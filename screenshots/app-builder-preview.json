@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Clash of the Beasts",
+      "hasCanvas": false,
+      "bodyTextLen": 29,
+      "bodyTextHash": "04c3d8752ac2d81caf4ff0a47243973e2a87172cd469e1ffb17d8a724e1aab23",
+      "bodyTextPrefix": "Tuỳ chỉnh bàn và lá Thông tin",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Clash of the Beasts",
+      "hasCanvas": false,
+      "bodyTextLen": 29,
+      "bodyTextHash": "04c3d8752ac2d81caf4ff0a47243973e2a87172cd469e1ffb17d8a724e1aab23",
+      "bodyTextPrefix": "Tuỳ chỉnh bàn và lá Thông tin",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

@@ -1,0 +1,43 @@
+YÊU CẦU KIỂM TRA TOÀN BỘ QUY TRÌNH AI HỌC GAME — CHỈ ĐỌC, KHÔNG SỬA CODE
+
+Tôi muốn kiểm tra trạng thái hiện tại của hệ thống AI học cách chơi từ hành vi người chơi, trước khi tiếp tục thử nghiệm.
+
+1. Kiểm tra luật game
+
+- Đọc code hiện tại và mô tả đầy đủ luật chơi thực tế.
+- Kiểm tra mana, sao, triệu hồi, tấn công, chặn đòn, kỹ năng, phép, hợp thể, hiệu ứng tự động và điều kiện kết thúc trận.
+- Xác định chính xác các hành động người chơi có thể lựa chọn và các hành động bắt buộc do luật quy định.
+
+2. Kiểm tra hệ thống ghi lịch sử
+
+- Đọc "src/lib/match-history.ts", "src/routes/play.tsx" và những file liên quan.
+- Xác nhận những gì được ghi vào lịch sử, cách phân biệt người chơi với AI, cách ghi kết quả thắng/thua/hòa và các hành động trong suốt trận.
+- Xác nhận dữ liệu có được lưu qua nhiều lần mở ứng dụng hay không.
+- Xác nhận chức năng xuất JSON hoạt động thế nào và dữ liệu xuất ra có đủ cho việc phân tích hành vi không.
+
+3. Kiểm tra AI học từ lịch sử
+
+- Đọc "src/lib/adapt.ts", "src/lib/habits.ts", "src/lib/duel.ts" và các file liên quan.
+- Giải thích dữ liệu lịch sử được dùng để điều chỉnh quyết định AI như thế nào.
+- Nêu rõ AI hiện học được những hành vi nào, chưa học được những hành vi nào.
+- Xác định chính xác cần bao nhiêu trận hoàn tất và bao nhiêu mẫu hành vi để mỗi cơ chế học bắt đầu có tác dụng.
+- Xác nhận AI có đọc dữ liệu đã lưu từ các trận trước khi đưa ra quyết định ở trận mới hay không.
+- Phân biệt rõ việc AI tự điều chỉnh trong game với việc xuất JSON cho AI lập trình phân tích và sửa code.
+
+4. Đề xuất bước thử nghiệm tiếp theo
+Hãy đưa ra quy trình ngắn nhất để tôi có thể:
+
+1. Xác nhận hệ thống hoạt động đúng.
+2. Thu thập đủ dữ liệu từ các trận đấu.
+3. Kiểm tra AI có thực sự thay đổi cách chơi dựa trên dữ liệu hay không.
+4. Đánh giá hiệu quả mà không làm thay đổi luật game ngoài ý muốn.
+
+Yêu cầu bắt buộc:
+
+- Chỉ đọc và phân tích code hiện tại. Không sửa, tạo, xóa file; không thay đổi luật, giao diện, dữ liệu hay cách chọn nước của AI.
+- Không yêu cầu tôi thử nghiệm thêm khi chưa xác định rõ mục đích.
+- Phân biệt rõ điều gì đã xác minh được từ code, điều gì chỉ là giả định và điều gì cần thử nghiệm thực tế.
+- Nếu có lỗi hoặc thiếu dữ liệu, chỉ báo cáo, không tự sửa.
+- Kết thúc bằng một kết luận ngắn: Tôi cần làm gì tiếp theo, có cần đánh thêm trận không, cần bao nhiêu trận và khi nào thì dừng.
+
+Sau khi hoàn tất báo cáo, hãy dừng lại và chờ tôi quyết định bước tiếp theo.

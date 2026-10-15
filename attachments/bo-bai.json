@@ -1,0 +1,42 @@
+{
+  "decks": [
+    {
+      "n": 1,
+      "name": "Lv 1 Meta deck",
+      "monsters": [
+        "khong-lo-mot-mat",
+        "phu-thuy-ti-hon",
+        "quai-thu-thien-su",
+        "rong-con",
+        "thien-than-be-nho",
+        "hiep-si-cua-vua",
+        "hiep-si-ho-ve",
+        "kazura",
+        "kizuran",
+        "my-dieu-nhan",
+        "chien-binh-rong",
+        "ma-dao-si",
+        "may-nem-bom-hinh-nhen",
+        "thuong-quan-long",
+        "hiep-si-cua-hau"
+      ],
+      "spells": [
+        "giap-co-khi",
+        "la-chan-phan-don",
+        "phuc-kich",
+        "guong-phong-ho",
+        "ke-dao-mo",
+        "soi-xich-dia-nguc",
+        "sam-set-tan-the",
+        "virus-an-mon",
+        "hoan-doi"
+      ]
+    },
+    {
+      "n": 2,
+      "name": "Bộ 2",
+      "monsters": [],
+      "spells": []
+    }
+  ]
+}

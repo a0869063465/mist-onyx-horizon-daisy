@@ -1,0 +1,110 @@
+THÔNG TIN MỚI
+
+CẬP NHẬT
+3.7
+1. Chiến thuật xếp theo số sao chủ yếu của quái trong nhóm, 1 sao trước. Cùng sao thì nhóm có nhiều quái đúng mức sao đó xếp trước.
+2. Icon lưu ở chân trang dựng bộ bài: bấm lần nữa thì thu hai icon lại.
+3. Ma đạo sĩ, Ma đạn: tiêu hao 1 mana, bắn 3 phát liên tục. Sát thương phép 1, rồi 2, loạt cuối 4.
+4. Hiệp sĩ hộ vệ có 2 công và 2 máu.
+5. Chiến binh rồng còn 4 máu và 1 thủ.
+6. Kizuran có 3 công.
+7. Thiên thần bé nhỏ đổi tên thành Nàng tiên giữ khoá.
+8. Quái thú thiên sứ còn 1 mana. Bảng chọn ghi Cầu nguyện, không còn Duy trì.
+9. Khổng lồ 1 mắt còn 3 thủ.
+10. Cơn thịnh nộ của hải vương có 1 công.
+
+3.6
+1. Tên trên mặt lá quái và phép: vừa 2 dòng thì giữ cỡ cũ. Tràn dòng 3 thì chỉ lá đó nhỏ lại cho đến khi vừa 2 dòng, không nhỏ hơn 75% cỡ gốc.
+2. Giữ lá quái trong dựng bộ bài không còn khung dưới mô tả skill. Ba ô đó trong tuỳ chỉnh mô tả cũng ẩn.
+3. Hiệp sĩ hộ vệ, Kiếm hộ vệ: khi chủ động lao vào tấn công hay đỡ đòn, loại sát thương gây ra theo khiên đã mất trước đó. Mất khiên vật lý thì gây sát thương phép. Mất khiên phép thì gây sát thương vật lý. Mất cả hai thì tính khiên vật lý trước, gây sát thương phép.
+4. Số cam góc trái trên lá quái canh lề trái, không còn canh giữa.
+5. Hiệp sĩ của vua và Hiệp sĩ của hậu bỏ lời chúc của kỵ sĩ cũ: không còn 2 máu ảo trước mỗi đòn. Máu của Hiệp sĩ của vua là 3. Máu của Hiệp sĩ của hậu là 3.
+6. Hiệp sĩ của hậu: trên sân hiện Kiếm phép. Lần 1 tốn 0 mana, 1 sát thương phép và 1 sát thương vật lý. Lần 2 tốn 1 mana, 3 sát thương vật lý, 3 sát thương phép và 1 sát thương chuẩn. Đếm 1 rồi 2, cùng lượt hay khác lượt đều giữ.
+7. Mỹ điểu nhân: lượt sau không được rút bài vẫn đúng. Máy không còn đứng im vì cứ đòi rút, mà triệu hồi, đánh hoặc kết thúc lượt.
+8. Bộ mặc định Lv 1 Meta deck lên đầu và được dùng khi vào ván. Bộ máy đang lưu, nếu khác, xuống dưới thành Bộ riêng.
+9. Dựng bộ vẫn đúng 24 lá. Quái từ 13 đến 17. Phép từ 7 đến 11.
+10. Deck mặc định là bộ Lv 1 Meta deck. Quái: Khổng lồ 1 mắt, Phù thuỷ tí hơn, Quái thú thiên sứ, Rồng con, Thiên thần bé nhỏ, Hiệp sĩ của vua, Hiệp sĩ hộ vệ, Kazura, Kizuran, Mỹ điểu nhân, Chiến binh rồng, Ma đạo sĩ, Máy ném bom hình nhện, Thương quản long, Hiệp sĩ của hậu. Phép: Giáp cơ khí, Lá chắn phản đòn, Phục kích, Gương phòng hộ, Kẻ đào mộ, Sợi xích địa ngục, Sấm sét tận thế, Virus ăn mòn, Hoán đổi.
+
+CHIẾN THUẬT
+Quái thú tình huống
+Lá: Cục bông ma quái, Kẻ săn mồi tử thần, Nàng tiên giữ khoá, Phù thuỷ rừng đen, Phù thuỷ thời gian, Rồng con, Sát nhân bắt giữ, Thế thân của shien, Yêu tinh chúc phúc
+Mô tả: Những quái thú rất yếu khi tình huống không phù hợp.
+
+Và rất mạnh nếu dùng đúng lúc.
+
+Cấp thấp, chiến đấu ngay
+Lá: Cơn thịnh nộ của hải vương, Hoa ăn thịt người, Khổng lồ 1 mắt, Máy chém, Phù thuỷ tí hơn, Thỏ đen tinh nghịch
+Mô tả: Các quái thú có thể chiến đấu sớm, hữu dụng ngay. 
+Tiêu mana sớm, và chiếm lợi thế hiệu quả.
+
+Tích luỹ và nhận
+Lá: Chiến binh lẫn khuất, Gã hề đáng sợ, Quái thú thiên sứ, Sâu non, Tê giác bé con
+Mô tả: Những quái thú chưa có tác dụng ngay khi ra sân, thường là phải ở lượt sau đó
+
+Các quái thú chiến đấu
+Lá: Chiến sĩ gặm nhắm, Kẻ giám hộ linh hồn, Ong khổng lồ, Rồng canh pháo đài
+Mô tả: Những quái thú có thể chiến đấu ngay.
+
+Bộ skill của chúng vẫn có tác dụng trong 1 số tình huống.
+
+Phòng ngự đa dụng
+Lá: Khủng long vãy kiếm, Lính chiến đá khổng lồ, Mộ voi ma mút
+Mô tả: Lợi dụng sức phòng ngự cao để:
+Che chắn, phá giáp, huỷ diệt 1 quái  thú,...
+
+Khiên của các Hiệp sĩ
+Lá: Hiệp sĩ của hậu, Hiệp sĩ của vua, Hiệp sĩ hộ vệ
+Mô tả: Các hiệp sĩ sẽ lợi dụng cơ chế khiên để phòng ngự.
+
+Dùng khiên để tấn công với tốc độ chậm.
+
+Thanh gươm và cái khiên
+Lá: Kazura, Kizuran
+Mô tả: Kazura là thanh gươm
+Kizuran là cái khiên
+Cùng trên sân thì chúng tuy 2 mà như 1 vậy. 
+Nguồn: Joey vs Rex rapter (Anime tập 13)
+
+Đơn chiến và tiến hoá
+Lá: Mỹ điểu nhân, Nữ chúa điểu nhân, Nữ chúa điểu nhân hoàn mỹ
+Mô tả: Harpie có thể đơn chiến hiệu quả 1 mình trên sân đấu, cô đa năng và có khả năng tự bảo vệ cao.
+
+Gây sát thương lớn
+Lá: Kiếm sĩ lửa thiêng, Lời nguyền của rồng, Ma đạo sĩ, Máy ném bom hình nhện, Triệu hồi ác ma
+Mô tả: Có thể là sát thương lan, ngẫu nhiên, hoặc dồn 1 mục tiêu. 
+
+Nhưng điểm chung là dame đều rất lớn.
+
+Chiến binh
+Lá: Chiến binh rồng, Chiến binh tê giác, Đấu sĩ bò tót
+Mô tả: Những quái thú chỉ số cao, và bộ skill phù hợp với cận chiến.
+
+Chỉ số tốt, sát thương cao.
+Lá: Mắt xanh huỷ diệt
+
+May rủi. Chỉ số, hồi phục và sát thương.
+Lá: Máy quay thưởng
+Mô tả: Chỉ số tốt nếu quay trúng
+Sống sót, hồi máu tốt nếu quay trúng
+Sát thương cao nếu quay trúng 
+
+Sát thương đa năng
+Lá: Mắt đỏ tàn phá, Rồng ác ma
+Mô tả: Sát thương đơn mục tiêu khổng lồ. 
+Nếu dùng thông minh thì biến thành lượng sát thương lan lớn.
+
+Dung hợp tạo ra rồng ác ma.
+
+Sát thương ổn đinh
+Lá: Thương quản long
+Mô tả: Tuỳ vào may rủi, nhưng lượng sát thương toả ra ổn.  
+Vấn đề là chỉ số thủ và máu không cao.
+
+Chiến binh bền bỉ
+Lá: Kỵ sĩ bóng tối, Chiến binh huyền thoại, Kỵ sĩ cưỡi rồng
+Mô tả: Chuyên giáp lá cả. Bền bỉ trong giao tranh. 
+
+Nghi thức hiến tế triệu hồi Kiếm sĩ huyền thoại.
+
+Dung hợp với rồng nguyền rủa, tạo thành Kỵ sĩ rồng.
+Nguồn: Yugi, vs Gã hề (Kaiba tháp game), vs kén ngài (Haga đảo đấu bài)
