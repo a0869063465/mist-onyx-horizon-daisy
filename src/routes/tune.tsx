@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { CardFace } from "@/components/game/card-face";
+import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyEdit } from "@/components/game/copy-text";
 import { CardFxPage } from "@/components/game/card-fx-page";
 import { FxLab } from "@/components/game/fx-lab";
@@ -755,7 +755,7 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
                 top: `${place.y}%`,
                 width: `${place.width}%`,
                 height: `${place.height}%`,
-                fontSize: `${place.size}cqw`,
+                fontSize: cardText(place.size),
               }}
               onPointerDown={(event) => {
                 drag.current = mark.key;
@@ -865,7 +865,7 @@ function FieldTune({ onBack }: { onBack: () => void }) {
                 top: `${place.y}%`,
                 width: `${place.width}%`,
                 height: `${place.height}%`,
-                fontSize: `${place.size}cqw`,
+                fontSize: cardText(place.size),
               }}
               onPointerDown={(event) => {
                 drag.current = mark.key;

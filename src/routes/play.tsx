@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { CardFace } from "@/components/game/card-face";
+import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
@@ -5210,7 +5210,7 @@ function BoardSlot({
       style={{
         left: `${layout[key].x}%`,
         top: `${layout[key].y}%`,
-        fontSize: `${hold ? Math.round(layout[key].size * 1.18) : layout[key].size}cqmin`,
+        fontSize: cardText(hold ? Math.round(layout[key].size * 1.18) : layout[key].size, "cqmin"),
         width: `${hold ? Math.min(48, Math.round(layout[key].width * 1.45)) : layout[key].width}%`,
         height: `${layout[key].height}%`,
       }}
@@ -5296,7 +5296,7 @@ function BoardSlot({
               top: `${layout.count.y}%`,
               width: `${layout.count.width}%`,
               height: `${layout.count.height}%`,
-              fontSize: `${layout.count.size}cqmin`,
+              fontSize: cardText(layout.count.size, "cqmin"),
             }}
           >
             {debtSlots.map((part) => (

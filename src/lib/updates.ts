@@ -493,6 +493,7 @@ export const PENDING_NOTES: string[] = [
   "Khủng long vãy kiếm: Vãy phá giáp giảm 2 thủ phép của quái địch, thay vì 1 thủ và 1 thủ phép. Thủ của quái địch không còn bị giảm.",
   "Kiếm sĩ lửa thiêng: Hoả thần long gây 2 sát thương chuẩn, thay vì 3. Sát thương phép vẫn 4.",
   "Đấu sĩ bò tót: thủ phép tăng từ 2 lên 3.",
+  "Tên và chỉ số trên lá bài dùng font Barlow Condensed và to hơn một chút, ở mọi nơi: tay bài, lá trên sân, bộ bài, chiến thuật và xem trước Tuỳ chỉnh. Bố cục đã lưu giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

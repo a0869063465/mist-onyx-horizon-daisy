@@ -3,7 +3,13 @@ import { artSrc, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { loadCard, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
 
-const NAME_FLOOR = 0.75;
+// Long names may shrink to 0.75 of the old size; card text is now 1.1x, so 0.75 / 1.1.
+const NAME_FLOOR = 0.68;
+
+/** Card text size from a layout number, scaled by the --card-text factor in styles.css. */
+export function cardText(size: number, unit = "cqw") {
+  return `calc(${size}${unit} * var(--card-text, 1))`;
+}
 
 function FittedName({ spot, value }: { spot: Spot; value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -16,7 +22,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
     let dead = false;
 
     const linesAt = (next: number) => {
-      node.style.fontSize = `${next}cqw`;
+      node.style.fontSize = cardText(next);
       node.style.height = "auto";
       const line = parseFloat(getComputedStyle(node).lineHeight) || 1;
       return node.scrollHeight / line;
@@ -41,7 +47,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
           }
         }
       }
-      node.style.fontSize = `${next}cqw`;
+      node.style.fontSize = cardText(next);
       node.style.height = `${spot.height}%`;
       setSize((prev) => (Math.abs(prev - next) < 0.01 ? prev : next));
     };
@@ -68,7 +74,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
         top: `${spot.y}%`,
         width: `${spot.width}%`,
         height: `${spot.height}%`,
-        fontSize: `${size}cqw`,
+        fontSize: cardText(size),
       }}
     >
       {value}
@@ -137,7 +143,7 @@ export function CardFace({
           top: `${spot.y}%`,
           width: `${spot.width}%`,
           height: `${spot.height}%`,
-          fontSize: `${spot.size}cqw`,
+          fontSize: cardText(spot.size),
         }}
       >
         {value}
