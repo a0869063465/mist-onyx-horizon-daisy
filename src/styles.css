@@ -1350,7 +1350,7 @@
 }
 /* Card text: names and stats on every card face, field unit and card preview. */
 :root {
-  --card-text: 1.1;
+  --card-text: 1.3;
 }
 .card .socket,
 .card .socket.is-name,
