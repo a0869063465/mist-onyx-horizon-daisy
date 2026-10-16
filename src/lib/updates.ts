@@ -485,6 +485,7 @@ export const PENDING_NOTES: string[] = [
   "Quái 2 đến 4 sao có thể triệu hồi hiến tế. Ấn giữ lá trên tay để bật vòng lửa, kéo ra sân rồi chọn quái. Chỉ số cộng thêm là vĩnh viễn.",
   "Kẻ giám hộ linh hồn: Kiếm hấp thụ linh hồn hiến 2 máu lần đầu, mỗi lần sau thêm 1 máu. Buff chỉ trong giao tranh rồi mất. Mỗi máu thêm cho thêm 1 công và 1 máu tối đa.",
   "Kẻ giám hộ linh hồn có thủ gốc 1.",
+  "Màn hình chính làm lại: ảnh bìa mới phủ kín màn hình, nút Chơi vàng, nút Điều chỉnh deck và hai nút nhỏ Tuỳ chỉnh, Thông tin. Mỗi nút có tiếng bấm riêng.",
 ];
 
 function remarkOf(notes: string[]) {

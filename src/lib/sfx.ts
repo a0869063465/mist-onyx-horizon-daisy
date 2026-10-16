@@ -212,3 +212,87 @@ export function playCue(kind: Cue, delay?: number, offset = 0) {
   }
   if (kind === "lose") tone(220, 0, 0.35, "sine", 0.08, 110);
 }
+
+export type UiCue = "confirm" | "select" | "soft";
+
+function noiseBurst(audio: AudioContext, start: number, dur: number, from: number, to: number, level: number) {
+  const frames = Math.max(1, Math.floor(audio.sampleRate * dur));
+  const buffer = audio.createBuffer(1, frames, audio.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+  const node = audio.createBufferSource();
+  const band = audio.createBiquadFilter();
+  const amp = audio.createGain();
+  node.buffer = buffer;
+  band.type = "bandpass";
+  band.Q.value = 1.4;
+  band.frequency.setValueAtTime(from, start);
+  band.frequency.exponentialRampToValueAtTime(to, start + dur);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + dur * 0.35);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  node.connect(band);
+  band.connect(amp);
+  amp.connect(audio.destination);
+  node.start(start);
+  node.stop(start + dur + 0.02);
+}
+
+function bell(audio: AudioContext, start: number, freq: number, dur: number, level: number) {
+  const osc = audio.createOscillator();
+  const shine = audio.createOscillator();
+  const amp = audio.createGain();
+  osc.type = "triangle";
+  shine.type = "sine";
+  osc.frequency.setValueAtTime(freq, start);
+  shine.frequency.setValueAtTime(freq * 2.01, start);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + 0.012);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(amp);
+  shine.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  shine.start(start);
+  osc.stop(start + dur + 0.02);
+  shine.stop(start + dur + 0.02);
+}
+
+function thump(audio: AudioContext, start: number, level: number) {
+  const osc = audio.createOscillator();
+  const amp = audio.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(150, start);
+  osc.frequency.exponentialRampToValueAtTime(52, start + 0.22);
+  amp.gain.setValueAtTime(Math.max(0.0001, level), start);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + 0.26);
+  osc.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + 0.28);
+}
+
+/** Menu sounds: confirm = main action, select = secondary button, soft = small links. */
+export function playUi(cue: UiCue) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = tapVolume() / 100;
+    if (vol <= 0) return;
+    const t = audio.currentTime;
+    if (cue === "confirm") {
+      thump(audio, t, 0.55 * vol);
+      noiseBurst(audio, t, 0.32, 600, 5200, 0.16 * vol);
+      bell(audio, t + 0.04, 784, 0.6, 0.11 * vol);
+      bell(audio, t + 0.1, 1175, 0.7, 0.09 * vol);
+      bell(audio, t + 0.16, 1568, 0.8, 0.07 * vol);
+    } else if (cue === "select") {
+      noiseBurst(audio, t, 0.14, 1800, 4200, 0.08 * vol);
+      bell(audio, t + 0.01, 988, 0.32, 0.09 * vol);
+      bell(audio, t + 0.06, 1319, 0.36, 0.06 * vol);
+    } else {
+      noiseBurst(audio, t, 0.05, 3200, 2400, 0.06 * vol);
+      bell(audio, t, 1480, 0.12, 0.05 * vol);
+    }
+  });
+}

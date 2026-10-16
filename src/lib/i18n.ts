@@ -170,6 +170,8 @@ const PAIRS: Array<[string, string]> = [
   ["Tuỳ chỉnh bàn và lá", "Customize board and cards"],
   ["Tuỳ chỉnh", "Customize"],
   ["Thông tin", "Info"],
+  ["Chơi", "Play"],
+  ["Điều chỉnh deck", "Edit deck"],
   ["Về menu", "Back to menu"],
   ["Về sân", "Back"],
   ["Về menu chính", "Main menu"],
