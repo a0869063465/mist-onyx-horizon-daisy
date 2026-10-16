@@ -969,6 +969,46 @@ export const SPELLS: SpellCard[] = [
     "env": true
   },
   {
+    "id": "thao-nguyen",
+    "name": "Thảo nguyên",
+    "gems": 0,
+    "effect": "Nếu một đồng minh tham gia giao tranh, hồi cho hắn 1 máu vào cuối lượt đó.",
+    "env": true,
+    "since": "2026-10-16"
+  },
+  {
+    "id": "dat-da",
+    "name": "Đất đá",
+    "gems": 0,
+    "effect": "Nếu 1 đồng minh hệ đất đá tham gia giao tranh tăng công bằng với 40% điểm tổng phòng ngự hiện có.",
+    "env": true,
+    "since": "2026-10-16"
+  },
+  {
+    "id": "nui",
+    "name": "Núi",
+    "gems": 0,
+    "effect": "Chim chóc và rồng tăng thêm 2 sát thương kỹ năng.",
+    "env": true,
+    "since": "2026-10-16"
+  },
+  {
+    "id": "rung-ram",
+    "name": "Rừng rậm",
+    "gems": 0,
+    "effect": "Thú rừng và côn trùng tăng 2 máu tối đa.",
+    "env": true,
+    "since": "2026-10-16"
+  },
+  {
+    "id": "bong-toi",
+    "name": "Bóng tối",
+    "gems": 0,
+    "effect": "Khi quái thú bóng tối gây sát thương lên quái thú đối phương, với mỗi quái thú chịu đòn, người chơi đối phương sẽ nhận thêm 1 sát thương. Nhân đôi với sát thương trên 5.",
+    "env": true,
+    "since": "2026-10-16"
+  },
+  {
     "id": "virus-an-mon",
     "name": "Virus ăn mòn",
     "gems": 0,

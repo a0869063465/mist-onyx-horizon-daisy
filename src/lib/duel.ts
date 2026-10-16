@@ -10,6 +10,7 @@ import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion } from "./fusion.ts";
+import { envFavors } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
@@ -74,6 +75,12 @@ export type FieldMon = {
   soul?: number;
   vows?: number;
   skillUp?: number;
+  /** Thảo nguyên: took part in a clash this turn. */
+  meadow?: boolean;
+  /** Rừng rậm: form that already got +2 max HP. */
+  envHp?: string;
+  /** Núi: already got +2 skill damage. */
+  envSkill?: boolean;
   path?: number;
   fed?: number;
   spun?: boolean;
@@ -875,7 +882,32 @@ function departed(before: Array<FieldMon | null>, after: Array<FieldMon | null>)
   return before.filter((mon): mon is FieldMon => Boolean(mon && !stay.has(mon.uid))).map((mon) => mon.cardId);
 }
 
-function patch(state: Duel, side: Side, player: Player): Duel {
+function envForm(mon: FieldMon): string {
+  return mon.cardId === "te-giac-be-con" ? `${mon.cardId}:${mon.level ?? 1}` : mon.cardId;
+}
+
+/** Rừng rậm: +2 max HP and HP. Núi: +2 skill damage. Applied once per form while the card is on the field. */
+function envBoost(player: Player): Player {
+  const env = player.env;
+  if (env !== "rung-ram" && env !== "nui") return player;
+  let changed = false;
+  const field = player.field.map((mon) => {
+    if (!mon || mon.hp <= 0 || !envFavors(env, mon.cardId)) return mon;
+    if (env === "rung-ram") {
+      const form = envForm(mon);
+      if (mon.envHp === form) return mon;
+      changed = true;
+      return { ...mon, maxHp: (mon.maxHp || mon.hp) + 2, hp: mon.hp + 2, raised: markRaised(mon, { hp: 2 }), envHp: form };
+    }
+    if (mon.envSkill) return mon;
+    changed = true;
+    return { ...mon, skillUp: (mon.skillUp ?? 0) + 2, envSkill: true };
+  });
+  return changed ? { ...player, field: field as Player["field"] } : player;
+}
+
+function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
+  const player = envBoost(rawPlayer);
   const prev = state.players[side];
   const gone = [
     ...departed(prev.field, player.field),
@@ -2763,9 +2795,9 @@ function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | 
   return { ...hit, mon: { ...hit.mon, stored } };
 }
 
-function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[]): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
-  let atk = liveAtk(attacker);
-  let counter = liveAtk(defender);
+function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
+  let atk = liveAtk(attacker) + rockA;
+  let counter = liveAtk(defender) + rockB;
   if (defender.riposte) counter = 0;
   const defA = liveDef(attacker, alliesA);
   const defB = liveDef(defender, alliesB);
@@ -4283,6 +4315,10 @@ function tideSkill(before: Duel, after: Duel, uid: string, targetUid: string | n
 }
 
 function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Duel {
+  return envGuard(state, [attackerUid, defenderUid], [attackerUid, defenderUid], () => resolveMeleeCore(state, attackerUid, defenderUid));
+}
+
+function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string): Duel {
   const side = state.turn;
   const foe = (1 - side) as Side;
   const you = state.players[side];
@@ -4316,7 +4352,7 @@ function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Du
   const shot = openGuardShot(attacker, defender, meleeBlow, you.field, them.roster);
   const defPool = phantomPool(defender, them.field);
   const atkPool = phantomPool(attacker, you.field);
-  const hit = strikePair(withLegend(shot.attacker), withLegend(shot.defender), you.field, them.field, you.roster, them.roster);
+  const hit = strikePair(withLegend(shot.attacker), withLegend(shot.defender), you.field, them.field, you.roster, them.roster, rockOf(state, attacker), rockOf(state, defender));
   const awardA = bullAward(hit.attacker, defender.cardId, hit.defender.hp <= 0);
   const awardD = bullAward(hit.defender, attacker.cardId, hit.attacker.hp <= 0);
   let wornA = dullHorn(awardA.mon, attacker.horn);
@@ -4737,6 +4773,12 @@ function resolveDemonBall(state: Duel, caster: FieldMon, target: FieldMon | null
 }
 
 export function resolveFace(state: Duel, blockerUid: string | null, withSkill = false): Duel {
+  const attackerUid = state.pending?.kind === "face" ? state.pending.attacker : null;
+  const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
+  return envGuard(state, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(state, blockerUid, withSkill));
+}
+
+function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = false): Duel {
   if (state.step !== "respond" || state.pending?.kind !== "face") return state;
   const pending = state.pending;
   const side = state.turn;
@@ -4783,7 +4825,7 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
     const meleeBlow = !attacker.horn && !attacker.gaze && !attacker.bolt;
     const shot = openGuardShot(attacker, blocker, meleeBlow, you.field, them.roster);
     const body = withLegend(shot.defender);
-    const hit = strikePair(withLegend(shot.attacker), body, you.field, guarding.field, you.roster, them.roster);
+    const hit = strikePair(withLegend(shot.attacker), body, you.field, guarding.field, you.roster, them.roster, rockOf(state, attacker), rockOf(state, blocker));
     const awardA = bullAward(hit.attacker, body.cardId, hit.defender.hp <= 0);
     const awardD = bullAward(hit.defender, attacker.cardId, hit.attacker.hp <= 0);
     let wornA = dullHorn(awardA.mon, attacker.horn);
@@ -5795,6 +5837,10 @@ export function pickSwap(state: Duel, token: string): Duel {
 }
 
 function flowerBite(state: Duel, foe: Side, attackerUid: string, flowerUid: string, take: number, lead: string): Duel {
+  return envGuard(state, [attackerUid, flowerUid], [attackerUid, flowerUid], () => flowerBiteCore(state, foe, attackerUid, flowerUid, take, lead));
+}
+
+function flowerBiteCore(state: Duel, foe: Side, attackerUid: string, flowerUid: string, take: number, lead: string): Duel {
   const side = (1 - foe) as Side;
   const you = state.players[side];
   const them = state.players[foe];
@@ -5804,7 +5850,7 @@ function flowerBite(state: Duel, foe: Side, attackerUid: string, flowerUid: stri
     return { ...note(state, lead, "heal"), mends: take > 0 ? [{ uid: flowerUid, n: take }] : null };
   }
   const keptDim = attacker.dim;
-  const hit = strikePair(withLegend(attacker), withLegend(flower), them.field, you.field, them.roster, you.roster);
+  const hit = strikePair(withLegend(attacker), withLegend(flower), them.field, you.field, them.roster, you.roster, rockOf(state, attacker), rockOf(state, flower));
   const awardA = bullAward(hit.attacker, flower.cardId, hit.defender.hp <= 0);
   const awardD = bullAward(hit.defender, attacker.cardId, hit.attacker.hp <= 0);
   const worn = combatErode(awardA.mon, awardD.mon, foe);
@@ -6310,6 +6356,10 @@ export function harpyLash(state: Duel): Duel {
 }
 
 function charmStrike(state: Duel, birdUid: string, foeUid: string): Duel {
+  return envGuard(state, [birdUid, foeUid], [birdUid, foeUid], () => charmStrikeCore(state, birdUid, foeUid));
+}
+
+function charmStrikeCore(state: Duel, birdUid: string, foeUid: string): Duel {
   const side = state.turn;
   const foe = (1 - side) as Side;
   const you = state.players[side];
@@ -6317,7 +6367,7 @@ function charmStrike(state: Duel, birdUid: string, foeUid: string): Duel {
   const bird = you.field.find((unit) => unit?.uid === birdUid) ?? null;
   const attacker = them.field.find((unit) => unit?.uid === foeUid && unit.hp > 0) ?? null;
   if (!bird || !attacker) return note(state, "Không còn quái để mê hoặc.");
-  const hit = strikePair(withLegend(attacker), withLegend(bird), them.field, you.field, them.roster, you.roster);
+  const hit = strikePair(withLegend(attacker), withLegend(bird), them.field, you.field, them.roster, you.roster, rockOf(state, attacker), rockOf(state, bird));
   const stunned = hit.attacker.hp > 0 ? { ...hit.attacker, dim: true, stun: Math.max(hit.attacker.stun, 2) } : hit.attacker;
   let next = patch(state, foe, dropDead({ ...them, field: them.field.map((unit) => (unit?.uid === attacker.uid ? stunned : unit)) }));
   next = patch(next, side, dropDead({ ...you, field: you.field.map((unit) => (unit?.uid === bird.uid ? hit.defender : unit)) }));
@@ -6413,6 +6463,11 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
 }
 
 function castLure(state: Duel, side: Side, mon: FieldMon, foeUid: string | null, allyUid: string | null): Duel {
+  const pair = foeUid && allyUid ? [foeUid, allyUid] : [];
+  return envGuard(state, pair, pair, () => castLureCore(state, side, mon, foeUid, allyUid));
+}
+
+function castLureCore(state: Duel, side: Side, mon: FieldMon, foeUid: string | null, allyUid: string | null): Duel {
   const you = state.players[side];
   const foe = (1 - side) as Side;
   const them = state.players[foe];
@@ -6430,7 +6485,7 @@ function castLure(state: Duel, side: Side, mon: FieldMon, foeUid: string | null,
   const foeNow = next.players[foe];
   const attacker = foeNow.field.find((unit) => unit?.uid === enemy.uid) ?? enemy;
   const defender = owner.field.find((unit) => unit?.uid === ally.uid) ?? ally;
-  const hit = strikePair(withLegend(attacker), withLegend(defender), foeNow.field, owner.field, foeNow.roster, owner.roster);
+  const hit = strikePair(withLegend(attacker), withLegend(defender), foeNow.field, owner.field, foeNow.roster, owner.roster, rockOf(next, attacker), rockOf(next, defender));
   const swung = hit.attacker.hp > 0 ? { ...hit.attacker, dim: false, stun: 0 } : hit.attacker;
   next = patch(next, foe, dropDead({ ...foeNow, field: foeNow.field.map((unit) => (unit?.uid === attacker.uid ? swung : unit)) }));
   next = patch(next, side, dropDead({ ...owner, field: owner.field.map((unit) => (unit?.uid === defender.uid ? hit.defender : unit)) }));
@@ -6548,6 +6603,10 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 }
 
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
+  return envGuard(state, [uid], [], () => useSkillCore(state, uid, targetUid, skillIndex, skipGnaw, extra, silent));
+}
+
+function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => useSkill(next, uid, targetUid, skillIndex, skipGnaw, extra, silent));
   const caster = state.players.flatMap((player) => player.field).find((unit) => unit?.uid === uid) ?? null;
   const bonus = caster?.blessDmg ?? 0;
@@ -7922,6 +7981,138 @@ function settleDragonDebt(state: Duel): { state: Duel; line: string } {
   return { state: next, line: bits.join(". ") };
 }
 
+
+// ---- Lá môi trường: Thảo nguyên, Đất đá, Bóng tối ----
+
+function ownerSide(state: Duel, uid: string): Side | null {
+  if (state.players[0].field.some((mon) => mon?.uid === uid)) return 0;
+  if (state.players[1].field.some((mon) => mon?.uid === uid)) return 1;
+  return null;
+}
+
+/** Đất đá: attack bonus for one clash, 40% of current def + mdef, rounded. */
+function rockOf(state: Duel, mon: FieldMon | null | undefined): number {
+  if (!mon) return 0;
+  const side = ownerSide(state, mon.uid);
+  if (side === null) return 0;
+  const owner = state.players[side];
+  if (owner.env !== "dat-da" || !envFavors("dat-da", mon.cardId)) return 0;
+  const total = liveDef(mon, owner.field) + liveMdef(mon, owner.field);
+  return total > 0 ? Math.round(total * 0.4) : 0;
+}
+
+let envDepth = 0;
+let envSources: string[] = [];
+let envClash: string[] = [];
+
+/** Runs one action and, at the outermost call, applies Bóng tối, Đất đá notes and Thảo nguyên marks. */
+function envGuard(before: Duel, sources: string[], clash: string[], run: () => Duel): Duel {
+  if (envDepth === 0) {
+    envSources = [];
+    envClash = [];
+  }
+  envSources.push(...sources);
+  envClash.push(...clash);
+  envDepth += 1;
+  let after: Duel;
+  try {
+    after = run();
+  } finally {
+    envDepth -= 1;
+  }
+  if (envDepth > 0) return after;
+  const sourcesNow = [...new Set(envSources)];
+  const clashNow = [...new Set(envClash)];
+  envSources = [];
+  envClash = [];
+  if (after === before) return after;
+  return darkToll(before, rockNotes(before, markMeadow(after, clashNow), clashNow), sourcesNow);
+}
+
+function rockNotes(before: Duel, after: Duel, clash: string[]): Duel {
+  const rows: { uid: string; name: string; n: number }[] = [];
+  for (const uid of clash) {
+    const side = ownerSide(before, uid);
+    if (side === null) continue;
+    const mon = before.players[side].field.find((unit) => unit?.uid === uid);
+    const n = rockOf(before, mon);
+    if (mon && n > 0) rows.push({ uid, name: shadeHidden(mon) ? "Quái thú ẩn mình" : cardOf(mon).name, n });
+  }
+  if (!rows.length) return after;
+  const alive = (uid: string) => after.players.some((player) => player.field.some((unit) => unit?.uid === uid && unit.hp > 0));
+  const mends = [...(after.mends ?? []), ...rows.filter((row) => alive(row.uid)).map((row) => ({ uid: row.uid, n: row.n }))];
+  const text = rows.map((row) => `+${row.n} công cho ${row.name}`).join(", ");
+  return { ...note(after, `Đất đá: ${text} trong lần giao tranh này.`, after.tone), mends };
+}
+
+function markMeadow(state: Duel, clash: string[]): Duel {
+  if (!clash.length) return state;
+  let next = state;
+  for (const side of [0, 1] as Side[]) {
+    const player = next.players[side];
+    if (player.env !== "thao-nguyen") continue;
+    let changed = false;
+    const field = player.field.map((mon) => {
+      if (!mon || mon.meadow || mon.hp <= 0 || !clash.includes(mon.uid) || !envFavors("thao-nguyen", mon.cardId)) return mon;
+      changed = true;
+      return { ...mon, meadow: true };
+    });
+    if (changed) next = patch(next, side, { ...player, field: field as Player["field"] });
+  }
+  return next;
+}
+
+/** Thảo nguyên: at the end of the turn, each warrior that clashed heals 1. */
+function meadowHeal(state: Duel): Duel {
+  let next = state;
+  const mends = [...(state.mends ?? [])];
+  const names: string[] = [];
+  for (const side of [0, 1] as Side[]) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.meadow)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon || !mon.meadow) return mon;
+      const cap = mon.maxHp || mon.hp;
+      const healed = player.env === "thao-nguyen" && mon.hp > 0 ? Math.min(1, Math.max(0, cap - mon.hp)) : 0;
+      if (healed > 0) {
+        mends.push({ uid: mon.uid, n: healed });
+        names.push(cardOf(mon).name);
+      }
+      return { ...mon, hp: mon.hp + healed, meadow: undefined };
+    });
+    next = patch(next, side, { ...player, field: field as Player["field"] });
+  }
+  if (!names.length) return next;
+  return { ...note(next, `Thảo nguyên hồi 1 máu cho ${names.join(", ")}.`, "heal"), mends };
+}
+
+/** Bóng tối: each enemy monster a dark ally damaged costs the enemy player 1, or 2 if it lost more than 5. */
+function darkToll(before: Duel, after: Duel, sources: string[]): Duel {
+  let next = after;
+  for (const side of [0, 1] as Side[]) {
+    if (next.winner != null) return next;
+    const owner = before.players[side];
+    if (owner.env !== "bong-toi") continue;
+    const dark = sources
+      .map((uid) => owner.field.find((mon) => mon?.uid === uid) ?? null)
+      .find((mon): mon is FieldMon => Boolean(mon && envFavors("bong-toi", mon.cardId)));
+    if (!dark) continue;
+    const foe = (1 - side) as Side;
+    let toll = 0;
+    for (const prev of before.players[foe].field) {
+      if (!prev || prev.hp <= 0) continue;
+      const now = next.players[foe].field.find((mon) => mon?.uid === prev.uid);
+      const lost = prev.hp - Math.max(0, now?.hp ?? 0);
+      if (lost > 0) toll += lost > 5 ? 2 : 1;
+    }
+    if (toll <= 0) continue;
+    const them = next.players[foe];
+    const name = shadeHidden(dark) ? "Quái thú ẩn mình" : cardOf(dark).name;
+    next = checkWinner(note(patch(next, foe, { ...them, hp: them.hp - toll }), `Bóng tối: ${name} gây thêm ${toll} sát thương chuẩn lên người chơi.`, "hit"));
+  }
+  return next;
+}
+
 export function endTurn(state: Duel): Duel {
   const next = endTurnCore(state);
   if (next === state) return next;
@@ -7936,7 +8127,7 @@ function endTurnCore(state: Duel): Duel {
   if (state.step !== "main" || state.winner || state.recall) return state;
   const waiting = needUpkeep(state);
   if (waiting) return waiting;
-  state = releaseLegend({ ...state, echo: null, last: null });
+  state = meadowHeal(releaseLegend({ ...state, echo: null, last: null }));
   const side = state.turn;
   const foe = (1 - side) as Side;
   const vowHeals: { uid: string; n: number }[] = [];

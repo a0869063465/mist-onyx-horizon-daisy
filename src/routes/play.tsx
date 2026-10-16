@@ -798,7 +798,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
     return true;
   }
   if (duel.step !== "main" || duel.turn !== viewer || duel.upkeep || duel.gemCap === viewer || duel.gemWarn === viewer) return false;
-  if (id === "bien-sau") return true;
+  if (spellCard(id)?.env) return true;
   return slowUsable(id, duel, viewer);
 }
 
