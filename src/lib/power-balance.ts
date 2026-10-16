@@ -285,6 +285,14 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "up",
     stats: { def: { from: 0, to: 1 } },
   },
+  {
+    id: "chien-binh-lan-khuat",
+    at: "2026-10-16",
+    wave: 24,
+    tone: "shift",
+    stats: { atk: { from: 4, to: 2 } },
+    notes: ["Sát thương gây ra khi ẩn mình là sát thương chuẩn"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

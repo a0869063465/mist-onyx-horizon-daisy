@@ -345,7 +345,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Chiến binh lẫn khuất",
     "stars": 1,
     "gems": 0,
-    "skill": "Ẩn mình: \nTiêu hao 1 mana. Tạo ra thế thân ngay vị trí ta đang đứng, trong lúc ẩn mình, có thể tuỳ ý ám sát kẻ địch mà không bị phản đòn. \n\nSố cam cho thấy quá trình ẩn thân đang bắt đầu.",
+    "skill": "Ẩn mình: \nTiêu hao 1 mana. Tạo ra thế thân ngay vị trí ta đang đứng. Trong lúc ẩn mình, có thể tuỳ ý ám sát kẻ địch mà không bị phản đòn, sát thương lúc đó gây ra sẽ là sát thương chuẩn. \n\nSố cam cho thấy quá trình ẩn thân đang bắt đầu.",
     "atk": 2,
     "def": 0,
     "mdef": 0,

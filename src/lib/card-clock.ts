@@ -343,15 +343,15 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "kind": "monster",
     "stars": 1,
     "mana": 0,
-    "atk": 4,
+    "atk": 2,
     "def": 0,
     "mdef": 0,
     "hp": 1,
-    "text": "2867439c",
+    "text": "2028e7b7",
     "added": "2026-10-13",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-16"
   },
   "ke-san-moi-tu-than": {
     "kind": "monster",
