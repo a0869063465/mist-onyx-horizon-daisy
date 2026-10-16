@@ -1361,150 +1361,239 @@
   font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 800;
 }
-/* ---- In-game polish: same colours, fills and borders as before, with depth and light ---- */
+/* ---- In-game look: built on the old colours/fills/borders, pushed to a polished metal-and-glass style.
+   Positions, sizes and border widths are unchanged, so layout stays exactly the same. ---- */
 .stage .act,
 .stage .act-chip,
 .stage .test-btn,
 .stage .help-btn,
 .stage .ask-card button {
-  text-shadow: 0 1px 1px rgb(0 0 0 / 0.55);
-  transition: transform 110ms ease-out, filter 110ms ease-out, box-shadow 110ms ease-out;
+  transition: transform 110ms ease-out, filter 110ms ease-out;
 }
 .stage .act:active:not(:disabled),
 .stage .act-chip:active,
 .stage .test-btn:active:not(:disabled),
 .stage .help-btn:active,
 .stage .ask-card button:active {
-  transform: translateY(1px) scale(0.97);
-  filter: brightness(1.15);
+  transform: translateY(1px) scale(0.96);
+  filter: brightness(1.18);
 }
-/* Rút quái / Rút phép / Chặn / Hết lượt / Bỏ qua: keep each tint, add bevel, rim light and glow */
-.stage .actions .act.is-draw-mon { --tone: #ff8a00; }
-.stage .actions .act.is-draw-spell { --tone: #c084fc; }
-.stage .actions .act.is-block { --tone: #f5c542; }
-.stage .actions .act.is-block-skill { --tone: #ff4d4d; }
-.stage .actions .act.is-end { --tone: #ff4d4d; }
-.stage .actions .act.is-pass { --tone: #4aa8ff; }
+
+/* Tone palettes (hi / mid / lo / rim / glow) taken from each button's old colour */
+.stage .actions .act.is-draw-mon,
+.stage .act-chip.is-k { --hi: #ffd27a; --mid: #f08a12; --lo: #8a3a00; --rim: #ffe7b0; --glow: #ff8a00; }
+.stage .actions .act.is-draw-spell { --hi: #e6c2ff; --mid: #9a4cf0; --lo: #451a80; --rim: #f3e2ff; --glow: #b46cff; }
+.stage .actions .act.is-block { --hi: #fff3a6; --mid: #efb420; --lo: #7d5300; --rim: #fff6cc; --glow: #f5c542; }
+.stage .actions .act.is-block-skill { --hi: #ffa3a3; --mid: #e03a3a; --lo: #730d12; --rim: #ffd6d6; --glow: #ff4d4d; }
+.stage .actions .act.is-end,
+.stage .act-chip.is-z { --hi: #ff9a9a; --mid: #d8262f; --lo: #66080e; --rim: #ffcaca; --glow: #ff3b3b; }
+.stage .actions .act.is-pass,
+.stage .act-chip.is-y { --hi: #a8dcff; --mid: #2d84ee; --lo: #0d3a86; --rim: #dcf0ff; --glow: #4aa8ff; }
+
+/* Action column + skill chips: glossy metal fill, gradient rim, glow, shine sweep */
 .stage .actions .act.is-draw-mon,
 .stage .actions .act.is-draw-spell,
 .stage .actions .act.is-block,
 .stage .actions .act.is-block-skill,
 .stage .actions .act.is-end,
-.stage .actions .act.is-pass {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.04) 46%, rgb(0 0 0 / 0.22) 100%);
+.stage .actions .act.is-pass,
+.stage .act-chip {
+  overflow: hidden;
+  border-color: transparent;
+  color: #fff;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6), 0 0 6px rgb(0 0 0 / 0.35);
+  background:
+    linear-gradient(180deg, var(--hi) 0%, var(--mid) 46%, var(--lo) 100%) padding-box,
+    linear-gradient(180deg, var(--rim) 0%, color-mix(in srgb, var(--mid) 70%, #000) 55%, var(--rim) 100%) border-box;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.28),
-    inset 0 -2px 0 rgb(0 0 0 / 0.35),
-    0 0 0 1px rgb(0 0 0 / 0.55),
-    0 3px 8px rgb(0 0 0 / 0.45),
-    0 0 10px color-mix(in srgb, var(--tone) 32%, transparent);
+    inset 0 2px 0 rgb(255 255 255 / 0.5),
+    inset 0 -3px 0 rgb(0 0 0 / 0.32),
+    0 0 0 1px rgb(0 0 0 / 0.75),
+    0 4px 10px rgb(0 0 0 / 0.55),
+    0 0 14px color-mix(in srgb, var(--glow) 50%, transparent);
 }
-.stage .act.is-skillbox,
-.stage .act:not(.is-draw-mon):not(.is-draw-spell):not(.is-block):not(.is-block-skill):not(.is-end):not(.is-pass) {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0.04) 48%, rgb(0 0 0 / 0.16) 100%);
+.stage .actions .act { position: relative; }
+.stage .actions .act::before,
+.stage .act-chip::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 4%;
+  height: 42%;
+  border-radius: 999px 999px 40% 40%;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.45), rgb(255 255 255 / 0));
+  pointer-events: none;
+}
+.stage .actions .act::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -70%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transform: skewX(-18deg);
+  animation: act-shine 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.stage .actions .act:nth-child(2)::after { animation-delay: 0.35s; }
+.stage .actions .act:nth-child(3)::after { animation-delay: 0.7s; }
+.stage .actions .act:nth-child(4)::after { animation-delay: 1.05s; }
+/* the response button asks for attention */
+.stage .actions .act.is-pass { animation: act-call 1.6s ease-in-out infinite; }
+.stage .act-chip svg { filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.7)); position: relative; }
+
+/* Other game buttons (Use, OK, chọn…): the gold of .act as polished gold */
+.stage .act:not(.is-draw-mon):not(.is-draw-spell):not(.is-block):not(.is-block-skill):not(.is-end):not(.is-pass):not(.ok):not(.is-skillbox) {
+  color: #3a1d02;
+  text-shadow: 0 1px 0 rgb(255 245 200 / 0.65);
+  background-image: linear-gradient(180deg, #fff1b8 0%, #ffd45c 34%, #f2a71b 70%, #c9740a 100%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.4),
-    inset 0 -2px 0 rgb(0 0 0 / 0.25),
-    0 0 0 1px rgb(0 0 0 / 0.45),
-    0 3px 8px rgb(0 0 0 / 0.4);
+    inset 0 2px 0 rgb(255 255 255 / 0.6),
+    inset 0 -3px 0 rgb(120 55 0 / 0.4),
+    0 0 0 1px #6b3504,
+    0 4px 10px rgb(0 0 0 / 0.5);
+}
+.stage .act.ok {
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+  background-image: linear-gradient(180deg, #8cc0ff 0%, #2f7dff 50%, #1747a8 100%);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.45), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 0 0 1px #0a2560, 0 4px 10px rgb(0 0 0 / 0.5), 0 0 12px rgb(47 125 255 / 0.45);
+}
+.stage .act.is-skillbox {
+  background-image: linear-gradient(180deg, #f3ffb0 0%, #d6f25a 45%, #8aa61c 100%);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.6), inset 0 -3px 0 rgb(40 60 0 / 0.35), 0 0 0 1px #3d4d05, 0 4px 10px rgb(0 0 0 / 0.5), 0 0 12px rgb(214 242 90 / 0.4);
 }
 .stage .act:disabled {
-  filter: saturate(0.6);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.4);
+  filter: saturate(0.35) brightness(0.8);
+  animation: none;
 }
-/* Skill chips on monsters */
-.stage .act-chip.is-k { --tone: #ff8a00; }
-.stage .act-chip.is-y { --tone: #4aa8ff; }
-.stage .act-chip.is-z { --tone: #ff4d4d; }
-.stage .act-chip {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(0 0 0 / 0.2));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.25),
-    0 0 0 1px rgb(0 0 0 / 0.55),
-    0 3px 8px rgb(0 0 0 / 0.5),
-    0 0 8px color-mix(in srgb, var(--tone, #ff8a00) 35%, transparent);
-}
-.stage .act-chip svg {
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
-}
-/* Reset / Test / Trở về and Cài đặt (Menu left as is) */
+
+/* Reset / Test / Trở về: glossy red pills with a gold ring; Cài đặt: dark glass with gold ring */
 .stage .test-btn {
-  background-image: linear-gradient(180deg, #ff3a55 0%, #d0122d 55%, #9c0a20 100%);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+  background-image: linear-gradient(180deg, #ff6b7d 0%, #e01834 48%, #8e0718 100%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.35),
-    inset 0 -2px 0 rgb(0 0 0 / 0.3),
-    0 0 0 1px rgb(60 0 8 / 0.8),
-    0 3px 8px rgb(0 0 0 / 0.45);
+    inset 0 2px 0 rgb(255 255 255 / 0.45),
+    inset 0 -3px 0 rgb(0 0 0 / 0.3),
+    0 0 0 1.5px #ffd27a,
+    0 0 0 3px rgb(60 0 8 / 0.85),
+    0 4px 10px rgb(0 0 0 / 0.5);
 }
 .stage .help-btn {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(0 0 0 / 0.15));
-  border-color: rgb(240 196 98 / 0.55);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 3px 8px rgb(0 0 0 / 0.45);
+  color: #fbe7b0;
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(0 0 0 / 0.25));
+  border-color: rgb(240 196 98 / 0.75);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 0 0 1px rgb(0 0 0 / 0.6), 0 4px 10px rgb(0 0 0 / 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
-/* Notice board: same dark glass, framed with a thin gold rim and inner light */
+
+/* Notice board: dark glass panel inside a gold gradient frame, corner studs, inner glow */
 .stage .banner:not(.is-react) {
-  border: 1px solid rgb(240 196 98 / 0.42);
-  background-image: linear-gradient(180deg, rgb(255 230 170 / 0.07) 0%, transparent 30%, rgb(0 0 0 / 0.25) 100%);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at 0.55rem 0.55rem, #ffe7a0 0 2px, #9a6514 3px, transparent 4px) padding-box,
+    radial-gradient(circle at calc(100% - 0.55rem) 0.55rem, #ffe7a0 0 2px, #9a6514 3px, transparent 4px) padding-box,
+    radial-gradient(circle at 0.55rem calc(100% - 0.55rem), #ffe7a0 0 2px, #9a6514 3px, transparent 4px) padding-box,
+    radial-gradient(circle at calc(100% - 0.55rem) calc(100% - 0.55rem), #ffe7a0 0 2px, #9a6514 3px, transparent 4px) padding-box,
+    radial-gradient(ellipse at 50% -10%, rgb(255 200 110 / 0.18), transparent 60%) padding-box,
+    linear-gradient(180deg, rgb(30 20 12 / 0.84), rgb(10 7 5 / 0.88)) padding-box,
+    linear-gradient(135deg, #fff1b8 0%, #c98a1c 22%, #5e3a0c 45%, #e8b84a 65%, #fff1b8 82%, #a8701a 100%) border-box;
   box-shadow:
-    inset 0 1px 0 rgb(255 240 200 / 0.18),
-    inset 0 0 18px rgb(0 0 0 / 0.45),
-    0 0 0 1px rgb(0 0 0 / 0.5),
-    0 6px 16px rgb(0 0 0 / 0.45);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+    inset 0 0 0 1px rgb(255 225 150 / 0.22),
+    inset 0 0 26px rgb(0 0 0 / 0.6),
+    0 0 0 1px rgb(0 0 0 / 0.75),
+    0 10px 24px rgb(0 0 0 / 0.55),
+    0 0 20px rgb(255 190 80 / 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
-/* Reaction bar icons: same border colours, framed tiles with a soft glow */
+
+/* Reaction bar: medallion tiles with a gradient rim in their own colour */
+.stage .react-ico.is-attack { --tone: #ff4d4d; }
+.stage .react-ico.is-block { --tone: #f5c542; }
+.stage .react-ico.is-skill { --tone: #4aa8ff; }
+.stage .react-ico.is-buff { --tone: #3ddc6a; }
+.stage .react-ico.is-chain { --tone: #d7d7e2; }
+.stage .react-ico.is-skull { --tone: #f4f4f4; }
+.stage .react-ico.is-rebound { --tone: #ff4f93; }
 .stage .react-ico {
-  border-radius: 0.5rem;
-  background-image: radial-gradient(circle at 50% 35%, rgb(255 255 255 / 0.12), transparent 65%), linear-gradient(180deg, #1d140d, #0b0806);
+  border-color: transparent;
+  border-radius: 0.6rem;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tone, #f5c542) 38%, #1a120c) 0%, #0a0705 72%) padding-box,
+    linear-gradient(160deg, #ffffff 0%, var(--tone, #f5c542) 30%, color-mix(in srgb, var(--tone, #f5c542) 45%, #000) 70%, var(--tone, #f5c542) 100%) border-box;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.18),
-    0 0 0 1px rgb(0 0 0 / 0.6),
-    0 3px 8px rgb(0 0 0 / 0.5),
-    0 0 9px color-mix(in srgb, currentColor 40%, transparent);
+    inset 0 0 12px rgb(0 0 0 / 0.65),
+    inset 0 1px 0 rgb(255 255 255 / 0.25),
+    0 0 0 1px rgb(0 0 0 / 0.75),
+    0 4px 10px rgb(0 0 0 / 0.55),
+    0 0 14px color-mix(in srgb, var(--tone, #f5c542) 55%, transparent);
 }
-.stage .react-ico svg {
-  filter: drop-shadow(0 0 3px currentColor);
-}
-.stage .banner.is-react .act.ok {
-  background-image: linear-gradient(180deg, #5a9bff 0%, #2f7dff 55%, #1f5ed0 100%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 1px rgb(0 10 40 / 0.7), 0 3px 8px rgb(0 0 0 / 0.45);
-}
-/* Notice history dots: little gems with a rim and highlight; the picked one glows */
+.stage .react-ico svg { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 1px 1px rgb(0 0 0 / 0.8)); }
+.stage .banner.is-react .act.ok { animation: act-call 1.6s ease-in-out infinite; }
+
+/* Notice history: faceted gems in a gold setting; the open one burns bright */
 .stage .trail-dot {
-  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.7) 0 14%, transparent 34%), currentColor;
+  background:
+    radial-gradient(circle at 34% 28%, #fff 0 9%, rgb(255 255 255 / 0.55) 15%, transparent 36%),
+    radial-gradient(circle at 50% 115%, rgb(0 0 0 / 0.55), transparent 62%),
+    currentColor;
   box-shadow:
-    inset 0 -1px 2px rgb(0 0 0 / 0.45),
-    0 0 0 1px rgb(0 0 0 / 0.6),
-    0 1px 3px rgb(0 0 0 / 0.5);
+    0 0 0 1px #2a1a08,
+    0 0 0 2px #d9a441,
+    0 0 0 3px rgb(0 0 0 / 0.55),
+    0 0 6px color-mix(in srgb, currentColor 55%, transparent);
+  transition: transform 140ms ease-out;
 }
 .stage .trail-dot.is-on {
+  transform: scale(1.2);
   box-shadow:
-    inset 0 -1px 2px rgb(0 0 0 / 0.35),
-    0 0 0 1px rgb(255 255 255 / 0.85),
-    0 0 8px currentColor,
-    0 0 14px currentColor;
+    0 0 0 1px #2a1a08,
+    0 0 0 2px #fff2c2,
+    0 0 0 3px rgb(0 0 0 / 0.5),
+    0 0 10px currentColor,
+    0 0 18px currentColor;
 }
-/* Pop-up choice panels: same fills per kind, with a rim, depth and beveled buttons */
+
+/* Pop-up choice panels: keep each panel's colour, frame it in gold, add depth; bevel the buttons */
 .stage .ask-card {
-  border-radius: 0.8rem;
+  border-radius: 0.9rem;
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent 35%, rgb(0 0 0 / 0.28));
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 0 0 1px rgb(0 0 0 / 0.55),
-    0 10px 26px rgb(0 0 0 / 0.55);
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 0 20px rgb(0 0 0 / 0.35),
+    0 0 0 1px rgb(0 0 0 / 0.7),
+    0 0 0 2.5px rgb(232 184 74 / 0.75),
+    0 0 0 4px rgb(0 0 0 / 0.55),
+    0 14px 32px rgb(0 0 0 / 0.6);
 }
-.stage .ask-card p {
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
-}
+.stage .ask-card p { text-shadow: 0 1px 2px rgb(0 0 0 / 0.7); font-weight: 700; }
 .stage .ask-card button {
-  border-radius: 0.5rem;
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.12), rgb(0 0 0 / 0.18));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 2px 5px rgb(0 0 0 / 0.4);
+  border-radius: 0.55rem;
+  font-weight: 800;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.55);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.2) 0%, rgb(255 255 255 / 0.03) 48%, rgb(0 0 0 / 0.25) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), inset 0 -2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 7px rgb(0 0 0 / 0.45);
 }
 .stage .ask-card button.on {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 1px rgb(255 240 190 / 0.5), 0 0 10px rgb(255 210 110 / 0.35);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 0 0 1px rgb(0 0 0 / 0.55), 0 0 0 2px rgb(255 236 170 / 0.8), 0 0 14px rgb(255 210 110 / 0.55);
+}
+
+@keyframes act-shine {
+  0%, 62% { left: -70%; }
+  100% { left: 140%; }
+}
+@keyframes act-call {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.28) drop-shadow(0 0 8px var(--glow, #4aa8ff)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage .actions .act::after,
+  .stage .actions .act.is-pass,
+  .stage .banner.is-react .act.ok { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-art,
