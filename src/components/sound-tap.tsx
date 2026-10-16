@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { playTap, playUi, unlockSound, type UiCue } from "@/lib/sfx";
 
+/** In-match buttons: big turn actions confirm, other buttons select, cards and small chrome are soft. */
+function stageCue(node: Element): UiCue {
+  if (node.matches(".act.is-end, .act.is-pass, .act.ok, .vow-ok")) return "confirm";
+  if (node.matches(".act, .act-chip, .ask-card button")) return "select";
+  return "soft";
+}
+
 export function SoundTap() {
   useEffect(() => {
     const onDown = (event: PointerEvent) => {
@@ -14,6 +21,7 @@ export function SoundTap() {
       if (cue) playUi(cue);
       else if (node.closest(".menu-page"))
         playUi(node.matches(".watch-back, .tuner-back") ? "soft" : "select");
+      else if (node.closest(".stage")) playUi(stageCue(node));
       else playTap();
     };
     window.addEventListener("pointerdown", onDown);

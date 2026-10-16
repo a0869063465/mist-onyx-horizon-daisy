@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { actPack, ailmentHolds, fxOn, tideOn } from "@/lib/fx-prefs";
+import { fxStyle } from "@/lib/fx-kinds";
 import { subscribeFx, type FxEvent, type FxPack, type FxSpot } from "@/lib/spectacle";
 
 type Chunk = {
@@ -462,6 +463,10 @@ export function Spectacle() {
     };
 
     const onFx = (event: FxEvent) => {
+      if (fxStyle() === "new") {
+        ailmentMarks = [];
+        return;
+      }
       if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");

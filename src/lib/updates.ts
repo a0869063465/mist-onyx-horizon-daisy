@@ -498,6 +498,8 @@ export const PENDING_NOTES: string[] = [
   "Bàn đấu phủ kín màn hình: thêm cảnh cổng đá, bậc thang, thác nước và đuốc quanh bàn. Bàn đấu, bố cục và vị trí các ô giữ nguyên.",
   "Làm đẹp nút và bảng trong trận: Rút quái, Rút phép, Hết lượt, nút kỹ năng trên quái, bảng thông báo, thanh phản ứng, chấm lịch sử, bảng chọn và nút Reset, Test, Trở về, Cài đặt. Màu, vị trí và cỡ giữ nguyên.",
   "Tên và chỉ số trên lá bài to hơn 30% so với cỡ gốc, ở mọi nơi. Bố cục đã lưu giữ nguyên.",
+  "Nút trong trận dùng tiếng bấm mới: Hết lượt, Bỏ qua và OK là tiếng xác nhận, các nút khác là tiếng chọn, bấm lá và nút nhỏ là tiếng nhẹ.",
+  "Hiệu ứng trong trận làm mới theo hệ của từng lá: lửa, nước, sấm, bóng tối, thánh, rừng, đá, ma thuật, máy, máu, thú. Mỗi lá có kiểu đòn riêng: chém, vuốt, đập, đâm, phép, bắn. Tuỳ chỉnh, Hiệu ứng có nút chọn Mới hoặc Cũ để quay về hiệu ứng trước đây.",
 ];
 
 function remarkOf(notes: string[]) {

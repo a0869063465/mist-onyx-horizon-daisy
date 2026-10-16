@@ -5,6 +5,7 @@ import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
 import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { fieldBindsFor } from "@/lib/field-chips";
@@ -2063,6 +2064,9 @@ function PlayPage() {
           },
         }
       : rawShown;
+    const fxSourceUid = strikeUid(prev) || strikeUid(duel);
+    const fxCard = (fxSourceUid ? (fieldMon(prev, fxSourceUid) ?? fieldMon(duel, fxSourceUid))?.cardId : undefined)
+      ?? (spent || boomSpell || duel.skill?.id || undefined);
     if (shown) {
       if (shown.shake && !quiet) emitFx({ t: "shake", act: "shake", spot: "center", power: 1 });
       const casting = shown.burst?.tone === "heal" ? "healSpell" : shown.burst ? "spell" : null;
@@ -2099,6 +2103,7 @@ function PlayPage() {
             y: item.y,
             color: item.text === "Hạ" ? "#ffb020" : "#ff4d4d",
             power: item.text === "Hạ" ? 1.4 : 0.95,
+            card: fxCard,
           });
         }
       }
@@ -2106,7 +2111,7 @@ function PlayPage() {
         const [raw, indexRaw] = key.split("-");
         const side = Number(raw) as Side;
         const spot = SLOT_POS[screenSide(side, viewerNow)][Number(indexRaw)];
-        if (spot) emitFx({ t: "ring", act: "summon", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y, color: "#ffb347", power: 1.15 });
+        if (spot) emitFx({ t: "ring", act: "summon", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y, color: "#ffb347", power: 1.15, card: duel.players[side].field[Number(indexRaw)]?.cardId });
       }
       for (const uid of shown.motion.lunges) {
         let fromSide: Side = 0;
@@ -2140,7 +2145,7 @@ function PlayPage() {
               : null;
         if (from && to && duel.pending?.kind !== "beam") {
           const shooter = fieldMon(duel, uid);
-          if (!shooter?.horn && !shooter?.gaze) emitFx({ t: "beam", act: "attack", x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: "#ff8a00" });
+          if (!shooter?.horn && !shooter?.gaze) emitFx({ t: "beam", act: "attack", x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: "#ff8a00", card: shooter?.cardId });
         }
       }
     }
@@ -2235,15 +2240,15 @@ function PlayPage() {
         if (point) {
           for (let i = 0; i < count; i += 1) {
             window.setTimeout(() => {
-              emitFx({ t: "burst", act: "spell", spot: "target", x: point.x, y: point.y, color: "#ff4d4d", power: 1.1 });
+              emitFx({ t: "burst", act: "spell", spot: "target", x: point.x, y: point.y, color: "#ff4d4d", power: 1.1, card: fxCard });
             }, i * 420);
           }
         }
-        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7 });
+        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
         for (let i = 1; i < count; i += 1) playCue("spellBoom", i * 0.42);
       } else if (!started && (hits.length > 0 || finished || stamped || look === "spell")) {
-        for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1 });
-        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7 });
+        for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
+        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
       }
     }
     const beamDrops = laserDrops(prev, duel, viewerNow);
@@ -2281,7 +2286,7 @@ function PlayPage() {
           setLinger((current) => current.map((item) => (ids.has(item.id) ? { ...item, fading: true } : item)));
           if (!quiet) {
             setFloaters((current) => [...current, ...falls.map((fall) => fall.floater)]);
-            for (const fall of falls) emitFx({ t: "burst", act: "kill", spot: fall.floater.spot, x: fall.floater.x, y: fall.floater.y, color: "#ffb020", power: 1.4 });
+            for (const fall of falls) emitFx({ t: "burst", act: "kill", spot: fall.floater.spot, x: fall.floater.x, y: fall.floater.y, color: "#ffb020", power: 1.4, card: fxCard });
             window.setTimeout(() => setFloaters((current) => current.filter((item) => !ids.has(item.id))), 1500);
           }
         }, fadeAt);
@@ -4776,6 +4781,7 @@ function PlayPage() {
           </div>
         ) : null}
         <Spectacle />
+        <ArenaFx />
         <FireBurst />
         <BoltBurst />
         <LaserBeam />

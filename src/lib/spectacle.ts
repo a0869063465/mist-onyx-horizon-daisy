@@ -3,9 +3,9 @@ export type FxSpot = "self" | "target" | "center";
 export type FxPack = "now" | "m1";
 
 export type FxEvent =
-  | { t: "burst"; act: FxAct; spot: FxSpot; x: number; y: number; color: string; power: number; pack?: FxPack }
-  | { t: "ring"; act: FxAct; spot: FxSpot; x: number; y: number; color: string; power: number; pack?: FxPack }
-  | { t: "beam"; act: "attack"; x1: number; y1: number; x2: number; y2: number; color: string; pack?: FxPack }
+  | { t: "burst"; act: FxAct; spot: FxSpot; x: number; y: number; color: string; power: number; pack?: FxPack; card?: string }
+  | { t: "ring"; act: FxAct; spot: FxSpot; x: number; y: number; color: string; power: number; pack?: FxPack; card?: string }
+  | { t: "beam"; act: "attack"; x1: number; y1: number; x2: number; y2: number; color: string; pack?: FxPack; card?: string }
   | { t: "shake"; act: "shake"; spot: "center"; power: number; pack?: FxPack }
   | { t: "ailments"; act: "ailment"; pack?: FxPack; marks: { id: string; x: number; y: number; spot: "self" | "target" }[] }
   | { t: "fire"; x: number; y: number; pack?: FxPack }
