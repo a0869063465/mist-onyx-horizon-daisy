@@ -117,7 +117,7 @@ function DeckPage() {
   }
 
   return (
-    <main className="builder">
+    <main className="builder menu-page is-sub">
       <header className="deck-head">
         <Link to="/" className="chip">
           {tr("Về sân")}
@@ -649,7 +649,7 @@ function DeckPlans({ ids, onBack }: { ids: string[]; onBack: () => void }) {
   const groups = deckTactics(ids, loadStrategies());
   const gray = new Set(FORMS.map((card) => card.id));
   return (
-    <main className="watch is-wide deck-plans">
+    <main className="watch is-wide deck-plans menu-page">
       <button type="button" className="watch-back" onClick={onBack}>
         {tr("Trở về")}
       </button>

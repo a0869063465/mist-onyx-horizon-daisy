@@ -487,6 +487,7 @@ export const PENDING_NOTES: string[] = [
   "Kẻ giám hộ linh hồn có thủ gốc 1.",
   "Màn hình chính làm lại: ảnh bìa mới phủ kín màn hình, nút Chơi vàng, nút Điều chỉnh deck và hai nút nhỏ Tuỳ chỉnh, Thông tin. Mỗi nút có tiếng bấm riêng.",
   "Mục Chơi (chọn cách chơi) và màn Tuỳ chỉnh đổi cùng kiểu với màn hình chính: nền ảnh bìa, nút vàng và xanh, chữ tiêu đề vàng, tiếng bấm riêng. Các màn chỉnh bên trong Tuỳ chỉnh giữ nguyên.",
+  "Các màn còn lại (Thông tin, Cập nhật, Chiến thuật, bộ bài, Hộp thư và các màn chỉnh trong Tuỳ chỉnh) đổi cùng kiểu nền và nút. Bàn đấu không đổi.",
 ];
 
 function remarkOf(notes: string[]) {

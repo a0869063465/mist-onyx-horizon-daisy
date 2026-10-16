@@ -13,7 +13,7 @@ function Inbox() {
     setNotes(rows);
   };
   return (
-    <main className="inbox">
+    <main className="inbox menu-page">
       <p className="home-links">
         <Link to="/">Màn hình chính</Link>
       </p>

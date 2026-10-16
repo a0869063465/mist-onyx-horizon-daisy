@@ -1245,6 +1245,84 @@
   border: 1px solid rgb(240 196 98 / 0.55);
   border-radius: 0.8rem;
 }
+.menu-page.is-sub > * {
+  animation: none;
+}
+.watch.is-wide.menu-page,
+.watch.is-plan.menu-page {
+  width: min(100%, 64rem);
+  max-width: 64rem;
+}
+.watch.is-wide.menu-page h1 {
+  font-size: 1.45rem;
+}
+.inbox.menu-page {
+  width: min(100%, 28rem);
+  margin: 0 auto;
+  padding: max(1rem, env(safe-area-inset-top)) 1.1rem 1.5rem;
+}
+.menu-page .home-links {
+  margin: 0;
+  justify-content: flex-start;
+}
+.menu-page .home-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.3rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  color: #fbe7b0;
+  font-size: 0.85rem;
+  background: rgb(8 12 28 / 0.62);
+  border: 1px solid rgb(240 196 98 / 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.menu-page .watch-card,
+.menu-page .plan,
+.menu-page .inbox li {
+  border: 1px solid rgb(240 196 98 / 0.35);
+  border-radius: 0.95rem;
+  background: rgb(8 12 28 / 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.menu-page .watch-card h2,
+.menu-page .watch-note h3,
+.menu-page .deck-plan-band > h2,
+.menu-page .inbox strong {
+  color: #ffd76a;
+}
+.menu-page .act.is-export {
+  color: #fff;
+  background: linear-gradient(180deg, #e0243f 0%, #96101f 100%);
+  border: 1.5px solid #ff9aa8;
+  box-shadow: 0 8px 22px rgb(220 40 70 / 0.25);
+}
+.inbox.menu-page li {
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid rgb(240 196 98 / 0.35);
+}
+.menu-page .chip,
+.menu-page .pad-btn {
+  color: #f4e4bd;
+  background: rgb(8 12 28 / 0.62);
+  border: 1px solid rgb(240 196 98 / 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.menu-page .chip.on,
+.menu-page .save {
+  color: #3a1d02;
+  background: linear-gradient(180deg, #fff1b8 0%, #ffd45c 34%, #f2a71b 70%, #c9740a 100%);
+  border: 1.5px solid #fff0b0;
+  box-shadow: 0 0 0 1.5px #7a3f05, 0 6px 18px rgb(255 170 30 / 0.3);
+}
+.menu-page .chip:active,
+.menu-page .pad-btn:active,
+.menu-page .save:active {
+  transform: scale(0.96);
+}
 @media (prefers-reduced-motion: reduce) {
   .home-art,
   .home-play,
@@ -3814,10 +3892,12 @@ button.trail-dot.is-on {
   flex-direction: column;
   gap: 0.7rem;
   padding: 0.85rem;
-  background: var(--color-gold);
-  border: 1px solid var(--color-gold-ink);
+  background: rgb(8 12 28 / 0.88);
+  border: 1px solid rgb(240 196 98 / 0.6);
   border-radius: 0.8rem;
-  color: var(--color-gold-ink);
+  color: #f4e4bd;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .mail-form label {
   display: flex;
@@ -3828,10 +3908,10 @@ button.trail-dot.is-on {
 .mail-form input,
 .mail-form textarea {
   width: 100%;
-  border: 1px solid var(--color-gold-ink);
+  border: 1px solid rgb(240 196 98 / 0.55);
   border-radius: 0.45rem;
-  background: color-mix(in srgb, white 28%, var(--color-gold));
-  color: var(--color-gold-ink);
+  background: rgb(4 6 16 / 0.72);
+  color: #fbe7b0;
   padding: 0.45rem 0.55rem;
   font: inherit;
 }
@@ -3849,9 +3929,9 @@ button.trail-dot.is-on {
   min-width: 4.5rem;
   padding: 0.4rem 0.8rem;
   border-radius: 0.45rem;
-  border: 1px solid var(--color-gold-ink);
-  background: var(--color-gold-ink);
-  color: var(--color-gold);
+  border: 1.5px solid #fff0b0;
+  background: linear-gradient(180deg, #ffd45c 0%, #f2a71b 100%);
+  color: #3a1d02;
   font-weight: 800;
   text-align: center;
 }
@@ -3875,7 +3955,7 @@ button.trail-dot.is-on {
   gap: 0.7rem;
 }
 .mail-box li {
-  border-top: 1px solid color-mix(in srgb, var(--color-gold-ink) 35%, transparent);
+  border-top: 1px solid rgb(240 196 98 / 0.3);
   padding-top: 0.55rem;
 }
 .mail-box strong,
@@ -3883,7 +3963,7 @@ button.trail-dot.is-on {
   display: block;
 }
 .mail-box span {
-  color: color-mix(in srgb, var(--color-gold-ink) 72%, transparent);
+  color: #b7a77f;
   font-size: 0.85rem;
 }
 .mail-box p {

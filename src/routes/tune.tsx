@@ -194,7 +194,7 @@ function SoundTune({ onBack }: { onBack: () => void }) {
     setTap(tapVolume());
   }, []);
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Quay lại
       </button>
@@ -434,7 +434,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Về tuỳ chỉnh
       </button>
@@ -731,7 +731,7 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
   }
 
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Về tuỳ chỉnh
       </button>
@@ -844,7 +844,7 @@ function FieldTune({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Về tuỳ chỉnh
       </button>
@@ -1014,7 +1014,7 @@ function CardTextTune({ onBack }: { onBack: () => void }) {
   const list = pile === "monster" ? roster : spellRoster;
   let lastGroup = "";
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Quay lại
       </button>
@@ -1103,7 +1103,7 @@ function MonsterEdit({
     setDraft({ ...draft, [key]: Number.isFinite(next) ? next : 0 });
   };
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Danh sách
       </button>
@@ -1194,7 +1194,7 @@ function SpellEdit({
 }) {
   const [draft, setDraft] = useState(() => spellCard(base.id) ?? base);
   return (
-    <main className="tuner">
+    <main className="tuner menu-page is-sub">
       <button type="button" className="tuner-back" onClick={onBack}>
         Danh sách
       </button>
