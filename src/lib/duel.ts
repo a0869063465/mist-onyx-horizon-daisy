@@ -2795,7 +2795,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     ...struck.mon,
     charge: attacker.charge + (attackerDodged ? 1 : 0),
     dim: true,
-    def: defender.cardId === "khung-long-vay-kiem" ? attacker.def - skillLoss(defender.cardId, "def", 1) : struck.mon.def,
+    def: struck.mon.def,
     mdef: defender.cardId === "khung-long-vay-kiem" ? attacker.mdef - skillLoss(defender.cardId, "mdef", 1) : struck.mon.mdef,
   }));
   const hornRaw = bolt ? liveAtk(attacker) + plate.p + plate.s : attacker.horn === "plus" ? Math.min(8, atk) : attacker.horn === "splash" ? Math.min(4, atk) : atk;
@@ -2888,7 +2888,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const nextDefender = {
     ...defenderBody,
     charge: defender.charge + (defenderDodged ? 1 : 0),
-    def: attacker.cardId === "khung-long-vay-kiem" ? defender.def - skillLoss(attacker.cardId, "def", 1) : defenderBody.def,
+    def: defenderBody.def,
     mdef: attacker.cardId === "khung-long-vay-kiem" ? defender.mdef - skillLoss(attacker.cardId, "mdef", 1) : defenderBody.mdef,
     dim: true,
   };

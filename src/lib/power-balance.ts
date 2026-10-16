@@ -300,6 +300,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     stats: { atk: { from: 2, to: 0 }, def: { from: 0, to: 2 }, hp: { from: 5, to: 3 } },
   },
+  {
+    id: "khung-long-vay-kiem",
+    at: "2026-10-16",
+    wave: 26,
+    tone: "shift",
+    notes: ["Vãy phá giáp giảm 2 thủ phép, thay vì 1 thủ và 1 thủ phép"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

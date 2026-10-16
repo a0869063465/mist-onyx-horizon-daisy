@@ -178,7 +178,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Khủng long vãy kiếm",
     "stars": 2,
     "gems": 1,
-    "skill": "**__Vãy phá giáp__**: \nGiao tranh giáp lá cà làm giảm 1 thủ và 1 thủ phép của quái địch. Có thể về số âm. Đòn vật lý sau cộng số thủ âm. Phép sau cộng số thủ phép âm.",
+    "skill": "**__Vãy phá giáp__**: \nGiao tranh giáp lá cà làm giảm 2 thủ phép của quái địch. Có thể về số âm. Phép sau cộng số thủ phép âm.",
     "atk": 1,
     "def": 3,
     "mdef": 0,
