@@ -1365,50 +1365,12 @@
   -webkit-text-stroke-width: 0.1em;
   text-shadow: 0 0.06em 0.1em rgb(0 0 0 / 0.9), 0 0 0.5em rgb(0 0 0 / 0.75);
 }
-.home-play,
-.home-btn,
-.home-chip,
-.home-wins,
-.mail-open,
-.menu-page h1,
 .menu-page:not(.tuner) .socket,
-.menu-page .act,
-.menu-page .tuner-save,
-.menu-page .tuner-item,
-.menu-page .watch-back,
-.menu-page .tuner-back,
-.menu-page .home-links a,
-.menu-page .chip,
-.menu-page .save,
-.menu-page .pad-btn,
-.menu-page .mode-list h2,
-.menu-page .room-box h2 {
+.menu-page:not(.tuner) .socket.is-name {
   font-family: "Bangers", system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.04em;
 }
-.home-play { font-size: 2.15rem; }
-.home-btn { font-size: 1.4rem; }
-.home-chip { font-size: 1.02rem; line-height: 1.05; }
-.home-wins { font-size: 1.05rem; }
-.home-wins strong { font-size: 1.25rem; }
-.mail-open { font-size: 1.05rem; }
-.menu-page h1 { font-size: 2.35rem; }
-.watch.is-wide.menu-page h1 { font-size: 1.75rem; }
-.menu-page .act,
-.menu-page .tuner-save { font-size: 1.35rem; }
-.menu-page .tuner-save.alt { font-size: 1.2rem; }
-.menu-page .mode-list > .act:first-child,
-.menu-page .room-box > .act:not(.alt):first-of-type { font-size: 2rem; }
-.menu-page .tuner-item,
-.menu-page .chip,
-.menu-page .save,
-.menu-page .pad-btn,
-.menu-page .watch-back,
-.menu-page .tuner-back,
-.menu-page .home-links a { font-size: 1.1rem; }
-.menu-page .mode-list h2,
-.menu-page .room-box h2 { font-size: 1.05rem; }
 @media (prefers-reduced-motion: reduce) {
   .home-art,
   .home-play,
