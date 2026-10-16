@@ -79,12 +79,12 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "mana": 1,
     "atk": 5,
     "def": 1,
-    "mdef": 2,
+    "mdef": 3,
     "hp": 6,
     "text": "6fe50892",
     "added": null,
-    "powerAt": "2026-10-08",
-    "powerTone": "down",
+    "powerAt": "2026-10-16",
+    "powerTone": "up",
     "shiftAt": null
   },
   "trieu-hoi-ac-ma": {

@@ -91,7 +91,7 @@ export const MONSTERS: MonsterCard[] = [
     "skill": "**__Chiến lợi phẩm__**: \nHạ gục mục tiêu trong chiến trường\n- Quái 1-2 sao cho 2 điểm, 3 sao cho 3, 4 sao cho 4.\n- Hai điểm đầu tiên hồi máu. Điểm dư sau đó chuyển thành máu tối đa, công, rồi phòng ngự.",
     "atk": 5,
     "def": 1,
-    "mdef": 2,
+    "mdef": 3,
     "hp": 6,
     "art": "bo-tot"
   },

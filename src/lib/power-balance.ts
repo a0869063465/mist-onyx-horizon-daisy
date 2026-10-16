@@ -314,6 +314,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "down",
     notes: ["Sát thương chuẩn của Hoả thần long giảm xuống 2 (3)"],
   },
+  {
+    id: "dau-si-bo-tot",
+    at: "2026-10-16",
+    wave: 28,
+    tone: "up",
+    stats: { mdef: { from: 2, to: 3 } },
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];
