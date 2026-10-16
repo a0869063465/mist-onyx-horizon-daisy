@@ -293,6 +293,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { atk: { from: 4, to: 2 } },
     notes: ["Sát thương gây ra khi ẩn mình là sát thương chuẩn"],
   },
+  {
+    id: "ga-he-dang-so",
+    at: "2026-10-16",
+    wave: 25,
+    tone: "shift",
+    stats: { atk: { from: 2, to: 0 }, def: { from: 0, to: 2 }, hp: { from: 5, to: 3 } },
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];
