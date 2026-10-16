@@ -2778,7 +2778,8 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const defenderDodged = rabbitDodge(defender, attacker);
   const beam = Boolean(attacker.horn || attacker.gaze || bolt);
   if (shadeHidden(attacker) || (shadeHidden(defender) && !beam) || defender.cage) counter = 0;
-  const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt);
+  const hiddenTrue = shadeHidden(attacker) && !beam;
+  const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt) || hiddenTrue;
   const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) ? riderPackets(defender, attacker, alliesA) : null;
   const blockSpell = !attackerDodged && !beam && !counterBlow && defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell" && counter > 0;
   const counterRaw = outgoing(defender, counter);
@@ -4323,6 +4324,8 @@ function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Du
   const hornRaw = attacker.horn === "plus" ? Math.min(8, liveAtk(attacker)) : attacker.horn === "splash" ? Math.min(4, liveAtk(attacker)) : liveAtk(attacker);
   const hornDealt = attacker.horn && !rabbitDodge(defender, attacker) ? spellLanded(defender, hornRaw, them.field, attacker) : attacker.horn ? 0 : 0;
   const gazeDealt = attacker.gaze && !attacker.horn && !rabbitDodge(defender, attacker) ? truLanded(defender, liveAtk(attacker), them.field, attacker) : 0;
+  const hiddenStrike = shadeHidden(attacker) && !attacker.horn && !attacker.gaze && !attacker.bolt;
+  const hiddenDealt = hiddenStrike && !rabbitDodge(defender, attacker) ? truLanded(defender, liveAtk(attacker), them.field, attacker) : 0;
   let splashLine = "";
   let splash = 0;
   let others: FieldMon[] = [];
@@ -4407,6 +4410,8 @@ function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Du
             ? `Roi sấm gây ${boltDealt} sát thương phép vào ${cardOf(defender).name}.${tail}`
             : attacker.gaze
             ? `${cardOf(attacker).name} bắn tia sáng vào ${cardOf(defender).name}, gây ${gazeDealt} sát thương chuẩn.${tail}`
+            : hiddenStrike
+              ? `${cardOf(attacker).name} ám sát ${cardOf(defender).name}, gây ${hiddenDealt} sát thương chuẩn.${tail}`
             : riderLine
               ? `${riderLine}${tail}`
               : attacker.cardId === PREY && attacker.preyKind === "spell"
@@ -4790,6 +4795,7 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
     const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
     next = soul.state;
     const gazeOnly = Boolean(attacker.gaze && !attacker.horn && !attacker.bolt);
+    const hiddenOnly = shadeHidden(attacker) && !attacker.horn && !attacker.gaze && !attacker.bolt;
     const beamed = Boolean(attacker.horn || attacker.bolt);
     const how = beamed ? "đỡ phép" : withSkill ? "chặn bằng kỹ năng" : "chặn bằng giáp lá cà";
     const plate = plateBank(attacker);
@@ -4808,10 +4814,10 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
             guarding.field,
             attacker,
           )
-      : gazeOnly && !rabbitDodge(body, attacker)
+      : (gazeOnly || hiddenOnly) && !rabbitDodge(body, attacker)
         ? truLanded(body, liveAtk(attacker), guarding.field, attacker)
         : 0;
-    const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly ? `, chịu ${taken} sát thương chuẩn` : "";
+    const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly || hiddenOnly ? `, chịu ${taken} sát thương chuẩn` : "";
     const blocked = releaseLegend({
       ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${cardOf(body).name} né đòn.` : ""}${soul.line}`, beamed || gazeOnly ? "spell" : "hit"),
       step: "main",
@@ -4853,7 +4859,8 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
   const beamed = Boolean(attacker.horn || attacker.gaze || attacker.bolt);
   const guardSpell = !attacker.horn && !attacker.gaze && !bolt && guardStrikeKind(attacker, you.roster) === "spell";
   const preyHit = attacker.cardId === PREY && attacker.preyKind === "spell" ? "sát thương phép" : attacker.cardId === PREY && attacker.preyKind === "tru" ? "sát thương chuẩn" : "";
-  const faceWord = guardSpell ? "sát thương phép" : preyHit || "máu";
+  const hiddenFace = shadeHidden(attacker) && !beamed ? "sát thương chuẩn" : "";
+  const faceWord = guardSpell ? "sát thương phép" : preyHit || hiddenFace || "máu";
   next = checkWinner(note(next, beamed ? `${cardOf(attacker).name} gây ${dealt} ${gazeTrue ? "sát thương chuẩn" : "sát thương phép"} lên người chơi.${soul.line}` : `${cardOf(attacker).name} gây ${dealt} ${faceWord} lên người chơi.${soul.line}`, beamed || guardSpell || preyHit === "sát thương phép" ? "spell" : "hit"));
   return markPrey(tideSwing(finishParley(mysticSecond(swingSword(growSmash(becomePerfect(releaseLegend({ ...next, step: next.winner !== null ? "over" : "main", pending: null }), side, attacker.uid), attacker.uid, smashPlain(attacker)), attacker.uid, swordSwing(attacker)), attacker.uid, null)), foe, attacker.uid), side, attacker, "face", true, spent.hp <= 0);
 }
