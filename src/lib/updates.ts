@@ -489,7 +489,7 @@ export const PENDING_NOTES: string[] = [
   "Mục Chơi (chọn cách chơi) và màn Tuỳ chỉnh đổi cùng kiểu với màn hình chính: nền ảnh bìa, nút vàng và xanh, chữ tiêu đề vàng, tiếng bấm riêng. Các màn chỉnh bên trong Tuỳ chỉnh giữ nguyên.",
   "Các màn còn lại (Thông tin, Cập nhật, Chiến thuật, bộ bài, Hộp thư và các màn chỉnh trong Tuỳ chỉnh) đổi cùng kiểu nền và nút. Bàn đấu không đổi.",
   "Chữ trên lá bài ở bộ bài và chiến thuật có viền tối và bóng mềm. Kích cỡ và vị trí chữ giữ nguyên. Lá ở bàn đấu và màn xem trước Tuỳ chỉnh không đổi.",
-  "Chữ trên lá bài ở bộ bài và chiến thuật đổi sang font Bangers, có đủ dấu tiếng Việt. Cỡ chữ và vị trí giữ nguyên. Lá ở bàn đấu và màn xem trước Tuỳ chỉnh không đổi.",
+  "Tên và chỉ số trên lá bài đổi sang font Bangers ở mọi nơi: bộ bài, chiến thuật, tay bài, lá trên sân và xem trước Tuỳ chỉnh. Cỡ chữ và vị trí giữ nguyên. Nút và tiêu đề menu dùng font Paytone One và Baloo 2.",
 ];
 
 function remarkOf(notes: string[]) {
