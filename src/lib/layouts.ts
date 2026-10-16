@@ -1,3 +1,4 @@
+import { boardEnv, ENV_BOARDS } from "./env-boards.ts";
 export type HudKey =
   | "foeHp"
   | "foeOrb"
@@ -47,7 +48,7 @@ export const DEFAULT_BOARD: Record<HudKey, Mark> = {
 export type Spot = { x: number; y: number; size: number; width: number; height: number; hidden?: boolean };
 export type Notice = { x: number; y: number; w: number; h: number; font: number; hidden?: boolean };
 export type Trail = { x: number; y: number; w: number; h: number; dot: number; glow: number; hidden?: boolean };
-export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail };
+export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot };
 
 export const DEFAULT_NOTICE: Notice = { x: 8.7, y: 36.8, w: 70, h: 21, font: 4.8, hidden: false };
 export const DEFAULT_TRAIL: Trail = { x: 1.2, y: 36.8, w: 7.2, h: 21, dot: 1.6, glow: 3, hidden: false };
@@ -55,6 +56,8 @@ export const DEFAULT_REACTION: Notice = { x: 74, y: 34, w: 20, h: 28, font: 4.2,
 export const DEFAULT_STACK: Spot = { x: 83.4, y: 72.6, size: 3.1, width: 16, height: 10, hidden: false };
 export const DEFAULT_ENV: Spot = { x: 7.6, y: 58.4, size: 3.6, width: 22, height: 5, hidden: false };
 export const DEFAULT_ENV_FOE: Spot = { x: 76.4, y: 36.1, size: 3.6, width: 22, height: 5, hidden: false };
+/** Rút quái / Rút phép / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
+export const DEFAULT_ACTIONS: Spot = { x: 89.5, y: 52, size: 1, width: 18, height: 20, hidden: false };
 
 export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
   marks: DEFAULT_BOARD,
@@ -64,6 +67,7 @@ export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
   stack: DEFAULT_STACK,
   env: DEFAULT_ENV,
   envFoe: DEFAULT_ENV_FOE,
+  actions: DEFAULT_ACTIONS,
 };
 
 export type CardKey = "stars" | "gems" | "def" | "mdef" | "atk" | "hp" | "name" | "fresh";
@@ -226,9 +230,20 @@ function asStack(value: unknown): Spot {
   return { ...base, hidden: raw.hidden === true };
 }
 
-export function loadBoard(): BoardLayout {
+function boardKey(env?: string) {
+  return env ? `${BOARD_KEY}:${env}` : BOARD_KEY;
+}
+
+function asActions(value: unknown): Spot {
+  const spot = asSpot(value, DEFAULT_ACTIONS);
+  return { ...spot, hidden: false };
+}
+
+/** Layout for the default board, or for one environment's board (falls back to the default layout until saved). */
+export function loadBoard(env?: string): BoardLayout {
   publishLayout();
-  const raw = read(BOARD_KEY) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
+  const own = env ? read(boardKey(env)) : null;
+  const raw = (own ?? read(BOARD_KEY)) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
   const marks = { ...DEFAULT_BOARD };
   const source = raw?.marks ?? (raw && typeof raw.foeHp?.x === "number" ? raw : DEFAULT_BOARD);
   for (const key of Object.keys(DEFAULT_BOARD) as HudKey[]) {
@@ -243,11 +258,44 @@ export function loadBoard(): BoardLayout {
     stack: asStack(raw?.stack),
     env: asEnv(raw?.env),
     envFoe: raw?.envFoe ? asStack(raw.envFoe) : { ...DEFAULT_ENV_FOE },
+    actions: asActions(raw?.actions),
   };
 }
 
-export function saveBoard(layout: BoardLayout) {
-  localStorage.setItem(BOARD_KEY, JSON.stringify(layout));
+export function saveBoard(layout: BoardLayout, env?: string) {
+  localStorage.setItem(boardKey(env), JSON.stringify(layout));
+}
+
+/** Drop an environment's own layout so it follows the default board layout again. */
+export function clearBoard(env: string) {
+  localStorage.removeItem(boardKey(env));
+}
+
+/** Environments that have their own saved layout. */
+export function savedBoards(): Record<string, BoardLayout> {
+  const out: Record<string, BoardLayout> = {};
+  for (const env of Object.keys(ENV_BOARDS)) if (read(boardKey(env))) out[env] = loadBoard(env);
+  return out;
+}
+
+const TOP_MARKS: HudKey[] = ["foeHp", "foeOrb", "foeFlask", "foeStars", "foeGems", "foeHand", "foeReserve"];
+
+/** In a match: the top half follows the opponent's environment layout, the bottom half follows yours. */
+export function matchBoard(topEnv: string | null | undefined, bottomEnv: string | null | undefined): BoardLayout {
+  const top = loadBoard(boardEnv(topEnv));
+  const bottom = loadBoard(boardEnv(bottomEnv));
+  const marks = { ...bottom.marks };
+  for (const key of TOP_MARKS) marks[key] = top.marks[key];
+  return {
+    marks,
+    notice: top.notice,
+    trail: top.trail,
+    reaction: top.reaction,
+    envFoe: top.envFoe,
+    env: bottom.env,
+    stack: bottom.stack,
+    actions: bottom.actions,
+  };
 }
 
 function loadSpots<K extends string>(key: string, defaults: Record<K, Spot>): Record<K, Spot> {

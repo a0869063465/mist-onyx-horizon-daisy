@@ -500,6 +500,8 @@ export const PENDING_NOTES: string[] = [
   "Tên và chỉ số trên lá bài to hơn 30% so với cỡ gốc, ở mọi nơi. Bố cục đã lưu giữ nguyên.",
   "Nút trong trận dùng tiếng bấm mới: Hết lượt, Bỏ qua và OK là tiếng xác nhận, các nút khác là tiếng chọn, bấm lá và nút nhỏ là tiếng nhẹ.",
   "Hiệu ứng trong trận làm mới theo hệ của từng lá: lửa, nước, sấm, bóng tối, thánh, rừng, đá, ma thuật, máy, máu, thú. Mỗi lá có kiểu đòn riêng: chém, vuốt, đập, đâm, phép, bắn. Tuỳ chỉnh, Hiệu ứng có nút chọn Mới hoặc Cũ để quay về hiệu ứng trước đây.",
+  "Bàn đấu đổi theo lá môi trường: nửa trên theo môi trường của đối thủ, nửa dưới theo môi trường của bạn, nối bằng đường chéo mờ tự nhiên. Có Thảo nguyên, Đất đá, Núi, Rừng rậm và Bóng tối.",
+  "Tuỳ chỉnh, Điều chỉnh bàn chơi có nút chọn môi trường, lưu bố cục riêng cho từng môi trường. Thêm mục chỉnh vị trí và cỡ chữ cho khối nút Rút quái, Rút phép, Hết lượt.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -105,7 +105,8 @@ import {
   type Side,
 } from "@/lib/duel";
 import { findFusion, findKnightFusion } from "@/lib/fusion";
-import { loadAlertLook, loadBoard, loadField, type FieldKey } from "@/lib/layouts";
+import { DEFAULT_ACTIONS, loadAlertLook, loadField, matchBoard, type FieldKey } from "@/lib/layouts";
+import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
@@ -2048,7 +2049,7 @@ function PlayPage() {
     const boomFx = boomSpell ? spellFxLook(boomSpell) : null;
     const spellCard = Boolean((doomLook && doomLook !== "none") || (boomFx && boomFx !== "none") || (fromSpell && fromSpell !== "none" && !stamped && !finished));
     const look = started || finished || stamped || (fromSpell && fromSpell !== "none" ? fromSpell : null) || (doomLook && doomLook !== "none" ? doomLook : null) || (boomFx && boomFx !== "none" ? boomFx : null);
-    const hud = loadBoard().marks;
+    const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
     const wait = killWait(prev, duel, look, spellCard);
     const rawShown = showEffects(prev, duel, viewerNow, hud);
     const shown = rawShown && quiet
@@ -2411,8 +2412,11 @@ function PlayPage() {
   );
   const groupedShot = shotLook(duel, duel.pending);
   const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : horning ? you.field.some((unit) => unit?.uid === (duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending.attacker : "")) : false;
-  const board = loadBoard();
+  const board = matchBoard(foe.env, you.env);
   const marks = board.marks;
+  const artTop = topArt(foe.env);
+  const artBottom = bottomArt(you.env);
+  const actionsMoved = JSON.stringify(board.actions) !== JSON.stringify(DEFAULT_ACTIONS);
   const fieldLayout = loadField();
   const selected = you.field.find((mon) => mon && aim && "uid" in aim && aim.uid === mon.uid) ?? null;
   const selectedCard = selected ? monsterCard(selected.cardId) : undefined;
@@ -3225,7 +3229,14 @@ function PlayPage() {
         onPointerCancel={dropAsk}
       >
         <div className="diorama">
-        <img className="board-art" src="/board.png" alt="" />
+        {artTop === artBottom ? (
+          <img className="board-art" src={artTop} alt="" />
+        ) : (
+          <>
+            <img className="board-art" src={artBottom} alt="" />
+            <img className="board-art is-top" src={artTop} alt="" />
+          </>
+        )}
         {[
           { id: you.env, spot: board.env, key: "you-env" },
           { id: foe.env, spot: board.envFoe, key: "foe-env" },
@@ -4413,7 +4424,21 @@ function PlayPage() {
             <p className="hand-empty">{hand === "reserve" ? tr("Hết quái dự bị") : tr("Hết phép")}</p>
           ) : null}
         </div>
-        <div className="actions">
+        <div
+          className="actions"
+          style={
+            actionsMoved
+              ? ({
+                  left: `${board.actions.x - board.actions.width / 2}%`,
+                  top: `${board.actions.y - board.actions.height / 2}%`,
+                  right: "auto",
+                  width: `${board.actions.width}%`,
+                  minHeight: `${board.actions.height}%`,
+                  "--act-scale": board.actions.size,
+                } as CSSProperties)
+              : undefined
+          }
+        >
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.monsterDeck.length > 0 ? (
             <button type="button" className="act is-draw-mon press" onClick={() => apply(draw(duel, "monster"))}>
               Rút quái

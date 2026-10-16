@@ -1660,6 +1660,15 @@
 }
 /* Scenery around the board. board-bleed.jpg holds board.png untouched at (219, 353), 846x1500,
    inside 1289x2228; it is sized and placed so that region sits exactly under .board. */
+.board-art.is-top {
+  -webkit-mask-image: url("/env/seam.png");
+  mask-image: url("/env/seam.png");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.stage .actions[style] .act {
+  font-size: calc(0.78rem * var(--act-scale, 1));
+}
 .board-bleed {
   --bh: min(100dvh, calc(100vw * 16 / 9));
   position: fixed;
@@ -5039,6 +5048,34 @@ button.watch-back {
 }
 .tune-board {
   width: min(100%, 24rem);
+}
+.env-picks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+.tune-board > img.board-art.is-top {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+.tune-pin.is-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.25em;
+  padding: 0.2em;
+  background: rgb(8 12 28 / 0.55);
+  border: 1px dashed rgb(240 196 98 / 0.8);
+  color: #fbe7b0;
+}
+.tune-pin.is-actions span {
+  display: block;
+  padding: 0.35em 0;
+  border-radius: 0.35em;
+  background: rgb(240 196 98 / 0.85);
+  color: var(--color-gold-ink);
+  text-align: center;
 }
 .tune-board > img {
   width: 100%;

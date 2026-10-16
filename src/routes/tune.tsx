@@ -24,6 +24,8 @@ import {
   loadField,
   loadSpell,
   saveBoard,
+  clearBoard,
+  savedBoards,
   saveCard,
   saveField,
   saveSpell,
@@ -34,11 +36,14 @@ import {
   type SpellKey,
   type Spot,
 } from "@/lib/layouts";
+import { ENV_BOARDS } from "@/lib/env-boards";
 
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
 type Screen = "menu" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
-type BoardPick = HudKey | "notice" | "trail" | "reaction" | "stack" | "env" | "envFoe";
+type BoardPick = HudKey | "notice" | "trail" | "reaction" | "stack" | "env" | "envFoe" | "actions";
+type SpotPick = "stack" | "env" | "envFoe" | "actions";
+const isSpotPick = (key: BoardPick): key is SpotPick => key === "stack" || key === "env" || key === "envFoe" || key === "actions";
 
 function clamp(value: number, min: number, max: number) {
   return Math.round(Math.min(max, Math.max(min, value)) * 10) / 10;
@@ -67,6 +72,8 @@ function exportChanges() {
   const marks = { ...DEFAULT_BOARD_LAYOUT.marks };
   for (const key of Object.keys(marks) as Array<keyof typeof marks>) marks[key] = { ...marks[key], hidden: false };
   if (!same(board, { ...DEFAULT_BOARD_LAYOUT, marks })) out.board = board;
+  const boards = savedBoards();
+  if (Object.keys(boards).length) out.boards = boards;
   if (!same(loadCard(), DEFAULT_CARD)) out.monster = loadCard();
   if (!same(loadSpell(), DEFAULT_SPELL)) out.spell = loadSpell();
   if (!same(loadField(), DEFAULT_FIELD)) out.field = loadField();
@@ -85,6 +92,7 @@ function exportChanges() {
 function setupLine() {
   return JSON.stringify({
     board: loadBoard(),
+    boards: savedBoards(),
     monster: loadCard(),
     spell: loadSpell(),
     field: loadField(),
@@ -322,9 +330,17 @@ function Pad({
 function BoardTune({ onBack }: { onBack: () => void }) {
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<BoardPick | null>(null);
-  const [layout, setLayout] = useState<BoardLayout>(loadBoard);
+  const [env, setEnv] = useState("");
+  const [layout, setLayout] = useState<BoardLayout>(() => loadBoard());
   const [picked, setPicked] = useState<BoardPick>("notice");
   const [saved, setSaved] = useState(false);
+  const art = env ? ENV_BOARDS[env] : null;
+
+  function pickEnv(next: string) {
+    setEnv(next);
+    setLayout(loadBoard(next || undefined));
+    setSaved(false);
+  }
 
   function at(event: ReactPointerEvent) {
     const node = stage.current;
@@ -342,7 +358,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       if (key === "notice") return { ...current, notice: { ...current.notice, x: clamp(x, 0, 80), y: clamp(y, 0, 90) } };
       if (key === "trail") return { ...current, trail: { ...current.trail, x: clamp(x, 0, 92), y: clamp(y, 0, 90) } };
       if (key === "reaction") return { ...current, reaction: { ...current.reaction, x: clamp(x, 0, 80), y: clamp(y, 0, 90) } };
-      if (key === "stack" || key === "env" || key === "envFoe") {
+      if (isSpotPick(key)) {
         const spot = current[key];
         return { ...current, [key]: { ...spot, x: clamp(x, 2, 98), y: clamp(y, 2, 98) } };
       }
@@ -355,7 +371,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     if (picked === "notice") place("notice", layout.notice.x + dx, layout.notice.y + dy);
     else if (picked === "trail") place("trail", layout.trail.x + dx, layout.trail.y + dy);
     else if (picked === "reaction") place("reaction", layout.reaction.x + dx, layout.reaction.y + dy);
-    else if (picked === "stack" || picked === "env" || picked === "envFoe") place(picked, layout[picked].x + dx, layout[picked].y + dy);
+    else if (isSpotPick(picked)) place(picked, layout[picked].x + dx, layout[picked].y + dy);
     else place(picked, layout.marks[picked].x + dx, layout.marks[picked].y + dy);
   }
 
@@ -365,7 +381,8 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       if (picked === "notice") return { ...current, notice: { ...current.notice, font: clamp(current.notice.font + delta, 1.6, 8) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, dot: clamp(current.trail.dot + delta, 0.8, 8) } };
       if (picked === "reaction") return { ...current, reaction: { ...current.reaction, font: clamp(current.reaction.font + delta, 1.6, 8) } };
-      if (picked === "stack" || picked === "env" || picked === "envFoe") {
+      if (picked === "actions") return { ...current, actions: { ...current.actions, size: clamp(current.actions.size + (delta > 0 ? 0.1 : -0.1), 0.6, 1.6) } };
+      if (isSpotPick(picked)) {
         const spot = current[picked];
         return { ...current, [picked]: { ...spot, size: clamp(spot.size + delta, 1.6, 8) } };
       }
@@ -380,7 +397,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       if (picked === "notice") return { ...current, notice: { ...current.notice, w: clamp(current.notice.w + delta, 20, 90) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, w: clamp(current.trail.w + delta, 3, 30) } };
       if (picked === "reaction") return { ...current, reaction: { ...current.reaction, w: clamp(current.reaction.w + delta, 20, 90) } };
-      if (picked === "stack" || picked === "env" || picked === "envFoe") {
+      if (isSpotPick(picked)) {
         const spot = current[picked];
         return { ...current, [picked]: { ...spot, width: clamp(spot.width + delta, 6, 48) } };
       }
@@ -394,7 +411,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       if (picked === "notice") return { ...current, notice: { ...current.notice, h: clamp(current.notice.h + delta, 4, 24) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, h: clamp(current.trail.h + delta, 4, 40) } };
       if (picked === "reaction") return { ...current, reaction: { ...current.reaction, h: clamp(current.reaction.h + delta, 4, 24) } };
-      if (picked === "stack" || picked === "env" || picked === "envFoe") {
+      if (isSpotPick(picked)) {
         const spot = current[picked];
         return { ...current, [picked]: { ...spot, height: clamp(spot.height + delta, 4, 28) } };
       }
@@ -403,8 +420,8 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   }
 
   const label =
-    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "reaction" ? "Thanh phản ứng" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : HUD_MARKS.find((mark) => mark.key === picked)?.label;
-  const boxy = picked === "notice" || picked === "trail" || picked === "reaction" || picked === "stack" || picked === "env" || picked === "envFoe";
+    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "reaction" ? "Thanh phản ứng" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : picked === "actions" ? "Nút Rút quái, Rút phép, Hết lượt" : HUD_MARKS.find((mark) => mark.key === picked)?.label;
+  const boxy = picked === "notice" || picked === "trail" || picked === "reaction" || isSpotPick(picked);
   const hidden =
     picked === "notice"
       ? layout.notice.hidden === true
@@ -412,7 +429,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         ? layout.trail.hidden === true
         : picked === "reaction"
         ? layout.reaction.hidden === true
-        : picked === "stack" || picked === "env" || picked === "envFoe"
+        : isSpotPick(picked)
           ? layout[picked].hidden === true
           : layout.marks[picked].hidden === true;
 
@@ -422,7 +439,8 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       if (picked === "notice") return { ...current, notice: { ...current.notice, hidden: !current.notice.hidden } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, hidden: !current.trail.hidden } };
       if (picked === "reaction") return { ...current, reaction: { ...current.reaction, hidden: !current.reaction.hidden } };
-      if (picked === "stack" || picked === "env" || picked === "envFoe") return { ...current, [picked]: { ...current[picked], hidden: !current[picked].hidden } };
+      if (picked === "actions") return current;
+      if (isSpotPick(picked)) return { ...current, [picked]: { ...current[picked], hidden: !current[picked].hidden } };
       const point = current.marks[picked];
       return { ...current, marks: { ...current.marks, [picked]: { ...point, hidden: !point.hidden } } };
     });
@@ -440,8 +458,20 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       </button>
       <h1>Chỉnh bàn đấu</h1>
       <p className="tuner-note">Chọn một số, rồi bấm mũi tên. Kéo cũng được. Lưu xong vào trận để xem.</p>
+      <p className="tuner-note">Bàn theo môi trường. Nửa trên theo môi trường của đối thủ, nửa dưới theo môi trường của bạn.</p>
+      <div className="env-picks">
+        <button type="button" className={`tuner-item${env === "" ? " on" : ""}`} onClick={() => pickEnv("")}>
+          Mặc định
+        </button>
+        {Object.keys(ENV_BOARDS).map((id) => (
+          <button key={id} type="button" className={`tuner-item${env === id ? " on" : ""}`} onClick={() => pickEnv(id)}>
+            {tr(spellCard(id)?.name ?? id)}
+          </button>
+        ))}
+      </div>
       <div ref={stage} className="tune-stage tune-board">
-        <img src="/board.png" alt="" />
+        <img src={art ? art.bottom : "/board.png"} alt="" />
+        {art && art.top !== art.bottom ? <img className="board-art is-top" src={art.top} alt="" /> : null}
         <button
           type="button"
           className={`tune-notice${picked === "notice" ? " on" : ""}${layout.notice.hidden ? " is-hidden" : ""}`}
@@ -608,6 +638,34 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         >
           Môi trường địch
         </button>
+        <button
+          type="button"
+          className={`tune-pin is-actions${picked === "actions" ? " on" : ""}`}
+          style={{
+            left: `${layout.actions.x}%`,
+            top: `${layout.actions.y}%`,
+            width: `${layout.actions.width}%`,
+            height: `${layout.actions.height}%`,
+            fontSize: `${2.6 * layout.actions.size}cqw`,
+          }}
+          onPointerDown={(event) => {
+            drag.current = "actions";
+            setPicked("actions");
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (drag.current !== "actions") return;
+            const spot = at(event);
+            if (spot) place("actions", spot.x, spot.y);
+          }}
+          onPointerUp={() => {
+            drag.current = null;
+          }}
+        >
+          <span>Rút quái</span>
+          <span>Rút phép</span>
+          <span>Hết lượt</span>
+        </button>
         {HUD_MARKS.map((mark) => (
           <button
             key={mark.key}
@@ -673,6 +731,9 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         <button type="button" className={`tuner-item${picked === "envFoe" ? " on" : ""}`} onClick={() => setPicked("envFoe")}>
           Môi trường địch{layout.envFoe.hidden ? " · ẩn" : ""} · rộng {layout.envFoe.width} · cao {layout.envFoe.height} · chữ {layout.envFoe.size}
         </button>
+        <button type="button" className={`tuner-item${picked === "actions" ? " on" : ""}`} onClick={() => setPicked("actions")}>
+          Nút Rút quái, Rút phép, Hết lượt · rộng {layout.actions.width} · cao {layout.actions.height} · chữ {layout.actions.size}
+        </button>
         {HUD_MARKS.map((mark) => (
           <button key={mark.key} type="button" className={`tuner-item${picked === mark.key ? " on" : ""}`} onClick={() => setPicked(mark.key)}>
             {mark.label}
@@ -684,7 +745,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         type="button"
         className="tuner-save"
         onClick={() => {
-          saveBoard(layout);
+          saveBoard(layout, env || undefined);
           setSaved(true);
         }}
       >
@@ -694,14 +755,19 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         type="button"
         className="pad-btn"
         onClick={() => {
-          setLayout(DEFAULT_BOARD_LAYOUT);
-          saveBoard(DEFAULT_BOARD_LAYOUT);
+          if (env) {
+            clearBoard(env);
+            setLayout(loadBoard(env));
+          } else {
+            setLayout(DEFAULT_BOARD_LAYOUT);
+            saveBoard(DEFAULT_BOARD_LAYOUT);
+          }
           setSaved(true);
         }}
       >
-        Trả về mặc định
+        {env ? "Dùng lại bố cục Mặc định" : "Trả về mặc định"}
       </button>
-      {saved ? <p className="tuner-note">Đã lưu. Vào chơi để xem.</p> : null}
+      {saved ? <p className="tuner-note">{env ? `Đã lưu cho ${tr(spellCard(env)?.name ?? env)}. Vào chơi để xem.` : "Đã lưu. Vào chơi để xem."}</p> : null}
     </main>
   );
 }

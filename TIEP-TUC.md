@@ -23,31 +23,14 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - 5 lá môi trường: Thảo nguyên, Đất đá, Núi, Rừng rậm, Bóng tối (luật trong duel.ts, hệ quái trong `src/lib/env-kinds.ts`).
 - Chỉnh lá: Chiến binh lẫn khuất, Gã hề đáng sợ, Khủng long vãy kiếm, Kiếm sĩ lửa thiêng, Đấu sĩ bò tót.
 
-## Đang dở 1: hình bàn đấu theo môi trường
+## Đã xong: hình bàn đấu theo môi trường
 
-Chủ game đã chốt:
-- Mỗi môi trường có ảnh **nửa trên** (phía đối thủ) và **nửa dưới** (phía mình). Có thể chỉ có một nửa, nửa còn lại dùng bàn Mặc định (`public/board.png`).
-- Khi chơi: nửa trên lấy theo môi trường của đối thủ, nửa dưới theo môi trường của mình. Chỗ nối là đường **gấp khúc tự nhiên, mờ dần, chạy chéo qua sân đá** (từ trái ~63% chiều cao lên phải ~37%), chạy qua la bàn, không né. Cùng một ảnh đủ cho cả hai nửa thì dùng nguyên ảnh, không nối.
-- Cảnh ngoài bàn (`board-bleed.jpg`) dùng chung cho mọi môi trường, mép làm mờ như hiện tại.
-- Tuỳ chỉnh → Điều chỉnh bàn chơi có nút **chọn môi trường**. Chọn môi trường nào thì hiện ảnh đó, chỉnh tay vị trí các mục, bấm Lưu thì lưu bố cục **riêng cho môi trường đó** (bố cục hiện tại = Mặc định).
-- Mục theo **môi trường trên**: chỉ số địch, bảng thông báo, lịch sử thông báo (chấm), thanh phản ứng, ô môi trường địch.
-- Mục theo **môi trường dưới**: chỉ số mình, ô môi trường mình, khối nút Rút quái / Rút phép / Hết lượt.
-- **Còn chờ chủ game trả lời**: (1) Xấp bài úp theo môi trường dưới, đúng không? (2) Thêm khối ba nút Rút quái / Rút phép / Hết lượt vào Tuỳ chỉnh để chỉnh vị trí, đi chung một khối, đúng không?
-
-Ảnh đã nhận, lưu ở `art-src/moi-truong/` (cỡ 942 × 1670, cùng tỉ lệ bàn gốc):
-
-| Môi trường | Nửa trên | Nửa dưới |
-|---|---|---|
-| Thảo nguyên | thao-nguyen-tren.jpg | thao-nguyen-duoi.jpg |
-| Đất đá | dat-da-tren.jpg | dat-da-duoi.jpg |
-| Rừng rậm | rung-ram-du.jpg | rung-ram-du.jpg |
-| Núi | nui-du-*.jpg | nui-du-*.jpg |
-| Bóng tối | bong-toi-du.jpg | bong-toi-du.jpg |
-
-Núi: ảnh gốc thiếu 3 ô bài phe xanh. Đã có hai bản thêm ô: `nui-du-o-tron.jpg` (chỉ ô, cắt tới viền 1) và `nui-du-vien-da.jpg` (thêm viền 2 đá xám). **Chủ game chưa chọn bản nào.**
-Biển sâu chưa có ảnh nên dùng Mặc định.
-
-Bản thử đường nối đã làm bằng Python: mặt nạ = đường chéo + sóng sin + nhiễu, độ mờ ~42±18 px, thêm loang kiểu mây. Chủ game xem và đồng ý hướng này.
+- Ảnh bàn ở `public/env/` (846 × 1500), bảng ánh xạ ở `src/lib/env-boards.ts`. Đường nối chéo mờ là mặt nạ `public/env/seam.png` (CSS `mask-image` trên `.board-art.is-top`).
+- Nửa trên = môi trường đối thủ, nửa dưới = môi trường mình. Môi trường không có ảnh (Biển sâu, không mang) dùng `board.png`.
+- Bố cục riêng từng môi trường: `loadBoard(env)` / `saveBoard(layout, env)` / `matchBoard(topEnv, bottomEnv)` trong `src/lib/layouts.ts`, lưu ở khoá `clash-board-layout:<env>`; chưa lưu thì theo Mặc định.
+- Theo nửa trên: chỉ số địch, thông báo, lịch sử thông báo, thanh phản ứng, ô môi trường địch. Theo nửa dưới: chỉ số mình, ô môi trường mình, xấp bài úp, khối nút Rút quái / Rút phép / Hết lượt (`actions`, mới thêm vào Tuỳ chỉnh).
+- Núi dùng bản thêm ô có viền đá xám. Ảnh gốc chủ game gửi nằm trong lịch sử git (commit c4f248f, thư mục `art-src/`) nếu cần làm lại.
+- Ô đặt quái trên bàn (vị trí lá) vẫn cố định theo bàn gốc, chưa chỉnh theo từng môi trường.
 
 ## Đang dở 2: hướng dẫn chơi kiểu Lục Thần
 
