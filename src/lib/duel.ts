@@ -7485,12 +7485,12 @@ function lastStrike(cardId: string): { hp: number; mana: number; spell: number; 
   const hp = hit ? Number(hit[1]) : 3;
   const mana = hit ? Number(hit[2]) : 1;
   const spell = hit ? Number(hit[3]) : 4;
-  const tru = hit ? Number(hit[4]) : 3;
+  const tru = hit ? Number(hit[4]) : 2;
   return {
     hp: Number.isFinite(hp) ? hp : 3,
     mana: Number.isFinite(mana) ? mana : 1,
     spell: Number.isFinite(spell) ? spell : 4,
-    tru: Number.isFinite(tru) ? tru : 3,
+    tru: Number.isFinite(tru) ? tru : 2,
   };
 }
 

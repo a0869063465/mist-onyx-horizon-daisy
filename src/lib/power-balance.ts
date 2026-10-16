@@ -307,6 +307,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     notes: ["Vãy phá giáp giảm 2 thủ phép, thay vì 1 thủ và 1 thủ phép"],
   },
+  {
+    id: "kiem-si-lua-thieng",
+    at: "2026-10-16",
+    wave: 27,
+    tone: "down",
+    notes: ["Sát thương chuẩn của Hoả thần long giảm xuống 2 (3)"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

@@ -67,10 +67,10 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 2,
     "hp": 7,
-    "text": "cee9962",
+    "text": "9126cf65",
     "added": null,
-    "powerAt": null,
-    "powerTone": null,
+    "powerAt": "2026-10-16",
+    "powerTone": "down",
     "shiftAt": "2026-10-14"
   },
   "dau-si-bo-tot": {

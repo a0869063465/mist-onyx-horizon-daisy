@@ -110,7 +110,7 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
   "quai-thu-thien-su": [{ key: "pray", title: "Hỏi cầu nguyện", label: "Tiêu 1 mana để {tên} cầu nguyện?" }],
   "kiem-si-lua-thieng": [
     { key: "echo", title: "Hỏi đòn thêm", label: "Truy cùng diệt tận." },
-    { key: "last", title: "Hoả thần long", label: "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 3 sát thương chuẩn" },
+    { key: "last", title: "Hoả thần long", label: "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 2 sát thương chuẩn" },
   ],
   "ky-si-bong-toi": [
     { key: "pick1", title: "Hỏi 1 mục", label: "Chọn 1 mục cho lần giáp lá cà này." },
@@ -213,6 +213,9 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["hiep-si-ho-ve", "bộ bài.\n\nKhi lá chắn"],
   ["hiep-si-cua-hau", "bộ bài.\n\nKhi lá chắn"],
   ["mat-xanh-huy-diet", "sát thương phép bằng đúng công"],
+  ["chien-binh-lan-khuat", "đang đứng, trong lúc ẩn mình"],
+  ["khung-long-vay-kiem", "giảm 1 thủ và 1 thủ phép"],
+  ["kiem-si-lua-thieng", "4 sát thương phép và 3 sát thương chuẩn"],
   ["hiep-si-huyen-bi", "Ghi 100% sát thương khiên nuốt"],
 ];
 
@@ -240,6 +243,7 @@ const STALE_ASKS: Array<[string, string, string]> = [
   ["trai-tim-hai-long", "tide", "Triều lên. Chọn một cách."],
   ["kiem-si-lua-thieng", "echo", "Chọn mục tiêu."],
   ["kiem-si-lua-thieng", "last", "Tiêu hao 3 máu và 1 mana để gây 6 sát thương phép."],
+  ["kiem-si-lua-thieng", "last", "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 3 sát thương chuẩn"],
 ];
 
 function dropKey(bag: Record<string, Record<string, string>>, base: Record<string, Record<string, string>>, id: string, key: string, old: string) {

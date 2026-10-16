@@ -491,6 +491,7 @@ export const PENDING_NOTES: string[] = [
   "Chiến binh lẫn khuất: công giảm từ 4 xuống 2. Thế thân dùng hình của chính lá. Sát thương gây ra khi đang ẩn mình là sát thương chuẩn, cả khi đánh quái lẫn đánh người chơi, vẫn không bị phản đòn. Mô tả kỹ năng đã ghi rõ điều này.",
   "Gã hề đáng sợ: công giảm từ 2 xuống 0, thủ tăng từ 0 lên 2, máu giảm từ 5 xuống 3. Thủ phép giữ 2.",
   "Khủng long vãy kiếm: Vãy phá giáp giảm 2 thủ phép của quái địch, thay vì 1 thủ và 1 thủ phép. Thủ của quái địch không còn bị giảm.",
+  "Kiếm sĩ lửa thiêng: Hoả thần long gây 2 sát thương chuẩn, thay vì 3. Sát thương phép vẫn 4.",
 ];
 
 function remarkOf(notes: string[]) {
