@@ -101,7 +101,7 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
     setLine(setupLine());
   }, []);
   return (
-    <main className="tuner">
+    <main className="tuner menu-page">
       <Link to="/" className="tuner-back">
         {tr("Về menu")}
       </Link>

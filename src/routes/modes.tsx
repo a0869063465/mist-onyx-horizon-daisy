@@ -62,7 +62,7 @@ function ModesPage() {
   }
 
   return (
-    <main className="watch">
+    <main className="watch menu-page">
       <Link to="/" className="watch-back">
         {tr("Về sân")}
       </Link>
@@ -76,12 +76,23 @@ function ModesPage() {
           }}
         >
           <h2>Online</h2>
-          <button type="button" className="act press" disabled={busy} onClick={() => void host()}>
+          <button
+            type="button"
+            className="act press"
+            data-ui="confirm"
+            disabled={busy}
+            onClick={() => void host()}
+          >
             {tr("Lấy mã")}
           </button>
           <label>
             {tr("Nhập mã")}
-            <input value={code} maxLength={4} autoCapitalize="characters" onChange={(event) => setCode(event.target.value.toUpperCase())} />
+            <input
+              value={code}
+              maxLength={4}
+              autoCapitalize="characters"
+              onChange={(event) => setCode(event.target.value.toUpperCase())}
+            />
           </label>
           <button type="submit" className="act alt press" disabled={busy}>
             {tr("Vào mã")}
@@ -93,7 +104,12 @@ function ModesPage() {
         </form>
       ) : (
         <div className="mode-list">
-          <button type="button" className="act press" onClick={() => goLocal("ai")}>
+          <button
+            type="button"
+            className="act press"
+            data-ui="confirm"
+            onClick={() => goLocal("ai")}
+          >
             {tr("Vs Máy")}
           </button>
           <h2>Vs Player</h2>
