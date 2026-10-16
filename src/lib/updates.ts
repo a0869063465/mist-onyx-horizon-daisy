@@ -496,6 +496,7 @@ export const PENDING_NOTES: string[] = [
   "Tên và chỉ số trên lá bài dùng font Barlow Condensed và to hơn một chút, ở mọi nơi: tay bài, lá trên sân, bộ bài, chiến thuật và xem trước Tuỳ chỉnh. Bố cục đã lưu giữ nguyên.",
   "Thêm 5 lá môi trường: Thảo nguyên, Đất đá, Núi, Rừng rậm và Bóng tối. Mỗi bộ mang một lá môi trường, chỉ có tác dụng với quái của mình, quái 5 sao không được hưởng.",
   "Bàn đấu phủ kín màn hình: thêm cảnh cổng đá, bậc thang, thác nước và đuốc quanh bàn. Bàn đấu, bố cục và vị trí các ô giữ nguyên.",
+  "Làm đẹp nút và bảng trong trận: Rút quái, Rút phép, Hết lượt, nút kỹ năng trên quái, bảng thông báo, thanh phản ứng, chấm lịch sử, bảng chọn và nút Reset, Test, Trở về, Cài đặt. Màu, vị trí và cỡ giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

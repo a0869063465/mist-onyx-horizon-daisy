@@ -1361,6 +1361,151 @@
   font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 800;
 }
+/* ---- In-game polish: same colours, fills and borders as before, with depth and light ---- */
+.stage .act,
+.stage .act-chip,
+.stage .test-btn,
+.stage .help-btn,
+.stage .ask-card button {
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.55);
+  transition: transform 110ms ease-out, filter 110ms ease-out, box-shadow 110ms ease-out;
+}
+.stage .act:active:not(:disabled),
+.stage .act-chip:active,
+.stage .test-btn:active:not(:disabled),
+.stage .help-btn:active,
+.stage .ask-card button:active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(1.15);
+}
+/* Rút quái / Rút phép / Chặn / Hết lượt / Bỏ qua: keep each tint, add bevel, rim light and glow */
+.stage .actions .act.is-draw-mon { --tone: #ff8a00; }
+.stage .actions .act.is-draw-spell { --tone: #c084fc; }
+.stage .actions .act.is-block { --tone: #f5c542; }
+.stage .actions .act.is-block-skill { --tone: #ff4d4d; }
+.stage .actions .act.is-end { --tone: #ff4d4d; }
+.stage .actions .act.is-pass { --tone: #4aa8ff; }
+.stage .actions .act.is-draw-mon,
+.stage .actions .act.is-draw-spell,
+.stage .actions .act.is-block,
+.stage .actions .act.is-block-skill,
+.stage .actions .act.is-end,
+.stage .actions .act.is-pass {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.04) 46%, rgb(0 0 0 / 0.22) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -2px 0 rgb(0 0 0 / 0.35),
+    0 0 0 1px rgb(0 0 0 / 0.55),
+    0 3px 8px rgb(0 0 0 / 0.45),
+    0 0 10px color-mix(in srgb, var(--tone) 32%, transparent);
+}
+.stage .act.is-skillbox,
+.stage .act:not(.is-draw-mon):not(.is-draw-spell):not(.is-block):not(.is-block-skill):not(.is-end):not(.is-pass) {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0.04) 48%, rgb(0 0 0 / 0.16) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 -2px 0 rgb(0 0 0 / 0.25),
+    0 0 0 1px rgb(0 0 0 / 0.45),
+    0 3px 8px rgb(0 0 0 / 0.4);
+}
+.stage .act:disabled {
+  filter: saturate(0.6);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.4);
+}
+/* Skill chips on monsters */
+.stage .act-chip.is-k { --tone: #ff8a00; }
+.stage .act-chip.is-y { --tone: #4aa8ff; }
+.stage .act-chip.is-z { --tone: #ff4d4d; }
+.stage .act-chip {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(0 0 0 / 0.2));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.25),
+    0 0 0 1px rgb(0 0 0 / 0.55),
+    0 3px 8px rgb(0 0 0 / 0.5),
+    0 0 8px color-mix(in srgb, var(--tone, #ff8a00) 35%, transparent);
+}
+.stage .act-chip svg {
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
+}
+/* Reset / Test / Trở về and Cài đặt (Menu left as is) */
+.stage .test-btn {
+  background-image: linear-gradient(180deg, #ff3a55 0%, #d0122d 55%, #9c0a20 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -2px 0 rgb(0 0 0 / 0.3),
+    0 0 0 1px rgb(60 0 8 / 0.8),
+    0 3px 8px rgb(0 0 0 / 0.45);
+}
+.stage .help-btn {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(0 0 0 / 0.15));
+  border-color: rgb(240 196 98 / 0.55);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 3px 8px rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+/* Notice board: same dark glass, framed with a thin gold rim and inner light */
+.stage .banner:not(.is-react) {
+  border: 1px solid rgb(240 196 98 / 0.42);
+  background-image: linear-gradient(180deg, rgb(255 230 170 / 0.07) 0%, transparent 30%, rgb(0 0 0 / 0.25) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 240 200 / 0.18),
+    inset 0 0 18px rgb(0 0 0 / 0.45),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 6px 16px rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+/* Reaction bar icons: same border colours, framed tiles with a soft glow */
+.stage .react-ico {
+  border-radius: 0.5rem;
+  background-image: radial-gradient(circle at 50% 35%, rgb(255 255 255 / 0.12), transparent 65%), linear-gradient(180deg, #1d140d, #0b0806);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 3px 8px rgb(0 0 0 / 0.5),
+    0 0 9px color-mix(in srgb, currentColor 40%, transparent);
+}
+.stage .react-ico svg {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.stage .banner.is-react .act.ok {
+  background-image: linear-gradient(180deg, #5a9bff 0%, #2f7dff 55%, #1f5ed0 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 1px rgb(0 10 40 / 0.7), 0 3px 8px rgb(0 0 0 / 0.45);
+}
+/* Notice history dots: little gems with a rim and highlight; the picked one glows */
+.stage .trail-dot {
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.7) 0 14%, transparent 34%), currentColor;
+  box-shadow:
+    inset 0 -1px 2px rgb(0 0 0 / 0.45),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 1px 3px rgb(0 0 0 / 0.5);
+}
+.stage .trail-dot.is-on {
+  box-shadow:
+    inset 0 -1px 2px rgb(0 0 0 / 0.35),
+    0 0 0 1px rgb(255 255 255 / 0.85),
+    0 0 8px currentColor,
+    0 0 14px currentColor;
+}
+/* Pop-up choice panels: same fills per kind, with a rim, depth and beveled buttons */
+.stage .ask-card {
+  border-radius: 0.8rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 0 0 1px rgb(0 0 0 / 0.55),
+    0 10px 26px rgb(0 0 0 / 0.55);
+}
+.stage .ask-card p {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+}
+.stage .ask-card button {
+  border-radius: 0.5rem;
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.12), rgb(0 0 0 / 0.18));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 2px 5px rgb(0 0 0 / 0.4);
+}
+.stage .ask-card button.on {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 1px rgb(255 240 190 / 0.5), 0 0 10px rgb(255 210 110 / 0.35);
+}
 @media (prefers-reduced-motion: reduce) {
   .home-art,
   .home-play,
