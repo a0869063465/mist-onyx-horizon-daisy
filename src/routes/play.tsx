@@ -3209,6 +3209,7 @@ function PlayPage() {
 
   return (
     <main className="stage">
+      <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />
       <section
         className={`board${shake ? " is-shaking" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"

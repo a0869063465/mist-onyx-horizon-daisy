@@ -495,6 +495,7 @@ export const PENDING_NOTES: string[] = [
   "Đấu sĩ bò tót: thủ phép tăng từ 2 lên 3.",
   "Tên và chỉ số trên lá bài dùng font Barlow Condensed và to hơn một chút, ở mọi nơi: tay bài, lá trên sân, bộ bài, chiến thuật và xem trước Tuỳ chỉnh. Bố cục đã lưu giữ nguyên.",
   "Thêm 5 lá môi trường: Thảo nguyên, Đất đá, Núi, Rừng rậm và Bóng tối. Mỗi bộ mang một lá môi trường, chỉ có tác dụng với quái của mình, quái 5 sao không được hưởng.",
+  "Bàn đấu phủ kín màn hình: thêm cảnh cổng đá, bậc thang, thác nước và đuốc quanh bàn. Bàn đấu, bố cục và vị trí các ô giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

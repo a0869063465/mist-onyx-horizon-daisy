@@ -1424,6 +1424,19 @@
     background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--color-gold) 16%, transparent), transparent 42%), var(--color-bg);
   }
 }
+/* Scenery around the board. board-bleed.jpg holds board.png untouched at (219, 353), 846x1500,
+   inside 1289x2228; it is sized and placed so that region sits exactly under .board. */
+.board-bleed {
+  --bh: min(100dvh, calc(100vw * 16 / 9));
+  position: fixed;
+  left: calc(50% - var(--bh) * 642 / 1500);
+  top: calc(50% - var(--bh) * 1103 / 1500);
+  width: calc(var(--bh) * 1289 / 1500);
+  height: calc(var(--bh) * 2228 / 1500);
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
 .board {
   position: relative;
   width: min(100vw, calc(100dvh * 9 / 16));
