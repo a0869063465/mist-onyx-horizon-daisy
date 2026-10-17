@@ -45,40 +45,99 @@ export function GlyphDefs() {
           <stop offset="0.52" stopColor="#ff2d2d" />
           <stop offset="1" stopColor="#9a0010" />
         </linearGradient>
-        <linearGradient id="rim3d" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fff6cf" />
-          <stop offset="0.3" stopColor="#d9a43a" />
-          <stop offset="0.5" stopColor="#fff0b8" />
-          <stop offset="0.75" stopColor="#8a5a12" />
-          <stop offset="1" stopColor="#f2c75c" />
+        <linearGradient id="rim3d-active" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#eaf8ff" />
+          <stop offset="0.3" stopColor="#4f9fe8" />
+          <stop offset="0.5" stopColor="#dff3ff" />
+          <stop offset="0.75" stopColor="#173f78" />
+          <stop offset="1" stopColor="#7cc4ff" />
         </linearGradient>
+        <linearGradient id="rim3d-passive" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#f6eaff" />
+          <stop offset="0.3" stopColor="#9a5fe0" />
+          <stop offset="0.5" stopColor="#f0dcff" />
+          <stop offset="0.75" stopColor="#40156e" />
+          <stop offset="1" stopColor="#c69cff" />
+        </linearGradient>
+        <linearGradient id="pedestal3d" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff3c8" />
+          <stop offset="0.45" stopColor="#c9963a" />
+          <stop offset="1" stopColor="#5e3c0c" />
+        </linearGradient>
+
       </defs>
     </svg>
   );
 }
 
-/** Gold metal rim with four diamond studs, laid over a round emblem. */
-export function Rim() {
+/** Metal rim with four diamond studs over a round skill emblem: blue for active skills, purple for passive. */
+export function Rim({ kind }: { kind: "active" | "passive" }) {
+  const metal = `url(#rim3d-${kind})`;
   return (
     <svg className="rim3d" viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="46" fill="none" stroke="url(#rim3d)" strokeWidth="6" />
+      <circle cx="50" cy="50" r="46" fill="none" stroke={metal} strokeWidth="6" />
       <circle cx="50" cy="50" r="49" fill="none" stroke="rgba(0,0,0,0.65)" strokeWidth="1.5" />
       <circle cx="50" cy="50" r="42.6" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="1.2" />
       {[0, 90, 180, 270].map((turn) => (
-        <path key={turn} d="M50 -1 L55 5 L50 11 L45 5 Z" fill="url(#rim3d)" stroke="rgba(0,0,0,0.6)" strokeWidth="1" transform={`rotate(${turn} 50 50)`} />
+        <path key={turn} d="M50 -1 L55 5 L50 11 L45 5 Z" fill={metal} stroke="rgba(0,0,0,0.6)" strokeWidth="1" transform={`rotate(${turn} 50 50)`} />
       ))}
     </svg>
   );
 }
 
-const ACTION_ICON: Record<SheetTone, string> = { gold: "up-card", fuse: "up-card", red: "candle-skull", purple: "linked-rings" };
+/** Facet shades of the floating crystal, light to dark, per action colour. */
+const CRYSTAL: Record<SheetTone, { top: string[]; low: string[]; glow: string }> = {
+  gold: { top: ["#fffbe0", "#ffe98a", "#ffd23c"], low: ["#f5b80f", "#c98a00", "#8a5a00"], glow: "#ffe36a" },
+  red: { top: ["#ffe4de", "#ff8a76", "#ff4a35"], low: ["#e0281a", "#a8140a", "#600400"], glow: "#ff5a40" },
+  purple: { top: ["#f6e8ff", "#d4a2ff", "#b46cff"], low: ["#9346f0", "#6a22c0", "#3a0a78"], glow: "#c88cff" },
+  fuse: { top: ["#ffe6ff", "#f39cff", "#ee5bff"], low: ["#ff3a3a", "#c0101a", "#6a0008"], glow: "#ff6ad8" },
+};
 
-/** Action tile in the Lục Thần style: dark plate, glowing frame, round emblem, label, and the mana it costs. */
+/** A faceted crystal floating over a gold ring pedestal (simple 3D, after the owner's reference picture). */
+export function Crystal({ tone }: { tone: SheetTone }) {
+  const c = CRYSTAL[tone];
+  const [t1, t2, t3] = c.top;
+  const [l1, l2, l3] = c.low;
+  return (
+    <svg className="crystal3d" viewBox="0 0 100 120" aria-hidden="true">
+      <defs>
+        <radialGradient id={`crystal-halo-${tone}`}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="0.35" stopColor={c.glow} stopOpacity="0.55" />
+          <stop offset="1" stopColor={c.glow} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="50" cy="56" rx="44" ry="50" fill={`url(#crystal-halo-${tone})`} opacity="0.6" />
+      <g className="crystal3d-base">
+        <ellipse cx="50" cy="101" rx="44" ry="12" fill="url(#pedestal3d)" stroke="#3a2406" strokeWidth="1" />
+        <ellipse cx="50" cy="99" rx="34" ry="8" fill="#2a1a06" />
+        <ellipse cx="50" cy="99" rx="32" ry="7" fill="none" stroke={c.glow} strokeWidth="2.8" opacity="0.95" />
+        <ellipse cx="50" cy="99" rx="32" ry="7" fill="none" stroke="#ffffff" strokeWidth="0.9" opacity="0.8" />
+        <path d="M42 99 L42 95 Q50 92 58 95 L58 99 Q50 102 42 99 Z" fill="url(#pedestal3d)" stroke="#3a2406" strokeWidth="0.8" />
+      </g>
+      <g className="crystal3d-gem">
+        <polygon points="50,4 22,44 38,52" fill={t2} />
+        <polygon points="50,4 38,52 62,52" fill={t1} />
+        <polygon points="50,4 62,52 78,44" fill={t3} />
+        <polygon points="22,44 38,52 50,88" fill={l2} />
+        <polygon points="38,52 62,52 50,88" fill={l1} />
+        <polygon points="62,52 78,44 50,88" fill={l3} />
+        <polyline points="50,4 38,52 50,88 62,52 50,4" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="0.8" />
+        <polyline points="22,44 38,52 62,52 78,44" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="0.9" />
+        <polygon points="50,10 41,40 46,43" fill="#ffffff" opacity="0.75" />
+        <path d="M66 20 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z" fill="#ffffff" />
+        <path d="M33 62 l1 2.6 2.6 1 -2.6 1 -1 2.6 -1 -2.6 -2.6 -1 2.6 -1 Z" fill="#ffffff" opacity="0.85" />
+      </g>
+    </svg>
+  );
+}
+
+/** Action tile: dark plate in a glowing frame, the 3D crystal, and beside it the label and the mana it costs. */
 export function ActionButton({ action, mini = false }: { action: SheetAction; mini?: boolean }) {
   return (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={action.onPress}>
       <span className="act3d-ico">
-        <Glyph name={ACTION_ICON[action.tone]} fill={`url(#act3d-${action.tone})`} />
+        <Crystal tone={action.tone} />
       </span>
       <span className="act3d-label">
         {tr(action.label)}
@@ -135,7 +194,7 @@ export function MonsterSheet({
               <span className="sk3d-core">
                 <Glyph name={skill.icon} />
               </span>
-              <Rim />
+              <Rim kind={skill.kind} />
             </span>
             <span className="sk3d-name">{tr(skill.name)}</span>
           </button>

@@ -6193,25 +6193,21 @@ button.watch-back {
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 0 #3a2200) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.8));
 }
-/* Action tiles in the Lục Thần style: dark plate in a glowing frame, round emblem on top, label under it.
+/* Action tiles: dark plate in a glowing frame, the 3D crystal on its pedestal, the label beside it.
    Triệu hồi gold, Hiến tế red, Dung hợp purple, a fused monster's summon purple over red. */
-.msheet-acts { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .act3d {
   --tone: #e9c46a;
   --glow: rgba(233, 196, 106, 0.55);
   position: relative;
-  min-width: 4.9rem;
-  min-height: 5.1rem;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  justify-items: center;
+  display: flex;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.4rem 0.45rem 0.35rem;
+  gap: 0.35rem;
+  min-height: 3.5rem;
+  padding: 0.2rem 0.75rem 0.2rem 0.25rem;
   border: 2px solid var(--tone);
   border-radius: 0.85rem;
   background:
-    radial-gradient(90% 60% at 50% 30%, rgba(255, 255, 255, 0.08), transparent 70%),
+    radial-gradient(90% 70% at 25% 50%, rgba(255, 255, 255, 0.07), transparent 70%),
     linear-gradient(180deg, #2c2b2f 0%, #141316 55%, #08080a 100%);
   box-shadow:
     0 0 0 1px #000,
@@ -6220,44 +6216,32 @@ button.watch-back {
     inset 0 -0.6rem 0.9rem rgba(0, 0, 0, 0.6),
     0 0.45rem 0.7rem rgba(0, 0, 0, 0.65);
   color: #fff;
-  transition: transform 90ms ease-out, box-shadow 120ms ease-out;
+  transition: transform 90ms ease-out;
   animation: act3d-glow 1.8s ease-in-out infinite;
 }
 @keyframes act3d-glow {
   50% { box-shadow: 0 0 0 1px #000, 0 0 20px 6px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -0.6rem 0.9rem rgba(0, 0, 0, 0.6), 0 0.45rem 0.7rem rgba(0, 0, 0, 0.65); }
 }
-.act3d:active { transform: translateY(2px) scale(0.95); }
+.act3d:active { transform: translateY(2px) scale(0.96); }
 .act3d.is-red { --tone: #ff5a3c; --glow: rgba(255, 70, 40, 0.55); }
 .act3d.is-purple { --tone: #c27aff; --glow: rgba(180, 92, 255, 0.55); }
 .act3d.is-fuse {
   --glow: rgba(238, 91, 255, 0.5);
   border-color: transparent;
   background:
-    radial-gradient(90% 60% at 50% 30%, rgba(255, 255, 255, 0.08), transparent 70%) padding-box,
+    radial-gradient(90% 70% at 25% 50%, rgba(255, 255, 255, 0.07), transparent 70%) padding-box,
     linear-gradient(180deg, #2c2b2f 0%, #141316 55%, #08080a 100%) padding-box,
     linear-gradient(180deg, #ee5bff 0 50%, #ff2d2d 50% 100%) border-box;
 }
-.act3d-ico {
-  width: 3rem;
-  height: 3rem;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 32%, #303034 0%, #0b0b0d 70%);
-  box-shadow:
-    0 0 0 2px var(--tone),
-    0 0 0 3.5px #000,
-    0 0 10px var(--glow),
-    inset 0 0.15rem 0.3rem rgba(255, 255, 255, 0.16),
-    inset 0 -0.3rem 0.5rem rgba(0, 0, 0, 0.85);
-}
-.act3d.is-fuse .act3d-ico { box-shadow: 0 0 0 2px #ee5bff, 0 0 0 3.5px #000, 0 0 10px var(--glow), inset 0 0.15rem 0.3rem rgba(255, 255, 255, 0.16), inset 0 -0.3rem 0.5rem rgba(0, 0, 0, 0.85); }
-.act3d-ico .glyph3d { width: 62%; height: 62%; filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 4px var(--glow)); }
+.act3d-ico { flex: none; width: 3.3rem; height: 3.9rem; margin: -0.35rem 0 -0.25rem; display: grid; place-items: center; }
+.crystal3d { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.7)); }
+.crystal3d-gem { animation: crystal-bob 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes crystal-bob { 50% { transform: translateY(-3px); } }
 .act3d-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  font-size: 0.74rem;
+  gap: 0.25rem;
+  font-size: 0.86rem;
   font-weight: 900;
   line-height: 1.05;
   white-space: nowrap;
@@ -6265,19 +6249,20 @@ button.watch-back {
   -webkit-text-stroke: 0.4px #000;
   text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 2px 3px rgba(0, 0, 0, 0.8);
 }
-.act3d-cost { display: inline-flex; align-items: center; gap: 0.12rem; }
-.act3d-cost b { color: #9ef4ff; font-size: 0.8rem; font-weight: 900; -webkit-text-stroke: 0.4px #06243f; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
+.act3d-cost { display: inline-flex; align-items: center; gap: 0.15rem; }
+.act3d-cost b { color: #9ef4ff; font-size: 0.86rem; font-weight: 900; -webkit-text-stroke: 0.4px #06243f; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
 .mana-gem {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 0.62rem;
+  height: 0.62rem;
   transform: rotate(45deg);
   border-radius: 0.1rem;
   background: linear-gradient(135deg, #f2feff 0%, #7fe0ff 30%, #3ec6ff 55%, #0d5fae 100%);
   box-shadow: 0 0 6px #3ec6ff, inset 0 0 2px #fff, 0 0 0 1px #06243f;
 }
-.act3d.is-mini { min-width: 4.1rem; min-height: 4.3rem; padding: 0.3rem 0.35rem 0.3rem; }
-.act3d.is-mini .act3d-ico { width: 2.45rem; height: 2.45rem; }
-.act3d.is-mini .act3d-label { font-size: 0.66rem; }
+.act3d.is-mini { min-height: 2.9rem; padding: 0.15rem 0.6rem 0.15rem 0.2rem; }
+.act3d.is-mini .act3d-ico { width: 2.6rem; height: 3.1rem; margin: -0.25rem 0 -0.2rem; }
+.act3d.is-mini .act3d-label { font-size: 0.76rem; }
+.msheet-acts { display: grid; gap: 0.5rem; justify-items: start; }
 .msheet-desc {
   margin-top: 0.75rem;
   padding: 0.55rem 0.75rem 0.65rem;
@@ -6334,16 +6319,18 @@ button.watch-back {
 }
 .vow3d-no:active { transform: translateY(0.2rem); box-shadow: 0 0.02rem 0 #07090d, inset 0 1px 0 rgba(255, 255, 255, 0.25); }
 
-/* Fusion, as in the reference video: the board goes dark (it does not tilt), both cards fly from where they are
-   to the middle and stack, burst in a white flash with flying sparks, the fused card shows large, then lands. */
+/* Fusion, after the reference video: the board goes dark (no tilt); the hand card sweeps onto its partner at
+   field size; the two flare into a white star with long streaks; the screen whites out with drifting sparkles;
+   the fused card shows large out of the white; after Triệu hồi it lays down onto its slot. */
 .diorama { transition: filter 500ms ease; }
-.board.is-fusing .diorama { filter: brightness(0.28) saturate(0.75); }
+.board.is-fusing .diorama { filter: brightness(0.3) saturate(0.75); }
 .fuse3d {
   position: absolute;
   inset: 0;
   z-index: 70;
   overflow: hidden;
-  background: radial-gradient(90% 70% at 50% 45%, rgba(30, 10, 50, 0.3), rgba(0, 0, 0, 0.55));
+  perspective: 900px;
+  background: radial-gradient(90% 70% at 50% 45%, rgba(20, 10, 40, 0.25), rgba(0, 0, 0, 0.5));
 }
 .fuse3d-card {
   position: absolute;
@@ -6351,55 +6338,62 @@ button.watch-back {
   top: var(--y0);
   width: var(--w0);
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 0 12px rgba(238, 91, 255, 0.75)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.8));
 }
-.fuse3d-card.is-b { z-index: 2; }
-.fuse3d.is-fly .fuse3d-card.is-a { animation: fuse-a 1.15s cubic-bezier(0.45, 0, 0.25, 1) forwards; }
-.fuse3d.is-fly .fuse3d-card.is-b { animation: fuse-b 1.15s cubic-bezier(0.45, 0, 0.25, 1) forwards; }
-@keyframes fuse-a {
+.fuse3d-card.is-b { left: var(--bx); top: var(--by); width: var(--wb); }
+.fuse3d.is-meet .fuse3d-card.is-a { animation: fuse-sweep 0.9s cubic-bezier(0.55, 0, 0.3, 1) forwards; }
+@keyframes fuse-sweep {
   0% { left: var(--x0); top: var(--y0); width: var(--w0); transform: translate(-50%, -50%) rotate(0deg); }
-  65% { left: 42%; top: 46%; width: 30%; transform: translate(-50%, -50%) rotate(-8deg); }
-  100% { left: 47%; top: 45%; width: 30%; transform: translate(-50%, -50%) rotate(-4deg); }
+  75% { left: calc(var(--bx) + 3%); top: calc(var(--by) - 4%); width: var(--wb); transform: translate(-50%, -50%) rotate(-7deg); }
+  100% { left: calc(var(--bx) + 2%); top: calc(var(--by) - 2%); width: var(--wb); transform: translate(-50%, -50%) rotate(-4deg); }
 }
-@keyframes fuse-b {
-  0% { left: var(--x0); top: var(--y0); width: var(--w0); transform: translate(-50%, -50%) rotate(0deg); }
-  65% { left: 58%; top: 40%; width: 30%; transform: translate(-50%, -50%) rotate(8deg); }
-  100% { left: 53%; top: 43%; width: 30%; transform: translate(-50%, -50%) rotate(4deg); }
+.fuse3d.is-flare .fuse3d-card.is-a { left: calc(var(--bx) + 2%); top: calc(var(--by) - 2%); width: var(--wb); transform: translate(-50%, -50%) rotate(-4deg); }
+.fuse3d.is-flare .fuse3d-card { animation: fuse-glow 0.75s ease-in forwards; }
+@keyframes fuse-glow {
+  to { filter: brightness(4) drop-shadow(0 0 18px #ffffff); opacity: 0.4; }
 }
-.fuse3d.is-flash .fuse3d-card.is-a { left: 47%; top: 45%; width: 30%; animation: fuse-melt 0.75s ease-in forwards; }
-.fuse3d.is-flash .fuse3d-card.is-b { left: 53%; top: 43%; width: 30%; animation: fuse-melt 0.75s ease-in forwards; }
-@keyframes fuse-melt {
-  0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1) drop-shadow(0 0 12px rgba(238, 91, 255, 0.75)); }
-  45% { transform: translate(-50%, -50%) scale(0.92) rotate(2deg); filter: brightness(3) drop-shadow(0 0 30px #fff); }
-  100% { transform: translate(-50%, -50%) scale(0.5); filter: brightness(6) drop-shadow(0 0 40px #fff); opacity: 0; }
+/* The flare: a white core with long cross streaks, thin diagonals and a wide horizontal glint. */
+.fuse3d-star { position: absolute; left: var(--bx); top: var(--by); width: 0; height: 0; z-index: 3; }
+.fuse3d-star i { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: 999px; animation: star-grow 0.75s cubic-bezier(0.3, 0, 0.3, 1) both; }
+.fuse3d-star .is-core {
+  width: 30vmin;
+  height: 30vmin;
+  translate: -50% -50%;
+  background: radial-gradient(circle, #ffffff 0%, #ffffff 16%, rgba(255, 236, 255, 0.85) 30%, rgba(230, 170, 255, 0.35) 55%, transparent 72%);
 }
-.fuse3d-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
-.fuse3d.is-flash .fuse3d-flash {
-  background:
-    radial-gradient(circle at 50% 44%, #ffffff 0%, rgba(255, 245, 255, 0.95) 20%, rgba(238, 91, 255, 0.5) 42%, transparent 72%),
-    repeating-conic-gradient(from 0deg at 50% 44%, rgba(255, 255, 255, 0.5) 0deg 3deg, transparent 3deg 14deg);
-  animation: fuse-flash 750ms ease-out both;
+.fuse3d-star .is-x, .fuse3d-star .is-y, .fuse3d-star .is-d1, .fuse3d-star .is-d2, .fuse3d-star .is-wide {
+  width: 120vmin;
+  height: 1.6vmin;
+  translate: -50% -50%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 220, 255, 0.5) 30%, #ffffff 50%, rgba(255, 220, 255, 0.5) 70%, transparent 100%);
 }
-@keyframes fuse-flash {
-  0% { opacity: 0; transform: scale(0.3); }
-  30% { opacity: 1; }
-  100% { opacity: 0.15; transform: scale(1.7) rotate(20deg); }
+.fuse3d-star .is-y { rotate: 90deg; }
+.fuse3d-star .is-d1 { rotate: 45deg; width: 60vmin; height: 0.9vmin; }
+.fuse3d-star .is-d2 { rotate: -45deg; width: 60vmin; height: 0.9vmin; }
+.fuse3d-star .is-wide { width: 180vmin; height: 3vmin; opacity: 0.6; filter: blur(2px); }
+@keyframes star-grow {
+  0% { scale: 0.05; opacity: 0; }
+  25% { opacity: 1; }
+  100% { scale: 1.15; opacity: 1; }
 }
-.fuse3d-sparks { position: absolute; left: 50%; top: 44%; width: 0; height: 0; z-index: 3; }
-.fuse3d-sparks i {
+/* Whiteout with drifting, twinkling sparkles; it lifts as the fused card arrives. */
+.fuse3d-white { position: absolute; inset: 0; z-index: 4; background: #ffffff; animation: white-in 0.35s ease-out both; }
+.fuse3d.is-card .fuse3d-white { animation: white-out 0.9s ease-in forwards; }
+@keyframes white-in { from { opacity: 0; } }
+@keyframes white-out { from { opacity: 1; } to { opacity: 0; } }
+.fuse3d-white i {
   position: absolute;
-  left: -3px;
-  top: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, #ffd6ff 45%, rgba(238, 91, 255, 0) 75%);
-  box-shadow: 0 0 8px #fff, 0 0 14px #ee5bff;
-  animation: fuse-spark var(--t) ease-out 0.15s both;
+  width: calc(4.5vmin * var(--s));
+  aspect-ratio: 1;
+  background: radial-gradient(circle, #ffffff 0 18%, rgba(200, 140, 255, 0.9) 32%, transparent 62%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 3px #d9a6ff);
+  animation: sparkle-drift var(--t) ease-in-out var(--dl) infinite;
 }
-@keyframes fuse-spark {
-  from { transform: rotate(var(--a)) translateX(0) scale(1.4); opacity: 1; }
-  to { transform: rotate(var(--a)) translateX(var(--d)) scale(0.3); opacity: 0; }
+@keyframes sparkle-drift {
+  0% { transform: translateY(0) scale(0.4) rotate(0deg); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(-9vmin) scale(1.1) rotate(45deg); opacity: 0; }
 }
 .fuse3d-big {
   position: absolute;
@@ -6407,36 +6401,19 @@ button.watch-back {
   top: 44%;
   width: 46%;
   transform: translate(-50%, -50%);
-  z-index: 4;
-  filter: drop-shadow(0 0 22px rgba(238, 91, 255, 0.85)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85));
+  z-index: 5;
+  filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.7)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85));
 }
-.fuse3d.is-card .fuse3d-big { animation: fuse-big 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.fuse3d.is-card .fuse3d-big { animation: fuse-big 0.9s ease-out both; }
 @keyframes fuse-big {
-  from { transform: translate(-50%, -50%) scale(0.25); opacity: 0; filter: brightness(3); }
-  to { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: brightness(1) drop-shadow(0 0 22px rgba(238, 91, 255, 0.85)); }
+  from { opacity: 0; filter: brightness(3) drop-shadow(0 0 30px #ffffff); transform: translate(-50%, -50%) scale(0.92); }
+  to { opacity: 1; filter: brightness(1) drop-shadow(0 0 18px rgba(255, 255, 255, 0.7)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85)); transform: translate(-50%, -50%) scale(1); }
 }
-.fuse3d.is-land .fuse3d-big { animation: fuse-land 0.65s cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+.fuse3d.is-land .fuse3d-big { animation: fuse-land 0.75s cubic-bezier(0.45, 0, 0.6, 1) forwards; }
 @keyframes fuse-land {
-  from { left: 50%; top: 44%; width: 46%; }
-  to { left: var(--sx); top: var(--sy); width: var(--sw); }
+  0% { left: 50%; top: 44%; width: 46%; transform: translate(-50%, -50%) rotateX(0deg); }
+  55% { transform: translate(-50%, -50%) rotateX(58deg); }
+  100% { left: var(--sx); top: var(--sy); width: var(--sw); transform: translate(-50%, -50%) rotateX(0deg); }
 }
-.fuse3d-rays {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 190%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 220, 255, 0.55) 0%, rgba(238, 91, 255, 0.25) 30%, transparent 60%),
-    repeating-conic-gradient(from 0deg, rgba(255, 210, 255, 0.35) 0deg 4deg, transparent 4deg 18deg);
-  -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 70%);
-  mask-image: radial-gradient(circle, #000 25%, transparent 70%);
-  animation: fuse-rays 6s linear infinite;
-  z-index: -1;
-}
-.fuse3d.is-land .fuse3d-rays { opacity: 0; transition: opacity 0.3s; }
-@keyframes fuse-rays { to { transform: translate(-50%, -50%) rotate(360deg); } }
 .fuse3d .msheet-back { background: transparent; }
 .credit-note { margin-top: 0.6rem; font-size: 0.68rem; opacity: 0.65; }

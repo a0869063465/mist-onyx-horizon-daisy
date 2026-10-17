@@ -2,7 +2,7 @@ const KEY = "clash-sound";
 const FX_KEY = "clash-vol-fx";
 const TAP_KEY = "clash-vol-tap";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/user-summon.ogg?v=4",
@@ -208,6 +208,7 @@ export function playTap() {
 export function playCue(kind: Cue, delay?: number, offset = 0) {
   if (kind === "tap") return playTap();
   if (kind === "riteSummon") return riteSummon(delay ?? 0);
+  if (kind === "fuseRite") return fuseRite(delay ?? 0);
   const clip = CLIPS[kind];
   if (clip) return playClip(clip, delay ?? CLIP_DELAY[kind] ?? 0, kind === "poison", offset);
   if (kind === "block" || kind === "hit") tone(140, 0, 0.12, "square", 0.07, 70);
@@ -317,6 +318,52 @@ function riteSummon(delay: number) {
     thump(audio, hit + 0.05, 0.6 * vol);
     noiseBurst(audio, hit, 0.9, 3800, 180, 0.32 * vol);
     for (const [freq, at] of [[110, 0], [164.8, 0.02], [220, 0.04], [329.6, 0.07]] as const) bell(audio, hit + at, freq, 1.6, 0.07 * vol);
+  });
+}
+
+/** A soft pad note that swells in and fades: the choir under the fusion. */
+function pad(audio: AudioContext, start: number, freq: number, dur: number, level: number) {
+  const osc = audio.createOscillator();
+  const air = audio.createOscillator();
+  const amp = audio.createGain();
+  osc.type = "triangle";
+  air.type = "sine";
+  osc.frequency.setValueAtTime(freq, start);
+  air.frequency.setValueAtTime(freq * 2.003, start);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + dur * 0.45);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(amp);
+  air.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  air.start(start);
+  osc.stop(start + dur + 0.02);
+  air.stop(start + dur + 0.02);
+}
+
+/**
+ * Fusion, timed to the scene: the card sweeps onto its partner (rising wind), the two flare into a star
+ * (glass chimes), the screen whites out (a huge airy swell with a choir), and the new monster rings in.
+ */
+function fuseRite(delay: number) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    noiseBurst(audio, t, 0.85, 250, 2600, 0.16 * vol);
+    tone(330, delay + 0.05, 0.8, "sine", 0.02, 660);
+    const flare = t + 0.9;
+    for (const [freq, at] of [[1568, 0], [2093, 0.05], [2637, 0.1], [3136, 0.15], [3951, 0.2], [2637, 0.3], [3520, 0.38]] as const) bell(audio, flare + at, freq, 0.9, 0.05 * vol);
+    noiseBurst(audio, flare, 0.8, 5200, 9000, 0.07 * vol);
+    const white = t + 1.65;
+    noiseBurst(audio, white, 1.3, 180, 6200, 0.3 * vol);
+    thump(audio, white + 0.05, 0.55 * vol);
+    for (const freq of [220, 277.2, 329.6, 440]) pad(audio, white, freq, 1.9, 0.06 * vol);
+    const ring = t + 2.5;
+    for (const [freq, at] of [[523.3, 0], [659.3, 0.04], [784, 0.08], [1046.5, 0.12]] as const) bell(audio, ring + at, freq, 1.4, 0.08 * vol);
   });
 }
 

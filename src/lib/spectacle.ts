@@ -13,8 +13,9 @@ export type FxEvent =
   | { t: "laser"; x1: number; y1: number; x2: number; y2: number; pack?: FxPack }
   | { t: "tide"; rank: "small" | "mid" | "big"; x: number; y: number; pack?: FxPack }
   | { t: "shield"; kind: "phys" | "spell"; x: number; y: number; pack?: FxPack }
-  /** Sacrifice summon landing on a slot (always played, whatever the effect style). */
-  | { t: "rite"; x: number; y: number; pack?: FxPack };
+  /** A monster arriving on a slot in a summoning circle (always played, whatever the effect style):
+   * blood = sacrifice summon, holy = summon, fuse = fused monster. */
+  | { t: "rite"; x: number; y: number; kind?: "blood" | "holy" | "fuse"; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

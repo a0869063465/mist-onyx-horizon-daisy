@@ -5,11 +5,21 @@
  * A skill whose heading is missing from the text shows the whole card text.
  */
 export type SkillKind = "active" | "passive";
-export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string };
+/**
+ * `pick` takes a small skill out of a shared skill set: the lines of the card text that contain any of these
+ * words (with their indented follow-on lines). Used when one heading holds several small skills, e.g. Khiên
+ * Ân Huệ holds the blessings of the knight, the king and the queen.
+ */
+export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[] };
 export type SkillShown = SkillEntry & { text: string };
 
 const A = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "active", icon, head });
 const P = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "passive", icon, head });
+const AP = (name: string, icon: string, ...pick: string[]): SkillEntry => ({ name, kind: "active", icon, pick });
+const PP = (name: string, icon: string, ...pick: string[]): SkillEntry => ({ name, kind: "passive", icon, pick });
+const KNIGHT = PP("Lời chúc của kỵ sĩ", "black-knight-helm", "lời chúc của kỵ sĩ");
+const KING = PP("Lời chúc của vua", "imperial-crown", "lời chúc của vua");
+const QUEEN = PP("Lời chúc của hậu", "queen-crown", "lời chúc của hậu");
 
 export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "phu-thuy-thoi-gian": [A("Lão hoá", "hourglass"), P("Cường hoá Lão Hoá", "anticlockwise-rotation"), A("Dòng chảy thời gian", "clockwork")],
@@ -18,7 +28,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "kiem-si-lua-thieng": [A("Vệt lửa", "fire-dash"), A("Long Hoả", "fire-breath"), A("Truy cùng diệt tận", "flame-spin"), A("Hoả thần long", "dragon-head")],
   "dau-si-bo-tot": [P("Chiến lợi phẩm", "charging-bull")],
   "trieu-hoi-ac-ma": [P("Khế ước ác ma", "pentagram-rose"), A("Sấm địa ngục", "lightning-flame")],
-  "ky-si-bong-toi": [P("Kỵ pháp", "mounted-knight"), A("Hiến Tế", "sacrificial-dagger")],
+  "ky-si-bong-toi": [PP("Kỵ pháp", "mounted-knight", "khi giáp lá cà"), PP("Chiến ý", "sword-brandish", "chiến ý"), A("Hiến Tế", "sacrificial-dagger")],
   "yeu-tinh-chuc-phuc": [P("Lời chúc phúc của tinh linh", "fairy-wand"), A("Hỗ công", "crossed-swords"), A("Hộ thủ", "checked-shield")],
   "mo-voi-ma-mut": [A("Nguyền rủa", "animal-skull"), P("Ác linh", "ghost")],
   "ong-khong-lo": [A("Tê liệt", "bee")],
@@ -33,10 +43,20 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhinoceros-horn")],
   "phu-thuy-ti-hon": [A("Cầu sấm", "focused-lightning")],
-  "sau-non": [A("Hoá Kén", "caterpillar")],
+  "sau-non": [
+    AP("Hoá Kén", "caterpillar", "tiêu hao 1 mana.", "kén có công", "kén và chân kén hồi"),
+    AP("Chân kén", "spider-web", "tạo tối đa 2 chân kén"),
+    PP("Nở", "butterfly", "đầu lượt của bạn", "đủ 4 lần", "đủ 5 lần", "đủ 6 lần", "chết từ mốc"),
+  ],
   "trai-tim-hai-long": [A("Triều lên", "wave-crest"), A("Con nước lớn tàn phá", "big-wave"), A("Đại hồng thuỷ huỷ diệt", "waves")],
   "sua-hut-ma-phap": [A("Ma pháp tích tụ", "jellyfish")],
-  "con-thinh-no-cua-hai-vuong": [P("Đè nén", "trident-shield"), A("Cơn thịnh nộ của hải thần", "trident"), P("Biển lặng", "wave-surfer")],
+  "con-thinh-no-cua-hai-vuong": [
+    PP("Lá chắn vật lý", "checked-shield", "lá chắn vật lý"),
+    PP("Lá chắn phép", "magic-shield", "lá chắn phép"),
+    P("Đè nén", "trident-shield"),
+    A("Cơn thịnh nộ của hải thần", "trident"),
+    P("Biển lặng", "wave-surfer"),
+  ],
   "chien-binh-lan-khuat": [A("Ẩn mình", "hooded-assassin")],
   "ke-san-moi-tu-than": [P("Kẻ săn mồi tử thần", "grim-reaper")],
   "sat-nhan-bat-giu": [A("Bắt Giữ", "manacles")],
@@ -50,21 +70,29 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
-  "may-quay-thuong": [A("Quay thưởng", "slot-machine"), A("Con bạc nổi giận", "dice-fire")],
+  "may-quay-thuong": [
+    AP("Quay thưởng", "slot-machine", "quay thưởng một lần", "vòng quay trúng"),
+    AP("Số 7", "card-joker", "- số 7"),
+    AP("Kiếm", "broadsword", "- kiếm"),
+    AP("Khiên", "round-shield", "- khiên"),
+    AP("Thập tự", "health-normal", "- thập tự"),
+    AP("Số 6", "dice-six-faces-six", "-số 6", "- số 6"),
+    A("Con bạc nổi giận", "dice-fire"),
+  ],
   "rong-con": [A("Hơi thở rồng", "dragon-breath")],
   "rong-ngan-tuoi": [A("Hơi thở rồng", "dragon-breath")],
   "chien-binh-rong": [P("Vảy rồng", "scale-mail")],
   "ma-dao-si": [A("Ma đạn", "bolt-spell-cast")],
   "loi-nguyen-cua-rong": [A("Địa ngục lửa", "fire-ring")],
   "thien-than-be-nho": [A("Thiên thần hộ mệnh", "angel-outfit"), P("Tinh linh bé nhỏ", "fairy")],
-  "hiep-si-cua-vua": [P("Khiên Ân Huệ", "crowned-heart"), P("Kiếm tấn công", "broadsword")],
-  "hiep-si-ho-ve": [P("Khiên Ân Huệ", "crowned-heart"), A("Kiếm hộ vệ", "sword-in-stone"), P("Học tập và trưởng thành", "open-book")],
-  "hiep-si-cua-hau": [P("Khiên Ân Huệ", "crowned-heart"), A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
+  "hiep-si-cua-vua": [KNIGHT, QUEEN, P("Kiếm tấn công", "broadsword")],
+  "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, A("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành")],
+  "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), A("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
-  "my-dieu-nhan": [A("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Roi điện", "electric-whip")],
-  "nu-chua-dieu-nhan": [A("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Dụ dỗ", "lips"), A("Roi điện", "electric-whip")],
+  "my-dieu-nhan": [A("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Roi điện", "electric-whip"), PP("Tiến hoá", "dna2", "mỗi kỹ năng chỉ dùng", "sau mỗi lần kích hoạt", "đủ 4 kỹ năng")],
+  "nu-chua-dieu-nhan": [A("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Dụ dỗ", "lips"), A("Roi điện", "electric-whip"), PP("Tiến hoá", "dna2", "mỗi kỹ năng chỉ dùng", "sau mỗi lần kích hoạt", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), A("Gió xoáy", "tornado"), A("Dụ dỗ", "lips"), A("Roi sấm", "lightning-branches")],
-  "the-than-cua-shien": [A("Thế thân", "ninja-heroic-stance")],
+  "the-than-cua-shien": [PP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), AP("Thế thân trên tay", "card-exchange", "- trên tay")],
   "phu-thuy-rung-den": [A("Nguyền rủa", "witch-face")],
   "ky-si-cuoi-rong": [P("Mũi thương bị nguyền rủa", "barbed-spear"), P("Lửa địa ngục", "flame-tunnel")],
   "rong-ac-ma": [A("Hoả cầu địa ngục", "burning-skull")],
@@ -75,6 +103,33 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ngai-nu-hoang": [A("Thổi độc", "poison-cloud")],
   "ngai-hoan-my": [A("Thổi độc", "poison-cloud")],
 };
+
+function norm(text: string) {
+  return text.replace(/\*\*|__/g, "").trim().toLowerCase();
+}
+
+/** A heading line on its own, like "__**Khiên Ân Huệ**__:". */
+const HEADING_LINE = /^\s*(?:\*\*__|__\*\*)[^\n]*?(?:__\*\*|\*\*__)\s*:?\s*$/;
+
+/** The lines holding any of the words, each with the indented lines that continue it. */
+function pickLines(text: string, words: string[]): string[] {
+  const lines = text.split("\n");
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = norm(lines[i]);
+    if (!line || !words.some((word) => line.includes(word.toLowerCase()))) continue;
+    out.push(lines[i]);
+    while (i + 1 < lines.length && /^[ \t]{2,}\S/.test(lines[i + 1])) out.push(lines[++i]);
+  }
+  return out;
+}
+
+const tidy = (lines: string[]) =>
+  lines
+    .map((line) => line.trim().replace(/^(?:\*\*__|__\*\*|\*\*|__)\s*/, ""))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
 /** Every skill icon the book uses (for the icon extractor and checks). */
 export const SKILL_ICON_NAMES = [...new Set(Object.values(SKILL_BOOK).flatMap((list) => list.map((entry) => entry.icon)))];
@@ -114,15 +169,20 @@ function dropHead(segment: string, head: string): string {
 export function skillsOf(cardId: string, text: string): SkillShown[] {
   const list = SKILL_BOOK[cardId] ?? [];
   if (list.length === 0) return [];
-  const starts = list.map((entry) => (entry.head ? findHead(text, entry.head) : -1));
+  // Lines a small skill took for itself, and bare heading lines, are left out of the bigger skills around them.
+  const taken = new Set(list.flatMap((entry) => (entry.pick ? pickLines(text, entry.pick).map(norm) : [])));
+  const keep = (chunk: string) => chunk.split("\n").filter((line) => !taken.has(norm(line)) && !HEADING_LINE.test(line));
+  const starts = list.map((entry) => (entry.pick ? -1 : entry.head ? findHead(text, entry.head) : -1));
   const sorted = [...new Set(starts.filter((at) => at >= 0))].sort((a, b) => a - b);
   const first = sorted[0] ?? -1;
   return list.map((entry, i) => {
+    if (entry.pick) return { ...entry, text: tidy(pickLines(text, entry.pick)) };
     const at = starts[i];
     if (at < 0) return { ...entry, text: entry.head === "" ? text.trim() : "" };
     const end = sorted.find((other) => other > at) ?? text.length;
     // Lines before the first heading (a card's general rule) go with the first skill.
-    const lead = at === first && first > 0 ? `${text.slice(0, first).trim()}\n\n` : "";
-    return { ...entry, text: `${lead}${dropHead(text.slice(at, end), entry.head ?? "").trim()}` };
+    const lead = at === first && first > 0 ? tidy(keep(text.slice(0, first))) : "";
+    const body = tidy(keep(dropHead(text.slice(at, end), entry.head ?? "")));
+    return { ...entry, text: lead ? `${lead}\n\n${body}` : body };
   });
 }

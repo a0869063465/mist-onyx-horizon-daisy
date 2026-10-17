@@ -509,10 +509,11 @@ export const PENDING_NOTES: string[] = [
   "Hướng dẫn mới: chào mừng, quả cầu ma pháp, đổi bài, số bài của mình và đối phương, mộ mana, sao, triệu hồi, kết thúc lượt, thanh phản ứng. Đối thủ dùng Sợi xích địa ngục, bạn chặn bằng Hấp thụ ma pháp, rồi bạn rút và dùng Sợi xích địa ngục.",
   "Số bài trên góc xấp bài của bạn, số phép trên tay và số quái dự bị của đối phương to gấp đôi, nằm trong ô nổi khối.",
   "Sửa lỗi: kéo thả quái ra sân xong thì lần chạm kế tiếp vào quái trên sân bị bỏ qua, phải chạm hai lần.",
-  "Bảng quái mới khi bấm quái trên tay hoặc trên sân: hàng icon kỹ năng chủ động vòng xanh lam, nội tại vòng tím, bấm icon để xem mô tả. Lá hiện như trên sân, số cam ở góc trái trên.",
-  "Nút Triệu hồi vàng, Hiến tế đỏ, Dung hợp tím kiểu ô nổi: huy hiệu tròn có icon, chữ bên dưới, viên ngọc và số mana cần. Icon kỹ năng là huy hiệu vành vàng. Nút nào chưa đủ điều kiện thì không hiện.",
-  "Hiến tế mở khung chọn quái hiến tế 3D, bấm Triệu hồi đỏ để triệu hồi. Dung hợp: bàn tối đi, hai lá bay vào nhau, loé sáng, quái dung hợp hiện to, bấm Triệu hồi tím đỏ thì quái bay xuống sân.",
+  "Bảng quái mới khi bấm quái trên tay hoặc trên sân: hàng icon kỹ năng chủ động vành xanh lam, nội tại vành tím, bấm icon để xem mô tả. Kỹ năng gộp được tách thành từng kỹ năng nhỏ, như Khiên Ân Huệ thành Lời chúc của kỵ sĩ, Lời chúc của vua, Lời chúc của hậu. Lá hiện như trên sân, số cam ở góc trái trên.",
+  "Nút Triệu hồi, Hiến tế, Dung hợp có viên pha lê 3D trên bệ vàng (vàng, đỏ, tím), chữ bên cạnh, viên ngọc và số mana cần. Nút nào chưa đủ điều kiện thì không hiện.",
+  "Hiến tế mở khung chọn quái hiến tế 3D, bấm Triệu hồi đỏ để triệu hồi. Dung hợp: lá lướt chồng lên quái, loé sáng hình ngôi sao, màn hình trắng xoá có sao lấp lánh, quái dung hợp hiện to, bấm Triệu hồi tím đỏ thì quái nằm xuống sân trong vòng triệu hồi tím. Âm thanh dung hợp mới. Kéo lá lên quái cũng ra cảnh này.",
   "Triệu hồi hiến tế có hiệu ứng và âm thanh mới: vòng ấn máu mở dưới ô, cột lửa địa ngục giáng xuống. Lửa trên quái bị hiến tế giữ nguyên.",
+  "Quái được triệu hồi ra sân có vòng triệu hồi vàng và cột sáng, hoành tráng như triệu hồi hiến tế.",
 ];
 
 function remarkOf(notes: string[]) {

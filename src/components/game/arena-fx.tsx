@@ -277,13 +277,19 @@ export function ArenaFx() {
       });
     };
 
-    // Sacrifice summon: a blood sigil opens on the slot, embers spiral up, a pillar of hellfire falls and slams
-    // into a shockwave as the monster arrives.
-    const rite = (x: number, y: number) => {
+    // Summoning circle: a sigil opens on the slot, motes spiral up, a pillar falls and slams into a shockwave as
+    // the monster arrives. Sacrifice summons burn in blood and hellfire, summons shine gold, fusions glow violet.
+    const RITE: Record<"blood" | "holy" | "fuse", { outer: Pal; inner: Pal; dark: string; light: string; mote: Bit }> = {
+      blood: { outer: PAL.blood, inner: PAL.fire, dark: "#5a0008", light: "#fff1d0", mote: "ember" },
+      holy: { outer: PAL.holy, inner: { core: "#ffffff", mid: "#9fe6ff", deep: "#2a7fd0", bit: "mote" }, dark: "#3a2a00", light: "#fffbe8", mote: "mote" },
+      fuse: { outer: PAL.arcane, inner: { core: "#ffe6ff", mid: "#ee5bff", deep: "#8a1a8a", bit: "glyph" }, dark: "#2a0838", light: "#fff0ff", mote: "mote" },
+    };
+    const rite = (x: number, y: number, kind: "blood" | "holy" | "fuse" = "blood") => {
       const u = unit();
-      const fire = PAL.fire;
-      const blood = PAL.blood;
-      flash("#5a0008", 0.35, 0.9);
+      const look = RITE[kind];
+      const fire = look.inner;
+      const blood = look.outer;
+      flash(look.dark, 0.35, 0.9);
       sigil(x, y + 3 * u, blood, 30, 2.4);
       later(120, () => sigil(x, y + 3 * u, fire, 18, 2.1));
       ring(x, y + 3 * u, blood.mid, 34, -18, 0.9, 3, 0.45);
@@ -302,7 +308,7 @@ export function ArenaFx() {
             max: 1.4,
             size: rand(1.6, 3) * u,
             color: Math.random() < 0.4 ? fire.core : Math.random() < 0.7 ? fire.mid : blood.mid,
-            shape: "ember",
+            shape: look.mote,
           });
         });
       }
@@ -313,13 +319,13 @@ export function ArenaFx() {
         flash(fire.mid, 0.18, 0.25);
       });
       later(900, () => {
-        flash("#fff1d0", 0.42, 0.35);
+        flash(look.light, 0.42, 0.35);
         shakeLight(1.3);
         ring(x, y + 3 * u, fire.core, 6, 150, 0.55, 7, 0.42);
         ring(x, y + 3 * u, blood.mid, 4, 95, 0.8, 5, 0.42);
         bits(x, y, fire, 46, 80, { shape: "spark", life: 0.6 });
         bits(x, y + 2 * u, fire, 30, 30, { up: 28, life: 1.3 });
-        bits(x, y + 4 * u, PAL.beast, 12, 18, { shape: "dust", life: 1.4 });
+        if (kind === "blood") bits(x, y + 4 * u, PAL.beast, 12, 18, { shape: "dust", life: 1.4 });
         sigil(x, y + 3 * u, fire, 24, 1.1);
       });
       later(1150, () => bits(x, y + 2 * u, blood, 20, 16, { up: 34, life: 1.6 }));
@@ -328,7 +334,7 @@ export function ArenaFx() {
     const onEvent = (e: FxEvent) => {
       if (e.t === "rite") {
         if (!reduced) {
-          rite(px(e.x), py(e.y));
+          rite(px(e.x), py(e.y), e.kind);
           wake();
         }
         return;
