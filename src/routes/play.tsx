@@ -109,7 +109,7 @@ import {
   type Side,
 } from "@/lib/duel";
 import { findFusion, findKnightFusion } from "@/lib/fusion";
-import { DEFAULT_ACTIONS, loadAlertLook, loadField, matchBoard, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
@@ -3155,7 +3155,7 @@ function PlayPage() {
   const foeSide = (viewer === 0 ? 1 : 0) as Side;
   const marksView = [
     ["foeHp", laserHp[`face:${foeSide}`] ?? foe.hp, ""],
-    ["foeOrb", foe.orb, ""],
+    ["foeOrb", tutView?.foeOrb ?? foe.orb, ""],
     ["foeFlask", Math.min(1, foe.flask), "bình"],
     ["foeStars", foe.stars, "sao"],
     ["foeGems", foe.starGems, "thừa"],
@@ -3253,6 +3253,15 @@ function PlayPage() {
           hand={hand}
           setHand={setHand}
           onView={setTutView}
+          drive={(run) =>
+            setDuel((current) => {
+              if (!current) return current;
+              const next = run(current);
+              if (next === current) return current;
+              if (next.live !== current.live) holdNotice(next.live, false, next.clock);
+              return next;
+            })
+          }
           onSkip={() => {
             setTutorial(false);
             setTutView(null);
@@ -3338,7 +3347,7 @@ function PlayPage() {
           if (gemKey && gemOwner.stars >= 4) return null;
           const always = orbKey || starKey || Boolean(tutView?.show?.includes(key));
           if (marks[key].hidden || (value === 0 && !always)) return null;
-          const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : foe.orb;
+          const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : tutView?.foeOrb ?? foe.orb;
           const starLit = starFlash !== null && ((starFlash === viewer && key === "youStars") || (starFlash !== viewer && key === "foeStars"));
           const color = orbKey
             ? value >= 3
@@ -3354,7 +3363,7 @@ function PlayPage() {
                 ? "#ff8a00"
                 : undefined;
           return (
-            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size}cqmin`, color }}>
+            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color }}>
               <b>{value}</b>
             </div>
           );
@@ -4663,8 +4672,18 @@ function PlayPage() {
                     type="button"
                     className="act press inspect-go"
                     onClick={() => {
-                      setAim({ kind: "summon", index: inspect.index });
+                      const index = inspect.index;
                       setInspect(null);
+                      const slot = you.field.findIndex((mon, at) => !mon && (you.locked?.[at] ?? 0) === 0);
+                      const held = you.reserve[index];
+                      const rite = held && vowCap(held.id, held.saved?.level ?? 1) > 0 && riteHand === index;
+                      // No free slot, or a sacrifice summon: pick the slot by hand as before.
+                      if (slot < 0 || rite) {
+                        if (rite && slot >= 0) setVowAsk({ index, slot: slot as 0 | 1 | 2, picks: [] });
+                        else setAim({ kind: "summon", index });
+                        return;
+                      }
+                      apply(summon(duel, index, slot as 0 | 1 | 2));
                     }}
                   >
                     Triệu hồi

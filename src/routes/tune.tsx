@@ -18,6 +18,7 @@ import {
   DEFAULT_SPELL,
   FIELD_MARKS,
   HUD_MARKS,
+  markScale,
   SPELL_MARKS,
   loadBoard,
   loadCard,
@@ -671,7 +672,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             key={mark.key}
             type="button"
             className={`tune-pin${picked === mark.key ? " on" : ""}${layout.marks[mark.key].hidden ? " is-hidden" : ""}`}
-            style={{ left: `${layout.marks[mark.key].x}%`, top: `${layout.marks[mark.key].y}%`, fontSize: `${layout.marks[mark.key].size}cqw` }}
+            style={{ left: `${layout.marks[mark.key].x}%`, top: `${layout.marks[mark.key].y}%`, fontSize: `${layout.marks[mark.key].size * markScale(mark.key)}cqw` }}
             onPointerDown={(event) => {
               drag.current = mark.key;
               setPicked(mark.key);

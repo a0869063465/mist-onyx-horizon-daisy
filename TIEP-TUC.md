@@ -41,8 +41,13 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 ## Đang dở: hướng dẫn chơi
 
 - Nút Hướng dẫn tạm đặt trong Chọn cách chơi (`modes.tsx`, chế độ `tutorial`). Chủ game trả lời câu "mở từ đâu" là "c", chưa nói cách nào. Cần hỏi lại.
-- Trận hướng dẫn: `src/lib/tutorial.ts` (trận vs Máy, trên tay có sẵn Rồng con và Khổng lồ 1 mắt), các bước ở `src/components/game/tutorial.tsx` (mảng `steps`). Mỗi bước gồm chữ, vùng sáng có vòng vàng, kiểu chờ (OK, tự chạy, bấm đúng chỗ), và số tạm hiện trên bàn (`TutView`).
-- Kịch bản đã làm, đúng lời chủ game: cầu mana → hai lá quái → ô đổi bài (bấm) → phép miễn phí → dải Bắt đầu lượt → +1 mana → thanh mana đã dùng → sao → rút bài (bấm) → mộ mana → mộ chuyển thành sao → triệu hồi (kéo thả hoặc bấm quái rồi Triệu hồi). Xong thì trận tiếp tục bình thường với máy. Bỏ qua thì về Chọn cách chơi.
-- Phần kế tiếp chủ game sẽ viết: Tấn công thường, Tấn công skill, Kích hoạt phép thường, Kích hoạt phép phản ứng. Chủ game có thể đưa lá cụ thể, hoặc để mình tự chọn.
-- Thêm vào game thật: bấm quái trên tay có nút Triệu hồi, rồi bấm ô trống (`onSlot` trong `play.tsx`).
-- Chủ game nói "Số 1 2 và 3 tiêu đề không có ý nghĩa, bỏ đi". Đã hiểu là bỏ số thứ tự trong lời hướng dẫn, và không làm thêm các mục 1–3 hiệu ứng kiểu Lục Thần. Chờ chủ game xác nhận.
+- Linh vật: Người giữ khoá (`public/tutorial/nguoi-giu-khoa.webp`, chủ game gửi). Khung thoại gọn đứng cạnh chỗ đang hướng dẫn, nút » nổi khối thay OK.
+- Trận hướng dẫn: `src/lib/tutorial.ts` dựng bài cố định. Bạn có Rồng con, Khổng lồ 1 mắt và Hấp thụ ma pháp; Sợi xích địa ngục nằm thứ 2 trong xấp phép, lên đầu khi tới bước rút phép. Đối thủ cầm Sợi xích địa ngục, rút Phù thuỷ tí hơn.
+- Các bước ở `src/components/game/tutorial.tsx` (mảng `steps`), theo đúng kịch bản thứ 2 của chủ game (17/10). Lượt đối thủ được dàn sẵn qua `drive` (rút, triệu hồi, dùng Sợi xích địa ngục, kết thúc lượt; nhường cho Sợi xích địa ngục của bạn). Máy tự đánh chỉ bật lại sau khi hướng dẫn xong.
+- Bấm Triệu hồi trên lá quái giờ triệu hồi luôn vào ô trống đầu tiên từ trái sang. Hết ô trống hoặc đang chọn hiến tế (giữ lâu lá) thì chọn ô bằng tay như cũ.
+- Số trên góc xấp bài to gấp đôi, ô vàng nổi khối. Số phép trên tay và quái dự bị của đối phương to gấp đôi, ô 3D (`COUNT_MARKS` / `markScale` trong `layouts.ts`, Tuỳ chỉnh cũng theo).
+- Chưa làm, đang chờ chủ game trả lời (xem tin nhắn cuối phiên 17/10):
+  - Thứ 1: hiện kỹ năng chủ động, nội tại và số đặc biệt của quái dạng 3D trên sàn đấu.
+  - Thứ 3: "cũng hiển thị khi có dung hợp và triệu hồi hiến tế".
+  - Thứ 4: đổi các nút (triệu hồi và các thứ khác) sang hình 3D kèm chữ.
+- Chủ game nói "Số 1 2 và 3 tiêu đề không có ý nghĩa, bỏ đi", chưa xác nhận cách hiểu. Kịch bản mới có danh sách 1–4 (Rút bài, Triệu hồi, Kỹ năng, Ma pháp) nên vẫn giữ số.

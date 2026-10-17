@@ -5816,28 +5816,124 @@ button.watch-back {
 @keyframes tut-ring {
   50% { box-shadow: 0 0 26px 7px rgba(244, 210, 122, 0.95), inset 0 0 14px rgba(244, 210, 122, 0.6); }
 }
-.tut-bubble {
+.tut-guide {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(calc(100% - 2rem), 26rem);
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15rem;
+  pointer-events: none;
+  animation: tut-in 240ms ease-out both;
+}
+.tut-mascot {
+  flex: none;
+  width: 4.6rem;
+  height: auto;
+  margin-bottom: -0.35rem;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+  user-select: none;
+  animation: tut-bob 2.4s ease-in-out infinite;
+}
+.tut-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
   display: grid;
-  gap: 0.35rem;
-  padding: 0.8rem 0.95rem;
-  border-radius: 0.9rem;
-  background: rgba(14, 18, 26, 0.94);
-  border: 1px solid rgba(244, 210, 122, 0.45);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  gap: 0.2rem;
+  padding: 0.5rem 0.7rem 0.6rem;
+  margin-bottom: 1.1rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, rgba(28, 34, 48, 0.97), rgba(12, 15, 22, 0.97));
+  border: 1px solid rgba(244, 210, 122, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: #f2ead6;
-  font-size: 0.88rem;
-  line-height: 1.4;
+  font-size: 0.8rem;
+  line-height: 1.35;
   pointer-events: auto;
-  animation: tut-in 220ms ease-out;
+}
+/* Little tail pointing at the guide. */
+.tut-bubble::before {
+  content: "";
+  position: absolute;
+  left: -0.42rem;
+  bottom: 0.9rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  background: rgb(14, 17, 25);
+  border-left: 1px solid rgba(244, 210, 122, 0.55);
+  border-bottom: 1px solid rgba(244, 210, 122, 0.55);
+  transform: rotate(45deg);
 }
 .tut-bubble p { margin: 0; }
-.tut-ok { justify-self: end; min-width: 5.5rem; min-height: 2.2rem; margin-top: 0.25rem; }
+.tut-bubble b { color: #f4d27a; }
+.tut-guide.is-big { flex-direction: column; align-items: center; gap: 0; }
+.tut-guide.is-big .tut-mascot { width: min(46vw, 11rem); margin: 0 0 -0.6rem; }
+.tut-guide.is-big .tut-bubble { width: 100%; margin-bottom: 0; text-align: center; font-size: 0.86rem; padding: 0.7rem 0.9rem 0.9rem; }
+.tut-guide.is-big .tut-bubble::before { left: calc(50% - 0.37rem); top: -0.42rem; bottom: auto; transform: rotate(135deg); }
+/* » : a raised gold gem that sinks when pressed. */
+.tut-next {
+  position: absolute;
+  right: -0.55rem;
+  bottom: -1.05rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #fff6cf 0%, #f6d37a 28%, #d49a2c 62%, #8a5a12 100%);
+  box-shadow: 0 0.22rem 0 #6b430c, 0 0.35rem 0.6rem rgba(0, 0, 0, 0.6), inset 0 -0.18rem 0.3rem rgba(90, 50, 0, 0.55), inset 0 0.12rem 0.2rem rgba(255, 255, 255, 0.7), 0 0 0 2px rgba(255, 236, 170, 0.55);
+  color: #4a2a00;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: tut-next-glow 1.4s ease-in-out infinite;
+}
+.tut-next span {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
+  margin: -0.2rem 0 0 0.08rem;
+  text-shadow: 0 1px 0 rgba(255, 245, 210, 0.8);
+}
+.tut-next:active {
+  transform: translateY(0.18rem);
+  box-shadow: 0 0.04rem 0 #6b430c, 0 0.15rem 0.3rem rgba(0, 0, 0, 0.6), inset 0 -0.1rem 0.25rem rgba(90, 50, 0, 0.55), inset 0 0.12rem 0.2rem rgba(255, 255, 255, 0.6), 0 0 0 2px rgba(255, 236, 170, 0.55);
+}
+.tut-guide.is-big .tut-next { right: calc(50% - 1.12rem); bottom: -1.15rem; }
+@keyframes tut-next-glow {
+  50% { filter: brightness(1.15) drop-shadow(0 0 6px rgba(255, 220, 120, 0.9)); }
+}
+@keyframes tut-bob {
+  50% { transform: translateY(-4px); }
+}
 @keyframes tut-in {
-  from { opacity: 0; transform: translate(-50%, 6px); }
+  from { opacity: 0; transform: translateY(6px); }
+}
+/* Drag demo: a copy of the card glides from the hand to the field, then the scene goes back. */
+.tut-ghost {
+  position: fixed;
+  border-radius: 0.5rem;
+  overflow: visible;
+  box-shadow: 0 0 0 2px #f4d27a, 0 10px 22px rgba(0, 0, 0, 0.7);
+  animation: tut-glide 2.1s ease-in-out both;
+}
+.tut-ghost img { width: 100%; height: 100%; object-fit: cover; border-radius: 0.5rem; }
+.tut-finger {
+  position: absolute;
+  right: -0.6rem;
+  bottom: -0.9rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff, #e8e1d0 55%, #b9ad94);
+  box-shadow: 0 0 0 3px rgba(244, 210, 122, 0.9), 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+@keyframes tut-glide {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  60%, 80% { transform: translate(var(--dx), var(--dy)) scale(0.92); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.92); opacity: 0; }
 }
 .tut-skip {
   position: fixed;
@@ -5907,3 +6003,32 @@ button.watch-back {
 }
 /* Triệu hồi stays in view at the bottom of the card panel, however long the skill text is. */
 .inspect-copy .inspect-go { position: sticky; bottom: 0; width: 100%; margin-top: 0.3rem; box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.45); }
+
+/* Card counts in a raised 3D tile, twice the old size: the number on your pile corner, and the opponent's two counts. */
+.face-pile b {
+  font-size: 2em;
+  min-width: 1.3em;
+  height: 1.3em;
+  top: -0.55em;
+  right: -0.55em;
+  padding: 0 0.18em;
+  border-radius: 0.32em;
+  background: linear-gradient(180deg, #ffe9a6 0%, #e8b84a 45%, #b07a1c 100%);
+  color: #3a2200;
+  box-shadow: 0 0.12em 0 #6b430c, 0 0.2em 0.35em rgba(0, 0, 0, 0.6), inset 0 0.06em 0.06em rgba(255, 255, 255, 0.75);
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.7);
+}
+.mark.is-count b {
+  display: grid;
+  place-items: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.15em;
+  border-radius: 0.3em;
+  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
+  border: 0.07em solid #f4d27a;
+  box-shadow: 0 0.1em 0 #6b430c, 0 0.18em 0.3em rgba(0, 0, 0, 0.65), inset 0 0.07em 0.05em rgba(255, 255, 255, 0.35);
+  color: #ffe9a6;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 2px #000;
+}

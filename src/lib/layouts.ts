@@ -30,6 +30,12 @@ export const HUD_MARKS: Array<{ key: HudKey; label: string; sample: string }> = 
   { key: "youGems", label: "Thừa bạn", sample: "0" },
 ];
 
+/** Card counts (the opponent's spells in hand and monsters in reserve) show twice their set size, in a framed tile. */
+export const COUNT_MARKS: HudKey[] = ["foeHand", "foeReserve"];
+export function markScale(key: HudKey): number {
+  return COUNT_MARKS.includes(key) ? 2 : 1;
+}
+
 export const DEFAULT_BOARD: Record<HudKey, Mark> = {
   foeHp: { x: 13.7, y: 11.3, size: 6.2 },
   foeOrb: { x: 84.2, y: 10.4, size: 9.6 },
