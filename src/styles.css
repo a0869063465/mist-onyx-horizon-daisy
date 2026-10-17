@@ -5779,3 +5779,131 @@ button.watch-back {
 @keyframes slot-shake {
   50% { transform: translateY(3px); }
 }
+
+/* ---- Loading screens: game load (app opens) and match load (before each match). Background art goes in
+   /public/load-game.jpg and /public/load-match.jpg; until then the dark gradient shows. ---- */
+.load-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 1rem max(2.2rem, env(safe-area-inset-bottom));
+  background: radial-gradient(120% 80% at 50% 30%, #1a2533 0%, #070b10 70%) center / cover no-repeat;
+  color: #f4e6c0;
+}
+.load-screen.is-game { background-image: url("/load-game.jpg"), radial-gradient(120% 80% at 50% 30%, #1a2533 0%, #070b10 70%); background-size: cover; background-position: center; }
+.load-screen.is-match { background-image: url("/load-match.jpg"), radial-gradient(120% 80% at 50% 30%, #1a2533 0%, #070b10 70%); background-size: cover; background-position: center; }
+.load-foot { width: min(100%, 34rem); display: grid; gap: 0.55rem; }
+.load-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-weight: 800; text-shadow: 0 1px 3px #000; }
+.load-title { font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; }
+.load-pct { font-size: 0.8rem; color: #e9c46a; }
+.load-bar { height: 0.42rem; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(233, 196, 106, 0.35); }
+.load-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b8862c, #f4d27a); box-shadow: 0 0 10px #f4d27a; transition: width 200ms ease-out; }
+.load-skip { justify-self: center; min-width: 8rem; }
+
+/* ---- Tutorial: dimmed board, gold rings on what the line talks about, the line itself and "Bỏ qua". ---- */
+.tut-layer { position: fixed; inset: 0; z-index: 8000; pointer-events: none; }
+.tut-dim { position: absolute; inset: 0; }
+.tut-ring {
+  position: fixed;
+  border-radius: 12px;
+  border: 2px solid #f4d27a;
+  box-shadow: 0 0 14px 3px rgba(244, 210, 122, 0.75), inset 0 0 10px rgba(244, 210, 122, 0.45);
+  animation: tut-ring 1.2s ease-in-out infinite;
+}
+@keyframes tut-ring {
+  50% { box-shadow: 0 0 26px 7px rgba(244, 210, 122, 0.95), inset 0 0 14px rgba(244, 210, 122, 0.6); }
+}
+.tut-bubble {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 2rem), 26rem);
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.9rem;
+  background: rgba(14, 18, 26, 0.94);
+  border: 1px solid rgba(244, 210, 122, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  color: #f2ead6;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: tut-in 220ms ease-out;
+}
+.tut-bubble p { margin: 0; }
+.tut-ok { justify-self: end; min-width: 5.5rem; min-height: 2.2rem; margin-top: 0.25rem; }
+@keyframes tut-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+}
+.tut-skip {
+  position: fixed;
+  top: max(0.6rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(10, 12, 18, 0.8);
+  color: #f2ead6;
+  font-size: 0.78rem;
+  font-weight: 700;
+  pointer-events: auto;
+}
+.tut-ribbon {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 44%;
+  display: flex;
+  justify-content: center;
+  padding: 0.7rem 0;
+  background: linear-gradient(90deg, transparent, rgba(12, 16, 24, 0.92) 18%, rgba(12, 16, 24, 0.92) 82%, transparent);
+  border-top: 1px solid rgba(244, 210, 122, 0.5);
+  border-bottom: 1px solid rgba(244, 210, 122, 0.5);
+  animation: tut-ribbon 1.9s ease-in-out both;
+}
+.tut-ribbon span { color: #f4d27a; font-size: 1.35rem; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; text-shadow: 0 0 12px rgba(244, 210, 122, 0.6); }
+@keyframes tut-ribbon {
+  0% { opacity: 0; transform: translateX(-30%); }
+  20%, 80% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateX(30%); }
+}
+.tut-pop { position: fixed; width: 0; height: 0; }
+.tut-pop i {
+  position: absolute;
+  left: -2.2rem;
+  top: -2.2rem;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  border: 3px solid #5ec8ff;
+  box-shadow: 0 0 18px #5ec8ff;
+  animation: tut-pop-ring 900ms ease-out both;
+}
+.tut-pop b {
+  position: absolute;
+  left: -1.5rem;
+  width: 3rem;
+  text-align: center;
+  top: -1.4rem;
+  color: #7fd6ff;
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-shadow: 0 0 8px #1a8cff, 0 1px 2px #000;
+  animation: tut-pop-rise 1100ms ease-out both;
+}
+@keyframes tut-pop-ring {
+  from { transform: scale(0.3); opacity: 1; }
+  to { transform: scale(1.5); opacity: 0; }
+}
+@keyframes tut-pop-rise {
+  from { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateY(-2.8rem); opacity: 0; }
+}
+/* Triệu hồi stays in view at the bottom of the card panel, however long the skill text is. */
+.inspect-copy .inspect-go { position: sticky; bottom: 0; width: 100%; margin-top: 0.3rem; box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.45); }

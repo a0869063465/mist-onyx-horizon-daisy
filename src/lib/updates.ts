@@ -502,6 +502,9 @@ export const PENDING_NOTES: string[] = [
   "Hiệu ứng trong trận làm mới theo hệ của từng lá: lửa, nước, sấm, bóng tối, thánh, rừng, đá, ma thuật, máy, máu, thú. Mỗi lá có kiểu đòn riêng: chém, vuốt, đập, đâm, phép, bắn. Tuỳ chỉnh, Hiệu ứng có nút chọn Mới hoặc Cũ để quay về hiệu ứng trước đây.",
   "Bàn đấu đổi theo lá môi trường: nửa trên theo môi trường của đối thủ, nửa dưới theo môi trường của bạn, nối bằng đường chéo mờ tự nhiên. Có Thảo nguyên, Đất đá, Núi, Rừng rậm và Bóng tối.",
   "Tuỳ chỉnh, Điều chỉnh bàn chơi có nút chọn môi trường, lưu bố cục riêng cho từng môi trường. Thêm mục chỉnh vị trí và cỡ chữ cho khối nút Rút quái, Rút phép, Hết lượt.",
+  "Thêm màn tải game lúc mở trò chơi và màn tải trận trước mỗi trận. Hình, tiếng và hiệu ứng được tải trước, vào trận không bị thiếu hình hay mất hiệu ứng. Mạng chậm quá 20 giây thì có nút Vào luôn.",
+  "Chọn cách chơi có nút Hướng dẫn: trận hướng dẫn lượt đầu với Rồng con và Khổng lồ 1 mắt, chỉ từng bước cầu mana, ô đổi bài, mộ mana, sao và triệu hồi. Nút Bỏ qua luôn ở trên cùng.",
+  "Bấm vào quái trên tay có nút Triệu hồi, rồi bấm ô trống để triệu hồi. Kéo thả quái ra sân vẫn dùng được như cũ.",
 ];
 
 function remarkOf(notes: string[]) {

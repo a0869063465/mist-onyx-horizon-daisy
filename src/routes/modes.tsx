@@ -19,7 +19,7 @@ function ModesPage() {
   const [busy, setBusy] = useState(false);
   useLang();
 
-  function goLocal(mode: "ai" | "hotseat" | "test") {
+  function goLocal(mode: "ai" | "hotseat" | "test" | "tutorial") {
     sessionStorage.setItem("clash-mode", mode);
     sessionStorage.removeItem("clash-net");
     void navigate({ to: "/play" });
@@ -121,6 +121,9 @@ function ModesPage() {
           </button>
           <button type="button" className="act press" onClick={() => goLocal("test")}>
             Test
+          </button>
+          <button type="button" className="act alt press" onClick={() => goLocal("tutorial")}>
+            {tr("Hướng dẫn")}
           </button>
         </div>
       )}

@@ -104,6 +104,12 @@ export function unlockSound() {
   for (const src of Object.values(CLIPS)) if (src) void load(src);
 }
 
+/** Every recorded sound, fetched and decoded ahead so the first play is never silent. */
+export function soundJobs(): Array<() => Promise<unknown>> {
+  if (typeof window === "undefined") return [];
+  return [...new Set(Object.values(CLIPS))].filter(Boolean).map((src) => () => load(src as string));
+}
+
 function load(src: string) {
   const pending = cache.get(src);
   if (pending) return pending;

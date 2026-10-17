@@ -4,6 +4,8 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { SoundTap } from "@/components/sound-tap";
 import { CopySize } from "@/components/game/copy-text";
 import { publishLayout } from "@/lib/layouts";
+import { GameLoad } from "@/components/game/load-screen";
+import { gameJobs } from "@/lib/preload";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Clash of the Beasts";
@@ -41,6 +43,7 @@ export const Route = createRootRoute({
         <AuthProvider>
           <Outlet />
         </AuthProvider>
+        <GameLoad jobs={gameJobs} />
         <Scripts />
       </body>
     </html>

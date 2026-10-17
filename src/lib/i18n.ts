@@ -287,6 +287,7 @@ const PAIRS: Array<[string, string]> = [
   ["Vào mã", "Join code"],
   ["Quay lại", "Back"],
   ["Vs Máy", "Vs AI"],
+  ["Hướng dẫn", "Tutorial"],
   ["2 người 1 máy", "2 players, 1 device"],
   ["Không tạo được mã.", "Could not create a code."],
   ["Nhập đủ 4 ký tự.", "Enter all 4 characters."],

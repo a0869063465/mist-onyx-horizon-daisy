@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
@@ -11,6 +11,10 @@ import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edit
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
+import { fxUrl, matchJobs } from "@/lib/preload";
+import { LoadScreen } from "@/components/game/load-screen";
+import { Tutorial, type TutView } from "@/components/game/tutorial";
+import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
 import { setLang, tr, useLang } from "@/lib/i18n";
@@ -1367,7 +1371,11 @@ function TimeWheel({
 
 function PlayPage() {
   const language = useLang();
+  const navigate = useNavigate();
   const [duel, setDuel] = useState<Duel | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [tutorial, setTutorial] = useState(false);
+  const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
   const [inspect, setInspect] = useState<Inspect | null>(null);
@@ -1579,6 +1587,12 @@ function PlayPage() {
     }
     if (!join?.code || (join.seat !== "host" && join.seat !== "guest")) {
       const saved = sessionStorage.getItem("clash-mode");
+      if (saved === TUTORIAL_MODE) {
+        matchRef.current = null;
+        setTutorial(true);
+        setDuel(createTutorialDuel());
+        return;
+      }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
       const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : createDuel(loadDeck(), mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
@@ -1642,7 +1656,7 @@ function PlayPage() {
   }, [duel?.recall]);
 
   useEffect(() => {
-    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel) return;
+    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial) return;
     const aiResponds = duel.step === "respond" && duel.hold?.priority === 1;
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
@@ -1666,7 +1680,7 @@ function PlayPage() {
       });
     }, wait);
     return () => window.clearTimeout(timer);
-  }, [duel, busy]);
+  }, [duel, busy, loaded, tutorial]);
 
   useEffect(() => {
     if (!duel || busy || duel.winner !== null || duel.step !== "main" || duel.upkeep || duel.reel?.kind !== "gun" || duel.reel.phase !== "wait") return;
@@ -2972,7 +2986,20 @@ function PlayPage() {
 
   function onSlot(side: Side, index: number) {
     if (!duel || !mine || duel.step !== "main" || side !== viewer) return;
-    if (aim?.kind === "summon") apply(summon(duel, aim.index, index as 0 | 1 | 2));
+    if (aim?.kind !== "summon") return;
+    const held = you.reserve[aim.index];
+    if (!held) {
+      setAim(null);
+      return;
+    }
+    const cap = vowCap(held.id, held.saved?.level ?? 1);
+    if (cap > 0 && (riteHand === aim.index || you.field.every((mon) => mon))) {
+      setAim(null);
+      setVowAsk({ index: aim.index, slot: index as 0 | 1 | 2, picks: [] });
+      return;
+    }
+    setAim(null);
+    apply(summon(duel, aim.index, index as 0 | 1 | 2));
   }
 
   function onUnit(side: Side, mon: FieldMon) {
@@ -3135,10 +3162,10 @@ function PlayPage() {
     ["foeHand", foe.hand.length, "phép"],
     ["foeReserve", foe.reserve.length, "dự bị"],
     ["youHp", laserHp[`face:${viewer}`] ?? you.hp, ""],
-    ["youOrb", you.orb, ""],
+    ["youOrb", tutView?.youOrb ?? you.orb, ""],
     ["youFlask", Math.min(1, you.flask), "bình"],
-    ["youStars", you.stars, "sao"],
-    ["youGems", you.starGems, "thừa"],
+    ["youStars", tutView?.youStars ?? you.stars, "sao"],
+    ["youGems", tutView?.youGems ?? you.starGems, "thừa"],
   ] as const;
 
   const reserveHeld = inspect?.pile === "reserve" ? you.reserve[inspect.index] : undefined;
@@ -3218,6 +3245,25 @@ function PlayPage() {
 
   return (
     <main className="stage">
+      {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} />}
+      {loaded && tutorial ? (
+        <Tutorial
+          duel={duel}
+          viewer={viewer}
+          hand={hand}
+          setHand={setHand}
+          onView={setTutView}
+          onSkip={() => {
+            setTutorial(false);
+            setTutView(null);
+            void navigate({ to: "/modes" });
+          }}
+          onDone={() => {
+            setTutorial(false);
+            setTutView(null);
+          }}
+        />
+      ) : null}
       <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />
       <section
         className={`board${shake ? " is-shaking" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
@@ -3290,9 +3336,9 @@ function PlayPage() {
           const gemKey = key === "youGems" || key === "foeGems";
           const gemOwner = key.startsWith("you") ? you : foe;
           if (gemKey && gemOwner.stars >= 4) return null;
-          const always = orbKey || starKey;
+          const always = orbKey || starKey || Boolean(tutView?.show?.includes(key));
           if (marks[key].hidden || (value === 0 && !always)) return null;
-          const sideOrb = key.startsWith("you") ? you.orb : foe.orb;
+          const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : foe.orb;
           const starLit = starFlash !== null && ((starFlash === viewer && key === "youStars") || (starFlash !== viewer && key === "foeStars"));
           const color = orbKey
             ? value >= 3
@@ -3308,7 +3354,7 @@ function PlayPage() {
                 ? "#ff8a00"
                 : undefined;
           return (
-            <div key={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size}cqmin`, color }}>
+            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size}cqmin`, color }}>
               <b>{value}</b>
             </div>
           );
@@ -4612,6 +4658,18 @@ function PlayPage() {
                 <p className={shownMonster ? "ink-skill" : "ink-spell"}>
                   <CopyText text={shownMonster?.skill ?? shownSpell?.effect ?? ""} />
                 </p>
+                {shownMonster && canPlay && inspect?.pile === "reserve" ? (
+                  <button
+                    type="button"
+                    className="act press inspect-go"
+                    onClick={() => {
+                      setAim({ kind: "summon", index: inspect.index });
+                      setInspect(null);
+                    }}
+                  >
+                    Triệu hồi
+                  </button>
+                ) : null}
                 {shownSpell && mine && inspect?.pile === "spell" && (shownSpell.id !== "hoan-doi" || spellCanAnswer(shownSpell.id, duel)) ? (
                   <button
                     type="button"
@@ -5125,7 +5183,7 @@ function RiteRing() {
   }, []);
   return (
     <>
-      <video ref={videoRef} className="rite-src" src="/fx/hien-te-vong.mp4?v=2" autoPlay loop playsInline />
+      <video ref={videoRef} className="rite-src" src={fxUrl("/fx/hien-te-vong.mp4?v=2")} autoPlay loop playsInline />
       <canvas ref={canvasRef} className="rite-ring" width={240} height={358} />
     </>
   );
