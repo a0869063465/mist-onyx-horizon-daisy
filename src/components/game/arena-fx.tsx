@@ -277,7 +277,62 @@ export function ArenaFx() {
       });
     };
 
+    // Sacrifice summon: a blood sigil opens on the slot, embers spiral up, a pillar of hellfire falls and slams
+    // into a shockwave as the monster arrives.
+    const rite = (x: number, y: number) => {
+      const u = unit();
+      const fire = PAL.fire;
+      const blood = PAL.blood;
+      flash("#5a0008", 0.35, 0.9);
+      sigil(x, y + 3 * u, blood, 30, 2.4);
+      later(120, () => sigil(x, y + 3 * u, fire, 18, 2.1));
+      ring(x, y + 3 * u, blood.mid, 34, -18, 0.9, 3, 0.45);
+      for (let i = 0; i < 26; i++) {
+        later(i * 28, () => {
+          const a = i * 0.9;
+          const r = rand(10, 26) * u;
+          add({
+            x: x + Math.cos(a) * r,
+            y: y + 3 * u + Math.sin(a) * r * 0.45,
+            vx: -Math.sin(a) * 14 * u,
+            vy: rand(-46, -26) * u,
+            ay: -10 * u,
+            drag: 0.95,
+            life: rand(0.9, 1.4),
+            max: 1.4,
+            size: rand(1.6, 3) * u,
+            color: Math.random() < 0.4 ? fire.core : Math.random() < 0.7 ? fire.mid : blood.mid,
+            shape: "ember",
+          });
+        });
+      }
+      later(300, () => ring(x, y + 3 * u, fire.mid, 26, -22, 0.6, 2, 0.45));
+      later(620, () => {
+        pillar(x, y + 4 * u, blood.mid, 22, 110, 0.9);
+        pillar(x, y + 4 * u, fire.core, 8, 110, 0.75);
+        flash(fire.mid, 0.18, 0.25);
+      });
+      later(900, () => {
+        flash("#fff1d0", 0.42, 0.35);
+        shakeLight(1.3);
+        ring(x, y + 3 * u, fire.core, 6, 150, 0.55, 7, 0.42);
+        ring(x, y + 3 * u, blood.mid, 4, 95, 0.8, 5, 0.42);
+        bits(x, y, fire, 46, 80, { shape: "spark", life: 0.6 });
+        bits(x, y + 2 * u, fire, 30, 30, { up: 28, life: 1.3 });
+        bits(x, y + 4 * u, PAL.beast, 12, 18, { shape: "dust", life: 1.4 });
+        sigil(x, y + 3 * u, fire, 24, 1.1);
+      });
+      later(1150, () => bits(x, y + 2 * u, blood, 20, 16, { up: 34, life: 1.6 }));
+    };
+
     const onEvent = (e: FxEvent) => {
+      if (e.t === "rite") {
+        if (!reduced) {
+          rite(px(e.x), py(e.y));
+          wake();
+        }
+        return;
+      }
       if (reduced || fxStyle() !== "new") return;
       if (e.t === "ailments") {
         auras = e.marks.map((m) => ({ id: m.id, x: m.x, y: m.y }));

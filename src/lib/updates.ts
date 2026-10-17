@@ -509,6 +509,10 @@ export const PENDING_NOTES: string[] = [
   "Hướng dẫn mới: chào mừng, quả cầu ma pháp, đổi bài, số bài của mình và đối phương, mộ mana, sao, triệu hồi, kết thúc lượt, thanh phản ứng. Đối thủ dùng Sợi xích địa ngục, bạn chặn bằng Hấp thụ ma pháp, rồi bạn rút và dùng Sợi xích địa ngục.",
   "Số bài trên góc xấp bài của bạn, số phép trên tay và số quái dự bị của đối phương to gấp đôi, nằm trong ô nổi khối.",
   "Sửa lỗi: kéo thả quái ra sân xong thì lần chạm kế tiếp vào quái trên sân bị bỏ qua, phải chạm hai lần.",
+  "Bảng quái mới khi bấm quái trên tay hoặc trên sân: hàng icon kỹ năng chủ động vòng xanh lam, nội tại vòng tím, bấm icon để xem mô tả. Lá hiện như trên sân, số cam ở góc trái trên.",
+  "Nút Triệu hồi vàng, Hiến tế đỏ, Dung hợp tím dạng 3D, có viên ngọc và số mana cần. Nút nào chưa đủ điều kiện thì không hiện.",
+  "Hiến tế mở khung chọn quái hiến tế 3D, bấm Triệu hồi đỏ để triệu hồi. Dung hợp có cảnh dung hợp trên bàn nghiêng 3D, rồi bấm Triệu hồi tím đỏ để đưa quái dung hợp ra sân.",
+  "Triệu hồi hiến tế có hiệu ứng và âm thanh mới: vòng ấn máu mở dưới ô, cột lửa địa ngục giáng xuống. Lửa trên quái bị hiến tế giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -2,7 +2,7 @@ const KEY = "clash-sound";
 const FX_KEY = "clash-vol-fx";
 const TAP_KEY = "clash-vol-tap";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/user-summon.ogg?v=4",
@@ -207,6 +207,7 @@ export function playTap() {
 
 export function playCue(kind: Cue, delay?: number, offset = 0) {
   if (kind === "tap") return playTap();
+  if (kind === "riteSummon") return riteSummon(delay ?? 0);
   const clip = CLIPS[kind];
   if (clip) return playClip(clip, delay ?? CLIP_DELAY[kind] ?? 0, kind === "poison", offset);
   if (kind === "block" || kind === "hit") tone(140, 0, 0.12, "square", 0.07, 70);
@@ -276,6 +277,47 @@ function thump(audio: AudioContext, start: number, level: number) {
   amp.connect(audio.destination);
   osc.start(start);
   osc.stop(start + 0.28);
+}
+
+/** Sacrifice summon: a dark rising drone and a rushing wind that slam into a deep boom, then a low choir chord. */
+function riteSummon(delay: number) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    const drone = audio.createOscillator();
+    const under = audio.createOscillator();
+    const low = audio.createBiquadFilter();
+    const amp = audio.createGain();
+    drone.type = "sawtooth";
+    under.type = "sine";
+    drone.frequency.setValueAtTime(46, t);
+    drone.frequency.exponentialRampToValueAtTime(92, t + 0.95);
+    under.frequency.setValueAtTime(23, t);
+    under.frequency.exponentialRampToValueAtTime(46, t + 0.95);
+    low.type = "lowpass";
+    low.frequency.setValueAtTime(220, t);
+    low.frequency.exponentialRampToValueAtTime(1400, t + 0.95);
+    amp.gain.setValueAtTime(0.0001, t);
+    amp.gain.exponentialRampToValueAtTime(0.22 * vol, t + 0.8);
+    amp.gain.exponentialRampToValueAtTime(0.0001, t + 1.15);
+    drone.connect(low);
+    under.connect(low);
+    low.connect(amp);
+    amp.connect(audio.destination);
+    drone.start(t);
+    under.start(t);
+    drone.stop(t + 1.2);
+    under.stop(t + 1.2);
+    noiseBurst(audio, t + 0.1, 0.85, 260, 5200, 0.2 * vol);
+    const hit = t + 0.95;
+    thump(audio, hit, 0.9 * vol);
+    thump(audio, hit + 0.05, 0.6 * vol);
+    noiseBurst(audio, hit, 0.9, 3800, 180, 0.32 * vol);
+    for (const [freq, at] of [[110, 0], [164.8, 0.02], [220, 0.04], [329.6, 0.07]] as const) bell(audio, hit + at, freq, 1.6, 0.07 * vol);
+  });
 }
 
 /** Menu sounds: confirm = main action, select = secondary button, soft = small links. */

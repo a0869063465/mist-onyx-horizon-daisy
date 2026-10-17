@@ -1443,6 +1443,11 @@ function place(state: Duel, side: Side, cardId: string, held?: PileMon): FieldMo
   };
 }
 
+/** How a held monster would stand on the field if summoned now (for showing it, not for play). */
+export function previewMon(state: Duel, side: Side, held: PileMon): FieldMon | null {
+  return monsterCard(held.id) ? place(state, side, held.id, held) : null;
+}
+
 const KING = "hiep-si-cua-vua";
 const GUARD_KNIGHT = "hiep-si-ho-ve";
 const QUEEN_KNIGHT = "hiep-si-cua-hau";

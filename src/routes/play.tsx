@@ -14,6 +14,8 @@ import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen } from "@/components/game/load-screen";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
+import { ActionButton, GlyphDefs, MonsterSheet, type SheetAction } from "@/components/game/monster-sheet";
+import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
@@ -84,6 +86,7 @@ import {
   skillFigure,
   summon,
   summonVow,
+  previewMon,
   vowCap,
   fuse,
   testGrant,
@@ -1386,7 +1389,8 @@ function PlayPage() {
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
   const [inspect, setInspect] = useState<Inspect | null>(null);
   const [strike, setStrike] = useState<Strike | null>(null);
-  const [look, setLook] = useState<{ name: string; text: string; hot?: string } | null>(null);
+  const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string } | null>(null);
+  const [fuseShow, setFuseShow] = useState<{ index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: "fly" | "flash" | "reveal"; n: number } | null>(null);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
   const [chronoAsk, setChronoAsk] = useState<{ caster: string; target: string; age: boolean; pass: boolean } | null>(null);
@@ -1937,6 +1941,17 @@ function PlayPage() {
         }
       }
     }
+    // Sacrifice summon: the sacrificed burn (above), then the new monster lands in a pillar of hellfire.
+    if (duel.ashes && duel.ashes.seq !== prev.ashes?.seq) {
+      const side = duel.ashes.side;
+      const known = new Set(prev.players[side].field.map((mon) => mon?.uid));
+      const at = duel.players[side].field.findIndex((mon) => mon && !known.has(mon.uid));
+      const spot = at >= 0 ? SLOT_POS[screenSide(side, viewerNow)][at] : null;
+      if (spot) {
+        window.setTimeout(() => emitFx({ t: "rite", x: spot.x, y: spot.y }), 450);
+        playCue("riteSummon", 0.45);
+      }
+    }
     if (drew) playCue("draw");
     if (summoned) playCue("summon");
     if (!quiet && /tích luỹ năng lượng/i.test(said)) playCue("spellRise");
@@ -2387,6 +2402,16 @@ function PlayPage() {
     }, wait);
     return () => window.clearTimeout(timer);
   }, [fuseAsk?.id, fuseAsk?.phase]);
+
+  useEffect(() => {
+    if (!fuseShow || fuseShow.phase === "reveal") return;
+    if (fuseShow.phase === "fly") playCue("fusion");
+    const timer = window.setTimeout(
+      () => setFuseShow((current) => (current && current.n === fuseShow.n ? { ...current, phase: current.phase === "fly" ? "flash" : "reveal" } : current)),
+      fuseShow.phase === "fly" ? 1300 : 950,
+    );
+    return () => window.clearTimeout(timer);
+  }, [fuseShow?.n, fuseShow?.phase]);
 
   if (duel) turnClock.current = duel.clock ?? 1;
 
@@ -2981,7 +3006,7 @@ function PlayPage() {
       if (!reactive) {
         suppressClick.current = true;
         setAim(null);
-        setLook(unit ? fieldLook(unit, you.stars) : { name: payload.card.name, text: payload.card.skill });
+        setLook(unit ? { ...fieldLook(unit, you.stars), uid: unit.uid } : { name: payload.card.name, text: payload.card.skill });
       }
       return;
     }
@@ -3155,7 +3180,7 @@ function PlayPage() {
       setLook({ name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." });
       return;
     }
-    setLook(fieldLook(mon, owner.stars));
+    setLook({ ...fieldLook(mon, owner.stars), uid: mon.uid });
   }
 
   const foeSide = (viewer === 0 ? 1 : 0) as Side;
@@ -3249,6 +3274,86 @@ function PlayPage() {
   const fuseHandName = fuseAsk ? fieldName({ cardId: fuseAsk.handId, level: fuseAsk.handLevel }) : "";
   const fuseFieldName = fuseAsk ? fieldName({ cardId: fuseAsk.fieldId, level: fuseAsk.fieldLevel }) : "";
 
+  const ownLive = you.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0));
+  /** What the held monster can do right now; a button only shows when the match would accept it. */
+  function handActions(index: number): SheetAction[] {
+    const held = you.reserve[index];
+    if (!duel || !held || !monsterCard(held.id) || !canPlay) return [];
+    const known = new Set(you.field.map((mon) => mon?.uid));
+    const lands = (next: Duel) => next.players[viewer].field.some((mon) => mon && !known.has(mon.uid));
+    const cost = (next: Duel) => Math.max(0, you.orb - next.players[viewer].orb);
+    const free = you.field.findIndex((mon, at) => !mon && (you.locked?.[at] ?? 0) === 0);
+    const list: SheetAction[] = [];
+    if (free >= 0) {
+      const next = summon(duel, index, free as 0 | 1 | 2);
+      if (lands(next)) {
+        list.push({ key: "summon", label: "Triệu hồi", tone: "gold", cost: cost(next), onPress: () => {
+          setInspect(null);
+          apply(summon(duel, index, free as 0 | 1 | 2));
+        } });
+      }
+    }
+    if (vowCap(held.id, held.saved?.level ?? 1) > 0 && ownLive.length > 0) {
+      const slot = (free >= 0 ? free : you.field.findIndex((mon) => mon?.uid === ownLive[0].uid)) as 0 | 1 | 2;
+      const next = summonVow(duel, index, slot, [ownLive[0].uid]);
+      if (lands(next)) {
+        list.push({ key: "vow", label: "Hiến tế", tone: "red", cost: cost(next), onPress: () => {
+          setInspect(null);
+          setVowAsk({ index, slot, picks: [] });
+        } });
+      }
+    }
+    const ids = ownLive.map((mon) => mon.cardId);
+    for (const mon of ownLive) {
+      const recipe = findFusion(held.id, mon.cardId) ?? findKnightFusion(held.id, mon.cardId, ids);
+      if (!recipe) continue;
+      const slot = you.field.findIndex((unit) => unit?.uid === mon.uid) as 0 | 1 | 2;
+      const next = fuse(duel, index, mon.uid, slot);
+      if (!lands(next)) continue;
+      list.push({ key: "fuse", label: "Dung hợp", tone: "purple", cost: cost(next), onPress: () => {
+        setInspect(null);
+        setFuseShow({ index, uid: mon.uid, slot, resultId: recipe.result, phase: "fly", n: Date.now() });
+      } });
+      break;
+    }
+    return list;
+  }
+
+  /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
+  const formOf = (mon: FieldMon) =>
+    mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
+  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string) => (
+    <MonsterSheet
+      name={fieldName(mon)}
+      card={<SheetCard mon={mon} allies={allies} layout={fieldLayout} />}
+      count={sheetCount(mon, allies)}
+      skills={skillsOf(formOf(mon), monsterCard(formOf(mon))?.skill ?? "")}
+      actions={actions}
+      note={note}
+      onClose={onClose}
+    />
+  );
+  const handMon = inspect?.pile === "reserve" && reserveHeld ? previewMon(duel, viewer, reserveHeld) : null;
+  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null)) : null;
+  const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
+  const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
+  const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined) : null;
+  const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
+  const fusePartner = fuseShow ? you.field.find((mon) => mon?.uid === fuseShow.uid) ?? null : null;
+  const fuseBorn = fuseShow ? previewMon(duel, viewer, { id: fuseShow.resultId, hp: monsterCard(fuseShow.resultId)?.hp ?? 1, maxHp: monsterCard(fuseShow.resultId)?.hp ?? 1 }) : null;
+  const fuseSheet =
+    fuseShow?.phase === "reveal" && fuseBorn
+      ? sheetFor(
+          fuseBorn,
+          you.field,
+          [{ key: "go", label: "Triệu hồi", tone: "fuse", cost: 0, onPress: () => {
+            apply(fuse(duel, fuseShow.index, fuseShow.uid, fuseShow.slot));
+            setFuseShow(null);
+          } }],
+          () => setFuseShow(null),
+        )
+      : null;
+
   return (
     <main className="stage">
       {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} />}
@@ -3274,7 +3379,7 @@ function PlayPage() {
       ) : null}
       <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />
       <section
-        className={`board${shake ? " is-shaking" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
+        className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
         style={{ "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={() => {
@@ -3480,23 +3585,32 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
-        {vowAsk && mine ? (
-          <div className="overlay is-ask">
-            <div className="ask-card is-keep">
-              <p>
-                <CopyText text={`Hãy chọn các quái thú mà bạn muốn **Hiến tế** để **Triệu hồi**.\nTối đa là **${vowCap(you.reserve[vowAsk.index]?.id ?? "", you.reserve[vowAsk.index]?.saved?.level ?? 1)}**`} />
-              </p>
-              <div className="vow-body">
-                <div className="vow-list">
+        {vowAsk && mine ? (() => {
+          const held = you.reserve[vowAsk.index];
+          const cap = vowCap(held?.id ?? "", held?.saved?.level ?? 1);
+          const close = () => {
+            setVowAsk(null);
+            setRiteHand(null);
+          };
+          const known = new Set(you.field.map((mon) => mon?.uid));
+          const trial = vowAsk.picks.length ? summonVow(duel, vowAsk.index, vowAsk.slot, vowAsk.picks) : null;
+          const ready = Boolean(trial?.players[viewer].field.some((mon) => mon && !known.has(mon.uid)));
+          return (
+            <div className="msheet-back is-vow" onClick={(event) => event.target === event.currentTarget && close()}>
+              <GlyphDefs />
+              <div className="vow3d" role="dialog">
+                <p className="vow3d-title">
+                  <CopyText text={`Hãy chọn các quái thú mà bạn muốn **Hiến tế** để **Triệu hồi**.\nTối đa là **${cap}**`} />
+                </p>
+                <div className="vow3d-list">
                   {you.field.map((mon) => {
                     if (!mon || mon.hp <= 0) return null;
                     const on = vowAsk.picks.includes(mon.uid);
-                    const cap = vowCap(you.reserve[vowAsk.index]?.id ?? "", you.reserve[vowAsk.index]?.saved?.level ?? 1);
                     return (
                       <button
                         key={mon.uid}
                         type="button"
-                        className={on ? "on" : ""}
+                        className={`vow3d-pick${on ? " on" : ""}`}
                         onClick={() =>
                           setVowAsk((current) => {
                             if (!current) return current;
@@ -3506,38 +3620,36 @@ function PlayPage() {
                           })
                         }
                       >
-                        {tr(fieldName(mon))}
+                        <SheetCard mon={mon} allies={you.field} layout={fieldLayout} />
+                        <span className="vow3d-name">{tr(fieldName(mon))}</span>
                       </button>
                     );
                   })}
                 </div>
-                <div className="vow-actions">
-                <button
-                  type="button"
-                  className="vow-ok"
-                  onClick={() => {
-                    apply(summonVow(duel, vowAsk.index, vowAsk.slot, vowAsk.picks));
-                    setVowAsk(null);
-                    setRiteHand(null);
-                  }}
-                >
-                  {tr("OK")}
-                </button>
-                <button
-                  type="button"
-                  className="vow-no"
-                  onClick={() => {
-                    setVowAsk(null);
-                    setRiteHand(null);
-                  }}
-                >
-                  {tr("Không")}
-                </button>
+                <div className="vow3d-actions">
+                  {ready ? (
+                    <ActionButton
+                      mini
+                      action={{
+                        key: "vow",
+                        label: "Triệu hồi",
+                        tone: "red",
+                        cost: Math.max(0, you.orb - (trial?.players[viewer].orb ?? you.orb)),
+                        onPress: () => {
+                          apply(summonVow(duel, vowAsk.index, vowAsk.slot, vowAsk.picks));
+                          close();
+                        },
+                      }}
+                    />
+                  ) : null}
+                  <button type="button" className="vow3d-no" onClick={close}>
+                    {tr("Không")}
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
+          );
+        })() : null}
         {mine && duel.gemCap === viewer && duel.turn === viewer ? (
           <div className="overlay is-ask">
             <div className="ask-card is-mana">
@@ -4555,7 +4667,7 @@ function PlayPage() {
             apply={apply}
           />
         ) : null}
-        {look ? (
+        {lookSheet ?? (look ? (
           <div className="overlay">
             <div className="sheet is-skill is-read">
               <h2>{look.name}</h2>
@@ -4587,7 +4699,7 @@ function PlayPage() {
               </button>
             </div>
           </div>
-        ) : null}
+        ) : null)}
         {strike && selectedCard ? (
           <div className="overlay">
             <div className="sheet is-skill">
@@ -4652,7 +4764,7 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
-        {inspect && (shownMonster || shownSpell) ? (
+        {handSheet ?? (inspect && (shownMonster || shownSpell) ? (
           <>
             <button type="button" className="inspect-dismiss" aria-label="Đóng kỹ năng" onClick={() => setInspect(null)} />
             <div className="inspect-card">
@@ -4671,28 +4783,6 @@ function PlayPage() {
                 <p className={shownMonster ? "ink-skill" : "ink-spell"}>
                   <CopyText text={shownMonster?.skill ?? shownSpell?.effect ?? ""} />
                 </p>
-                {shownMonster && canPlay && inspect?.pile === "reserve" ? (
-                  <button
-                    type="button"
-                    className="act press inspect-go"
-                    onClick={() => {
-                      const index = inspect.index;
-                      setInspect(null);
-                      const slot = you.field.findIndex((mon, at) => !mon && (you.locked?.[at] ?? 0) === 0);
-                      const held = you.reserve[index];
-                      const rite = held && vowCap(held.id, held.saved?.level ?? 1) > 0 && riteHand === index;
-                      // No free slot, or a sacrifice summon: pick the slot by hand as before.
-                      if (slot < 0 || rite) {
-                        if (rite && slot >= 0) setVowAsk({ index, slot: slot as 0 | 1 | 2, picks: [] });
-                        else setAim({ kind: "summon", index });
-                        return;
-                      }
-                      apply(summon(duel, index, slot as 0 | 1 | 2));
-                    }}
-                  >
-                    Triệu hồi
-                  </button>
-                ) : null}
                 {shownSpell && mine && inspect?.pile === "spell" && (shownSpell.id !== "hoan-doi" || spellCanAnswer(shownSpell.id, duel)) ? (
                   <button
                     type="button"
@@ -4718,7 +4808,7 @@ function PlayPage() {
               </div>
             </div>
           </>
-        ) : null}
+        ) : null)}
         {drag ? (
           <div className="ghost" style={{ left: drag.x, top: drag.y }}>
             {drag.kind === "spell" ? (
@@ -4804,6 +4894,7 @@ function PlayPage() {
                   <SpeakerIcon muted={!sound} />
                 </button>
               </div>
+              <p className="tuner-note credit-note">Icon kỹ năng: game-icons.net (CC BY 3.0)</p>
             </div>
           </div>
         ) : null}
@@ -4894,6 +4985,23 @@ function PlayPage() {
         <WaterBurst />
         <ShieldBurst />
         </div>
+        {fuseShow ? (
+          <div className={`fuse3d is-${fuseShow.phase}`}>
+            {fuseShow.phase !== "reveal" && fuseHeld && fusePartner ? (
+              <div className="fuse3d-stage">
+                <div className="fuse3d-card is-a">
+                  <CardFace monster={monsterCard(fuseHeld.id)!} />
+                </div>
+                <div className="fuse3d-card is-b">
+                  <CardFace monster={monsterCard(formOf(fusePartner))!} />
+                </div>
+                <i className="fuse3d-core" />
+              </div>
+            ) : null}
+            <i className="fuse3d-flash" />
+            {fuseSheet}
+          </div>
+        ) : null}
       </section>
     </main>
   );
@@ -5240,6 +5348,66 @@ function KnightPick({
   );
 }
 
+/** The orange number a monster shows on the field (charge, blocks left, level…), or "" for none. */
+function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | string {
+  return (
+    (mon.cardId === "ga-he-dang-so" || mon.cardId === "tho-den-tinh-nghich") && mon.charge > 0
+      ? mon.charge
+      : mon.cardId === "linh-chien-da-khong-lo" && mon.blocksLeft > 0
+        ? mon.blocksLeft
+      : (mon.cardId === "kazura" || mon.cardId === "kizuran") && allies.some((unit) => unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0)
+        ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
+      : mon.cardId === "ken-ngai"
+        ? mon.level ?? 0
+        : mon.cardId === "con-thinh-no-cua-hai-vuong"
+          ? 2 + 3 * (mon.stored ?? 0)
+        : mon.cardId === "hiep-si-cua-hau"
+          ? mon.beat === 1 ? 2 : 1
+        : (mon.level ?? 1) > 1
+          ? (mon.level ?? 1)
+          : ""
+  );
+}
+
+/** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
+function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
+  const stats = visibleStats(mon, allies);
+  const spot = (key: FieldKey, value: number, blue: boolean) =>
+    value === 0 ? null : (
+      <span
+        className={`fstat${value < 0 ? " is-red" : blue ? " is-blue" : ""}`}
+        style={{
+          left: `${layout[key].x}%`,
+          top: `${layout[key].y}%`,
+          fontSize: cardText(layout[key].size, "cqmin"),
+          width: `${layout[key].width}%`,
+          height: `${layout[key].height}%`,
+        }}
+      >
+        {value}
+      </span>
+    );
+  const art = artSrc(mon.cardId, mon.level);
+  return (
+    <span className="sheet-unit">
+      <span className="field-unit">
+        {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
+        <img className="frame" src="/field-frame.png" alt="" draggable={false} />
+        {spot("def", stats.def, stats.blueDef)}
+        {spot("mdef", stats.mdef, stats.blueMdef)}
+        {spot("atk", stats.atk, stats.blueAtk)}
+        {spot("hp", mon.hp, stats.blueHp)}
+      </span>
+    </span>
+  );
+}
+
+function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
+  const count = fieldCount(mon, allies);
+  if (count !== "" && count !== 0) return String(count);
+  return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
+}
+
 function BoardSlot({
   mon,
   side,
@@ -5333,22 +5501,7 @@ function BoardSlot({
     );
   };
   const bind = Math.max(mon.stun, mon.chain ?? 0, mon.gag ?? 0, mon.path ?? 0);
-  const count =
-    (mon.cardId === "ga-he-dang-so" || mon.cardId === "tho-den-tinh-nghich") && mon.charge > 0
-      ? mon.charge
-      : mon.cardId === "linh-chien-da-khong-lo" && mon.blocksLeft > 0
-        ? mon.blocksLeft
-      : (mon.cardId === "kazura" || mon.cardId === "kizuran") && allies.some((unit) => unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0)
-        ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
-      : mon.cardId === "ken-ngai"
-        ? mon.level ?? 0
-        : mon.cardId === "con-thinh-no-cua-hai-vuong"
-          ? 2 + 3 * (mon.stored ?? 0)
-        : mon.cardId === "hiep-si-cua-hau"
-          ? mon.beat === 1 ? 2 : 1
-        : (mon.level ?? 1) > 1
-          ? (mon.level ?? 1)
-          : "";
+  const count = fieldCount(mon, allies);
   const glassLabel = mon.glass ? tr("Suy") : "";
   const lit = (mon.shown ?? 0) > 0 ? mon.shown ?? 0 : 0;
   const counted = count !== "" && count !== 0;

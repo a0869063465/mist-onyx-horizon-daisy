@@ -48,8 +48,14 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Sửa lỗi game thật: sau khi kéo thả quái, cú chạm kế tiếp bị nuốt (`suppressClick` giờ xoá khi có cú chạm mới trên bàn).
 - Bấm Triệu hồi trên lá quái giờ triệu hồi luôn vào ô trống đầu tiên từ trái sang. Hết ô trống hoặc đang chọn hiến tế (giữ lâu lá) thì chọn ô bằng tay như cũ.
 - Số trên góc xấp bài to gấp đôi, ô vàng nổi khối. Số phép trên tay và quái dự bị của đối phương to gấp đôi, ô 3D (`COUNT_MARKS` / `markScale` trong `layouts.ts`, Tuỳ chỉnh cũng theo).
-- Chưa làm, đang chờ chủ game trả lời (xem tin nhắn cuối phiên 17/10):
-  - Thứ 1: hiện kỹ năng chủ động, nội tại và số đặc biệt của quái dạng 3D trên sàn đấu.
-  - Thứ 3: "cũng hiển thị khi có dung hợp và triệu hồi hiến tế".
-  - Thứ 4: đổi các nút (triệu hồi và các thứ khác) sang hình 3D kèm chữ.
+
+## Đã xong: bảng quái mới (chủ game vẽ bảng trắng, 17/10)
+
+- `src/components/game/monster-sheet.tsx`: bấm quái trên tay hoặc trên sân. Trên: icon kỹ năng (chủ động vòng xanh lam, nội tại vòng tím). Giữa: lá kiểu trên sân (`SheetCard` trong play.tsx, số cam góc trái trên = `fieldCount`), tên, nút 3D. Dưới: mô tả của icon đang chọn.
+- Bảng kỹ năng từng quái: `src/lib/skill-book.ts` (tên, loại, icon, tiêu đề trong chữ lá; mô tả cắt từ chữ lá nên sửa chữ lá là theo). Quái mới thì thêm dòng vào `SKILL_BOOK`.
+- Icon: game-icons.net (CC BY 3.0, có dòng ghi nguồn trong Cài đặt). Thêm icon: `npm pack @iconify-json/game-icons`, giải nén, `node scripts/skill-icons.mjs <đường dẫn icons.json>` sinh lại `src/lib/skill-icons.ts`. Bộ envato chủ game gửi là hàng trả phí có watermark, không dùng.
+- Nút: Triệu hồi vàng, Hiến tế đỏ, Dung hợp tím, quái dung hợp ra sân tím pha đỏ. Chỉ hiện khi luật cho phép (chạy thử luật trước). Ngọc + số mana khi tốn mana.
+- Hiến tế → khung chọn quái 3D (`vow3d`), nút Triệu hồi đỏ nhỏ. Giữ lâu lá vẫn dùng được.
+- Dung hợp → bàn nghiêng 3D tối (`.board.is-fusing`), hai lá bay vào, loé sáng, hiện bảng quái dung hợp → Triệu hồi. Kéo lá lên quái để dung hợp (cách cũ) vẫn giữ.
+- Hiệu ứng triệu hồi hiến tế: `rite` trong arena-fx (luôn chạy, không theo nút Mới/Cũ) + tiếng `riteSummon` tổng hợp trong sfx.ts. Lửa và tiếng cười trên quái bị hiến tế giữ nguyên.
 - Chủ game nói "Số 1 2 và 3 tiêu đề không có ý nghĩa, bỏ đi", chưa xác nhận cách hiểu. Kịch bản mới có danh sách 1–4 (Rút bài, Triệu hồi, Kỹ năng, Ma pháp) nên vẫn giữ số.

@@ -107,7 +107,7 @@ function steps(viewer: Side): Step[] {
     },
     { text: "Bạn đã đủ **Sao hiến tế** để triệu hồi **Quái thú 1 sao**. Hãy triệu hồi.", focus: [STARS, ONE_STAR], wait: "ok", hand: "reserve" },
     // The demo replays until the player drags a monster onto the field.
-    { text: "Hãy kéo và thả Quái thú lên sân.", focus: [ONE_STAR, slots], wait: "summon", anim: "drag", allow: [".inspect-card", ".inspect-dismiss"], hand: "reserve" },
+    { text: "Hãy kéo và thả Quái thú lên sân.", focus: [ONE_STAR, slots], wait: "summon", anim: "drag", allow: [".msheet-back"], hand: "reserve" },
     // Already summoned this turn, so tapping is shown, not done.
     { text: "Hoặc nhấp vào quái thú, và bấm **Triệu Hồi**.", focus: [ONE_STAR], wait: "ok", hand: "reserve" },
     { text: "Người chơi ở lượt đi đầu tiên sẽ không thể tấn công đối phương.", focus: [ownMon], wait: "ok" },
@@ -133,7 +133,7 @@ function steps(viewer: Side): Step[] {
       text: "Bạn đã rút được **Sợi xích địa ngục**. Hãy thử dùng nó.",
       focus: [{ sel: ".hand .hand-card.is-spell, .hand .hand-spell" }, foeMon],
       wait: "chain",
-      allow: [".hand", ".inspect-card", ".inspect-dismiss", ".overlay", ".ask-card", "[data-slot]"],
+      allow: [".hand", ".inspect-card", ".inspect-dismiss", ".msheet-back", ".overlay", ".ask-card", "[data-slot]"],
       hand: "spell",
     },
     { text: "Tốt lắm. Chúc mừng bạn đã hoàn thành phần hướng dẫn cơ bản dành cho **Triệu hồi sư tập sự**.", focus: [], wait: "ok", big: true },
@@ -349,13 +349,18 @@ export function Tutorial({
     let lastHoles: Box[] = [];
     const tick = () => {
       // The line steps aside while a card panel the step allows is open, so it never covers it.
-      setAside(Boolean(document.querySelector(".inspect-card")) && Boolean(step.allow?.includes(".inspect-card")));
+      setAside((step.allow ?? []).some((sel) => (sel === ".inspect-card" || sel === ".msheet-back") && document.querySelector(sel)));
       const now = measure(step.focus);
       if (!same(now, last)) {
         last = now;
         setBoxes(now);
       }
-      const open = measure((step.allow ?? []).filter((sel) => sel === ".inspect-card" || sel === ".overlay" || sel === ".ask-card").map((sel) => ({ sel })));
+      const open = measure(
+        (step.allow ?? [])
+          .map((sel) => (sel === ".msheet-back" ? ".msheet" : sel))
+          .filter((sel) => sel === ".inspect-card" || sel === ".msheet" || sel === ".overlay" || sel === ".ask-card")
+          .map((sel) => ({ sel })),
+      );
       if (!same(open, lastHoles)) {
         lastHoles = open;
         setHoles(open);

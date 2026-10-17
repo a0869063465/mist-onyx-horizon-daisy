@@ -12,7 +12,9 @@ export type FxEvent =
   | { t: "bolt"; rank: "small" | "big"; x: number; y: number; self?: boolean; pack?: FxPack }
   | { t: "laser"; x1: number; y1: number; x2: number; y2: number; pack?: FxPack }
   | { t: "tide"; rank: "small" | "mid" | "big"; x: number; y: number; pack?: FxPack }
-  | { t: "shield"; kind: "phys" | "spell"; x: number; y: number; pack?: FxPack };
+  | { t: "shield"; kind: "phys" | "spell"; x: number; y: number; pack?: FxPack }
+  /** Sacrifice summon landing on a slot (always played, whatever the effect style). */
+  | { t: "rite"; x: number; y: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();
