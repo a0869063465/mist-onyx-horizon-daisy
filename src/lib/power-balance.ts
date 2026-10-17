@@ -363,6 +363,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "up",
     notes: ["Dùng kỹ năng không còn bị khoá rút bài ở lượt sau"],
   },
+  {
+    id: "cuc-bong-ma-quai",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "shift",
+    notes: ["Đổi sang Phát nổ, Pháo kích và Bông mềm. Bản sao dùng được mọi kỹ năng, mỗi loại kỹ năng chỉ dùng 1 lần"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

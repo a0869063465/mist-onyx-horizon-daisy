@@ -47,7 +47,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "rong-boc-trung": [A("Thế công", "dragon-spiral"), A("Thế thủ", "egg-defense"), NOTE("đổi thế công hoặc thế thủ")],
   "ga-he-dang-so": [A("Quả cầu bóng đêm", "concentration-orb")],
   "tho-den-tinh-nghich": [P("Nhảy qua lại", "rabbit")],
-  "cuc-bong-ma-quai": [A("Dùng để tấn công", "floating-ghost"), S("Dùng để phòng ngự", "ghost-ally"), S("Dùng như spell", "magic-swirl")],
+  "cuc-bong-ma-quai": [A("Phát nổ", "spiky-explosion"), A("Pháo kích", "cannon-shot"), S("Bông mềm", "fluffy-cloud"), NOTE("mỗi loại kỹ năng", "các kỹ năng ngoài")],
   "quai-thu-thien-su": [P("Cầu nguyện", "prayer"), P("Ân huệ thiên sứ", "angel-wings")],
   "te-giac-be-con": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],

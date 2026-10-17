@@ -526,6 +526,8 @@ export const PENDING_NOTES: string[] = [
   "Chiến sĩ gặm nhắm: Khiên thú sĩ thêm 2 máu tối đa, thay vì 3.",
   "Gã hề đáng sợ: Quả cầu bóng đêm gây 6 sát thương, thay vì 5.",
   "Ong khổng lồ đổi tên skill Tê liệt thành Kim châm tê liệt. Sứa hút ma pháp đổi Ma pháp tích tụ thành Tích luỹ ma pháp.",
+  "Cục bông ma quái đổi bộ kỹ năng. Phát nổ: không tốn mana, tự huỷ, gây sát thương phép bằng công lên 1 quái địch. Pháo kích: tốn 1 mana, nhân bản chính nó. Bông mềm: khi người chơi bị tấn công, bấm Use trên tay, tốn 1 mana, triệu hồi bản thân chặn và các bản sao lấp đầy sân đấu, tối đa 4 con. Bản sao dùng được mọi kỹ năng như bản chính.",
+  "Cục bông ma quái: mỗi loại kỹ năng chỉ dùng 1 lần rồi mất, và các kỹ năng ngoài Phát nổ không tính là đã hành động. Bỏ nút Đỡ đòn ngoài sân.",
 ];
 
 function remarkOf(notes: string[]) {

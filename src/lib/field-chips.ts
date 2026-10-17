@@ -13,6 +13,10 @@ export type FieldBindCtx = {
   aim: (index: number) => void;
   cast: (index: number) => void;
   declare: (index: number) => void;
+  /** Skills this monster has already used up (once per kind). */
+  spent: string[];
+  /** Empty slots on its side. */
+  room: number;
 };
 
 export type FieldBindChip = { key: string; label: string; go: () => void };
@@ -35,6 +39,8 @@ const ROWS: Row[] = [
   { ids: ["te-giac-be-con"], key: "up", cast: "self", skill: 0, gate: (ctx) => ctx.level < 3 && ctx.afford(ctx.level >= 2 ? 2 : 1) },
   { ids: ["hiep-si-cua-hau"], key: "sword", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "sword")} ${ctx.beat === 1 ? 2 : 1}` },
   { ids: ["mat-do-tan-pha"], key: "ball", cast: "aim", skill: 0, gate: pay(1) },
+  { ids: ["cuc-bong-ma-quai"], key: "boom", cast: "aim", skill: 0 },
+  { ids: ["cuc-bong-ma-quai"], key: "barrage", cast: "self", skill: 1, gate: (ctx) => ctx.room >= 1 && ctx.afford(1) && !ctx.spent.includes("barrage") },
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },

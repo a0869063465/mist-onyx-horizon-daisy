@@ -396,6 +396,7 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "ma-dao-si": [{ index: 0, cast: "aim" }],
   "loi-nguyen-cua-rong": [{ index: 0, cast: "aim" }],
   "rong-ac-ma": [{ index: 0, cast: "aim" }],
+  "cuc-bong-ma-quai": [{ index: 0, cast: "aim" }, { index: 1, cast: "self" }],
   "thien-than-be-nho": [{ index: 0, cast: "aim" }, { index: 1, cast: "aim" }],
   "rong-phun-hoa-cau": [{ index: 0, cast: "declare" }, { index: 1, cast: "aim" }],
   "phu-thuy-thoi-gian": [{ index: 0, cast: "aim" }],
@@ -2228,6 +2229,7 @@ export function harmSkill(cardId: string, index = 0) {
   if (cardId === "rong-con" || cardId === "rong-ngan-tuoi") return true;
   if (cardId === "ma-dao-si" || cardId === "loi-nguyen-cua-rong" || cardId === "rong-ac-ma" || cardId === "con-thinh-no-cua-hai-vuong") return true;
   if (cardId === QUEEN_KNIGHT) return true;
+  if (cardId === "cuc-bong-ma-quai") return index === 0;
   return false;
 }
 
@@ -3680,20 +3682,16 @@ function openSlots(player: Player) {
   return player.field.filter((cell, index) => !cell && (player.locked?.[index] ?? 0) === 0).length;
 }
 
+/** Bông mềm: while the player is attacked, Cục bông ma quái in hand can be summoned to block, for 1 mana. */
 export function cottonOffer(state: Duel, side: Side) {
-  const none = { self: false, copy: false, hand: false, handCopy: false };
+  const none = { hand: false };
   if (state.step !== "respond" || !state.hold || state.hold.priority !== side || state.winner) return none;
-  if (threatenedSide(state) !== side) return none;
+  const pending = state.pending;
+  const onPlayer = pending?.kind === "face" || (pending?.kind === "beam" && !pending.target);
+  if (!onPlayer || threatenedSide(state) !== side) return none;
   const you = state.players[side];
-  const original = you.field.find((mon) => mon && mon.cardId === "cuc-bong-ma-quai" && !mon.copy && !mon.dim && mon.stun === 0 && !mon.noBlock) ?? null;
-  const room = openSlots(you);
   const inHand = you.reserve.some((card) => card.id === "cuc-bong-ma-quai");
-  return {
-    self: Boolean(original),
-    copy: Boolean(original && room >= 1 && you.orb >= 1),
-    hand: inHand && room >= 1,
-    handCopy: inHand && room >= 2 && you.orb >= 1,
-  };
+  return { hand: inHand && openSlots(you) >= 1 && you.orb >= 1 };
 }
 
 function redirectHit(state: Duel, uid: string): Duel {
@@ -3717,54 +3715,33 @@ function redirectHit(state: Duel, uid: string): Duel {
   };
 }
 
-export function cottonCover(state: Duel, mode: "self" | "copy" | "hand" | "hand-copy"): Duel {
-  if (state.parley && state.step === "respond") return freeTalk(state, (next) => cottonCover(next, mode));
+/** At most this many Cục bông ma quái (the blocker and its copies) stand on the field after Bông mềm. */
+const SOFT_COTTON_MAX = 4;
+
+export function cottonCover(state: Duel, _mode: "hand" = "hand"): Duel {
+  if (state.parley && state.step === "respond") return freeTalk(state, (next) => cottonCover(next));
   if (!state.hold || state.step !== "respond") return state;
   const side = state.hold.priority;
   const offer = cottonOffer(state, side);
   const you = state.players[side];
   const name = monsterCard("cuc-bong-ma-quai")?.name ?? "Cục bông ma quái";
-  if (mode === "self") {
-    const mon = you.field.find((unit) => unit && unit.cardId === "cuc-bong-ma-quai" && !unit.copy && !unit.dim && unit.stun === 0 && !unit.noBlock) ?? null;
-    if (!offer.self || !mon) return note(state, `${name} không đỡ được.`);
-    return redirectHit(state, mon.uid);
-  }
-  if (mode === "copy") {
-    if (!offer.copy) return note(state, "Không đủ mana hoặc ô trống để nhân bản.");
-    const paid = pay(you, 1);
-    if (!paid) return note(state, "Cần 1 gem.");
-    const field = [...paid.field] as Player["field"];
-    const slot = field.findIndex((cell, index) => !cell && (paid.locked?.[index] ?? 0) === 0);
-    if (slot < 0) return note(state, "Không còn ô trống.");
-    const seq = state.seq + 1;
-    const copy = { ...place({ ...state, seq }, side, "cuc-bong-ma-quai"), copy: true };
-    field[slot] = copy;
-    const marked = field.map((unit) => (unit && unit.cardId === "cuc-bong-ma-quai" && !unit.copy ? { ...unit, dim: true } : unit));
-    const next = patch({ ...state, seq: seq + 1 }, side, { ...paid, field: marked as Player["field"] });
-    return redirectHit(next, copy.uid);
-  }
-  if (mode === "hand" ? !offer.hand : !offer.handCopy) return note(state, `${name} không triệu hồi nhanh được.`);
+  if (!offer.hand) return note(state, `${name} không triệu hồi nhanh được.`);
   const index = you.reserve.findIndex((card) => card.id === "cuc-bong-ma-quai");
-  const paid = mode === "hand-copy" ? pay(you, 1) : you;
+  const paid = pay(you, 1);
   if (!paid || index < 0) return note(state, "Cần 1 gem.");
   const field = [...paid.field] as Player["field"];
   const slots = field.flatMap((cell, slot) => (!cell && (paid.locked?.[slot] ?? 0) === 0 ? [slot] : []));
-  if (slots.length === 0 || (mode === "hand-copy" && slots.length < 2)) return note(state, "Không còn ô trống.");
+  if (slots.length === 0) return note(state, "Không còn ô trống.");
   let seq = state.seq + 1;
-  const body = { ...place({ ...state, seq }, side, "cuc-bong-ma-quai", paid.reserve[index]), dim: true };
+  const body = place({ ...state, seq }, side, "cuc-bong-ma-quai", paid.reserve[index]);
   field[slots[0]] = body;
-  let guard = body.uid;
-  if (mode === "hand-copy") {
-    for (const slot of slots.slice(1)) {
-      seq += 1;
-      const copy = { ...place({ ...state, seq }, side, "cuc-bong-ma-quai"), copy: true };
-      field[slot] = copy;
-      guard = copy.uid;
-    }
+  for (const slot of slots.slice(1, SOFT_COTTON_MAX)) {
+    seq += 1;
+    field[slot] = { ...place({ ...state, seq }, side, "cuc-bong-ma-quai"), copy: true };
   }
   const reserve = paid.reserve.filter((_, slot) => slot !== index);
   const next = patch({ ...state, seq: seq + 1 }, side, { ...paid, field, reserve });
-  return redirectHit(next, guard);
+  return redirectHit(next, body.uid);
 }
 
 /** The two monsters whose skill is the hellfire ball: Mắt đỏ tàn phá and Rồng ác ma (same rules, figures read from each card). */
@@ -4965,6 +4942,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
     return beginHold(state, { kind: "face", attacker: uid, skill: true }, `${cardOf(mon).name} dùng ${skill} lên người chơi. Có thể chặn`);
   }
   if (mon.cardId === "loi-nguyen-cua-rong" && !aimed) return note(state, "Chọn một quái đối thủ.");
+  if (mon.cardId === "cuc-bong-ma-quai" && skillIndex === 0 && !foeField.some((unit) => unit?.uid === aimed && unit.hp > 0)) return note(state, "Chọn một quái đối thủ.");
   if (mon.cardId === "phu-thuy-rung-den") {
     if (!aimed) return note(state, "Chọn một quái đối thủ.");
     const foeMon = foeField.find((unit) => unit?.uid === aimed && unit.hp > 0);
@@ -5024,6 +5002,7 @@ function castName(cardId: string, index: number): string {
   if (cardId === "loi-nguyen-cua-rong") return chipLabel(cardId, "fire");
   if (cardId === "phu-thuy-rung-den") return chipLabel(cardId, "curse");
   if (cardId === "rong-ac-ma") return chipLabel(cardId, "orb");
+  if (cardId === "cuc-bong-ma-quai") return chipLabel(cardId, index === 0 ? "boom" : "barrage");
   if (cardId === QUEEN_KNIGHT) return chipLabel(cardId, "sword");
   return monsterCard(cardId)?.name ?? "Kỹ năng";
 }
@@ -7012,23 +6991,34 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     return note(next, `${castName(mon.cardId, skillIndex)} gây ${spellLanded(them.field.find((unit) => unit?.uid === real) ?? target, amount, undefined, mon)} sát thương phép.`, "spell");
   }
   if (mon.cardId === "cuc-bong-ma-quai") {
-    if (mon.copy) return note(state, "Bản sao không dùng được kỹ năng.");
-    const count = skillIndex === 2 ? 2 : 1;
-    if (you.field.filter((unit) => !unit).length < count) return note(state, "Không đủ ô trống.");
+    const spent = mon.shed ?? [];
+    if (skillIndex === 0) {
+      // Phát nổ: no mana, it destroys itself and deals spell damage equal to its attack to an enemy monster.
+      const them = state.players[foe];
+      const target = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
+      if (!target) return note(state, "Chọn một quái đối thủ.");
+      const real = shuntUid(them.field, target.uid) ?? target.uid;
+      const landed = them.field.find((unit) => unit?.uid === real) ?? target;
+      const amount = outgoing(mon, liveAtk(mon));
+      const foeField = them.field.map((unit) => (unit?.uid === landed.uid ? damageSpell(unit, amount, them.field, mon) : unit));
+      const yourField = you.field.map((unit) => (unit?.uid === uid ? null : unit));
+      const next = patch(patch(state, side, { ...you, field: yourField }), foe, settleCocoon(dropDead({ ...them, field: foeField })));
+      return note(next, `${castName(mon.cardId, 0)} tự huỷ, gây ${spellLanded(landed, amount, them.field, mon)} sát thương phép lên ${cardOf(landed).name}.`, "spell");
+    }
+    // Pháo kích: 1 mana, copies itself into an empty slot. Not counted as having acted. Each kind of skill is used once.
+    if (spent.includes("barrage")) return note(state, "Pháo kích đã biến mất.");
     const before = you.stars;
     const paid = pay(you, 1);
     if (!paid) return note(state, "Cần 1 gem.");
-    let seq = state.seq;
-    const field = [...paid.field];
-    for (let i = 0; i < count; i += 1) {
-      const slot = field.findIndex((unit) => !unit);
-      seq += 1;
-      field[slot] = { ...place({ ...state, seq }, side, mon.cardId), copy: true };
-    }
-    const yourField = field.map((unit) => (unit?.uid === uid ? { ...unit, charge: 1, dim: true } : unit));
+    const field = [...paid.field] as Player["field"];
+    const slot = field.findIndex((unit, at) => !unit && (paid.locked?.[at] ?? 0) === 0);
+    if (slot < 0) return note(state, "Không đủ ô trống.");
+    const seq = state.seq + 1;
+    field[slot] = { ...place({ ...state, seq }, side, mon.cardId), copy: true, shed: [...spent] };
+    const yourField = field.map((unit) => (unit?.uid === uid ? { ...unit, shed: [...spent, "barrage"] } : unit)) as Player["field"];
     return note(
       pingStars(patch({ ...state, seq: seq + 1 }, side, { ...paid, field: yourField }), side, before, paid.stars),
-      `${cardOf(mon).name} nhân ${count} bản sao.`,
+      `${castName(mon.cardId, 1)}: ${cardOf(mon).name} nhân bản chính nó.`,
     );
   }
   if (mon.cardId === "te-giac-be-con") {

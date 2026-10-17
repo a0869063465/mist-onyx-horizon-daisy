@@ -1452,7 +1452,7 @@ function PlayPage() {
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
   const [hornAsk, setHornAsk] = useState<{ uid: string; foeUid: string; mode: "splash" | "plus" | null } | null>(null);
-  const [cottonAsk, setCottonAsk] = useState<null | "field" | "hand">(null);
+  const [cottonAsk, setCottonAsk] = useState<null | "hand">(null);
   const [askAt, setAskAt] = useState<{ x: number; y: number } | null>(null);
   const askDrag = useRef<{ pointer: number; x: number; y: number; left: number; top: number } | null>(null);
   const prevDuel = useRef<Duel | null>(null);
@@ -2486,7 +2486,7 @@ function PlayPage() {
   );
   const otherSide = (viewer === 0 ? 1 : 0) as Side;
   const canIntercept = responding && duel.hold?.priority === viewer && duel.pending?.kind === "face";
-  const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { self: false, copy: false, hand: false, handCopy: false };
+  const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
   const beam = duel.pending?.kind === "beam" ? duel.pending : null;
   const horning = hornPending(duel);
@@ -3032,7 +3032,7 @@ function PlayPage() {
     if (!payload) return;
     if (!moved && payload.kind === "unit" && Date.now() - origin.current.t > 420) {
       const unit = you.field.find((mon) => mon?.uid === payload.uid);
-      const reactive = Boolean(unit && duel && (gnawReady(duel, unit, viewer) || cottonReady(duel, unit, viewer) || monsterAlert(duel, unit, viewer) || mysticAlert(duel, unit, viewer)));
+      const reactive = Boolean(unit && duel && (gnawReady(duel, unit, viewer) || monsterAlert(duel, unit, viewer) || mysticAlert(duel, unit, viewer)));
       if (!reactive) {
         suppressClick.current = true;
         setAim(null);
@@ -3164,7 +3164,6 @@ function PlayPage() {
       return;
     }
     const ready = side === viewer && gnawReady(duel, mon, side);
-    const cottonUp = side === viewer && cottonReady(duel, mon, side);
     const coverReady =
       side === viewer &&
       !mon.dim &&
@@ -3197,7 +3196,7 @@ function PlayPage() {
     const wallUp = side === viewer && canWall(duel, mon.uid);
     const spiritUp = side === viewer && canSpirit(duel, mon.uid);
     const mysticUp = side === viewer && mysticAlert(duel, mon, side);
-    const reactive = ready || cottonUp || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
+    const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
     if (side === viewer && sealed) return;
     if (side === viewer && (hatchReady || reelReady || (!mon.dim && (canPlay || reactive)))) {
       setAim({ kind: "menu", uid: mon.uid });
@@ -4148,27 +4147,10 @@ function PlayPage() {
             <button type="button" onClick={() => apply(answerPrey(duel, false))}>{tr("Không")}</button>
           </div>
         ) : null}
-        {cottonAsk === "field" && (cotton.self || cotton.copy) ? (
+        {cottonAsk === "hand" && cotton.hand ? (
           <div className="ask-card">
             <p>{monsterCard("cuc-bong-ma-quai")?.name}</p>
-            {cotton.self ? (
-              <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "self")); }}>{askLabel("cuc-bong-ma-quai", "self")}</button>
-            ) : null}
-            {cotton.copy ? (
-              <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "copy")); }}>{askLabel("cuc-bong-ma-quai", "copy")}</button>
-            ) : null}
-            <button type="button" onClick={() => setCottonAsk(null)}>{tr("Không")}</button>
-          </div>
-        ) : null}
-        {cottonAsk === "hand" && (cotton.hand || cotton.handCopy) ? (
-          <div className="ask-card">
-            <p>{monsterCard("cuc-bong-ma-quai")?.name}</p>
-            {cotton.hand ? (
-              <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "hand")); }}>{askLabel("cuc-bong-ma-quai", "hand")}</button>
-            ) : null}
-            {cotton.handCopy ? (
-              <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "hand-copy")); }}>{askLabel("cuc-bong-ma-quai", "handCopy")}</button>
-            ) : null}
+            <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "hand")); }}>{askLabel("cuc-bong-ma-quai", "soft")}</button>
             <button type="button" onClick={() => setCottonAsk(null)}>{tr("Không")}</button>
           </div>
         ) : null}
@@ -4452,7 +4434,7 @@ function PlayPage() {
         {board.stack.hidden ? null : (
         <button
           type="button"
-          className={`face-pile press${(you.hand.some((id) => spellCanAnswer(id, duel)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || cotton.handCopy || standHand) && hand === "spell") ? " is-alert" : ""}`}
+          className={`face-pile press${(you.hand.some((id) => spellCanAnswer(id, duel)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
           style={{
             left: `${board.stack.x}%`,
             top: `${board.stack.y}%`,
@@ -4502,7 +4484,7 @@ function PlayPage() {
                 if (!card) return null;
                 const live = reserveLive(held, card);
                 const open = inspect?.pile === "reserve" && inspect.index === index;
-                const cottonCard = id === "cuc-bong-ma-quai" && (cotton.hand || cotton.handCopy);
+                const cottonCard = id === "cuc-bong-ma-quai" && cotton.hand;
                 const standCard = id === "the-than-cua-shien" && standHand;
                 const face = (
                   <button
@@ -4706,7 +4688,6 @@ function PlayPage() {
               setBlessArm(true);
               holdNotice("Yêu tinh đang chờ. Kéo quái khác lên để chặn.");
             }}
-            onCotton={() => setCottonAsk("field")}
             onChronoFlow={(uid) => {
               if (!canTargetFoe(duel)) {
                 holdNotice("Lượt đầu không được nhắm đối thủ.");
@@ -4772,11 +4753,8 @@ function PlayPage() {
               </button>
               {selectedCard.id === "cuc-bong-ma-quai" ? (
                 <>
-                  <button type="button" className="act press is-skillbox" onClick={() => { setStrike(null); apply(useSkill(duel, strike.uid, null, 0)); }}>
-                    Nhân 2
-                  </button>
                   <button type="button" className="act press is-skillbox" onClick={() => { setStrike(null); apply(useSkill(duel, strike.uid, null, 1)); }}>
-                    Nhân 3
+                    Pháo kích
                   </button>
                 </>
               ) : selectedCard.id === "mat-xanh-huy-diet" ? (
@@ -5110,13 +5088,7 @@ function gnawReady(duel: Duel, mon: FieldMon, side: Side) {
 function isPrime(duel: Duel, mon: FieldMon, side: Side) {
   if (mon.stun > 0) return false;
   if (mon.cardId === "ga-he-dang-so" && mon.charge >= 2 && !mon.dim) return true;
-  return gnawReady(duel, mon, side) || cottonReady(duel, mon, side);
-}
-
-function cottonReady(duel: Duel, mon: FieldMon, side: Side) {
-  if (mon.cardId !== "cuc-bong-ma-quai" || mon.copy) return false;
-  const offer = cottonOffer(duel, side);
-  return offer.self || offer.copy;
+  return gnawReady(duel, mon, side);
 }
 
 function SwordIcon() {
@@ -5134,7 +5106,6 @@ function UnitChips({
   attackable,
   blessOn,
   onBless,
-  onCotton,
   onChronoFlow,
   onLure,
   setAim,
@@ -5146,7 +5117,6 @@ function UnitChips({
   attackable: boolean;
   blessOn: boolean;
   onBless: () => void;
-  onCotton: () => void;
   onChronoFlow: (uid: string) => void;
   onLure: (uid: string) => void;
   setAim: (aim: Aim | null) => void;
@@ -5179,6 +5149,8 @@ function UnitChips({
       aim: aimSkill,
       cast: (index) => apply(useSkill(duel, uid, null, index)),
       declare: (index) => apply(declareSkill(duel, uid, null, index)),
+      spent: mon.shed ?? [],
+      room: empty,
     })) {
       y.push({ key: chip.key, label: chip.label, go: chip.go });
     }
@@ -5187,10 +5159,6 @@ function UnitChips({
   if (attackable && !noSkill && !mon.copy && card.id === "ga-he-dang-so") {
     if (you.orb >= 1) y.push({ key: "charge", label: chipLabel(card.id, "charge"), go: () => apply(useSkill(duel, uid, null, 0)) });
     if (mon.charge >= 2) z.push({ key: "cast", label: chipLabel(card.id, "cast"), go: () => aimSkill(1) });
-  }
-  if (attackable && !noSkill && !mon.copy && card.id === "cuc-bong-ma-quai") {
-    if (empty >= 1) y.push({ key: "one", label: chipLabel(card.id, "one"), go: () => apply(useSkill(duel, uid, null, 1)) });
-    if (empty >= 2) y.push({ key: "two", label: chipLabel(card.id, "two"), go: () => apply(useSkill(duel, uid, null, 2)) });
   }
   if (attackable && !mon.copy && card.id === "sat-nhan-bat-giu" && !mon.seized && mon.stun === 0 && (mon.chain ?? 0) === 0 && (mon.path ?? 0) === 0 && !mon.cage) {
     y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0) });
@@ -5299,9 +5267,6 @@ function UnitChips({
           ),
       });
     }
-  }
-  if (cottonReady(duel, mon, side)) {
-    z.push({ key: "dodge", label: chipLabel(card.id, "dodge"), go: onCotton });
   }
   if (noAttack && y.length === 0 && z.length === 0) return null;
 

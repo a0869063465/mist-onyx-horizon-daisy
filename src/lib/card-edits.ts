@@ -13,9 +13,8 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "cast", label: "Quả cầu bóng tối", tone: "z" },
   ],
   "cuc-bong-ma-quai": [
-    { key: "one", label: "Nhân 2", tone: "y" },
-    { key: "two", label: "Nhân 3", tone: "y" },
-    { key: "dodge", label: "Đỡ đòn", tone: "z" },
+    { key: "boom", label: "Phát nổ", tone: "y" },
+    { key: "barrage", label: "Pháo kích", tone: "y" },
   ],
   "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
@@ -124,12 +123,7 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
     { key: "surge", title: "Con nước lớn", label: "Con nước lớn tàn phá" },
     { key: "doom", title: "Đại thuỷ triều", label: "Đại thuỷ triều huỷ diệt" },
   ],
-  "cuc-bong-ma-quai": [
-    { key: "copy", title: "Bản sao chặn", label: "Nhân bản sao ra chặn. Tốn 1 mana." },
-    { key: "self", title: "Bản thân chặn", label: "Bản thân chặn. Không tốn mana." },
-    { key: "hand", title: "Từ trên tay", label: "Triệu hồi bản thân ra chặn. Không tốn mana." },
-    { key: "handCopy", title: "Tay nhân bản", label: "Nhân tối đa, bản sao chặn. Tốn 1 mana." },
-  ],
+  "cuc-bong-ma-quai": [{ key: "soft", title: "Bông mềm", label: "Triệu hồi bản thân ra chặn. Tốn 1 mana, các bản sao lấp đầy sân." }],
 };
 
 type Store = {
@@ -224,6 +218,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["my-dieu-nhan", "không được rút bài"],
   ["nu-chua-dieu-nhan", "không được rút bài"],
   ["nu-chua-dieu-nhan", "không khoá rút bài"],
+  ["cuc-bong-ma-quai", "Dùng để tấn công"],
   ["ong-khong-lo", "__**Tê liệt**__"],
   ["sua-hut-ma-phap", "Ma pháp tích tụ"],
 ];
