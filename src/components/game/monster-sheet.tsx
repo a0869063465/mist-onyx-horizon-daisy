@@ -273,7 +273,7 @@ export function MonsterSheet({
               </b>
               {shown.text ? (
                 <p className="ink-skill">
-                  <CopyText text={shown.text} />
+                  <CopyText text={shown.text} firstTitle={false} />
                 </p>
               ) : null}
               {note && picked === 0 ? <p className="msheet-note">{tr(note)}</p> : null}

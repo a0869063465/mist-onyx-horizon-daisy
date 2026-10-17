@@ -12,9 +12,9 @@ export function CopySize() {
   return null;
 }
 
-export function CopyText({ text }: { text: string }) {
+export function CopyText({ text, firstTitle = true }: { text: string; firstTitle?: boolean }) {
   useLang();
-  const bits = parseCopy(tr(text));
+  const bits = parseCopy(tr(text), firstTitle);
   const nodes = [];
   for (let index = 0; index < bits.length; index += 1) {
     const bit = bits[index];

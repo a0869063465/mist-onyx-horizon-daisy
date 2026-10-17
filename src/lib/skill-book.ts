@@ -107,7 +107,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ky-si-cuoi-rong": [P("Mũi thương bị nguyền rủa", "barbed-spear"), P("Lửa địa ngục", "flame-tunnel")],
   "rong-ac-ma": [A("Hoả cầu địa ngục", "burning-skull")],
   "chien-binh-huyen-thoai": [P("Chiến sư", "laurel-crown"), P("Bền bỉ", "heart-plus")],
-  "ken-ngai": [A("Mọc chân", "spider-alt", ""), A("Nở", "butterfly", "")],
+  "ken-ngai": [A("Mọc chân", "spider-alt"), A("Nở", "butterfly")],
   "chan-ken": [P("Chân kén", "spider-web", "")],
   "ngai-khong-lo": [A("Thổi độc", "poison-cloud")],
   "ngai-nu-hoang": [A("Thổi độc", "poison-cloud"), NOTE("độc sẽ cộng dồn")],
@@ -118,8 +118,11 @@ function norm(text: string) {
   return text.replace(/\*\*|__/g, "").trim().toLowerCase();
 }
 
-/** A heading line on its own, like "__**Khiên Ân Huệ**__:". */
-const HEADING_LINE = /^\s*(?:\*\*__|__\*\*)[^\n]*?(?:__\*\*|\*\*__)\s*:?\s*$/;
+/**
+ * A line that is only a heading: marked and closed ("__**Khiên Ân Huệ**__:"), or marked and ending in a colon
+ * with its closing mark on the next line ("__**Kỵ pháp: ").
+ */
+const HEADING_LINE = /^\s*(?:\*\*__|__\*\*)[^\n]*?(?:(?:__\*\*|\*\*__)\s*:?|:)\s*$/;
 
 /** The lines holding any of the words, each with the indented lines that continue it. */
 function pickLines(text: string, words: string[]): string[] {

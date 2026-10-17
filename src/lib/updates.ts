@@ -519,6 +519,7 @@ export const PENDING_NOTES: string[] = [
   "Kỹ năng dùng như phép có vành hồng, như Giáp và Vuốt, Roi điện của Mỹ điểu nhân, Khiên thú sĩ của Chiến sĩ gặm nhắm, Thế thân trên sân và Thế thân trên tay của Thế thân của shien, Dùng để phòng ngự và Dùng như spell của Cục bông ma quái.",
   "Bảng quái có kỹ năng Lưu ý vành vàng, ghi những ghi chú quan trọng của bộ kỹ năng.",
   "Triệu hồi quái dung hợp lên sân có sét đánh xuống ô và tiếng sấm.",
+  "Thêm mô tả Hiến Tế cho Kỵ sĩ bóng tối, và mô tả Mọc chân, Nở cho Kén ngài. Bảng quái hiện các mô tả này.",
 ];
 
 function remarkOf(notes: string[]) {

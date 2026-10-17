@@ -228,6 +228,8 @@ const FRESH_SKILL: Array<[string, string]> = [
   ["hiep-si-cua-vua", "bộ bài.\n    Khi lá chắn"],
   ["hiep-si-ho-ve", "bộ bài.\n    Khi lá chắn"],
   ["hiep-si-cua-hau", "bộ bài.\n    Khi lá chắn"],
+  ["ky-si-bong-toi", "con đường hỗn mang"],
+  ["ken-ngai", "mọc chân tăng sức phòng ngự"],
 ];
 
 const STALE_CHIPS: Array<[string, string, string]> = [
