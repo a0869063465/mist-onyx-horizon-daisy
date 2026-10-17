@@ -1372,6 +1372,12 @@ function TimeWheel({
 function PlayPage() {
   const language = useLang();
   const navigate = useNavigate();
+  /** Back to the screen the tutorial was opened from. */
+  const leaveTutorial = () => {
+    setTutorial(false);
+    setTutView(null);
+    void navigate({ to: sessionStorage.getItem("clash-tutorial-from") || "/modes" });
+  };
   const [duel, setDuel] = useState<Duel | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tutorial, setTutorial] = useState(false);
@@ -3262,15 +3268,8 @@ function PlayPage() {
               return next;
             })
           }
-          onSkip={() => {
-            setTutorial(false);
-            setTutView(null);
-            void navigate({ to: "/modes" });
-          }}
-          onDone={() => {
-            setTutorial(false);
-            setTutView(null);
-          }}
+          onSkip={leaveTutorial}
+          onDone={leaveTutorial}
         />
       ) : null}
       <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />
@@ -3278,6 +3277,10 @@ function PlayPage() {
         className={`board${shake ? " is-shaking" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
         style={{ "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
+        onPointerDownCapture={() => {
+          // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
+          suppressClick.current = false;
+        }}
         onPointerDown={graspAsk}
         onPointerMove={dragAsk}
         onPointerUp={dropAsk}
@@ -4340,6 +4343,7 @@ function PlayPage() {
                     type="button"
                     className={`hand-card press is-monster${open || (aim?.kind === "summon" && aim.index === index) ? " is-open" : ""}${cottonCard || standCard ? " is-alert" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                     data-reserve={index}
+                    data-stars={card.stars}
                     onClick={() => openHand("reserve", index)}
                     onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                     onPointerMove={move}

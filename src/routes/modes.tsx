@@ -22,6 +22,8 @@ function ModesPage() {
   function goLocal(mode: "ai" | "hotseat" | "test" | "tutorial") {
     sessionStorage.setItem("clash-mode", mode);
     sessionStorage.removeItem("clash-net");
+    // The tutorial returns here when it ends or is skipped.
+    if (mode === "tutorial") sessionStorage.setItem("clash-tutorial-from", window.location.pathname);
     void navigate({ to: "/play" });
   }
 

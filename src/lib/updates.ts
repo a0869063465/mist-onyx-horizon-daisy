@@ -508,6 +508,7 @@ export const PENDING_NOTES: string[] = [
   "Hướng dẫn có Người giữ khoá dẫn đường. Khung thoại gọn, đứng cạnh chỗ đang hướng dẫn, nút OK đổi thành nút » nổi khối.",
   "Hướng dẫn mới: chào mừng, quả cầu ma pháp, đổi bài, số bài của mình và đối phương, mộ mana, sao, triệu hồi, kết thúc lượt, thanh phản ứng. Đối thủ dùng Sợi xích địa ngục, bạn chặn bằng Hấp thụ ma pháp, rồi bạn rút và dùng Sợi xích địa ngục.",
   "Số bài trên góc xấp bài của bạn, số phép trên tay và số quái dự bị của đối phương to gấp đôi, nằm trong ô nổi khối.",
+  "Sửa lỗi: kéo thả quái ra sân xong thì lần chạm kế tiếp vào quái trên sân bị bỏ qua, phải chạm hai lần.",
 ];
 
 function remarkOf(notes: string[]) {

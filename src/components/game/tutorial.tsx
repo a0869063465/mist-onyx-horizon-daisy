@@ -9,7 +9,8 @@ export type TutView = { youOrb?: number; foeOrb?: number; youGems?: number; youS
 
 export const GUIDE_ART = "/tutorial/nguoi-giu-khoa.webp";
 
-type Focus = { sel: string; min?: number };
+/** min: smallest ring side, as a share of the board width. left: extra room on the left (the star icon sits left of its number). */
+type Focus = { sel: string; min?: number; left?: number };
 type Wait =
   | "ok"
   | "auto"
@@ -53,8 +54,9 @@ type Step = {
 const ORB: Focus = { sel: '[data-tut="youOrb"]', min: 0.2 };
 const FOE_ORB: Focus = { sel: '[data-tut="foeOrb"]', min: 0.2 };
 const GEMS: Focus = { sel: '[data-tut="youGems"]', min: 0.09 };
-const STARS: Focus = { sel: '[data-tut="youStars"]', min: 0.09 };
+const STARS: Focus = { sel: '[data-tut="youStars"]', min: 0.09, left: 0.05 };
 const MONSTERS: Focus = { sel: ".hand .hand-card.is-monster" };
+const ONE_STAR: Focus = { sel: '.hand .hand-card.is-monster[data-stars="1"]' };
 const HAND: Focus = { sel: ".hand .hand-card" };
 const PILE: Focus = { sel: ".face-pile" };
 const OPENING = { youOrb: 1, foeOrb: 1 };
@@ -87,15 +89,15 @@ function steps(viewer: Side): Step[] {
     },
     { focus: [], wait: "auto", ms: 1900, ribbon: "Bắt đầu lượt", view: OPENING, hand: "reserve" },
     { text: "Mỗi người chơi sẽ nhận được 1 năng lượng ở đầu lượt đấu. Kể cả lượt đấu của đối phương.", focus: [ORB, FOE_ORB], wait: "ok", pop: ["youOrb", "foeOrb"] },
-    { text: "Đây là **Mộ Mana**. Mọi thao tác của bạn trên sân chơi, đều có thể tiêu hao năng lượng.", focus: [GEMS], wait: "ok", view: { show: ["youGems"] } },
+    { text: "Đây là **Mộ Mana**. Mọi thao tác của bạn, đều có thể tiêu hao năng lượng.", focus: [GEMS], wait: "ok", view: { show: ["youGems"] } },
     {
-      text: "1. Thao tác **Rút bài**\n2. **Triệu hồi** (khoảng 50%)\n3. Sử dụng **Kỹ năng quái thú** (khoảng 90%)\n4. **Ma pháp** (khoảng 30%)",
+      text: "1. Thao tác **Rút bài**\n2. **Triệu hồi** (khoảng 50% trường hợp)\n3. Sử dụng **Kỹ năng quái thú** (khoảng 90% trường hợp)\n4. **Ma pháp** (khoảng 30% trường hợp)",
       focus: [GEMS],
       wait: "ok",
       view: { show: ["youGems"] },
     },
     { text: "Hãy rút 1 lá bài.", focus: [{ sel: ".actions .act.is-draw-mon" }, { sel: ".actions .act.is-draw-spell" }], wait: "draw", view: { show: ["youGems"] } },
-    { text: "Bạn thấy đấy, Mana tiêu hao cho rút bài sẽ chuyển vào **Mộ mana**.", focus: [GEMS], wait: "ok", view: { youGems: 1, youStars: 0, show: ["youGems"] }, pop: ["youGems"], hand: "reserve" },
+    { text: "Bạn có thể thấy, Mana tiêu hao cho rút bài sẽ chuyển vào **Mộ mana**.", focus: [GEMS], wait: "ok", view: { youGems: 1, youStars: 0, show: ["youGems"] }, pop: ["youGems"], hand: "reserve" },
     {
       text: "Khi đủ lượng mana nhất định. **Mộ mana** sẽ hiến tế lượng mana đó. Để nâng cấp **Sao**.",
       focus: [GEMS, STARS],
@@ -103,17 +105,12 @@ function steps(viewer: Side): Step[] {
       view: { youGems: 1, youStars: 0, show: ["youGems"] },
       anim: "grave",
     },
-    { text: "Bạn đã đủ **Sao hiến tế** để triệu hồi Quái thú cấp độ 1 sao. Hãy triệu hồi.", focus: [STARS, MONSTERS], wait: "ok", hand: "reserve" },
-    { text: "Hãy kéo và thả Quái thú lên sân.", focus: [MONSTERS, slots], wait: "summon", ms: 2600, anim: "drag", summoned: "first-turn", hand: "reserve" },
-    {
-      text: "Hoặc nhấp vào quái thú, và bấm **Triệu Hồi**.",
-      focus: [MONSTERS],
-      wait: "summon",
-      allow: [".inspect-card", ".inspect-dismiss", slots.sel],
-      summoned: "first-turn",
-      hand: "reserve",
-    },
-    { id: "first-turn", text: "Người chơi ở lượt đi đầu tiên sẽ không thể tấn công đối phương.", focus: [ownMon], wait: "ok" },
+    { text: "Bạn đã đủ **Sao hiến tế** để triệu hồi **Quái thú 1 sao**. Hãy triệu hồi.", focus: [STARS, ONE_STAR], wait: "ok", hand: "reserve" },
+    // The demo replays until the player drags a monster onto the field.
+    { text: "Hãy kéo và thả Quái thú lên sân.", focus: [ONE_STAR, slots], wait: "summon", anim: "drag", allow: [".inspect-card", ".inspect-dismiss"], hand: "reserve" },
+    // Already summoned this turn, so tapping is shown, not done.
+    { text: "Hoặc nhấp vào quái thú, và bấm **Triệu Hồi**.", focus: [ONE_STAR], wait: "ok", hand: "reserve" },
+    { text: "Người chơi ở lượt đi đầu tiên sẽ không thể tấn công đối phương.", focus: [ownMon], wait: "ok" },
     { text: "Hãy bấm vào **Kết thúc lượt**.", focus: [{ sel: ".actions .act.is-end" }], wait: "end" },
     { focus: [], wait: "auto", ms: 1900, ribbon: "Lượt đối thủ" },
     { focus: [], wait: "foe-cast", clear: true },
@@ -122,7 +119,7 @@ function steps(viewer: Side): Step[] {
       focus: [{ sel: ".banner.is-react" }],
       wait: "ok",
     },
-    { text: "Đối phương đang sử dụng **Sợi xích địa ngục** nhắm vào quái thú của bạn.", focus: [ownMon], wait: "ok" },
+    { text: "Đối phương đang sử dụng **Sợi xích địa ngục** nhắm vào quái thú của bạn.", focus: [ownMon, { sel: "p.banner" }], wait: "ok" },
     {
       text: "Những phép có thể sử dụng để ứng phó nhấp nháy, có nút **Use** là có thể sử dụng được. Hãy thử bấm.",
       focus: [{ sel: ".hand .hand-spell.is-use" }],
@@ -130,7 +127,7 @@ function steps(viewer: Side): Step[] {
       hand: "spell",
     },
     { text: "**Hấp thụ ma pháp** đã hấp thu hoàn toàn phép của đối thủ.", focus: [], wait: "ok" },
-    { focus: [], wait: "foe-end", clear: true },
+    { focus: [], wait: "foe-end" },
     { text: "Hãy rút 1 lá bài **Phép**.", focus: [{ sel: ".actions .act.is-draw-spell" }], wait: "draw", stack: true },
     {
       text: "Bạn đã rút được **Sợi xích địa ngục**. Hãy thử dùng nó.",
@@ -140,7 +137,7 @@ function steps(viewer: Side): Step[] {
       hand: "spell",
     },
     { text: "Tốt lắm. Chúc mừng bạn đã hoàn thành phần hướng dẫn cơ bản dành cho **Triệu hồi sư tập sự**.", focus: [], wait: "ok", big: true },
-    { text: "Có thể chúng ta sẽ còn gặp lại nhau đấy. Tạm biệt.", focus: [], wait: "ok", big: true },
+    { text: "Có thể chúng ta sẽ còn gặp lại nhau đấy.\nTạm biệt.", focus: [], wait: "ok", big: true },
   ];
 }
 
@@ -154,10 +151,11 @@ function measure(focus: Focus[]): Box[] {
       const r = el.getBoundingClientRect();
       if (r.width === 0 && r.height === 0) continue;
       const side = item.min && board ? board.width * item.min : 0;
-      const width = Math.max(r.width + 12, side);
+      const extra = item.left && board ? board.width * item.left : 0;
+      const width = Math.max(r.width + 12, side) + extra;
       const height = Math.max(r.height + 12, side);
       // Keep the ring on screen when the part sits at the very edge.
-      const left = Math.max(2, Math.min(window.innerWidth - width - 2, r.left + r.width / 2 - width / 2));
+      const left = Math.max(2, Math.min(window.innerWidth - width - 2, r.left + r.width / 2 - (width - extra) / 2 - extra));
       const top = Math.max(2, Math.min(window.innerHeight - height - 2, r.top + r.height / 2 - height / 2));
       boxes.push({ left, top, width, height });
     }
@@ -264,15 +262,19 @@ export function Tutorial({
       });
     }
     if (step.anim === "drag") {
-      later(350, () => {
-        const card = document.querySelector(".hand .hand-card.is-monster");
+      // Shows the move, then hands over: the demo replays every few seconds until the player does it.
+      const show = () => {
+        const card = document.querySelector('.hand .hand-card.is-monster[data-stars="1"]') as HTMLElement | null;
         const slot = document.querySelector(`[data-slot][data-owner="${viewer}"][data-empty="1"]`);
-        const held = duel.players[viewer].reserve[0];
+        const held = duel.players[viewer].reserve[Number(card?.dataset.reserve ?? -1)];
         if (!card || !slot || !held) return;
         const a = card.getBoundingClientRect();
         const b = slot.getBoundingClientRect();
         setGhost({ from: { left: a.left, top: a.top, width: a.width, height: a.height }, to: { left: b.left, top: b.top, width: b.width, height: b.height }, src: artSrc(held.id), n: Date.now() });
-      });
+      };
+      later(350, show);
+      const again = window.setInterval(show, 4200);
+      timers.push(again);
     }
     if (step.wait === "auto" || (step.wait === "summon" && step.ms)) later(step.ms ?? 1500, next);
     if (step.wait === "foe-cast") {
@@ -297,7 +299,10 @@ export function Tutorial({
     }
     if (step.stack) drive((d) => chainOnTop(d, viewer));
     if (step.wait === "foe-end") later(1100, () => drive((d) => (d.turn === foe && d.step === "main" ? endTurn(d) : d)));
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+    return () => timers.forEach((timer) => {
+      window.clearTimeout(timer);
+      window.clearInterval(timer);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [at]);
 
@@ -366,9 +371,14 @@ export function Tutorial({
     if (!step) return;
     const acting = step.wait === "toggle" || step.wait === "toggles" || step.wait === "draw" || step.wait === "summon" || step.wait === "end" || step.wait === "absorb" || step.wait === "chain";
     const open = [".tut-ui", ...(acting ? [...step.focus.map((item) => item.sel), ...(step.allow ?? [])] : [])].join(", ");
+    // A click follows its press: after an allowed press (a drag that ends elsewhere) the click must reach the
+    // game too, or the game waits for it and drops the next tap.
+    let pressBlocked = false;
     const guard = (event: Event) => {
       const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest(open)) return;
+      const inside = Boolean(target?.closest(open));
+      if (event.type === "pointerdown" || event.type === "touchstart") pressBlocked = !inside;
+      if (inside || ((event.type === "click" || event.type === "pointerup") && !pressBlocked)) return;
       event.stopPropagation();
       event.preventDefault();
     };

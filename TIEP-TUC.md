@@ -44,6 +44,8 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Linh vật: Người giữ khoá (`public/tutorial/nguoi-giu-khoa.webp`, chủ game gửi). Khung thoại gọn đứng cạnh chỗ đang hướng dẫn, nút » nổi khối thay OK.
 - Trận hướng dẫn: `src/lib/tutorial.ts` dựng bài cố định. Bạn có Rồng con, Khổng lồ 1 mắt và Hấp thụ ma pháp; Sợi xích địa ngục nằm thứ 2 trong xấp phép, lên đầu khi tới bước rút phép. Đối thủ cầm Sợi xích địa ngục, rút Phù thuỷ tí hơn.
 - Các bước ở `src/components/game/tutorial.tsx` (mảng `steps`), theo đúng kịch bản thứ 2 của chủ game (17/10). Lượt đối thủ được dàn sẵn qua `drive` (rút, triệu hồi, dùng Sợi xích địa ngục, kết thúc lượt; nhường cho Sợi xích địa ngục của bạn). Máy tự đánh chỉ bật lại sau khi hướng dẫn xong.
+- Chủ game duyệt danh sách bước (17/10) và đã sửa: câu 13, 14, 16, 18, 33; vòng sáng sao bọc cả ngôi sao (`left` trong `Focus`); bước 18–20 chỉ sáng quái 1 sao (`data-stars` trên lá trên tay); bước 19 làm mẫu lặp lại, người chơi phải tự kéo thả; bước 20 chỉ chỉ cách bấm Triệu hồi (lượt này đã triệu hồi rồi); bước 26 sáng cả bảng thông báo; bước 29 giữ màn tối; xong hoặc Bỏ qua thì về màn trước khi vào hướng dẫn (`clash-tutorial-from`).
+- Sửa lỗi game thật: sau khi kéo thả quái, cú chạm kế tiếp bị nuốt (`suppressClick` giờ xoá khi có cú chạm mới trên bàn).
 - Bấm Triệu hồi trên lá quái giờ triệu hồi luôn vào ô trống đầu tiên từ trái sang. Hết ô trống hoặc đang chọn hiến tế (giữ lâu lá) thì chọn ô bằng tay như cũ.
 - Số trên góc xấp bài to gấp đôi, ô vàng nổi khối. Số phép trên tay và quái dự bị của đối phương to gấp đôi, ô 3D (`COUNT_MARKS` / `markScale` trong `layouts.ts`, Tuỳ chỉnh cũng theo).
 - Chưa làm, đang chờ chủ game trả lời (xem tin nhắn cuối phiên 17/10):
