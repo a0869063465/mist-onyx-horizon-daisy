@@ -370,6 +370,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     notes: ["Đổi sang Phát nổ, Pháo kích và Bông mềm. Bản sao dùng được mọi kỹ năng, mỗi loại kỹ năng chỉ dùng 1 lần"],
   },
+  {
+    id: "nui",
+    at: "2026-10-17",
+    wave: 30,
+    tone: "down",
+    notes: ["Chim chóc và rồng chỉ tăng 1 sát thương kỹ năng (2)"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

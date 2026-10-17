@@ -887,7 +887,7 @@ function envForm(mon: FieldMon): string {
   return mon.cardId === "te-giac-be-con" ? `${mon.cardId}:${mon.level ?? 1}` : mon.cardId;
 }
 
-/** Rừng rậm: +2 max HP and HP. Núi: +2 skill damage. Applied once per form while the card is on the field. */
+/** Rừng rậm: +2 max HP and HP. Núi: +1 skill damage. Applied once per form while the card is on the field. */
 function envBoost(player: Player): Player {
   const env = player.env;
   if (env !== "rung-ram" && env !== "nui") return player;
@@ -902,7 +902,7 @@ function envBoost(player: Player): Player {
     }
     if (mon.envSkill) return mon;
     changed = true;
-    return { ...mon, skillUp: (mon.skillUp ?? 0) + 2, envSkill: true };
+    return { ...mon, skillUp: (mon.skillUp ?? 0) + 1, envSkill: true };
   });
   return changed ? { ...player, field: field as Player["field"] } : player;
 }

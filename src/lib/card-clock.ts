@@ -1131,11 +1131,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 0,
-    "text": "63bfddcd",
+    "text": "1e74b4b9",
     "added": "2026-10-16",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "dat-da": {
     "kind": "spell",
@@ -1159,11 +1159,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 0,
-    "text": "e0cbb9dc",
+    "text": "961e14d5",
     "added": "2026-10-16",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "rung-ram": {
     "kind": "spell",

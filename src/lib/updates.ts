@@ -533,6 +533,8 @@ export const PENDING_NOTES: string[] = [
   "Quái có công bằng 0 không hiện nút Tấn công.",
   "Nút trên quái ở sân làm mới: mỗi nút có icon và tên kỹ năng như bảng quái. Tấn công màu cam, kỹ năng theo màu loại của nó.",
   "Nút Rút quái, Rút phép, Hết lượt làm mới hoàn toàn: kính tối, viền sáng và icon cùng màu cam, tím, đỏ như cũ.",
+  "Thảo nguyên: mô tả ghi rõ chiến binh đồng minh, đúng với luật đang chạy.",
+  "Núi: chim chóc và rồng chỉ tăng 1 sát thương kỹ năng, thay vì 2.",
 ];
 
 function remarkOf(notes: string[]) {

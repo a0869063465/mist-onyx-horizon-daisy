@@ -295,6 +295,17 @@ function dropKnown(store: Store) {
     }
     changed = true;
   }
+  for (const [id, old] of [["thao-nguyen", "Nếu một đồng minh tham gia"], ["nui", "tăng thêm 2 sát thương kỹ năng"]] as const) {
+    const card = store.spells[id];
+    if (!card?.effect?.includes(old)) continue;
+    delete card.effect;
+    delete store.baseSpells[id]?.effect;
+    if (Object.keys(card).length === 0) {
+      delete store.spells[id];
+      delete store.baseSpells[id];
+    }
+    changed = true;
+  }
   const rain = store.spells["mua-ma-thuat"];
   if (rain?.effect?.includes("Hồi phục 4 máu")) {
     rain.effect = rain.effect.replace("Hồi phục 4 máu", "Hồi phục 2 máu");

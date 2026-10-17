@@ -972,7 +972,7 @@ export const SPELLS: SpellCard[] = [
     "id": "thao-nguyen",
     "name": "Thảo nguyên",
     "gems": 0,
-    "effect": "Nếu một đồng minh tham gia giao tranh, hồi cho hắn 1 máu vào cuối lượt đó.",
+    "effect": "Nếu một chiến binh đồng minh tham gia giao tranh, hồi cho hắn 1 máu vào cuối lượt đó.",
     "env": true,
     "since": "2026-10-16"
   },
@@ -988,7 +988,7 @@ export const SPELLS: SpellCard[] = [
     "id": "nui",
     "name": "Núi",
     "gems": 0,
-    "effect": "Chim chóc và rồng tăng thêm 2 sát thương kỹ năng.",
+    "effect": "Chim chóc và rồng tăng thêm 1 sát thương kỹ năng.",
     "env": true,
     "since": "2026-10-16"
   },
