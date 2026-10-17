@@ -239,6 +239,10 @@ type Aim =
   | { kind: "spell"; index: number; spellId: string; from?: string };
 
 type Strike = { uid: string; face: boolean; foeUid: string | null };
+/** Centre and width of a card on the board, in % of the board. */
+type BoardSpot = { x: number; y: number; w: number };
+/** Fusion scene: both cards fly together and burst, the fused card shows, its sheet asks to summon, it lands. */
+type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: "fly" | "flash" | "card" | "reveal" | "land"; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot };
 type Inspect = { pile: "reserve" | "spell"; index: number } | { pile: "env"; id: string };
 type BlockChoice = { uid: string; skill: boolean | null; buff: boolean | null };
 type FuseAsk = {
@@ -1390,7 +1394,7 @@ function PlayPage() {
   const [inspect, setInspect] = useState<Inspect | null>(null);
   const [strike, setStrike] = useState<Strike | null>(null);
   const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string } | null>(null);
-  const [fuseShow, setFuseShow] = useState<{ index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: "fly" | "flash" | "reveal"; n: number } | null>(null);
+  const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
   const [chronoAsk, setChronoAsk] = useState<{ caster: string; target: string; age: boolean; pass: boolean } | null>(null);
@@ -2404,11 +2408,13 @@ function PlayPage() {
   }, [fuseAsk?.id, fuseAsk?.phase]);
 
   useEffect(() => {
-    if (!fuseShow || fuseShow.phase === "reveal") return;
+    if (!fuseShow || fuseShow.phase === "reveal" || fuseShow.phase === "land") return;
     if (fuseShow.phase === "fly") playCue("fusion");
+    if (fuseShow.phase === "flash") playCue("spellBoom");
+    const after = { fly: "flash", flash: "card", card: "reveal" } as const;
     const timer = window.setTimeout(
-      () => setFuseShow((current) => (current && current.n === fuseShow.n ? { ...current, phase: current.phase === "fly" ? "flash" : "reveal" } : current)),
-      fuseShow.phase === "fly" ? 1300 : 950,
+      () => setFuseShow((current) => (current && current.n === fuseShow.n && current.phase === fuseShow.phase ? { ...current, phase: after[fuseShow.phase as keyof typeof after] } : current)),
+      fuseShow.phase === "fly" ? 1150 : fuseShow.phase === "flash" ? 750 : 1100,
     );
     return () => window.clearTimeout(timer);
   }, [fuseShow?.n, fuseShow?.phase]);
@@ -3311,8 +3317,25 @@ function PlayPage() {
       const next = fuse(duel, index, mon.uid, slot);
       if (!lands(next)) continue;
       list.push({ key: "fuse", label: "Dung hợp", tone: "purple", cost: cost(next), onPress: () => {
+        const spot = (el: Element | null, fallback: BoardSpot): BoardSpot => {
+          const board = document.querySelector(".board")?.getBoundingClientRect();
+          if (!board || !el) return fallback;
+          const box = el.getBoundingClientRect();
+          return { x: ((box.left + box.width / 2 - board.left) / board.width) * 100, y: ((box.top + box.height / 2 - board.top) / board.height) * 100, w: (box.width / board.width) * 100 };
+        };
+        const slotSpot = spot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), { x: 50, y: 62, w: 18 });
+        setFuseShow({
+          index,
+          uid: mon.uid,
+          slot,
+          resultId: recipe.result,
+          phase: "fly",
+          n: Date.now(),
+          a: spot(document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
+          b: slotSpot,
+          at: slotSpot,
+        });
         setInspect(null);
-        setFuseShow({ index, uid: mon.uid, slot, resultId: recipe.result, phase: "fly", n: Date.now() });
       } });
       break;
     }
@@ -3347,8 +3370,12 @@ function PlayPage() {
           fuseBorn,
           you.field,
           [{ key: "go", label: "Triệu hồi", tone: "fuse", cost: 0, onPress: () => {
-            apply(fuse(duel, fuseShow.index, fuseShow.uid, fuseShow.slot));
-            setFuseShow(null);
+            const show = fuseShow;
+            setFuseShow({ ...show, phase: "land" });
+            window.setTimeout(() => {
+              apply(fuse(duel, show.index, show.uid, show.slot));
+              setFuseShow(null);
+            }, 650);
           } }],
           () => setFuseShow(null),
         )
@@ -4987,18 +5014,34 @@ function PlayPage() {
         </div>
         {fuseShow ? (
           <div className={`fuse3d is-${fuseShow.phase}`}>
-            {fuseShow.phase !== "reveal" && fuseHeld && fusePartner ? (
-              <div className="fuse3d-stage">
-                <div className="fuse3d-card is-a">
-                  <CardFace monster={monsterCard(fuseHeld.id)!} />
-                </div>
-                <div className="fuse3d-card is-b">
-                  <CardFace monster={monsterCard(formOf(fusePartner))!} />
-                </div>
-                <i className="fuse3d-core" />
-              </div>
+            {(fuseShow.phase === "fly" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
+              <>
+                {[
+                  { key: "a", spot: fuseShow.a, card: monsterCard(fuseHeld.id) },
+                  { key: "b", spot: fuseShow.b, card: monsterCard(formOf(fusePartner)) },
+                ].map(({ key, spot, card }) =>
+                  card ? (
+                    <div key={key} className={`fuse3d-card is-${key}`} style={{ "--x0": `${spot.x}%`, "--y0": `${spot.y}%`, "--w0": `${spot.w}%` } as CSSProperties}>
+                      <CardFace monster={card} />
+                    </div>
+                  ) : null,
+                )}
+              </>
+            ) : null}
+            {fuseShow.phase === "flash" ? (
+              <span className="fuse3d-sparks">
+                {Array.from({ length: 28 }, (_, i) => (
+                  <i key={i} style={{ "--a": `${(i * 360) / 28 + (i % 3) * 7}deg`, "--d": `${32 + ((i * 37) % 30)}vmin`, "--t": `${0.5 + ((i * 13) % 5) / 10}s` } as CSSProperties} />
+                ))}
+              </span>
             ) : null}
             <i className="fuse3d-flash" />
+            {(fuseShow.phase === "card" || fuseShow.phase === "land") && fuseBorn ? (
+              <div className="fuse3d-big" style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}>
+                <i className="fuse3d-rays" />
+                <CardFace monster={monsterCard(fuseShow.resultId)!} />
+              </div>
+            ) : null}
             {fuseSheet}
           </div>
         ) : null}

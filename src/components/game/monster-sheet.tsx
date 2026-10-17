@@ -24,30 +24,71 @@ export function GlyphDefs() {
           <stop offset="0.45" stopColor="#f4f0ff" />
           <stop offset="1" stopColor="#a9b4d6" />
         </linearGradient>
-        <linearGradient id="act3d-glyph" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.5" stopColor="#fff4d6" />
-          <stop offset="1" stopColor="#d9b56a" />
+        <linearGradient id="act3d-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff6cf" />
+          <stop offset="0.45" stopColor="#f2c75c" />
+          <stop offset="1" stopColor="#a8701a" />
+        </linearGradient>
+        <linearGradient id="act3d-red" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe0d6" />
+          <stop offset="0.45" stopColor="#ff6a4a" />
+          <stop offset="1" stopColor="#a8180a" />
+        </linearGradient>
+        <linearGradient id="act3d-purple" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f6e2ff" />
+          <stop offset="0.45" stopColor="#c27aff" />
+          <stop offset="1" stopColor="#5a1fa0" />
+        </linearGradient>
+        <linearGradient id="act3d-fuse" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffd6ff" />
+          <stop offset="0.48" stopColor="#ee5bff" />
+          <stop offset="0.52" stopColor="#ff2d2d" />
+          <stop offset="1" stopColor="#9a0010" />
+        </linearGradient>
+        <linearGradient id="rim3d" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff6cf" />
+          <stop offset="0.3" stopColor="#d9a43a" />
+          <stop offset="0.5" stopColor="#fff0b8" />
+          <stop offset="0.75" stopColor="#8a5a12" />
+          <stop offset="1" stopColor="#f2c75c" />
         </linearGradient>
       </defs>
     </svg>
   );
 }
 
-/** Raised action button: emblem, label, and the mana it costs (hidden when free). */
+/** Gold metal rim with four diamond studs, laid over a round emblem. */
+export function Rim() {
+  return (
+    <svg className="rim3d" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="url(#rim3d)" strokeWidth="6" />
+      <circle cx="50" cy="50" r="49" fill="none" stroke="rgba(0,0,0,0.65)" strokeWidth="1.5" />
+      <circle cx="50" cy="50" r="42.6" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="1.2" />
+      {[0, 90, 180, 270].map((turn) => (
+        <path key={turn} d="M50 -1 L55 5 L50 11 L45 5 Z" fill="url(#rim3d)" stroke="rgba(0,0,0,0.6)" strokeWidth="1" transform={`rotate(${turn} 50 50)`} />
+      ))}
+    </svg>
+  );
+}
+
+const ACTION_ICON: Record<SheetTone, string> = { gold: "up-card", fuse: "up-card", red: "candle-skull", purple: "linked-rings" };
+
+/** Action tile in the Lục Thần style: dark plate, glowing frame, round emblem, label, and the mana it costs. */
 export function ActionButton({ action, mini = false }: { action: SheetAction; mini?: boolean }) {
   return (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={action.onPress}>
       <span className="act3d-ico">
-        <Glyph name="crystal-shrine" fill="url(#act3d-glyph)" />
+        <Glyph name={ACTION_ICON[action.tone]} fill={`url(#act3d-${action.tone})`} />
       </span>
-      <span className="act3d-label">{tr(action.label)}</span>
-      {action.cost > 0 ? (
-        <span className="act3d-cost">
-          <i className="mana-gem" />
-          <b>{action.cost}</b>
-        </span>
-      ) : null}
+      <span className="act3d-label">
+        {tr(action.label)}
+        {action.cost > 0 ? (
+          <span className="act3d-cost">
+            <i className="mana-gem" />
+            <b>{action.cost}</b>
+          </span>
+        ) : null}
+      </span>
     </button>
   );
 }
@@ -91,7 +132,10 @@ export function MonsterSheet({
             onClick={() => setPicked(index)}
           >
             <span className="sk3d-gem">
-              <Glyph name={skill.icon} />
+              <span className="sk3d-core">
+                <Glyph name={skill.icon} />
+              </span>
+              <Rim />
             </span>
             <span className="sk3d-name">{tr(skill.name)}</span>
           </button>
@@ -118,9 +162,13 @@ export function MonsterSheet({
           </div>
           <div className="msheet-side">
             <h2 className="msheet-name">{tr(name)}</h2>
-            {actions.map((action) => (
-              <ActionButton key={action.key} action={action} />
-            ))}
+            {actions.length ? (
+              <div className="msheet-acts">
+                {actions.map((action) => (
+                  <ActionButton key={action.key} action={action} />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="msheet-desc">
