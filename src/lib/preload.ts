@@ -67,6 +67,7 @@ const CORE_PICTURES = [
   "/mark-moi.png",
   "/env/seam.png",
   "/tutorial/nguoi-giu-khoa.webp",
+  "/ui/fuse-swirl.webp",
   "/fx/skull.png",
   "/fx/rebound.png",
   "/fx/doc.gif",

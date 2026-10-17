@@ -14,7 +14,7 @@ import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen } from "@/components/game/load-screen";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
-import { ActionButton, GlyphDefs, MonsterSheet, type SheetAction } from "@/components/game/monster-sheet";
+import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance } from "@/components/game/fuse-dance";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
@@ -3339,7 +3339,7 @@ function PlayPage() {
       const slot = you.field.findIndex((unit) => unit?.uid === mon.uid) as 0 | 1 | 2;
       const next = fuse(duel, index, mon.uid, slot);
       if (!lands(next)) continue;
-      list.push({ key: "fuse", label: "Dung hợp", tone: "purple", cost: cost(next), onPress: () => {
+      list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: cost(next), onPress: () => {
         const slotSpot = boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), { x: 50, y: 62, w: 18 });
         setFuseShow({
           index,
@@ -3410,6 +3410,7 @@ function PlayPage() {
 
   return (
     <main className="stage">
+      <GlyphDefs />
       {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} />}
       {loaded && tutorial ? (
         <Tutorial
@@ -4648,13 +4649,19 @@ function PlayPage() {
           }
         >
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.monsterDeck.length > 0 ? (
-            <button type="button" className="act is-draw-mon press" onClick={() => apply(draw(duel, "monster"))}>
-              Rút quái
+            <button type="button" className="act ax is-draw-mon press" onClick={() => apply(draw(duel, "monster"))}>
+              <span className="ax-ico">
+                <Glyph name="card-draw" />
+              </span>
+              <span className="ax-label">{tr("Rút quái")}</span>
             </button>
           ) : null}
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.spellDeck.length > 0 ? (
-            <button type="button" className="act is-draw-spell press" onClick={() => apply(draw(duel, "spell"))}>
-              Rút phép
+            <button type="button" className="act ax is-draw-spell press" onClick={() => apply(draw(duel, "spell"))}>
+              <span className="ax-ico">
+                <Glyph name="spell-book" />
+              </span>
+              <span className="ax-label">{tr("Rút phép")}</span>
             </button>
           ) : null}
           {responding && duel.hold?.priority === viewer && harpyOffer(duel, viewer) === "armor" ? (
@@ -4670,10 +4677,13 @@ function PlayPage() {
           {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
-              className={`act press ${responding ? "is-pass" : "is-end"}`}
+              className={`act ax press ${responding ? "is-pass" : "is-end"}`}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
-              {responding ? "OK" : tr("Hết lượt")}
+              <span className="ax-ico">
+                <Glyph name={responding ? "check-mark" : "sands-of-time"} />
+              </span>
+              <span className="ax-label">{responding ? "OK" : tr("Hết lượt")}</span>
             </button>
           ) : null}
         </div>
@@ -5091,14 +5101,6 @@ function isPrime(duel: Duel, mon: FieldMon, side: Side) {
   return gnawReady(duel, mon, side);
 }
 
-function SwordIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M14.2 2.2 21.8 9.8l-2.1 2.1-1.3-1.3-6.6 6.6 1.6 1.6-1.6 1.6-2.3-2.3-2.2 2.2-1.6-1.6 2.2-2.2-2.3-2.3 1.6-1.6 1.6 1.6 6.6-6.6-1.3-1.3 2.1-2.1Z" />
-    </svg>
-  );
-}
-
 function UnitChips({
   duel,
   uid,
@@ -5268,44 +5270,40 @@ function UnitChips({
       });
     }
   }
-  if (noAttack && y.length === 0 && z.length === 0) return null;
+  const strikeShown = attackable && !noAttack && visibleStats(mon, you.field).atk > 0;
+  if (!strikeShown && y.length === 0 && z.length === 0) return null;
 
-  const soloRed = z.length === 1 && y.length === 0 && !(attackable && !noAttack);
-  let above = 0;
-  const overCard = () => {
-    above += 1;
-    return {
-      left: `${box.x}%`,
-      top: `${Math.max(0.6, box.y - above * 7.4)}%`,
-      width: `${box.w}%`,
-      height: "6.8%",
-    };
+  // Each button shows the skill's emblem and name as on the monster sheet: the colour of its kind there, or blue
+  // for a skill and red for a reaction when the sheet has no such skill. Attack is orange.
+  const book = skillsOf(card.id, card.skill ?? "");
+  const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const lookOf = (label: string, tone: "y" | "z"): { icon: string; kind: UnitActKind } => {
+    const hit = book.find((row) => same(row.name, label)) ?? book.find((row) => label.toLowerCase().startsWith(row.name.toLowerCase()));
+    const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : tone === "z" ? "risk" : "active";
+    return { icon: hit?.icon ?? (tone === "z" ? "magic-swirl" : "sparkles"), kind };
   };
+  const rows: Array<{ key: string; label: string; go: () => void; icon: string; kind: UnitActKind }> = [
+    ...(strikeShown ? [{ key: "attack", label: attackLabel(), go: () => setAim({ kind: "attack", uid }), icon: "broadsword", kind: "attack" as const }] : []),
+    ...y.map((item) => ({ ...item, ...lookOf(item.label, "y") })),
+    ...z.map((item) => ({ ...item, ...lookOf(item.label, "z") })),
+  ];
+  const soloRed = z.length === 1 && y.length === 0 && !strikeShown;
+  const wide = Math.max(box.w + 8, 31);
+  const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
-    <>
-      {attackable && !noAttack ? (
-        <button type="button" className="act-chip is-k press" style={overCard()} onClick={() => setAim({ kind: "attack", uid })}>
-          <SwordIcon />
-          {tr(attackLabel())}
-        </button>
-      ) : null}
-      {y.map((item) => (
-        <button key={item.key} type="button" className="act-chip is-y press" style={overCard()} onClick={item.go}>
-          {tr(item.label)}
-        </button>
-      ))}
-      {z.map((item) => (
-        <button
-          key={item.key}
-          type="button"
-          className={`act-chip is-z press${soloRed ? " is-mid" : ""}`}
-          style={soloRed ? { left: `${box.x}%`, top: `${box.y + box.h * 0.28}%`, width: `${box.w}%`, height: "8%" } : overCard()}
-          onClick={item.go}
-        >
-          {tr(item.label)}
+    <div className="unit-acts" style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
+      {rows.map((row) => (
+        <button key={row.key} type="button" className={`unit-act is-${row.kind} press`} onClick={row.go}>
+          <span className="unit-act-ico">
+            <span className="unit-act-core">
+              <Glyph name={row.icon} />
+            </span>
+            <Rim kind={row.kind} />
+          </span>
+          <span className="unit-act-name">{tr(row.label)}</span>
         </button>
       ))}
-    </>
+    </div>
   );
 }
 

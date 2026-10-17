@@ -528,6 +528,11 @@ export const PENDING_NOTES: string[] = [
   "Ong khổng lồ đổi tên skill Tê liệt thành Kim châm tê liệt. Sứa hút ma pháp đổi Ma pháp tích tụ thành Tích luỹ ma pháp.",
   "Cục bông ma quái đổi bộ kỹ năng. Phát nổ: không tốn mana, tự huỷ, gây sát thương phép bằng công lên 1 quái địch. Pháo kích: tốn 1 mana, nhân bản chính nó. Bông mềm: khi người chơi bị tấn công, bấm Use trên tay, tốn 1 mana, triệu hồi bản thân chặn và các bản sao lấp đầy sân đấu, tối đa 4 con. Bản sao dùng được mọi kỹ năng như bản chính.",
   "Cục bông ma quái: mỗi loại kỹ năng chỉ dùng 1 lần rồi mất, và các kỹ năng ngoài Phát nổ không tính là đã hành động. Bỏ nút Đỡ đòn ngoài sân.",
+  "Nút Dung hợp đổi sang huy hiệu tròn giống nút Hiến tế, bên trong là vòng xoáy đang xoay, màu hồng pha đỏ như tên quái dung hợp trên bảng thông báo.",
+  "Mô tả kỹ năng trên bảng quái tô màu các chữ điểm nhấn như bảng thông báo: tên quái, tên phép, tên kỹ năng, sát thương phép, sát thương vật lý, sát thương chuẩn, mana. Chữ thường giữ màu cũ.",
+  "Quái có công bằng 0 không hiện nút Tấn công.",
+  "Nút trên quái ở sân làm mới: mỗi nút có icon và tên kỹ năng như bảng quái. Tấn công màu cam, kỹ năng theo màu loại của nó.",
+  "Nút Rút quái, Rút phép, Hết lượt làm mới hoàn toàn: kính tối, viền sáng và icon cùng màu cam, tím, đỏ như cũ.",
 ];
 
 function remarkOf(notes: string[]) {

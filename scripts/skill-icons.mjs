@@ -9,7 +9,7 @@ const set = JSON.parse(fs.readFileSync(source, "utf8"));
 const book = fs.readFileSync(new URL("../src/lib/skill-book.ts", import.meta.url), "utf8");
 const names = new Set([...book.matchAll(/\b(?:A|P|R|S|AP|PP|RP|SP)\("[^"]+", "([^"]+)"/g)].map((hit) => hit[1]));
 // Action buttons on the monster sheet.
-for (const extra of ["candle-skull", "info"]) names.add(extra);
+for (const extra of ["candle-skull", "info", "broadsword", "card-draw", "spell-book", "sands-of-time", "check-mark", "magic-swirl", "sparkles"]) names.add(extra);
 const out = {};
 for (const name of [...names].sort()) {
   const icon = set.icons[name];

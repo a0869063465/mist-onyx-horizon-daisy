@@ -4,9 +4,10 @@ import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { tr } from "@/lib/i18n";
 
-/** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: Dung hợp. fuse: summoning a fused monster. */
+/** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
 export type SheetTone = "gold" | "red" | "purple" | "fuse";
-export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; onPress: () => void };
+/** `swirl`: a round emblem holding the owner's whirlpool picture (Dung hợp), like Hiến tế's round emblem. */
+export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress: () => void };
 
 /** A game-icons glyph painted with the shared bevel gradient, so it reads as a raised 3D emblem. */
 export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?: string }) {
@@ -80,6 +81,13 @@ export function GlyphDefs() {
           <stop offset="0.75" stopColor="#6e4c00" />
           <stop offset="1" stopColor="#ffd84a" />
         </linearGradient>
+        <linearGradient id="rim3d-attack" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff1dc" />
+          <stop offset="0.3" stopColor="#ff8a00" />
+          <stop offset="0.5" stopColor="#ffe2b8" />
+          <stop offset="0.75" stopColor="#6a2a00" />
+          <stop offset="1" stopColor="#ffb04a" />
+        </linearGradient>
         <linearGradient id="pedestal3d" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff3c8" />
           <stop offset="0.45" stopColor="#c9963a" />
@@ -91,8 +99,11 @@ export function GlyphDefs() {
   );
 }
 
+/** Emblem colours of the action buttons over a monster on the board: a skill kind, or orange for attack. */
+export type UnitActKind = SkillKind | "attack";
+
 /** Metal rim with four diamond studs over a round skill emblem, in the colour of the skill's kind. */
-export function Rim({ kind }: { kind: SkillKind }) {
+export function Rim({ kind }: { kind: UnitActKind }) {
   const metal = `url(#rim3d-${kind})`;
   return (
     <svg className="rim3d" viewBox="0 0 100 100" aria-hidden="true">
@@ -159,11 +170,11 @@ export function Crystal({ tone }: { tone: SheetTone }) {
  * and its mana gem is red.
  */
 export function ActionButton({ action, mini = false }: { action: SheetAction; mini?: boolean }) {
-  const crystal = action.tone !== "red";
+  const crystal = action.tone !== "red" && !action.emblem;
   return (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={action.onPress}>
-      <span className={`act3d-ico${crystal ? " is-crystal" : ""}`}>
-        {crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
+      <span className={`act3d-ico${crystal ? " is-crystal" : ""}${action.emblem ? ` is-${action.emblem}` : ""}`}>
+        {action.emblem === "swirl" ? <i className="act3d-swirl" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
       </span>
       <span className="act3d-label">
         {tr(action.label)}
@@ -273,7 +284,7 @@ export function MonsterSheet({
               </b>
               {shown.text ? (
                 <p className="ink-skill">
-                  <CopyText text={shown.text} firstTitle={false} />
+                  <CopyText text={shown.text} firstTitle={false} inked />
                 </p>
               ) : null}
               {note && picked === 0 ? <p className="msheet-note">{tr(note)}</p> : null}
