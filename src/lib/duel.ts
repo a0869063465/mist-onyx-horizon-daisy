@@ -2832,8 +2832,8 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     ...struck.mon,
     charge: attacker.charge + (attackerDodged ? 1 : 0),
     dim: true,
-    def: struck.mon.def,
-    mdef: defender.cardId === "khung-long-vay-kiem" ? attacker.mdef - skillLoss(defender.cardId, "mdef", 1) : struck.mon.mdef,
+    def: defender.cardId === "khung-long-vay-kiem" ? attacker.def - skillLoss(defender.cardId, "def", 2) : struck.mon.def,
+    mdef: struck.mon.mdef,
   }));
   const hornRaw = bolt ? liveAtk(attacker) + plate.p + plate.s : attacker.horn === "plus" ? Math.min(8, atk) : attacker.horn === "splash" ? Math.min(4, atk) : atk;
   const hornAmount = outgoing(attacker, hornRaw);
@@ -2925,8 +2925,8 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const nextDefender = {
     ...defenderBody,
     charge: defender.charge + (defenderDodged ? 1 : 0),
-    def: defenderBody.def,
-    mdef: attacker.cardId === "khung-long-vay-kiem" ? defender.mdef - skillLoss(attacker.cardId, "mdef", 1) : defenderBody.mdef,
+    def: attacker.cardId === "khung-long-vay-kiem" ? defender.def - skillLoss(attacker.cardId, "def", 2) : defenderBody.def,
+    mdef: defenderBody.mdef,
     dim: true,
   };
   if (defender.blocksLeft > 1) {
@@ -3765,6 +3765,11 @@ export function cottonCover(state: Duel, mode: "self" | "copy" | "hand" | "hand-
   const reserve = paid.reserve.filter((_, slot) => slot !== index);
   const next = patch({ ...state, seq: seq + 1 }, side, { ...paid, field, reserve });
   return redirectHit(next, guard);
+}
+
+/** The two monsters whose skill is the hellfire ball: Mắt đỏ tàn phá and Rồng ác ma (same rules, figures read from each card). */
+function isHell(id: string) {
+  return id === "mat-do-tan-pha" || id === "rong-ac-ma";
 }
 
 function hellCount(text: string, word: string, fallback: number) {
@@ -4733,50 +4738,6 @@ function resolveHellFace(state: Duel, attacker: FieldMon, blocker: FieldMon | nu
   };
 }
 
-function resolveDemonBall(state: Duel, caster: FieldMon, target: FieldMon | null): Duel {
-  const side = (state.players[0].field.some((mon) => mon?.uid === caster.uid) ? 0 : 1) as Side;
-  const foe = (1 - side) as Side;
-  const you = state.players[side];
-  const them = state.players[foe];
-  const base = grabNums(skillText(caster.cardId), /(\d+)\s*sát thương chuẩn/gi)[0] ?? 6;
-  const amount = outgoing(caster, base) + (charmDamage || caster.blessDmg || 0);
-  const yourField = you.field.map((unit) => (unit?.uid === caster.uid ? { ...unit, dim: true } : unit));
-  let next = patch(state, side, { ...you, field: yourField });
-  if (!target) {
-    const foePlayer = next.players[foe];
-    next = patch(next, foe, { ...foePlayer, hp: foePlayer.hp - amount });
-    const checked = checkWinner(note(next, `${castName(caster.cardId, 0)} gây ${amount} sát thương chuẩn lên người chơi.`, "spell"));
-    return releaseLegend({
-      ...checked,
-      step: checked.winner !== null ? "over" : "main",
-      pending: null,
-      hold: null,
-      skill: { id: caster.cardId, index: 0, aim: null },
-    });
-  }
-  const landed = next.players[foe].field.find((unit) => unit?.uid === target.uid) ?? target;
-  const before = landed.hp;
-  const burned = (() => {
-    const saved = charmDamage;
-    charmDamage = 0;
-    try {
-      return trueDamage(landed, amount, next.players[foe].field);
-    } finally {
-      charmDamage = saved;
-    }
-  })();
-  const dealt = Math.max(0, before - burned.hp);
-  const foeField = next.players[foe].field.map((unit) => (unit?.uid === landed.uid ? burned : unit));
-  next = patch(next, foe, dropDead({ ...next.players[foe], field: foeField }));
-  return releaseLegend({
-    ...note(next, `${castName(caster.cardId, 0)} gây ${dealt} sát thương chuẩn lên ${cardOf(landed).name}.`, "spell"),
-    step: "main",
-    pending: null,
-    hold: null,
-    skill: { id: caster.cardId, index: 0, aim: landed.uid },
-  });
-}
-
 export function resolveFace(state: Duel, blockerUid: string | null, withSkill = false): Duel {
   const attackerUid = state.pending?.kind === "face" ? state.pending.attacker : null;
   const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
@@ -4820,8 +4781,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
       });
       return tideSwing(releaseLegend({ ...note(next, "Gương phòng hộ chặn đòn và cướp một nửa chỉ số.", "spell"), step: "main", pending: null }), foe, attacker.uid);
     }
-    if (attacker.cardId === "mat-do-tan-pha") return resolveHellFace(state, attacker, blocker);
-    if (attacker.cardId === "rong-ac-ma") return resolveDemonBall(state, attacker, blocker);
+    if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, blocker);
     if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {
       const open = commitGuardShot({ ...state, step: "main" as const, pending: null, hold: null }, attacker.uid, blocker.uid, false);
       return releaseGuardMark(useSkill(open, attacker.uid, blocker.uid, attacker.cardId === "rong-phun-hoa-cau" ? 1 : 0, true, null, true), blocker.uid);
@@ -4879,8 +4839,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     const hunted = markPrey(swung, side, attacker, "face", false, worn.attacker.hp <= 0);
     return blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
   }
-  if (attacker.cardId === "mat-do-tan-pha") return resolveHellFace(state, attacker, null);
-  if (attacker.cardId === "rong-ac-ma") return resolveDemonBall(state, attacker, null);
+  if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, null);
   if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {
     const open = { ...state, step: "main" as const, pending: null, hold: null };
     return useSkill(open, attacker.uid, null, attacker.cardId === "rong-phun-hoa-cau" ? 1 : 0, true, null, true);
@@ -4970,7 +4929,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon || mon.dim || held(mon) || hexLocked(mon)) return state;
   if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
-  if (mon.cardId === "mat-do-tan-pha" && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
+  if (isHell(mon.cardId) && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   if (mon.cardId === "may-nem-bom-hinh-nhen" && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   const foeField = state.players[(1 - state.turn) as Side].field;
   const aimed = redirectCover(foeField, targetUid);
@@ -4981,10 +4940,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   const skill = castName(mon.cardId, skillIndex);
   const aimedMon = aimed ? [...foeField, ...you.field].find((unit) => unit?.uid === aimed) ?? null : null;
   const onto = aimedMon ? ` lên ${cardOf(aimedMon).name}` : "";
-  if (mon.cardId === "mat-do-tan-pha" && !aimed) {
-    return beginHold(state, { kind: "face", attacker: uid, skill: true }, `${cardOf(mon).name} dùng ${skill} lên người chơi. Có thể chặn`);
-  }
-  if (mon.cardId === "rong-ac-ma" && !aimed) {
+  if (isHell(mon.cardId) && !aimed) {
     return beginHold(state, { kind: "face", attacker: uid, skill: true }, `${cardOf(mon).name} dùng ${skill} lên người chơi. Có thể chặn`);
   }
   if (isHarpy(mon.cardId)) {
@@ -5073,7 +5029,7 @@ function castName(cardId: string, index: number): string {
 }
 
 function strikeName(mon: FieldMon): string {
-  if (mon.cardId === "mat-do-tan-pha") return "Cầu lửa địa ngục";
+  if (isHell(mon.cardId)) return castName(mon.cardId, 0);
   if (mon.gaze && !mon.horn) return "Tia sáng huỷ diệt";
   if (mon.horn) return "Sấm lôi phá";
   return castName(mon.cardId, 0);
@@ -5090,7 +5046,7 @@ function rebound(state: Duel, victimUid: string): Duel {
   const caster = state.players[0].field.find((mon) => mon?.uid === casterUid) ?? state.players[1].field.find((mon) => mon?.uid === casterUid) ?? null;
   if (pending.kind === "beam" && caster?.cardId === "ong-khong-lo") return note(state, "Lá chắn phản đòn không phản được đòn trói.");
   if (pending.kind === "beam" && !caster) return note(state, "Không còn quái thi triển.");
-  if ((pending.kind === "face" || pending.kind === "melee") && !caster?.horn && !caster?.gaze && caster?.cardId !== "mat-do-tan-pha") return note(state, "Không có đòn kỹ năng để phản.");
+  if ((pending.kind === "face" || pending.kind === "melee") && !caster?.horn && !caster?.gaze && !isHell(caster?.cardId ?? "")) return note(state, "Không có đòn kỹ năng để phản.");
   if (pending.kind !== "beam" && pending.kind !== "face" && pending.kind !== "melee") return note(state, "Không có đòn kỹ năng để phản.");
   const index = pending.kind === "beam" ? pending.index : 0;
   const name = pending.kind === "beam" ? castName(caster!.cardId, index) : strikeName(caster!);
@@ -5135,7 +5091,7 @@ function finishRebound(state: Duel): Duel {
     return rainBombs(clear, ownerSide, live, victim.uid);
   }
   let owner = state.players[ownerSide];
-  if (caster.cardId === "mat-do-tan-pha") {
+  if (isHell(caster.cardId)) {
     const cost = skillManaCost(caster.cardId, 1);
     const paid = payCost(owner, cost);
     if (!paid) return note(clear, "Không đủ mana để phản đòn.");
@@ -6302,8 +6258,8 @@ export function harpyWard(state: Duel): Duel {
     what = castName(caster?.cardId ?? "", pending.index);
   }
   const gain = kit.mdef > 0 ? `tăng vĩnh viễn ${kit.mdef} thủ phép và ${kit.hp} máu` : `tăng vĩnh viễn ${kit.def} thủ và ${kit.hp} máu`;
-  const line = actNotice("Giáp và Vuốt", [`huỷ ${what} nhắm vào ${cardOf(bird).name}`, gain, "lượt sau không được rút bài"]);
-  const sealed = sealHarpy(patch(state, side, banDraw({ ...paid, field })), side, bird.uid, line, "spell");
+  const line = actNotice("Giáp và Vuốt", [`huỷ ${what} nhắm vào ${cardOf(bird).name}`, gain]);
+  const sealed = sealHarpy(patch(state, side, { ...paid, field }), side, bird.uid, line, "spell");
   return { ...sealed, step: "main", pending: null, hold: null };
 }
 
@@ -6353,10 +6309,10 @@ export function harpyLash(state: Duel): Duel {
   const paid = bird && kit ? pay(you, kit.lash) : null;
   if (!bird || !kit || !attacker || !paid) return note(state, kit?.lash === 1 ? "Cần 1 mana." : "Cần 2 mana.");
   const grown = growHarpy(bird, { atk: kit.atk }, "lash");
-  let next = patch(state, side, banDraw({ ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) }));
+  let next = patch(state, side, { ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) });
   const marked = them.field.map((unit) => (unit?.uid === attacker.uid ? { ...unit, dim: true } : unit));
   next = patch(next, atkSide, { ...them, field: marked });
-  const line = actNotice("Roi điện", [`né đòn của ${cardOf(attacker).name}`, `tăng vĩnh viễn ${kit.atk} công`, "đang thi triển", "lượt sau không được rút bài"]);
+  const line = actNotice("Roi điện", [`né đòn của ${cardOf(attacker).name}`, `tăng vĩnh viễn ${kit.atk} công`, "đang thi triển"]);
   return openLash(next, side, bird.uid, attacker.uid, false, line);
 }
 
@@ -6376,7 +6332,7 @@ function charmStrikeCore(state: Duel, birdUid: string, foeUid: string): Duel {
   const stunned = hit.attacker.hp > 0 ? { ...hit.attacker, dim: true, stun: Math.max(hit.attacker.stun, 2) } : hit.attacker;
   let next = patch(state, foe, dropDead({ ...them, field: them.field.map((unit) => (unit?.uid === attacker.uid ? stunned : unit)) }));
   next = patch(next, side, dropDead({ ...you, field: you.field.map((unit) => (unit?.uid === bird.uid ? hit.defender : unit)) }));
-  return growSmash(sealHarpy(next, side, bird.uid, actNotice("Mê hoặc", [`${cardOf(attacker).name} đánh thường vào ${cardOf(bird).name}`, `${cardOf(attacker).name} không thể hành động ở lượt sau`, "lượt sau không được rút bài"]), "hit"), attacker.uid, attacker.cardId === "khong-lo-mot-mat");
+  return growSmash(sealHarpy(next, side, bird.uid, actNotice("Mê hoặc", [`${cardOf(attacker).name} đánh thường vào ${cardOf(bird).name}`, `${cardOf(attacker).name} không thể hành động ở lượt sau`]), "hit"), attacker.uid, attacker.cardId === "khong-lo-mot-mat");
 }
 
 export function answerPlume(state: Duel, yes: boolean): Duel {
@@ -6394,10 +6350,10 @@ export function answerPlume(state: Duel, yes: boolean): Duel {
   const paid = bird && kit && !shedOf(bird).includes("lash") ? pay(you, kit.lash) : null;
   if (!bird || !kit || !attacker || !paid) return charmStrike(cleared, ask.bird, ask.foe);
   const grown = growHarpy(bird, { atk: kit.atk }, "lash");
-  let next = patch(cleared, side, banDraw({ ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) }));
+  let next = patch(cleared, side, { ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) });
   const marked = them.field.map((unit) => (unit?.uid === attacker.uid ? { ...unit, dim: true } : unit));
   next = patch(next, foe, { ...them, field: marked });
-  const line = actNotice("Roi điện", [`né đòn của ${cardOf(attacker).name}`, `tăng vĩnh viễn ${kit.atk} công`, "đang thi triển", `${cardOf(attacker).name} không thể hành động ở lượt sau`, "lượt sau không được rút bài"]);
+  const line = actNotice("Roi điện", [`né đòn của ${cardOf(attacker).name}`, `tăng vĩnh viễn ${kit.atk} công`, "đang thi triển", `${cardOf(attacker).name} không thể hành động ở lượt sau`]);
   return openLash(next, side, bird.uid, attacker.uid, true, line);
 }
 
@@ -6446,9 +6402,9 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     const tolls = handTolls(state.players[foe]).filter((_, index) => index !== pick.index);
     const grown = { ...mon, dim: true, shed: [...spent, "gust"] };
     const field = paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit));
-    let next = patch(state, side, banDraw({ ...paid, field }));
+    let next = patch(state, side, { ...paid, field });
     next = patch(next, foe, { ...state.players[foe], hand, tolls });
-    return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`, "lượt sau không được rút bài"]), "spell");
+    return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`]), "spell");
   }
   if (spent.includes("charm")) return note(state, "Mê hoặc đã biến mất.");
   const them = state.players[foe];
@@ -6458,7 +6414,7 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
   if (!paid) return note(state, "Cần 1 mana.");
   const grown = { ...mon, dim: true, shed: [...spent, "charm"] };
   const field = paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit));
-  const next = patch(state, side, banDraw({ ...paid, field }));
+  const next = patch(state, side, { ...paid, field });
   const owner = next.players[side];
   const still = owner.field.find((unit) => unit?.uid === mon.uid) ?? grown;
   if (!shedOf(still).includes("lash") && owner.orb >= harpyKit(still.cardId).lash) {
@@ -6825,13 +6781,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const noted = note(next, aimNotice(castName(mon.cardId, skillIndex), spinRows) ?? `${cardOf(mon).name} gây ${spinRows[0]?.bits ?? "0 sát thương"}.`, "spell");
     return checkWinner({ ...noted, skill: { id: mon.cardId, index: 0, aim: null, hits } });
   }
-  if (mon.cardId === "rong-ac-ma") {
-    const them = state.players[foe];
-    const target = targetUid ? them.field.find((unit) => unit?.uid === targetUid) ?? null : null;
-    if (targetUid && !target) return note(state, "Chọn một quái đối thủ hoặc người chơi.");
-    return resolveDemonBall(state, mon, target);
-  }
-  if (mon.cardId === "mat-do-tan-pha") {
+  if (isHell(mon.cardId)) {
     const them = state.players[foe];
     const target = targetUid ? them.field.find((unit) => unit?.uid === targetUid) ?? null : null;
     if (targetUid && !target) return note(state, "Chọn một quái đối thủ.");

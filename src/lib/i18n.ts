@@ -138,6 +138,8 @@ const PAIRS: Array<[string, string]> = [
   ["Thổi độc 2", "Poison Breath 2"],
   ["Thổi độc 3", "Poison Breath 3"],
   ["Ma pháp tích tụ", "Stored Magic"],
+  ["Tích luỹ ma pháp", "Stored Magic"],
+  ["Kim châm tê liệt", "Paralyzing Sting"],
   ["Vì Anh Em", "For My Brother"],
   ["Hoá kén", "Cocoon"],
   ["Mọc chân", "Grow Legs"],

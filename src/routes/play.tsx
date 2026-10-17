@@ -2276,7 +2276,7 @@ function PlayPage() {
             }
           }
           const landed = hits.filter((hit) => !caster || Math.abs(hit.x - caster.x) > 3 || Math.abs(hit.y - caster.y) > 3);
-          const hellShot = Boolean(casterUid && fieldMon(board, casterUid)?.cardId === "mat-do-tan-pha");
+          const hellShot = Boolean(casterUid && ["mat-do-tan-pha", "rong-ac-ma"].includes(fieldMon(board, casterUid)?.cardId ?? ""));
           const splash = duel.skill?.id === "may-nem-bom-hinh-nhen" || duel.skill?.id === "thuong-quan-long" || duel.skill?.id === "loi-nguyen-cua-rong";
           const where = splash
             ? []

@@ -41,7 +41,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ky-si-bong-toi": [PP("Kỵ pháp", "mounted-knight", "khi giáp lá cà"), PP("Chiến ý", "sword-brandish", "chiến ý"), R("Hiến Tế", "sacrificial-dagger")],
   "yeu-tinh-chuc-phuc": [P("Lời chúc phúc của tinh linh", "fairy-wand"), A("Hỗ công", "crossed-swords"), S("Hộ thủ", "checked-shield")],
   "mo-voi-ma-mut": [R("Nguyền rủa", "animal-skull"), P("Ác linh", "ghost")],
-  "ong-khong-lo": [A("Tê liệt", "bee")],
+  "ong-khong-lo": [A("Kim châm tê liệt", "bee")],
   "linh-chien-da-khong-lo": [S("Tường thành", "stone-wall")],
   "khung-long-vay-kiem": [P("Vãy phá giáp", "stegosaurus-scales")],
   "rong-boc-trung": [A("Thế công", "dragon-spiral"), A("Thế thủ", "egg-defense"), NOTE("đổi thế công hoặc thế thủ")],
@@ -59,7 +59,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
     PP("Nở", "butterfly", "đầu lượt của bạn", "đủ 4 lần", "đủ 5 lần", "đủ 6 lần", "chết từ mốc"),
   ],
   "trai-tim-hai-long": [A("Triều lên", "wave-crest"), A("Con nước lớn tàn phá", "big-wave"), A("Đại hồng thuỷ huỷ diệt", "waves"), NOTE("kẻ bị đòn này hạ")],
-  "sua-hut-ma-phap": [A("Ma pháp tích tụ", "jellyfish")],
+  "sua-hut-ma-phap": [A("Tích luỹ ma pháp", "jellyfish")],
   "con-thinh-no-cua-hai-vuong": [
     PP("Lá chắn vật lý", "checked-shield", "lá chắn vật lý"),
     PP("Lá chắn phép", "magic-shield", "lá chắn phép"),
@@ -72,7 +72,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "sat-nhan-bat-giu": [A("Bắt Giữ", "manacles")],
   "kraken": [P("Đắm tàu", "kraken-tentacle")],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],
-  "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số màu cam trên tôi")],
+  "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số cam:", "điểm do kazura kiếm được")],
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
   "mat-xanh-huy-diet": [A("Cầu sấm ánh sáng", "bolt-eye")],
   "mat-do-tan-pha": [A("Cầu lửa địa ngục", "burning-eye")],
@@ -99,8 +99,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
   "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
-  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng chỉ dùng", "sau mỗi lần kích hoạt", "đủ 4 kỹ năng")],
-  "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Dụ dỗ", "lips"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng chỉ dùng", "sau mỗi lần kích hoạt", "đủ 4 kỹ năng")],
+  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
+  "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Dụ dỗ", "lips"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), A("Gió xoáy", "tornado"), A("Dụ dỗ", "lips"), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],
   "phu-thuy-rung-den": [A("Nguyền rủa", "witch-face")],
@@ -123,6 +123,10 @@ function norm(text: string) {
  * with its closing mark on the next line ("__**Kỵ pháp: ").
  */
 const HEADING_LINE = /^\s*(?:\*\*__|__\*\*)[^\n]*?(?:(?:__\*\*|\*\*__)\s*:?|:)\s*$/;
+
+/** A heading whose closing mark sits at the start of the next line: "__**Ngủ đông" then "**__Tôi không thể…". */
+const OPEN_HEADING = /^\s*(?:\*\*__|__\*\*)[^\n*_]*$/;
+const MARKED = /^\s*(?:\*\*__|__\*\*|\*\*|__)/;
 
 /** The lines holding any of the words, each with the indented lines that continue it. */
 function pickLines(text: string, words: string[]): string[] {
@@ -200,7 +204,10 @@ export function skillsOf(cardId: string, text: string): SkillShown[] {
   if (list.length === 0) return [];
   // Lines a small skill took for itself, and bare heading lines, are left out of the bigger skills around them.
   const taken = new Set(list.flatMap((entry) => (entry.pick ? pickLines(text, entry.pick).map(norm) : [])));
-  const keep = (chunk: string) => chunk.split("\n").filter((line) => !taken.has(norm(line)) && !HEADING_LINE.test(line));
+  const keep = (chunk: string) => {
+    const lines = chunk.split("\n");
+    return lines.filter((line, at) => !taken.has(norm(line)) && !HEADING_LINE.test(line) && !(OPEN_HEADING.test(line) && MARKED.test(lines[at + 1] ?? "")));
+  };
   const starts = list.map((entry) => (entry.pick ? -1 : entry.head ? findHead(text, entry.head) : -1));
   const sorted = [...new Set(starts.filter((at) => at >= 0))].sort((a, b) => a - b);
   const first = sorted[0] ?? -1;

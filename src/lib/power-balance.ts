@@ -321,6 +321,48 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "up",
     stats: { mdef: { from: 2, to: 3 } },
   },
+  {
+    id: "chien-si-gam-nham",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "down",
+    notes: ["Khiên thú sĩ chỉ thêm 2 máu tối đa (3)"],
+  },
+  {
+    id: "ga-he-dang-so",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "up",
+    notes: ["Quả cầu bóng đêm lần đầu gây 6 sát thương (5)"],
+  },
+  {
+    id: "rong-ac-ma",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "shift",
+    notes: ["Hoả cầu địa ngục tiêu hao 1 mana, gây sát thương hỗn hợp 5 vật lý, 6 phép, 3 chuẩn lên quái trúng đòn, sát thương dư từ 7 lan sang các quái còn lại, thay vì 6 sát thương chuẩn"],
+  },
+  {
+    id: "khung-long-vay-kiem",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "shift",
+    notes: ["Vãy phá giáp giảm 2 thủ, thay vì 2 thủ phép"],
+  },
+  {
+    id: "my-dieu-nhan",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "up",
+    notes: ["Dùng kỹ năng không còn bị khoá rút bài ở lượt sau"],
+  },
+  {
+    id: "nu-chua-dieu-nhan",
+    at: "2026-10-17",
+    wave: 29,
+    tone: "up",
+    notes: ["Dùng kỹ năng không còn bị khoá rút bài ở lượt sau"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

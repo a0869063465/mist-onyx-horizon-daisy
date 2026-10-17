@@ -520,6 +520,12 @@ export const PENDING_NOTES: string[] = [
   "Bảng quái có kỹ năng Lưu ý vành vàng, ghi những ghi chú quan trọng của bộ kỹ năng.",
   "Triệu hồi quái dung hợp lên sân có sét đánh xuống ô và tiếng sấm.",
   "Thêm mô tả Hiến Tế cho Kỵ sĩ bóng tối, và mô tả Mọc chân, Nở cho Kén ngài. Bảng quái hiện các mô tả này.",
+  "Rồng ác ma dùng Hoả cầu địa ngục giống Cầu lửa địa ngục của Mắt đỏ tàn phá: tiêu hao 1 mana, gây sát thương hỗn hợp 5 vật lý, 6 phép và 3 chuẩn lên quái trúng đòn. Quái đó chết mà sát thương còn dư từ 7 trở lên thì lan sang các quái còn lại của kẻ địch.",
+  "Khủng long vãy kiếm: Vãy phá giáp giảm 2 thủ của quái địch trong giao tranh giáp lá cà, không còn giảm thủ phép.",
+  "Mỹ điểu nhân và Nữ chúa điểu nhân dùng kỹ năng không còn bị khoá rút bài ở lượt sau. Lời mô tả cũng đổi theo.",
+  "Chiến sĩ gặm nhắm: Khiên thú sĩ thêm 2 máu tối đa, thay vì 3.",
+  "Gã hề đáng sợ: Quả cầu bóng đêm gây 6 sát thương, thay vì 5.",
+  "Ong khổng lồ đổi tên skill Tê liệt thành Kim châm tê liệt. Sứa hút ma pháp đổi Ma pháp tích tụ thành Tích luỹ ma pháp.",
 ];
 
 function remarkOf(notes: string[]) {

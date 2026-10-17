@@ -31,7 +31,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "fire", label: "Vệt Lửa", tone: "y" },
     { key: "blood", label: "Lửa rồng thiêng", tone: "y" },
   ],
-  "ong-khong-lo": [{ key: "stun", label: "Tê liệt", tone: "y" }],
+  "ong-khong-lo": [{ key: "stun", label: "Kim châm tê liệt", tone: "y" }],
   "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rửa", tone: "y" }],
   "rong-boc-trung": [
     { key: "stanceGuard", label: "Thế thủ", tone: "y" },
@@ -54,7 +54,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ngai-khong-lo": [{ key: "dust", label: "Thổi độc", tone: "y" }],
   "ngai-nu-hoang": [{ key: "dust", label: "Thổi độc 2", tone: "y" }],
   "ngai-hoan-my": [{ key: "dust", label: "Thổi độc 3", tone: "y" }],
-  "sua-hut-ma-phap": [{ key: "spit", label: "Ma pháp tích tụ", tone: "y" }],
+  "sua-hut-ma-phap": [{ key: "spit", label: "Tích luỹ ma pháp", tone: "y" }],
   "con-thinh-no-cua-hai-vuong": [{ key: "rage", label: "Cơn thịnh nộ của hải thần", tone: "y" }],
   "chien-binh-lan-khuat": [{ key: "hide", label: "Ẩn mình", tone: "y" }],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
@@ -217,6 +217,15 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["khung-long-vay-kiem", "giảm 1 thủ và 1 thủ phép"],
   ["kiem-si-lua-thieng", "4 sát thương phép và 3 sát thương chuẩn"],
   ["hiep-si-huyen-bi", "Ghi 100% sát thương khiên nuốt"],
+  ["chien-si-gam-nham", "thêm 3 máu tối đa"],
+  ["ga-he-dang-so", "gây 5 sát thương, cứ thêm"],
+  ["rong-ac-ma", "Gây 6 sát thương chuẩn lên 1 mục tiêu"],
+  ["khung-long-vay-kiem", "giảm 2 thủ phép"],
+  ["my-dieu-nhan", "không được rút bài"],
+  ["nu-chua-dieu-nhan", "không được rút bài"],
+  ["nu-chua-dieu-nhan", "không khoá rút bài"],
+  ["ong-khong-lo", "__**Tê liệt**__"],
+  ["sua-hut-ma-phap", "Ma pháp tích tụ"],
 ];
 
 const FRESH_SKILL: Array<[string, string]> = [

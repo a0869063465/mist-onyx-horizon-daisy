@@ -53,11 +53,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 5,
-    "text": "c33c269c",
+    "text": "a1183f19",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "kiem-si-lua-thieng": {
     "kind": "monster",
@@ -151,11 +151,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 3,
-    "text": "e182f2c2",
+    "text": "df10189",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "linh-chien-da-khong-lo": {
     "kind": "monster",
@@ -179,11 +179,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 3,
     "mdef": 0,
     "hp": 5,
-    "text": "71b7b09",
+    "text": "97f0f87f",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": "2026-10-16"
+    "shiftAt": "2026-10-17"
   },
   "rong-boc-trung": {
     "kind": "monster",
@@ -193,11 +193,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 0,
     "hp": 8,
-    "text": "cdfc02e4",
+    "text": "ae17c75",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "ga-he-dang-so": {
     "kind": "monster",
@@ -207,11 +207,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 2,
     "mdef": 2,
     "hp": 3,
-    "text": "313e8a96",
+    "text": "cb52cec1",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": "2026-10-16"
+    "shiftAt": "2026-10-17"
   },
   "tho-den-tinh-nghich": {
     "kind": "monster",
@@ -291,11 +291,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 2,
-    "text": "84193083",
+    "text": "bc97b4ce",
     "added": null,
     "powerAt": "2026-10-09",
     "powerTone": "down",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "trai-tim-hai-long": {
     "kind": "monster",
@@ -305,11 +305,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 6,
-    "text": "1e2aac30",
+    "text": "fe90bfc7",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "sua-hut-ma-phap": {
     "kind": "monster",
@@ -319,11 +319,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 4,
     "hp": 5,
-    "text": "fdc82127",
+    "text": "f9c7494",
     "added": null,
     "powerAt": "2026-10-08",
     "powerTone": "down",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "con-thinh-no-cua-hai-vuong": {
     "kind": "monster",
@@ -333,11 +333,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 2,
-    "text": "8b20dfec",
+    "text": "ba0f5332",
     "added": null,
     "powerAt": "2026-10-14",
     "powerTone": "up",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "chien-binh-lan-khuat": {
     "kind": "monster",
@@ -403,11 +403,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 0,
     "hp": 3,
-    "text": "142b3178",
+    "text": "38752956",
     "added": null,
     "powerAt": "2026-10-08",
     "powerTone": "down",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "kizuran": {
     "kind": "monster",
@@ -417,11 +417,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 8,
-    "text": "ad0905df",
+    "text": "a59f34df",
     "added": null,
     "powerAt": "2026-10-14",
     "powerTone": "up",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "ke-giam-ho-linh-hon": {
     "kind": "monster",
@@ -669,11 +669,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 4,
-    "text": "23c6388",
+    "text": "e968317",
     "added": "2026-10-05",
     "powerAt": "2026-10-11",
     "powerTone": "up",
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "the-than-cua-shien": {
     "kind": "monster",
@@ -739,11 +739,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 2,
     "mdef": 2,
     "hp": 12,
-    "text": "3fece12e",
+    "text": "e3466cea",
     "added": "2026-10-05",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "nu-chua-dieu-nhan": {
     "kind": "monster",
@@ -753,11 +753,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 3,
     "mdef": 1,
     "hp": 6,
-    "text": "db46e29e",
+    "text": "91286f31",
     "added": "2026-10-05",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-17"
   },
   "nu-chua-dieu-nhan-hoan-my": {
     "kind": "monster",
