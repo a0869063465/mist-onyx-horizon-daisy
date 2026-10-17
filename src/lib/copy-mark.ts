@@ -4,11 +4,11 @@ export function plainCopy(text: string) {
 
 export type CopyBit = { text: string; bold: boolean; under: boolean } | { br: true };
 
-export function parseCopy(raw: string): CopyBit[] {
+export function parseCopy(raw: string, firstTitle = true): CopyBit[] {
   const out: CopyBit[] = [];
   let bold = false;
   let under = false;
-  for (const bit of markSkillTitles(raw).split(/(\*\*|__|\n)/)) {
+  for (const bit of markSkillTitles(raw, firstTitle).split(/(\*\*|__|\n)/)) {
     if (bit === "**") bold = !bold;
     else if (bit === "__") under = !under;
     else if (bit === "\n") out.push({ br: true });
@@ -17,8 +17,11 @@ export function parseCopy(raw: string): CopyBit[] {
   return out;
 }
 
-/** Dòng tên kỹ năng chưa đánh dấu thì tự in đậm và gạch dưới. */
-function markSkillTitles(raw: string): string {
+/**
+ * Dòng tên kỹ năng chưa đánh dấu thì tự in đậm và gạch dưới. `firstTitle` false: dòng ngắn đầu tiên không tự
+ * thành tên, vì bảng quái đã ghi tên kỹ năng ở trên mô tả.
+ */
+function markSkillTitles(raw: string, firstTitle = true): string {
   const lines = raw.split("\n");
   let seen = false;
   return lines
@@ -35,7 +38,7 @@ function markSkillTitles(raw: string): string {
           return `${titled[1]}__**${name}**__${titled[3]}${titled[4]}`;
         }
       }
-      if (!seen && line.trim()) {
+      if (firstTitle && !seen && line.trim()) {
         const name = line.trim();
         if (name.length >= 2 && name.length <= 48 && !/^[-•]/.test(name) && !/[.!?,，]/.test(name)) {
           seen = true;

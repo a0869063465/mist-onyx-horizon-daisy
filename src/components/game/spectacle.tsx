@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { actPack, ailmentHolds, fxOn, tideOn } from "@/lib/fx-prefs";
+import { fxStyle } from "@/lib/fx-kinds";
 import { subscribeFx, type FxEvent, type FxPack, type FxSpot } from "@/lib/spectacle";
+import { fxUrl } from "@/lib/preload";
 
 type Chunk = {
   x: number;
@@ -462,7 +464,11 @@ export function Spectacle() {
     };
 
     const onFx = (event: FxEvent) => {
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser") return;
+      if (fxStyle() === "new") {
+        ailmentMarks = [];
+        return;
+      }
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -770,7 +776,7 @@ export function FireBurst() {
         <video
           key={clip.id}
           className="fire-blast"
-          src="/fx/lua-no.mp4?v=2"
+          src={fxUrl("/fx/lua-no.mp4?v=2")}
           autoPlay
           muted
           playsInline
@@ -806,7 +812,7 @@ export function LaserBeam() {
           <video
             key={clip.id}
             className="laser-beam"
-            src="/fx/laser.mp4?v=2"
+            src={fxUrl("/fx/laser.mp4?v=2")}
             autoPlay
             muted
             playsInline
@@ -843,7 +849,7 @@ export function BoltBurst() {
         <video
           key={clip.id}
           className={`bolt-blast is-${clip.rank}${clip.self ? " is-self" : ""}`}
-          src={clip.rank === "small" ? "/fx/set-dien.mp4?v=1" : "/fx/set-to.mp4?v=1"}
+          src={fxUrl(clip.rank === "small" ? "/fx/set-dien.mp4?v=1" : "/fx/set-to.mp4?v=1")}
           autoPlay
           muted
           playsInline

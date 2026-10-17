@@ -117,7 +117,7 @@ function DeckPage() {
   }
 
   return (
-    <main className="builder">
+    <main className="builder menu-page is-sub">
       <header className="deck-head">
         <Link to="/" className="chip">
           {tr("Về sân")}
@@ -284,7 +284,7 @@ function byMana(a: SpellCard, b: SpellCard) {
 }
 
 const SPELL_BANDS: { label: string; ids: string[] }[] = [
-  { label: "Môi trường", ids: ["bien-sau"] },
+  { label: "Môi trường", ids: ["bien-sau", "thao-nguyen", "dat-da", "nui", "rung-ram", "bong-toi"] },
   { label: "Phản đòn", ids: ["co-may-thoi-gian", "giap-co-khi", "hoan-doi", "la-chan-phan-don", "phuc-kich", "guong-phong-ho"] },
   { label: "Giải trừ", ids: ["hap-thu-ma-phap", "mua-ma-thuat", "phan-nguyen", "vong-xoay-bao-ho"] },
   { label: "Đa năng", ids: ["ke-dao-mo", "mu-ma-phap", "thu-hoi-quai-thu"] },
@@ -649,7 +649,7 @@ function DeckPlans({ ids, onBack }: { ids: string[]; onBack: () => void }) {
   const groups = deckTactics(ids, loadStrategies());
   const gray = new Set(FORMS.map((card) => card.id));
   return (
-    <main className="watch is-wide deck-plans">
+    <main className="watch is-wide deck-plans menu-page">
       <button type="button" className="watch-back" onClick={onBack}>
         {tr("Trở về")}
       </button>

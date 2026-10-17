@@ -13,9 +13,8 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "cast", label: "Quả cầu bóng tối", tone: "z" },
   ],
   "cuc-bong-ma-quai": [
-    { key: "one", label: "Nhân 2", tone: "y" },
-    { key: "two", label: "Nhân 3", tone: "y" },
-    { key: "dodge", label: "Đỡ đòn", tone: "z" },
+    { key: "boom", label: "Phát nổ", tone: "y" },
+    { key: "barrage", label: "Pháo kích", tone: "y" },
   ],
   "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
@@ -31,7 +30,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "fire", label: "Vệt Lửa", tone: "y" },
     { key: "blood", label: "Lửa rồng thiêng", tone: "y" },
   ],
-  "ong-khong-lo": [{ key: "stun", label: "Tê liệt", tone: "y" }],
+  "ong-khong-lo": [{ key: "stun", label: "Kim châm tê liệt", tone: "y" }],
   "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rửa", tone: "y" }],
   "rong-boc-trung": [
     { key: "stanceGuard", label: "Thế thủ", tone: "y" },
@@ -54,7 +53,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ngai-khong-lo": [{ key: "dust", label: "Thổi độc", tone: "y" }],
   "ngai-nu-hoang": [{ key: "dust", label: "Thổi độc 2", tone: "y" }],
   "ngai-hoan-my": [{ key: "dust", label: "Thổi độc 3", tone: "y" }],
-  "sua-hut-ma-phap": [{ key: "spit", label: "Ma pháp tích tụ", tone: "y" }],
+  "sua-hut-ma-phap": [{ key: "spit", label: "Tích luỹ ma pháp", tone: "y" }],
   "con-thinh-no-cua-hai-vuong": [{ key: "rage", label: "Cơn thịnh nộ của hải thần", tone: "y" }],
   "chien-binh-lan-khuat": [{ key: "hide", label: "Ẩn mình", tone: "y" }],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
@@ -110,7 +109,7 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
   "quai-thu-thien-su": [{ key: "pray", title: "Hỏi cầu nguyện", label: "Tiêu 1 mana để {tên} cầu nguyện?" }],
   "kiem-si-lua-thieng": [
     { key: "echo", title: "Hỏi đòn thêm", label: "Truy cùng diệt tận." },
-    { key: "last", title: "Hoả thần long", label: "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 3 sát thương chuẩn" },
+    { key: "last", title: "Hoả thần long", label: "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 2 sát thương chuẩn" },
   ],
   "ky-si-bong-toi": [
     { key: "pick1", title: "Hỏi 1 mục", label: "Chọn 1 mục cho lần giáp lá cà này." },
@@ -124,12 +123,7 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
     { key: "surge", title: "Con nước lớn", label: "Con nước lớn tàn phá" },
     { key: "doom", title: "Đại thuỷ triều", label: "Đại thuỷ triều huỷ diệt" },
   ],
-  "cuc-bong-ma-quai": [
-    { key: "copy", title: "Bản sao chặn", label: "Nhân bản sao ra chặn. Tốn 1 mana." },
-    { key: "self", title: "Bản thân chặn", label: "Bản thân chặn. Không tốn mana." },
-    { key: "hand", title: "Từ trên tay", label: "Triệu hồi bản thân ra chặn. Không tốn mana." },
-    { key: "handCopy", title: "Tay nhân bản", label: "Nhân tối đa, bản sao chặn. Tốn 1 mana." },
-  ],
+  "cuc-bong-ma-quai": [{ key: "soft", title: "Bông mềm", label: "Triệu hồi bản thân ra chặn. Tốn 1 mana, các bản sao lấp đầy sân." }],
 };
 
 type Store = {
@@ -213,7 +207,20 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["hiep-si-ho-ve", "bộ bài.\n\nKhi lá chắn"],
   ["hiep-si-cua-hau", "bộ bài.\n\nKhi lá chắn"],
   ["mat-xanh-huy-diet", "sát thương phép bằng đúng công"],
+  ["chien-binh-lan-khuat", "đang đứng, trong lúc ẩn mình"],
+  ["khung-long-vay-kiem", "giảm 1 thủ và 1 thủ phép"],
+  ["kiem-si-lua-thieng", "4 sát thương phép và 3 sát thương chuẩn"],
   ["hiep-si-huyen-bi", "Ghi 100% sát thương khiên nuốt"],
+  ["chien-si-gam-nham", "thêm 3 máu tối đa"],
+  ["ga-he-dang-so", "gây 5 sát thương, cứ thêm"],
+  ["rong-ac-ma", "Gây 6 sát thương chuẩn lên 1 mục tiêu"],
+  ["khung-long-vay-kiem", "giảm 2 thủ phép"],
+  ["my-dieu-nhan", "không được rút bài"],
+  ["nu-chua-dieu-nhan", "không được rút bài"],
+  ["nu-chua-dieu-nhan", "không khoá rút bài"],
+  ["cuc-bong-ma-quai", "Dùng để tấn công"],
+  ["ong-khong-lo", "__**Tê liệt**__"],
+  ["sua-hut-ma-phap", "Ma pháp tích tụ"],
 ];
 
 const FRESH_SKILL: Array<[string, string]> = [
@@ -225,6 +232,8 @@ const FRESH_SKILL: Array<[string, string]> = [
   ["hiep-si-cua-vua", "bộ bài.\n    Khi lá chắn"],
   ["hiep-si-ho-ve", "bộ bài.\n    Khi lá chắn"],
   ["hiep-si-cua-hau", "bộ bài.\n    Khi lá chắn"],
+  ["ky-si-bong-toi", "con đường hỗn mang"],
+  ["ken-ngai", "mọc chân tăng sức phòng ngự"],
 ];
 
 const STALE_CHIPS: Array<[string, string, string]> = [
@@ -240,6 +249,7 @@ const STALE_ASKS: Array<[string, string, string]> = [
   ["trai-tim-hai-long", "tide", "Triều lên. Chọn một cách."],
   ["kiem-si-lua-thieng", "echo", "Chọn mục tiêu."],
   ["kiem-si-lua-thieng", "last", "Tiêu hao 3 máu và 1 mana để gây 6 sát thương phép."],
+  ["kiem-si-lua-thieng", "last", "Tiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 3 sát thương chuẩn"],
 ];
 
 function dropKey(bag: Record<string, Record<string, string>>, base: Record<string, Record<string, string>>, id: string, key: string, old: string) {
@@ -282,6 +292,17 @@ function dropKnown(store: Store) {
     if (Object.keys(fairy).length === 0) {
       delete store.monsters["thien-than-be-nho"];
       delete store.baseMonsters["thien-than-be-nho"];
+    }
+    changed = true;
+  }
+  for (const [id, old] of [["thao-nguyen", "Nếu một đồng minh tham gia"], ["nui", "tăng thêm 2 sát thương kỹ năng"]] as const) {
+    const card = store.spells[id];
+    if (!card?.effect?.includes(old)) continue;
+    delete card.effect;
+    delete store.baseSpells[id]?.effect;
+    if (Object.keys(card).length === 0) {
+      delete store.spells[id];
+      delete store.baseSpells[id];
     }
     changed = true;
   }
