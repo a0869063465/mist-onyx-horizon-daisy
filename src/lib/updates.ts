@@ -510,10 +510,15 @@ export const PENDING_NOTES: string[] = [
   "Số bài trên góc xấp bài của bạn, số phép trên tay và số quái dự bị của đối phương to gấp đôi, nằm trong ô nổi khối.",
   "Sửa lỗi: kéo thả quái ra sân xong thì lần chạm kế tiếp vào quái trên sân bị bỏ qua, phải chạm hai lần.",
   "Bảng quái mới khi bấm quái trên tay hoặc trên sân: hàng icon kỹ năng chủ động vành xanh lam, nội tại vành tím, bấm icon để xem mô tả. Kỹ năng gộp được tách thành từng kỹ năng nhỏ, như Khiên Ân Huệ thành Lời chúc của kỵ sĩ, Lời chúc của vua, Lời chúc của hậu. Lá hiện như trên sân, số cam ở góc trái trên.",
-  "Nút Triệu hồi, Hiến tế, Dung hợp có viên pha lê 3D trên bệ vàng (vàng, đỏ, tím), chữ bên cạnh, viên ngọc và số mana cần. Nút nào chưa đủ điều kiện thì không hiện.",
-  "Hiến tế mở khung chọn quái hiến tế 3D, bấm Triệu hồi đỏ để triệu hồi. Dung hợp: lá lướt chồng lên quái, loé sáng hình ngôi sao, màn hình trắng xoá có sao lấp lánh, quái dung hợp hiện to, bấm Triệu hồi tím đỏ thì quái nằm xuống sân trong vòng triệu hồi tím. Âm thanh dung hợp mới. Kéo lá lên quái cũng ra cảnh này.",
+  "Nút Triệu hồi, Hiến tế, Dung hợp là ô nổi khối, chữ nằm dưới icon. Triệu hồi và Dung hợp dùng icon viên pha lê 3D trên vòng phép, Hiến tế giữ icon cũ. Sau chữ là viên ngọc và số mana cần: ngọc xanh ở Triệu hồi, ngọc đỏ ở Hiến tế. Nút nào chưa đủ điều kiện thì không hiện.",
+  "Hiến tế mở khung chọn quái hiến tế 3D, bấm Triệu hồi đỏ để triệu hồi. Dung hợp: hai quái được đưa lên, đập vào nhau, bật ra xa rồi xoáy vào nhau như bị cuốn vào xoáy nước, lá vẫn đứng. Loé sáng, màn hình trắng xoá, quái dung hợp xoay nhẹ rồi hiện ra, bấm Triệu hồi tím đỏ thì quái nằm xuống sân trong vòng triệu hồi tím. Âm thanh dung hợp mới theo từng nhịp. Kéo lá lên quái cũng ra cảnh này.",
   "Triệu hồi hiến tế có hiệu ứng và âm thanh mới: vòng ấn máu mở dưới ô, cột lửa địa ngục giáng xuống. Lửa trên quái bị hiến tế giữ nguyên.",
-  "Quái được triệu hồi ra sân có vòng triệu hồi vàng và cột sáng, hoành tráng như triệu hồi hiến tế.",
+  "Triệu hồi quái thú chủ lực, từ 4 sao trở lên, có vòng triệu hồi vàng và cột sáng. Quái thường giữ hiệu ứng triệu hồi cũ.",
+  "Bấm một kỹ năng trên bảng quái thì hiện mô tả. Sau tên kỹ năng có viên ngọc và số mana tiêu hao, giống nút Triệu hồi.",
+  "Kỹ năng chủ động đẩy bản thân vào nguy hiểm có vành đỏ, như Hoá Kén của Sâu non và Hiến Tế của Kỵ sĩ bóng tối.",
+  "Kỹ năng dùng như phép có vành hồng, như Giáp và Vuốt, Roi điện của Mỹ điểu nhân, Khiên thú sĩ của Chiến sĩ gặm nhắm, Thế thân trên sân và Thế thân trên tay của Thế thân của shien, Dùng để phòng ngự và Dùng như spell của Cục bông ma quái.",
+  "Bảng quái có kỹ năng Lưu ý vành vàng, ghi những ghi chú quan trọng của bộ kỹ năng.",
+  "Triệu hồi quái dung hợp lên sân có sét đánh xuống ô và tiếng sấm.",
 ];
 
 function remarkOf(notes: string[]) {

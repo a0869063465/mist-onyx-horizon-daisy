@@ -15,6 +15,7 @@ import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen } from "@/components/game/load-screen";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, GlyphDefs, MonsterSheet, type SheetAction } from "@/components/game/monster-sheet";
+import { FUSE_BEATS, FuseDance } from "@/components/game/fuse-dance";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
@@ -242,11 +243,19 @@ type Strike = { uid: string; face: boolean; foeUid: string | null };
 /** Centre and width of a card on the board, in % of the board. */
 type BoardSpot = { x: number; y: number; w: number };
 /**
- * Fusion scene, after the owner's reference video: the hand card sweeps onto its partner (meet), the two flare
- * into a star (flare), the screen whites out (white), the fused card shows large (card), its sheet asks to
- * summon (reveal), and it lays down onto the slot in a summoning circle (land).
+ * Fusion scene, after the owner's second reference video: both monsters rise to the middle (lift), smash into
+ * each other (clash), spring apart (apart), are sucked into each other in a whirlpool, standing upright (swirl),
+ * burst into a flash and whiteout (flash), and the fused monster turns a little on its upright axis as it
+ * appears (turn). Its sheet asks to summon (reveal), and it lays down onto the slot with lightning (land).
  */
-type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: "meet" | "flare" | "white" | "card" | "reveal" | "land"; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot };
+type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "land";
+type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot };
+
+/** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
+const FUSE_RAYS = [
+  [-90, 62, 1.1, 0], [-62, 48, 0.7, 40], [-118, 52, 0.8, 20], [-34, 40, 0.6, 70], [-146, 44, 0.6, 50], [-8, 56, 0.9, 30],
+  [172, 50, 0.8, 60], [28, 34, 0.5, 90], [152, 30, 0.5, 100], [90, 28, 0.6, 80], [62, 24, 0.4, 110], [118, 26, 0.4, 120],
+] as const;
 
 /** Where an element sits on the board, as a card spot. */
 function boardSpot(el: Element | null, fallback: BoardSpot): BoardSpot {
@@ -1957,14 +1966,15 @@ function PlayPage() {
         }
       }
     }
-    // A plain summon lands in a gold summoning circle, as grand as the sacrifice one (which has its own below).
+    // Summoning a main monster (Quái thú chủ lực, 4 stars and up) lands it in a gold summoning circle; other
+    // monsters keep the usual summon effect, and sacrifice summons have their own circle below.
     const sacrificed = Boolean(duel.ashes && duel.ashes.seq !== prev.ashes?.seq);
     const summonedNow = (duel.events ?? []).slice(prev.events?.length ?? 0).some((row) => row.kind === "summon" && row.ok);
     if (summonedNow && !sacrificed) {
       for (const side of [0, 1] as const) {
         const known = new Set(prev.players[side].field.map((mon) => mon?.uid));
         duel.players[side].field.forEach((mon, index) => {
-          if (!mon || known.has(mon.uid)) return;
+          if (!mon || known.has(mon.uid) || (monsterCard(mon.cardId)?.stars ?? 0) < 4) return;
           const spot = SLOT_POS[screenSide(side, viewerNow)][index];
           if (spot) emitFx({ t: "rite", x: spot.x, y: spot.y, kind: "holy" });
         });
@@ -2434,12 +2444,11 @@ function PlayPage() {
 
   useEffect(() => {
     if (!fuseShow || fuseShow.phase === "reveal" || fuseShow.phase === "land") return;
-    if (fuseShow.phase === "meet") playCue("fuseRite");
+    if (fuseShow.phase === "lift") playCue("fuseRite");
     const phase = fuseShow.phase;
-    const after = { meet: "flare", flare: "white", white: "card", card: "reveal" } as const;
-    const wait = { meet: 900, flare: 750, white: 850, card: 1150 }[phase];
+    const [wait, after] = FUSE_BEATS[phase];
     const timer = window.setTimeout(
-      () => setFuseShow((current) => (current && current.n === fuseShow.n && current.phase === phase ? { ...current, phase: after[phase] } : current)),
+      () => setFuseShow((current) => (current && current.n === fuseShow.n && current.phase === phase ? { ...current, phase: after } : current)),
       wait,
     );
     return () => window.clearTimeout(timer);
@@ -2805,7 +2814,7 @@ function PlayPage() {
           uid: partner.uid,
           slot: index as 0 | 1 | 2,
           resultId: recipe.result,
-          phase: "meet",
+          phase: "lift",
           n: Date.now(),
           a: boardSpot(document.querySelector(`[data-reserve="${payload.index}"]`), { x: 30, y: 88, w: 18 }),
           b: slotSpot,
@@ -3338,7 +3347,7 @@ function PlayPage() {
           uid: mon.uid,
           slot,
           resultId: recipe.result,
-          phase: "meet",
+          phase: "lift",
           n: Date.now(),
           a: boardSpot(document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
           b: slotSpot,
@@ -3381,10 +3390,19 @@ function PlayPage() {
           [{ key: "go", label: "Triệu hồi", tone: "fuse", cost: 0, onPress: () => {
             const show = fuseShow;
             setFuseShow({ ...show, phase: "land" });
+            // Lightning strikes the slot as the fused monster lands, with its thunder.
+            playCue("boltPrep", 0.35);
             window.setTimeout(() => {
               apply(fuse(duel, show.index, show.uid, show.slot));
               setFuseShow(null);
               emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
+              emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
+              playCue("boltBoom");
+              window.setTimeout(() => {
+                emitFx({ t: "bolt", rank: "small", x: show.at.x - 7, y: show.at.y - 2 });
+                emitFx({ t: "bolt", rank: "small", x: show.at.x + 7, y: show.at.y + 1 });
+                playCue("boltSmall");
+              }, 260);
             }, 750);
           } }],
           () => setFuseShow(null),
@@ -5023,46 +5041,33 @@ function PlayPage() {
         <ShieldBurst />
         </div>
         {fuseShow ? (
-          <div className={`fuse3d is-${fuseShow.phase}`} style={{ "--bx": `${fuseShow.b.x}%`, "--by": `${fuseShow.b.y}%` } as CSSProperties}>
-            {(fuseShow.phase === "meet" || fuseShow.phase === "flare") && fuseHeld && fusePartner ? (
-              <>
-                {[
-                  { key: "b", spot: fuseShow.b, card: monsterCard(formOf(fusePartner)) },
-                  { key: "a", spot: fuseShow.a, card: monsterCard(fuseHeld.id) },
-                ].map(({ key, spot, card }) =>
-                  card ? (
-                    <div
-                      key={key}
-                      className={`fuse3d-card is-${key}`}
-                      style={{ "--x0": `${spot.x}%`, "--y0": `${spot.y}%`, "--w0": `${spot.w}%`, "--wb": `${fuseShow.b.w}%` } as CSSProperties}
-                    >
-                      <CardFace monster={card} />
-                    </div>
-                  ) : null,
-                )}
-              </>
+          <div className={`fuse3d is-${fuseShow.phase}`}>
+            {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
+              <FuseDance a={fuseShow.a} b={fuseShow.b}>
+                {[<CardFace key="a" monster={monsterCard(fuseHeld.id)} />, <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />]}
+              </FuseDance>
             ) : null}
-            {fuseShow.phase === "flare" ? (
+            {fuseShow.phase === "swirl" || fuseShow.phase === "flash" || fuseShow.phase === "turn" ? <i className="fuse3d-glow" /> : null}
+            {fuseShow.phase === "flash" ? (
               <span className="fuse3d-star">
                 <i className="is-core" />
-                <i className="is-x" />
-                <i className="is-y" />
-                <i className="is-d1" />
-                <i className="is-d2" />
-                <i className="is-wide" />
+                {FUSE_RAYS.map((ray, i) => (
+                  <i key={i} className="is-ray" style={{ "--a": `${ray[0]}deg`, "--l": `${ray[1]}vmin`, "--h": `${ray[2]}vmin`, "--dl": `${ray[3]}ms` } as CSSProperties} />
+                ))}
               </span>
             ) : null}
-            {fuseShow.phase === "white" || fuseShow.phase === "card" ? (
-              <span className="fuse3d-white">
-                {Array.from({ length: 18 }, (_, i) => (
+            {fuseShow.phase === "flash" || fuseShow.phase === "turn" ? <i className="fuse3d-white" /> : null}
+            {fuseShow.phase === "turn" ? (
+              <span className="fuse3d-dust">
+                {Array.from({ length: 28 }, (_, i) => (
                   <i
                     key={i}
-                    style={{ left: `${(i * 53) % 100}%`, top: `${(i * 37 + 11) % 100}%`, "--s": `${0.6 + ((i * 7) % 5) / 5}`, "--t": `${1.2 + ((i * 3) % 5) / 4}s`, "--dl": `${((i * 11) % 9) / 10}s` } as CSSProperties}
+                    style={{ left: `${(i * 53 + 7) % 100}%`, top: `${(i * 37 + 11) % 96}%`, "--s": `${0.6 + ((i * 7) % 5) / 5}`, "--t": `${0.7 + ((i * 3) % 5) / 10}s`, "--dl": `${((i * 11) % 7) * 30}ms` } as CSSProperties}
                   />
                 ))}
               </span>
             ) : null}
-            {(fuseShow.phase === "card" || fuseShow.phase === "land") && fuseBorn ? (
+            {(fuseShow.phase === "turn" || fuseShow.phase === "land") && fuseBorn ? (
               <div className="fuse3d-big" style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}>
                 <CardFace monster={monsterCard(fuseShow.resultId)!} />
               </div>

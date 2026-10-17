@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
 import { SKILL_ICONS } from "@/lib/skill-icons";
-import type { SkillShown } from "@/lib/skill-book";
+import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { tr } from "@/lib/i18n";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: Dung hợp. fuse: summoning a fused monster. */
@@ -59,6 +59,27 @@ export function GlyphDefs() {
           <stop offset="0.75" stopColor="#40156e" />
           <stop offset="1" stopColor="#c69cff" />
         </linearGradient>
+        <linearGradient id="rim3d-risk" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffe8e2" />
+          <stop offset="0.3" stopColor="#e0402a" />
+          <stop offset="0.5" stopColor="#ffd6cc" />
+          <stop offset="0.75" stopColor="#6a0c04" />
+          <stop offset="1" stopColor="#ff7a5c" />
+        </linearGradient>
+        <linearGradient id="rim3d-spell" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffe8f2" />
+          <stop offset="0.3" stopColor="#ff4f93" />
+          <stop offset="0.5" stopColor="#ffd9ea" />
+          <stop offset="0.75" stopColor="#7a0c3c" />
+          <stop offset="1" stopColor="#ff8ab8" />
+        </linearGradient>
+        <linearGradient id="rim3d-note" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff8d6" />
+          <stop offset="0.3" stopColor="#e8b828" />
+          <stop offset="0.5" stopColor="#fff2b0" />
+          <stop offset="0.75" stopColor="#6e4c00" />
+          <stop offset="1" stopColor="#ffd84a" />
+        </linearGradient>
         <linearGradient id="pedestal3d" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff3c8" />
           <stop offset="0.45" stopColor="#c9963a" />
@@ -70,8 +91,8 @@ export function GlyphDefs() {
   );
 }
 
-/** Metal rim with four diamond studs over a round skill emblem: blue for active skills, purple for passive. */
-export function Rim({ kind }: { kind: "active" | "passive" }) {
+/** Metal rim with four diamond studs over a round skill emblem, in the colour of the skill's kind. */
+export function Rim({ kind }: { kind: SkillKind }) {
   const metal = `url(#rim3d-${kind})`;
   return (
     <svg className="rim3d" viewBox="0 0 100 100" aria-hidden="true">
@@ -132,18 +153,23 @@ export function Crystal({ tone }: { tone: SheetTone }) {
   );
 }
 
-/** Action tile: dark plate in a glowing frame, the 3D crystal, and beside it the label and the mana it costs. */
+/**
+ * Action tile in the Lục Thần style: dark plate in a glowing frame, the emblem on top, the label under it with
+ * the mana it costs. Triệu hồi and Dung hợp show the 3D crystal on its ring; Hiến tế keeps its round emblem,
+ * and its mana gem is red.
+ */
 export function ActionButton({ action, mini = false }: { action: SheetAction; mini?: boolean }) {
+  const crystal = action.tone !== "red";
   return (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={action.onPress}>
-      <span className="act3d-ico">
-        <Crystal tone={action.tone} />
+      <span className={`act3d-ico${crystal ? " is-crystal" : ""}`}>
+        {crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
       </span>
       <span className="act3d-label">
         {tr(action.label)}
         {action.cost > 0 ? (
           <span className="act3d-cost">
-            <i className="mana-gem" />
+            <i className={`mana-gem${action.tone === "red" ? " is-red" : ""}`} />
             <b>{action.cost}</b>
           </span>
         ) : null}
@@ -153,8 +179,9 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
 }
 
 /**
- * Monster sheet: active skills (blue rings) and passive skills (purple rings) on top, the card as it looks on
- * the field with its name and actions beside it, and the description of whichever icon was tapped below.
+ * Monster sheet: skills pressed on the board (blue, red for the risky ones, pink for the spell-like ones) on
+ * top, passive skills (purple) and Lưu ý (yellow) under them; the card as it looks on the field with its name
+ * and actions beside it; and the description of whichever icon was tapped, with its mana cost, below.
  */
 export function MonsterSheet({
   name,
@@ -177,9 +204,11 @@ export function MonsterSheet({
 }) {
   const [picked, setPicked] = useState(0);
   useEffect(() => setPicked(0), [name]);
-  const actives = skills.map((skill, index) => ({ skill, index })).filter((item) => item.skill.kind === "active");
-  const passives = skills.map((skill, index) => ({ skill, index })).filter((item) => item.skill.kind === "passive");
+  const listed = skills.map((skill, index) => ({ skill, index }));
+  const actives = listed.filter((item) => item.skill.kind === "active" || item.skill.kind === "risk" || item.skill.kind === "spell");
+  const passives = listed.filter((item) => item.skill.kind === "passive" || item.skill.kind === "note");
   const shown = skills[picked];
+  const cost = shown ? skillCost(shown.text) : "";
   const row = (list: typeof actives) =>
     list.length ? (
       <div className="msheet-row">
@@ -233,7 +262,15 @@ export function MonsterSheet({
         <div className="msheet-desc">
           {shown ? (
             <>
-              <b className={`msheet-desc-title is-${shown.kind}`}>{tr(shown.name)}</b>
+              <b className={`msheet-desc-title is-${shown.kind}`}>
+                {tr(shown.name)}
+                {cost ? (
+                  <span className="act3d-cost">
+                    <i className="mana-gem" />
+                    <b>{cost}</b>
+                  </span>
+                ) : null}
+              </b>
               {shown.text ? (
                 <p className="ink-skill">
                   <CopyText text={shown.text} />

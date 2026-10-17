@@ -342,9 +342,129 @@ function pad(audio: AudioContext, start: number, freq: number, dur: number, leve
   air.stop(start + dur + 0.02);
 }
 
+/** Noise through a band that sweeps, with the given band width: the body of a whoosh or a hiss. */
+function noiseBand(audio: AudioContext, start: number, dur: number, from: number, to: number, q: number) {
+  const frames = Math.max(1, Math.floor(audio.sampleRate * dur));
+  const buffer = audio.createBuffer(1, frames, audio.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+  const node = audio.createBufferSource();
+  const band = audio.createBiquadFilter();
+  node.buffer = buffer;
+  band.type = "bandpass";
+  band.Q.value = q;
+  band.frequency.setValueAtTime(from, start);
+  band.frequency.exponentialRampToValueAtTime(to, start + dur);
+  node.connect(band);
+  node.start(start);
+  node.stop(start + dur + 0.02);
+  return { node, band };
+}
+
+/** The whirlpool: rushing air that circles left and right faster and faster as it is drawn in and rises. */
+function whirl(audio: AudioContext, start: number, dur: number, level: number) {
+  const { band } = noiseBand(audio, start, dur, 600, 2600, 2.6);
+  const lfo = audio.createOscillator();
+  const sweep = audio.createGain();
+  const amp = audio.createGain();
+  lfo.frequency.setValueAtTime(2.2, start);
+  lfo.frequency.exponentialRampToValueAtTime(13, start + dur * 0.85);
+  sweep.gain.value = 420;
+  lfo.connect(sweep);
+  sweep.connect(band.frequency);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + dur * 0.8);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  band.connect(amp);
+  const pan = typeof audio.createStereoPanner === "function" ? audio.createStereoPanner() : null;
+  if (pan) {
+    const swing = audio.createGain();
+    swing.gain.value = 0.75;
+    lfo.connect(swing);
+    swing.connect(pan.pan);
+    amp.connect(pan);
+    pan.connect(audio.destination);
+  } else amp.connect(audio.destination);
+  lfo.start(start);
+  lfo.stop(start + dur + 0.02);
+}
+
+/** A deep roar that throbs faster as it grows: the pull of the fusion and its flash. */
+function rumble(audio: AudioContext, start: number, dur: number, peak: number, level: number) {
+  const saw = audio.createOscillator();
+  const sub = audio.createOscillator();
+  const low = audio.createBiquadFilter();
+  const throb = audio.createGain();
+  const lfo = audio.createOscillator();
+  const depth = audio.createGain();
+  const amp = audio.createGain();
+  const { band: air } = noiseBand(audio, start, dur, 140, 320, 0.8);
+  saw.type = "sawtooth";
+  sub.type = "sine";
+  saw.frequency.setValueAtTime(48, start);
+  saw.frequency.exponentialRampToValueAtTime(86, start + peak);
+  sub.frequency.setValueAtTime(36, start);
+  sub.frequency.exponentialRampToValueAtTime(54, start + peak);
+  low.type = "lowpass";
+  low.Q.value = 2.5;
+  low.frequency.setValueAtTime(180, start);
+  low.frequency.exponentialRampToValueAtTime(420, start + peak);
+  low.frequency.exponentialRampToValueAtTime(160, start + dur);
+  lfo.frequency.setValueAtTime(6, start);
+  lfo.frequency.linearRampToValueAtTime(12, start + peak);
+  depth.gain.value = 0.45;
+  throb.gain.value = 0.55;
+  lfo.connect(depth);
+  depth.connect(throb.gain);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + peak);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  saw.connect(low);
+  sub.connect(low);
+  air.connect(low);
+  low.connect(throb);
+  throb.connect(amp);
+  amp.connect(audio.destination);
+  for (const node of [saw, sub, lfo]) {
+    node.start(start);
+    node.stop(start + dur + 0.02);
+  }
+}
+
+/** A bright, trembling ring high above the roar while the light bursts and the screen whites out. */
+function shimmer(audio: AudioContext, start: number, dur: number, level: number) {
+  const amp = audio.createGain();
+  const lfo = audio.createOscillator();
+  const depth = audio.createGain();
+  const shake = audio.createGain();
+  lfo.frequency.value = 9;
+  depth.gain.value = 0.35;
+  shake.gain.value = 0.65;
+  lfo.connect(depth);
+  depth.connect(shake.gain);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + dur * 0.3);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  for (const freq of [1975.5, 2093, 2217.5]) {
+    const osc = audio.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, start);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.06, start + dur);
+    osc.connect(shake);
+    osc.start(start);
+    osc.stop(start + dur + 0.02);
+  }
+  shake.connect(amp);
+  amp.connect(audio.destination);
+  lfo.start(start);
+  lfo.stop(start + dur + 0.02);
+}
+
 /**
- * Fusion, timed to the scene: the card sweeps onto its partner (rising wind), the two flare into a star
- * (glass chimes), the screen whites out (a huge airy swell with a choir), and the new monster rings in.
+ * Fusion, on the beats of the scene (FUSE_BEATS in fuse-dance.tsx): both monsters rise (wind), rush in and smash
+ * (a heavy metal hit), spring apart (a whoosh), circle into the whirlpool (rushing air swinging left and right,
+ * faster and faster) over a deep throbbing roar that peaks with the flash (glass chimes and a trembling ring), the
+ * screen whites out (an airy swell with a choir), the fused monster turns in (a whoosh) and rings in.
  */
 function fuseRite(delay: number) {
   whenReady(() => {
@@ -353,16 +473,26 @@ function fuseRite(delay: number) {
     const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
     if (vol <= 0) return;
     const t = audio.currentTime + delay;
-    noiseBurst(audio, t, 0.85, 250, 2600, 0.16 * vol);
-    tone(330, delay + 0.05, 0.8, "sine", 0.02, 660);
-    const flare = t + 0.9;
-    for (const [freq, at] of [[1568, 0], [2093, 0.05], [2637, 0.1], [3136, 0.15], [3951, 0.2], [2637, 0.3], [3520, 0.38]] as const) bell(audio, flare + at, freq, 0.9, 0.05 * vol);
-    noiseBurst(audio, flare, 0.8, 5200, 9000, 0.07 * vol);
-    const white = t + 1.65;
-    noiseBurst(audio, white, 1.3, 180, 6200, 0.3 * vol);
-    thump(audio, white + 0.05, 0.55 * vol);
-    for (const freq of [220, 277.2, 329.6, 440]) pad(audio, white, freq, 1.9, 0.06 * vol);
-    const ring = t + 2.5;
+    noiseBurst(audio, t, 0.55, 300, 1800, 0.14 * vol);
+    noiseBurst(audio, t + 0.56, 0.22, 900, 3200, 0.12 * vol);
+    const hit = t + 0.78;
+    thump(audio, hit, 0.9 * vol);
+    thump(audio, hit + 0.04, 0.5 * vol);
+    for (const [freq, at] of [[1318.5, 0], [1975.5, 0.005], [2793.8, 0.01], [3729.3, 0.015]] as const) bell(audio, hit + at, freq, 0.6, 0.05 * vol);
+    noiseBurst(audio, hit, 0.3, 3200, 400, 0.24 * vol);
+    noiseBurst(audio, hit + 0.02, 0.38, 1800, 420, 0.12 * vol);
+    whirl(audio, t + 1.2, 1.45, 0.2 * vol);
+    rumble(audio, t + 1.65, 1.95, 1.0, 0.34 * vol);
+    const flash = t + 2.3;
+    for (const [freq, at] of [[2093, 0], [2637, 0.04], [3136, 0.08], [3951, 0.12], [4699, 0.16]] as const) bell(audio, flash + at, freq, 1.0, 0.045 * vol);
+    noiseBurst(audio, flash, 0.8, 5200, 9000, 0.07 * vol);
+    shimmer(audio, flash, 1.2, 0.035 * vol);
+    const white = t + 2.84;
+    noiseBurst(audio, white, 1.2, 180, 6200, 0.26 * vol);
+    thump(audio, white, 0.5 * vol);
+    for (const freq of [220, 277.2, 329.6, 440]) pad(audio, white, freq, 1.6, 0.05 * vol);
+    noiseBurst(audio, t + 3.08, 0.4, 600, 2600, 0.1 * vol);
+    const ring = t + 3.4;
     for (const [freq, at] of [[523.3, 0], [659.3, 0.04], [784, 0.08], [1046.5, 0.12]] as const) bell(audio, ring + at, freq, 1.4, 0.08 * vol);
   });
 }

@@ -7,9 +7,9 @@ const source = process.argv[2];
 if (!source) throw new Error("Pass the path to @iconify-json/game-icons icons.json");
 const set = JSON.parse(fs.readFileSync(source, "utf8"));
 const book = fs.readFileSync(new URL("../src/lib/skill-book.ts", import.meta.url), "utf8");
-const names = new Set([...book.matchAll(/\b(?:A|P|AP|PP)\("[^"]+", "([^"]+)"/g)].map((hit) => hit[1]));
+const names = new Set([...book.matchAll(/\b(?:A|P|R|S|AP|PP|RP|SP)\("[^"]+", "([^"]+)"/g)].map((hit) => hit[1]));
 // Action buttons on the monster sheet.
-for (const extra of ["up-card", "candle-skull", "linked-rings", "info"]) names.add(extra);
+for (const extra of ["candle-skull", "info"]) names.add(extra);
 const out = {};
 for (const name of [...names].sort()) {
   const icon = set.icons[name];

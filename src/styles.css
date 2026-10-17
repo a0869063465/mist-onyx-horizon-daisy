@@ -6095,6 +6095,9 @@ button.watch-back {
   background: none;
 }
 .sk3d.is-passive { --ring: #b45cff; --deep: #2a0d4a; }
+.sk3d.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.sk3d.is-spell { --ring: #ff4f93; --deep: #4a0622; }
+.sk3d.is-note { --ring: #ffd23c; --deep: #4a3400; }
 .sk3d-gem {
   position: relative;
   width: 3.15rem;
@@ -6193,21 +6196,26 @@ button.watch-back {
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 0 #3a2200) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.8));
 }
-/* Action tiles: dark plate in a glowing frame, the 3D crystal on its pedestal, the label beside it.
-   Triệu hồi gold, Hiến tế red, Dung hợp purple, a fused monster's summon purple over red. */
+/* Action tiles in the Lục Thần style: dark plate in a glowing frame, emblem on top, label under it.
+   Triệu hồi (gold) and Dung hợp (purple) show the 3D crystal on its ring; Hiến tế (red) keeps its round
+   emblem. A fused monster's summon is purple over red. */
+.msheet-acts { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .act3d {
   --tone: #e9c46a;
   --glow: rgba(233, 196, 106, 0.55);
   position: relative;
-  display: flex;
+  min-width: 4.9rem;
+  min-height: 5.1rem;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  justify-items: center;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 3.5rem;
-  padding: 0.2rem 0.75rem 0.2rem 0.25rem;
+  gap: 0.15rem;
+  padding: 0.4rem 0.45rem 0.35rem;
   border: 2px solid var(--tone);
   border-radius: 0.85rem;
   background:
-    radial-gradient(90% 70% at 25% 50%, rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(90% 60% at 50% 30%, rgba(255, 255, 255, 0.08), transparent 70%),
     linear-gradient(180deg, #2c2b2f 0%, #141316 55%, #08080a 100%);
   box-shadow:
     0 0 0 1px #000,
@@ -6216,32 +6224,48 @@ button.watch-back {
     inset 0 -0.6rem 0.9rem rgba(0, 0, 0, 0.6),
     0 0.45rem 0.7rem rgba(0, 0, 0, 0.65);
   color: #fff;
-  transition: transform 90ms ease-out;
+  transition: transform 90ms ease-out, box-shadow 120ms ease-out;
   animation: act3d-glow 1.8s ease-in-out infinite;
 }
 @keyframes act3d-glow {
   50% { box-shadow: 0 0 0 1px #000, 0 0 20px 6px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -0.6rem 0.9rem rgba(0, 0, 0, 0.6), 0 0.45rem 0.7rem rgba(0, 0, 0, 0.65); }
 }
-.act3d:active { transform: translateY(2px) scale(0.96); }
+.act3d:active { transform: translateY(2px) scale(0.95); }
 .act3d.is-red { --tone: #ff5a3c; --glow: rgba(255, 70, 40, 0.55); }
 .act3d.is-purple { --tone: #c27aff; --glow: rgba(180, 92, 255, 0.55); }
 .act3d.is-fuse {
   --glow: rgba(238, 91, 255, 0.5);
   border-color: transparent;
   background:
-    radial-gradient(90% 70% at 25% 50%, rgba(255, 255, 255, 0.07), transparent 70%) padding-box,
+    radial-gradient(90% 60% at 50% 30%, rgba(255, 255, 255, 0.08), transparent 70%) padding-box,
     linear-gradient(180deg, #2c2b2f 0%, #141316 55%, #08080a 100%) padding-box,
     linear-gradient(180deg, #ee5bff 0 50%, #ff2d2d 50% 100%) border-box;
 }
-.act3d-ico { flex: none; width: 3.3rem; height: 3.9rem; margin: -0.35rem 0 -0.25rem; display: grid; place-items: center; }
+.act3d-ico {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 32%, #303034 0%, #0b0b0d 70%);
+  box-shadow:
+    0 0 0 2px var(--tone),
+    0 0 0 3.5px #000,
+    0 0 10px var(--glow),
+    inset 0 0.15rem 0.3rem rgba(255, 255, 255, 0.16),
+    inset 0 -0.3rem 0.5rem rgba(0, 0, 0, 0.85);
+}
+.act3d-ico .glyph3d { width: 62%; height: 62%; filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 4px var(--glow)); }
+/* The crystal stands on its own ring, so it has no round plate behind it. */
+.act3d-ico.is-crystal { width: 3.1rem; height: 3.5rem; margin-top: -0.3rem; border-radius: 0; background: none; box-shadow: none; }
 .crystal3d { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.7)); }
 .crystal3d-gem { animation: crystal-bob 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
 @keyframes crystal-bob { 50% { transform: translateY(-3px); } }
 .act3d-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.86rem;
+  gap: 0.2rem;
+  font-size: 0.74rem;
   font-weight: 900;
   line-height: 1.05;
   white-space: nowrap;
@@ -6249,20 +6273,26 @@ button.watch-back {
   -webkit-text-stroke: 0.4px #000;
   text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 2px 3px rgba(0, 0, 0, 0.8);
 }
-.act3d-cost { display: inline-flex; align-items: center; gap: 0.15rem; }
-.act3d-cost b { color: #9ef4ff; font-size: 0.86rem; font-weight: 900; -webkit-text-stroke: 0.4px #06243f; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
+.act3d-cost { display: inline-flex; align-items: center; gap: 0.12rem; }
+.act3d-cost b { color: #9ef4ff; font-size: 0.8rem; font-weight: 900; -webkit-text-stroke: 0.4px #06243f; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
 .mana-gem {
-  width: 0.62rem;
-  height: 0.62rem;
+  width: 0.6rem;
+  height: 0.6rem;
   transform: rotate(45deg);
   border-radius: 0.1rem;
   background: linear-gradient(135deg, #f2feff 0%, #7fe0ff 30%, #3ec6ff 55%, #0d5fae 100%);
   box-shadow: 0 0 6px #3ec6ff, inset 0 0 2px #fff, 0 0 0 1px #06243f;
 }
-.act3d.is-mini { min-height: 2.9rem; padding: 0.15rem 0.6rem 0.15rem 0.2rem; }
-.act3d.is-mini .act3d-ico { width: 2.6rem; height: 3.1rem; margin: -0.25rem 0 -0.2rem; }
-.act3d.is-mini .act3d-label { font-size: 0.76rem; }
-.msheet-acts { display: grid; gap: 0.5rem; justify-items: start; }
+/* Hiến tế's mana gem is red. */
+.mana-gem.is-red {
+  background: linear-gradient(135deg, #fff0ec 0%, #ff9a86 30%, #ff3a24 55%, #8a0c02 100%);
+  box-shadow: 0 0 6px #ff3a24, inset 0 0 2px #fff, 0 0 0 1px #3f0602;
+}
+.mana-gem.is-red + b { color: #ffb4a6; -webkit-text-stroke: 0.4px #3f0602; text-shadow: 0 1px 0 #3f0602, 0 0 6px #ff3a24; }
+.act3d.is-mini { min-width: 4.1rem; min-height: 4.3rem; padding: 0.3rem 0.35rem 0.3rem; }
+.act3d.is-mini .act3d-ico { width: 2.45rem; height: 2.45rem; }
+.act3d.is-mini .act3d-ico.is-crystal { width: 2.6rem; height: 2.9rem; }
+.act3d.is-mini .act3d-label { font-size: 0.66rem; }
 .msheet-desc {
   margin-top: 0.75rem;
   padding: 0.55rem 0.75rem 0.65rem;
@@ -6283,6 +6313,11 @@ button.watch-back {
   text-shadow: 0 2px 0 #021426, 0 0 8px rgba(62, 198, 255, 0.55);
 }
 .msheet-desc-title.is-passive { color: #dcb2ff; text-shadow: 0 2px 0 #1a0632, 0 0 8px rgba(180, 92, 255, 0.55); }
+.msheet-desc-title.is-risk { color: #ff9a86; text-shadow: 0 2px 0 #3a0602, 0 0 8px rgba(255, 74, 53, 0.55); }
+.msheet-desc-title.is-spell { color: #ff9cc4; text-shadow: 0 2px 0 #3a0418, 0 0 8px rgba(255, 79, 147, 0.55); }
+.msheet-desc-title.is-note { color: #ffe27a; text-shadow: 0 2px 0 #3a2a00, 0 0 8px rgba(255, 210, 60, 0.55); }
+.msheet-desc-title { display: flex; align-items: center; gap: 0.35rem; }
+.msheet-desc-title .act3d-cost b { font-size: 0.9rem; }
 .msheet-note { color: #ffb347; font-weight: 800; }
 .msheet-empty { color: #b9b2a0; }
 
@@ -6319,9 +6354,11 @@ button.watch-back {
 }
 .vow3d-no:active { transform: translateY(0.2rem); box-shadow: 0 0.02rem 0 #07090d, inset 0 1px 0 rgba(255, 255, 255, 0.25); }
 
-/* Fusion, after the reference video: the board goes dark (no tilt); the hand card sweeps onto its partner at
-   field size; the two flare into a white star with long streaks; the screen whites out with drifting sparkles;
-   the fused card shows large out of the white; after Triệu hồi it lays down onto its slot. */
+/* Fusion, after the owner's second reference video. The two cards are moved by FuseDance (fuse-dance.tsx): they
+   rise, smash, spring apart and are sucked into each other on a whirlpool, standing upright. Here: the board goes
+   dark (no tilt), a glow gathers between the cards and bursts into a flash with violet rays, the screen whites out
+   and clears with drifting specks, the fused monster turns a little on its upright axis as it appears, and after
+   Triệu hồi it lays down onto its slot. */
 .diorama { transition: filter 500ms ease; }
 .board.is-fusing .diorama { filter: brightness(0.3) saturate(0.75); }
 .fuse3d {
@@ -6332,82 +6369,104 @@ button.watch-back {
   perspective: 900px;
   background: radial-gradient(90% 70% at 50% 45%, rgba(20, 10, 40, 0.25), rgba(0, 0, 0, 0.5));
 }
+.fuse3d-dance { position: absolute; inset: 0; }
 .fuse3d-card {
   position: absolute;
-  left: var(--x0);
-  top: var(--y0);
-  width: var(--w0);
+  left: 50%;
+  top: 44%;
+  width: 26%;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.8));
+  will-change: transform, left, top, filter;
 }
-.fuse3d-card.is-b { left: var(--bx); top: var(--by); width: var(--wb); }
-.fuse3d.is-meet .fuse3d-card.is-a { animation: fuse-sweep 0.9s cubic-bezier(0.55, 0, 0.3, 1) forwards; }
-@keyframes fuse-sweep {
-  0% { left: var(--x0); top: var(--y0); width: var(--w0); transform: translate(-50%, -50%) rotate(0deg); }
-  75% { left: calc(var(--bx) + 3%); top: calc(var(--by) - 4%); width: var(--wb); transform: translate(-50%, -50%) rotate(-7deg); }
-  100% { left: calc(var(--bx) + 2%); top: calc(var(--by) - 2%); width: var(--wb); transform: translate(-50%, -50%) rotate(-4deg); }
-}
-.fuse3d.is-flare .fuse3d-card.is-a { left: calc(var(--bx) + 2%); top: calc(var(--by) - 2%); width: var(--wb); transform: translate(-50%, -50%) rotate(-4deg); }
-.fuse3d.is-flare .fuse3d-card { animation: fuse-glow 0.75s ease-in forwards; }
-@keyframes fuse-glow {
-  to { filter: brightness(4) drop-shadow(0 0 18px #ffffff); opacity: 0.4; }
-}
-/* The flare: a white core with long cross streaks, thin diagonals and a wide horizontal glint. */
-.fuse3d-star { position: absolute; left: var(--bx); top: var(--by); width: 0; height: 0; z-index: 3; }
-.fuse3d-star i { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: 999px; animation: star-grow 0.75s cubic-bezier(0.3, 0, 0.3, 1) both; }
-.fuse3d-star .is-core {
-  width: 30vmin;
-  height: 30vmin;
-  translate: -50% -50%;
-  background: radial-gradient(circle, #ffffff 0%, #ffffff 16%, rgba(255, 236, 255, 0.85) 30%, rgba(230, 170, 255, 0.35) 55%, transparent 72%);
-}
-.fuse3d-star .is-x, .fuse3d-star .is-y, .fuse3d-star .is-d1, .fuse3d-star .is-d2, .fuse3d-star .is-wide {
-  width: 120vmin;
-  height: 1.6vmin;
-  translate: -50% -50%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 220, 255, 0.5) 30%, #ffffff 50%, rgba(255, 220, 255, 0.5) 70%, transparent 100%);
-}
-.fuse3d-star .is-y { rotate: 90deg; }
-.fuse3d-star .is-d1 { rotate: 45deg; width: 60vmin; height: 0.9vmin; }
-.fuse3d-star .is-d2 { rotate: -45deg; width: 60vmin; height: 0.9vmin; }
-.fuse3d-star .is-wide { width: 180vmin; height: 3vmin; opacity: 0.6; filter: blur(2px); }
-@keyframes star-grow {
-  0% { scale: 0.05; opacity: 0; }
-  25% { opacity: 1; }
-  100% { scale: 1.15; opacity: 1; }
-}
-/* Whiteout with drifting, twinkling sparkles; it lifts as the fused card arrives. */
-.fuse3d-white { position: absolute; inset: 0; z-index: 4; background: #ffffff; animation: white-in 0.35s ease-out both; }
-.fuse3d.is-card .fuse3d-white { animation: white-out 0.9s ease-in forwards; }
-@keyframes white-in { from { opacity: 0; } }
-@keyframes white-out { from { opacity: 1; } to { opacity: 0; } }
-.fuse3d-white i {
+.fuse3d-glow {
   position: absolute;
-  width: calc(4.5vmin * var(--s));
+  left: 50%;
+  top: 44%;
+  z-index: 4;
+  width: 46vmin;
   aspect-ratio: 1;
-  background: radial-gradient(circle, #ffffff 0 18%, rgba(200, 140, 255, 0.9) 32%, transparent 62%);
-  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
-  filter: drop-shadow(0 0 3px #d9a6ff);
-  animation: sparkle-drift var(--t) ease-in-out var(--dl) infinite;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffffff 0 14%, rgba(255, 236, 255, 0.85) 26%, rgba(206, 150, 255, 0.4) 46%, transparent 68%);
+  mix-blend-mode: screen;
 }
-@keyframes sparkle-drift {
-  0% { transform: translateY(0) scale(0.4) rotate(0deg); opacity: 0; }
-  40% { opacity: 1; }
-  100% { transform: translateY(-9vmin) scale(1.1) rotate(45deg); opacity: 0; }
+.fuse3d.is-swirl .fuse3d-glow { animation: glow-gather 1.1s cubic-bezier(0.6, 0, 0.9, 0.5) both; }
+.fuse3d.is-flash .fuse3d-glow { animation: glow-burst 0.56s ease-out both; }
+.fuse3d.is-turn .fuse3d-glow { animation: glow-fade 0.6s ease-out both; }
+@keyframes glow-gather {
+  0% { scale: 0.1; opacity: 0; }
+  45% { opacity: 0.35; }
+  100% { scale: 0.9; opacity: 1; }
 }
+@keyframes glow-burst { from { scale: 0.9; } to { scale: 1.6; } }
+@keyframes glow-fade { from { scale: 1.6; opacity: 1; } to { scale: 1.1; opacity: 0; } }
+/* The flash: a white core and long violet rays, most of them upward, flickering as they grow. */
+.fuse3d-star { position: absolute; left: 50%; top: 44%; z-index: 5; width: 0; height: 0; }
+.fuse3d-star i { position: absolute; left: 0; top: 0; }
+.fuse3d-star .is-core {
+  width: 40vmin;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0 18%, rgba(255, 240, 255, 0.9) 30%, rgba(214, 160, 255, 0.45) 52%, transparent 72%);
+  animation: star-core 0.56s ease-out both;
+}
+.fuse3d-star .is-ray {
+  width: var(--l);
+  height: var(--h);
+  margin-top: calc(var(--h) / -2);
+  transform-origin: 0 50%;
+  rotate: var(--a);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(240, 214, 255, 0.95) 18%, rgba(190, 130, 255, 0.55) 55%, transparent 100%);
+  filter: drop-shadow(0 0 0.8vmin rgba(200, 140, 255, 0.9));
+  animation: star-ray 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) var(--dl) both, ray-flicker 0.12s steps(2) var(--dl) infinite;
+}
+@keyframes star-core { from { scale: 0.5; opacity: 0.6; } to { scale: 1.5; opacity: 1; } }
+@keyframes star-ray {
+  0% { scale: 0 1; opacity: 0; }
+  30% { opacity: 1; }
+  100% { scale: 1 1; opacity: 0.95; }
+}
+@keyframes ray-flicker { 50% { filter: drop-shadow(0 0 1.4vmin rgba(225, 180, 255, 1)) brightness(1.3); } }
+/* Whiteout at the end of the flash, clearing as the fused monster turns in. */
+.fuse3d-white { position: absolute; inset: 0; z-index: 6; background: #ffffff; opacity: 0; pointer-events: none; }
+.fuse3d.is-flash .fuse3d-white { animation: white-in 0.2s ease-in 0.34s forwards; }
+.fuse3d.is-turn .fuse3d-white { opacity: 1; animation: white-out 0.45s ease-out forwards; }
+@keyframes white-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes white-out { from { opacity: 1; } to { opacity: 0; } }
+.fuse3d-dust { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.fuse3d-dust i {
+  position: absolute;
+  width: calc(0.9vmin * var(--s));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 1.2vmin rgba(225, 190, 255, 0.95);
+  animation: dust-rise var(--t) ease-out var(--dl) both;
+}
+@keyframes dust-rise {
+  0% { opacity: 0; transform: translateY(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8vmin); }
+}
+/* The fused monster, standing: it turns in from an angle on its upright axis, a touch past front, and settles. */
 .fuse3d-big {
   position: absolute;
   left: 50%;
   top: 44%;
+  z-index: 8;
   width: 46%;
   transform: translate(-50%, -50%);
-  z-index: 5;
-  filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.7)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85));
+  filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.55)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85));
 }
-.fuse3d.is-card .fuse3d-big { animation: fuse-big 0.9s ease-out both; }
-@keyframes fuse-big {
-  from { opacity: 0; filter: brightness(3) drop-shadow(0 0 30px #ffffff); transform: translate(-50%, -50%) scale(0.92); }
-  to { opacity: 1; filter: brightness(1) drop-shadow(0 0 18px rgba(255, 255, 255, 0.7)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85)); transform: translate(-50%, -50%) scale(1); }
+.fuse3d.is-turn .fuse3d-big { animation: fuse-turn 0.64s cubic-bezier(0.25, 0.75, 0.35, 1) 0.22s both; }
+@keyframes fuse-turn {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotateY(64deg) scale(1.06); filter: brightness(2.2) drop-shadow(0 0 30px #ffffff); }
+  18% { opacity: 1; }
+  72% { transform: translate(-50%, -50%) rotateY(-6deg) scale(1.01); }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotateY(0deg) scale(1); filter: brightness(1) drop-shadow(0 0 18px rgba(255, 255, 255, 0.55)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.85)); }
 }
 .fuse3d.is-land .fuse3d-big { animation: fuse-land 0.75s cubic-bezier(0.45, 0, 0.6, 1) forwards; }
 @keyframes fuse-land {
