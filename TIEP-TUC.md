@@ -16,14 +16,14 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 
 ## Đang chờ chủ game trả lời (hỏi lại nếu cần, đừng tự quyết)
 
-- Hướng dẫn chơi mở từ đâu (chủ game trả lời "c", chưa rõ). Nút tạm ở Chọn cách chơi.
-- Phù thuỷ thời gian có tính là quái máy móc (Cứ địa máy móc) không. Đang tính.
-- Cứ địa máy móc: áo giáp vỡ rồi thì mất đến khi quái rời sân (đang làm vậy, chủ game chưa xác nhận). Đang dùng ảnh bàn số 3; cặp ảnh 1 và 2 (trên/dưới) cũng dùng được nếu chủ game muốn.
-- Thánh địa thiên sứ: lá chắn chỉ chặn đánh thường và skill, không chặn phép (đang làm vậy). Mô tả lá đã bỏ đoạn trong ngoặc giải thích thiên sứ/yêu tinh/tinh linh; thêm lại nếu chủ game muốn. Danh sách thuật sư buff và chiến binh thiên sứ: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
-- Cục bông ma quái: bản sao do Pháo kích tạo mang theo kỹ năng chưa dùng của bản chính (mỗi bản sao tự nhân bản được 1 lần); "tối đa 4 con" chỉ là trần vì sân 3 ô. Chủ game chưa xác nhận.
-- Mọc chân (Kén ngài) tốn 1 mana nhưng mô tả chưa ghi nên không hiện ngọc; "khoãng" trong mô tả Hiến Tế giữ nguyên. Chưa trả lời.
-- Màu chữ điểm nhấn: đã áp vào mô tả kỹ năng trên bảng quái; nếu chủ game muốn chỗ khác thì đổi.
-- Nền màn tải game/trận: chủ game sẽ gửi ảnh.
+- Hướng dẫn chơi mở từ đâu: chủ game nói để sau (18/10). Nút tạm ở Chọn cách chơi.
+- Phù thuỷ thời gian KHÔNG tính là quái máy móc (chủ game chốt 18/10). Không đổi gì.
+- Cứ địa máy móc: áo giáp vỡ rồi thì mất đến khi quái rời sân, dùng ảnh bàn số 3 (chủ game chốt 18/10).
+- Thánh địa thiên sứ: "lá chắn" chỉ là chữ của Claude, chữ lá không có. Đoạn trong ngoặc là chủ game viết cho Claude đọc, không đưa vào lá (bỏ là đúng). Còn hỏi: "không thể tấn công" có gồm phép nhắm vào quái không (hiện chỉ chặn đánh thường và skill). Chiến binh thiên sứ/thuật sư: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
+- Cục bông ma quái: chủ game giải thích (18/10) giới hạn là mana, không phải ô sân: đầy 3 ô, nổ gốc + 1 bản sao, bản sao còn lại nhân tiếp. Code Pháo kích hiện đã cho làm vậy (bản sao mang Pháo kích chưa dùng), không đổi.
+- Mọc chân (Kén ngài) = phần kèm của Hoá Kén (Sâu non), chủ game xác nhận hướng. Chủ game muốn kỹ năng kèm nhau có thanh kim loại (giống vành icon) nối các icon. Đang hỏi: nối những cặp nào, trên bảng quái nào.
+- Màu chữ điểm nhấn: để sau (đang áp vào mô tả kỹ năng trên bảng quái).
+- Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh.
 
 ## Mẹo khi trả lời chủ game
 
