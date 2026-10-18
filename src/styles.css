@@ -6548,6 +6548,25 @@ button.watch-back {
 .msheet-desc b.ink-star2 { color: #ffe14a; }
 .msheet-desc b.ink-star3 { color: #ff3b3b; }
 .msheet-desc b.ink-star4 { color: #b44dff; }
+/* The sheet's own colours (sheet-ink.ts): stats, turns, healing, sacrifice, evolving, lifting bad states. */
+.msheet-desc b.ink-sheet-turn,
+.msheet-desc b.ink-sheet-atk { color: #ff7a1a; }
+.msheet-desc b.ink-sheet-blood { color: #ff3b3b; }
+.msheet-desc b.ink-sheet-def { color: #ffbe0b; }
+.msheet-desc b.ink-sheet-mdef { color: #c084fc; }
+.msheet-desc b.ink-sheet-guard {
+  color: #ffbe0b;
+  background-image: linear-gradient(to bottom, #ffbe0b 0 52%, #b45cff 52% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.msheet-desc b.ink-sheet-hp { color: #3ddc6a; }
+.msheet-desc b.ink-sheet-evo { color: #ff7ad9; }
+.msheet-desc b.ink-sheet-clean { color: #6fb6ff; }
+.msheet-desc b.ink-sheet-mute { color: #c3c8d2; }
 
 /* Rút quái, Rút phép, Hết lượt (and OK while answering): new glass buttons in the same colours, orange,
    purple, red and blue. A dark smoked-glass body, a thin bright edge in the button's colour, a glowing icon

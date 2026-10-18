@@ -541,6 +541,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng quái: kỹ năng đi kèm nhau được nối bằng thanh kim loại. Hoá Kén nối với Chân kén và Nở, Vệt lửa nối với Truy cùng diệt tận và Hoả thần long, Kỵ pháp nối với Chiến ý.",
   "Bảng quái của Kén ngài bỏ icon Mọc chân, vì kén không tự dùng được. Mọc chân đi kèm Hoá Kén của Sâu non.",
   "Cứ địa máy móc: Phù thuỷ thời gian không phải quái máy móc, không được áo giáp.",
+  "Mô tả trên bảng quái tô màu thêm: số lượt và công màu cam, thủ vàng, thủ phép tím, phòng ngự vàng pha tím, máu và hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải trạng thái bất lợi xanh lam, không thể hành động màu xám. Bảng thông báo giữ màu cũ.",
 ];
 
 function remarkOf(notes: string[]) {

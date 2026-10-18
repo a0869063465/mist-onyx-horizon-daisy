@@ -25,6 +25,7 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Long Hoả (Kiếm sĩ lửa thiêng) đã bỏ khỏi code (18/10, chủ game yêu cầu). Chữ lá vẫn còn đoạn Long Hoả: đã đưa mô tả cũ, chờ chủ game viết mô tả mới. Sát thương Truy cùng diệt tận đọc từ đoạn của nó (`followDmg`), không theo thứ tự số trong chữ lá nữa. Đoạn Long Hoả còn trong chữ lá được chặn bằng `DROPPED_HEADS` (skill-book.ts) để không dính vào Vệt lửa; khi chủ game gửi mô tả mới thì xoá dòng đó.
 - Cơn thịnh nộ của hải vương: chữ lá có skill "Hộ thần" (1 lá chắn vật lý + 1 lá chắn phép), nhưng bảng quái đang tách thành 2 icon "Lá chắn vật lý" / "Lá chắn phép". Đang hỏi chủ game có gộp lại thành 1 icon Hộ thần không.
 - Màu chữ điểm nhấn: để sau (đang áp vào mô tả kỹ năng trên bảng quái).
+- Màu riêng của bảng quái (chủ game chốt 18/10, tô theo mô tả Hiến Tế): `src/components/game/sheet-ink.ts`, chỉ dùng trong `CopyText inked` (bảng quái), bảng thông báo không đổi. Lượt + công cam, thủ vàng, thủ phép tím, phòng ngự gradient vàng→tím, máu/máu tối đa/hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải bất lợi xanh lam, "không thể hành động/tấn công…" xám dễ đọc. Tô cả số đi kèm. Giữ màu bảng thông báo cho chữ khác; trùng vị trí thì chữ dài hơn thắng.
 - Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh.
 
 ## Mẹo khi trả lời chủ game
