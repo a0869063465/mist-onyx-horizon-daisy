@@ -573,7 +573,7 @@ export const PENDING_NOTES: string[] = [
   "Bài hướng dẫn Cơ bản có hình Nàng tiên giữ khoá. Bấm vào là vào hướng dẫn ngay.",
   "Ghi chú kéo thả trong Chỉnh sửa bộ bài là chữ nổi rung rinh, đầu câu có dấu ? vàng. Bấm vào thì tan biến thành dấu ? nhỏ, bấm dấu đó thì hiện lại.",
   "Chỉnh sửa bộ bài: icon chiến thuật và lọc xếp dọc dưới nút lưu, trên nút Đổi hình nền, dàn đều cột bên phải.",  "Chỉnh sửa bộ bài: hàng 1 là nút quái và phép, hạ thấp xuống; hàng 2 là thống kê, lọc và lưu, nút lưu nằm ngay trên nút Đổi hình nền. Các hàng dàn đều.",
-  "Bài hướng dẫn Cơ bản có hình toàn thân Nàng tiên giữ khoá bên trái, quay mặt vào tên bài. Dấu Hoàn thành chuyển sang bên phải.",  "Khung bộ bài ở màn Chọn bộ bài: hộp bộ bài to hơn, vòng chân dung nhỏ lại, tên bộ bài nằm trong khung viền dưới hộp như Legends of Runeterra. Ô Yêu thích và Chỉnh sửa gọn lại.",
+  "Bài hướng dẫn Cơ bản có hình toàn thân Nàng tiên giữ khoá bên trái, quay mặt vào tên bài. Dấu Hoàn thành chuyển sang bên phải.",  "Khung bộ bài ở màn Chọn bộ bài: hộp bộ bài to hơn, vòng chân dung nhỏ lại, tên bộ bài nằm trong khung viền dưới hộp như Legends of Runeterra. Ô Yêu thích và Chỉnh sửa gọn lại.",  "Khung bộ bài giờ là khung ngang giữa màn hình, phía trên và dưới tối; bấm vùng tối để đóng. Hộp bộ bài to hơn nữa, tên bộ bài nằm ngoài khung viền, chữ chế độ chơi sáng và to hơn cho dễ đọc.",
 ];
 
 function remarkOf(notes: string[]) {

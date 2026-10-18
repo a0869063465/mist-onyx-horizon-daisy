@@ -7508,50 +7508,60 @@ button.watch-back {
   box-shadow: 0 0 10px rgba(255, 40, 20, 0.85), 0 2px 4px rgba(0, 0, 0, 0.7);
 }
 
-/* The deck panel: LoR's blue panel sliding in from the right. */
+/* The deck panel: LoR's blue panel as a band across the screen, dark above and below; tapping the dark closes
+   it (owner, 18/10: a band instead of a strip down the right edge). */
 .lor-drawer-back { position: fixed; inset: 0; z-index: 30; background: rgba(6, 4, 4, 0.55); }
+.lor-drawer-back.is-band { display: grid; align-items: center; overflow-y: auto; padding: 1rem 0; background: rgba(4, 3, 3, 0.66); }
 .lor-drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(86vw, 24rem);
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.1rem 1rem calc(1.2rem + env(safe-area-inset-bottom));
-  overflow-y: auto;
+  padding: 1.1rem 1rem 1.15rem;
   background:
     var(--lor-noise),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 2px, rgba(255, 255, 255, 0) 2px 9px),
     linear-gradient(165deg, #2648a4 0%, #1f3d8f 38%, #1a357d 72%, #152c6a 100%);
-  border-left: 2px solid #b08a45;
-  box-shadow: -10px 0 26px rgba(0, 0, 0, 0.65), inset 1px 0 0 rgba(255, 230, 170, 0.25);
-  animation: lor-slide 0.24s ease-out;
+  border-top: 2px solid #b08a45;
+  border-bottom: 2px solid #b08a45;
+  box-shadow: 0 0 34px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 230, 170, 0.25), inset 0 -1px 0 rgba(255, 230, 170, 0.25);
+  animation: lor-band 0.22s ease-out;
+}
+@media (min-width: 30rem) {
+  .lor-drawer { border: 2px solid #b08a45; border-radius: 0.6rem; }
+}
+@keyframes lor-band {
+  from { opacity: 0; transform: scaleY(0.88); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes lor-slide {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+/* The game mode, readable as LoR's: a brighter blue pill in a thick dark rim, cream letters. */
 .lor-pill {
   flex: none;
-  width: 80%;
-  min-height: 2.7rem;
-  border-radius: 0.75rem;
+  width: min(72%, 17rem);
+  min-height: 2.75rem;
+  border-radius: 0.8rem;
   font-family: var(--lor-cond);
-  font-size: 1.05rem;
+  font-size: 1.18rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #d6def3;
-  background: linear-gradient(180deg, #2e50ad 0%, #1f3b8c 100%);
-  border: 2px solid #0b1640;
-  box-shadow: inset 0 0 0 2px #557ad0, inset 0 0 14px rgba(140, 175, 255, 0.35), 0 3px 7px rgba(0, 0, 0, 0.5);
+  color: #f4efe2;
+  text-shadow: 0 1px 2px rgba(8, 16, 52, 0.95);
+  background: linear-gradient(180deg, #4d77da 0%, #3c65c8 48%, #2d53b1 100%);
+  border: 3px solid #0e1534;
+  box-shadow: inset 0 0 0 1px rgba(170, 196, 255, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.55);
 }
 .lor-pill:active { filter: brightness(1.1); }
 /* The portrait between two thin gold lines with little steps. */
-.lor-drawer-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 0.7rem; width: 100%; padding-bottom: 2.4rem; }
+.lor-drawer-body { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%; }
 .lor-portrait-row { position: relative; flex: none; display: grid; place-items: center; width: 100%; padding: 0.2rem 0; }
 .lor-portrait-row::before, .lor-portrait-row::after {
   content: "";
@@ -7578,9 +7588,8 @@ button.watch-back {
 }
 /* A phone's panel is narrow and tall, so the side squares and their columns are slimmer than LoR's and the deck box
    takes the room between them (owner, 18/10: the box looked small and the portrait big). */
-.lor-stage { flex: none; display: grid; grid-template-columns: 3.4rem minmax(0, 13.5rem) 3.4rem; align-items: center; gap: 0.3rem; width: 100%; justify-content: center; }
-.lor-stage-box { position: relative; display: grid; justify-items: center; padding: 0.6rem 0.45rem 0.55rem; }
-.lor-stage-box .lor-title { max-width: 100%; margin-top: 0.35rem; font-size: 1.35rem; line-height: 1.1; }
+.lor-stage { flex: none; display: grid; grid-template-columns: 3.8rem minmax(0, 11.5rem) 3.8rem; align-items: center; gap: 0.35rem; width: 100%; justify-content: center; }
+.lor-stage-box { position: relative; padding: 0.6rem 0.45rem 0.45rem; }
 /* The thin gold bracket around the deck, open at the middle of each side. */
 .lor-stage-box::before {
   content: "";
@@ -7611,7 +7620,7 @@ button.watch-back {
 .lor-square .glyph3d { width: 100%; height: 100%; }
 .lor-square:active { transform: translateY(1px); filter: brightness(0.92); }
 .lor-square.is-fav.on { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 170, 80, 0.6), 0 0 14px rgba(255, 140, 40, 0.65), 0 3px 7px rgba(0, 0, 0, 0.6); }
-.lor-square.is-delete { position: absolute; right: 0.85rem; bottom: calc(0.9rem + env(safe-area-inset-bottom)); width: 2.6rem; height: 2.6rem; padding: 0.5rem; }
+.lor-square.is-delete { position: absolute; right: 0.85rem; bottom: 1.25rem; width: 2.6rem; height: 2.6rem; padding: 0.5rem; }
 .lor-title { flex: none; margin: 0; max-width: 92%; overflow-wrap: anywhere; text-align: center; font-family: var(--lor-cond); font-size: 1.55rem; font-weight: 600; letter-spacing: 0.03em; color: #ece7dc; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.7); }
 /* LoR's gold Chơi ngay button in its dark frame. */
 .lor-play {
@@ -7633,6 +7642,8 @@ button.watch-back {
   -webkit-tap-highlight-color: transparent;
 }
 .lor-play:active { transform: translateY(1px); filter: brightness(0.95); }
+/* In the deck band, Chơi ngay leaves room for Xoá in the corner. */
+.lor-drawer .lor-play { width: min(62%, 15rem); }
 .lor-play:disabled { color: #4d4d4d; text-shadow: none; background: linear-gradient(180deg, #c2c2c2 0%, #9c9c9c 50%, #727272 100%); box-shadow: 0 0 0 1px #6a6a6a, inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.6); }
 .lor-play.is-wide { width: 100%; margin-top: 0.4rem; }
 

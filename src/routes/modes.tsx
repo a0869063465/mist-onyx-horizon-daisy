@@ -58,10 +58,10 @@ function remember(code: string, seat: "host" | "guest") {
 
 /**
  * Chọn bộ bài (owner, 18/10): what Chơi opens, made to look like the LoR deck screen the owner recorded. A grid of
- * deck boxes (favourites first, then the latest changed); tap one and its blue panel slides in from the right:
- * the game mode on top, the deck's portrait, the deck box between Yêu thích and Chỉnh sửa, its name, Chơi ngay,
- * and Xoá in the corner. Bộ bài mới makes an empty deck and opens the deck builder; Hướng dẫn (top right) opens the
- * list of tutorials.
+ * deck boxes (favourites first, then the latest changed); tap one and its blue panel opens as a band across the
+ * screen, dark above and below: the game mode on top, the deck's portrait, the deck box between Yêu thích and
+ * Chỉnh sửa, its name, Chơi ngay, and Xoá in the corner. Bộ bài mới makes an empty deck and opens the deck builder;
+ * Hướng dẫn (top right) opens the list of tutorials.
  */
 function DeckSelectPage() {
   const navigate = useNavigate();
@@ -235,7 +235,7 @@ function DeckSelectPage() {
       </div>
       {shown ? (
         <div
-          className="lor-drawer-back"
+          className="lor-drawer-back is-band"
           onClick={(event) => event.target === event.currentTarget && setOpen(null)}
         >
           <aside className="lor-drawer" role="dialog" aria-label={shown.name}>
@@ -261,10 +261,8 @@ function DeckSelectPage() {
                   </button>
                   <span>{tr("Yêu thích")}</span>
                 </div>
-                {/* The deck's name sits under the box inside the thin bracket, as in LoR. */}
                 <div className="lor-stage-box">
                   <DeckBox row={shown} />
-                  <h2 className="lor-title">{shown.name}</h2>
                 </div>
                 <div className="lor-side">
                   <button type="button" className="lor-square" onClick={() => edit(shown.n)}>
@@ -273,6 +271,7 @@ function DeckSelectPage() {
                   <span>{tr("Chỉnh sửa")}</span>
                 </div>
               </div>
+              <h2 className="lor-title">{shown.name}</h2>
               <button
                 type="button"
                 className="lor-play"
