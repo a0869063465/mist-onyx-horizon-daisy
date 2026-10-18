@@ -30,7 +30,6 @@ const EXTRA: Record<string, SkillSlot[]> = {
   ],
   "kiem-si-lua-thieng": [
     { key: "fire", name: "Vệt Lửa", index: 0 },
-    { key: "blood", name: "Lửa rồng thiêng", index: 1 },
     { key: "echo", name: "Đòn thêm", index: 8 },
     { key: "last", name: "Hoả thần long", index: 9 },
   ],
@@ -104,7 +103,6 @@ function skillIndex(cardId: string, key: string, fallback: number) {
 export function slotFor(cardId: string, index: number): SkillSlot | undefined {
   const skills = skillsOf(cardId);
   if (cardId === "kiem-si-lua-thieng") {
-    if (index === 1) return skills.find((skill) => skill.key === "blood");
     if (index === 8) return skills.find((skill) => skill.key === "echo");
     if (index === 9) return skills.find((skill) => skill.key === "last");
     return skills.find((skill) => skill.key === "fire");

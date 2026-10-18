@@ -6153,6 +6153,23 @@ button.watch-back {
   text-shadow: 0 1px 0 #000, 0 2px 3px rgba(0, 0, 0, 0.85);
 }
 .sk3d.on .sk3d-name { color: color-mix(in srgb, var(--ring) 45%, #ffffff); }
+/* Skills that come together (Hoá Kén with Chân kén and Nở): one group joined by a bar of the rims' metal. */
+.sk3d-chain { display: flex; align-items: flex-start; }
+.sk3d-chain .sk3d { position: relative; z-index: 1; }
+.sk3d-link {
+  position: relative;
+  z-index: 0;
+  flex: none;
+  width: 1.7rem;
+  height: 0.62rem;
+  margin: calc((3.15rem - 0.62rem) / 2) -0.62rem 0;
+  border-radius: 0.2rem;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.15) 32%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.6) 100%),
+    linear-gradient(90deg, var(--from), var(--to));
+  box-shadow: 0 0.15rem 0.25rem rgba(0, 0, 0, 0.7);
+}
 .msheet-mid { display: grid; grid-template-columns: 40% 1fr; gap: 0.75rem; align-items: start; }
 .msheet-card {
   position: relative;

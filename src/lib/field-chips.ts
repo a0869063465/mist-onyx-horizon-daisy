@@ -55,13 +55,6 @@ const ROWS: Row[] = [
   { ids: ["rong-phun-hoa-cau"], key: "fire", cast: "aim", skill: 1, gate: orb(1) },
   { ids: ["phu-thuy-thoi-gian"], key: "age", cast: "aim", skill: 0 },
   { ids: ["kiem-si-lua-thieng"], key: "fire", cast: "aim", skill: 0 },
-  {
-    ids: ["kiem-si-lua-thieng"],
-    key: "blood",
-    cast: "aim",
-    skill: 1,
-    gate: (ctx) => ctx.hp > Number(/tiêu(?:\s*hao)?\s*(\d+)\s*máu/i.exec(ctx.skillText)?.[1] ?? 2),
-  },
   { ids: ["ong-khong-lo"], key: "stun", cast: "aim", skill: 0, gate: orb(1) },
   { ids: ["phu-thuy-rung-den"], key: "curse", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["mo-voi-ma-mut"], key: "burst", cast: "aim", skill: 0, gate: orb(1) },

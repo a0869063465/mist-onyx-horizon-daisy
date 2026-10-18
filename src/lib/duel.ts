@@ -403,7 +403,7 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "thien-than-be-nho": [{ index: 0, cast: "aim" }, { index: 1, cast: "aim" }],
   "rong-phun-hoa-cau": [{ index: 0, cast: "declare" }, { index: 1, cast: "aim" }],
   "phu-thuy-thoi-gian": [{ index: 0, cast: "aim" }],
-  "kiem-si-lua-thieng": [{ index: 0, cast: "aim" }, { index: 1, cast: "aim" }],
+  "kiem-si-lua-thieng": [{ index: 0, cast: "aim" }],
   "ong-khong-lo": [{ index: 0, cast: "aim" }],
   "phu-thuy-rung-den": [{ index: 0, cast: "aim" }],
   "mo-voi-ma-mut": [{ index: 0, cast: "aim" }],
@@ -5008,7 +5008,6 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
 
 function castName(cardId: string, index: number): string {
   if (cardId === "kiem-si-lua-thieng") {
-    if (index === 1) return chipLabel(cardId, "blood");
     if (index === 8) return "Đòn thêm";
     if (index === 9) return "Hoả thần long";
     return chipLabel(cardId, "fire");
@@ -5201,8 +5200,7 @@ function finishRebound(state: Duel): Duel {
   let body = { ...caster, dim: true };
   const blood = caster.cardId === "kiem-si-lua-thieng" && pending.index !== 0;
   if (blood) {
-    const bites = grabNums(skillText(caster.cardId), /tiêu(?:\s*hao)?\s*(\d+)\s*máu/gi);
-    const bite = bites[pending.index === 8 ? 1 : 0] ?? 2;
+    const bite = pending.index === 8 ? followBite(caster.cardId) : lastStrike(caster.cardId).hp;
     if (caster.hp <= bite) return note(clear, "Không đủ máu để phản đòn.");
     body = { ...caster, hp: caster.hp - bite, dim: true };
   } else {
@@ -5211,7 +5209,7 @@ function finishRebound(state: Duel): Duel {
     if (!paid) return note(clear, "Không đủ mana để phản đòn.");
     owner = paid;
   }
-  const amount = skillFigure(caster.cardId, "dmg", 0, pending.index === 8 ? 2 : pending.index);
+  const amount = caster.cardId === "kiem-si-lua-thieng" && pending.index === 8 ? followDmg(caster.cardId) : skillFigure(caster.cardId, "dmg", 0, pending.index);
   let field = owner.field.map((mon) => (mon?.uid === body.uid ? body : mon));
   if (amount > 0 && ownerSide === victimSide) {
     const current = field.find((mon) => mon?.uid === victim.uid) ?? victim;
@@ -6844,16 +6842,6 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     if (!target) return note(state, "Chọn một quái đối thủ");
     targetUid = shuntUid(them.field, target.uid);
     const landed = them.field.find((unit) => unit?.uid === targetUid) ?? target;
-    if (skillIndex > 0) {
-      const bite = grabNums(skillText(mon.cardId), /tiêu(?:\s*hao)?\s*(\d+)\s*máu/gi)[0] ?? 2;
-      if (mon.hp <= bite) return note(state, `Không đủ máu. Skill này sẽ khiến ${cardOf(mon).name} mất mạng.`);
-      const amount = skillFigure(mon.cardId, "dmg", 7, 1) + (mon.skillUp ?? 0);
-      const yourField = you.field.map((unit) => (unit?.uid === uid ? { ...unit, hp: unit.hp - bite, dim: unit.hp - bite > 0 } : unit));
-      const foeField = them.field.map((unit) => (unit?.uid === landed.uid ? damageSpell(unit, amount, them.field, mon) : unit));
-      let next = patch(state, side, dropDead({ ...you, field: yourField }));
-      next = patch(next, foe, settleCocoon(dropDead({ ...them, field: foeField })));
-      return armEcho(note(next, `${castName(mon.cardId, skillIndex)} đổi ${bite} máu lấy ${spellLanded(landed, amount, them.field, mon)} sát thương phép`, "spell"), uid);
-    }
     const before = you.stars;
     const paid = pay(you, 1);
     if (!paid) return note(state, "Cần 1 gem");
@@ -7534,6 +7522,13 @@ function followBite(cardId: string): number {
   return Number.isFinite(value) ? value : 2;
 }
 
+/** Truy cùng diệt tận: the spell damage named in its own paragraph of the card text. */
+function followDmg(cardId: string): number {
+  const hit = /truy cùng diệt tận[\s\S]*?(\d+)\s*sát thương phép/i.exec(skillText(cardId));
+  const value = hit ? Number(hit[1]) : 4;
+  return Number.isFinite(value) ? value : 4;
+}
+
 function lastStrike(cardId: string): { hp: number; mana: number; spell: number; tru: number } {
   const hit = /tiêu hao thêm\s+(\d+)\s*máu và\s+(\d+)\s*mana[\s\S]*?(\d+)\s*sát thương phép và\s+(\d+)\s*sát thương chuẩn/i.exec(skillText(cardId));
   const hp = hit ? Number(hit[1]) : 3;
@@ -7581,7 +7576,7 @@ export function swordFollow(state: Duel, targetUid: string | null, committed = f
   const target = them.field.find((unit) => unit?.uid === aimed) ?? null;
   if (!target) return note(state, "Chọn một quái đối thủ");
   if (!committed) return beginHold(state, { kind: "beam", caster: uid, target: aimed, index: 8 }, `${cardOf(mon).name} dùng ${castName(mon.cardId, 8)} lên ${cardOf(target).name}.`);
-  const amount = skillFigure(mon.cardId, "dmg", 5, 2);
+  const amount = followDmg(mon.cardId);
   const yourField = you.field.map((unit) => (unit?.uid === uid ? { ...unit, hp: unit.hp - bite } : unit));
   const foeField = them.field.map((unit) => (unit?.uid === target.uid ? damageSpell(unit, amount, them.field, mon) : unit));
   let next = patch({ ...state, echo: null }, side, dropDead({ ...you, field: yourField }));

@@ -17,11 +17,13 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 ## Đang chờ chủ game trả lời (hỏi lại nếu cần, đừng tự quyết)
 
 - Hướng dẫn chơi mở từ đâu: chủ game nói để sau (18/10). Nút tạm ở Chọn cách chơi.
-- Phù thuỷ thời gian KHÔNG tính là quái máy móc (chủ game chốt 18/10). Không đổi gì.
+- Phù thuỷ thời gian KHÔNG tính là quái máy móc (chủ game chốt 18/10). Đã bỏ khỏi `cu-dia-may-moc` trong env-kinds.ts.
 - Cứ địa máy móc: áo giáp vỡ rồi thì mất đến khi quái rời sân, dùng ảnh bàn số 3 (chủ game chốt 18/10).
-- Thánh địa thiên sứ: "lá chắn" chỉ là chữ của Claude, chữ lá không có. Đoạn trong ngoặc là chủ game viết cho Claude đọc, không đưa vào lá (bỏ là đúng). Còn hỏi: "không thể tấn công" có gồm phép nhắm vào quái không (hiện chỉ chặn đánh thường và skill). Chiến binh thiên sứ/thuật sư: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
-- Cục bông ma quái: chủ game giải thích (18/10) giới hạn là mana, không phải ô sân: đầy 3 ô, nổ gốc + 1 bản sao, bản sao còn lại nhân tiếp. Code Pháo kích hiện đã cho làm vậy (bản sao mang Pháo kích chưa dùng), không đổi.
-- Mọc chân (Kén ngài) = phần kèm của Hoá Kén (Sâu non), chủ game xác nhận hướng. Chủ game muốn kỹ năng kèm nhau có thanh kim loại (giống vành icon) nối các icon. Đang hỏi: nối những cặp nào, trên bảng quái nào.
+- Thánh địa thiên sứ: chủ game xác nhận (18/10) chỉ chặn đánh thường và skill, không chặn phép, như đang làm. Đoạn trong ngoặc là chủ game viết cho Claude đọc, không đưa vào lá. Chiến binh thiên sứ/thuật sư: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
+- Cục bông ma quái: chủ game xác nhận (18/10) giới hạn là mana, không phải ô sân. Code Pháo kích đã đúng, không đổi.
+- Kỹ năng kèm nhau (18/10): `joined(...)` trong skill-book.ts, bảng quái gom vào một nhóm nối thanh kim loại (`.sk3d-chain` / `.sk3d-link`). Đã nối: Hoá Kén–Chân kén–Nở (Sâu non), Vệt lửa–Truy cùng diệt tận–Hoả thần long, Kỵ pháp–Chiến ý. KHÔNG nối: Học tập/Trưởng thành, Thế thân trên sân/trên tay. Kén ngài bỏ icon Mọc chân (kén không tự dùng được), chữ lá giữ nguyên.
+- Long Hoả (Kiếm sĩ lửa thiêng) đã bỏ khỏi code (18/10, chủ game yêu cầu). Chữ lá vẫn còn đoạn Long Hoả: đã đưa mô tả cũ, chờ chủ game viết mô tả mới. Sát thương Truy cùng diệt tận đọc từ đoạn của nó (`followDmg`), không theo thứ tự số trong chữ lá nữa.
+- Cơn thịnh nộ của hải vương: chữ lá có skill "Hộ thần" (1 lá chắn vật lý + 1 lá chắn phép), nhưng bảng quái đang tách thành 2 icon "Lá chắn vật lý" / "Lá chắn phép". Đang hỏi chủ game có gộp lại thành 1 icon Hộ thần không.
 - Màu chữ điểm nhấn: để sau (đang áp vào mô tả kỹ năng trên bảng quái).
 - Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh.
 

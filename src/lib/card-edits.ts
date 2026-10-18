@@ -28,7 +28,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   ],
   "kiem-si-lua-thieng": [
     { key: "fire", label: "Vệt Lửa", tone: "y" },
-    { key: "blood", label: "Lửa rồng thiêng", tone: "y" },
   ],
   "ong-khong-lo": [{ key: "stun", label: "Kim châm tê liệt", tone: "y" }],
   "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rửa", tone: "y" }],

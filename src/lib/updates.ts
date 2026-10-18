@@ -537,6 +537,10 @@ export const PENDING_NOTES: string[] = [
   "Núi: chim chóc và rồng chỉ tăng 1 sát thương kỹ năng, thay vì 2.",
   "Thêm lá môi trường Cứ địa máy móc: quái thú máy móc đồng minh được áo giáp 2 thủ. Đòn vật lý dưới 2 công không làm gì được áo giáp; từ 2 công trở lên thì áo giáp vẫn chặn đòn đó rồi vỡ. Quái máy móc: Thương quản long, Máy chém, Máy ném bom hình nhện, Máy quay thưởng, Phù thuỷ thời gian. Bàn đấu có hình riêng.",
   "Thêm lá môi trường Thánh địa thiên sứ: đối thủ không tấn công được quái thú thiên sứ của bạn, cả đánh thường lẫn skill, khi trên sân bạn còn quái khác. Phép và đánh vào người chơi vẫn được. Thiên sứ gồm Quái thú thiên sứ, Yêu tinh chúc phúc, Nàng tiên giữ khoá. Bàn đấu có hình riêng.",
+  "Kiếm sĩ lửa thiêng bỏ kỹ năng Long Hoả. Truy cùng diệt tận và Hoả thần long đi tiếp sau Vệt lửa.",
+  "Bảng quái: kỹ năng đi kèm nhau được nối bằng thanh kim loại. Hoá Kén nối với Chân kén và Nở, Vệt lửa nối với Truy cùng diệt tận và Hoả thần long, Kỵ pháp nối với Chiến ý.",
+  "Bảng quái của Kén ngài bỏ icon Mọc chân, vì kén không tự dùng được. Mọc chân đi kèm Hoá Kén của Sâu non.",
+  "Cứ địa máy móc: Phù thuỷ thời gian không phải quái máy móc, không được áo giáp.",
 ];
 
 function remarkOf(notes: string[]) {

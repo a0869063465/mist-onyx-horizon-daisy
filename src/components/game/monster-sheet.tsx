@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
@@ -101,6 +101,9 @@ export function GlyphDefs() {
 
 /** Emblem colours of the action buttons over a monster on the board: a skill kind, or orange for attack. */
 export type UnitActKind = SkillKind | "attack";
+
+/** Mid tone of each rim's metal, for the bar that joins skills that come together. */
+const RIM_TONE: Record<SkillKind, string> = { active: "#4f9fe8", passive: "#9a5fe0", risk: "#e0402a", spell: "#ff4f93", note: "#e8b828" };
 
 /** Metal rim with four diamond studs over a round skill emblem, in the colour of the skill's kind. */
 export function Rim({ kind }: { kind: UnitActKind }) {
@@ -215,30 +218,50 @@ export function MonsterSheet({
 }) {
   const [picked, setPicked] = useState(0);
   useEffect(() => setPicked(0), [name]);
-  const listed = skills.map((skill, index) => ({ skill, index }));
-  const actives = listed.filter((item) => item.skill.kind === "active" || item.skill.kind === "risk" || item.skill.kind === "spell");
-  const passives = listed.filter((item) => item.skill.kind === "passive" || item.skill.kind === "note");
+  // Skills that come together stay in one group, in the row of the first of them.
+  const groups: Array<Array<{ skill: SkillShown; index: number }>> = [];
+  skills.forEach((skill, index) => {
+    if (skill.chain && groups.length) groups[groups.length - 1].push({ skill, index });
+    else groups.push([{ skill, index }]);
+  });
+  const isActive = (kind: SkillKind) => kind === "active" || kind === "risk" || kind === "spell";
+  const actives = groups.filter((group) => isActive(group[0].skill.kind));
+  const passives = groups.filter((group) => !isActive(group[0].skill.kind));
   const shown = skills[picked];
   const cost = shown ? skillCost(shown.text) : "";
-  const row = (list: typeof actives) =>
+  const icon = ({ skill, index }: { skill: SkillShown; index: number }) => (
+    <button
+      key={`${skill.name}-${index}`}
+      type="button"
+      className={`sk3d is-${skill.kind}${index === picked ? " on" : ""}`}
+      onClick={() => setPicked(index)}
+    >
+      <span className="sk3d-gem">
+        <span className="sk3d-core">
+          <Glyph name={skill.icon} />
+        </span>
+        <Rim kind={skill.kind} />
+      </span>
+      <span className="sk3d-name">{tr(skill.name)}</span>
+    </button>
+  );
+  const row = (list: typeof groups) =>
     list.length ? (
       <div className="msheet-row">
-        {list.map(({ skill, index }) => (
-          <button
-            key={`${skill.name}-${index}`}
-            type="button"
-            className={`sk3d is-${skill.kind}${index === picked ? " on" : ""}`}
-            onClick={() => setPicked(index)}
-          >
-            <span className="sk3d-gem">
-              <span className="sk3d-core">
-                <Glyph name={skill.icon} />
-              </span>
-              <Rim kind={skill.kind} />
+        {list.map((group) =>
+          group.length === 1 ? (
+            icon(group[0])
+          ) : (
+            <span key={`chain-${group[0].index}`} className="sk3d-chain">
+              {group.map((item, at) => (
+                <Fragment key={item.index}>
+                  {at > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[group[at - 1].skill.kind], "--to": RIM_TONE[item.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
+                  {icon(item)}
+                </Fragment>
+              ))}
             </span>
-            <span className="sk3d-name">{tr(skill.name)}</span>
-          </button>
-        ))}
+          ),
+        )}
       </div>
     ) : null;
   return (
