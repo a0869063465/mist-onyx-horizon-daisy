@@ -8,20 +8,16 @@ export const Route = createFileRoute("/guide")({ component: GuidePage });
 
 /**
  * Hướng dẫn (owner, 18/10): what the Hướng dẫn button on Chọn bộ bài opens, made after LoR's challenge list. One
- * banner per tutorial, the two monsters facing each other, HOÀN THÀNH once it was played to the end. Tapping a
- * banner slides in its panel from the right: name, the two monsters VS, what it teaches, who it is for, Chơi ngay.
+ * banner per tutorial with its monster, HOÀN THÀNH once it was played to the end. Tapping a banner starts it.
  */
 function GuidePage() {
   const navigate = useNavigate();
   const [done, setDone] = useState<string[]>([]);
-  const [open, setOpen] = useState<string | null>(null);
   useLang();
 
   useEffect(() => {
     setDone(tutorialsDone());
   }, []);
-
-  const shown = TUTORIALS.find((row) => row.key === open) ?? null;
 
   function start(row: TutorialInfo) {
     sessionStorage.setItem("clash-mode", "tutorial");
@@ -49,11 +45,11 @@ function GuidePage() {
               <button
                 key={row.key}
                 type="button"
-                className={`lor-trial${finished ? " is-done" : ""}${row.key === open ? " on" : ""}`}
-                onClick={() => setOpen(row.key)}
+                className={`lor-trial${finished ? " is-done" : ""}`}
+                data-ui="confirm"
+                onClick={() => start(row)}
               >
-                <span className="lor-trial-art is-left" style={{ backgroundImage: `url(${artSrc(row.left, 1)})` }} />
-                <span className="lor-trial-art is-right" style={{ backgroundImage: `url(${artSrc(row.right, 1)})` }} />
+                <span className="lor-trial-art" style={{ backgroundImage: `url(${artSrc(row.art, 1)})` }} />
                 <span className="lor-trial-title">
                   {tr(row.title)}
                   <svg viewBox="0 0 120 10" aria-hidden="true">
@@ -75,37 +71,6 @@ function GuidePage() {
           })}
         </section>
       </div>
-      {shown ? (
-        <div className="lor-drawer-back" onClick={(event) => event.target === event.currentTarget && setOpen(null)}>
-          <aside className="lor-trial-panel" role="dialog" aria-label={tr(shown.title)}>
-            <h2 className="lor-trial-name">{tr(shown.title)}</h2>
-            <svg className="lor-flourish" viewBox="0 0 240 20" aria-hidden="true">
-              <path d="M3 16h9q4 0 4-4v-2h94M130 10h94v2q0 4 4 4h9" />
-              <path d="M110 10l10-7 10 7-10 7z" />
-              <circle cx="22" cy="14" r="1.4" />
-              <circle cx="218" cy="14" r="1.4" />
-            </svg>
-            <div className="lor-vs">
-              <span className="lor-vs-face" style={{ backgroundImage: `url(${artSrc(shown.left, 1)})` }} />
-              <span className="lor-vs-mid">
-                <b>VS</b>
-                <svg viewBox="0 0 60 14" aria-hidden="true">
-                  <path d="M0 11H23l7-7 7 7H60" />
-                </svg>
-              </span>
-              <span className="lor-vs-face" style={{ backgroundImage: `url(${artSrc(shown.right, 1)})` }} />
-            </div>
-            <p className="lor-trial-text">{tr(shown.text)}</p>
-            <div className="lor-trial-level">
-              <span>{tr("Độ khó đề nghị cho:")}</span>
-              <b>{tr(shown.level)}</b>
-            </div>
-            <button type="button" className="lor-play" data-ui="confirm" onClick={() => start(shown)}>
-              {tr("Chơi ngay")}
-            </button>
-          </aside>
-        </div>
-      ) : null}
     </main>
   );
 }

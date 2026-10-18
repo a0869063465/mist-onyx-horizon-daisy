@@ -1,18 +1,15 @@
 /**
- * The Hướng dẫn list (owner, 18/10): Chơi → Hướng dẫn shows every tutorial as a banner, in LoR's challenge style.
- * "Cơ bản" is the one built so far. `left` and `right` are the monsters on its banner and its VS portraits: yours
- * and the opponent's in that tutorial match.
+ * The Hướng dẫn list (owner, 18/10): Chơi → Hướng dẫn shows every tutorial as a banner, in LoR's challenge style;
+ * tapping one starts it. "Cơ bản" is the one built so far. `art` is the monster on its banner (one monster, not
+ * two facing each other: owner, 18/10).
  */
-export type TutorialInfo = { key: string; title: string; left: string; right: string; text: string; level: string };
+export type TutorialInfo = { key: string; title: string; art: string };
 
 export const TUTORIALS: TutorialInfo[] = [
   {
     key: "co-ban",
     title: "Cơ bản",
-    left: "rong-con",
-    right: "phu-thuy-ti-hon",
-    text: "Người giữ khoá chỉ bạn cách rút bài, triệu hồi, dùng kỹ năng và ma pháp.",
-    level: "Tân thủ",
+    art: "thien-than-be-nho",
   },
 ];
 

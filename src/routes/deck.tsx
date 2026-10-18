@@ -437,8 +437,8 @@ function DeckPage() {
 }
 
 /**
- * The deck builder's tip under the search box (owner, 18/10). Tapping it sinks it to a small "?" tab; tapping the
- * tab brings it back. The choice is remembered on this phone.
+ * The deck builder's tip under the search box (owner, 18/10): raised, gently swaying letters led by a yellow "?".
+ * Tapping it dissolves it to a small "?"; tapping that brings it back. The choice is remembered on this phone.
  */
 const TIP_KEY = "clash-deck-tip";
 
@@ -464,7 +464,12 @@ function DragTip() {
   return (
     <button type="button" className={`dk-tip${sunk ? " is-sunk" : ""}`} aria-expanded={!sunk} onClick={flip}>
       <span className="dk-tip-text">
-        <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+        <i className="dk-tip-mark" aria-hidden="true">
+          ?
+        </i>
+        <span>
+          <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+        </span>
       </span>
       <span className="dk-tip-tab" aria-hidden="true">
         ?
@@ -499,7 +504,8 @@ function CoverPicker({ choices, current, onPick, onClose }: { choices: string[];
           <div className="dk-cover-grid">
             {choices.map((id) => (
               <button key={id} type="button" className={`dk-cover-pick${picked === id ? " on" : ""}`} onClick={() => setPicked(id)}>
-                <CardFace monster={monsterCard(id)} hideName />
+                <span className="dk-cover-art" style={{ backgroundImage: `url(${artSrc(id, 1)})` }} />
+                <img className="dk-cover-frame" src="/ui/cover-frame.png" alt="" draggable={false} />
               </button>
             ))}
           </div>

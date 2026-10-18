@@ -38,6 +38,8 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Đổi hình nền: `coverChoices` (deck-book.ts) = quái của bộ + dạng tiến hoá/dung hợp bộ có thể ra (`EVOLUTIONS`). Chọn rồi Đặt làm ảnh bìa ghi `cover` + `coverSet`. Màn Chọn bộ bài giữ bìa đã chọn; quái đó rời bộ thì bỏ `coverSet`, quay về bìa ngẫu nhiên quái nhiều sao nhất. Icon `portrait` (game-icons).
 - Số sao trong danh sách: ngôi sao vàng giữ nguyên, con số đổi màu theo sao (`.dk-row-badge.is-s1..s5`: xanh lá, cam, đỏ, tím, trắng).
 - Menu chính: ô `home-btn is-shut` "Cửa hàng" ở chỗ nút bộ bài cũ, có khoá, không bấm được.
+- Chỉnh lại sau đó (chủ game 18/10): khung cân bằng thấp lại (max 7.2rem, cuộn). Đổi hình nền: ảnh quái trong khung vàng chủ game gửi (`public/ui/cover-frame.png`, nền đen đã làm trong suốt), 3 ô một hàng, không có chỉ số. Ghi chú kéo thả: chữ nổi rung rinh, dấu ? vàng đầu câu, bấm thì tan biến còn dấu ? nhỏ (bấm lại hiện). Cột phải: quái/phép/lưu một hàng; thống kê, lọc xếp dọc dưới lưu; tên bộ + Đổi hình nền ở đáy, dàn đều.
+- Hướng dẫn: banner Cơ bản 1 quái (Nàng tiên giữ khoá, id `thien-than-be-nho`), bấm là vào trận hướng dẫn ngay. Khung bên kiểu hình 2 giữ lại làm component `TrialPanel` (src/components/game/trial-panel.tsx) để dùng cho Giám định.
 
 ## Đã xong (18/10): màn Chọn bộ bài (Chơi mở ra, theo video LoR chủ game gửi)
 
@@ -95,7 +97,7 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 
 ## Đang dở: hướng dẫn chơi
 
-- Nút Hướng dẫn ở góc trên phải màn Chọn bộ bài mở `/guide` (`src/routes/guide.tsx`, theo hình Thử thách LoR chủ game gửi 18/10). Danh sách bài ở `TUTORIALS` (`src/lib/tutorial-list.ts`); bài đang có: Cơ bản (Rồng con VS Phù thuỷ tí hơn, Tân thủ). Bấm bài hiện khung bên (tên cam, hai chân dung VS, nội dung, độ khó, Chơi ngay). Học xong (`onDone`) thì ghi `clash-tutorials-done` và banner hiện ✓ Hoàn thành; xong hay Bỏ qua đều về `/guide`. Câu nội dung bài là Claude viết, chủ game có thể sửa.
+- Nút Hướng dẫn ở góc trên phải màn Chọn bộ bài mở `/guide` (`src/routes/guide.tsx`, theo hình Thử thách LoR chủ game gửi 18/10). Danh sách bài ở `TUTORIALS` (`src/lib/tutorial-list.ts`); bài đang có: Cơ bản (hình Nàng tiên giữ khoá). Bấm bài là vào hướng dẫn ngay; khung bên kiểu LoR là `TrialPanel`, để dành cho Giám định. Học xong (`onDone`) thì ghi `clash-tutorials-done` và banner hiện ✓ Hoàn thành; xong hay Bỏ qua đều về `/guide`.
 - Linh vật: Người giữ khoá (`public/tutorial/nguoi-giu-khoa.webp`, chủ game gửi). Khung thoại gọn đứng cạnh chỗ đang hướng dẫn, nút » nổi khối thay OK.
 - Trận hướng dẫn: `src/lib/tutorial.ts` dựng bài cố định. Bạn có Rồng con, Khổng lồ 1 mắt và Hấp thụ ma pháp; Sợi xích địa ngục nằm thứ 2 trong xấp phép, lên đầu khi tới bước rút phép. Đối thủ cầm Sợi xích địa ngục, rút Phù thuỷ tí hơn.
 - Các bước ở `src/components/game/tutorial.tsx` (mảng `steps`), theo đúng kịch bản thứ 2 của chủ game (17/10). Lượt đối thủ được dàn sẵn qua `drive` (rút, triệu hồi, dùng Sợi xích địa ngục, kết thúc lượt; nhường cho Sợi xích địa ngục của bạn). Máy tự đánh chỉ bật lại sau khi hướng dẫn xong.
