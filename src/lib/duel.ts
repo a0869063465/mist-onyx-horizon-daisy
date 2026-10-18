@@ -10,7 +10,7 @@ import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion } from "./fusion.ts";
-import { envFavors } from "./env-kinds.ts";
+import { envFavors, SANCTUARY_GUARDED } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
@@ -1817,6 +1817,26 @@ function bullAward(mon: FieldMon, victimId: string, victimDead: boolean): { mon:
   const points = stars >= 4 ? 4 : stars >= 3 ? 3 : 2;
   const fed = feedBull(mon, points);
   return { mon: fed.mon, mend: fed.healed };
+}
+
+/**
+ * Thánh địa thiên sứ: the owner's angels can't be attacked (normal attack or skill) while any other of the owner's
+ * monsters is still on the field.
+ */
+export function sanctuaryShielded(state: Duel, uid: string | null | undefined): boolean {
+  if (!uid) return false;
+  for (const player of state.players) {
+    const mon = player.field.find((unit) => unit?.uid === uid);
+    if (!mon) continue;
+    const guarded = (unit: FieldMon) => player.env === "thanh-dia-thien-su" && SANCTUARY_GUARDED.includes(unit.cardId) && envFavors(player.env, unit.cardId);
+    if (!guarded(mon)) return false;
+    return player.field.some((unit) => unit && unit.uid !== uid && unit.hp > 0 && !guarded(unit));
+  }
+  return false;
+}
+
+function sanctuaryLine(mon: FieldMon): string {
+  return `Thánh địa thiên sứ che chở ${cardOf(mon).name}. Phải tấn công các quái khác trước.`;
 }
 
 function kazuraSafe(mon: FieldMon | null): boolean {
@@ -4617,6 +4637,7 @@ function attackMonsterCore(state: Duel, attackerUid: string, defenderUid: string
   defenderUid = shuntUid(them.field, defenderUid) ?? defenderUid;
   const picked = them.field.find((mon) => mon?.uid === defenderUid) ?? null;
   if (picked && kazuraSafe(picked)) return note(state, `${cardOf(picked).name} không thể bị tấn công. Còn ${picked.safe ?? 0} lượt.`);
+  if (picked && sanctuaryShielded(state, picked.uid)) return note(state, sanctuaryLine(picked));
   if (you.attackLock > 0) return note(state, "Bạn đang bị cấm tấn công.");
   const attacker = you.field.find((mon) => mon?.uid === attackerUid) ?? null;
   const defender = them.field.find((mon) => mon?.uid === defenderUid) ?? null;
@@ -4936,6 +4957,8 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   if (mon.cardId === "may-nem-bom-hinh-nhen" && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   const foeField = state.players[(1 - state.turn) as Side].field;
   const aimed = redirectCover(foeField, targetUid);
+  const sheltered = foeField.find((unit) => unit?.uid === aimed && sanctuaryShielded(state, unit.uid));
+  if (sheltered) return note(state, sanctuaryLine(sheltered));
   const moth = mon.cardId === "ngai-khong-lo" || mon.cardId === "ngai-nu-hoang" || mon.cardId === "ngai-hoan-my";
   if (moth && !aimed) return note(state, "Chọn một quái đối thủ.");
   if (mon.cardId === "trai-tim-hai-long" && skillIndex >= 2 && !aimed) return note(state, "Chọn một quái đối thủ.");
@@ -6850,6 +6873,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const them = state.players[foe];
     const target = them.field.find((unit) => unit?.uid === targetUid) ?? null;
     if (!target) return note(state, "Chọn một quái đối thủ.");
+    if (sanctuaryShielded(state, target.uid)) return note(state, sanctuaryLine(target));
     const real = shuntUid(them.field, target.uid) ?? target.uid;
     const landed = them.field.find((unit) => unit?.uid === real) ?? target;
     const amount = mon.hp;
@@ -8783,7 +8807,7 @@ export function aiStep(state: Duel): Duel {
       if (smashPlain(atk) && me.orb < 1) continue;
       if (swordDue(atk) && me.orb < 1) continue;
       for (const def of threats) {
-        if (kazuraSafe(def)) continue;
+        if (kazuraSafe(def) || sanctuaryShielded(state, def.uid)) continue;
         const hit = clashCost(atk, def);
         if (!hit.kill) continue;
         if (!best || Number(hit.suicide) < Number(best.suicide) || (hit.suicide === best.suicide && (hit.take < best.take || threatRank(def) > threatRank(best.def)))) {
@@ -8815,7 +8839,8 @@ export function aiStep(state: Duel): Duel {
   }
   const queen = ready.find((mon) => mon.cardId === QUEEN_KNIGHT && !hexLocked(mon) && (mon.chain ?? 0) === 0 && (mon.path ?? 0) === 0 && !mon.cage);
   if (queen && canTargetFoe(state) && foes.length > 0 && me.orb >= queenSwing(queen).cost) {
-    const victim = threats.find((mon) => !kazuraSafe(mon)) ?? foes.find((mon) => !kazuraSafe(mon));
+    const open = (mon: FieldMon) => !kazuraSafe(mon) && !sanctuaryShielded(state, mon.uid);
+    const victim = threats.find(open) ?? foes.find(open);
     if (victim) {
       const cast = progress(state, declareSkill(state, queen.uid, victim.uid, 0));
       if (cast) return cast;
@@ -8896,7 +8921,7 @@ export function aiStep(state: Duel): Duel {
         if (smashPlain(atk) && me.orb < 1) continue;
         if (swordDue(atk) && me.orb < 1) continue;
         for (const def of foes) {
-          if (kazuraSafe(def)) continue;
+          if (kazuraSafe(def) || sanctuaryShielded(state, def.uid)) continue;
           const hit = clashCost(atk, def);
           if (hit.deal <= 0) continue;
           if (strict && hit.take > hit.deal && !hit.kill) continue;

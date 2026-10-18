@@ -4,6 +4,13 @@ import { monsterCard } from "./catalog.ts";
  * Hệ của quái cho từng lá môi trường. Mỗi quái thuộc một hệ.
  * Sửa danh sách ở đây khi chủ game xếp lại hệ. Quái 5 sao không được hưởng môi trường.
  */
+/**
+ * Thánh địa thiên sứ. Guarded: the angels (thiên sứ, yêu tinh, tinh linh: frail buffers) and the sanctuary's
+ * buffing priests (none yet). Warriors: the angel warriors who fight (none yet).
+ */
+export const SANCTUARY_GUARDED = ["quai-thu-thien-su", "yeu-tinh-chuc-phuc", "thien-than-be-nho"];
+export const SANCTUARY_WARRIORS: string[] = [];
+
 export const ENV_KINDS: Record<string, string[]> = {
   // Chiến binh
   "thao-nguyen": [
@@ -34,6 +41,8 @@ export const ENV_KINDS: Record<string, string[]> = {
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong", "phu-thuy-thoi-gian"],
+  // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ
+  "thanh-dia-thien-su": [...SANCTUARY_GUARDED, ...SANCTUARY_WARRIORS],
   // Bóng tối
   "bong-toi": [
     "trieu-hoi-ac-ma",

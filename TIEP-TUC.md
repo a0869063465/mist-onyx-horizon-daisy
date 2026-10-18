@@ -31,6 +31,7 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Theo nửa trên: chỉ số địch, thông báo, lịch sử thông báo, thanh phản ứng, ô môi trường địch. Theo nửa dưới: chỉ số mình, ô môi trường mình, xấp bài úp, khối nút Rút quái / Rút phép / Hết lượt (`actions`, mới thêm vào Tuỳ chỉnh).
 - Núi dùng bản thêm ô có viền đá xám. Ảnh gốc chủ game gửi nằm trong lịch sử git (commit c4f248f, thư mục `art-src/`) nếu cần làm lại.
 - Cứ địa máy móc (18/10): ảnh bàn `public/env/cu-dia-may-moc.jpg` (ảnh thứ 3 chủ game gửi, cả bàn), ảnh lá tạm cắt từ ảnh bàn. Hệ máy móc trong `ENV_KINDS`. Áo giáp: `armor` + `envArmor` trên quái, cộng thẳng vào thủ (hiện xanh như chỉ số tăng); `crackArmor` gọi ở các đường sát thương vật lý (`takePhysical`, giáp lá cà, `landHell`, súng của Máy quay thưởng): đòn thô ≥ áo giáp thì chặn xong rồi vỡ.
+- Thánh địa thiên sứ (18/10): ảnh `thanh-dia-thien-su-tren/duoi.jpg`, ảnh lá chủ game gửi. `SANCTUARY_GUARDED` (thiên sứ, yêu tinh, tinh linh; thuật sư buff phục vụ thánh địa: chưa có quái) và `SANCTUARY_WARRIORS` (chiến binh thiên sứ: chưa có quái) trong env-kinds.ts. `sanctuaryShielded()` chặn đánh thường và skill (không chặn phép, không chặn đánh người chơi) khi chủ còn quái khác không được che chở; máy cũng tránh. Luật hồi 1 máu khi chiến binh thiên sứ đánh trúng (sát thương > 0, kể cả skill) CHƯA làm vì chưa có chiến binh thiên sứ; làm khi chủ game thêm lá đầu tiên.
 - Ô đặt quái trên bàn (vị trí lá) vẫn cố định theo bàn gốc, chưa chỉnh theo từng môi trường.
 
 ## Đã xong: màn tải

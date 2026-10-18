@@ -104,6 +104,7 @@ import {
   answerGemWarn,
   answerLegs,
   visibleStats,
+  sanctuaryShielded,
   startReel,
   pullReel,
   settleReel,
@@ -4306,7 +4307,8 @@ function PlayPage() {
             !!mon &&
             mon.cardId === "kazura" &&
             foe.field.some((unit) => unit && unit.cardId === "kizuran" && unit.cover && unit.hp > 0 && unit.stun === 0 && (unit.chain ?? 0) === 0);
-          const untouchable = !!mon && mon.cardId === "kazura" && (mon.safe ?? 0) > 0 && !covered && drag?.kind !== "spell" && aim?.kind !== "skill";
+          const sheltered = !!mon && sanctuaryShielded(duel, mon.uid) && drag?.kind !== "spell" && aim?.kind !== "spell";
+          const untouchable = sheltered || (!!mon && mon.cardId === "kazura" && (mon.safe ?? 0) > 0 && !covered && drag?.kind !== "spell" && aim?.kind !== "skill");
           return (
             <BoardSlot
               key={`f${index}`}

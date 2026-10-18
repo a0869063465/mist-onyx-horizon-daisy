@@ -1017,6 +1017,14 @@ export const SPELLS: SpellCard[] = [
     "since": "2026-10-18"
   },
   {
+    "id": "thanh-dia-thien-su",
+    "name": "Thánh địa thiên sứ",
+    "gems": 0,
+    "effect": "- Đối thủ không thể tấn công quái thú thiên sứ, và các thuật sư của ta, trước khi tấn công toàn bộ quái thú khác trên sân, hoặc các chiến binh thiên sứ khác.\n- Khi quái thú chiến binh thiên sứ của ta tấn công vào người chơi và quái thú đối phương, hồi 1 máu cho người chơi.",
+    "env": true,
+    "since": "2026-10-18"
+  },
+  {
     "id": "virus-an-mon",
     "name": "Virus ăn mòn",
     "gems": 0,
