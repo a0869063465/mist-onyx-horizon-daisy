@@ -15,13 +15,14 @@ export const ENV_FILTERS = SPELLS.filter((card) => card.env && ENV_KINDS[card.id
  * Monster types (owner, 18/10), each the monsters of some tactics groups:
  * Đa dụng = the situational ones; Sát thương = big, steady and versatile damage; Đấu sĩ = the fighters;
  * Phòng ngự = defence specialists; Theo bộ = monsters that come as a set; Phát triển = the ones that grow.
+ * `ids`: monsters in no tactics group that the owner put in the type by name.
  */
-export const MONSTER_TYPES: Array<{ key: string; label: string; icon: string; plans: string[] }> = [
+export const MONSTER_TYPES: Array<{ key: string; label: string; icon: string; plans: string[]; ids?: string[] }> = [
   { key: "da-dung", label: "Đa dụng", icon: "card-joker", plans: ["tinh-huong"] },
   { key: "sat-thuong", label: "Sát thương", icon: "spiky-explosion", plans: ["sat-lon", "sat-on", "sat-da-nang"] },
-  { key: "dau-si", label: "Đấu sĩ", icon: "crossed-swords", plans: ["chien-binh", "ben-bi", "cap-thap", "chien-dau"] },
+  { key: "dau-si", label: "Đấu sĩ", icon: "crossed-swords", plans: ["chien-binh", "ben-bi", "cap-thap", "chien-dau"], ids: ["rong-boc-trung"] },
   { key: "phong-ngu", label: "Phòng ngự", icon: "checked-shield", plans: ["phong-da-dung"] },
-  { key: "theo-bo", label: "Theo bộ", icon: "three-friends", plans: ["khien-hiep-si", "guom-khien"] },
+  { key: "theo-bo", label: "Theo bộ", icon: "three-friends", plans: ["khien-hiep-si", "guom-khien"], ids: ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken"] },
   { key: "phat-trien", label: "Phát triển", icon: "growth", plans: ["tich-luy", "may-rui", "don-chien", "chi-so-tot"] },
 ];
 
@@ -38,8 +39,10 @@ export function filterOn(filter: PoolFilter): boolean {
 export function passesFilter(id: string, filter: PoolFilter, plans: Strategy[]): boolean {
   if (filter.envs.length && !filter.envs.some((env) => ENV_KINDS[env]?.includes(id))) return false;
   if (filter.types.length) {
-    const groups = MONSTER_TYPES.filter((type) => filter.types.includes(type.key)).flatMap((type) => type.plans);
-    if (!plans.some((plan) => groups.includes(plan.id) && plan.cards.includes(id))) return false;
+    const types = MONSTER_TYPES.filter((type) => filter.types.includes(type.key));
+    const groups = types.flatMap((type) => type.plans);
+    const named = types.some((type) => type.ids?.includes(id));
+    if (!named && !plans.some((plan) => groups.includes(plan.id) && plan.cards.includes(id))) return false;
   }
   if (filter.stars.length && !filter.stars.includes(monsterCard(id)?.stars ?? 0)) return false;
   return true;

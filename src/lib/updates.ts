@@ -551,6 +551,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm vào lá phép hiện khung giống bảng quái: icon nhóm phép (Môi trường, Phản đòn, Giải trừ, Đa năng, Khống chế, Sát thương) ở trên, mô tả ở dưới, nút Dùng phép cạnh lá.",
   "Biển sâu áp dụng cho mọi quái biển: thêm Cơn thịnh nộ của hải vương, cùng Trái tim hải long, Sứa hút ma pháp và Kraken.",
   "Xếp hệ cho các quái chưa có môi trường: Phù thuỷ thời gian và Phù thuỷ tí hơn thuộc Bóng tối; Kazura, Kizuran, Ma đạo sĩ và Thế thân của shien thuộc Thảo nguyên; Mắt xanh huỷ diệt thuộc Núi. Các quái này được hưởng lá môi trường đó.",
+  "Lọc theo loại quái: Rồng bọc trứng thuộc Đấu sĩ; Trái tim hải long, Sứa hút ma pháp và Kraken thuộc Theo bộ.",
 ];
 
 function remarkOf(notes: string[]) {
