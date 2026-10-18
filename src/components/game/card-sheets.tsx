@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
@@ -36,12 +37,6 @@ export function BalanceLines({ id }: { id: string }) {
       ))}
     </div>
   );
-}
-
-/** The Cân bằng icon (yellow, green, red: Thay đổi lối chơi, Tăng, Giảm), only for cards that were balanced. */
-export function balanceExtra(id: string): SheetExtra | null {
-  if (!infoBlocks(id).length) return null;
-  return { key: "balance", name: "Cân bằng", emblem: <Glyph name="scales" />, rim: "balance", ring: "#c6e02e", deep: "#2c3304", body: <BalanceLines id={id} /> };
 }
 
 /** A spell's kind as its sheet icon, in the reaction bar's colour; tapping it shows the spell's text (and a note). */
@@ -110,10 +105,26 @@ export function FieldFace({ id }: { id: string }) {
 }
 
 /** The monster sheet of a catalog card (deck builder): its skills, then the extra icons. */
-export function CardMonsterSheet({ id, extras = [], actions = [], note, onClose }: { id: string; extras?: SheetExtra[]; actions?: SheetAction[]; note?: string; onClose: () => void }) {
+export function CardMonsterSheet({
+  id,
+  extras = [],
+  actions = [],
+  aside,
+  note,
+  onClose,
+}: {
+  id: string;
+  extras?: SheetExtra[];
+  actions?: SheetAction[];
+  aside?: ReactNode;
+  note?: string;
+  onClose: () => void;
+}) {
   const card = monsterCard(id);
   if (!card) return null;
-  return <MonsterSheet name={card.name} card={<FieldFace id={id} />} count="" skills={skillsOf(id, card.skill ?? "")} extras={extras} actions={actions} note={note} onClose={onClose} />;
+  return (
+    <MonsterSheet name={card.name} card={<FieldFace id={id} />} count="" skills={skillsOf(id, card.skill ?? "")} extras={extras} actions={actions} aside={aside} note={note} onClose={onClose} />
+  );
 }
 
 /**
@@ -125,6 +136,7 @@ export function SpellSheet({
   gems,
   extras = [],
   actions = [],
+  aside,
   note,
   onClose,
 }: {
@@ -132,6 +144,7 @@ export function SpellSheet({
   gems?: number | string;
   extras?: SheetExtra[];
   actions?: SheetAction[];
+  aside?: ReactNode;
   note?: string;
   onClose: () => void;
 }) {
@@ -145,6 +158,7 @@ export function SpellSheet({
       skills={[]}
       extras={[spellKindExtra(id, gems, note), ...extras]}
       actions={actions}
+      aside={aside}
       onClose={onClose}
     />
   );

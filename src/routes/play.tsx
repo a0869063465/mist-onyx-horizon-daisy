@@ -18,6 +18,7 @@ import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, ty
 import { FUSE_BEATS, FuseDance } from "@/components/game/fuse-dance";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
+import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
 import { setLang, tr, useLang } from "@/lib/i18n";
@@ -1361,7 +1362,7 @@ function PlayPage() {
   const leaveTutorial = () => {
     setTutorial(false);
     setTutView(null);
-    void navigate({ to: sessionStorage.getItem("clash-tutorial-from") || "/modes" });
+    void navigate({ to: sessionStorage.getItem("clash-tutorial-from") || "/guide" });
   };
   const [duel, setDuel] = useState<Duel | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -3386,7 +3387,10 @@ function PlayPage() {
             })
           }
           onSkip={leaveTutorial}
-          onDone={leaveTutorial}
+          onDone={() => {
+            markTutorialDone();
+            leaveTutorial();
+          }}
         />
       ) : null}
       <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />

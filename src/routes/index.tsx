@@ -218,6 +218,19 @@ function Home() {
             </svg>
             <span>{tr("Chơi")}</span>
           </Link>
+          {/* Where the deck builder button was: the shop to come (owner, 18/10). It cannot be opened yet. */}
+          <div className="home-btn is-shut" aria-disabled="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 9l1.6-5h14.8L21 9" />
+              <path d="M3 9a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0" />
+              <path d="M5 11.6V20h14v-8.4M10 20v-5h4v5" />
+            </svg>
+            <span>{tr("Cửa hàng")}</span>
+            <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="9.5" rx="2" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+          </div>
           <div className="home-row">
             <Link to="/tune" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
               <svg viewBox="0 0 24 24" aria-hidden="true">

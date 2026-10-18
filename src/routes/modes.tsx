@@ -60,7 +60,8 @@ function remember(code: string, seat: "host" | "guest") {
  * Chọn bộ bài (owner, 18/10): what Chơi opens, made to look like the LoR deck screen the owner recorded. A grid of
  * deck boxes (favourites first, then the latest changed); tap one and its blue panel slides in from the right:
  * the game mode on top, the deck's portrait, the deck box between Yêu thích and Chỉnh sửa, its name, Chơi ngay,
- * and Xoá in the corner. Bộ bài mới makes an empty deck and opens the deck builder; Hướng dẫn sits top right.
+ * and Xoá in the corner. Bộ bài mới makes an empty deck and opens the deck builder; Hướng dẫn (top right) opens the
+ * list of tutorials.
  */
 function DeckSelectPage() {
   const navigate = useNavigate();
@@ -79,8 +80,14 @@ function DeckSelectPage() {
 
   useEffect(() => {
     const stored = loadBook();
-    // Every deck keeps the cover it was given; a deck whose cover left it gets a new one.
-    setBook(stored.decks.map((row) => ({ ...row, cover: coverOf(row) ?? undefined })));
+    // Every deck keeps the cover it was given; a deck whose cover left it gets a new one, and a chosen cover that
+    // left the deck is no longer the player's choice.
+    setBook(
+      stored.decks.map((row) => {
+        const cover = coverOf(row) ?? undefined;
+        return { ...row, cover, coverSet: (row.coverSet && cover === row.cover) || undefined };
+      }),
+    );
     setActive(stored.active);
     setMode(loadMode());
     setBooted(true);
@@ -134,12 +141,9 @@ function DeckSelectPage() {
     setPicking(false);
   }
 
-  function goLocal(next: "ai" | "test" | "tutorial") {
+  function goLocal(next: "ai" | "test") {
     sessionStorage.setItem("clash-mode", next);
     sessionStorage.removeItem("clash-net");
-    // The tutorial returns here when it ends or is skipped.
-    if (next === "tutorial")
-      sessionStorage.setItem("clash-tutorial-from", window.location.pathname);
     void navigate({ to: "/play" });
   }
 
@@ -206,9 +210,9 @@ function DeckSelectPage() {
             {"<<"}
           </Link>
           <h1>{tr("Chọn bộ bài của bạn")}</h1>
-          <button type="button" className="lor-stone is-help" onClick={() => goLocal("tutorial")}>
+          <Link to="/guide" className="lor-stone is-help">
             {tr("Hướng dẫn")}
-          </button>
+          </Link>
         </header>
         <div className="lor-bar">
           <button type="button" className="lor-stone" onClick={makeDeck}>

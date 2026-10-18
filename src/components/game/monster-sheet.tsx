@@ -115,13 +115,11 @@ export function GlyphDefs() {
             ))}
           </linearGradient>
         ))}
-        {/* Cân bằng: the yellow, green and red of Thay đổi lối chơi, Tăng and Giảm. */}
-        <linearGradient id="rim3d-balance" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fff7c8" />
-          <stop offset="0.25" stopColor="#ffe14a" />
-          <stop offset="0.5" stopColor="#c6e02e" />
-          <stop offset="0.75" stopColor="#ff4a4a" />
-          <stop offset="1" stopColor="#ffd2c8" />
+        {/* Grey steel for the deck builder's filter button. */}
+        <linearGradient id="rim3d-steel" x1="0" y1="0" x2="1" y2="1">
+          {rimStops("#9aa1ad").map((color, at) => (
+            <stop key={at} offset={[0, 0.3, 0.5, 0.75, 1][at]} stopColor={color} />
+          ))}
         </linearGradient>
         <linearGradient id="pedestal3d" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff3c8" />
@@ -239,6 +237,7 @@ export function MonsterSheet({
   skills,
   extras = [],
   actions,
+  aside,
   note,
   onClose,
 }: {
@@ -247,9 +246,11 @@ export function MonsterSheet({
   /** The orange number the monster shows on the field; empty hides the badge. */
   count: string;
   skills: SkillShown[];
-  /** Icons after the skills that are not skills: Cân bằng on the deck builder, a spell's kind on the spell sheet. */
+  /** Icons after the skills that are not skills: a spell's kind on the spell sheet. */
   extras?: SheetExtra[];
   actions: SheetAction[];
+  /** Shown beside the card under its name (the deck builder's power balance notes). */
+  aside?: ReactNode;
   /** Live figure for this monster (e.g. its current skill damage), shown under the first skill. */
   note?: string;
   onClose: () => void;
@@ -342,6 +343,7 @@ export function MonsterSheet({
           </div>
           <div className="msheet-side">
             <h2 className="msheet-name">{tr(name)}</h2>
+            {aside}
             {actions.length ? (
               <div className="msheet-acts">
                 {actions.map((action) => (

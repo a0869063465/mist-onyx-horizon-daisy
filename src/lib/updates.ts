@@ -560,6 +560,15 @@ export const PENDING_NOTES: string[] = [
   "Nút Bộ bài mới tạo bộ trống rồi mở trang Chỉnh sửa bộ bài. Nút << ở trang Chỉnh sửa bộ bài quay về màn Chọn bộ bài.",
   "Menu chính bỏ nút Điều chỉnh deck, game bỏ chế độ 2 người 1 máy. Hướng dẫn nằm ở góc trên bên phải màn Chọn bộ bài.",
   "Màn Chọn bộ bài làm lại theo kiểu Legends of Runeterra: hộp bộ bài khung vàng có chồng lá phía trên, ruy băng sao đỏ, nút đá xám, khung bộ bài xanh dương trượt ra từ bên phải với vòng chân dung, nút Chơi ngay vàng, bảng chế độ chơi kiểu Vô hạn.",
+  "Chỉnh sửa bộ bài: dưới ô tìm lá có dòng ghi chú \"Kéo ngang hoặc Ấn giữ để di chuyển lá bài\". Bấm vào thì ghi chú chìm xuống, bấm lại thì nổi lên.",
+  "Chỉnh sửa bộ bài: icon chiến thuật màu xanh dương, icon lọc màu xám, cùng dời lên ngay dưới 3 nút quái, phép và lưu.",
+  "Chỉnh sửa bộ bài: hàng cuối là tên bộ bài và nút Đổi hình nền màu vàng. Bấm vào hiện mọi lá quái của bộ, kể cả lá ngoài bộ; chọn một lá rồi bấm Đặt làm ảnh bìa. Bìa này hiện trên hộp bộ bài ở màn Chọn bộ bài.",
+  "Số sao trong danh sách bộ bài vẫn là ngôi sao vàng, con số đổi màu theo sao cho dễ nhìn: 1 sao xanh lá, 2 sao cam, 3 sao đỏ, 4 sao tím, 5 sao trắng.",
+  "Bỏ icon Cân bằng. Khung Cân bằng sức mạnh giờ nằm cạnh lá bài, ngay dưới tên lá.",
+  "Kho bài trong Chỉnh sửa bộ bài hiện 4 lá một hàng.",
+  "Menu chính có lại ô ở chỗ nút bộ bài cũ, giờ tên là Cửa hàng, có khoá, chưa bấm vào được.",
+  "Nút Hướng dẫn ở màn Chọn bộ bài mở danh sách các bài hướng dẫn, kiểu Thử thách của Legends of Runeterra. Bài đầu tiên là Cơ bản. Bấm vào bài hiện khung bên phải: hai quái đối đầu, nội dung bài, độ khó đề nghị cho Tân thủ và nút Chơi ngay.",
+  "Học xong một bài hướng dẫn thì bài đó có dấu ✓ Hoàn thành. Học xong hay Bỏ qua đều quay về danh sách hướng dẫn.",
 ];
 
 function remarkOf(notes: string[]) {

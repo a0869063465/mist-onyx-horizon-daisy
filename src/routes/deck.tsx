@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { CardFace } from "@/components/game/card-face";
-import { balanceExtra, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
-import { cardsOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
+import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
 import { tr, useLang } from "@/lib/i18n";
-import { markFace } from "@/lib/power-balance";
+import { infoBlocks, markFace } from "@/lib/power-balance";
 import { spellKind, spellKindRank } from "@/lib/spell-kinds";
 import { deckTactics, loadStrategies } from "@/lib/strategies";
 
@@ -46,6 +46,7 @@ function DeckPage() {
   const [saved, setSaved] = useState(false);
   const [naming, setNaming] = useState<string | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
+  const [covering, setCovering] = useState(false);
   const [ghost, setGhost] = useState<Ghost | null>(null);
   const grab = useRef<Grab | null>(null);
   // A press that turned into a drag or a swipe is not a tap: its click (if the browser sends one) is ignored.
@@ -244,6 +245,17 @@ function DeckPage() {
     setActive(row.n);
   }
 
+  // The cover the player chose stays on the deck's box (Chọn bộ bài) while the deck can still show it.
+  function setCover(id: string) {
+    if (entry) {
+      setBook((current) => current.map((row) => (row.n === entry.n ? { ...row, cover: id, coverSet: true, at: Date.now() } : row)));
+      return;
+    }
+    const row = { ...freshDeck(book), monsters: deck.monsters, spells: deck.spells, cover: id, coverSet: true };
+    setBook((current) => [...current, row]);
+    setActive(row.n);
+  }
+
   function toggle<K extends keyof PoolFilter>(key: K, value: PoolFilter[K][number]) {
     setFilter((current) => {
       const list = current[key] as Array<typeof value>;
@@ -345,6 +357,7 @@ function DeckPage() {
               </button>
             ) : null}
           </label>
+          <DragTip />
           <div className="dk-tools">
             <button type="button" className={`dk-tool is-monster${mode === "monster" && !q ? " on" : ""}`} aria-label={tr("Quái thú")} onClick={() => setMode("monster")}>
               <ToolGem glyph="wolf-head" rim="note" ring="#ffd23c" deep="#4a3400" />
@@ -359,12 +372,9 @@ function DeckPage() {
               {short > 0 ? <b className="dk-count is-bad">-{short}</b> : null}
             </button>
           </div>
-          <div className="dk-foot">
-            <button type="button" className="dk-name" onClick={() => setNaming(entry?.name ?? "")}>
-              <span className="dk-name-text">{deckName}</span>
-            </button>
+          <div className="dk-tools is-two">
             <button type="button" className="dk-tool is-small" aria-label={tr("Các chiến thuật đang có trong bộ bài")} onClick={() => setPlansOpen(true)}>
-              <ToolGem glyph="histogram" rim="note" ring="#e9c46a" deep="#3a2a06" />
+              <ToolGem glyph="histogram" rim="active" ring="#3ec6ff" deep="#0b2a4a" />
             </button>
             <button
               type="button"
@@ -372,7 +382,15 @@ function DeckPage() {
               aria-label={tr("Lọc")}
               onClick={() => setFilterOpen((open) => !open)}
             >
-              <ToolGem glyph="funnel" rim="note" ring="#e9c46a" deep="#3a2a06" />
+              <ToolGem glyph="funnel" rim="steel" ring="#b9bec8" deep="#2a2d33" />
+            </button>
+          </div>
+          <div className="dk-foot">
+            <button type="button" className="dk-name" onClick={() => setNaming(entry?.name ?? "")}>
+              <span className="dk-name-text">{deckName}</span>
+            </button>
+            <button type="button" className="dk-tool is-small" aria-label={tr("Đổi hình nền")} onClick={() => setCovering(true)}>
+              <ToolGem glyph="portrait" rim="note" ring="#e9c46a" deep="#3a2a06" />
             </button>
             {naming !== null ? (
               <input
@@ -398,18 +416,102 @@ function DeckPage() {
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} extras={extrasOf(sheet.id)} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
         ) : (
-          <SpellSheet id={sheet.id} extras={extrasOf(sheet.id)} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
         )
+      ) : null}
+      {covering ? (
+        <CoverPicker
+          choices={coverChoices(deck)}
+          current={entry ? coverOf({ ...entry, monsters: deck.monsters, spells: deck.spells }) : null}
+          onPick={(id) => {
+            setCover(id);
+            setCovering(false);
+          }}
+          onClose={() => setCovering(false)}
+        />
       ) : null}
     </main>
   );
 }
 
-function extrasOf(id: string) {
-  const balance = balanceExtra(id);
-  return balance ? [balance] : [];
+/**
+ * The deck builder's tip under the search box (owner, 18/10). Tapping it sinks it to a small "?" tab; tapping the
+ * tab brings it back. The choice is remembered on this phone.
+ */
+const TIP_KEY = "clash-deck-tip";
+
+function DragTip() {
+  const [sunk, setSunk] = useState(false);
+  useEffect(() => {
+    try {
+      setSunk(localStorage.getItem(TIP_KEY) === "sunk");
+    } catch {
+      // Shown by default.
+    }
+  }, []);
+  function flip() {
+    setSunk((now) => {
+      try {
+        localStorage.setItem(TIP_KEY, now ? "up" : "sunk");
+      } catch {
+        // Only this visit then.
+      }
+      return !now;
+    });
+  }
+  return (
+    <button type="button" className={`dk-tip${sunk ? " is-sunk" : ""}`} aria-expanded={!sunk} onClick={flip}>
+      <span className="dk-tip-text">
+        <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+      </span>
+      <span className="dk-tip-tab" aria-hidden="true">
+        ?
+      </span>
+    </button>
+  );
+}
+
+/** Power balance notes beside the card on its sheet, under its name (owner, 18/10: instead of a Cân bằng icon). */
+function BalanceBox({ id }: { id: string }) {
+  const blocks = infoBlocks(id);
+  if (!blocks.length) return null;
+  return (
+    <section className={`msheet-balance is-${blocks[0].tone}`}>
+      <b>{tr("Cân bằng sức mạnh")}</b>
+      <BalanceLines id={id} />
+    </section>
+  );
+}
+
+/** Đổi hình nền: the deck's monsters and the forms they can become; pick one and set it as the deck's cover. */
+function CoverPicker({ choices, current, onPick, onClose }: { choices: string[]; current: string | null; onPick: (id: string) => void; onClose: () => void }) {
+  const [picked, setPicked] = useState<string | null>(current);
+  return (
+    <div className="dk-cover-back" onClick={(event) => event.target === event.currentTarget && onClose()}>
+      <div className="dk-cover" role="dialog" aria-label={tr("Đổi hình nền")}>
+        <button type="button" className="msheet-x" aria-label={tr("Đóng")} onClick={onClose}>
+          ✕
+        </button>
+        <h2>{tr("Đổi hình nền")}</h2>
+        {choices.length ? (
+          <div className="dk-cover-grid">
+            {choices.map((id) => (
+              <button key={id} type="button" className={`dk-cover-pick${picked === id ? " on" : ""}`} onClick={() => setPicked(id)}>
+                <CardFace monster={monsterCard(id)} hideName />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="dk-cover-empty">{tr("Bộ bài chưa có quái thú.")}</p>
+        )}
+        <button type="button" className="dk-cover-set" disabled={!picked} onClick={() => picked && onPick(picked)}>
+          {tr("Đặt làm ảnh bìa")}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function sameIds(left: string[], right: string[]) {
@@ -463,7 +565,7 @@ function DeckRow({ id, kind, lifted, onPress, onTap }: { id: string; kind: Kind;
       onContextMenu={(event) => event.preventDefault()}
     >
       {art ? <span className="dk-row-art" style={{ backgroundImage: `url(${art})` }} /> : null}
-      <span className={`dk-row-badge is-${kind}`}>
+      <span className={`dk-row-badge is-${kind}${monster ? ` is-s${Math.min(5, Math.max(1, monster.stars))}` : ""}`}>
         {monster ? (
           <>
             <i className="dk-row-star" aria-hidden="true">

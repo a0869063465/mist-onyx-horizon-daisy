@@ -473,6 +473,20 @@ const PAIRS: Array<[string, string]> = [
   ["Thay đổi lối chơi", "Playstyle change"],
   ["Lần cuối", "Latest"],
   ["Đập phá", "Smash"],
+  ["Kéo ngang", "Drag sideways"],
+  ["hoặc", "or"],
+  ["Ấn giữ", "Press and hold"],
+  ["để di chuyển lá bài", "to move a card"],
+  ["Đổi hình nền", "Change cover"],
+  ["Đặt làm ảnh bìa", "Set as cover"],
+  ["Bộ bài chưa có quái thú.", "This deck has no monsters yet."],
+  ["Cửa hàng", "Shop"],
+  ["Chọn hướng dẫn", "Choose a tutorial"],
+  ["Cơ bản", "Basics"],
+  ["Hoàn thành", "Completed"],
+  ["Độ khó đề nghị cho:", "Recommended for:"],
+  ["Tân thủ", "Beginners"],
+  ["Người giữ khoá chỉ bạn cách rút bài, triệu hồi, dùng kỹ năng và ma pháp.", "The Keykeeper shows you how to draw, summon, use skills and cast spells."],
 ];
 
 const EXACT = new Map(PAIRS);
