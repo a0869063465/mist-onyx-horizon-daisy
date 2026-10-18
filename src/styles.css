@@ -7913,3 +7913,39 @@ button.watch-back {
 .code-entry { display: grid; gap: 0.75rem; }
 .code-entry .tune-input { min-height: 2.8rem; padding: 0 0.8rem; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.12em; text-align: center; }
 .code-note { margin: 0; text-align: center; font-weight: 700; color: #ffe08a; }
+
+/* Đánh thường's waiting screen (owner, 18/10, after LoR): a framed box in the middle, the owner's portrait
+   background (/queue-bg.jpg) over the deck's blurred art. */
+.lor-queue { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 1rem; overflow: hidden; background: #120c0c; }
+.lor-queue-art, .lor-queue-bg { position: absolute; inset: -2rem; background: center / cover no-repeat; pointer-events: none; }
+.lor-queue-art { filter: blur(10px) brightness(0.45) saturate(0.85); }
+.lor-queue-bg { inset: 0; background-image: url("/queue-bg.jpg"); }
+.lor-queue-box {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  width: min(86vw, 20rem);
+  padding: 1.2rem 1.1rem 1.3rem;
+  text-align: center;
+  border-radius: 0.6rem;
+  border: 2px solid #b08a45;
+  background:
+    var(--lor-noise),
+    linear-gradient(180deg, rgba(48, 30, 28, 0.96) 0%, rgba(30, 20, 19, 0.97) 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 220, 160, 0.12), 0 18px 40px rgba(0, 0, 0, 0.7);
+  animation: lor-band 0.22s ease-out;
+}
+.lor-queue-box h2 { margin: 0; font-family: var(--lor-cond); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #b9ab97; }
+.lor-queue-sub { margin: -0.4rem 0 0; font-family: var(--lor-cond); font-size: 0.95rem; font-weight: 500; letter-spacing: 0.03em; color: #9c8f7e; }
+.lor-queue-face {
+  width: 9rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1a1416 center 22% / 165% no-repeat;
+  border: 4px solid #d2a04c;
+  box-shadow: 0 0 0 2px #2a1a08, 0 0 0 5px rgba(214, 160, 92, 0.3), 0 0 22px rgba(255, 190, 90, 0.25), 0 8px 16px rgba(0, 0, 0, 0.6);
+}
+.lor-queue-time { margin: 0.3rem 0 0; font-family: var(--lor-cond); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #cdbfa8; }
+.lor-queue-time b { font-size: 1.3rem; color: #f2b44f; font-variant-numeric: tabular-nums; }
+.lor-queue-box .lor-stone { min-width: 9rem; }

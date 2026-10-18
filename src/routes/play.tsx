@@ -1598,7 +1598,9 @@ function PlayPage() {
     matchRef.current = null;
     netRef.current = join;
     setNet(join);
-    setWait(join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
+    // A room paired by Đánh thường has both decks already: no code to share.
+    const quick = Boolean((join as { quick?: boolean }).quick);
+    setWait(quick ? "Đang vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
     let stop = false;
     const tick = async () => {
       const room = await pollRoom({ data: { code: join.code, seat: join.seat } });
@@ -2418,7 +2420,7 @@ function PlayPage() {
     return (
       <main className="stage">
         <p>{wait || "Đang mở đấu trường…"}</p>
-        {net?.seat === "host" ? <p className="room-code">{net.code}</p> : null}
+        {net?.seat === "host" && !(net as { quick?: boolean }).quick ? <p className="room-code">{net.code}</p> : null}
       </main>
     );
   }

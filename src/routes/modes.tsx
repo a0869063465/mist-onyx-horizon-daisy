@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc, spellCard, spellSrc } from "@/lib/catalog";
 import { deckIssues, saveDeck } from "@/lib/deck";
@@ -13,12 +13,12 @@ import {
   type DeckEntry,
 } from "@/lib/deck-book";
 import { tr, useLang } from "@/lib/i18n";
-import { joinRoom, openRoom } from "@/lib/net-room";
+import { joinRoom, leaveQueue, openRoom, seekMatch, type NetDeck } from "@/lib/net-room";
 
 export const Route = createFileRoute("/modes")({ component: DeckSelectPage });
 
 /**
- * Game modes on a deck's panel (owner, 18/10). Đánh thường (matchmaking) is shown but not open yet. `art` is the
+ * Game modes on a deck's panel (owner, 18/10). Đánh thường pairs two waiting players (`QueueScreen`). `art` is the
  * monster faintly behind its card in the mode picker, as the LoR picker shows a champion behind each choice.
  */
 type PlayMode = "ai" | "quick" | "custom" | "test";
@@ -27,9 +27,9 @@ const MODES: Array<{ key: PlayMode; label: string; text: string; art: string; op
   {
     key: "quick",
     label: "Đánh thường",
-    text: "Tìm trận với người chơi khác. Chưa mở.",
+    text: "Tìm trận với người chơi khác.",
     art: "kiem-si-lua-thieng",
-    open: false,
+    open: true,
   },
   {
     key: "custom",
@@ -56,9 +56,10 @@ function reasonOf(error: unknown): string {
   return text ? ` (${text.slice(0, 120)})` : "";
 }
 
-function remember(code: string, seat: "host" | "guest") {
+/** `quick`: paired by Đánh thường, so the match shows "Đang vào trận…" instead of a code to share. */
+function remember(code: string, seat: "host" | "guest", quick = false) {
   sessionStorage.setItem("clash-mode", "net");
-  sessionStorage.setItem("clash-net", JSON.stringify({ code, seat }));
+  sessionStorage.setItem("clash-net", JSON.stringify({ code, seat, ...(quick ? { quick: true } : {}) }));
 }
 
 /**
@@ -81,6 +82,7 @@ function DeckSelectPage() {
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [queueing, setQueueing] = useState(false);
   useLang();
 
   useEffect(() => {
@@ -163,6 +165,10 @@ function DeckSelectPage() {
       setNote("");
       setCode("");
       setRoom(true);
+      return;
+    }
+    if (mode === "quick") {
+      setQueueing(true);
       return;
     }
     goLocal(mode === "test" ? "test" : "ai");
@@ -330,6 +336,17 @@ function DeckSelectPage() {
           </div>
         </LorModal>
       ) : null}
+      {queueing && shown ? (
+        <QueueScreen
+          deck={cardsOf(shown)}
+          art={coverArt}
+          onMatched={(found, seat) => {
+            remember(found, seat, true);
+            void navigate({ to: "/play" });
+          }}
+          onCancel={() => setQueueing(false)}
+        />
+      ) : null}
       {room && shown ? (
         <LorModal art={coverArt} onClose={() => !busy && setRoom(false)}>
           <h2 className="lor-modal-title">{tr("Tuỳ chọn")}</h2>
@@ -386,6 +403,87 @@ function DeckSelectPage() {
 }
 
 /** Gradients the deck boxes and the panel icons share; drawn once on the page. */
+/**
+ * Đánh thường's waiting screen, after LoR's (owner, 18/10): a framed panel in the middle of the screen, not a strip
+ * down it, with the mode, "Đang trong hàng chờ đối thủ", the deck's portrait, the time waited and Huỷ. It waits
+ * until paired or cancelled. The background is /queue-bg.jpg (the owner's picture, portrait) over the deck's art.
+ */
+function QueueScreen({
+  deck,
+  art,
+  onMatched,
+  onCancel,
+}: {
+  deck: NetDeck;
+  art: string | null;
+  onMatched: (code: string, seat: "host" | "guest") => void;
+  onCancel: () => void;
+}) {
+  const [ticket] = useState(() =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  );
+  const [seconds, setSeconds] = useState(0);
+  const [note, setNote] = useState("");
+  const done = useRef(false);
+  const matched = useRef(onMatched);
+  matched.current = onMatched;
+  const cards = useRef(deck);
+
+  useEffect(() => {
+    const started = Date.now();
+    const clock = window.setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 250);
+    let waiting = false;
+    const seek = async () => {
+      if (done.current || waiting) return;
+      waiting = true;
+      try {
+        const found = await seekMatch({ data: { ticket, deck: cards.current } });
+        setNote("");
+        if (found.phase === "matched" && !done.current) {
+          done.current = true;
+          matched.current(found.code, found.seat);
+        }
+      } catch (error) {
+        setNote(`Không kết nối được máy chủ.${reasonOf(error)}`);
+      } finally {
+        waiting = false;
+      }
+    };
+    void seek();
+    const timer = window.setInterval(() => void seek(), 1200);
+    return () => {
+      window.clearInterval(clock);
+      window.clearInterval(timer);
+    };
+  }, [ticket]);
+
+  function cancel() {
+    done.current = true;
+    void leaveQueue({ data: { ticket } }).catch(() => undefined);
+    onCancel();
+  }
+
+  const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  return (
+    <div className="lor-queue" role="dialog" aria-label={tr("Đánh thường")}>
+      {art ? <span className="lor-queue-art" style={{ backgroundImage: `url(${art})` }} /> : null}
+      <span className="lor-queue-bg" />
+      <section className="lor-queue-box">
+        <h2>{tr("Đánh thường")}</h2>
+        <p className="lor-queue-sub">{tr("Đang trong hàng chờ đối thủ")}</p>
+        <span className="lor-queue-face" style={art ? { backgroundImage: `url(${art})` } : undefined} />
+        <p className="lor-queue-time">
+          {tr("Đang tìm trận đấu:")} <b>{time}</b>
+        </p>
+        <button type="button" className="lor-stone" onClick={cancel}>
+          {tr("Huỷ")}
+        </button>
+        {note ? <p className="lor-note">{tr(note)}</p> : null}
+      </section>
+    </div>
+  );
+}
+
 function LorDefs() {
   return (
     <svg className="glyph-defs" width="0" height="0" aria-hidden="true">

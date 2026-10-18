@@ -159,3 +159,82 @@ export const pollRoom = createServerFn({ method: "POST" })
       guestDeck: data.seat === "host" && !room.duel ? readDeck(room.guest_deck) : null,
     };
   });
+
+/** A waiting player who stopped polling this long ago has left the queue. */
+const QUEUE_STALE = 20_000;
+
+type Seek =
+  | { phase: "wait" }
+  | { phase: "matched"; code: string; seat: NetSeat };
+
+/**
+ * Đánh thường (owner, 18/10): each waiting phone calls this every second or so with its ticket. Two waiting
+ * players are paired into a new room; who hosts, and so who moves first, is random. The room already holds both
+ * decks, so the match opens as soon as the host's game sees it.
+ */
+export const seekMatch = createServerFn({ method: "POST" })
+  .validator((data: { ticket: string; deck: NetDeck }) => data)
+  .handler(async ({ data }): Promise<Seek> => {
+    const sql = await db();
+    const now = Date.now();
+    const ticket = String(data.ticket).slice(0, 64);
+    await sql`delete from clash_queue where (code is null and updated_at < ${now - QUEUE_STALE}) or updated_at < ${now - TTL}`;
+    const mine = await sql<{ code: string | null; seat: string | null }>`select code, seat from clash_queue where ticket = ${ticket}`;
+    if (mine[0]?.code) return { phase: "matched", code: mine[0].code, seat: mine[0].seat === "host" ? "host" : "guest" };
+    const deck = JSON.stringify(deckOf(data.deck));
+    if (mine[0]) await sql`update clash_queue set updated_at = ${now} where ticket = ${ticket}`;
+    else {
+      await sql`
+        insert into clash_queue (ticket, deck, code, seat, joined_at, updated_at)
+        values (${ticket}, ${deck}, null, null, ${now}, ${now})
+        on conflict (ticket) do nothing
+      `;
+    }
+    const others = await sql<{ ticket: string; deck: string }>`
+      select ticket, deck from clash_queue
+      where ticket <> ${ticket} and code is null and updated_at >= ${now - QUEUE_STALE}
+      order by joined_at
+      limit 5
+    `;
+    for (const other of others) {
+      const meHost = Math.random() < 0.5;
+      const hostDeck = meHost ? deck : other.deck;
+      const guestDeck = meHost ? other.deck : deck;
+      let code = "";
+      for (let n = 0; n < 8 && !code; n += 1) {
+        const tried = codeOf();
+        const made = await sql<{ code: string }>`
+          insert into clash_rooms (code, host_deck, guest_deck, duel, rev, updated_at)
+          values (${tried}, ${hostDeck}, ${guestDeck}, null, 0, ${now})
+          on conflict (code) do nothing
+          returning code
+        `;
+        if (made[0]) code = made[0].code;
+      }
+      if (!code) break;
+      const mySeat = meHost ? "host" : "guest";
+      const theirSeat = meHost ? "guest" : "host";
+      const claimed = await sql<{ ticket: string }>`
+        update clash_queue
+        set code = ${code}, seat = case when ticket = ${ticket} then ${mySeat} else ${theirSeat} end, updated_at = ${now}
+        where ticket in (${ticket}, ${other.ticket}) and code is null
+        returning ticket
+      `;
+      if (claimed.length === 2) return { phase: "matched", code, seat: mySeat };
+      // Someone else paired one of us first: undo this pairing and its room.
+      await sql`update clash_queue set code = null, seat = null where code = ${code}`;
+      await sql`delete from clash_rooms where code = ${code}`;
+      const again = await sql<{ code: string | null; seat: string | null }>`select code, seat from clash_queue where ticket = ${ticket}`;
+      if (again[0]?.code) return { phase: "matched", code: again[0].code, seat: again[0].seat === "host" ? "host" : "guest" };
+    }
+    return { phase: "wait" };
+  });
+
+/** Huỷ: leave the queue (a ticket already paired stays, and its room expires unplayed). */
+export const leaveQueue = createServerFn({ method: "POST" })
+  .validator((data: { ticket: string }) => data)
+  .handler(async ({ data }) => {
+    const sql = await db();
+    await sql`delete from clash_queue where ticket = ${String(data.ticket).slice(0, 64)} and code is null`;
+    return { ok: true as const };
+  });
