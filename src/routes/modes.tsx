@@ -261,8 +261,10 @@ function DeckSelectPage() {
                   </button>
                   <span>{tr("Yêu thích")}</span>
                 </div>
+                {/* The deck's name sits under the box inside the thin bracket, as in LoR. */}
                 <div className="lor-stage-box">
                   <DeckBox row={shown} />
+                  <h2 className="lor-title">{shown.name}</h2>
                 </div>
                 <div className="lor-side">
                   <button type="button" className="lor-square" onClick={() => edit(shown.n)}>
@@ -271,7 +273,6 @@ function DeckSelectPage() {
                   <span>{tr("Chỉnh sửa")}</span>
                 </div>
               </div>
-              <h2 className="lor-title">{shown.name}</h2>
               <button
                 type="button"
                 className="lor-play"
