@@ -4,13 +4,7 @@ import { parseCopy } from "@/lib/copy-mark";
 import { FUSIONS } from "@/lib/fusion";
 import { tr, useLang } from "@/lib/i18n";
 
-/** The `sheet-*` inks are only for the monster sheet's description (see sheet-ink.ts), never the notice board. */
-export type Ink =
-  | "mon" | "spell" | "skill" | "atk" | "star1" | "star2" | "star3" | "star4" | "hide" | "sys" | "tru" | "phys" | "ward" | "fuse" | "mana"
-  | "sheet-turn" | "sheet-blood" | "sheet-atk" | "sheet-def" | "sheet-mdef" | "sheet-guard" | "sheet-mute" | "sheet-hp" | "sheet-evo" | "sheet-clean";
-
-/** Extra words to colour at a position of the text (the monster sheet's own colours): the longer match wins. */
-export type InkAt = (text: string, at: number) => { text: string; ink: Ink } | null;
+type Ink = "mon" | "spell" | "skill" | "atk" | "star1" | "star2" | "star3" | "star4" | "hide" | "sys" | "tru" | "phys" | "ward" | "fuse" | "mana";
 
 const FUSED = new Set(FUSIONS.map((recipe) => recipe.result));
 
@@ -101,7 +95,7 @@ const BASE_BUCKETS = ruleBuckets(NOTICE_RULES);
 const SYSTEM_BUCKETS = ruleBuckets([...NOTICE_RULES, ...SYSTEM_RULES]);
 
 /** `keepLead`: keep a leading "1." (card text), which a notice line drops. */
-export function noticeParts(raw: string, system = false, keepLead = false, more?: InkAt): Array<{ text: string; ink?: Ink }> {
+export function noticeParts(raw: string, system = false, keepLead = false): Array<{ text: string; ink?: Ink }> {
   const text = keepLead ? raw : raw.replace(/^\d+\.\s*/, "");
   const extra: Array<{ text: string; ink: Ink }> = [];
   for (const [id, chips] of Object.entries(MONSTER_CHIPS)) {
@@ -114,9 +108,7 @@ export function noticeParts(raw: string, system = false, keepLead = false, more?
   const out: Array<{ text: string; ink?: Ink }> = [];
   let index = 0;
   while (index < text.length) {
-    const named = buckets.get(text[index])?.find((rule) => text.startsWith(rule.text, index));
-    const own = more?.(text, index);
-    const hit = own && (!named || own.text.length >= named.text.length) ? own : named;
+    const hit = buckets.get(text[index])?.find((rule) => text.startsWith(rule.text, index));
     if (hit) {
       out.push({ text: hit.text, ink: hit.ink });
       index += hit.text.length;

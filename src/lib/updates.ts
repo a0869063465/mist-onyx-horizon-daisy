@@ -542,6 +542,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng quái của Kén ngài bỏ icon Mọc chân, vì kén không tự dùng được. Mọc chân đi kèm Hoá Kén của Sâu non.",
   "Cứ địa máy móc: Phù thuỷ thời gian không phải quái máy móc, không được áo giáp.",
   "Mô tả trên bảng quái tô màu thêm: số lượt và công màu cam, thủ vàng, thủ phép tím, phòng ngự vàng pha tím, máu và hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải trạng thái bất lợi xanh lam, không thể hành động màu xám. Bảng thông báo giữ màu cũ.",
+  "Màu mới trên bảng quái chỉ thêm vào chữ chưa có màu. Tên skill và chữ đã có màu giữ nguyên màu cũ.",
 ];
 
 function remarkOf(notes: string[]) {
