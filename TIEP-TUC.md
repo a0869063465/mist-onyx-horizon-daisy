@@ -1,6 +1,6 @@
 # Việc đang dở (đọc trước khi làm)
 
-Ghi lại cuối phiên ngày 17/10/2026. Nhánh làm việc: `claude/test-app-phf3et` (chưa gộp vào `main`).
+Ghi lại cuối phiên ngày 18/10/2026. Nhánh làm việc: `claude/test-app-phf3et` (chưa gộp vào `main`).
 Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi gộp vào `main`, và phải hỏi chủ game trước khi gộp.
 
 ## Quy tắc làm việc với chủ game
@@ -13,6 +13,21 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Không nhắc tới điểm mạnh, điểm yếu, khắc chế (đang ẩn).
 - Bộ test có 9 bài lỗi sẵn (thẻ chia sẻ, giản đồ đăng nhập), không liên quan lá bài. `tsc` có 7 lỗi sẵn.
 - Chạy thử luật: dùng `createServer` của Vite (`ssrLoadModule('/src/lib/duel.ts')`) vì Node thuần không hiểu đường dẫn `@/`.
+
+## Đang chờ chủ game trả lời (hỏi lại nếu cần, đừng tự quyết)
+
+- Hướng dẫn chơi mở từ đâu (chủ game trả lời "c", chưa rõ). Nút tạm ở Chọn cách chơi.
+- Phù thuỷ thời gian có tính là quái máy móc (Cứ địa máy móc) không. Đang tính.
+- Cứ địa máy móc: áo giáp vỡ rồi thì mất đến khi quái rời sân (đang làm vậy, chủ game chưa xác nhận). Đang dùng ảnh bàn số 3; cặp ảnh 1 và 2 (trên/dưới) cũng dùng được nếu chủ game muốn.
+- Thánh địa thiên sứ: lá chắn chỉ chặn đánh thường và skill, không chặn phép (đang làm vậy). Mô tả lá đã bỏ đoạn trong ngoặc giải thích thiên sứ/yêu tinh/tinh linh; thêm lại nếu chủ game muốn. Danh sách thuật sư buff và chiến binh thiên sứ: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
+- Cục bông ma quái: bản sao do Pháo kích tạo mang theo kỹ năng chưa dùng của bản chính (mỗi bản sao tự nhân bản được 1 lần); "tối đa 4 con" chỉ là trần vì sân 3 ô. Chủ game chưa xác nhận.
+- Mọc chân (Kén ngài) tốn 1 mana nhưng mô tả chưa ghi nên không hiện ngọc; "khoãng" trong mô tả Hiến Tế giữ nguyên. Chưa trả lời.
+- Màu chữ điểm nhấn: đã áp vào mô tả kỹ năng trên bảng quái; nếu chủ game muốn chỗ khác thì đổi.
+- Nền màn tải game/trận: chủ game sẽ gửi ảnh.
+
+## Mẹo khi trả lời chủ game
+
+- Chủ game đánh số câu kiểu "1. 2. 3. 6." thì ô chat tự đổi 6 thành 4 (danh sách Markdown). Khi trích lại số câu, viết "Câu 6:" hoặc "6)" để giữ đúng số.
 
 ## Đã xong trong phiên này
 
