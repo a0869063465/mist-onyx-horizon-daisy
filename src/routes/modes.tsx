@@ -1,21 +1,44 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type CSSProperties } from "react";
-import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
+import { useEffect, useState, type ReactNode } from "react";
+import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc, spellCard, spellSrc } from "@/lib/catalog";
 import { deckIssues, saveDeck } from "@/lib/deck";
-import { cardsOf, coverOf, deckOrder, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
+import {
+  cardsOf,
+  coverOf,
+  deckOrder,
+  freshDeck,
+  loadBook,
+  saveBook,
+  type DeckEntry,
+} from "@/lib/deck-book";
 import { tr, useLang } from "@/lib/i18n";
 import { joinRoom, openRoom } from "@/lib/net-room";
 
 export const Route = createFileRoute("/modes")({ component: DeckSelectPage });
 
-/** Game modes on a deck's panel (owner, 18/10). Đánh thường (matchmaking) is shown but not open yet. */
+/**
+ * Game modes on a deck's panel (owner, 18/10). Đánh thường (matchmaking) is shown but not open yet. `art` is the
+ * monster faintly behind its card in the mode picker, as the LoR picker shows a champion behind each choice.
+ */
 type PlayMode = "ai" | "quick" | "custom" | "test";
-const MODES: Array<{ key: PlayMode; label: string; icon: string; open: boolean }> = [
-  { key: "ai", label: "Vs Máy", icon: "robot-golem", open: true },
-  { key: "quick", label: "Đánh thường", icon: "crossed-swords", open: false },
-  { key: "custom", label: "Tuỳ chọn", icon: "shaking-hands", open: true },
-  { key: "test", label: "Test", icon: "test-tubes", open: true },
+const MODES: Array<{ key: PlayMode; label: string; text: string; art: string; open: boolean }> = [
+  { key: "ai", label: "Vs Máy", text: "Đấu với máy.", art: "may-quay-thuong", open: true },
+  {
+    key: "quick",
+    label: "Đánh thường",
+    text: "Tìm trận với người chơi khác. Chưa mở.",
+    art: "kiem-si-lua-thieng",
+    open: false,
+  },
+  {
+    key: "custom",
+    label: "Tuỳ chọn",
+    text: "Tạo phòng mời bạn bè, hoặc nhập mã phòng.",
+    art: "hiep-si-cua-vua",
+    open: true,
+  },
+  { key: "test", label: "Test", text: "Thử bộ bài tự do.", art: "phu-thuy-thoi-gian", open: true },
 ];
 const MODE_KEY = "clash-play-mode";
 
@@ -34,9 +57,10 @@ function remember(code: string, seat: "host" | "guest") {
 }
 
 /**
- * Chọn bộ bài (owner, 18/10, after the LoR deck screen): what Chơi opens. A grid of decks (favourites first, then
- * the latest changed); tap one for its panel: game mode on top, Yêu thích, Chỉnh sửa, Chơi ngay, Xoá. Bộ bài mới
- * makes an empty deck and opens the deck builder; Hướng dẫn sits top right.
+ * Chọn bộ bài (owner, 18/10): what Chơi opens, made to look like the LoR deck screen the owner recorded. A grid of
+ * deck boxes (favourites first, then the latest changed); tap one and its blue panel slides in from the right:
+ * the game mode on top, the deck's portrait, the deck box between Yêu thích and Chỉnh sửa, its name, Chơi ngay,
+ * and Xoá in the corner. Bộ bài mới makes an empty deck and opens the deck builder; Hướng dẫn sits top right.
  */
 function DeckSelectPage() {
   const navigate = useNavigate();
@@ -114,7 +138,8 @@ function DeckSelectPage() {
     sessionStorage.setItem("clash-mode", next);
     sessionStorage.removeItem("clash-net");
     // The tutorial returns here when it ends or is skipped.
-    if (next === "tutorial") sessionStorage.setItem("clash-tutorial-from", window.location.pathname);
+    if (next === "tutorial")
+      sessionStorage.setItem("clash-tutorial-from", window.location.pathname);
     void navigate({ to: "/play" });
   }
 
@@ -170,170 +195,336 @@ function DeckSelectPage() {
     }
   }
 
+  const coverArt = shown?.cover ? artSrc(shown.cover, 1) : null;
+
   return (
-    <main className="ds-page">
-      <GlyphDefs />
-      <header className="dk-head ds-head">
-        <Link to="/" className="dk-back" aria-label={tr("Về sân")}>
-          {"<<"}
-        </Link>
-        <h1>{tr("Chọn bộ bài")}</h1>
-        <button type="button" className="ds-help" onClick={() => goLocal("tutorial")}>
-          <Glyph name="help" fill="#f3dfa6" />
-          <span>{tr("Hướng dẫn")}</span>
-        </button>
-      </header>
-      <div className="ds-bar">
-        <button type="button" className="ds-new" onClick={makeDeck}>
-          <Glyph name="card-play" fill="#f3dfa6" />
-          <span>{tr("Bộ bài mới")}</span>
-        </button>
-      </div>
-      <section className="ds-grid">
-        {decks.map((row) => (
-          <button key={row.n} type="button" className="ds-deck" onClick={() => setOpen(row.n)}>
-            <DeckBox row={row} />
-            <span className="ds-name">{row.name}</span>
+    <main className="lor-page">
+      <LorDefs />
+      <div className="lor-main">
+        <header className="lor-head">
+          <Link to="/" className="lor-stone is-back" aria-label={tr("Về sân")}>
+            {"<<"}
+          </Link>
+          <h1>{tr("Chọn bộ bài của bạn")}</h1>
+          <button type="button" className="lor-stone is-help" onClick={() => goLocal("tutorial")}>
+            {tr("Hướng dẫn")}
           </button>
-        ))}
-      </section>
+        </header>
+        <div className="lor-bar">
+          <button type="button" className="lor-stone" onClick={makeDeck}>
+            {tr("Bộ bài mới")}
+          </button>
+        </div>
+        <section className="lor-grid">
+          {decks.map((row) => (
+            <button
+              key={row.n}
+              type="button"
+              className={`lor-deck${row.n === open ? " on" : ""}`}
+              onClick={() => setOpen(row.n)}
+            >
+              <DeckBox row={row} />
+              <span className="lor-deck-name">{row.name}</span>
+            </button>
+          ))}
+        </section>
+      </div>
       {shown ? (
-        <div className="ds-back" onClick={(event) => event.target === event.currentTarget && setOpen(null)}>
-          <div className="ds-panel" role="dialog" aria-label={shown.name}>
-            <button type="button" className="msheet-x" aria-label={tr("Đóng")} onClick={() => setOpen(null)}>
-              ✕
+        <div
+          className="lor-drawer-back"
+          onClick={(event) => event.target === event.currentTarget && setOpen(null)}
+        >
+          <aside className="lor-drawer" role="dialog" aria-label={shown.name}>
+            <button type="button" className="lor-pill" onClick={() => setPicking(true)}>
+              {tr(modeInfo.label)}
             </button>
-            <button type="button" className="ds-mode" onClick={() => setPicking(true)}>
-              <Glyph name={modeInfo.icon} fill="#f3dfa6" />
-              <span>{tr(modeInfo.label)}</span>
-            </button>
-            <div className="ds-stage">
-              <button type="button" className={`ds-side is-fav${shown.fav ? " on" : ""}`} onClick={() => toggleFav(shown.n)}>
-                <SideGem glyph="round-star" ring="#ff8a3d" deep="#4a1c04" rim="attack" />
-                <span>{tr("Yêu thích")}</span>
-              </button>
-              <div className="ds-cover">
-                <DeckBox row={shown} />
+            <div className="lor-drawer-body">
+              <div className="lor-portrait-row">
+                <span
+                  className="lor-portrait"
+                  style={coverArt ? { backgroundImage: `url(${coverArt})` } : undefined}
+                />
               </div>
-              <button type="button" className="ds-side" onClick={() => edit(shown.n)}>
-                <SideGem glyph="quill-ink" ring="#e9c46a" deep="#3a2a06" rim="note" />
-                <span>{tr("Chỉnh sửa")}</span>
+              <div className="lor-stage">
+                <div className="lor-side">
+                  <button
+                    type="button"
+                    className={`lor-square is-fav${shown.fav ? " on" : ""}`}
+                    aria-pressed={Boolean(shown.fav)}
+                    onClick={() => toggleFav(shown.n)}
+                  >
+                    <Glyph name="round-star" fill="url(#lor-star)" />
+                  </button>
+                  <span>{tr("Yêu thích")}</span>
+                </div>
+                <div className="lor-stage-box">
+                  <DeckBox row={shown} />
+                </div>
+                <div className="lor-side">
+                  <button type="button" className="lor-square" onClick={() => edit(shown.n)}>
+                    <Glyph name="quill-ink" fill="url(#lor-silver)" />
+                  </button>
+                  <span>{tr("Chỉnh sửa")}</span>
+                </div>
+              </div>
+              <h2 className="lor-title">{shown.name}</h2>
+              <button
+                type="button"
+                className="lor-play"
+                data-ui="confirm"
+                disabled={Boolean(deckIssues(cardsOf(shown)))}
+                onClick={() => play(shown)}
+              >
+                {tr("Chơi ngay")}
               </button>
             </div>
-            <h2 className="ds-title">{shown.name}</h2>
-            <button type="button" className="ds-play" data-ui="confirm" disabled={Boolean(deckIssues(cardsOf(shown)))} onClick={() => play(shown)}>
-              {tr("Chơi ngay")}
+            <button
+              type="button"
+              className="lor-square is-delete"
+              aria-label={tr("Xoá bộ bài")}
+              onClick={() => setAsking(shown.n)}
+            >
+              <Glyph name="trash-can" fill="url(#lor-silver)" />
             </button>
-            <button type="button" className="ds-delete" aria-label={tr("Xoá bộ bài")} onClick={() => setAsking(shown.n)}>
-              <Glyph name="trash-can" fill="#ffb4a6" />
-            </button>
-          </div>
+          </aside>
         </div>
       ) : null}
       {picking ? (
-        <div className="ds-back is-top" onClick={(event) => event.target === event.currentTarget && setPicking(false)}>
-          <div className="ds-modes" role="dialog" aria-label={tr("Chế độ chơi")}>
-            <h2>{tr("Chế độ chơi")}</h2>
-            <div className="ds-mode-grid">
-              {MODES.map((item) => (
+        <LorModal art={coverArt} onClose={() => setPicking(false)}>
+          <h2 className="lor-modal-title">{tr(modeInfo.label)}</h2>
+          <p className="lor-modal-sub">{tr(modeInfo.text)}</p>
+          <h3 className="lor-modal-label">{tr("Chọn chế độ chơi")}</h3>
+          <div className="lor-cards">
+            {MODES.map((item) => {
+              const art = artSrc(item.art, 1);
+              return (
                 <button
                   key={item.key}
                   type="button"
-                  className={`ds-mode-pick${item.key === mode ? " on" : ""}${item.open ? "" : " is-shut"}`}
+                  className={`lor-card${item.key === mode ? " on" : ""}${item.open ? "" : " is-shut"}`}
                   disabled={!item.open}
                   onClick={() => pickMode(item.key)}
                 >
-                  <Glyph name={item.open ? item.icon : "padlock"} fill={item.open ? "#f3dfa6" : "#8d8a83"} />
-                  <span>{tr(item.label)}</span>
+                  {art ? (
+                    <span className="lor-card-art" style={{ backgroundImage: `url(${art})` }} />
+                  ) : null}
+                  <b>
+                    {item.open ? null : <Glyph name="padlock" fill="#c9c3b6" />}
+                    {tr(item.label)}
+                  </b>
+                  <i aria-hidden="true" />
+                  <span>{tr(item.text)}</span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </div>
+        </LorModal>
       ) : null}
       {room && shown ? (
-        <div className="ds-back is-top" onClick={(event) => event.target === event.currentTarget && !busy && setRoom(false)}>
+        <LorModal art={coverArt} onClose={() => !busy && setRoom(false)}>
+          <h2 className="lor-modal-title">{tr("Tuỳ chọn")}</h2>
+          <p className="lor-modal-sub">{tr("Tạo phòng mời bạn bè, hoặc nhập mã phòng.")}</p>
           <form
-            className="ds-room"
+            className="lor-room"
             onSubmit={(event) => {
               event.preventDefault();
               void join(shown);
             }}
           >
-            <h2>{tr("Tuỳ chọn")}</h2>
-            <button type="button" className="ds-play" data-ui="confirm" disabled={busy} onClick={() => void host(shown)}>
+            <button
+              type="button"
+              className="lor-play is-wide"
+              data-ui="confirm"
+              disabled={busy}
+              onClick={() => void host(shown)}
+            >
               {tr("Lấy mã")}
             </button>
-            <label>
-              {tr("Nhập mã")}
-              <input value={code} maxLength={4} autoCapitalize="characters" onChange={(event) => setCode(event.target.value.toUpperCase())} />
-            </label>
-            <button type="submit" className="ds-ghost" disabled={busy}>
-              {tr("Vào mã")}
-            </button>
-            {note ? <p className="ds-note">{tr(note)}</p> : null}
-          </form>
-        </div>
-      ) : null}
-      {asking !== null ? (
-        <div className="ds-back is-top" onClick={(event) => event.target === event.currentTarget && setAsking(null)}>
-          <div className="ds-ask" role="alertdialog">
-            <p>{`${tr("Xoá bộ bài")} "${book.find((row) => row.n === asking)?.name ?? ""}"?`}</p>
-            <div>
-              <button type="button" className="ds-danger" onClick={() => remove(asking)}>
-                {tr("Xoá")}
-              </button>
-              <button type="button" className="ds-ghost" onClick={() => setAsking(null)}>
-                {tr("Huỷ")}
+            <h3 className="lor-modal-label">{tr("Nhập mã")}</h3>
+            <div className="lor-room-row">
+              <input
+                value={code}
+                maxLength={4}
+                autoCapitalize="characters"
+                aria-label={tr("Nhập mã")}
+                onChange={(event) => setCode(event.target.value.toUpperCase())}
+              />
+              <button type="submit" className="lor-stone" disabled={busy}>
+                {tr("Vào mã")}
               </button>
             </div>
+            {note ? <p className="lor-note">{tr(note)}</p> : null}
+          </form>
+        </LorModal>
+      ) : null}
+      {asking !== null ? (
+        <LorModal art={coverArt} onClose={() => setAsking(null)}>
+          <h2 className="lor-modal-title">{tr("Xoá bộ bài")}</h2>
+          <p className="lor-modal-sub">{book.find((row) => row.n === asking)?.name ?? ""}</p>
+          <div className="lor-ask">
+            <button type="button" className="lor-stone is-danger" onClick={() => remove(asking)}>
+              {tr("Xoá")}
+            </button>
+            <button type="button" className="lor-stone" onClick={() => setAsking(null)}>
+              {tr("Huỷ")}
+            </button>
           </div>
-        </div>
+        </LorModal>
       ) : null}
     </main>
   );
 }
 
+/** Gradients the deck boxes and the panel icons share; drawn once on the page. */
+function LorDefs() {
+  return (
+    <svg className="glyph-defs" width="0" height="0" aria-hidden="true">
+      <defs>
+        <linearGradient id="lor-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff1b8" />
+          <stop offset="0.12" stopColor="#e6bd62" />
+          <stop offset="0.3" stopColor="#b98431" />
+          <stop offset="0.5" stopColor="#f2d27e" />
+          <stop offset="0.7" stopColor="#a8732a" />
+          <stop offset="0.86" stopColor="#d9b05a" />
+          <stop offset="1" stopColor="#6a430f" />
+        </linearGradient>
+        <linearGradient id="lor-gold-side" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#8a5c1a" />
+          <stop offset="0.35" stopColor="#f3d488" />
+          <stop offset="0.65" stopColor="#c08d3a" />
+          <stop offset="1" stopColor="#6e4812" />
+        </linearGradient>
+        <linearGradient id="lor-stack" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f1eee8" />
+          <stop offset="0.5" stopColor="#bdb8ae" />
+          <stop offset="1" stopColor="#7d786f" />
+        </linearGradient>
+        <linearGradient id="lor-ribbon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f04a3e" />
+          <stop offset="0.55" stopColor="#c8211a" />
+          <stop offset="1" stopColor="#8e110c" />
+        </linearGradient>
+        <linearGradient id="lor-star" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffd08a" />
+          <stop offset="0.5" stopColor="#f39033" />
+          <stop offset="1" stopColor="#c45a12" />
+        </linearGradient>
+        <linearGradient id="lor-silver" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.5" stopColor="#e2ddd2" />
+          <stop offset="1" stopColor="#a49d90" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 /**
- * A deck's box: its cover monster in a gold frame over a stack of cards, a star ribbon for a favourite, a red !
- * on top for a deck that cannot be played yet, and its environment card's icon under the art when it has one.
+ * A deck box as LoR draws it: the cover monster behind a gold frame whose two top posts hold a stack of cards,
+ * a pointed bottom, the environment card's round socket over the bottom of the art (when the deck has one), the
+ * red star ribbon of a favourite, and a red ! on top of a deck that cannot be played yet.
  */
 function DeckBox({ row }: { row: DeckEntry }) {
-  const cover = row.cover ?? null;
-  const art = cover ? artSrc(cover, 1) : null;
+  const art = row.cover ? artSrc(row.cover, 1) : null;
   const env = row.spells.find((id) => spellCard(id)?.env);
   const broken = Boolean(deckIssues(cardsOf(row)));
   return (
-    <span className="ds-box">
-      <span className="ds-box-art" style={art ? { backgroundImage: `url(${art})` } : undefined} />
-      {row.fav ? (
-        <span className="ds-flag" aria-label={tr("Yêu thích")}>
-          ★
+    <span className="lor-box">
+      <span className="lor-box-art" style={art ? { backgroundImage: `url(${art})` } : undefined} />
+      <svg className="lor-box-frame" viewBox="0 0 160 222" aria-hidden="true">
+        <rect
+          x="23"
+          y="4"
+          width="114"
+          height="19"
+          rx="2.5"
+          fill="url(#lor-stack)"
+          stroke="#45413b"
+          strokeWidth="0.8"
+        />
+        <path
+          d="M25 8.5H135M25 12.5H135M25 16.5H135"
+          stroke="#6f6a62"
+          strokeWidth="0.7"
+          opacity="0.75"
+        />
+        <path
+          fillRule="evenodd"
+          fill="url(#lor-gold)"
+          stroke="#2c1c05"
+          strokeWidth="1.2"
+          d="M6 14Q6 6 14 6H25L27 22H133L135 6H146Q154 6 154 14V188L149 196H99L80 213L61 196H11L6 188Z M15 28V185H145V28Z"
+        />
+        <path d="M15 28V185H145V28Z" fill="none" stroke="#120b02" strokeWidth="2" />
+        <path
+          d="M16.5 29.5V183.5H143.5V29.5Z"
+          fill="none"
+          stroke="#f6dc94"
+          strokeWidth="0.6"
+          opacity="0.7"
+        />
+        <path
+          d="M8 16V186M152 16V186"
+          stroke="url(#lor-gold-side)"
+          strokeWidth="1.4"
+          opacity="0.8"
+        />
+        <path d="M70 199L80 208L90 199" fill="none" stroke="#2c1c05" strokeWidth="1.2" />
+        <path d="M11 192H62M98 192H149" stroke="#f6dc94" strokeWidth="0.6" opacity="0.6" />
+        {row.fav ? (
+          <g className="lor-ribbon">
+            <path
+              d="M-7 33H54L46 43L54 53H-7Z"
+              fill="url(#lor-ribbon)"
+              stroke="#4e0603"
+              strokeWidth="0.9"
+            />
+            <path d="M-7 53L1 58V53Z" fill="#5c0805" />
+            <path d="M-4 35.5H50" stroke="#ff9a8a" strokeWidth="0.7" opacity="0.6" />
+            <path
+              d="M14 36.2L16.1 40.9L21.2 41.4L17.3 44.8L18.5 49.8L14 47.2L9.5 49.8L10.7 44.8L6.8 41.4L11.9 40.9Z"
+              fill="#f7f3ea"
+            />
+          </g>
+        ) : null}
+      </svg>
+      {env ? (
+        <span className="lor-box-env">
+          <img src={spellSrc(env)} alt="" draggable={false} />
         </span>
       ) : null}
       {broken ? (
-        <span className="ds-warn" aria-label={tr("Chưa đủ lá")}>
+        <span className="lor-box-warn" aria-label={tr("Chưa đủ lá")}>
           !
-        </span>
-      ) : null}
-      {env ? (
-        <span className="ds-env">
-          <img src={spellSrc(env)} alt="" draggable={false} />
         </span>
       ) : null}
     </span>
   );
 }
 
-function SideGem({ glyph, ring, deep, rim }: { glyph: string; ring: string; deep: string; rim: string }) {
+/** The LoR mode picker look: a blue panel in a thin gold line, a faded monster behind, a round gold close button. */
+function LorModal({
+  art,
+  onClose,
+  children,
+}: {
+  art: string | null;
+  onClose: () => void;
+  children: ReactNode;
+}) {
   return (
-    <span className="sk3d ds-gem" style={{ "--ring": ring, "--deep": deep } as CSSProperties}>
-      <span className="sk3d-gem">
-        <span className="sk3d-core">
-          <Glyph name={glyph} />
-        </span>
-        <Rim kind={rim} />
-      </span>
-    </span>
+    <div
+      className="lor-modal-back"
+      onClick={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <div className="lor-modal" role="dialog">
+        {art ? <span className="lor-modal-art" style={{ backgroundImage: `url(${art})` }} /> : null}
+        <button type="button" className="lor-x" aria-label={tr("Đóng")} onClick={onClose}>
+          ✕
+        </button>
+        <div className="lor-modal-body">{children}</div>
+      </div>
+    </div>
   );
 }

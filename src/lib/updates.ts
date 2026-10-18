@@ -559,6 +559,7 @@ export const PENDING_NOTES: string[] = [
   "Bộ bài chưa đủ lá có dấu chấm than đỏ ở trên, nút Chơi ngay xám, không bấm được.",
   "Nút Bộ bài mới tạo bộ trống rồi mở trang Chỉnh sửa bộ bài. Nút << ở trang Chỉnh sửa bộ bài quay về màn Chọn bộ bài.",
   "Menu chính bỏ nút Điều chỉnh deck, game bỏ chế độ 2 người 1 máy. Hướng dẫn nằm ở góc trên bên phải màn Chọn bộ bài.",
+  "Màn Chọn bộ bài làm lại theo kiểu Legends of Runeterra: hộp bộ bài khung vàng có chồng lá phía trên, ruy băng sao đỏ, nút đá xám, khung bộ bài xanh dương trượt ra từ bên phải với vòng chân dung, nút Chơi ngay vàng, bảng chế độ chơi kiểu Vô hạn.",
 ];
 
 function remarkOf(notes: string[]) {

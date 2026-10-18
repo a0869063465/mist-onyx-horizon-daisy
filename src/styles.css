@@ -7169,60 +7169,111 @@ button.watch-back {
 }
 .dk-ghost.is-fit { filter: drop-shadow(0 0 10px #ffe08a) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.75)); }
 
-/* ── Chọn bộ bài (what Chơi opens; owner, 18/10, after the LoR deck screen) ── */
-.dk-page button, .ds-page button { font-family: inherit; }
-.ds-page {
+/* ── Chọn bộ bài: made to look like the LoR deck screen the owner recorded (18/10) ── */
+.dk-page button { font-family: inherit; }
+.lor-page {
+  --lor-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --lor-cond: "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif;
   position: fixed;
   inset: 0;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
-  color: #f4ecd8;
+  color: #ddd0b8;
   font-family: "Be Vietnam Pro", system-ui, sans-serif;
   background:
-    radial-gradient(120% 60% at 50% 0%, rgba(255, 220, 160, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
-    linear-gradient(180deg, #2b2620 0%, #211d19 55%, #15120f 100%);
+    var(--lor-noise),
+    radial-gradient(130% 80% at 50% 10%, #3a2724 0%, #2a1b1a 45%, #1c1212 100%);
 }
-.ds-help {
+.lor-page :where(button, input) { font-family: inherit; }
+/* The main area sits in a thin gold line with a rounded corner, as in LoR. */
+.lor-main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0.45rem 0.4rem 0;
+  border: 1px solid #b08a45;
+  border-bottom: 0;
+  border-radius: 0.9rem 0.9rem 0 0;
+  background:
+    var(--lor-noise),
+    linear-gradient(180deg, rgba(58, 36, 32, 0.9) 0%, rgba(36, 24, 23, 0.95) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.lor-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.4rem;
+  padding: 0.5rem 0.6rem 0.45rem;
+}
+.lor-head::after {
+  content: "";
   position: absolute;
-  right: 0.55rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  height: 2.1rem;
-  padding: 0 0.55rem;
-  border-radius: 0.45rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #f3dfa6;
-  background: linear-gradient(180deg, #2a3d68 0%, #142244 100%);
-  border: 1px solid rgba(201, 168, 90, 0.7);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(160, 104, 46, 0) 0%, #a8692e 12%, #c27a35 50%, #a8692e 88%, rgba(160, 104, 46, 0) 100%);
+  box-shadow: 0 0 6px rgba(214, 120, 40, 0.45);
 }
-.ds-help .glyph3d { width: 1.05rem; height: 1.05rem; }
-.ds-head h1 { font-size: 0.95rem; }
-.ds-bar { flex: none; display: flex; gap: 0.5rem; padding: 0.65rem 0.75rem 0.15rem; }
-.ds-new {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  height: 2.3rem;
-  padding: 0 0.85rem;
-  border-radius: 0.45rem;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+.lor-head h1 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-family: var(--lor-cond);
+  font-size: 1.22rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #f3dfa6;
-  background: linear-gradient(180deg, #4a4038 0%, #2c2622 100%);
-  border: 1px solid rgba(201, 168, 90, 0.65);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 6px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  color: #b9ab97;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.7);
 }
-.ds-new .glyph3d { width: 1.15rem; height: 1.15rem; }
-.ds-grid {
+/* LoR's grey stone buttons. */
+.lor-stone {
+  display: inline-grid;
+  place-items: center;
+  min-height: 2.45rem;
+  padding: 0 1.05rem;
+  font-family: var(--lor-cond);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #ebe5d9;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
+  border-radius: 0.55rem;
+  border: 2px solid #1f1c19;
+  background:
+    var(--lor-noise),
+    linear-gradient(180deg, #858079 0%, #69655e 42%, #504c46 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(150, 120, 70, 0.35), 0 3px 6px rgba(0, 0, 0, 0.65);
+  -webkit-tap-highlight-color: transparent;
+}
+.lor-stone:active { transform: translateY(1px); filter: brightness(0.92); }
+.lor-stone:disabled { opacity: 0.55; }
+.lor-stone.is-back { min-height: 2.25rem; padding: 0 0.7rem; letter-spacing: -0.04em; font-size: 1.15rem; }
+.lor-stone.is-help { min-height: 2.25rem; padding: 0 0.6rem; font-size: 0.92rem; letter-spacing: 0.05em; }
+.lor-stone.is-danger { color: #fff1ea; border-color: #2a0806; background: var(--lor-noise), linear-gradient(180deg, #b23a2c 0%, #8a2016 45%, #5e110a 100%); }
+.lor-bar { position: relative; display: flex; gap: 0.6rem; padding: 0.75rem 0.85rem 0.85rem; }
+.lor-bar::after {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #b5662b 0%, #c47a3a 50%, rgba(181, 102, 43, 0.15) 100%);
+  box-shadow: 0 0 5px rgba(214, 120, 40, 0.4);
+}
+.lor-grid {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -7230,212 +7281,303 @@ button.watch-back {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
-  gap: 1.15rem 0.75rem;
-  padding: 1rem 0.85rem 2rem;
+  gap: 1.3rem 0.85rem;
+  padding: 1.35rem 1rem 2.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: #b5662b transparent;
 }
-.ds-deck { display: grid; justify-items: center; gap: 0.4rem; padding: 0; border: 0; background: none; color: inherit; -webkit-tap-highlight-color: transparent; }
-.ds-deck:active .ds-box { transform: scale(0.97); }
-.ds-name {
-  width: 92%;
-  padding-bottom: 0.3rem;
+.lor-grid::-webkit-scrollbar { width: 4px; }
+.lor-grid::-webkit-scrollbar-thumb { background: #b5662b; border-radius: 2px; }
+.lor-deck { display: grid; justify-items: center; gap: 0.35rem; padding: 0; border: 0; background: none; color: inherit; -webkit-tap-highlight-color: transparent; }
+.lor-deck:active .lor-box { transform: scale(0.97); }
+.lor-deck.on .lor-box { filter: drop-shadow(0 0 8px rgba(255, 214, 120, 0.75)); }
+.lor-deck-name {
+  position: relative;
+  width: 100%;
+  padding-bottom: 0.55rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #efe3c4;
-  border-bottom: 1px solid rgba(201, 168, 90, 0.35);
+  font-family: var(--lor-cond);
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #ddd0b8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+/* The double line under each deck name. */
+.lor-deck-name::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 3px;
+  border-top: 1px solid rgba(160, 128, 88, 0.45);
+  border-bottom: 1px solid rgba(160, 128, 88, 0.25);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
 }
 
-/* A deck box: cover art in a gold frame over a stack of cards. */
-.ds-box { position: relative; display: block; width: 100%; aspect-ratio: 0.74; margin-top: 0.55rem; transition: transform 0.12s; }
-.ds-box::before, .ds-box::after {
-  content: "";
+/* The deck box: art in the frame's window, the frame drawn over it. */
+.lor-box { position: relative; display: block; width: 100%; aspect-ratio: 160 / 222; transition: transform 0.12s; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.6)); }
+.lor-box-art {
   position: absolute;
-  height: 0.6rem;
-  border-radius: 0.3rem 0.3rem 0 0;
-  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45);
+  left: 9.4%;
+  top: 12.6%;
+  width: 81.2%;
+  height: 70.8%;
+  background: #241c18 center 18% / cover no-repeat;
 }
-.ds-box::before { left: 8%; right: 8%; top: -0.3rem; background: linear-gradient(180deg, #d8d0bf 0%, #8f8778 100%); }
-.ds-box::after { left: 15%; right: 15%; top: -0.56rem; background: linear-gradient(180deg, #bdb5a5 0%, #7a7366 100%); }
-.ds-box-art {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: 0.45rem;
-  background: #1b1814 center 22% / cover no-repeat;
-  box-shadow: 0 0 0 2px #c9a85a, 0 0 0 4px #3a2c12, 0 0 0 5px #e7c873, 0 9px 14px rgba(0, 0, 0, 0.7);
-}
-.ds-box-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
-}
-.ds-flag {
-  position: absolute;
-  left: -0.45rem;
-  top: 0.55rem;
-  z-index: 3;
-  padding: 0.08rem 0.6rem 0.08rem 0.35rem;
-  font-size: 0.8rem;
-  line-height: 1.1;
-  color: #ffffff;
-  text-shadow: 0 1px 0 #5a0000;
-  background: linear-gradient(180deg, #ef3b35 0%, #a31512 100%);
-  clip-path: polygon(0 0, 100% 0, 82% 50%, 100% 100%, 0 100%);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
-}
-.ds-warn {
+.lor-box-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.45) 100%); }
+.lor-box-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lor-box-env {
   position: absolute;
   left: 50%;
-  top: -0.75rem;
-  z-index: 4;
-  transform: translateX(-50%);
-  display: grid;
-  place-items: center;
-  width: 1.65rem;
-  height: 1.65rem;
-  border-radius: 50%;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #ffffff;
-  background: radial-gradient(circle at 35% 30%, #ff8a7a 0%, #d41c12 60%, #7a0400 100%);
-  border: 2px solid #ffd9d2;
-  box-shadow: 0 0 10px rgba(255, 40, 20, 0.85), 0 2px 4px rgba(0, 0, 0, 0.7);
-}
-.ds-env {
-  position: absolute;
-  left: 50%;
-  bottom: 0.4rem;
-  z-index: 2;
-  transform: translateX(-50%);
-  width: 1.95rem;
-  height: 1.95rem;
+  top: 80%;
+  width: 26%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
   overflow: hidden;
   border-radius: 50%;
-  border: 2px solid #c9a85a;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.75);
+  background: #0b0b0e;
+  border: 2px solid #c9a24f;
+  box-shadow: 0 0 0 2px #1c1206, 0 3px 6px rgba(0, 0, 0, 0.7), inset 0 0 6px rgba(0, 0, 0, 0.8);
 }
-.ds-env img { width: 100%; height: 100%; object-fit: cover; }
-
-/* The deck panel, the mode picker, the room box and the delete question. */
-.ds-back {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
+.lor-box-env img { width: 100%; height: 100%; object-fit: cover; }
+.lor-box-warn {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
+  transform: translate(-50%, -38%);
   display: grid;
   place-items: center;
-  padding: 1rem;
-  background: rgba(4, 6, 12, 0.66);
-  backdrop-filter: blur(2px);
+  width: 22%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-family: var(--lor-cond);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: radial-gradient(circle at 38% 30%, #ff9384 0%, #df2618 55%, #7c0600 100%);
+  border: 2px solid #ffe2da;
+  box-shadow: 0 0 10px rgba(255, 40, 20, 0.85), 0 2px 4px rgba(0, 0, 0, 0.7);
 }
-.ds-back.is-top { z-index: 40; }
-.ds-panel, .ds-modes, .ds-room {
-  position: relative;
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #1f3f92 0%, #152e6e 55%, #0f2257 100%);
-  border: 2px solid #c9a85a;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-.ds-panel { display: grid; justify-items: center; gap: 0.75rem; width: min(92vw, 25rem); padding: 1rem 1rem 1.25rem; }
-.ds-mode {
+
+/* The deck panel: LoR's blue panel sliding in from the right. */
+.lor-drawer-back { position: fixed; inset: 0; z-index: 30; background: rgba(6, 4, 4, 0.55); }
+.lor-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(86vw, 24rem);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-width: 58%;
-  height: 2.3rem;
-  padding: 0 1rem;
-  border-radius: 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #dbe8ff;
-  background: linear-gradient(180deg, #0d1f4f 0%, #081538 100%);
-  border: 1px solid #7fb2ff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 12px rgba(80, 150, 255, 0.35);
+  gap: 0.75rem;
+  padding: 1.1rem 1rem calc(1.2rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background:
+    var(--lor-noise),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 2px, rgba(255, 255, 255, 0) 2px 9px),
+    linear-gradient(165deg, #2648a4 0%, #1f3d8f 38%, #1a357d 72%, #152c6a 100%);
+  border-left: 2px solid #b08a45;
+  box-shadow: -10px 0 26px rgba(0, 0, 0, 0.65), inset 1px 0 0 rgba(255, 230, 170, 0.25);
+  animation: lor-slide 0.24s ease-out;
 }
-.ds-mode .glyph3d { width: 1.2rem; height: 1.2rem; }
-.ds-stage { display: grid; grid-template-columns: 4.6rem minmax(0, 9.5rem) 4.6rem; align-items: center; gap: 0.45rem; width: 100%; justify-content: center; }
-.ds-cover { padding-top: 0.2rem; }
-.ds-side { display: grid; justify-items: center; gap: 0.25rem; padding: 0; border: 0; background: none; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #dbe8ff; }
-.ds-gem.sk3d { width: auto; }
-.ds-side .sk3d-gem { width: 2.75rem; height: 2.75rem; }
-.ds-side.is-fav:not(.on) .sk3d-gem { filter: saturate(0.3) brightness(0.7); box-shadow: 0 0.3rem 0.45rem rgba(0, 0, 0, 0.6); }
-.ds-side:active .sk3d-gem { transform: scale(0.94); }
-.ds-title { margin: 0; max-width: 100%; overflow-wrap: anywhere; text-align: center; font-size: 1.05rem; font-weight: 800; color: #fff3d6; text-shadow: 0 2px 0 #000; }
-.ds-play {
-  width: 62%;
-  height: 2.9rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 800;
+@keyframes lor-slide {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.lor-pill {
+  flex: none;
+  width: 80%;
+  min-height: 2.7rem;
+  border-radius: 0.75rem;
+  font-family: var(--lor-cond);
+  font-size: 1.05rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #3a2400;
-  background: linear-gradient(180deg, #fff0b0 0%, #f0c44c 45%, #b8801c 100%);
-  border: 2px solid #fff3c4;
-  box-shadow: 0 0 14px rgba(255, 200, 80, 0.55), 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 #ffffff;
+  color: #d6def3;
+  background: linear-gradient(180deg, #2e50ad 0%, #1f3b8c 100%);
+  border: 2px solid #0b1640;
+  box-shadow: inset 0 0 0 2px #557ad0, inset 0 0 14px rgba(140, 175, 255, 0.35), 0 3px 7px rgba(0, 0, 0, 0.5);
 }
-.ds-play:active { transform: translateY(1px); }
-.ds-play:disabled { color: #4a4a4a; background: linear-gradient(180deg, #b3b3b3 0%, #6d6d6d 100%); border-color: #c4c4c4; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6); }
-.ds-delete {
+.lor-pill:active { filter: brightness(1.1); }
+/* The portrait between two thin gold lines with little steps. */
+.lor-drawer-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 0.7rem; width: 100%; padding-bottom: 2.4rem; }
+.lor-portrait-row { position: relative; flex: none; display: grid; place-items: center; width: 100%; padding: 0.2rem 0; }
+.lor-portrait-row::before, .lor-portrait-row::after {
+  content: "";
   position: absolute;
-  right: 0.75rem;
-  bottom: 0.75rem;
+  left: 0;
+  right: 0;
+  height: 0.8rem;
+  border-style: solid;
+  border-color: rgba(214, 170, 92, 0.55);
+  pointer-events: none;
+}
+.lor-portrait-row::before { top: 0.6rem; border-width: 1px 0 0; -webkit-mask-image: linear-gradient(90deg, #000 30%, transparent 32%, transparent 68%, #000 70%); mask-image: linear-gradient(90deg, #000 30%, transparent 32%, transparent 68%, #000 70%); }
+.lor-portrait-row::after { bottom: 0.9rem; border-width: 0 0 1px; -webkit-mask-image: linear-gradient(90deg, transparent 4%, #000 6%, #000 28%, transparent 30%, transparent 70%, #000 72%, #000 94%, transparent 96%); mask-image: linear-gradient(90deg, transparent 4%, #000 6%, #000 28%, transparent 30%, transparent 70%, #000 72%, #000 94%, transparent 96%); }
+.lor-portrait {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 7.4rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #12204a center 22% / 165% no-repeat;
+  border: 3px solid #c9a24f;
+  box-shadow: 0 0 0 2px #2a1d08, 0 0 0 4px rgba(214, 170, 92, 0.35), 0 6px 12px rgba(0, 0, 0, 0.55);
+}
+.lor-stage { flex: none; display: grid; grid-template-columns: 4.3rem minmax(0, 11.6rem) 4.3rem; align-items: center; gap: 0.45rem; width: 100%; justify-content: center; }
+.lor-stage-box { position: relative; padding: 0.7rem 0.55rem 0.4rem; }
+/* The thin gold bracket around the deck, open at the middle of each side. */
+.lor-stage-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(214, 170, 92, 0.55);
+  border-radius: 0.2rem;
+  -webkit-mask-image: linear-gradient(180deg, #000 18%, transparent 20%, transparent 80%, #000 82%);
+  mask-image: linear-gradient(180deg, #000 18%, transparent 20%, transparent 80%, #000 82%);
+  pointer-events: none;
+}
+.lor-side { display: grid; justify-items: center; gap: 0.35rem; }
+.lor-side > span { font-family: var(--lor-cond); font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #cfd6e8; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6); white-space: nowrap; }
+.lor-square {
   display: grid;
   place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  padding: 0.38rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(180deg, #5a1414 0%, #300606 100%);
-  border: 1px solid #c45656;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+  width: 3.1rem;
+  height: 3.1rem;
+  padding: 0.55rem;
+  border-radius: 0.6rem;
+  border: 2px solid #1c1916;
+  background:
+    var(--lor-noise),
+    linear-gradient(180deg, #7d7871 0%, #5f5b55 50%, #47443f 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(150, 120, 70, 0.3), 0 3px 7px rgba(0, 0, 0, 0.6);
+  -webkit-tap-highlight-color: transparent;
 }
-.ds-delete .glyph3d { width: 100%; height: 100%; }
-.ds-modes { width: min(92vw, 23rem); padding: 1rem; }
-.ds-modes h2, .ds-room h2 { margin: 0 0 0.75rem; text-align: center; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #f3dfa6; }
-.ds-mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
-.ds-mode-pick {
+.lor-square .glyph3d { width: 100%; height: 100%; }
+.lor-square:active { transform: translateY(1px); filter: brightness(0.92); }
+.lor-square.is-fav.on { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 170, 80, 0.6), 0 0 14px rgba(255, 140, 40, 0.65), 0 3px 7px rgba(0, 0, 0, 0.6); }
+.lor-square.is-delete { position: absolute; right: 0.85rem; bottom: calc(0.9rem + env(safe-area-inset-bottom)); width: 2.6rem; height: 2.6rem; padding: 0.5rem; }
+.lor-title { flex: none; margin: 0; max-width: 92%; overflow-wrap: anywhere; text-align: center; font-family: var(--lor-cond); font-size: 1.55rem; font-weight: 600; letter-spacing: 0.03em; color: #ece7dc; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.7); }
+/* LoR's gold Chơi ngay button in its dark frame. */
+.lor-play {
+  flex: none;
+  width: 78%;
+  min-height: 3.5rem;
+  margin-top: 0.3rem;
+  border-radius: 0.5rem;
+  font-family: var(--lor-cond);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #3a2911;
+  text-shadow: 0 1px 0 rgba(255, 244, 200, 0.6);
+  background: linear-gradient(180deg, #fde88f 0%, #f4cc50 38%, #dda62b 74%, #b8821a 100%);
+  border: 3px solid #241806;
+  box-shadow: 0 0 0 1px #9a7630, inset 0 2px 0 rgba(255, 255, 255, 0.65), inset 0 -3px 5px rgba(120, 70, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.6);
+  -webkit-tap-highlight-color: transparent;
+}
+.lor-play:active { transform: translateY(1px); filter: brightness(0.95); }
+.lor-play:disabled { color: #4d4d4d; text-shadow: none; background: linear-gradient(180deg, #c2c2c2 0%, #9c9c9c 50%, #727272 100%); box-shadow: 0 0 0 1px #6a6a6a, inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.6); }
+.lor-play.is-wide { width: 100%; margin-top: 0.4rem; }
+
+/* The mode picker, the room box and the delete question, in LoR's "Vô hạn" panel look. */
+.lor-modal-back { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 1rem 0.6rem; background: rgba(4, 4, 8, 0.66); }
+.lor-modal {
+  position: relative;
+  width: min(95vw, 27rem);
+  overflow: hidden;
+  border-radius: 0.8rem;
+  border: 1px solid #c9a24f;
+  background:
+    var(--lor-noise),
+    linear-gradient(160deg, #2648a4 0%, #1d3a88 50%, #152c6a 100%);
+  box-shadow: 0 0 0 3px rgba(10, 16, 40, 0.8), 0 22px 44px rgba(0, 0, 0, 0.75);
+}
+.lor-modal-art {
+  position: absolute;
+  inset: 0 0 0 30%;
+  background: center 20% / cover no-repeat;
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  pointer-events: none;
+}
+.lor-modal-body { position: relative; padding: 1.2rem 1.1rem 1.15rem; }
+.lor-x {
+  position: absolute;
+  right: 0.55rem;
+  top: 0.55rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ff8a3d;
+  background: radial-gradient(circle at 40% 35%, #4b3b2b 0%, #1b130b 72%);
+  border: 2px solid #c9a24f;
+  box-shadow: 0 0 0 2px #241806, 0 3px 7px rgba(0, 0, 0, 0.65);
+}
+.lor-modal-title { margin: 0 3rem 0.2rem 0; font-family: var(--lor-cond); font-size: 2.1rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.05; color: #dcb662; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.6); }
+.lor-modal-sub { margin: 0 3rem 0 0; font-family: var(--lor-cond); font-size: 1.02rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1.25; text-transform: uppercase; color: #f1e8d4; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); overflow-wrap: anywhere; }
+.lor-modal-label { margin: 1rem 0 0.5rem; font-family: var(--lor-cond); font-size: 1rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #d4ab55; }
+.lor-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+.lor-card {
+  position: relative;
   display: grid;
   justify-items: center;
+  align-content: center;
   gap: 0.35rem;
-  padding: 0.85rem 0.4rem;
-  border-radius: 0.7rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #dbe8ff;
-  background: linear-gradient(180deg, #0d1f4f 0%, #081538 100%);
-  border: 1px solid rgba(127, 178, 255, 0.45);
+  min-height: 6.6rem;
+  padding: 0.75rem 0.5rem;
+  overflow: hidden;
+  color: #ffffff;
+  border-radius: 0.2rem;
+  background: rgba(10, 13, 26, 0.86);
+  border: 1px solid #8d92a0;
+  -webkit-tap-highlight-color: transparent;
 }
-.ds-mode-pick .glyph3d { width: 2.2rem; height: 2.2rem; }
-.ds-mode-pick.on { color: #fff3c4; border-color: #ffe08a; box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.35), 0 0 16px rgba(255, 210, 90, 0.5); }
-.ds-mode-pick.is-shut { opacity: 0.5; }
-.ds-room { display: grid; gap: 0.65rem; width: min(92vw, 22rem); padding: 1rem; }
-.ds-room .ds-play { width: 100%; }
-.ds-room label { display: grid; gap: 0.3rem; font-size: 0.78rem; font-weight: 800; color: #dbe8ff; }
-.ds-room input {
-  height: 2.5rem;
+.lor-card-art { position: absolute; inset: 0; background: center 20% / cover no-repeat; opacity: 0.28; pointer-events: none; }
+.lor-card > b, .lor-card > i, .lor-card > span { position: relative; }
+.lor-card > b { display: flex; align-items: center; gap: 0.3rem; font-family: var(--lor-cond); font-size: 1.35rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.7); }
+.lor-card > b .glyph3d { width: 1.05rem; height: 1.05rem; }
+.lor-card > i { width: 72%; height: 1px; background: linear-gradient(90deg, rgba(217, 165, 74, 0) 0%, #d9a54a 18%, #d9a54a 82%, rgba(217, 165, 74, 0) 100%); }
+.lor-card > i::before, .lor-card > i::after { content: ""; position: absolute; top: -2px; width: 5px; height: 5px; background: #d9a54a; transform: rotate(45deg); }
+.lor-card > i::before { left: 14%; }
+.lor-card > i::after { right: 14%; }
+.lor-card > span { font-size: 0.76rem; font-weight: 500; line-height: 1.3; text-align: center; color: #e8e2d6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.lor-card.on { border-color: #e2c06a; box-shadow: 0 0 0 1px rgba(226, 192, 106, 0.45), 0 0 16px rgba(226, 192, 106, 0.35); }
+.lor-card.is-shut { opacity: 0.5; }
+.lor-card:active:not(:disabled) { transform: translateY(1px); }
+.lor-room { display: grid; gap: 0.2rem; margin-top: 0.4rem; }
+.lor-room-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.55rem; }
+.lor-room input {
+  min-width: 0;
+  height: 2.6rem;
   border-radius: 0.45rem;
-  border: 1px solid #7fb2ff;
   outline: 0;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: 0.3em;
+  font-family: var(--lor-cond);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.35em;
   text-align: center;
   color: #ffffff;
-  background: #081538;
+  background: rgba(8, 14, 36, 0.85);
+  border: 1px solid #8d92a0;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
 }
-.ds-ghost { height: 2.45rem; padding: 0 1.1rem; border-radius: 0.5rem; font-weight: 800; color: #f3dfa6; background: linear-gradient(180deg, #2a3d68 0%, #142244 100%); border: 1px solid rgba(201, 168, 90, 0.7); }
-.ds-note { margin: 0; text-align: center; font-size: 0.78rem; font-weight: 700; color: #ffb4a6; }
-.ds-ask { width: min(88vw, 20rem); padding: 1.1rem 1rem 1rem; border-radius: 0.9rem; text-align: center; background: linear-gradient(180deg, #2c1515 0%, #160808 100%); border: 2px solid #c45656; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7); }
-.ds-ask p { margin: 0 0 0.9rem; font-weight: 800; overflow-wrap: anywhere; }
-.ds-ask div { display: flex; justify-content: center; gap: 0.6rem; }
-.ds-danger { height: 2.45rem; padding: 0 1.3rem; border-radius: 0.5rem; font-weight: 800; color: #ffffff; background: linear-gradient(180deg, #b82020 0%, #6a0808 100%); border: 1px solid #ff8a7a; }
+.lor-note { margin: 0.4rem 0 0; font-weight: 700; font-size: 0.8rem; color: #ffb4a6; }
+.lor-ask { display: flex; justify-content: center; gap: 0.7rem; margin-top: 1.1rem; }
