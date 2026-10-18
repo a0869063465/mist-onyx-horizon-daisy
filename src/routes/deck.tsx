@@ -358,7 +358,7 @@ function DeckPage() {
             ) : null}
           </label>
           <DragTip />
-          {/* Quái and Phép on the left; Thống kê, Lọc, Lưu stacked right above Đổi hình nền (owner, 18/10). */}
+          {/* Row 1: Quái, Phép. Row 2: Thống kê, Lọc, Lưu; Lưu sits right above Đổi hình nền (owner, 18/10). */}
           <div className="dk-pad">
             <div className="dk-tools is-main">
               <button type="button" className={`dk-tool is-monster${mode === "monster" && !q ? " on" : ""}`} aria-label={tr("Quái thú")} onClick={() => setMode("monster")}>
