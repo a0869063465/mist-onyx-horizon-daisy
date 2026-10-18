@@ -7,6 +7,7 @@ import { DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "@/l
 import { clearHabits, loadHabits, watchLines } from "@/lib/habits";
 import { diagnoseHistory, exportStoredHistory, matchHistoryProblem, type HistoryDiag, type HistoryPack } from "@/lib/match-history";
 import { loadStrategies, saveStrategies, sortCards, sortStrategies, type Strategy } from "@/lib/strategies";
+import { redeemCode, useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { UPDATE_RELEASES } from "@/lib/updates";
 
@@ -154,8 +155,10 @@ function exportInfo(onDone: (saved: boolean) => void) {
 export const Route = createFileRoute("/watch")({ component: InfoPage });
 
 function InfoPage() {
-  const [pane, setPane] = useState<"menu" | "updates" | "ai" | "plans" | "tested" | "matches">("menu");
+  const [pane, setPane] = useState<"menu" | "updates" | "ai" | "plans" | "tested" | "matches" | "code">("menu");
   const [exported, setExported] = useState(false);
+  // The guest view keeps only Chiến thuật and Nhập mã (owner, 18/10).
+  const guest = useAppMode() === "guest";
   useLang();
   useEffect(() => {
     if (!readMark()) writeMark(currentMark());
@@ -165,6 +168,7 @@ function InfoPage() {
   if (pane === "plans") return <Plans onBack={() => setPane("menu")} />;
   if (pane === "tested") return <Tested onBack={() => setPane("menu")} />;
   if (pane === "matches") return <MatchExport onBack={() => setPane("menu")} />;
+  if (pane === "code") return <CodeEntry onBack={() => setPane("menu")} />;
   return (
     <main className="watch is-menu menu-page">
       <Link to="/" className="watch-back">
@@ -172,25 +176,36 @@ function InfoPage() {
       </Link>
       <h1>{tr("Thông tin")}</h1>
       <div className="mode-list">
-        <button type="button" className="act press" onClick={() => setPane("updates")}>
-          {tr("Cập nhật")}
-        </button>
+        {guest ? null : (
+          <button type="button" className="act press" onClick={() => setPane("updates")}>
+            {tr("Cập nhật")}
+          </button>
+        )}
         <button type="button" className="act press" onClick={() => setPane("plans")}>
           {tr("Chiến thuật")}
         </button>
-        <button type="button" className="act press" onClick={() => setPane("tested")}>
-          {tr("Đã test")}
-        </button>
-        <button type="button" className="act press" onClick={() => setPane("matches")}>
-          {tr("Xuất lịch sử ván đấu")}
+        {guest ? null : (
+          <>
+            <button type="button" className="act press" onClick={() => setPane("tested")}>
+              {tr("Đã test")}
+            </button>
+            <button type="button" className="act press" onClick={() => setPane("matches")}>
+              {tr("Xuất lịch sử ván đấu")}
+            </button>
+          </>
+        )}
+        <button type="button" className="act press" onClick={() => setPane("code")}>
+          {tr("Nhập mã")}
         </button>
       </div>
-      <footer className="info-foot">
-        <button type="button" className="act press is-export" onClick={() => exportInfo(setExported)}>
-          {tr("Xuất")}
-        </button>
-        {exported ? <p className="export-saved">{tr("Đã lưu")}</p> : null}
-      </footer>
+      {guest ? null : (
+        <footer className="info-foot">
+          <button type="button" className="act press is-export" onClick={() => exportInfo(setExported)}>
+            {tr("Xuất")}
+          </button>
+          {exported ? <p className="export-saved">{tr("Đã lưu")}</p> : null}
+        </footer>
+      )}
     </main>
   );
 }
@@ -629,6 +644,53 @@ function Updates({ onBack }: { onBack: () => void }) {
           <p>{tr("Chưa có bản cập nhật.")}</p>
         )}
       </section>
+    </main>
+  );
+}
+
+/** Nhập mã: a box for gift codes; for now its codes switch between the publisher and the guest view. */
+function CodeEntry({ onBack }: { onBack: () => void }) {
+  const [text, setText] = useState("");
+  const [note, setNote] = useState("");
+  function submit() {
+    const mode = redeemCode(text);
+    if (!mode) {
+      setNote("Mã không đúng.");
+      return;
+    }
+    setText("");
+    setNote(mode === "guest" ? "Đã chuyển sang chế độ khách." : "Đã chuyển sang chế độ nhà phát hành.");
+  }
+  return (
+    <main className="watch menu-page">
+      <button type="button" className="watch-back" onClick={onBack}>
+        {tr("Quay lại")}
+      </button>
+      <h1>{tr("Nhập mã")}</h1>
+      <form
+        className="watch-card code-entry"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
+        <input
+          className="tune-input"
+          value={text}
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label={tr("Nhập mã")}
+          onChange={(event) => {
+            setText(event.target.value.toUpperCase());
+            setNote("");
+          }}
+        />
+        <button type="submit" className="act press" disabled={!text.trim()}>
+          {tr("Xác nhận")}
+        </button>
+        {note ? <p className="code-note">{tr(note)}</p> : null}
+      </form>
     </main>
   );
 }

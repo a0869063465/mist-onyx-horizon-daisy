@@ -51,6 +51,11 @@ function loadMode(): PlayMode {
   }
 }
 
+function reasonOf(error: unknown): string {
+  const text = error instanceof Error ? error.message.trim() : "";
+  return text ? ` (${text.slice(0, 120)})` : "";
+}
+
 function remember(code: string, seat: "host" | "guest") {
   sessionStorage.setItem("clash-mode", "net");
   sessionStorage.setItem("clash-net", JSON.stringify({ code, seat }));
@@ -170,8 +175,9 @@ function DeckSelectPage() {
       const opened = await openRoom({ data: { deck: cardsOf(row) } });
       remember(opened.code, "host");
       await navigate({ to: "/play" });
-    } catch {
-      setNote("Không tạo được mã.");
+    } catch (error) {
+      // The server's reason is shown too, so a failing room server can be told apart from a bad connection.
+      setNote(`Không tạo được mã.${reasonOf(error)}`);
       setBusy(false);
     }
   }
@@ -193,8 +199,8 @@ function DeckSelectPage() {
       }
       remember(joined.code, "guest");
       await navigate({ to: "/play" });
-    } catch {
-      setNote("Không vào được phòng.");
+    } catch (error) {
+      setNote(`Không vào được phòng.${reasonOf(error)}`);
       setBusy(false);
     }
   }

@@ -9,6 +9,7 @@ import { defaultMonsterPicture, defaultSpellPicture, hideArt, monsterArts, spell
 import { askDraft, attackLabel, chipDraft, MONSTER_ASKS, MONSTER_CHIPS, resetMonster, resetSpell, saveAttack, saveMonster, saveSpell as saveSpellText } from "@/lib/card-edits";
 import { ailmentHolds, defaultFxPrefs, defaultLooks, loadActivePack, loadFxPrefs, loadLooks } from "@/lib/fx-prefs";
 import { setLang, tr, useLang } from "@/lib/i18n";
+import { useAppMode } from "@/lib/app-mode";
 import { fxVolume, playCue, playUi, setFxVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
 import {
   CARD_MARKS,
@@ -106,6 +107,8 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
   const [note, setNote] = useState("");
   const [dump, setDump] = useState("");
   const language = useLang();
+  // The guest view keeps only Ngôn ngữ and Âm thanh (owner, 18/10).
+  const guest = useAppMode() === "guest";
   useEffect(() => {
     setLine(setupLine());
   }, []);
@@ -124,71 +127,79 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
           English
         </button>
       </div>
-      <button type="button" className="tuner-save" onClick={() => onPick("board")}>
-        {tr("Điều chỉnh bàn chơi")}
-      </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("monster")}>
-        {tr("Điều chỉnh lá quái trên tay")}
-      </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("spell")}>
-        {tr("Điều chỉnh lá phép trên tay")}
-      </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("field")}>
-        {tr("Điều chỉnh lá trên sân")}
-      </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("text")}>
-        {tr("Điều chỉnh nội dung lá bài")}
-      </button>
+      {guest ? null : (
+        <>
+          <button type="button" className="tuner-save" onClick={() => onPick("board")}>
+            {tr("Điều chỉnh bàn chơi")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("monster")}>
+            {tr("Điều chỉnh lá quái trên tay")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("spell")}>
+            {tr("Điều chỉnh lá phép trên tay")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("field")}>
+            {tr("Điều chỉnh lá trên sân")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("text")}>
+            {tr("Điều chỉnh nội dung lá bài")}
+          </button>
+        </>
+      )}
       <button type="button" className="tuner-save" onClick={() => onPick("sound")}>
         {tr("Âm thanh")}
       </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("fx")}>
-        {tr("Hiệu ứng")}
-      </button>
-      <button type="button" className="tuner-save alt" onClick={() => onPick("cardfx")}>
-        {tr("Hiệu ứng lá bài")}
-      </button>
-      <a className="tuner-save alt" href="/clash-lite.zip" download>
-        {tr("Tải gói nhẹ")}
-      </a>
-      <button
-        type="button"
-        className="tuner-save"
-        onClick={() => {
-          const text = setupLine();
-          setLine(text);
-          void navigator.clipboard?.writeText(text).then(
-            () => setNote("Đã chép. Dán dòng này vào cuộc trò chuyện."),
-            () => setNote("Chưa chép được. Giữ dòng bên dưới rồi sao chép."),
-          );
-        }}
-      >
-        {tr("Xuất tuỳ chỉnh")}
-      </button>
-      {note ? <p className="tuner-note">{note}</p> : null}
-      <input className="tune-input" readOnly value={line} onFocus={(event) => event.currentTarget.select()} />
-      <button
-        type="button"
-        className="tuner-save is-red"
-        onClick={() => {
-          if (!window.confirm("Xuất mọi thay đổi trong tuỳ chỉnh?")) return;
-          const data = exportChanges();
-          if (Object.keys(data).length === 0) {
-            setDump("");
-            setNote("Không có thay đổi để xuất.");
-            return;
-          }
-          const text = JSON.stringify(data, null, 2);
-          setDump(text);
-          void navigator.clipboard?.writeText(text).then(
-            () => setNote("Đã xuất và chép các thay đổi."),
-            () => setNote("Đã xuất. Giữ phần chữ bên dưới rồi sao chép."),
-          );
-        }}
-      >
-        Xuất mọi thay đổi
-      </button>
-      {dump ? <textarea className="tune-input is-area" readOnly value={dump} onFocus={(event) => event.currentTarget.select()} /> : null}
+      {guest ? null : (
+        <>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("fx")}>
+            {tr("Hiệu ứng")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("cardfx")}>
+            {tr("Hiệu ứng lá bài")}
+          </button>
+          <a className="tuner-save alt" href="/clash-lite.zip" download>
+            {tr("Tải gói nhẹ")}
+          </a>
+          <button
+            type="button"
+            className="tuner-save"
+            onClick={() => {
+              const text = setupLine();
+              setLine(text);
+              void navigator.clipboard?.writeText(text).then(
+                () => setNote("Đã chép. Dán dòng này vào cuộc trò chuyện."),
+                () => setNote("Chưa chép được. Giữ dòng bên dưới rồi sao chép."),
+              );
+            }}
+          >
+            {tr("Xuất tuỳ chỉnh")}
+          </button>
+          {note ? <p className="tuner-note">{note}</p> : null}
+          <input className="tune-input" readOnly value={line} onFocus={(event) => event.currentTarget.select()} />
+          <button
+            type="button"
+            className="tuner-save is-red"
+            onClick={() => {
+              if (!window.confirm("Xuất mọi thay đổi trong tuỳ chỉnh?")) return;
+              const data = exportChanges();
+              if (Object.keys(data).length === 0) {
+                setDump("");
+                setNote("Không có thay đổi để xuất.");
+                return;
+              }
+              const text = JSON.stringify(data, null, 2);
+              setDump(text);
+              void navigator.clipboard?.writeText(text).then(
+                () => setNote("Đã xuất và chép các thay đổi."),
+                () => setNote("Đã xuất. Giữ phần chữ bên dưới rồi sao chép."),
+              );
+            }}
+          >
+            Xuất mọi thay đổi
+          </button>
+          {dump ? <textarea className="tune-input is-area" readOnly value={dump} onFocus={(event) => event.currentTarget.select()} /> : null}
+        </>
+      )}
     </main>
   );
 }
