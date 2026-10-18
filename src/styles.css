@@ -7028,9 +7028,11 @@ button.watch-back {
 .dk-search input::placeholder { color: rgba(216, 199, 154, 0.55); }
 .dk-search-x { flex: none; padding: 0 0.1rem; border: 0; background: none; font-size: 0.8rem; color: #d8c79a; }
 .dk-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; align-items: center; gap: 0.25rem; margin-top: 0.15rem; }
-/* Thống kê and Lọc stack under Lưu, Đổi hình nền under them (owner, 18/10), spread down the column. */
-.dk-tools.is-two { flex: 1; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; align-content: space-evenly; gap: 0.5rem 0.25rem; margin: 0; }
-.dk-tools.is-two > * { grid-column: 3; }
+/* Quái and Phép on the left, a little low; Thống kê, Lọc and Lưu stacked on the right, Lưu right above Đổi hình
+   nền (owner, 18/10). The right column lines up with the cover button in the last row. */
+.dk-pad { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 0.25rem; }
+.dk-tools.is-main { grid-template-columns: repeat(2, minmax(0, 1fr)); align-self: center; margin: 1.6rem 0 0; }
+.dk-tools.is-stack { grid-template-columns: 1fr; align-content: space-evenly; gap: 0.45rem; margin: 0; }
 .dk-tool { position: relative; display: grid; place-items: center; padding: 0; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
 .dk-gem.sk3d { width: auto; }
 .dk-tool .sk3d-gem { width: 2.9rem; height: 2.9rem; transition: transform 0.14s ease-out, box-shadow 0.14s ease-out, opacity 0.14s; }
@@ -7761,14 +7763,20 @@ button.watch-back {
   width: 60%;
   background: center 22% / cover no-repeat;
 }
-/* One monster on the banner, from the right, fading into the dark on the left. */
-.lor-trial-art:not(.is-left):not(.is-right) {
-  right: 0;
-  width: 72%;
-  background-position: center 18%;
-  -webkit-mask-image: linear-gradient(270deg, #000 55%, transparent 100%);
-  mask-image: linear-gradient(270deg, #000 55%, transparent 100%);
+/* The full-body picture on the left of the banner, midway between the frame and the name (owner, 18/10). */
+.lor-trial-pic {
+  position: absolute;
+  left: 17%;
+  top: 50%;
+  z-index: 1;
+  height: 86%;
+  width: auto;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8));
+  pointer-events: none;
 }
+.lor-trial-pic.is-flip { transform: translate(-50%, -50%) scaleX(-1); }
+.lor-trial.is-done .lor-trial-pic { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8)) brightness(0.55) saturate(0.75); }
 .lor-trial-art.is-left {
   left: 0;
   -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 100%);
@@ -7805,7 +7813,7 @@ button.watch-back {
 .lor-trial-title svg { width: 6.5rem; height: 0.6rem; fill: none; stroke: #a8823f; stroke-width: 1.6; }
 .lor-trial-done {
   position: absolute;
-  left: 7%;
+  right: 7%;
   top: 50%;
   z-index: 1;
   display: grid;

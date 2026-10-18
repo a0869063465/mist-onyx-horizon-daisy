@@ -358,32 +358,35 @@ function DeckPage() {
             ) : null}
           </label>
           <DragTip />
-          <div className="dk-tools">
-            <button type="button" className={`dk-tool is-monster${mode === "monster" && !q ? " on" : ""}`} aria-label={tr("Quái thú")} onClick={() => setMode("monster")}>
-              <ToolGem glyph="wolf-head" rim="note" ring="#ffd23c" deep="#4a3400" />
-              <Count side={balance.monster} />
-            </button>
-            <button type="button" className={`dk-tool is-spell${mode === "spell" && !q ? " on" : ""}`} aria-label={tr("Phép")} onClick={() => setMode("spell")}>
-              <ToolGem glyph="spell-book" rim="passive" ring="#b45cff" deep="#2a0d4a" />
-              <Count side={balance.spell} />
-            </button>
-            <button type="button" className={`dk-tool is-save${canSave ? "" : " is-off"}${saved ? " is-saved" : ""}`} aria-label={tr("Lưu")} disabled={!canSave} onClick={save}>
-              <ToolGem glyph={saved ? "check-mark" : "save"} rim="active" ring="#3ec6ff" deep="#0b2a4a" />
-              {short > 0 ? <b className="dk-count is-bad">-{short}</b> : null}
-            </button>
-          </div>
-          <div className="dk-tools is-two">
-            <button type="button" className="dk-tool is-small" aria-label={tr("Các chiến thuật đang có trong bộ bài")} onClick={() => setPlansOpen(true)}>
-              <ToolGem glyph="histogram" rim="active" ring="#3ec6ff" deep="#0b2a4a" />
-            </button>
-            <button
-              type="button"
-              className={`dk-tool is-small${filterOpen ? " on" : ""}${filterOn(filter) ? " is-set" : ""}`}
-              aria-label={tr("Lọc")}
-              onClick={() => setFilterOpen((open) => !open)}
-            >
-              <ToolGem glyph="funnel" rim="steel" ring="#b9bec8" deep="#2a2d33" />
-            </button>
+          {/* Quái and Phép on the left; Thống kê, Lọc, Lưu stacked right above Đổi hình nền (owner, 18/10). */}
+          <div className="dk-pad">
+            <div className="dk-tools is-main">
+              <button type="button" className={`dk-tool is-monster${mode === "monster" && !q ? " on" : ""}`} aria-label={tr("Quái thú")} onClick={() => setMode("monster")}>
+                <ToolGem glyph="wolf-head" rim="note" ring="#ffd23c" deep="#4a3400" />
+                <Count side={balance.monster} />
+              </button>
+              <button type="button" className={`dk-tool is-spell${mode === "spell" && !q ? " on" : ""}`} aria-label={tr("Phép")} onClick={() => setMode("spell")}>
+                <ToolGem glyph="spell-book" rim="passive" ring="#b45cff" deep="#2a0d4a" />
+                <Count side={balance.spell} />
+              </button>
+            </div>
+            <div className="dk-tools is-stack">
+              <button type="button" className="dk-tool is-small" aria-label={tr("Các chiến thuật đang có trong bộ bài")} onClick={() => setPlansOpen(true)}>
+                <ToolGem glyph="histogram" rim="active" ring="#3ec6ff" deep="#0b2a4a" />
+              </button>
+              <button
+                type="button"
+                className={`dk-tool is-small${filterOpen ? " on" : ""}${filterOn(filter) ? " is-set" : ""}`}
+                aria-label={tr("Lọc")}
+                onClick={() => setFilterOpen((open) => !open)}
+              >
+                <ToolGem glyph="funnel" rim="steel" ring="#b9bec8" deep="#2a2d33" />
+              </button>
+              <button type="button" className={`dk-tool is-small is-save${canSave ? "" : " is-off"}${saved ? " is-saved" : ""}`} aria-label={tr("Lưu")} disabled={!canSave} onClick={save}>
+                <ToolGem glyph={saved ? "check-mark" : "save"} rim="active" ring="#3ec6ff" deep="#0b2a4a" />
+                {short > 0 ? <b className="dk-count is-bad">-{short}</b> : null}
+              </button>
+            </div>
           </div>
           <div className="dk-foot">
             <button type="button" className="dk-name" onClick={() => setNaming(entry?.name ?? "")}>

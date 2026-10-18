@@ -572,7 +572,8 @@ export const PENDING_NOTES: string[] = [
   "Đổi hình nền hiện hình quái trong khung vàng mới, không bị chỉ số che.",
   "Bài hướng dẫn Cơ bản có hình Nàng tiên giữ khoá. Bấm vào là vào hướng dẫn ngay.",
   "Ghi chú kéo thả trong Chỉnh sửa bộ bài là chữ nổi rung rinh, đầu câu có dấu ? vàng. Bấm vào thì tan biến thành dấu ? nhỏ, bấm dấu đó thì hiện lại.",
-  "Chỉnh sửa bộ bài: icon chiến thuật và lọc xếp dọc dưới nút lưu, trên nút Đổi hình nền, dàn đều cột bên phải.",
+  "Chỉnh sửa bộ bài: icon chiến thuật và lọc xếp dọc dưới nút lưu, trên nút Đổi hình nền, dàn đều cột bên phải.",  "Chỉnh sửa bộ bài: nút quái và phép nằm bên trái, hạ thấp xuống; bên phải xếp dọc thống kê, lọc, lưu, nút lưu nằm ngay trên nút Đổi hình nền.",
+  "Bài hướng dẫn Cơ bản có hình toàn thân Nàng tiên giữ khoá bên trái, quay mặt vào tên bài. Dấu Hoàn thành chuyển sang bên phải.",
 ];
 
 function remarkOf(notes: string[]) {

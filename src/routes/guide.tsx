@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { artSrc } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { playTutorial, TUTORIALS, tutorialsDone, type TutorialInfo } from "@/lib/tutorial-list";
 
@@ -8,7 +7,7 @@ export const Route = createFileRoute("/guide")({ component: GuidePage });
 
 /**
  * Hướng dẫn (owner, 18/10): what the Hướng dẫn button on Chọn bộ bài opens, made after LoR's challenge list. One
- * banner per tutorial with its monster, HOÀN THÀNH once it was played to the end. Tapping a banner starts it.
+ * banner per tutorial with a full-body picture on the left, HOÀN THÀNH once it was played to the end. Tapping a banner starts it.
  */
 function GuidePage() {
   const navigate = useNavigate();
@@ -49,7 +48,7 @@ function GuidePage() {
                 data-ui="confirm"
                 onClick={() => start(row)}
               >
-                <span className="lor-trial-art" style={{ backgroundImage: `url(${artSrc(row.art, 1)})` }} />
+                <img className={`lor-trial-pic${row.flip ? " is-flip" : ""}`} src={row.pic} alt="" draggable={false} />
                 <span className="lor-trial-title">
                   {tr(row.title)}
                   <svg viewBox="0 0 120 10" aria-hidden="true">

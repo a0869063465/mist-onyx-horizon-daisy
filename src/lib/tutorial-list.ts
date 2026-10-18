@@ -1,15 +1,17 @@
 /**
  * The Hướng dẫn list (owner, 18/10): Chơi → Hướng dẫn shows every tutorial as a banner, in LoR's challenge style;
- * tapping one starts it. "Cơ bản" is the one built so far. `art` is the monster on its banner (one monster, not
- * two facing each other: owner, 18/10).
+ * tapping one starts it. "Cơ bản" is the one built so far. `pic` is a full-body picture on the left of the banner,
+ * between its edge and the name; `flip` turns it to face the name (owner, 18/10).
  */
-export type TutorialInfo = { key: string; title: string; art: string };
+export type TutorialInfo = { key: string; title: string; pic: string; flip?: boolean };
 
 export const TUTORIALS: TutorialInfo[] = [
   {
     key: "co-ban",
     title: "Cơ bản",
-    art: "thien-than-be-nho",
+    // Nàng tiên giữ khoá, the tutorial's guide.
+    pic: "/tutorial/nguoi-giu-khoa.webp",
+    flip: true,
   },
 ];
 
