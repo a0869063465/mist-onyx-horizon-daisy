@@ -10,6 +10,8 @@ const book = fs.readFileSync(new URL("../src/lib/skill-book.ts", import.meta.url
 const names = new Set([...book.matchAll(/\b(?:A|P|R|S|AP|PP|RP|SP)\("[^"]+", "([^"]+)"/g)].map((hit) => hit[1]));
 // Action buttons on the monster sheet.
 for (const extra of ["candle-skull", "info", "broadsword", "card-draw", "spell-book", "sands-of-time", "check-mark", "magic-swirl", "sparkles"]) names.add(extra);
+// Deck builder: search, monster / spell / save / stats / filter buttons, the balance icon, the spell kind and the filter icons.
+for (const extra of ["magnifying-glass", "wolf-head", "save", "histogram", "funnel", "scales", "mountains", "card-joker", "spiky-explosion", "crossed-swords", "checked-shield", "three-friends", "growth"]) names.add(extra);
 const out = {};
 for (const name of [...names].sort()) {
   const icon = set.icons[name];

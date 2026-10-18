@@ -117,13 +117,16 @@ import { findFusion, findKnightFusion } from "@/lib/fusion";
 import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
+import { ReactGlyph, type ReactMark } from "@/components/game/react-glyph";
+import { SpellSheet } from "@/components/game/card-sheets";
+import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
 
 export const Route = createFileRoute("/play")({ component: PlayPage });
 
-const SEA_IDS = new Set(["trai-tim-hai-long", "sua-hut-ma-phap", "kraken"]);
-const SEA_NAMES = ["Trái tim hải long", "Sứa hút ma pháp", "Kraken"];
+const SEA_IDS = new Set(SEA_KINDS);
+const SEA_NAMES = SEA_KINDS.map((id) => monsterCard(id)?.name ?? "").filter(Boolean);
 
 function seaVeiled(duel: Duel, viewer: Side, uid: string): boolean {
   if (!uid) return false;
@@ -715,7 +718,6 @@ function splashMarkPoint(state: Duel, id: string, viewer: Side, falls: Fall[]): 
   return fall ? { x: fall.floater.x, y: fall.floater.y } : null;
 }
 
-type ReactMark = "attack" | "block" | "skill" | "buff" | "chain" | "skull" | "rebound";
 
 const ANSWER_SPELLS = new Set([
   "guong-phong-ho",
@@ -892,52 +894,6 @@ function reactionMark(prev: Duel, next: Duel): ReactMark | null {
     }
   }
   return null;
-}
-
-function ReactGlyph({ kind }: { kind: ReactMark }) {
-  if (kind === "attack") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden>
-        <path d="M6 26 L20 8 L23 11 L9 29 Z" fill="currentColor" />
-        <path d="M18 6 L26 4 L24 12 Z" fill="currentColor" />
-        <path d="M8 22 L14 28" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    );
-  }
-  if (kind === "block") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden>
-        <path d="M16 3 L27 8 V16 C27 23 16 29 16 29 C16 29 5 23 5 16 V8 Z" fill="none" stroke="currentColor" strokeWidth="2.4" />
-        <path d="M11 16 L15 20 L22 12" fill="none" stroke="currentColor" strokeWidth="2.4" />
-      </svg>
-    );
-  }
-  if (kind === "chain") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden>
-        <rect x="4" y="12" width="12" height="8" rx="4" fill="none" stroke="currentColor" strokeWidth="2.4" />
-        <rect x="16" y="12" width="12" height="8" rx="4" fill="none" stroke="currentColor" strokeWidth="2.4" />
-      </svg>
-    );
-  }
-  if (kind === "skull") {
-    return <img src="/fx/skull.png" alt="" draggable={false} />;
-  }
-  if (kind === "rebound") {
-    return <img src="/fx/rebound.png" alt="" draggable={false} />;
-  }
-  if (kind === "skill") {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden>
-        <path d="M18 2 L8 18 H15 L13 30 L25 13 H18 Z" fill="currentColor" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden>
-      <path d="M16 4 L18.5 13 H28 L20.5 18.5 L23 28 L16 22.5 L9 28 L11.5 18.5 L4 13 H13.5 Z" fill="currentColor" />
-    </svg>
-  );
 }
 
 function reserveLive(held: { id: string; hp: number; saved?: { level?: number; atk: number; def: number; mdef: number } }, card: { name: string; atk: number; def: number; mdef: number }) {
@@ -4809,51 +4765,55 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
-        {handSheet ?? (inspect && (shownMonster || shownSpell) ? (
-          <>
-            <button type="button" className="inspect-dismiss" aria-label="Đóng kỹ năng" onClick={() => setInspect(null)} />
-            <div className="inspect-card">
-              {shownMonster ? (
+        {handSheet ??
+          (inspect && shownSpell ? (
+            // Spells open the spell sheet, laid out like the monster sheet (owner, 18/10).
+            <SpellSheet
+              id={shownSpell.id}
+              gems={spellToll ? `${shownSpell.gems}+1` : undefined}
+              actions={
+                mine && inspect.pile === "spell" && (shownSpell.id !== "hoan-doi" || spellCanAnswer(shownSpell.id, duel))
+                  ? [
+                      {
+                        key: "cast",
+                        label: shownSpell.id === "hoan-doi" || shownSpell.id === "ke-dao-mo" ? "Use" : "Dùng phép",
+                        tone: "purple",
+                        cost: shownSpell.gems + (spellToll ? 1 : 0),
+                        onPress: () => {
+                          const index = inspect.index;
+                          if (shownSpell.id === "ke-dao-mo") {
+                            setInspect(null);
+                            openDig(index);
+                            return;
+                          }
+                          const swap = shownSpell.id === "hoan-doi";
+                          const aimed = aimedUid(duel);
+                          const ally = aimed && duel.players[viewer].field.some((mon) => mon?.uid === aimed) ? aimed : null;
+                          setInspect(null);
+                          if (swap) setSwapPick([]);
+                          apply(castSpell(duel, index, swap ? aimed : shownSpell.id === "co-may-thoi-gian" || shownSpell.id === "giap-co-khi" ? ally : null));
+                        },
+                      },
+                    ]
+                  : []
+              }
+              onClose={() => setInspect(null)}
+            />
+          ) : inspect && shownMonster ? (
+            <>
+              <button type="button" className="inspect-dismiss" aria-label="Đóng kỹ năng" onClick={() => setInspect(null)} />
+              <div className="inspect-card">
                 <CardFace monster={shownMonster} gems={reserveToll ? `${shownMonster.gems}+1` : undefined} live={reserveHeld && shownMonster ? reserveLive(reserveHeld, shownMonster) : undefined} />
-              ) : (
-                <CardFace spellId={shownSpell?.id} gems={spellToll ? `${shownSpell?.gems ?? 0}+1` : undefined} />
-              )}
-              <div className={`inspect-copy${shownMonster ? " is-skill" : " is-spell"}`}>
-                <strong>{shownMonster?.name ?? shownSpell?.name}</strong>
-                <p>
-                  {shownMonster
-                    ? `${shownMonster.stars} sao · ${reserveToll ? `${shownMonster.gems}+1` : shownMonster.gems} gem`
-                    : `${spellToll ? `${shownSpell?.gems ?? 0}+1` : shownSpell?.gems ?? 0} gem`}
-                </p>
-                <p className={shownMonster ? "ink-skill" : "ink-spell"}>
-                  <CopyText text={shownMonster?.skill ?? shownSpell?.effect ?? ""} />
-                </p>
-                {shownSpell && mine && inspect?.pile === "spell" && (shownSpell.id !== "hoan-doi" || spellCanAnswer(shownSpell.id, duel)) ? (
-                  <button
-                    type="button"
-                    className="act press"
-                    onClick={() => {
-                      const index = inspect.index;
-                      if (shownSpell.id === "ke-dao-mo") {
-                        setInspect(null);
-                        openDig(index);
-                        return;
-                      }
-                      const swap = shownSpell.id === "hoan-doi";
-                      const aimed = aimedUid(duel);
-                      const ally = aimed && duel.players[viewer].field.some((mon) => mon?.uid === aimed) ? aimed : null;
-                      setInspect(null);
-                      if (swap) setSwapPick([]);
-                      apply(castSpell(duel, index, swap ? aimed : shownSpell.id === "co-may-thoi-gian" || shownSpell.id === "giap-co-khi" ? ally : null));
-                    }}
-                  >
-                    {shownSpell.id === "hoan-doi" || shownSpell.id === "ke-dao-mo" ? "Use" : "Dùng phép"}
-                  </button>
-                ) : null}
+                <div className="inspect-copy is-skill">
+                  <strong>{shownMonster.name}</strong>
+                  <p>{`${shownMonster.stars} sao · ${reserveToll ? `${shownMonster.gems}+1` : shownMonster.gems} gem`}</p>
+                  <p className="ink-skill">
+                    <CopyText text={shownMonster.skill ?? ""} />
+                  </p>
+                </div>
               </div>
-            </div>
-          </>
-        ) : null)}
+            </>
+          ) : null)}
         {drag ? (
           <div className="ghost" style={{ left: drag.x, top: drag.y }}>
             {drag.kind === "spell" ? (

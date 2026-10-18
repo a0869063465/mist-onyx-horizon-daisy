@@ -10,7 +10,7 @@ import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion } from "./fusion.ts";
-import { envFavors, SANCTUARY_GUARDED } from "./env-kinds.ts";
+import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
@@ -1599,7 +1599,7 @@ function settleGuard(mon: FieldMon): FieldMon {
   };
 }
 
-const SEA_IDS = new Set(["trai-tim-hai-long", "sua-hut-ma-phap", "kraken"]);
+const SEA_IDS = new Set(SEA_KINDS);
 
 function isSea(id: string) {
   return SEA_IDS.has(id);

@@ -543,6 +543,14 @@ export const PENDING_NOTES: string[] = [
   "Cứ địa máy móc: Phù thuỷ thời gian không phải quái máy móc, không được áo giáp.",
   "Mô tả trên bảng quái tô màu thêm: số lượt và công màu cam, thủ vàng, thủ phép tím, phòng ngự vàng pha tím, máu và hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải trạng thái bất lợi xanh lam, không thể hành động màu xám. Bảng thông báo giữ màu cũ.",
   "Màu mới trên bảng quái chỉ thêm vào chữ chưa có màu. Tên skill và chữ đã có màu giữ nguyên màu cũ.",
+  "Trang bộ bài làm mới thành Chỉnh sửa bộ bài: kho bài ở trên, 3 lá một hàng, chỉ có hình và chỉ số. Dưới bên trái là danh sách bộ bài; dưới bên phải là ô tìm lá, nút quái, phép, lưu, tên bộ bài, chiến thuật và lọc.",
+  "Kéo lá từ kho xuống danh sách để thêm vào bộ bài, kéo dòng trong danh sách lên kho để bỏ ra. Giữ lá một chút rồi kéo, hoặc kéo ngang. Bấm lá để xem mô tả.",
+  "Cạnh nút quái và nút phép ghi -x đỏ khi còn thiếu, +x khi đã đủ. Nút lưu mờ và ghi -x đỏ khi bộ bài chưa đủ 24 lá; lưu xong hiện dấu ✓.",
+  "Lọc kho bài theo môi trường, loại quái (Đa dụng, Sát thương, Đấu sĩ, Phòng ngự, Theo bộ, Phát triển) và số sao. Bấm lại nút lọc để ẩn khung, kết quả lọc vẫn giữ.",
+  "Bảng quái trong trang bộ bài có thêm icon Cân bằng: bấm để xem lá đã được Tăng, Giảm hay Thay đổi lối chơi.",
+  "Bấm vào lá phép hiện khung giống bảng quái: icon nhóm phép (Môi trường, Phản đòn, Giải trừ, Đa năng, Khống chế, Sát thương) ở trên, mô tả ở dưới, nút Dùng phép cạnh lá.",
+  "Biển sâu áp dụng cho mọi quái biển: thêm Cơn thịnh nộ của hải vương, cùng Trái tim hải long, Sứa hút ma pháp và Kraken.",
+  "Xếp hệ cho các quái chưa có môi trường: Phù thuỷ thời gian và Phù thuỷ tí hơn thuộc Bóng tối; Kazura, Kizuran, Ma đạo sĩ và Thế thân của shien thuộc Thảo nguyên; Mắt xanh huỷ diệt thuộc Núi. Các quái này được hưởng lá môi trường đó.",
 ];
 
 function remarkOf(notes: string[]) {

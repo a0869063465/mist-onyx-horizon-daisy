@@ -11,8 +11,13 @@ import { monsterCard } from "./catalog.ts";
 export const SANCTUARY_GUARDED = ["quai-thu-thien-su", "yeu-tinh-chuc-phuc", "thien-than-be-nho"];
 export const SANCTUARY_WARRIORS: string[] = [];
 
+/** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
+export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong"];
+
 export const ENV_KINDS: Record<string, string[]> = {
-  // Chiến binh
+  // Biển sâu: quái biển
+  "bien-sau": SEA_KINDS,
+  // Chiến binh (cả dạng người: Kazura, Kizuran; Ma đạo sĩ là mạo hiểm giả phe con người; Thế thân của shien là kiếm sĩ)
   "thao-nguyen": [
     "chien-si-gam-nham",
     "kiem-si-lua-thieng",
@@ -21,11 +26,15 @@ export const ENV_KINDS: Record<string, string[]> = {
     "hiep-si-ho-ve",
     "hiep-si-cua-hau",
     "chien-binh-rong",
+    "kazura",
+    "kizuran",
+    "ma-dao-si",
+    "the-than-cua-shien",
   ],
   // Đất đá
   "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat"],
   // Chim chóc và rồng
-  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan"],
+  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet"],
   // Thú rừng và côn trùng
   "rung-ram": [
     "ong-khong-lo",
@@ -43,7 +52,7 @@ export const ENV_KINDS: Record<string, string[]> = {
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
   // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ
   "thanh-dia-thien-su": [...SANCTUARY_GUARDED, ...SANCTUARY_WARRIORS],
-  // Bóng tối
+  // Bóng tối (cả phù thuỷ: Phù thuỷ thời gian, Phù thuỷ tí hơn)
   "bong-toi": [
     "trieu-hoi-ac-ma",
     "ky-si-bong-toi",
@@ -55,6 +64,8 @@ export const ENV_KINDS: Record<string, string[]> = {
     "mat-do-tan-pha",
     "phu-thuy-rung-den",
     "ke-giam-ho-linh-hon",
+    "phu-thuy-thoi-gian",
+    "phu-thuy-ti-hon",
   ],
 };
 

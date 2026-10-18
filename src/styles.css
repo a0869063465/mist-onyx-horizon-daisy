@@ -6098,6 +6098,27 @@ button.watch-back {
 .sk3d.is-risk { --ring: #ff4a35; --deep: #4a0804; }
 .sk3d.is-spell { --ring: #ff4f93; --deep: #4a0622; }
 .sk3d.is-note { --ring: #ffd23c; --deep: #4a3400; }
+/* Extra icons (sheet extras): Cân bằng in yellow, green and red; a spell's kind in its reaction bar colour. */
+.sk3d.is-balance .sk3d-core {
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(135deg, #ffe14a 0%, #c6e02e 50%, #ff4a4a 100%);
+}
+.sk3d-react {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 62%;
+  height: 62%;
+  color: #ffffff;
+}
+.sk3d-react svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.7)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)); }
+/* The reaction bar's rebound picture is a pink arrow on black: drop its frame, lighten the arrow, let the black vanish. */
+.sk3d-react:has(img) { mix-blend-mode: screen; }
+.sk3d-react img { width: 100%; height: 100%; object-fit: contain; clip-path: inset(4%); transform: scale(1.14); filter: grayscale(1) brightness(1.8) contrast(3); }
+.msheet-desc-title.is-extra { color: color-mix(in srgb, var(--ring) 55%, #ffffff); text-shadow: 0 2px 0 #000, 0 0 8px color-mix(in srgb, var(--ring) 55%, transparent); }
+.msheet-desc .power-lines { font-size: 0.8rem; line-height: 1.38; color: #f1e7cf; }
 .sk3d-gem {
   position: relative;
   width: 3.15rem;
@@ -6716,3 +6737,434 @@ button.watch-back {
 .glyph-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
 .stage .actions .act.ax .ax-label { white-space: normal; overflow-wrap: normal; }
 .stage .actions .act.ax { font-size: calc(0.84rem * var(--act-scale, 100) / 100); padding-right: 0.4rem; }
+
+/* ── Chỉnh sửa bộ bài (deck builder, owner's layout after the LoR deck builder, 18/10) ── */
+.dk-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f4ecd8;
+  background: #0b0f1a;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+}
+.dk-page.is-dragging { user-select: none; -webkit-user-select: none; }
+.dk-head {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  padding: 0 3.4rem;
+  background: linear-gradient(180deg, #16203a 0%, #0c1222 100%);
+  border-bottom: 1px solid rgba(201, 168, 90, 0.55);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.65);
+}
+.dk-head h1 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #fff6d2 0%, #ecc363 52%, #a5761c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.9));
+}
+.dk-back {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  min-width: 2.7rem;
+  height: 2.1rem;
+  border-radius: 0.45rem;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: #f3dfa6;
+  text-decoration: none;
+  background: linear-gradient(180deg, #2a3d68 0%, #142244 100%);
+  border: 1px solid rgba(201, 168, 90, 0.7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.dk-back:active { transform: translateY(-50%) scale(0.95); }
+
+/* The pool: three cards to a row on a dark board. */
+.dk-pool {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 0.75rem 0.85rem 1.1rem;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 220, 160, 0.07) 0%, rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, #2b2620 0%, #211d19 55%, #181512 100%);
+  box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.55), inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 0.15s;
+}
+.dk-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem 0.6rem; }
+.dk-card {
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.6));
+  transition: transform 0.12s, opacity 0.12s;
+}
+.dk-card:active { transform: scale(0.97); }
+.dk-card.is-in .card { filter: brightness(0.32) saturate(0.45); }
+.dk-card.is-locked .card { filter: grayscale(0.55) brightness(0.62); }
+.dk-card.is-lifted { opacity: 0.3; }
+.dk-lock {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  color: #ead9ae;
+  background: radial-gradient(circle at 35% 30%, #3b3428, #121009 75%);
+  border: 2px solid #b9a476;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.7);
+}
+.dk-lock svg { width: 58%; height: 58%; }
+.dk-empty { margin: 2.2rem 0; text-align: center; font-size: 0.85rem; font-weight: 700; color: #cdbf9e; }
+
+/* The bottom panel: the deck list on the left, the tools on the right. */
+.dk-bottom {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 58fr) minmax(0, 42fr);
+  gap: 0.55rem;
+  height: min(41dvh, 23.5rem);
+  padding: 0.55rem 0.5rem calc(0.55rem + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #1d2e56 0%, #132142 50%, #0c1630 100%);
+  border-top: 2px solid #b8954a;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 236, 180, 0.35);
+}
+.dk-list { position: relative; min-height: 0; border-radius: 0.55rem; transition: box-shadow 0.15s; }
+.dk-rows {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  display: grid;
+  align-content: start;
+  gap: 0.32rem;
+  padding: 0.1rem 0.15rem 0.5rem;
+}
+.dk-rows-empty { margin: 1.4rem 0.4rem; text-align: center; font-size: 0.78rem; font-weight: 700; line-height: 1.4; color: rgba(222, 210, 178, 0.75); }
+.dk-pool.is-target, .dk-list.is-target { box-shadow: inset 0 0 0 2px rgba(255, 224, 138, 0.28); }
+.dk-pool.is-over, .dk-list.is-over { box-shadow: inset 0 0 0 2px #ffe08a, inset 0 0 26px rgba(255, 214, 110, 0.38); }
+
+/* A deck row: badge, name over an art strip, crystal or kind icon. */
+.dk-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.15rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.6rem;
+  padding: 0 0.4rem 0 0.2rem;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background: linear-gradient(90deg, #0f1628 0%, #151f37 50%, #0f1628 100%);
+  border: 1px solid rgba(201, 168, 90, 0.42);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.dk-row.is-spell { border-color: rgba(214, 120, 200, 0.5); }
+.dk-row:active { transform: scale(0.985); }
+.dk-row.is-lifted { opacity: 0.3; }
+.dk-row-art {
+  position: absolute;
+  inset: 0 0 0 30%;
+  background-size: cover;
+  background-position: center 28%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.9) 48%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.9) 48%, #000 100%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.dk-row-badge {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 30%, #7fb2ff 0%, #2a5cb0 45%, #10295a 100%);
+  border: 2px solid #cfdcf2;
+  box-shadow: 0 0 0 1px #08101f, 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 -2px 3px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 0 #061226;
+}
+/* Monsters: a gold star holding the number of stars. */
+.dk-row-badge.is-monster { border: 0; background: none; box-shadow: none; filter: drop-shadow(0 1px 0 #2a1800) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
+.dk-row-star {
+  position: absolute;
+  inset: -0.12rem;
+  display: block;
+  font-style: normal;
+  font-size: 0;
+  background: radial-gradient(circle at 40% 30%, #fff6c4 0%, #f2c44a 45%, #a86d0c 100%);
+  clip-path: polygon(50% 0%, 61.8% 35.4%, 98.1% 35.4%, 68.7% 57.3%, 79.4% 91.6%, 50% 70.8%, 20.6% 91.6%, 31.3% 57.3%, 1.9% 35.4%, 38.2% 35.4%);
+}
+.dk-row-badge.is-monster b { position: relative; margin-top: 0.12rem; font-size: 0.95rem; color: #3a2200; text-shadow: 0 1px 0 rgba(255, 246, 196, 0.7); }
+.dk-row-name {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #f6eedb;
+  text-shadow: 0 1px 0 #000, 0 0 6px rgba(0, 0, 0, 0.95), 0 0 2px #000;
+}
+.dk-row-end { position: relative; z-index: 1; display: flex; align-items: center; justify-content: flex-end; min-width: 1.6rem; }
+.dk-row-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.1rem 0.35rem 0.1rem 0.3rem;
+  border-radius: 0.5rem;
+  background: rgba(6, 12, 26, 0.82);
+  border: 1px solid rgba(126, 224, 255, 0.45);
+}
+.dk-row-cost .mana-gem { width: 0.62rem; height: 0.62rem; }
+.dk-row-cost b { font-family: "Barlow Condensed", system-ui, sans-serif; font-size: 0.95rem; font-weight: 800; color: #9ef4ff; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
+.dk-row-kind {
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0.22rem;
+  border-radius: 50%;
+  color: var(--tone);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.14), rgba(6, 10, 20, 0.92) 70%);
+  border: 1px solid color-mix(in srgb, var(--tone) 65%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--tone) 45%, transparent);
+}
+.dk-row-kind svg { width: 100%; height: 100%; filter: drop-shadow(0 0 3px currentColor); }
+.dk-row-kind:has(img) { padding: 0.12rem; }
+.dk-row-kind-pic { display: grid; width: 100%; height: 100%; overflow: hidden; border-radius: 50%; mix-blend-mode: screen; }
+.dk-row-kind img { width: 100%; height: 100%; object-fit: contain; clip-path: inset(4%); transform: scale(1.14); }
+
+/* Tools on the right: search, monster / spell / save, then the deck name, tactics and filter. */
+.dk-side { display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; min-height: 0; }
+.dk-search {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 2.35rem;
+  padding: 0 0.45rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, #08101f 0%, #101a31 100%);
+  border: 1px solid rgba(201, 168, 90, 0.55);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.75);
+}
+.dk-search-ico { display: grid; place-items: center; flex: none; width: 1.15rem; height: 1.15rem; }
+.dk-search-ico .glyph3d { width: 100%; height: 100%; }
+.dk-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f4ecd8;
+}
+.dk-search input::placeholder { color: rgba(216, 199, 154, 0.55); }
+.dk-search-x { flex: none; padding: 0 0.1rem; border: 0; background: none; font-size: 0.8rem; color: #d8c79a; }
+.dk-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; align-items: center; gap: 0.25rem; margin: auto 0; }
+.dk-tool { position: relative; display: grid; place-items: center; padding: 0; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
+.dk-gem.sk3d { width: auto; }
+.dk-tool .sk3d-gem { width: 2.9rem; height: 2.9rem; transition: transform 0.14s ease-out, box-shadow 0.14s ease-out, opacity 0.14s; }
+.dk-tool:active .sk3d-gem { transform: translateY(1px) scale(0.95); }
+.dk-tool.on .sk3d-gem { transform: translateY(-2px) scale(1.08); box-shadow: 0 0 20px 6px color-mix(in srgb, var(--ring) 85%, transparent), 0 0.35rem 0.5rem rgba(0, 0, 0, 0.6); }
+.dk-tool.is-off .sk3d-gem { opacity: 0.4; filter: grayscale(0.65); box-shadow: none; }
+/* The monster or spell icon that is not showing its cards in the pool is dimmer. */
+.dk-tool.is-monster:not(.on) .sk3d-gem, .dk-tool.is-spell:not(.on) .sk3d-gem { filter: saturate(0.5) brightness(0.72); box-shadow: 0 0.3rem 0.45rem rgba(0, 0, 0, 0.65); }
+.dk-tool.is-saved .sk3d-gem { box-shadow: 0 0 20px 6px rgba(120, 255, 150, 0.75); }
+.dk-tool.is-small .sk3d-gem { width: 2.35rem; height: 2.35rem; }
+.dk-tool.is-set::after {
+  content: "";
+  position: absolute;
+  right: -0.05rem;
+  top: -0.05rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #ffd23c;
+  box-shadow: 0 0 0 1px #2a1c00, 0 0 7px #ffd23c;
+}
+.dk-count {
+  position: absolute;
+  right: -0.45rem;
+  top: -0.45rem;
+  z-index: 2;
+  min-width: 1.45rem;
+  padding: 0 0.25rem;
+  border-radius: 0.7rem;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  text-align: center;
+  color: #7dff8a;
+  background: #08101f;
+  border: 1px solid rgba(125, 255, 138, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+.dk-count.is-bad { color: #ff6a5a; border-color: rgba(255, 106, 90, 0.75); }
+.dk-foot { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.35rem; }
+.dk-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 2.35rem;
+  padding: 0 0.45rem;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #f3dfa6;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, #2a3d68 0%, #142244 100%);
+  border: 1px solid rgba(201, 168, 90, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.dk-name-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.dk-name-edit {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  padding: 0 0.6rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #fff8e6;
+  border-radius: 0.5rem;
+  background: #08101f;
+  border: 1px solid #e9c46a;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(233, 196, 106, 0.25), 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+
+/* The filter, over the deck list (style after the owner's pictures 2 and 3). */
+.dk-filter {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.45rem 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(180deg, #241b36 0%, #181228 60%, #110d1d 100%);
+  border: 1px solid rgba(201, 168, 90, 0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.dk-filter-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #dcc99c;
+}
+.dk-filter-head::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(220, 201, 156, 0.6), transparent); }
+.dk-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.45rem 0.2rem; margin-bottom: 0.55rem; }
+.dk-chip { display: grid; justify-items: center; gap: 0.18rem; padding: 0; border: 0; background: none; color: #cfc3a6; -webkit-tap-highlight-color: transparent; }
+.dk-chip-ico {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4d3f72 0%, #1d1631 72%);
+  border: 2px solid #8a7550;
+  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.22), 0 3px 5px rgba(0, 0, 0, 0.65);
+  transition: box-shadow 0.14s, border-color 0.14s, transform 0.14s;
+}
+.dk-chip-ico img { width: 100%; height: 100%; object-fit: cover; }
+.dk-chip:not(.on) .dk-chip-ico img { filter: saturate(0.55) brightness(0.72); }
+.dk-chip-ico .glyph3d { width: 62%; height: 62%; }
+.dk-chip-label { max-width: 100%; font-size: 0.52rem; font-weight: 800; line-height: 1.1; letter-spacing: 0.02em; text-align: center; text-transform: uppercase; }
+.dk-chip:active .dk-chip-ico { transform: scale(0.94); }
+.dk-chip.on .dk-chip-ico { border-color: #ffe08a; box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.3), 0 0 12px 3px rgba(255, 210, 90, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.3); }
+.dk-chip.on .dk-chip-label { color: #ffeab8; }
+.dk-stars { display: flex; gap: 0.5rem; margin-bottom: 0.65rem; }
+.dk-num {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #e8dcc0;
+  background: radial-gradient(circle at 35% 30%, #3d3253 0%, #16111f 75%);
+  border: 2px solid #8a7550;
+  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.2), 0 3px 5px rgba(0, 0, 0, 0.6);
+}
+.dk-num.on { color: #3a2400; background: radial-gradient(circle at 35% 30%, #fff3c0 0%, #e7b640 58%, #8a5a0c 100%); border-color: #fff1b8; box-shadow: 0 0 12px 3px rgba(255, 210, 90, 0.55); }
+.dk-clear {
+  width: 100%;
+  height: 2.05rem;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #ffdcd4;
+  border-radius: 0.45rem;
+  background: linear-gradient(180deg, #6e2020 0%, #3e0e0e 100%);
+  border: 1px solid #c45656;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.dk-clear:disabled { opacity: 0.4; }
+
+/* The card that follows the finger while it is dragged. */
+.dk-ghost {
+  position: fixed;
+  z-index: 80;
+  width: 6.4rem;
+  transform: translate(-50%, -62%) rotate(-5deg);
+  pointer-events: none;
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.75));
+  transition: filter 0.12s;
+}
+.dk-ghost.is-fit { filter: drop-shadow(0 0 10px #ffe08a) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.75)); }

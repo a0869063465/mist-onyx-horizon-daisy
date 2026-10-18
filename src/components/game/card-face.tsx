@@ -108,6 +108,7 @@ export function CardFace({
   dim = false,
   selected = false,
   hideStats = false,
+  hideName = false,
   showNew = false,
   mark = null,
   layout,
@@ -121,6 +122,8 @@ export function CardFace({
   dim?: boolean;
   selected?: boolean;
   hideStats?: boolean;
+  /** No name on the card (the deck builder's pool shows only the art and figures). */
+  hideName?: boolean;
   showNew?: boolean;
   mark?: "new" | "up" | "down" | null;
   layout?: Record<CardKey, Spot>;
@@ -167,13 +170,13 @@ export function CardFace({
           {pin(spots.mdef, live?.mdef ?? monster.mdef)}
           {pin(spots.atk, live?.atk ?? monster.atk)}
           {pin(spots.hp, live?.hp ?? monster.hp)}
-          {pin(spots.name, tr(live?.name ?? monster.name), true)}
+          {hideName ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
           {badge ? <NewMark spot={spots.fresh} kind={badge} /> : null}
         </>
       ) : spell ? (
         <>
           {pin(spellSpots.gems, gems ?? spell.gems)}
-          {pin(spellSpots.name, tr(spell.name), true)}
+          {hideName ? null : pin(spellSpots.name, tr(spell.name), true)}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}
         </>
       ) : null}

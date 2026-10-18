@@ -2,12 +2,32 @@ import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } fro
 import { CopyText } from "@/components/game/copy-text";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
+import { SPELL_KINDS } from "@/lib/spell-kinds";
 import { tr } from "@/lib/i18n";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
 export type SheetTone = "gold" | "red" | "purple" | "fuse";
 /** `swirl`: a round emblem holding the owner's whirlpool picture (Dung hợp), like Hiến tế's round emblem. */
 export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress: () => void };
+
+/**
+ * An icon on a sheet that is not one of the card's skills: Cân bằng (the deck builder) or a spell's kind (the
+ * spell sheet). It sits after the skills in the same 3D style: `ring`/`deep` colour the gem, `rim` names the rim
+ * gradient (rim3d-<rim>), `body` is what the description shows when it is tapped.
+ */
+export type SheetExtra = { key: string; name: string; emblem: ReactNode; rim: string; ring: string; deep: string; cost?: number | string; body: ReactNode };
+
+/** `hex` mixed toward `to` by `t` (0 keeps hex, 1 gives to). */
+function mixHex(hex: string, to: string, t: number) {
+  const parse = (value: string) => [1, 3, 5].map((at) => parseInt(value.slice(at, at + 2), 16));
+  const [a, b] = [parse(hex), parse(to)];
+  return `#${a.map((value, i) => Math.round(value + (b[i] - value) * t).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Rim gradient stops in the skills' pattern (light, colour, pale, dark, light colour) for one colour. */
+function rimStops(tone: string): string[] {
+  return [mixHex(tone, "#ffffff", 0.85), tone, mixHex(tone, "#ffffff", 0.7), mixHex(tone, "#000000", 0.65), mixHex(tone, "#ffffff", 0.3)];
+}
 
 /** A game-icons glyph painted with the shared bevel gradient, so it reads as a raised 3D emblem. */
 export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?: string }) {
@@ -88,6 +108,21 @@ export function GlyphDefs() {
           <stop offset="0.75" stopColor="#6a2a00" />
           <stop offset="1" stopColor="#ffb04a" />
         </linearGradient>
+        {SPELL_KINDS.map((kind) => (
+          <linearGradient key={kind.key} id={`rim3d-sp-${kind.key}`} x1="0" y1="0" x2="1" y2="1">
+            {rimStops(kind.tone).map((color, at) => (
+              <stop key={at} offset={[0, 0.3, 0.5, 0.75, 1][at]} stopColor={color} />
+            ))}
+          </linearGradient>
+        ))}
+        {/* Cân bằng: the yellow, green and red of Thay đổi lối chơi, Tăng and Giảm. */}
+        <linearGradient id="rim3d-balance" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff7c8" />
+          <stop offset="0.25" stopColor="#ffe14a" />
+          <stop offset="0.5" stopColor="#c6e02e" />
+          <stop offset="0.75" stopColor="#ff4a4a" />
+          <stop offset="1" stopColor="#ffd2c8" />
+        </linearGradient>
         <linearGradient id="pedestal3d" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff3c8" />
           <stop offset="0.45" stopColor="#c9963a" />
@@ -106,7 +141,7 @@ export type UnitActKind = SkillKind | "attack";
 const RIM_TONE: Record<SkillKind, string> = { active: "#4f9fe8", passive: "#9a5fe0", risk: "#e0402a", spell: "#ff4f93", note: "#e8b828" };
 
 /** Metal rim with four diamond studs over a round skill emblem, in the colour of the skill's kind. */
-export function Rim({ kind }: { kind: UnitActKind }) {
+export function Rim({ kind }: { kind: UnitActKind | string }) {
   const metal = `url(#rim3d-${kind})`;
   return (
     <svg className="rim3d" viewBox="0 0 100 100" aria-hidden="true">
@@ -202,6 +237,7 @@ export function MonsterSheet({
   card,
   count,
   skills,
+  extras = [],
   actions,
   note,
   onClose,
@@ -211,13 +247,16 @@ export function MonsterSheet({
   /** The orange number the monster shows on the field; empty hides the badge. */
   count: string;
   skills: SkillShown[];
+  /** Icons after the skills that are not skills: Cân bằng on the deck builder, a spell's kind on the spell sheet. */
+  extras?: SheetExtra[];
   actions: SheetAction[];
   /** Live figure for this monster (e.g. its current skill damage), shown under the first skill. */
   note?: string;
   onClose: () => void;
 }) {
-  const [picked, setPicked] = useState(0);
-  useEffect(() => setPicked(0), [name]);
+  const first = skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
+  const [picked, setPicked] = useState(first);
+  useEffect(() => setPicked(first), [name]); // eslint-disable-line react-hooks/exhaustive-deps
   // Skills that come together stay in one group, in the row of the first of them.
   const groups: Array<Array<{ skill: SkillShown; index: number }>> = [];
   skills.forEach((skill, index) => {
@@ -227,14 +266,15 @@ export function MonsterSheet({
   const isActive = (kind: SkillKind) => kind === "active" || kind === "risk" || kind === "spell";
   const actives = groups.filter((group) => isActive(group[0].skill.kind));
   const passives = groups.filter((group) => !isActive(group[0].skill.kind));
-  const shown = skills[picked];
+  const shown = picked.startsWith("s") ? skills[Number(picked.slice(1))] : undefined;
+  const extra = picked.startsWith("x:") ? extras.find((item) => `x:${item.key}` === picked) : undefined;
   const cost = shown ? skillCost(shown.text) : "";
   const icon = ({ skill, index }: { skill: SkillShown; index: number }) => (
     <button
       key={`${skill.name}-${index}`}
       type="button"
-      className={`sk3d is-${skill.kind}${index === picked ? " on" : ""}`}
-      onClick={() => setPicked(index)}
+      className={`sk3d is-${skill.kind}${`s${index}` === picked ? " on" : ""}`}
+      onClick={() => setPicked(`s${index}`)}
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
@@ -245,8 +285,23 @@ export function MonsterSheet({
       <span className="sk3d-name">{tr(skill.name)}</span>
     </button>
   );
-  const row = (list: typeof groups) =>
-    list.length ? (
+  const extraIcon = (item: SheetExtra) => (
+    <button
+      key={`x-${item.key}`}
+      type="button"
+      className={`sk3d is-extra is-${item.key}${`x:${item.key}` === picked ? " on" : ""}`}
+      style={{ "--ring": item.ring, "--deep": item.deep } as CSSProperties}
+      onClick={() => setPicked(`x:${item.key}`)}
+    >
+      <span className="sk3d-gem">
+        <span className="sk3d-core">{item.emblem}</span>
+        <Rim kind={item.rim} />
+      </span>
+      <span className="sk3d-name">{tr(item.name)}</span>
+    </button>
+  );
+  const row = (list: typeof groups, withExtras: boolean) =>
+    list.length || withExtras ? (
       <div className="msheet-row">
         {list.map((group) =>
           group.length === 1 ? (
@@ -262,8 +317,11 @@ export function MonsterSheet({
             </span>
           ),
         )}
+        {withExtras ? extras.map(extraIcon) : null}
       </div>
     ) : null;
+  // The extra icons sit at the right end of the first row of icons.
+  const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
   return (
     <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <GlyphDefs />
@@ -271,10 +329,10 @@ export function MonsterSheet({
         <button type="button" className="msheet-x" aria-label="Đóng" onClick={onClose}>
           ✕
         </button>
-        {skills.length ? (
+        {skills.length || extras.length ? (
           <div className="msheet-skills">
-            {row(actives)}
-            {row(passives)}
+            {row(actives, extrasOnActives)}
+            {row(passives, extras.length > 0 && !extrasOnActives)}
           </div>
         ) : null}
         <div className="msheet-mid">
@@ -310,7 +368,20 @@ export function MonsterSheet({
                   <CopyText text={shown.text} firstTitle={false} inked />
                 </p>
               ) : null}
-              {note && picked === 0 ? <p className="msheet-note">{tr(note)}</p> : null}
+              {note && picked === "s0" ? <p className="msheet-note">{tr(note)}</p> : null}
+            </>
+          ) : extra ? (
+            <>
+              <b className="msheet-desc-title is-extra" style={{ "--ring": extra.ring } as CSSProperties}>
+                {tr(extra.name)}
+                {extra.cost ? (
+                  <span className="act3d-cost">
+                    <i className="mana-gem" />
+                    <b>{extra.cost}</b>
+                  </span>
+                ) : null}
+              </b>
+              {extra.body}
             </>
           ) : (
             <p className="msheet-empty">{tr("Không có kỹ năng.")}</p>
