@@ -568,7 +568,7 @@ export const PENDING_NOTES: string[] = [
   "Kho bài trong Chỉnh sửa bộ bài hiện 4 lá một hàng.",
   "Menu chính có lại ô ở chỗ nút bộ bài cũ, giờ tên là Cửa hàng, có khoá, chưa bấm vào được.",
   "Nút Hướng dẫn ở màn Chọn bộ bài mở danh sách các bài hướng dẫn, kiểu Thử thách của Legends of Runeterra. Bài đầu tiên là Cơ bản. Bấm vào bài hiện khung bên phải: hai quái đối đầu, nội dung bài, độ khó đề nghị cho Tân thủ và nút Chơi ngay.",
-  "Học xong một bài hướng dẫn thì bài đó có dấu ✓ Hoàn thành. Học xong hay Bỏ qua đều quay về danh sách hướng dẫn.",
+  "Học xong một bài hướng dẫn thì bài đó có dấu ✓ Hoàn thành. Học xong hay Bỏ qua đều quay về danh sách hướng dẫn.",  "Bỏ tiếng tút tút cũ khi bấm nút ở Chỉnh sửa bộ bài, Chọn bộ bài, Hướng dẫn, bảng quái và các mục còn lại. Mọi nút dùng tiếng bấm mới như menu chính.",
 ];
 
 function remarkOf(notes: string[]) {

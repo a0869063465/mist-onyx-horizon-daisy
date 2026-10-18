@@ -9,7 +9,7 @@ import { defaultMonsterPicture, defaultSpellPicture, hideArt, monsterArts, spell
 import { askDraft, attackLabel, chipDraft, MONSTER_ASKS, MONSTER_CHIPS, resetMonster, resetSpell, saveAttack, saveMonster, saveSpell as saveSpellText } from "@/lib/card-edits";
 import { ailmentHolds, defaultFxPrefs, defaultLooks, loadActivePack, loadFxPrefs, loadLooks } from "@/lib/fx-prefs";
 import { setLang, tr, useLang } from "@/lib/i18n";
-import { fxVolume, playCue, playTap, setFxVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
+import { fxVolume, playCue, playUi, setFxVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
 import {
   CARD_MARKS,
   DEFAULT_BOARD_LAYOUT,
@@ -254,7 +254,7 @@ function SoundTune({ onBack }: { onBack: () => void }) {
                 setTapVolume(next);
                 setOn(true);
               }}
-              onPointerUp={() => playTap()}
+              onPointerUp={() => playUi("select")}
             />
           </label>
         </>
