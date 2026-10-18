@@ -554,6 +554,11 @@ export const PENDING_NOTES: string[] = [
   "Lọc theo loại quái: Rồng bọc trứng thuộc Đấu sĩ; Trái tim hải long, Sứa hút ma pháp và Kraken thuộc Theo bộ.",
   "Mô tả Kiếm sĩ lửa thiêng bỏ đoạn Long Hoả, vì kỹ năng này đã bỏ.",
   "Bảng quái của Cơn thịnh nộ của hải vương gộp 2 icon lá chắn thành một icon Hộ thần, đúng tên kỹ năng trên lá.",
+  "Bấm Chơi mở màn Chọn bộ bài: các bộ bài có bìa là quái nhiều sao nhất, cờ sao cho bộ yêu thích và icon lá môi trường nếu bộ có. Bộ yêu thích lên đầu, sau đó là bộ sửa gần nhất.",
+  "Bấm vào một bộ bài hiện khung bộ bài: chế độ chơi ở trên (Vs Máy, Đánh thường chưa mở, Tuỳ chọn, Test), Yêu thích, Chỉnh sửa, Chơi ngay, và nút Xoá ở góc dưới bên phải.",
+  "Bộ bài chưa đủ lá có dấu chấm than đỏ ở trên, nút Chơi ngay xám, không bấm được.",
+  "Nút Bộ bài mới tạo bộ trống rồi mở trang Chỉnh sửa bộ bài. Nút << ở trang Chỉnh sửa bộ bài quay về màn Chọn bộ bài.",
+  "Menu chính bỏ nút Điều chỉnh deck, game bỏ chế độ 2 người 1 máy. Hướng dẫn nằm ở góc trên bên phải màn Chọn bộ bài.",
 ];
 
 function remarkOf(notes: string[]) {

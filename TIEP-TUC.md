@@ -16,7 +16,9 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 
 ## Đang chờ chủ game trả lời (hỏi lại nếu cần, đừng tự quyết)
 
-- Hướng dẫn chơi mở từ đâu: chủ game nói để sau (18/10). Nút tạm ở Chọn cách chơi.
+- Hướng dẫn chơi: nút ở góc trên bên phải màn Chọn bộ bài (chủ game chốt 18/10).
+- Chế độ nhà phát triển (ẩn bớt mục với người chơi, một bản chung + mã bật trên máy chủ game): đã đề xuất, chủ game chưa trả lời 4 câu (mục nào ẩn, bật bằng mã nào, mục mới mặc định ẩn hay hiện, bản người chơi là main).
+- Làm sau (chủ game dặn 18/10, đừng làm trước): Đánh thường (tìm trận qua máy chủ, nút đã có nhưng khoá), chia sẻ/nhập mã bộ bài (máy chủ tạo mã khi lưu bộ), bìa bộ bài (tạm ngẫu nhiên trong số quái nhiều sao nhất), Tuỳ chọn mời bạn bè / nhập id người chơi (tạm giữ lấy mã / nhập mã phòng).
 - Phù thuỷ thời gian KHÔNG tính là quái máy móc (chủ game chốt 18/10). Đã bỏ khỏi `cu-dia-may-moc` trong env-kinds.ts.
 - Cứ địa máy móc: áo giáp vỡ rồi thì mất đến khi quái rời sân, dùng ảnh bàn số 3 (chủ game chốt 18/10).
 - Thánh địa thiên sứ: chủ game xác nhận (18/10) chỉ chặn đánh thường và skill, không chặn phép, như đang làm. Đoạn trong ngoặc là chủ game viết cho Claude đọc, không đưa vào lá. Chiến binh thiên sứ/thuật sư: chờ chủ game thêm quái; khi có chiến binh thiên sứ thì làm luật hồi 1 máu.
@@ -27,6 +29,12 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Màu chữ điểm nhấn: để sau (đang áp vào mô tả kỹ năng trên bảng quái).
 - Màu riêng của bảng quái (chủ game chốt 18/10, tô theo mô tả Hiến Tế): `src/components/game/sheet-ink.ts`, chỉ dùng trong `CopyText inked` (bảng quái), bảng thông báo không đổi. Lượt + công cam, thủ vàng, thủ phép tím, phòng ngự gradient vàng→tím, máu/máu tối đa/hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải bất lợi xanh lam, "không thể hành động/tấn công…" xám dễ đọc. Tô cả số đi kèm. CHỈ THÊM: `addSheetInk` chỉ tô phần chữ mà màu bảng thông báo để trống; chữ đã có màu (tên skill như Hiến tế, Phòng ngự, Tiến hoá; "tấn công") giữ nguyên. Chủ game nhắc 18/10: "chỉ thêm, đừng sửa".
 - Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh.
+
+## Đã xong (18/10): màn Chọn bộ bài (Chơi mở ra, theo video LoR chủ game gửi)
+
+- `src/routes/modes.tsx` viết lại (route vẫn là /modes). Menu Chơi vào đây; bỏ nút Điều chỉnh deck ở menu; bỏ chế độ 2 người 1 máy (không còn lối vào, code chế độ vẫn còn). Trên: << (về menu), tiêu đề, nút Hướng dẫn góc phải. Nút Bộ bài mới (tạo bộ trống, mở /deck). Lưới 3 bộ một hàng (`DeckBox`): bìa = `coverOf` (giữ `cover` trong deck-book, đổi ngẫu nhiên khi quái đó không còn là quái nhiều sao nhất của bộ), cờ sao `fav`, dấu ! đỏ trên đầu khi `deckIssues`, icon lá môi trường dưới bìa nếu có. Thứ tự `deckOrder`: yêu thích, rồi `at` (lần sửa gần nhất, deck.tsx ghi khi đổi lá/tên).
+- Khung bộ bài: nút chế độ ở trên mở bảng 4 chế độ (Vs Máy, Đánh thường khoá, Tuỳ chọn = lấy mã/nhập mã phòng như Online cũ, Test; nhớ ở `clash-play-mode`), Yêu thích trái, Chỉnh sửa phải (đặt active rồi mở /deck), tên, Chơi ngay (xám khi chưa hợp lệ; `saveDeck` bộ đó vì trận đọc `loadDeck`), Xoá góc dưới phải (hỏi lại). Chưa làm nút Nhập mã bộ bài / Chia sẻ (chủ game chọn chưa hiện).
+- deck.tsx: << về /modes.
 
 ## Đã xong (18/10): trang Chỉnh sửa bộ bài mới (theo hình LoR chủ game gửi)
 

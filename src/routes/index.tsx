@@ -218,19 +218,6 @@ function Home() {
             </svg>
             <span>{tr("Chơi")}</span>
           </Link>
-          <Link
-            to="/deck"
-            className="home-btn"
-            data-sfx
-            onPointerDown={() => playUi("select")}
-            aria-label="Xây bộ bài"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="7" y="3" width="12" height="16" rx="2" />
-              <path d="M5 6.5v12A2.5 2.5 0 0 0 7.5 21H15" />
-            </svg>
-            <span>{tr("Điều chỉnh deck")}</span>
-          </Link>
           <div className="home-row">
             <Link to="/tune" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
               <svg viewBox="0 0 24 24" aria-hidden="true">

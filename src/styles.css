@@ -7168,3 +7168,274 @@ button.watch-back {
   transition: filter 0.12s;
 }
 .dk-ghost.is-fit { filter: drop-shadow(0 0 10px #ffe08a) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.75)); }
+
+/* ── Chọn bộ bài (what Chơi opens; owner, 18/10, after the LoR deck screen) ── */
+.dk-page button, .ds-page button { font-family: inherit; }
+.ds-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f4ecd8;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 220, 160, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, #2b2620 0%, #211d19 55%, #15120f 100%);
+}
+.ds-help {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2.1rem;
+  padding: 0 0.55rem;
+  border-radius: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #f3dfa6;
+  background: linear-gradient(180deg, #2a3d68 0%, #142244 100%);
+  border: 1px solid rgba(201, 168, 90, 0.7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.ds-help .glyph3d { width: 1.05rem; height: 1.05rem; }
+.ds-head h1 { font-size: 0.95rem; }
+.ds-bar { flex: none; display: flex; gap: 0.5rem; padding: 0.65rem 0.75rem 0.15rem; }
+.ds-new {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.3rem;
+  padding: 0 0.85rem;
+  border-radius: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f3dfa6;
+  background: linear-gradient(180deg, #4a4038 0%, #2c2622 100%);
+  border: 1px solid rgba(201, 168, 90, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+.ds-new .glyph3d { width: 1.15rem; height: 1.15rem; }
+.ds-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 1.15rem 0.75rem;
+  padding: 1rem 0.85rem 2rem;
+}
+.ds-deck { display: grid; justify-items: center; gap: 0.4rem; padding: 0; border: 0; background: none; color: inherit; -webkit-tap-highlight-color: transparent; }
+.ds-deck:active .ds-box { transform: scale(0.97); }
+.ds-name {
+  width: 92%;
+  padding-bottom: 0.3rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #efe3c4;
+  border-bottom: 1px solid rgba(201, 168, 90, 0.35);
+}
+
+/* A deck box: cover art in a gold frame over a stack of cards. */
+.ds-box { position: relative; display: block; width: 100%; aspect-ratio: 0.74; margin-top: 0.55rem; transition: transform 0.12s; }
+.ds-box::before, .ds-box::after {
+  content: "";
+  position: absolute;
+  height: 0.6rem;
+  border-radius: 0.3rem 0.3rem 0 0;
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+.ds-box::before { left: 8%; right: 8%; top: -0.3rem; background: linear-gradient(180deg, #d8d0bf 0%, #8f8778 100%); }
+.ds-box::after { left: 15%; right: 15%; top: -0.56rem; background: linear-gradient(180deg, #bdb5a5 0%, #7a7366 100%); }
+.ds-box-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 0.45rem;
+  background: #1b1814 center 22% / cover no-repeat;
+  box-shadow: 0 0 0 2px #c9a85a, 0 0 0 4px #3a2c12, 0 0 0 5px #e7c873, 0 9px 14px rgba(0, 0, 0, 0.7);
+}
+.ds-box-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+.ds-flag {
+  position: absolute;
+  left: -0.45rem;
+  top: 0.55rem;
+  z-index: 3;
+  padding: 0.08rem 0.6rem 0.08rem 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow: 0 1px 0 #5a0000;
+  background: linear-gradient(180deg, #ef3b35 0%, #a31512 100%);
+  clip-path: polygon(0 0, 100% 0, 82% 50%, 100% 100%, 0 100%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+.ds-warn {
+  position: absolute;
+  left: 50%;
+  top: -0.75rem;
+  z-index: 4;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 30%, #ff8a7a 0%, #d41c12 60%, #7a0400 100%);
+  border: 2px solid #ffd9d2;
+  box-shadow: 0 0 10px rgba(255, 40, 20, 0.85), 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+.ds-env {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  z-index: 2;
+  transform: translateX(-50%);
+  width: 1.95rem;
+  height: 1.95rem;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid #c9a85a;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.75);
+}
+.ds-env img { width: 100%; height: 100%; object-fit: cover; }
+
+/* The deck panel, the mode picker, the room box and the delete question. */
+.ds-back {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 6, 12, 0.66);
+  backdrop-filter: blur(2px);
+}
+.ds-back.is-top { z-index: 40; }
+.ds-panel, .ds-modes, .ds-room {
+  position: relative;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #1f3f92 0%, #152e6e 55%, #0f2257 100%);
+  border: 2px solid #c9a85a;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.ds-panel { display: grid; justify-items: center; gap: 0.75rem; width: min(92vw, 25rem); padding: 1rem 1rem 1.25rem; }
+.ds-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 58%;
+  height: 2.3rem;
+  padding: 0 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #dbe8ff;
+  background: linear-gradient(180deg, #0d1f4f 0%, #081538 100%);
+  border: 1px solid #7fb2ff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 12px rgba(80, 150, 255, 0.35);
+}
+.ds-mode .glyph3d { width: 1.2rem; height: 1.2rem; }
+.ds-stage { display: grid; grid-template-columns: 4.6rem minmax(0, 9.5rem) 4.6rem; align-items: center; gap: 0.45rem; width: 100%; justify-content: center; }
+.ds-cover { padding-top: 0.2rem; }
+.ds-side { display: grid; justify-items: center; gap: 0.25rem; padding: 0; border: 0; background: none; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #dbe8ff; }
+.ds-gem.sk3d { width: auto; }
+.ds-side .sk3d-gem { width: 2.75rem; height: 2.75rem; }
+.ds-side.is-fav:not(.on) .sk3d-gem { filter: saturate(0.3) brightness(0.7); box-shadow: 0 0.3rem 0.45rem rgba(0, 0, 0, 0.6); }
+.ds-side:active .sk3d-gem { transform: scale(0.94); }
+.ds-title { margin: 0; max-width: 100%; overflow-wrap: anywhere; text-align: center; font-size: 1.05rem; font-weight: 800; color: #fff3d6; text-shadow: 0 2px 0 #000; }
+.ds-play {
+  width: 62%;
+  height: 2.9rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3a2400;
+  background: linear-gradient(180deg, #fff0b0 0%, #f0c44c 45%, #b8801c 100%);
+  border: 2px solid #fff3c4;
+  box-shadow: 0 0 14px rgba(255, 200, 80, 0.55), 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 #ffffff;
+}
+.ds-play:active { transform: translateY(1px); }
+.ds-play:disabled { color: #4a4a4a; background: linear-gradient(180deg, #b3b3b3 0%, #6d6d6d 100%); border-color: #c4c4c4; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6); }
+.ds-delete {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0.38rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, #5a1414 0%, #300606 100%);
+  border: 1px solid #c45656;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+.ds-delete .glyph3d { width: 100%; height: 100%; }
+.ds-modes { width: min(92vw, 23rem); padding: 1rem; }
+.ds-modes h2, .ds-room h2 { margin: 0 0 0.75rem; text-align: center; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #f3dfa6; }
+.ds-mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.ds-mode-pick {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 0.85rem 0.4rem;
+  border-radius: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #dbe8ff;
+  background: linear-gradient(180deg, #0d1f4f 0%, #081538 100%);
+  border: 1px solid rgba(127, 178, 255, 0.45);
+}
+.ds-mode-pick .glyph3d { width: 2.2rem; height: 2.2rem; }
+.ds-mode-pick.on { color: #fff3c4; border-color: #ffe08a; box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.35), 0 0 16px rgba(255, 210, 90, 0.5); }
+.ds-mode-pick.is-shut { opacity: 0.5; }
+.ds-room { display: grid; gap: 0.65rem; width: min(92vw, 22rem); padding: 1rem; }
+.ds-room .ds-play { width: 100%; }
+.ds-room label { display: grid; gap: 0.3rem; font-size: 0.78rem; font-weight: 800; color: #dbe8ff; }
+.ds-room input {
+  height: 2.5rem;
+  border-radius: 0.45rem;
+  border: 1px solid #7fb2ff;
+  outline: 0;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-align: center;
+  color: #ffffff;
+  background: #081538;
+}
+.ds-ghost { height: 2.45rem; padding: 0 1.1rem; border-radius: 0.5rem; font-weight: 800; color: #f3dfa6; background: linear-gradient(180deg, #2a3d68 0%, #142244 100%); border: 1px solid rgba(201, 168, 90, 0.7); }
+.ds-note { margin: 0; text-align: center; font-size: 0.78rem; font-weight: 700; color: #ffb4a6; }
+.ds-ask { width: min(88vw, 20rem); padding: 1.1rem 1rem 1rem; border-radius: 0.9rem; text-align: center; background: linear-gradient(180deg, #2c1515 0%, #160808 100%); border: 2px solid #c45656; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7); }
+.ds-ask p { margin: 0 0 0.9rem; font-weight: 800; overflow-wrap: anywhere; }
+.ds-ask div { display: flex; justify-content: center; gap: 0.6rem; }
+.ds-danger { height: 2.45rem; padding: 0 1.3rem; border-radius: 0.5rem; font-weight: 800; color: #ffffff; background: linear-gradient(180deg, #b82020 0%, #6a0808 100%); border: 1px solid #ff8a7a; }

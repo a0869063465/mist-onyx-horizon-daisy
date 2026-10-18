@@ -27,7 +27,8 @@ const NUDGE = 8;
 const DECK_SIZE = 24;
 
 /**
- * Chỉnh sửa bộ bài (owner's layout, 18/10, after the LoR deck builder): the card pool on top, three to a row;
+ * Chỉnh sửa bộ bài (owner's layout, 18/10, after the LoR deck builder), opened from a deck on the Chọn bộ bài
+ * screen (the book's active deck), and back there with <<: the card pool on top, three to a row;
  * the deck list bottom left; search, monster / spell / save and the deck name, tactics and filter bottom right.
  * Drag a card from the pool down onto the list to add it, a row of the list up onto the pool to take it out;
  * tap a card or a row to read it.
@@ -69,7 +70,7 @@ function DeckPage() {
       const row = current.find((entry) => entry.n === active);
       if (!row) return current;
       if (sameIds(row.monsters, deck.monsters) && sameIds(row.spells, deck.spells)) return current;
-      return current.map((entry) => (entry.n === active ? { ...entry, monsters: deck.monsters, spells: deck.spells } : entry));
+      return current.map((entry) => (entry.n === active ? { ...entry, monsters: deck.monsters, spells: deck.spells, at: Date.now() } : entry));
     });
   }, [deck, active, booted]);
 
@@ -235,7 +236,7 @@ function DeckPage() {
     setNaming(null);
     if (!name) return;
     if (entry) {
-      setBook((current) => current.map((row) => (row.n === entry.n ? { ...row, name } : row)));
+      setBook((current) => current.map((row) => (row.n === entry.n ? { ...row, name, at: Date.now() } : row)));
       return;
     }
     const row = { ...freshDeck(book), name, monsters: deck.monsters, spells: deck.spells };
@@ -264,7 +265,7 @@ function DeckPage() {
     <main className={`dk-page${ghost ? " is-dragging" : ""}`}>
       <GlyphDefs />
       <header className="dk-head">
-        <Link to="/" className="dk-back" aria-label={tr("Trở về")}>
+        <Link to="/modes" className="dk-back" aria-label={tr("Trở về")}>
           {"<<"}
         </Link>
         <h1>{tr("Chỉnh sửa bộ bài")}</h1>

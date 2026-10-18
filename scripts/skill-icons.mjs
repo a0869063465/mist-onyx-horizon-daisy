@@ -12,6 +12,8 @@ const names = new Set([...book.matchAll(/\b(?:A|P|R|S|AP|PP|RP|SP)\("[^"]+", "([
 for (const extra of ["candle-skull", "info", "broadsword", "card-draw", "spell-book", "sands-of-time", "check-mark", "magic-swirl", "sparkles"]) names.add(extra);
 // Deck builder: search, monster / spell / save / stats / filter buttons, the balance icon, the spell kind and the filter icons.
 for (const extra of ["magnifying-glass", "wolf-head", "save", "histogram", "funnel", "scales", "mountains", "card-joker", "spiky-explosion", "crossed-swords", "checked-shield", "three-friends", "growth"]) names.add(extra);
+// Chọn bộ bài: favourite, edit, delete, tutorial, new deck, and the game modes.
+for (const extra of ["round-star", "quill-ink", "trash-can", "help", "card-play", "robot-golem", "shaking-hands", "test-tubes", "padlock"]) names.add(extra);
 const out = {};
 for (const name of [...names].sort()) {
   const icon = set.icons[name];

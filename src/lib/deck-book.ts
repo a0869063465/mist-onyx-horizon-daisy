@@ -6,7 +6,11 @@ const DB = "clash-deck-files";
 const STORE = "handles";
 const HANDLE = "book";
 
-export type DeckEntry = { n: number; name: string; monsters: string[]; spells: string[] };
+/**
+ * `fav`: a favourite deck (starred, listed first). `at`: when its cards or name last changed (newest first after
+ * the favourites). `cover`: the monster shown on its box, picked at random among its monsters with the most stars.
+ */
+export type DeckEntry = { n: number; name: string; monsters: string[]; spells: string[]; fav?: boolean; at?: number; cover?: string };
 export type DeckBook = { decks: DeckEntry[]; active: number | null };
 
 type FileHandle = {
@@ -37,12 +41,16 @@ function entry(raw: unknown, used: Set<number>): DeckEntry | null {
   const n = Number(row.n);
   if (!Number.isInteger(n) || n < 1 || used.has(n)) return null;
   used.add(n);
-  return {
+  const kept: DeckEntry = {
     n,
     name: typeof row.name === "string" ? row.name.slice(0, 40) : `Bộ ${n}`,
     monsters: ids(row.monsters, (id) => Boolean(monsterCard(id))),
     spells: ids(row.spells, (id) => Boolean(spellCard(id))),
   };
+  if (row.fav === true) kept.fav = true;
+  if (typeof row.at === "number" && Number.isFinite(row.at)) kept.at = row.at;
+  if (typeof row.cover === "string" && monsterCard(row.cover)) kept.cover = row.cover;
+  return kept;
 }
 
 export function parseBook(raw: string): DeckBook | null {
@@ -89,7 +97,25 @@ export function saveBook(book: DeckBook) {
 
 export function freshDeck(decks: DeckEntry[]): DeckEntry {
   const n = decks.reduce((max, row) => Math.max(max, row.n), 0) + 1;
-  return { n, name: `Bộ ${n}`, monsters: [], spells: [] };
+  return { n, name: `Bộ ${n}`, monsters: [], spells: [], at: Date.now() };
+}
+
+/** Favourites first, then the deck changed most recently (older decks with no time: the newest made first). */
+export function deckOrder(decks: DeckEntry[]): DeckEntry[] {
+  return [...decks].sort((a, b) => Number(Boolean(b.fav)) - Number(Boolean(a.fav)) || (b.at ?? 0) - (a.at ?? 0) || b.n - a.n);
+}
+
+/**
+ * The monster on a deck's box: its kept cover while that is still one of the deck's monsters with the most stars,
+ * otherwise one of those picked at random (owner, 18/10: random for now). Null for a deck with no monster.
+ */
+export function coverOf(entry: DeckEntry): string | null {
+  const cards = entry.monsters.map((id) => monsterCard(id)).filter((card): card is NonNullable<typeof card> => Boolean(card));
+  if (!cards.length) return null;
+  const top = Math.max(...cards.map((card) => card.stars));
+  const pool = cards.filter((card) => card.stars === top).map((card) => card.id);
+  if (entry.cover && pool.includes(entry.cover)) return entry.cover;
+  return pool[Math.floor(Math.random() * pool.length)] ?? null;
 }
 
 export function cardsOf(entry: DeckEntry): BeastDeck {
