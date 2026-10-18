@@ -7542,22 +7542,21 @@ button.watch-back {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-/* The game mode, readable as LoR's: a brighter blue pill in a thick dark rim, cream letters. */
+/* The game mode: the first pill look, with bigger letters (owner, 18/10). */
 .lor-pill {
   flex: none;
-  width: min(72%, 17rem);
-  min-height: 2.75rem;
-  border-radius: 0.8rem;
+  width: 80%;
+  min-height: 2.9rem;
+  border-radius: 0.75rem;
   font-family: var(--lor-cond);
-  font-size: 1.18rem;
+  font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #f4efe2;
-  text-shadow: 0 1px 2px rgba(8, 16, 52, 0.95);
-  background: linear-gradient(180deg, #4d77da 0%, #3c65c8 48%, #2d53b1 100%);
-  border: 3px solid #0e1534;
-  box-shadow: inset 0 0 0 1px rgba(170, 196, 255, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.55);
+  color: #d6def3;
+  background: linear-gradient(180deg, #2e50ad 0%, #1f3b8c 100%);
+  border: 2px solid #0b1640;
+  box-shadow: inset 0 0 0 2px #557ad0, inset 0 0 14px rgba(140, 175, 255, 0.35), 0 3px 7px rgba(0, 0, 0, 0.5);
 }
 .lor-pill:active { filter: brightness(1.1); }
 /* The portrait between two thin gold lines with little steps. */
