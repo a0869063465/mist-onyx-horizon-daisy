@@ -66,8 +66,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "trai-tim-hai-long": [A("Triều lên", "wave-crest"), A("Con nước lớn tàn phá", "big-wave"), A("Đại hồng thuỷ huỷ diệt", "waves"), NOTE("kẻ bị đòn này hạ")],
   "sua-hut-ma-phap": [A("Tích luỹ ma pháp", "jellyfish")],
   "con-thinh-no-cua-hai-vuong": [
-    PP("Lá chắn vật lý", "checked-shield", "lá chắn vật lý"),
-    PP("Lá chắn phép", "magic-shield", "lá chắn phép"),
+    P("Hộ thần", "checked-shield"),
     P("Đè nén", "trident-shield"),
     A("Cơn thịnh nộ của hải thần", "trident"),
     P("Biển lặng", "wave-surfer"),
@@ -117,14 +116,6 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ngai-khong-lo": [A("Thổi độc", "poison-cloud")],
   "ngai-nu-hoang": [A("Thổi độc", "poison-cloud"), NOTE("độc sẽ cộng dồn")],
   "ngai-hoan-my": [A("Thổi độc", "poison-cloud"), NOTE("độc sẽ cộng dồn")],
-};
-
-/**
- * Headings still in a card's text whose skill is gone from the game (Long Hoả): they end the skill before
- * them and show nothing, until the owner writes the new text.
- */
-const DROPPED_HEADS: Record<string, string[]> = {
-  "kiem-si-lua-thieng": ["Long Hoả"],
 };
 
 function norm(text: string) {
@@ -222,8 +213,7 @@ export function skillsOf(cardId: string, text: string): SkillShown[] {
     return lines.filter((line, at) => !taken.has(norm(line)) && !HEADING_LINE.test(line) && !(OPEN_HEADING.test(line) && MARKED.test(lines[at + 1] ?? "")));
   };
   const starts = list.map((entry) => (entry.pick ? -1 : entry.head ? findHead(text, entry.head) : -1));
-  const dropped = (DROPPED_HEADS[cardId] ?? []).map((head) => findHead(text, head));
-  const sorted = [...new Set([...starts, ...dropped].filter((at) => at >= 0))].sort((a, b) => a - b);
+  const sorted = [...new Set(starts.filter((at) => at >= 0))].sort((a, b) => a - b);
   const first = sorted[0] ?? -1;
   return list.map((entry, i) => {
     if (entry.pick) return { ...entry, text: tidy(pickLines(text, entry.pick)) };

@@ -76,7 +76,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Kiếm sĩ lửa thiêng",
     "stars": 3,
     "gems": 0,
-    "skill": "**__Vệt lửa__**: \nTiêu hao 1 mana để gây 4 sát thương phép lên 1 kẻ địch.\n\n**__Long Hoả__**: \nTiêu hao 2 máu để gây 5 sát thương phép.\n\n__**Truy cùng diệt tận:\n**__Sau đòn phép đầu tiên, có thể tiêu thêm 2 máu để gây thêm 4 sát thương phép một lần nữa.\n\n**__Hoả thần long__**: \nTiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 2 sát thương chuẩn.",
+    "skill": "**__Vệt lửa__**: \nTiêu hao 1 mana để gây 4 sát thương phép lên 1 kẻ địch.\n\n__**Truy cùng diệt tận:\n**__Sau đòn phép đầu tiên, có thể tiêu thêm 2 máu để gây thêm 4 sát thương phép một lần nữa.\n\n**__Hoả thần long__**: \nTiêu hao thêm 3 máu và 1 mana để gây 4 sát thương phép và 2 sát thương chuẩn.",
     "atk": 3,
     "def": 0,
     "mdef": 2,
