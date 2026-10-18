@@ -535,6 +535,7 @@ export const PENDING_NOTES: string[] = [
   "Nút Rút quái, Rút phép, Hết lượt làm mới hoàn toàn: kính tối, viền sáng và icon cùng màu cam, tím, đỏ như cũ.",
   "Thảo nguyên: mô tả ghi rõ chiến binh đồng minh, đúng với luật đang chạy.",
   "Núi: chim chóc và rồng chỉ tăng 1 sát thương kỹ năng, thay vì 2.",
+  "Thêm lá môi trường Cứ địa máy móc: quái thú máy móc đồng minh được áo giáp 2 thủ. Đòn vật lý dưới 2 công không làm gì được áo giáp; từ 2 công trở lên thì áo giáp vẫn chặn đòn đó rồi vỡ. Quái máy móc: Thương quản long, Máy chém, Máy ném bom hình nhện, Máy quay thưởng, Phù thuỷ thời gian. Bàn đấu có hình riêng.",
 ];
 
 function remarkOf(notes: string[]) {

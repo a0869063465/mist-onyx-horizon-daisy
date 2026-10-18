@@ -1009,6 +1009,14 @@ export const SPELLS: SpellCard[] = [
     "since": "2026-10-16"
   },
   {
+    "id": "cu-dia-may-moc",
+    "name": "Cứ địa máy móc",
+    "gems": 0,
+    "effect": "Trang bị cho quái thú máy móc đồng minh Áo giáp 2 Thủ trước các đòn tấn công vật lý. (Cần 2 công trở lên để đánh vỡ áo giáp)",
+    "env": true,
+    "since": "2026-10-18"
+  },
+  {
     "id": "virus-an-mon",
     "name": "Virus ăn mòn",
     "gems": 0,

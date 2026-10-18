@@ -79,6 +79,9 @@ export type FieldMon = {
   meadow?: boolean;
   /** Rừng rậm: form that already got +2 max HP. */
   envHp?: string;
+  /** Cứ địa máy móc: armour points (already counted in def) and the form that got them. */
+  armor?: number;
+  envArmor?: string;
   /** Núi: already got +2 skill damage. */
   envSkill?: boolean;
   path?: number;
@@ -883,17 +886,34 @@ function departed(before: Array<FieldMon | null>, after: Array<FieldMon | null>)
   return before.filter((mon): mon is FieldMon => Boolean(mon && !stay.has(mon.uid))).map((mon) => mon.cardId);
 }
 
+const MECH_ARMOR = 2;
+
+/** An armour breaks on a physical hit at least as big as it: it still blocked that hit, then it is gone. */
+function crackArmor(mon: FieldMon, raw: number): FieldMon {
+  if (!mon.armor || raw < mon.armor) return mon;
+  return { ...mon, def: Math.max(0, mon.def - mon.armor), armor: undefined, raised: markRaised(mon, { def: -mon.armor }) };
+}
+
 function envForm(mon: FieldMon): string {
   return mon.cardId === "te-giac-be-con" ? `${mon.cardId}:${mon.level ?? 1}` : mon.cardId;
 }
 
-/** Rừng rậm: +2 max HP and HP. Núi: +1 skill damage. Applied once per form while the card is on the field. */
+/**
+ * Rừng rậm: +2 max HP and HP. Núi: +1 skill damage. Cứ địa máy móc: a 2-point armour counted as def. Applied once
+ * per form while the card is on the field.
+ */
 function envBoost(player: Player): Player {
   const env = player.env;
-  if (env !== "rung-ram" && env !== "nui") return player;
+  if (env !== "rung-ram" && env !== "nui" && env !== "cu-dia-may-moc") return player;
   let changed = false;
   const field = player.field.map((mon) => {
     if (!mon || mon.hp <= 0 || !envFavors(env, mon.cardId)) return mon;
+    if (env === "cu-dia-may-moc") {
+      const form = envForm(mon);
+      if (mon.envArmor === form) return mon;
+      changed = true;
+      return { ...mon, def: mon.def + MECH_ARMOR, armor: MECH_ARMOR, raised: markRaised(mon, { def: MECH_ARMOR }), envArmor: form };
+    }
     if (env === "rung-ram") {
       const form = envForm(mon);
       if (mon.envHp === form) return mon;
@@ -1979,6 +1999,11 @@ function pushDebt(mon: FieldMon, add: { p: number; s: number; t: number }): Fiel
 }
 
 function takePhysical(mon: FieldMon, raw: number, allies?: Array<FieldMon | null>) {
+  const hit = takePhysicalCore(mon, raw, allies);
+  return { ...hit, mon: crackArmor(hit.mon, raw) };
+}
+
+function takePhysicalCore(mon: FieldMon, raw: number, allies?: Array<FieldMon | null>) {
   if (shadeHidden(mon)) {
     const pool = mon.stored ?? 1;
     const taken = Math.min(pool, Math.max(0, raw));
@@ -2900,6 +2925,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
       const plated = bankPlate(defender, "phys", blocked);
       const soaked = soak(plated, "phys", defenderDodged ? 0 : hurt(plated, physical(raw, defB)));
       hit = applyIncoming(soaked.mon, soaked.amount, alliesB);
+      hit = { ...hit, mon: crackArmor(hit.mon, defenderDodged ? 0 : raw) };
       }
     }
     if (!guardSpell && shadeHidden(defender) && !defenderDodged) {
@@ -3856,7 +3882,7 @@ function landHell(mon: FieldMon, pack: HellPack, allies?: Array<FieldMon | null>
   const blockedSpell = Math.max(0, Math.min(rawSpell, liveMdef(body, allies)));
   const hit = applyIncoming(guarded.mon, hellSum(guarded.pack), allies);
   const stored = mon.cardId === "sua-hut-ma-phap" ? (hit.mon.stored ?? 0) + blockedSpell : hit.mon.stored;
-  return { mon: { ...hit.mon, stored }, dealt: hellSum(guarded.pack), left: hellSplit(guarded.pack, mon.hp).left, blockedSpell, taken: guarded.pack, broke: guarded.broke };
+  return { mon: crackArmor({ ...hit.mon, stored }, sliced.phys), dealt: hellSum(guarded.pack), left: hellSplit(guarded.pack, mon.hp).left, blockedSpell, taken: guarded.pack, broke: guarded.broke };
 }
 
 function resolveHell(state: Duel, attacker: FieldMon, defender: FieldMon): Duel {
@@ -6730,7 +6756,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
         } else {
           const rawN = hurt(target, Math.max(0, raw - liveDef(target, field)));
           bump(real, cardOf(target).name, "phys", shownTru(target, rawN, field));
-          field = field.map((unit) => (unit?.uid === real ? applyIncoming(unit, rawN, field).mon : unit));
+          field = field.map((unit) => (unit?.uid === real ? crackArmor(applyIncoming(unit, rawN, field).mon, raw) : unit));
         }
       } else {
         const raw = outgoing(mon, shot.barrel.n);

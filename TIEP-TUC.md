@@ -30,6 +30,7 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Bố cục riêng từng môi trường: `loadBoard(env)` / `saveBoard(layout, env)` / `matchBoard(topEnv, bottomEnv)` trong `src/lib/layouts.ts`, lưu ở khoá `clash-board-layout:<env>`; chưa lưu thì theo Mặc định.
 - Theo nửa trên: chỉ số địch, thông báo, lịch sử thông báo, thanh phản ứng, ô môi trường địch. Theo nửa dưới: chỉ số mình, ô môi trường mình, xấp bài úp, khối nút Rút quái / Rút phép / Hết lượt (`actions`, mới thêm vào Tuỳ chỉnh).
 - Núi dùng bản thêm ô có viền đá xám. Ảnh gốc chủ game gửi nằm trong lịch sử git (commit c4f248f, thư mục `art-src/`) nếu cần làm lại.
+- Cứ địa máy móc (18/10): ảnh bàn `public/env/cu-dia-may-moc.jpg` (ảnh thứ 3 chủ game gửi, cả bàn), ảnh lá tạm cắt từ ảnh bàn. Hệ máy móc trong `ENV_KINDS`. Áo giáp: `armor` + `envArmor` trên quái, cộng thẳng vào thủ (hiện xanh như chỉ số tăng); `crackArmor` gọi ở các đường sát thương vật lý (`takePhysical`, giáp lá cà, `landHell`, súng của Máy quay thưởng): đòn thô ≥ áo giáp thì chặn xong rồi vỡ.
 - Ô đặt quái trên bàn (vị trí lá) vẫn cố định theo bàn gốc, chưa chỉnh theo từng môi trường.
 
 ## Đã xong: màn tải

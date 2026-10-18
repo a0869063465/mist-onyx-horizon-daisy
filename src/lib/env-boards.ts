@@ -5,6 +5,7 @@ export const ENV_BOARDS: Record<string, { top: string; bottom: string }> = {
   "rung-ram": { top: "/env/rung-ram.jpg", bottom: "/env/rung-ram.jpg" },
   nui: { top: "/env/nui.jpg", bottom: "/env/nui.jpg" },
   "bong-toi": { top: "/env/bong-toi.jpg", bottom: "/env/bong-toi.jpg" },
+  "cu-dia-may-moc": { top: "/env/cu-dia-may-moc.jpg", bottom: "/env/cu-dia-may-moc.jpg" },
 };
 
 export const DEFAULT_BOARD_ART = "/board.png";

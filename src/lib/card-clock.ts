@@ -1193,6 +1193,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerTone": null,
     "shiftAt": null
   },
+  "cu-dia-may-moc": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 0,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "837fd82e",
+    "added": "2026-10-18",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
   "virus-an-mon": {
     "kind": "spell",
     "stars": 0,
