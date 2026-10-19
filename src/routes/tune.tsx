@@ -237,22 +237,6 @@ function SoundTune({ onBack }: { onBack: () => void }) {
       {on ? (
         <>
           <label className="tune-field-label">
-            Nhạc nền · {music}
-            <input
-              className="vol-range"
-              type="range"
-              min={0}
-              max={100}
-              value={music}
-              onChange={(event) => {
-                const next = Number(event.target.value);
-                setMusic(next);
-                setMusicVolume(next);
-                setOn(true);
-              }}
-            />
-          </label>
-          <label className="tune-field-label">
             Hiệu ứng trận · {fx}
             <input
               className="vol-range"
@@ -284,6 +268,22 @@ function SoundTune({ onBack }: { onBack: () => void }) {
                 setOn(true);
               }}
               onPointerUp={() => playUi("select")}
+            />
+          </label>
+          <label className="tune-field-label">
+            Nhạc nền · {music}
+            <input
+              className="vol-range"
+              type="range"
+              min={0}
+              max={100}
+              value={music}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                setMusic(next);
+                setMusicVolume(next);
+                setOn(true);
+              }}
             />
           </label>
         </>
