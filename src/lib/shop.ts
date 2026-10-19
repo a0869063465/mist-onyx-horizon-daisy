@@ -1,43 +1,45 @@
 import { useEffect, useState } from "react";
 import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "@/lib/catalog";
+import { spellKindRank } from "@/lib/spell-kinds";
 
 /**
- * Cửa hàng (owner, 19/10): packs bought with stars. A pack holds 5 different cards, each drawn by its weight.
+ * Cửa hàng (owner, 19/10): packs bought with stars. A pack holds 3 different cards (owner: 3, not 5).
  * Tiers: Normal (blue) = spells of 0 mana and 1–2 star monsters, SR (gold) = spells of 1 mana and 3 star monsters,
  * UR (rainbow) = 4 star monsters and spells of 2 mana or more. That is the usual rule; the rate panel can move a card.
- * A card drawn again refunds 1 star. 10 packs cost 150 stars and hold at least one UR.
- * For now there is one common pack for testing (9 packs later), with every card a deck can hold except 5-star
- * monsters, environments included. Stars, owned cards and the rates the publisher tunes are kept on this phone.
+ * Each card drawn is first a tier, by the tier's percent (only those 3 numbers are tuned; owner, 19/10), then any card
+ * of that tier, all with the same chance. A card drawn again refunds 1 star. 10 packs cost 150 stars and hold at
+ * least one UR. For now there is one common pack for testing (9 packs later), with every card a deck can hold except
+ * 5-star monsters, environments included. Stars, owned cards and the rates the publisher tunes are kept on this phone.
  */
 export type Tier = "N" | "SR" | "UR";
 export type PackKind = "monster" | "spell";
 export type PackEntry = { id: string; kind: PackKind };
-export type RateEdit = { tier?: Tier; weight?: number };
-export type Rates = Record<string, RateEdit>;
+/** The chance (in %) each card drawn is of each tier, and the cards moved to another tier than the usual one. */
+export type Rates = { tiers: Record<Tier, number>; moved: Record<string, Tier> };
 export type Pull = PackEntry & { tier: Tier; fresh: boolean; refund: number };
 export type OpenedPack = { pulls: Pull[]; best: Tier };
 export type Purchase = { packs: OpenedPack[]; spent: number; refund: number; fresh: number };
 
-export const PACK_SIZE = 5;
+export const PACK_SIZE = 3;
 export const PACK_PRICE = 15;
 export const BUNDLE_SIZE = 10;
 export const BUNDLE_PRICE = 150;
 /** Highest first. */
 export const TIERS: Tier[] = ["UR", "SR", "N"];
 export const TIER_NAME: Record<Tier, string> = { N: "Normal", SR: "SR", UR: "UR" };
-export const DEFAULT_WEIGHT: Record<Tier, number> = { N: 10, SR: 4, UR: 1 };
-export const MAX_WEIGHT = 999;
+/** Each card drawn: UR 1%, SR 7%, Normal the rest (owner, 19/10: keep these, he types new ones in). */
+export const DEFAULT_TIERS: Record<Tier, number> = { UR: 1, SR: 7, N: 92 };
 
 export const PACK = {
   id: "goi-chung",
   name: "Gói chung",
   art: "/ui/pack.webp",
-  blurb: "Gói thử nghiệm gồm mọi lá bỏ vào bộ bài được, trừ quái 5 sao. Mỗi gói 5 lá khác nhau.",
+  blurb: "Gói thử nghiệm gồm mọi lá bỏ vào bộ bài được, trừ quái 5 sao. Mỗi gói 3 lá khác nhau.",
 };
 
 const STAR_KEY = "clash-stars";
 const OWNED_KEY = "clash-owned";
-const RATE_KEY = "clash-pack-rates";
+const RATE_KEY = "clash-pack-odds";
 const TIER_RANK: Record<Tier, number> = { N: 0, SR: 1, UR: 2 };
 
 export function tierRank(tier: Tier): number {
@@ -65,16 +67,17 @@ export function naturalTier(entry: PackEntry): Tier {
 }
 
 export function tierOf(entry: PackEntry, rates: Rates): Tier {
-  return rates[entry.id]?.tier ?? naturalTier(entry);
-}
-
-export function weightOf(entry: PackEntry, rates: Rates): number {
-  const weight = rates[entry.id]?.weight;
-  return typeof weight === "number" ? weight : DEFAULT_WEIGHT[tierOf(entry, rates)];
+  return rates.moved[entry.id] ?? naturalTier(entry);
 }
 
 export function cardName(entry: PackEntry): string {
   return (entry.kind === "monster" ? monsterCard(entry.id)?.name : spellCard(entry.id)?.name) ?? entry.id;
+}
+
+/** Monsters by stars, then spells by their group (as in Chỉnh sửa bộ bài) and mana; names last. */
+export function byPower(a: PackEntry, b: PackEntry): number {
+  const rank = (entry: PackEntry) => (entry.kind === "monster" ? (monsterCard(entry.id)?.stars ?? 0) : 1000 + spellKindRank(entry.id) * 10 + (spellCard(entry.id)?.gems ?? 0));
+  return rank(a) - rank(b) || cardName(a).localeCompare(cardName(b), "vi");
 }
 
 function read<T>(key: string, fallback: T): T {
@@ -94,36 +97,51 @@ function write(key: string, value: unknown) {
   }
 }
 
+export function freshRates(): Rates {
+  return { tiers: { ...DEFAULT_TIERS }, moved: {} };
+}
+
+/** A percent as typed: 0 to 100, at most two decimals. */
+export function clampPercent(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value * 100) / 100));
+}
+
+/** UR and SR are typed; Normal is what is left of 100%. */
+export function withTier(rates: Rates, tier: "UR" | "SR", value: number): Rates {
+  const tiers = { ...rates.tiers, [tier]: clampPercent(value) };
+  const other = tier === "UR" ? "SR" : "UR";
+  tiers[other] = Math.min(tiers[other], clampPercent(100 - tiers[tier]));
+  tiers.N = clampPercent(100 - tiers.UR - tiers.SR);
+  return { ...rates, tiers };
+}
+
 export function loadRates(): Rates {
-  const raw = read<unknown>(RATE_KEY, {});
-  if (!raw || typeof raw !== "object") return {};
-  const rates: Rates = {};
-  for (const [id, edit] of Object.entries(raw as Record<string, unknown>)) {
-    if (!edit || typeof edit !== "object") continue;
-    const row = edit as { tier?: unknown; weight?: unknown };
-    const next: RateEdit = {};
-    if (row.tier === "N" || row.tier === "SR" || row.tier === "UR") next.tier = row.tier;
-    if (typeof row.weight === "number" && Number.isFinite(row.weight)) next.weight = clampWeight(row.weight);
-    if (next.tier || next.weight !== undefined) rates[id] = next;
+  const raw = read<unknown>(RATE_KEY, null);
+  const rates = freshRates();
+  if (!raw || typeof raw !== "object") return rates;
+  const data = raw as { tiers?: Record<string, unknown>; moved?: Record<string, unknown> };
+  let next = rates;
+  for (const tier of ["UR", "SR"] as const) {
+    const value = data.tiers?.[tier];
+    if (typeof value === "number" && Number.isFinite(value)) next = withTier(next, tier, value);
   }
-  return rates;
+  const ids = new Set(packPool().map((entry) => entry.id));
+  for (const [id, tier] of Object.entries(data.moved ?? {})) {
+    if (ids.has(id) && (tier === "N" || tier === "SR" || tier === "UR")) next.moved[id] = tier;
+  }
+  return next;
 }
 
 export function saveRates(rates: Rates) {
   write(RATE_KEY, rates);
 }
 
-export function clampWeight(value: number): number {
-  return Math.max(0, Math.min(MAX_WEIGHT, Math.round(value)));
-}
-
-/** A card's edit with defaults dropped, so a card back on the usual tier and weight leaves the list. */
-export function tidyEdit(entry: PackEntry, edit: RateEdit): RateEdit | null {
-  const next: RateEdit = {};
-  const tier = edit.tier ?? naturalTier(entry);
-  if (tier !== naturalTier(entry)) next.tier = tier;
-  if (edit.weight !== undefined && edit.weight !== DEFAULT_WEIGHT[tier]) next.weight = edit.weight;
-  return next.tier || next.weight !== undefined ? next : null;
+/** Moves a card to a tier; back on its usual tier it leaves the list of moved cards. */
+export function moveCard(rates: Rates, entry: PackEntry, tier: Tier): Rates {
+  const moved = { ...rates.moved };
+  if (tier === naturalTier(entry)) delete moved[entry.id];
+  else moved[entry.id] = tier;
+  return { ...rates, moved };
 }
 
 // ---- Stars (the shop's money) and owned cards, on this phone until accounts exist (owner, 19/10). ----
@@ -170,30 +188,40 @@ export function clearOwned() {
 
 // ---- Drawing ----
 
-type Weighted = PackEntry & { tier: Tier; weight: number };
+type Drawn = PackEntry & { tier: Tier };
+type Pools = Record<Tier, Drawn[]>;
 
-function weighted(rates: Rates): Weighted[] {
-  return packPool()
-    .map((entry) => ({ ...entry, tier: tierOf(entry, rates), weight: weightOf(entry, rates) }))
-    .filter((entry) => entry.weight > 0);
+function pools(rates: Rates): Pools {
+  const sorted: Pools = { N: [], SR: [], UR: [] };
+  for (const entry of packPool()) {
+    const tier = tierOf(entry, rates);
+    sorted[tier].push({ ...entry, tier });
+  }
+  return sorted;
 }
 
-/** Up to `count` different cards, each pick by weight among the cards not picked yet. */
-function drawFrom(pool: Weighted[], count: number, rng: () => number): Weighted[] {
-  const left = [...pool];
-  const picked: Weighted[] = [];
-  while (picked.length < count && left.length) {
-    const total = left.reduce((sum, entry) => sum + entry.weight, 0);
+/**
+ * Up to `count` different cards: each one rolls a tier by the percents (a tier with no card left is skipped),
+ * then takes any card of that tier not in the pack yet.
+ */
+function drawFrom(pool: Pools, rates: Rates, count: number, rng: () => number, only?: Tier): Drawn[] {
+  const picked: Drawn[] = [];
+  const left: Pools = { N: [...pool.N], SR: [...pool.SR], UR: [...pool.UR] };
+  while (picked.length < count) {
+    const open = (only ? [only] : TIERS).filter((tier) => left[tier].length && (only || rates.tiers[tier] > 0));
+    if (!open.length) break;
+    const total = open.reduce((sum, tier) => sum + (only ? 1 : rates.tiers[tier]), 0);
     let roll = rng() * total;
-    let index = left.length - 1;
-    for (let i = 0; i < left.length; i += 1) {
-      roll -= left[i].weight;
+    let tier = open[open.length - 1];
+    for (const option of open) {
+      roll -= only ? 1 : rates.tiers[option];
       if (roll < 0) {
-        index = i;
+        tier = option;
         break;
       }
     }
-    picked.push(left.splice(index, 1)[0]);
+    const list = left[tier];
+    picked.push(list.splice(Math.floor(rng() * list.length), 1)[0]);
   }
   return picked;
 }
@@ -203,14 +231,13 @@ function bestOf(cards: Array<{ tier: Tier }>): Tier {
 }
 
 /** The cards of `count` packs; a bundle of 10 with no UR gets one, in place of a lower card of a random pack. */
-export function drawPacks(count: number, rates: Rates, rng: () => number = Math.random): Weighted[][] {
-  const pool = weighted(rates);
-  const packs = Array.from({ length: count }, () => drawFrom(pool, PACK_SIZE, rng));
+export function drawPacks(count: number, rates: Rates, rng: () => number = Math.random): Drawn[][] {
+  const pool = pools(rates);
+  const packs = Array.from({ length: count }, () => drawFrom(pool, rates, PACK_SIZE, rng));
   if (count >= BUNDLE_SIZE && !packs.some((pack) => pack.some((card) => card.tier === "UR"))) {
-    const at = Math.floor(rng() * packs.length);
-    const pack = packs[at];
-    const urs = pool.filter((card) => card.tier === "UR" && !pack.some((held) => held.id === card.id));
-    const [ur] = drawFrom(urs, 1, rng);
+    const pack = packs[Math.floor(rng() * packs.length)];
+    const urs = { ...pool, UR: pool.UR.filter((card) => !pack.some((held) => held.id === card.id)) };
+    const [ur] = drawFrom(urs, rates, 1, rng, "UR");
     if (ur && pack.length) pack[Math.floor(rng() * pack.length)] = ur;
   }
   return packs;
@@ -261,12 +288,12 @@ export type Odds = { card: Record<string, number>; best: Record<Tier, number> };
 
 /** By simulation: the chance each card is in one pack, and the chance a pack's best card is UR, SR or Normal. */
 export function packOdds(rates: Rates, runs = 20000): Odds {
-  const pool = weighted(rates);
+  const pool = pools(rates);
   const rng = seeded(20261019);
   const seen: Record<string, number> = {};
   const best: Record<Tier, number> = { N: 0, SR: 0, UR: 0 };
   for (let run = 0; run < runs; run += 1) {
-    const pack = drawFrom(pool, PACK_SIZE, rng);
+    const pack = drawFrom(pool, rates, PACK_SIZE, rng);
     for (const card of pack) seen[card.id] = (seen[card.id] ?? 0) + 1;
     best[bestOf(pack)] += 1;
   }
@@ -275,11 +302,11 @@ export function packOdds(rates: Rates, runs = 20000): Odds {
   return { card, best: { N: best.N / runs, SR: best.SR / runs, UR: best.UR / runs } };
 }
 
-/** The tuned rates as text to paste to Claude: only the cards that left the usual tier or weight. */
+/** The tuned rates as text to paste to Claude: the three percents and the cards moved to another tier. */
 export function ratesText(rates: Rates): string {
-  const lines = [`Tỉ lệ ${PACK.name} (mặc định: Normal ${DEFAULT_WEIGHT.N}, SR ${DEFAULT_WEIGHT.SR}, UR ${DEFAULT_WEIGHT.UR})`];
-  const edited = packPool().filter((entry) => rates[entry.id]);
-  if (!edited.length) lines.push("Chưa đổi lá nào.");
-  for (const entry of edited) lines.push(`${cardName(entry)} (${entry.id}): ${TIER_NAME[tierOf(entry, rates)]}, trọng số ${weightOf(entry, rates)}`);
+  const lines = [`Tỉ lệ ${PACK.name}: UR ${rates.tiers.UR}%, SR ${rates.tiers.SR}%, Normal ${rates.tiers.N}% (mặc định UR ${DEFAULT_TIERS.UR}%, SR ${DEFAULT_TIERS.SR}%, Normal ${DEFAULT_TIERS.N}%)`];
+  const moved = packPool().filter((entry) => rates.moved[entry.id]);
+  if (moved.length) for (const entry of moved) lines.push(`${cardName(entry)} (${entry.id}): ${TIER_NAME[naturalTier(entry)]} → ${TIER_NAME[rates.moved[entry.id]]}`);
+  else lines.push("Chưa đổi bậc lá nào.");
   return lines.join("\n");
 }

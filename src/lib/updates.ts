@@ -587,6 +587,9 @@ export const PENDING_NOTES: string[] = [
   "Nhạc nền được tải sẵn trong màn tải game, chạm lần đầu là phát ngay. Các bài sau tải ngầm trước khi tới lượt.",
   "Âm lượng to hơn ở mọi mức, mức 50 vẫn là 50: hiệu ứng trận, nút bấm và nhạc nền.",
   "Mở gói: chữ MỚI và nhãn N, SR, UR to hơn. Nhãn SR màu cam vàng.",
+  "Mỗi gói còn 3 lá khác nhau, lá to hơn. Khi mở gói và ở bảng kết quả, lá chỉ là hình quái hoặc phép trong khung vàng, không chỉ số, không tên.",
+  "Tỉ lệ gói: bỏ trọng số từng lá. Mỗi lá rút ra là UR 1%, SR 7%, Normal 92%, nhà phát hành nhập lại được; trong cùng bậc, lá nào cũng có cơ hội như nhau. Vẫn đổi bậc từng lá được.",
+  "Lá trong gói: lá đã có in mờ, lá phép xếp theo nhóm như Chỉnh sửa bộ bài. Khung Tỉ lệ cũng xếp phép theo nhóm.",
 ];
 
 function remarkOf(notes: string[]) {

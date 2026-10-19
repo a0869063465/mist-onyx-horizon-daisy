@@ -498,7 +498,7 @@ const PAIRS: Array<[string, string]> = [
   ["Tân thủ", "Beginners"],
   ["Người giữ khoá chỉ bạn cách rút bài, triệu hồi, dùng kỹ năng và ma pháp.", "The Keykeeper shows you how to draw, summon, use skills and cast spells."],
   ["Gói chung", "Common Pack"],
-  ["Gói thử nghiệm gồm mọi lá bỏ vào bộ bài được, trừ quái 5 sao. Mỗi gói 5 lá khác nhau.", "A test pack with every card a deck can hold, except 5-star monsters. 5 different cards per pack."],
+  ["Gói thử nghiệm gồm mọi lá bỏ vào bộ bài được, trừ quái 5 sao. Mỗi gói 3 lá khác nhau.", "A test pack with every card a deck can hold, except 5-star monsters. 3 different cards per pack."],
   ["Gói bài", "Packs"],
   ["1 gói", "1 pack"],
   ["10 gói (chắc chắn có 1 UR)", "10 packs (1 UR guaranteed)"],
@@ -529,15 +529,14 @@ const PAIRS: Array<[string, string]> = [
   ["có UR", "has a UR"],
   ["cao nhất SR", "best is SR"],
   ["toàn Normal", "all Normal"],
-  ["Số % là cơ hội lá đó có trong 1 gói. 10 gói luôn có ít nhất 1 UR.", "The % is the chance the card is in one pack. 10 packs always hold at least 1 UR."],
-  ["Trọng số mặc định", "Default weights"],
-  ["Số càng lớn càng dễ ra; 0 là không ra. Chỉnh xong bấm Sao chép rồi gửi cho Claude.", "A bigger number comes up more often; 0 never comes up. When done, tap Copy and send it to Claude."],
+  ["Số % cạnh mỗi lá là cơ hội lá đó có trong 1 gói. 10 gói luôn có ít nhất 1 UR.", "The % by each card is the chance it is in one pack. 10 packs always hold at least 1 UR."],
+  ["Mỗi lá rút ra là UR, SR hay Normal theo số % dưới đây; trong cùng bậc, lá nào cũng có cơ hội như nhau.", "Each card drawn is UR, SR or Normal by the % below; within a tier every card has the same chance."],
+  ["phần còn lại", "the rest"],
+  ["Bấm UR, SR, N cạnh một lá để đổi bậc lá đó. Chỉnh xong bấm Sao chép rồi gửi cho Claude.", "Tap UR, SR or N by a card to move it to that tier. When done, tap Copy and send it to Claude."],
   ["Về mặc định", "Reset"],
   ["Sao chép", "Copy"],
   ["Đã sao chép", "Copied"],
   ["lá", "cards"],
-  ["Trọng số", "Weight"],
-  ["Đã có", "Owned"],
 ];
 
 const EXACT = new Map(PAIRS);

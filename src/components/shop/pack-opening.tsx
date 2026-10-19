@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import { CardFace } from "@/components/game/card-face";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
-import { monsterCard } from "@/lib/catalog";
+import { artSrc, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { playPack, playUi, type PackCue } from "@/lib/sfx";
 import { PACK, tierRank, type OpenedPack, type Pull, type Purchase, type Tier } from "@/lib/shop";
@@ -11,7 +10,7 @@ import { PACK, tierRank, type OpenedPack, type Pull, type Purchase, type Tier } 
  * 10 packs first stand in two rows (a pack holding a UR has a rainbow frame); MỞ opens them one by one.
  * Each pack: it lands on the stage and lightning strikes beside it; a pack holding a UR also gets a red bolt, a
  * white flash and turns rainbow. Tap: a beam of light falls on it, its top is torn off and the stage bursts into
- * vertical light (blue = all Normal, gold = best is SR, rainbow = a UR). The 5 cards fly in face down (an SR back
+ * vertical light (blue = all Normal, gold = best is SR, rainbow = a UR). The 3 cards fly in face down (an SR back
  * glows gold, a UR back purple); tap to turn them: an SR jumps up in gold sparks, a UR comes forward in a ring of
  * light. Then Tiếp, and after the last pack the results: every card drawn, tap one to read it.
  */
@@ -306,9 +305,18 @@ function Stripes({ tier }: { tier: Tier }) {
   );
 }
 
+/**
+ * The card as a picture only (owner, 19/10): its art in the gold frame of Đổi hình nền (Chỉnh sửa bộ bài),
+ * no figures and no name.
+ */
 function Face({ pull }: { pull: Pull }) {
-  const monster = pull.kind === "monster" ? monsterCard(pull.id) : undefined;
-  return monster ? <CardFace monster={monster} /> : <CardFace spellId={pull.id} />;
+  const art = pull.kind === "monster" ? artSrc(pull.id, 1) : spellSrc(pull.id);
+  return (
+    <span className="po-face">
+      <span className="po-face-art" style={{ backgroundImage: `url(${art})` }} />
+      <img className="po-face-frame" src="/ui/cover-frame.png" alt="" draggable={false} />
+    </span>
+  );
 }
 
 /** MỚI for a card drawn for the first time, its tier, and +1★ for a card already owned. */

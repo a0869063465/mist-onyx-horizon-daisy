@@ -8267,6 +8267,12 @@ button.watch-back {
 .shop-panel-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0.7rem 0.8rem 0.9rem; }
 .shop-panel-foot { margin: 0; padding: 0.6rem 0.8rem 0.8rem; border-top: 1px solid rgba(160, 190, 255, 0.3); }
 .shop-panel-foot button { letter-spacing: 0.03em; white-space: nowrap; }
+.rate-tierbox { display: grid; gap: 0.45rem; margin: 0.2rem 0 0.7rem; padding: 0.6rem 0.7rem; border-radius: 0.45rem; border: 1px solid rgba(160, 190, 255, 0.35); background: rgba(0, 0, 0, 0.3); }
+.rate-tierline { display: flex; align-items: center; gap: 0.5rem; font-family: var(--shop-cond); font-size: 1.1rem; font-weight: 800; }
+.rate-tierline .po-tag { position: static; font-size: 1rem; min-width: 2.6rem; }
+.rate-tierline input, .rate-tierval { width: 5rem; height: 2.1rem; border-radius: 0.3rem; border: 1px solid rgba(255, 255, 255, 0.4); background: #050a1e; color: #fff; font: inherit; text-align: center; }
+.rate-tierval { display: inline-grid; place-items: center; border-style: dashed; color: #c9d6ff; }
+.rate-tierline small { font-family: inherit; font-size: 0.85rem; font-weight: 600; color: #b9c7ec; }
 .rate-sum { margin: 0 0 0.35rem; font-family: var(--shop-cond); font-size: 1.02rem; font-weight: 800; }
 .rate-sum .is-UR { color: #f3a8ff; }
 .rate-sum .is-SR { color: #ffd65a; }
@@ -8297,14 +8303,15 @@ button.watch-back {
 .rate-weight input::-webkit-inner-spin-button, .rate-weight input::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
 .shop-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem 0.5rem; padding-top: 0.6rem; }
 .shop-card { position: relative; padding: 0; border: 0; background: none; }
+.shop-card.is-owned { opacity: 0.38; filter: grayscale(0.5); }
 .shop-owned { position: absolute; left: 50%; bottom: -0.55rem; transform: translateX(-50%); padding: 0.05rem 0.4rem; border-radius: 999px; background: rgba(0, 0, 0, 0.8); border: 1px solid #e4ff5a; color: #e4ff5a; font-family: var(--shop-cond); font-size: 0.68rem; font-weight: 800; white-space: nowrap; }
 
 /* ── Mở gói: the opening stage (rebuilt from the owner's reference video, 19/10) ── */
 .po {
   --floor: 62%;
   --pack-w: min(40vw, 190px);
-  --cw: min(17.2vw, 92px);
-  --gap: min(1.7vw, 9px);
+  --cw: min(26vw, 150px);
+  --gap: min(4vw, 22px);
   --po-cond: "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif;
   position: fixed;
   inset: 0;
@@ -8569,7 +8576,7 @@ button.watch-back {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 3.05;
+  aspect-ratio: 2 / 3;
   padding: 0;
   border: 0;
   background: none;
@@ -8587,7 +8594,7 @@ button.watch-back {
   -webkit-backface-visibility: hidden;
 }
 .po-card-front { transform: rotateY(180deg); }
-.po-card-back img { display: block; width: 100%; height: 100%; border-radius: inherit; }
+.po-card-back img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
 .po-card-back::after {
   content: "";
   position: absolute;
@@ -8607,10 +8614,10 @@ button.watch-back {
 .po-card.is-pop .po-card-front { box-shadow: 0 0 16px 4px rgba(255, 205, 90, 0.95); }
 .po-card.is-away { opacity: 0; }
 .po-new, .po-tag, .po-refund { position: absolute; z-index: 2; font-family: var(--po-cond); font-weight: 800; line-height: 1; pointer-events: none; }
-.po-new { left: -8%; top: -17%; font-size: clamp(0.82rem, 3.8vw, 1.05rem); font-style: italic; letter-spacing: 0.03em; color: #ffe14d; text-shadow: 0 0 2px #000, 0 1px 0 #000, 0 0 6px rgba(255, 210, 60, 0.7); }
+.po-new { left: -2%; top: -15%; font-size: clamp(0.82rem, 3.8vw, 1.05rem); font-style: italic; letter-spacing: 0.03em; color: #ffe14d; text-shadow: 0 0 2px #000, 0 1px 0 #000, 0 0 6px rgba(255, 210, 60, 0.7); }
 .po-tag {
-  right: -8%;
-  top: -15%;
+  right: -3%;
+  top: -13%;
   min-width: 1.8em;
   padding: 0.14em 0.34em;
   border-radius: 0.35em;
@@ -8703,7 +8710,7 @@ button.watch-back {
 .po-results-head h2 { margin: 0; font-family: var(--po-cond); font-size: 1.5rem; font-weight: 800; letter-spacing: 0.04em; }
 .po-results-head p { margin: 0.25rem 0 0; font-weight: 700; color: rgba(230, 238, 255, 0.88); }
 .po-results-head b.is-star { color: #ffd65a; }
-.po-grid { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-content: start; gap: 1.35rem 0.6rem; padding: 1.2rem 0.9rem 1.5rem; }
+.po-grid { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 1.35rem 0.6rem; padding: 1.2rem 0.9rem 1.5rem; }
 .po-res { position: relative; padding: 0; border: 0; background: none; animation: po-res-in 360ms calc(min(var(--i), 30) * 30ms) ease-out both; }
 .po-results-foot { display: flex; justify-content: center; padding: 0.7rem 1rem max(1rem, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(5, 10, 30, 0.9), rgba(5, 10, 30, 0.4)); }
 .po-ok { min-width: 12rem; padding: 0.7rem 2rem; border-radius: 999px; border: 2px solid #e4ff5a; background: #0b0f1c; color: #fff; font-family: var(--po-cond); font-size: 1.15rem; font-weight: 800; letter-spacing: 0.16em; }
@@ -8731,3 +8738,8 @@ button.watch-back {
 @keyframes po-bubble { 0% { opacity: 0; transform: scale(0.35); } 25% { opacity: 1; } 100% { opacity: 0.85; transform: scale(1.04); } }
 @keyframes po-ten-in { from { opacity: 0; transform: translateY(-30%) scale(0.8); } to { opacity: 1; transform: none; } }
 @keyframes po-res-in { from { opacity: 0; transform: translateY(14px) scale(0.92); } }
+/* The card as a picture in the gold frame of Đổi hình nền (owner, 19/10). */
+.po-face { position: absolute; inset: 0; display: block; }
+.po-res .po-face, .po-show-card .po-face { position: relative; display: block; aspect-ratio: 2 / 3; }
+.po-face-art { position: absolute; inset: 2.6% 3.8%; border-radius: 9% / 6%; background: #0b0b0e center 20% / cover no-repeat; }
+.po-face-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }

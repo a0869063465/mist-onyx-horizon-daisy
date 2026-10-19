@@ -1,13 +1,15 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { CardFace } from "@/components/game/card-face";
-import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
+import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import {
+  byPower,
   cardName,
-  clampWeight,
-  DEFAULT_WEIGHT,
+  DEFAULT_TIERS,
+  freshRates,
   loadRates,
+  moveCard,
   naturalTier,
   ownedIds,
   PACK,
@@ -15,15 +17,13 @@ import {
   packPool,
   ratesText,
   saveRates,
-  tidyEdit,
   TIER_NAME,
   tierOf,
   tierRank,
   TIERS,
-  weightOf,
+  withTier,
   type PackEntry,
   type Rates,
-  type Tier,
 } from "@/lib/shop";
 
 function Panel({ title, onClose, children, foot }: { title: string; onClose: () => void; children: ReactNode; foot?: ReactNode }) {
@@ -48,19 +48,15 @@ function percent(value: number) {
   return `${pct >= 10 ? pct.toFixed(0) : pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)}%`.replace(".", ",");
 }
 
-function byPower(a: PackEntry, b: PackEntry) {
-  const rank = (entry: PackEntry) => (entry.kind === "monster" ? (monsterCard(entry.id)?.stars ?? 0) : 10 + (spellCard(entry.id)?.gems ?? 0));
-  return rank(a) - rank(b) || cardName(a).localeCompare(cardName(b), "vi");
-}
 
 function thumb(entry: PackEntry) {
   return entry.kind === "monster" ? artSrc(entry.id, 1) : spellSrc(entry.id);
 }
 
 /**
- * Tỉ lệ: the chance a pack holds each card, worked out from the weights (a bigger weight comes up more often).
- * The publisher can move a card to another tier and change its weight (owner, 19/10: tune on this phone first);
- * Sao chép copies the changes as text to paste to Claude, who puts them in the game for everyone.
+ * Tỉ lệ: each card drawn is UR, SR or Normal by three percents (owner, 19/10: no weight per card; UR and SR are
+ * typed, Normal is the rest), then any card of that tier with the same chance. The publisher can still move a card to
+ * another tier. Kept on this phone; Sao chép copies the numbers as text to paste to Claude for everyone.
  */
 export function RatePanel({ editable, onClose }: { editable: boolean; onClose: () => void }) {
   const [rates, setRates] = useState<Rates>(() => loadRates());
@@ -68,26 +64,15 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
   const pool = useMemo(() => packPool(), []);
   const odds = useMemo(() => packOdds(rates), [rates]);
 
-  function change(entry: PackEntry, edit: { tier?: Tier; weight?: number }) {
-    setRates((now) => {
-      const merged = { ...now[entry.id], ...edit };
-      // Moving a card to another tier gives it that tier's usual weight.
-      if (edit.tier && edit.weight === undefined) delete merged.weight;
-      const tidy = tidyEdit(entry, merged);
-      const next = { ...now };
-      if (tidy) next[entry.id] = tidy;
-      else delete next[entry.id];
-      saveRates(next);
-      return next;
-    });
+  function update(next: Rates) {
+    saveRates(next);
+    setRates(next);
     setCopied("");
   }
 
   function reset() {
     playUi("select");
-    saveRates({});
-    setRates({});
-    setCopied("");
+    update(freshRates());
   }
 
   async function copy() {
@@ -100,9 +85,10 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
     }
   }
 
+  const changed = rates.tiers.UR !== DEFAULT_TIERS.UR || rates.tiers.SR !== DEFAULT_TIERS.SR || Object.keys(rates.moved).length > 0;
   const foot = editable ? (
     <>
-      <button type="button" className="shop-soft" onClick={reset} disabled={!Object.keys(rates).length}>
+      <button type="button" className="shop-soft" onClick={reset} disabled={!changed}>
         {tr("Về mặc định")}
       </button>
       <button type="button" className="shop-main" onClick={() => void copy()}>
@@ -113,6 +99,33 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
 
   return (
     <Panel title={tr("Tỉ lệ")} onClose={onClose} foot={foot}>
+      <p className="rate-note">{tr("Mỗi lá rút ra là UR, SR hay Normal theo số % dưới đây; trong cùng bậc, lá nào cũng có cơ hội như nhau.")}</p>
+      <div className="rate-tierbox">
+        {TIERS.map((tier) => (
+          <label key={tier} className={`rate-tierline is-${tier}`}>
+            <b className={`po-tag is-${tier}`}>{tier}</b>
+            {editable && tier !== "N" ? (
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={100}
+                step={0.1}
+                value={rates.tiers[tier]}
+                aria-label={`${tier} %`}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  if (event.target.value !== "" && Number.isFinite(value)) update(withTier(rates, tier, value));
+                }}
+              />
+            ) : (
+              <span className="rate-tierval">{String(rates.tiers[tier]).replace(".", ",")}</span>
+            )}
+            <span>%</span>
+            {tier === "N" && editable ? <small>{tr("phần còn lại")}</small> : null}
+          </label>
+        ))}
+      </div>
       <p className="rate-sum">
         {tr("Mỗi gói")}:{" "}
         <span className="is-UR">
@@ -127,12 +140,8 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
           {tr("toàn Normal")} {percent(odds.best.N)}
         </span>
       </p>
-      <p className="rate-note">{tr("Số % là cơ hội lá đó có trong 1 gói. 10 gói luôn có ít nhất 1 UR.")}</p>
-      {editable ? (
-        <p className="rate-note">
-          {tr("Trọng số mặc định")}: Normal {DEFAULT_WEIGHT.N}, SR {DEFAULT_WEIGHT.SR}, UR {DEFAULT_WEIGHT.UR}. {tr("Số càng lớn càng dễ ra; 0 là không ra. Chỉnh xong bấm Sao chép rồi gửi cho Claude.")}
-        </p>
-      ) : null}
+      <p className="rate-note">{tr("Số % cạnh mỗi lá là cơ hội lá đó có trong 1 gói. 10 gói luôn có ít nhất 1 UR.")}</p>
+      {editable ? <p className="rate-note">{tr("Bấm UR, SR, N cạnh một lá để đổi bậc lá đó. Chỉnh xong bấm Sao chép rồi gửi cho Claude.")}</p> : null}
       {copied === "manual" ? <textarea className="rate-copy" readOnly value={ratesText(rates)} onFocus={(event) => event.currentTarget.select()} /> : null}
       {TIERS.map((tier) => {
         const rows = pool.filter((entry) => tierOf(entry, rates) === tier).sort(byPower);
@@ -143,15 +152,14 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
             </h4>
             {rows.map((entry) => {
               const moved = tierOf(entry, rates) !== naturalTier(entry);
-              const weight = weightOf(entry, rates);
               return (
-                <div key={entry.id} className={`rate-row${rates[entry.id] ? " is-edited" : ""}`}>
+                <div key={entry.id} className={`rate-row${moved ? " is-edited" : ""}`}>
                   <span className="rate-art" style={{ backgroundImage: `url(${thumb(entry)})` }} />
                   <div className="rate-main">
                     <div className="rate-line">
                       <span className="rate-name">
                         {tr(cardName(entry))}
-                        {moved ? <small> ({tr("thường là")} {TIER_NAME[naturalTier(entry)]})</small> : null}
+                        {moved ? <small> ({TIER_NAME[naturalTier(entry)]} →)</small> : null}
                       </span>
                       <b className="rate-pct">{percent(odds.card[entry.id] ?? 0)}</b>
                     </div>
@@ -159,29 +167,10 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
                       <div className="rate-line">
                         <span className="rate-tiers">
                           {TIERS.map((option) => (
-                            <button key={option} type="button" className={`rate-tier is-${option}${option === tier ? " on" : ""}`} onClick={() => option !== tier && change(entry, { tier: option })}>
+                            <button key={option} type="button" className={`rate-tier is-${option}${option === tier ? " on" : ""}`} onClick={() => option !== tier && update(moveCard(rates, entry, option))}>
                               {option}
                             </button>
                           ))}
-                        </span>
-                        <span className="rate-weight">
-                          <button type="button" aria-label={tr("Giảm")} onClick={() => change(entry, { weight: clampWeight(weight - 1) })}>
-                            −
-                          </button>
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            value={weight}
-                            aria-label={tr("Trọng số")}
-                            onChange={(event) => {
-                              const value = Number(event.target.value);
-                              if (event.target.value !== "" && Number.isFinite(value)) change(entry, { weight: clampWeight(value) });
-                            }}
-                          />
-                          <button type="button" aria-label={tr("Tăng")} onClick={() => change(entry, { weight: clampWeight(weight + 1) })}>
-                            +
-                          </button>
                         </span>
                       </div>
                     ) : null}
@@ -214,10 +203,9 @@ export function PackCards({ onTap, onClose }: { onTap: (entry: PackEntry) => voi
         {rows.map(({ entry, tier }) => {
           const monster = entry.kind === "monster" ? monsterCard(entry.id) : undefined;
           return (
-            <button key={entry.id} type="button" className="shop-card" onClick={() => onTap(entry)}>
+            <button key={entry.id} type="button" className={`shop-card${owned.has(entry.id) ? " is-owned" : ""}`} onClick={() => onTap(entry)}>
               {monster ? <CardFace monster={monster} /> : <CardFace spellId={entry.id} />}
               <b className={`po-tag is-${tier}`}>{tier}</b>
-              {owned.has(entry.id) ? <b className="shop-owned">{tr("Đã có")}</b> : null}
             </button>
           );
         })}
