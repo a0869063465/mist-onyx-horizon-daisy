@@ -6638,7 +6638,30 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 }
 
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
-  return envGuard(state, [uid], [], () => useSkillCore(state, uid, targetUid, skillIndex, skipGnaw, extra, silent));
+  return lavaSkill(state, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
+}
+
+/**
+ * Núi dung nham stacks on a skill (owner, 19/10): spent like Yêu tinh chúc phúc's blessing, +1 attack and +1 skill
+ * damage each, so any monster can use them. A skill that does not use the blessing gives the stacks back.
+ */
+function lavaSkill(state: Duel, uid: string, run: (armed: Duel) => Duel): Duel {
+  const side = ownerSide(state, uid);
+  const caster = side === null ? null : state.players[side].field.find((mon) => mon?.uid === uid);
+  const n = caster?.lava ?? 0;
+  if (side === null || !caster || n <= 0) return run(state);
+  const shift = (duel: Duel, by: number, lava: number | undefined) => {
+    const player = duel.players[side];
+    const field = player.field.map((mon) =>
+      mon?.uid === uid ? { ...mon, blessAtk: Math.max(0, (mon.blessAtk ?? 0) + by), blessDmg: Math.max(0, (mon.blessDmg ?? 0) + by), lava } : mon,
+    );
+    return patch(duel, side, { ...player, field: field as Player["field"] });
+  };
+  const armed = shift(state, n, undefined);
+  const result = run(armed);
+  if (result === armed) return state;
+  const after = result.players[side].field.find((mon) => mon?.uid === uid);
+  return after && (after.blessDmg ?? 0) >= n ? shift(result, -n, n) : result;
 }
 
 function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
