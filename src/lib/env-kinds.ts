@@ -4,13 +4,20 @@
  */
 /**
  * Thánh địa thiên sứ. Guarded: the angels (thiên sứ, yêu tinh, tinh linh: frail buffers) and the sanctuary's
- * buffing priests (none yet). Warriors: the angel warriors who fight (none yet).
+ * buffing priests (Thánh thuật sư). Người yêu hạnh phúc is a frail winged spirit, same guard. Warriors: the angel
+ * warriors who fight (none yet).
  */
-export const SANCTUARY_GUARDED = ["quai-thu-thien-su", "yeu-tinh-chuc-phuc", "thien-than-be-nho"];
+export const SANCTUARY_GUARDED = [
+  "quai-thu-thien-su",
+  "yeu-tinh-chuc-phuc",
+  "thien-than-be-nho",
+  "thanh-thuat-su",
+  "nguoi-yeu-hanh-phuc",
+];
 export const SANCTUARY_WARRIORS: string[] = [];
 
 /** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
-export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong"];
+export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong", "ky-si-canh-cut"];
 
 export const ENV_KINDS: Record<string, string[]> = {
   // Biển sâu: quái biển
@@ -28,11 +35,12 @@ export const ENV_KINDS: Record<string, string[]> = {
     "kizuran",
     "ma-dao-si",
     "the-than-cua-shien",
+    "ke-trom-ao-trang",
   ],
   // Đất đá
-  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat"],
+  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat", "khung-long-hinh-nguoi"],
   // Chim chóc và rồng
-  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet"],
+  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet", "rong-dia-nguc"],
   // Thú rừng và côn trùng
   "rung-ram": [
     "ong-khong-lo",
@@ -45,6 +53,8 @@ export const ENV_KINDS: Record<string, string[]> = {
     "te-giac-hieu-thang",
     "te-giac-chien-binh",
     "hoa-an-thit-nguoi",
+    "sangan",
+    "ky-nhong-dien",
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
@@ -66,6 +76,9 @@ export const ENV_KINDS: Record<string, string[]> = {
     "ke-giam-ho-linh-hon",
     "phu-thuy-thoi-gian",
     "phu-thuy-ti-hon",
+    "hu-nhot-linh-hon",
+    "binh-bien-hinh",
+    "mat-na-bong-toi",
   ],
 };
 
