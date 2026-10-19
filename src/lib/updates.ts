@@ -580,6 +580,10 @@ export const PENDING_NOTES: string[] = [
   "Môi trường áp dụng cho cả quái 5 sao và dạng ngoài bộ.",  "Núi dung nham: quái lửa đồng minh bị phun trào trúng nhận 1 cộng dồn mỗi phát, kể cả khi thủ phép chặn hết; phun trào trúng người mang lá thì mọi quái lửa đồng minh nhận thêm cộng dồn theo số phát. Đòn đánh thường kế tiếp dùng hết cộng dồn: mỗi cộng dồn +1 công và +1 sát thương phép lên mục tiêu bị đánh. Số cộng dồn hiện trên lá bằng số vàng đỏ. Hiện chưa có quái nào thuộc hệ lửa.",  "Núi dung nham: dùng kỹ năng cũng tiêu cộng dồn như đánh thường. Mỗi cộng dồn +1 công và +1 sát thương kỹ năng, giống phù hộ của Yêu tinh chúc phúc; kỹ năng không gây sát thương thì cộng dồn được giữ lại.",
   "Màn tải trò chơi có logo Clash of the Beasts ở giữa, thanh tải nằm bên dưới.",
   "Menu chính có hình nền mới.",
+  "Mở Cửa hàng, tạm thời chỉ cho nhà phát hành. Gói chung giá 15 sao, mỗi gói 5 lá khác nhau. Mua 10 gói giá 150 sao, chắc chắn có ít nhất 1 lá UR. Rút trúng lá đã có thì hoàn 1 sao cho mỗi lá.",
+  "Mở gói: sét đánh cạnh gói; gói có UR thì thêm sét đỏ, loé trắng rồi hoá cầu vồng. Chạm để bóc gói, tia sáng xanh dương khi toàn Normal, vàng khi cao nhất là SR, cầu vồng khi có UR. Lá úp mặt: mặt sau vàng là SR, tím là UR. Chạm để lật: SR nhảy lên toả hạt vàng, UR phóng to trong vòng sáng.",
+  "Bảng kết quả mở gói: mọi lá vừa nhận, nhãn MỚI cho lá lần đầu có, +1★ cho lá trùng. Chạm lá để xem thông tin.",
+  "Trang gói có khung Tỉ lệ: số % mỗi lá có trong 1 gói. Nhà phát hành đổi bậc và trọng số từng lá, lưu trên máy, bấm Sao chép để gửi.",
 ];
 
 function remarkOf(notes: string[]) {

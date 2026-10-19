@@ -15,6 +15,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TuneRouteImport } from './routes/tune'
 import { Route as WatchRouteImport } from './routes/watch'
 
@@ -48,6 +49,11 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TuneRoute = TuneRouteImport.update({
   id: '/tune',
   path: '/tune',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/modes'
     | '/play'
+    | '/shop'
     | '/tune'
     | '/watch'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/modes'
     | '/play'
+    | '/shop'
     | '/tune'
     | '/watch'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/modes'
     | '/play'
+    | '/shop'
     | '/tune'
     | '/watch'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   HopThuRoute: typeof HopThuRoute
   ModesRoute: typeof ModesRoute
   PlayRoute: typeof PlayRoute
+  ShopRoute: typeof ShopRoute
   TuneRoute: typeof TuneRoute
   WatchRoute: typeof WatchRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tune': {
       id: '/tune'
       path: '/tune'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   HopThuRoute: HopThuRoute,
   ModesRoute: ModesRoute,
   PlayRoute: PlayRoute,
+  ShopRoute: ShopRoute,
   TuneRoute: TuneRoute,
   WatchRoute: WatchRoute,
 }

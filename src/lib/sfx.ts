@@ -524,6 +524,82 @@ function fuseRite(delay: number) {
   });
 }
 
+/** A sharp electric crack with a rolling tail: one lightning strike (lower and heavier when `heavy`). */
+function crack(audio: AudioContext, start: number, level: number, heavy: boolean) {
+  noiseBurst(audio, start, 0.09, 7200, 2600, 0.5 * level);
+  noiseBurst(audio, start + 0.04, 0.12, 5200, 1400, 0.36 * level);
+  noiseBurst(audio, start + 0.06, heavy ? 1.3 : 0.85, heavy ? 700 : 1100, 90, (heavy ? 0.34 : 0.22) * level);
+  thump(audio, start, (heavy ? 0.85 : 0.45) * level);
+  const zap = audio.createOscillator();
+  const amp = audio.createGain();
+  zap.type = "sawtooth";
+  zap.frequency.setValueAtTime(heavy ? 900 : 1500, start);
+  zap.frequency.exponentialRampToValueAtTime(heavy ? 70 : 160, start + 0.18);
+  amp.gain.setValueAtTime(Math.max(0.0001, (heavy ? 0.09 : 0.05) * level), start);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
+  zap.connect(amp);
+  amp.connect(audio.destination);
+  zap.start(start);
+  zap.stop(start + 0.22);
+}
+
+/**
+ * Pack opening sounds (shop, owner's reference video 19/10, all made here, nothing taken from the video): lightning
+ * strikes before the pack opens (red ones mean a UR), the white flash that turns the pack rainbow, the pack's top
+ * torn off, the beam of light by the best card (Normal calm, SR bright bells, UR a choir), cards dealt, and flips:
+ * plain, SR (a chime) and UR (a big ringing burst).
+ */
+export type PackCue = "strike" | "redStrike" | "flash" | "cut" | "beamN" | "beamSR" | "beamUR" | "deal" | "flip" | "flipSR" | "flipUR";
+
+export function playPack(cue: PackCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "strike") crack(audio, t, vol, false);
+    else if (cue === "redStrike") crack(audio, t, vol, true);
+    else if (cue === "flash") {
+      noiseBurst(audio, t, 0.7, 400, 7000, 0.16 * vol);
+      for (const [freq, at] of [[1046.5, 0.18], [1318.5, 0.24], [1568, 0.3], [2093, 0.36], [2637, 0.42]] as const) bell(audio, t + at, freq, 1.1, 0.05 * vol);
+      shimmer(audio, t + 0.2, 1.3, 0.04 * vol);
+    } else if (cue === "cut") {
+      noiseBurst(audio, t, 0.26, 1400, 6800, 0.3 * vol);
+      noiseBurst(audio, t + 0.05, 0.18, 3000, 9000, 0.16 * vol);
+      thump(audio, t + 0.02, 0.35 * vol);
+    } else if (cue === "beamN") {
+      noiseBurst(audio, t, 1.3, 220, 2400, 0.16 * vol);
+      for (const freq of [261.6, 329.6, 392]) pad(audio, t + 0.05, freq, 1.5, 0.035 * vol);
+    } else if (cue === "beamSR") {
+      noiseBurst(audio, t, 1.4, 260, 3600, 0.2 * vol);
+      for (const freq of [293.7, 370, 440, 587.3]) pad(audio, t + 0.05, freq, 1.7, 0.04 * vol);
+      for (const [freq, at] of [[1174.7, 0.1], [1480, 0.18], [1760, 0.26], [2349.3, 0.34]] as const) bell(audio, t + at, freq, 1.2, 0.05 * vol);
+    } else if (cue === "beamUR") {
+      noiseBurst(audio, t, 1.6, 200, 5200, 0.24 * vol);
+      thump(audio, t, 0.6 * vol);
+      for (const freq of [196, 246.9, 293.7, 392, 493.9]) pad(audio, t + 0.04, freq, 2.1, 0.045 * vol);
+      for (const [freq, at] of [[1568, 0.12], [1975.5, 0.2], [2349.3, 0.28], [3136, 0.36], [3951, 0.44]] as const) bell(audio, t + at, freq, 1.4, 0.05 * vol);
+      shimmer(audio, t + 0.1, 1.8, 0.045 * vol);
+    } else if (cue === "deal") {
+      noiseBurst(audio, t, 0.12, 3400, 1300, 0.12 * vol);
+    } else if (cue === "flip") {
+      noiseBurst(audio, t, 0.07, 2600, 5200, 0.12 * vol);
+      softPop(audio, t + 0.02, 659.3, 0.1, 0.05 * vol);
+    } else if (cue === "flipSR") {
+      noiseBurst(audio, t, 0.08, 2600, 5600, 0.12 * vol);
+      for (const [freq, at] of [[1318.5, 0.02], [1661.2, 0.08], [1975.5, 0.14], [2637, 0.2]] as const) bell(audio, t + at, freq, 0.9, 0.06 * vol);
+      shimmer(audio, t + 0.06, 0.8, 0.03 * vol);
+    } else if (cue === "flipUR") {
+      thump(audio, t, 0.55 * vol);
+      noiseBurst(audio, t, 0.9, 500, 8000, 0.18 * vol);
+      for (const freq of [261.6, 329.6, 392, 523.3]) pad(audio, t + 0.02, freq, 1.8, 0.05 * vol);
+      for (const [freq, at] of [[1046.5, 0.04], [1318.5, 0.1], [1568, 0.16], [2093, 0.22], [2637, 0.28], [3136, 0.34]] as const) bell(audio, t + at, freq, 1.3, 0.06 * vol);
+      shimmer(audio, t + 0.1, 1.5, 0.05 * vol);
+    }
+  });
+}
+
 /**
  * A soft wooden "pop" for buttons: one rounded sine note that dips a little and fades fast, through a low-pass so
  * nothing hisses or rings (owner, 19/10: taps should stay quiet under the music, no rustle, no beeping).
