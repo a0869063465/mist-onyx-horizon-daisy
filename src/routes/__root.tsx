@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { SoundTap } from "@/components/sound-tap";
+import { MenuMusic } from "@/components/menu-music";
 import { CopySize } from "@/components/game/copy-text";
 import { publishLayout } from "@/lib/layouts";
 import { GameLoad } from "@/components/game/load-screen";
@@ -39,6 +40,7 @@ export const Route = createRootRoute({
       <body>
         <PreviewHostBridge />
         <SoundTap />
+        <MenuMusic />
         <CopySize />
         <AuthProvider>
           <Outlet />
