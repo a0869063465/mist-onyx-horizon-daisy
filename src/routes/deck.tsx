@@ -419,9 +419,9 @@ function DeckPage() {
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
         ) : (
-          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
         )
       ) : null}
       {covering ? (

@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
+import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
@@ -7,6 +8,7 @@ import { artSrc, monsterCard, spellCard } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { loadField, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
+import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
 import { spellKind } from "@/lib/spell-kinds";
 
@@ -104,7 +106,34 @@ export function FieldFace({ id }: { id: string }) {
   );
 }
 
-/** The monster sheet of a catalog card (deck builder): its skills, then the extra icons. */
+/** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
+export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined };
+
+/**
+ * A card's sheet with its related cards (owner, 19/10): tapping the card on the sheet opens the 3D fan of its family;
+ * tapping a card in the fan opens that card's sheet, whose "<<" goes back to the fan; tapping outside the fan goes
+ * back to the first sheet. A card with no family is only a picture. `sheet` draws the first sheet, given what a tap on
+ * its card does.
+ */
+export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
+  const family = relatedCards(id);
+  const [view, setView] = useState<{ fan: string } | { open: string } | null>(null);
+  return (
+    <>
+      {sheet(family.length > 1 ? () => setView({ fan: id }) : undefined)}
+      {view && "fan" in view ? <CardCarousel ids={family} focus={view.fan} onOpen={(next) => setView({ open: next })} onClose={() => setView(null)} /> : null}
+      {view && "open" in view ? (
+        monsterCard(view.open) ? (
+          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+        ) : (
+          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+        )
+      ) : null}
+    </>
+  );
+}
+
+/** The monster sheet of a catalog card (deck builder, shop): its skills, then the extra icons; its card opens the fan. */
 export function CardMonsterSheet({
   id,
   extras = [],
@@ -112,6 +141,9 @@ export function CardMonsterSheet({
   aside,
   note,
   onClose,
+  onBack,
+  asideFor,
+  noteFor,
 }: {
   id: string;
   extras?: SheetExtra[];
@@ -119,12 +151,29 @@ export function CardMonsterSheet({
   aside?: ReactNode;
   note?: string;
   onClose: () => void;
-}) {
+  /** Opened from the fan: back to it. */
+  onBack?: () => void;
+} & SheetExtras) {
   const card = monsterCard(id);
   if (!card) return null;
-  return (
-    <MonsterSheet name={card.name} card={<FieldFace id={id} />} count="" skills={skillsOf(id, card.skill ?? "")} extras={extras} actions={actions} aside={aside} note={note} onClose={onClose} />
+  const sheet = (onArt?: () => void) => (
+    <MonsterSheet
+      name={card.name}
+      card={<FieldFace id={id} />}
+      count=""
+      skills={skillsOf(id, card.skill ?? "")}
+      extras={extras}
+      actions={actions}
+      aside={aside}
+      note={note}
+      onClose={onClose}
+      onArt={onArt}
+      onBack={onBack}
+    />
   );
+  // A sheet opened from the fan does not open another fan: its card goes back to the one it came from.
+  if (onBack) return sheet(onBack);
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} />;
 }
 
 /**
@@ -139,6 +188,9 @@ export function SpellSheet({
   aside,
   note,
   onClose,
+  onBack,
+  asideFor,
+  noteFor,
 }: {
   id: string;
   gems?: number | string;
@@ -147,10 +199,12 @@ export function SpellSheet({
   aside?: ReactNode;
   note?: string;
   onClose: () => void;
-}) {
+  /** Opened from the fan: back to it. */
+  onBack?: () => void;
+} & SheetExtras) {
   const spell = spellCard(id);
   if (!spell) return null;
-  return (
+  const sheet = (onArt?: () => void) => (
     <MonsterSheet
       name={spell.name}
       card={<CardFace spellId={id} gems={gems} />}
@@ -160,6 +214,10 @@ export function SpellSheet({
       actions={actions}
       aside={aside}
       onClose={onClose}
+      onArt={onArt}
+      onBack={onBack}
     />
   );
+  if (onBack) return sheet(onBack);
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} />;
 }

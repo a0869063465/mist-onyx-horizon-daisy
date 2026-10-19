@@ -523,6 +523,7 @@ const PAIRS: Array<[string, string]> = [
   ["Kết quả mở gói", "Pack results"],
   ["Lá mới nhận", "New cards"],
   ["Lá trùng hoàn", "Duplicates refunded"],
+  ["Lá liên quan", "Related cards"],
   ["MỚI", "NEW"],
   ["Lật lá", "Flip the card"],
   ["Mỗi gói", "Per pack"],

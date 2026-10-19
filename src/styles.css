@@ -8750,3 +8750,84 @@ button.watch-back {
 .po-res .po-face, .po-show-card .po-face { position: relative; display: block; aspect-ratio: 2 / 3; }
 .po-face-art { position: absolute; inset: 2.6% 3.8%; border-radius: 9% / 6%; background: #0b0b0e center 20% / cover no-repeat; }
 .po-face-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* ── Lá liên quan: a sheet's card opens the 3D fan of its family (owner, 19/10, after the LoR card view) ── */
+.msheet-card.is-fan { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.msheet-card.is-fan:active { filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 14px rgba(233, 196, 106, 0.55)); }
+/* A small stack of cards in the corner says the card has related cards. */
+.msheet-fan { position: absolute; left: -10%; top: -7%; z-index: 3; width: 34%; aspect-ratio: 1.1; pointer-events: none; filter: drop-shadow(0 0 4px rgba(244, 210, 122, 0.6)); }
+.msheet-fan i {
+  position: absolute;
+  bottom: 0;
+  width: 46%;
+  aspect-ratio: 2 / 3;
+  border-radius: 12%;
+  border: 1.5px solid #f4d27a;
+  background: linear-gradient(160deg, #3b2a6e, #14102a);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  transform-origin: 50% 100%;
+}
+.msheet-fan i:nth-child(1) { left: 8%; transform: rotate(-16deg); }
+.msheet-fan i:nth-child(2) { left: 27%; transform: rotate(0deg); }
+.msheet-fan i:nth-child(3) { left: 46%; transform: rotate(16deg); background: linear-gradient(160deg, #f8dc8a, #b9832a); }
+.msheet-up {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  z-index: 2;
+  min-width: 2.3rem;
+  height: 1.9rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #4a556e, #1a2030 70%);
+  box-shadow: 0 2px 0 #05070c, inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(233, 196, 106, 0.5);
+  color: #f4d27a;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+.cc-back {
+  position: absolute;
+  inset: 0;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: radial-gradient(120% 70% at 50% 45%, rgba(10, 14, 30, 0.84), rgba(0, 0, 0, 0.94));
+  animation: msheet-fade 180ms ease-out both;
+}
+.cc-stage { position: relative; width: 100%; height: min(64vh, 34rem); perspective: 1000px; perspective-origin: 50% 40%; }
+.cc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(50vw, 15rem);
+  transform: translate(-50%, -50%) translate3d(var(--x), var(--y), var(--z)) rotateY(var(--ry)) rotateZ(var(--rz)) scale(var(--s));
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.25, 1), opacity 320ms, filter 320ms;
+  filter: brightness(0.62) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.7));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cc-card.is-front { filter: brightness(1) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 12px rgba(244, 210, 122, 0.45)); }
+.cc-back.is-dragging .cc-card { transition: none; }
+.cc-foot { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0 1rem; text-align: center; }
+.cc-name {
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f4e6c0;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+.cc-dots { display: flex; gap: 0.4rem; }
+.cc-dots i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: rgba(244, 230, 192, 0.3); }
+.cc-dots i.on { background: #f4d27a; box-shadow: 0 0 6px #f4d27a; }

@@ -240,6 +240,8 @@ export function MonsterSheet({
   aside,
   note,
   onClose,
+  onArt,
+  onBack,
 }: {
   name: string;
   card: ReactNode;
@@ -254,6 +256,10 @@ export function MonsterSheet({
   /** Live figure for this monster (e.g. its current skill damage), shown under the first skill. */
   note?: string;
   onClose: () => void;
+  /** Tapping the card: the 3D fan of its related cards (owner, 19/10). Without it the card is only a picture. */
+  onArt?: () => void;
+  /** A sheet opened from the fan: "<<" (and a tap outside the sheet) goes back to the fan. */
+  onBack?: () => void;
 }) {
   const first = skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
   const [picked, setPicked] = useState(first);
@@ -324,9 +330,14 @@ export function MonsterSheet({
   // The extra icons sit at the right end of the first row of icons.
   const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
   return (
-    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && onClose()}>
+    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? onClose)()}>
       <GlyphDefs />
       <div className="msheet" role="dialog" aria-label={name}>
+        {onBack ? (
+          <button type="button" className="msheet-up" aria-label={tr("Trở về")} onClick={onBack}>
+            {"<<"}
+          </button>
+        ) : null}
         <button type="button" className="msheet-x" aria-label="Đóng" onClick={onClose}>
           ✕
         </button>
@@ -337,9 +348,22 @@ export function MonsterSheet({
           </div>
         ) : null}
         <div className="msheet-mid">
-          <div className="msheet-card">
+          <div
+            className={`msheet-card${onArt ? " is-fan" : ""}`}
+            role={onArt ? "button" : undefined}
+            tabIndex={onArt ? 0 : undefined}
+            aria-label={onArt ? tr("Lá liên quan") : undefined}
+            onClick={onArt}
+          >
             {card}
             {count ? <span className="msheet-count">{count}</span> : null}
+            {onArt ? (
+              <span className="msheet-fan" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            ) : null}
           </div>
           <div className="msheet-side">
             <h2 className="msheet-name">{tr(name)}</h2>

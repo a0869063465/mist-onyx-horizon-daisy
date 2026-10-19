@@ -119,7 +119,7 @@ import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matc
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ReactGlyph, type ReactMark } from "@/components/game/react-glyph";
-import { SpellSheet } from "@/components/game/card-sheets";
+import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
@@ -3342,15 +3342,23 @@ function PlayPage() {
   /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
   const formOf = (mon: FieldMon) =>
     mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
+  // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
   const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string) => (
-    <MonsterSheet
-      name={fieldName(mon)}
-      card={<SheetCard mon={mon} allies={allies} layout={fieldLayout} />}
-      count={sheetCount(mon, allies)}
-      skills={skillsOf(formOf(mon), monsterCard(formOf(mon))?.skill ?? "")}
-      actions={actions}
-      note={note}
+    <RelatedFlow
+      id={formOf(mon)}
       onClose={onClose}
+      sheet={(onArt) => (
+        <MonsterSheet
+          name={fieldName(mon)}
+          card={<SheetCard mon={mon} allies={allies} layout={fieldLayout} />}
+          count={sheetCount(mon, allies)}
+          skills={skillsOf(formOf(mon), monsterCard(formOf(mon))?.skill ?? "")}
+          actions={actions}
+          note={note}
+          onClose={onClose}
+          onArt={onArt}
+        />
+      )}
     />
   );
   const handMon = inspect?.pile === "reserve" && reserveHeld ? previewMon(duel, viewer, reserveHeld) : null;
