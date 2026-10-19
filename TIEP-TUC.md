@@ -1,6 +1,6 @@
 # Việc đang dở (đọc trước khi làm)
 
-Ghi lại cuối phiên ngày 18/10/2026. Nhánh làm việc: `claude/test-app-phf3et` (chưa gộp vào `main`).
+Ghi lại cuối phiên ngày 19/10/2026. Nhánh làm việc: `claude/test-app-phf3et` (chưa gộp vào `main`).
 Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi gộp vào `main`, và phải hỏi chủ game trước khi gộp.
 
 ## Quy tắc làm việc với chủ game
