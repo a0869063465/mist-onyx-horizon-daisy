@@ -65,6 +65,12 @@ const ROWS: Row[] = [
   { ids: ["sua-hut-ma-phap"], key: "spit", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "spit")} ${3 + ctx.stored}` },
   { ids: ["con-thinh-no-cua-hai-vuong"], key: "rage", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(1) },
   { ids: ["chien-binh-lan-khuat"], key: "hide", cast: "self", skill: 0, gate: (ctx) => ctx.afford(1) },
+  { ids: ["rong-dia-nguc"], key: "dark", cast: "self", skill: 0, gate: pay(1) },
+  { ids: ["hu-nhot-linh-hon"], key: "call", cast: "self", skill: 0, gate: pay(1) },
+  { ids: ["thanh-thuat-su"], key: "saint", cast: "self", skill: 0, gate: pay(1) },
+  { ids: ["binh-bien-hinh"], key: "shape", cast: "self", skill: 0 },
+  { ids: ["ky-si-canh-cut"], key: "swap", cast: "self", skill: 0, gate: pay(1) },
+  { ids: ["mat-na-bong-toi"], key: "curse", cast: "self", skill: 0, gate: pay(1) },
 ];
 
 export const FIELD_BIND_KEYS = ROWS.flatMap((row) => row.ids.map((id) => `${id}:${row.key}`));

@@ -67,6 +67,22 @@ import {
   harpyLash,
   answerPlume,
   answerPrey,
+  answerJar,
+  cancelJar,
+  answerSangan,
+  shapeChoices,
+  pickShape,
+  confirmShape,
+  cancelShape,
+  penguinChoices,
+  pickPenguin,
+  confirmPenguin,
+  cancelPenguin,
+  pickMask,
+  confirmMask,
+  cancelMask,
+  answerSaint,
+  cancelSaint,
   evolveBird,
   wallAlly,
   confirmSwap,
@@ -4137,6 +4153,66 @@ function PlayPage() {
             <p>Ta là Kẻ săn mồi tử thần, tiêu hao 1 mana, cùng ta tiêu diệt hắn?</p>
             <button type="button" onClick={() => apply(answerPrey(duel, true))}>Ok</button>
             <button type="button" onClick={() => apply(answerPrey(duel, false))}>{tr("Không")}</button>
+          </div>
+        ) : null}
+        {duel.jarAsk && duel.turn === viewer ? (
+          <div className="ask-card">
+            <p>Gọi hồn nào?</p>
+            {(duel.players[viewer].field.find((mon) => mon?.uid === duel.jarAsk?.uid)?.souls ?? []).map((id, index) => (
+              <button key={`${id}-${index}`} type="button" onClick={() => apply(answerJar(duel, index))}>{monsterCard(id)?.name ?? id}</button>
+            ))}
+            <button type="button" onClick={() => apply(cancelJar(duel))}>{tr("Không")}</button>
+          </div>
+        ) : null}
+        {duel.sanganAsk && duel.sanganAsk.side === viewer ? (
+          <div className="ask-card">
+            <p>Sangan chết. Chọn 1 quái công dưới 3.</p>
+            {duel.sanganAsk.picks.map((index) => {
+              const pile = duel.players[viewer].monsterDeck[index];
+              return (
+                <button key={index} type="button" onClick={() => apply(answerSangan(duel, index))}>{monsterCard(pile?.id ?? "")?.name ?? "Quái"}</button>
+              );
+            })}
+          </div>
+        ) : null}
+        {duel.shapeAsk && duel.shapeAsk.side === viewer ? (
+          <div className="ask-card">
+            <p>Biến thành quái nào?</p>
+            {shapeChoices(duel, duel.shapeAsk.uid).map((row) => (
+              <button key={row.key} type="button" onClick={() => apply(confirmShape(pickShape(duel, row.key)))}>{`${row.name} · ${row.stars}★ · ${row.cost} mana · ${row.where}`}</button>
+            ))}
+            <button type="button" onClick={() => apply(cancelShape(duel))}>{tr("Không")}</button>
+          </div>
+        ) : null}
+        {duel.penguinAsk && duel.penguinAsk.side === viewer ? (
+          <div className="ask-card">
+            <p>Đổi lá nào?</p>
+            {penguinChoices(duel, viewer).map((row) => (
+              <button key={row.key} type="button" onClick={() => apply(confirmPenguin(pickPenguin(duel, row.key)))}>{`${row.name} · ${row.where}`}</button>
+            ))}
+            <button type="button" onClick={() => apply(cancelPenguin(duel))}>{tr("Không")}</button>
+          </div>
+        ) : null}
+        {duel.maskAsk && duel.maskAsk.side === viewer ? (
+          <div className="ask-card">
+            <p>Đưa phép nào về tay?</p>
+            {duel.maskAsk.picks.map((index) => {
+              const id = duel.players[viewer].spent?.[index] ?? "";
+              return (
+                <button key={index} type="button" onClick={() => apply(confirmMask(pickMask(duel, String(index))))}>{spellCard(id)?.name ?? id}</button>
+              );
+            })}
+            <button type="button" onClick={() => apply(cancelMask(duel))}>{tr("Không")}</button>
+          </div>
+        ) : null}
+        {duel.saintAsk && duel.turn === viewer ? (
+          <div className="ask-card">
+            <p>Thánh thuật lên ai?</p>
+            {duel.players[viewer].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.cardId !== "mu")).map((mon) => (
+              <button key={mon.uid} type="button" onClick={() => apply(answerSaint(duel, mon.uid))}>{fieldName(mon)}</button>
+            ))}
+            <button type="button" onClick={() => apply(answerSaint(duel, null))}>Người chơi</button>
+            <button type="button" onClick={() => apply(cancelSaint(duel))}>{tr("Không")}</button>
           </div>
         ) : null}
         {cottonAsk === "hand" && cotton.hand ? (
