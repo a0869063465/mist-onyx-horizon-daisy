@@ -1,14 +1,10 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CardFace } from "@/components/game/card-face";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import {
   byPower,
-  DEFAULT_ROW,
-  loadRowLook,
-  rowStyle,
-  saveRowLook,
   cardName,
   DEFAULT_TIERS,
   freshRates,
@@ -227,102 +223,6 @@ export function PackCards({ onTap, onClose }: { onTap: (entry: PackEntry) => voi
           );
         })}
       </div>
-    </Panel>
-  );
-}
-
-/**
- * Chỉnh hàng lá (publisher, owner 19/10): how much the cards turn, sink and come near, seen on a small stage.
- * Tap a side card to set both sides (mirrored), tap the middle card to set the middle one.
- */
-export function RowTuner({ onClose }: { onClose: () => void }) {
-  const [look, setLook] = useState(() => loadRowLook());
-  const [part, setPart] = useState<"side" | "mid">("side");
-  const spot = look[part];
-  function update(next: typeof look) {
-    saveRowLook(next);
-    setLook(next);
-  }
-  function change(key: "lean" | "tilt" | "roll" | "sink" | "near" | "spread", value: number) {
-    update({ ...look, [part]: { ...spot, [key]: value } });
-  }
-  const foot = (
-    <>
-      <button type="button" className="shop-soft" onClick={() => update(DEFAULT_ROW)}>
-        {tr("Về mặc định")}
-      </button>
-      <button type="button" className="shop-main" onClick={onClose}>
-        OK
-      </button>
-    </>
-  );
-  const which = part === "side" ? tr("lá hai bên") : tr("lá giữa");
-  return (
-    <Panel title={tr("Chỉnh hàng lá")} onClose={onClose} foot={foot}>
-      <div className="po po-preview" style={rowStyle(look) as CSSProperties}>
-        <span className="po-floor" aria-hidden="true" />
-        <div className="po-row">
-          {[0, 1, 2].map((slot) => (
-            <span
-              key={slot}
-              className={`po-slot${(slot === 1) === (part === "mid") ? " is-picked" : ""}`}
-              onClick={() => {
-                playUi("select");
-                setPart(slot === 1 ? "mid" : "side");
-              }}
-            >
-              <span className="po-card">
-                <span className="po-card-inner">
-                  <span className="po-card-back">
-                    <img src="/ui/card-back.webp" alt="" draggable={false} />
-                  </span>
-                </span>
-              </span>
-            </span>
-          ))}
-        </div>
-      </div>
-      <p className="row-pick">{tr("Bấm lá để chọn lá cần chỉnh.")}</p>
-      <label className="row-tune">
-        <span>
-          {tr("Góc xoay")} {which}: {spot.lean}°
-        </span>
-        <input type="range" min={part === "side" ? 0 : -60} max={60} step={1} value={spot.lean} onChange={(event) => change("lean", Number(event.target.value))} />
-      </label>
-      <label className="row-tune">
-        <span>
-          {tr("Ngả trước / sau")} {which}: {spot.tilt}°
-        </span>
-        <input type="range" min={-60} max={60} step={1} value={spot.tilt} onChange={(event) => change("tilt", Number(event.target.value))} />
-      </label>
-      <label className="row-tune">
-        <span>
-          {tr("Xoay nghiêng trái / phải")} {which}: {spot.roll}°
-        </span>
-        <input type="range" min={-45} max={45} step={1} value={spot.roll} onChange={(event) => change("roll", Number(event.target.value))} />
-      </label>
-      <label className="row-tune">
-        <span>
-          {tr("Hạ thấp")} {which}: {spot.sink}px
-        </span>
-        <input type="range" min={-20} max={30} step={1} value={spot.sink} onChange={(event) => change("sink", Number(event.target.value))} />
-      </label>
-      <label className="row-tune">
-        <span>
-          {tr("Gần / xa màn hình")} ({which}): {spot.near > 0 ? "+" : ""}
-          {spot.near}px
-        </span>
-        <input type="range" min={-150} max={150} step={1} value={spot.near} onChange={(event) => change("near", Number(event.target.value))} />
-      </label>
-      {part === "side" ? (
-        <label className="row-tune">
-          <span>
-            {tr("Gần vào giữa / xa ra")}: {spot.spread > 0 ? "+" : ""}
-            {spot.spread}px
-          </span>
-          <input type="range" min={-60} max={60} step={1} value={spot.spread} onChange={(event) => change("spread", Number(event.target.value))} />
-        </label>
-      ) : null}
     </Panel>
   );
 }

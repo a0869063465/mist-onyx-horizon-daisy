@@ -27,8 +27,8 @@ export const BUNDLE_PRICE = 150;
 /** Highest first. */
 export const TIERS: Tier[] = ["UR", "SR", "N"];
 export const TIER_NAME: Record<Tier, string> = { N: "Normal", SR: "SR", UR: "UR" };
-/** Each card drawn: UR 1%, SR 7%, Normal the rest (owner, 19/10: keep these, he types new ones in). */
-export const DEFAULT_TIERS: Record<Tier, number> = { UR: 1, SR: 7, N: 92 };
+/** Each card drawn: UR 2,1%, SR 11,3%, Normal the rest (owner's numbers, 19/10). */
+export const DEFAULT_TIERS: Record<Tier, number> = { UR: 2.1, SR: 11.3, N: 86.6 };
 
 export const PACK = {
   id: "goi-chung",
@@ -188,7 +188,6 @@ export function clearOwned() {
 
 // ---- The look of the opened row, tuned by the publisher (owner, 19/10: "make it custom, I'll set it myself") ----
 
-const ROW_KEY = "clash-pack-row";
 /**
  * One card place: its turn about the up-down axis (degrees; for the sides, toward the middle), its tilt about the
  * card's left-right axis (degrees, above 0 = top leans back), its roll about the axis out of the screen (degrees;
@@ -198,29 +197,11 @@ const ROW_KEY = "clash-pack-row";
  */
 export type CardSpot = { lean: number; tilt: number; roll: number; sink: number; near: number; spread: number };
 export type RowLook = { side: CardSpot; mid: CardSpot };
-/** The owner's own numbers (19/10, set in Chỉnh hàng lá on his phone). */
-export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 2, roll: -3, sink: -5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 0, roll: 0, sink: 0, near: 0, spread: 0 } };
-
-function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
-  const row = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof CardSpot, unknown>>;
-  const pick = (key: keyof CardSpot) => {
-    const value = Number(row[key]);
-    return Number.isFinite(value) ? value : fallback[key];
-  };
-  return { lean: pick("lean"), tilt: pick("tilt"), roll: pick("roll"), sink: pick("sink"), near: pick("near"), spread: pick("spread") };
-}
-
-export function loadRowLook(): RowLook {
-  const raw = read<Record<string, unknown> | null>(ROW_KEY, null);
-  if (!raw) return DEFAULT_ROW;
-  // Saved before the middle card could be set: the numbers were the sides'.
-  const side = "side" in raw ? raw.side : raw;
-  return { side: spotOf(side, DEFAULT_ROW.side), mid: spotOf(raw.mid, DEFAULT_ROW.mid) };
-}
-
-export function saveRowLook(look: RowLook) {
-  write(ROW_KEY, look);
-}
+/**
+ * The owner's own numbers (19/10, set on his phone with the Chỉnh hàng lá sliders, which were then taken out: "remember
+ * these for later": 3 turns about X, Y, Z and 3 moves along X, Y, Z per card place).
+ */
+export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 2, roll: -3, sink: -5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 5, roll: 0, sink: -9, near: -16, spread: 0 } };
 
 /** The CSS variables the row reads. */
 export function rowStyle(look: RowLook): Record<string, string> {

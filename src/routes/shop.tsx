@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { GlyphDefs } from "@/components/game/monster-sheet";
 import { PackOpening } from "@/components/shop/pack-opening";
-import { PackCards, RatePanel, RowTuner } from "@/components/shop/shop-panels";
+import { PackCards, RatePanel } from "@/components/shop/shop-panels";
 import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
@@ -26,7 +26,7 @@ function ShopPage() {
   const stars = useStars();
   const [booted, setBooted] = useState(false);
   const [view, setView] = useState<"list" | "pack">("list");
-  const [panel, setPanel] = useState<"rates" | "cards" | "row" | null>(null);
+  const [panel, setPanel] = useState<"rates" | "cards" | null>(null);
   const [asking, setAsking] = useState<1 | 10 | null>(null);
   const [opening, setOpening] = useState<Purchase | null>(null);
   const [sheet, setSheet] = useState<PackEntry | null>(null);
@@ -169,21 +169,11 @@ function ShopPage() {
         >
           {tr("Xoá lá đã có")}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            playUi("select");
-            setPanel("row");
-          }}
-        >
-          {tr("Chỉnh hàng lá")}
-        </button>
       </footer>
 
       {notice ? <p className="shop-notice">{notice}</p> : null}
       {asking ? <ConfirmBuy count={asking} stars={stars} onCancel={() => setAsking(null)} onBuy={() => buy(asking)} /> : null}
       {panel === "rates" ? <RatePanel editable onClose={() => setPanel(null)} /> : null}
-      {panel === "row" ? <RowTuner onClose={() => setPanel(null)} /> : null}
       {panel === "cards" ? <PackCards onTap={setSheet} onClose={() => setPanel(null)} /> : null}
       {sheet ? (
         sheet.kind === "monster" ? <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} /> : <SpellSheet id={sheet.id} onClose={() => setSheet(null)} />

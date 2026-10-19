@@ -3,7 +3,7 @@ import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { artSrc, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { playPack, playUi, type PackCue } from "@/lib/sfx";
-import { loadRowLook, PACK, rowStyle, tierRank, type OpenedPack, type Pull, type Purchase, type Tier } from "@/lib/shop";
+import { DEFAULT_ROW, PACK, rowStyle, tierRank, type OpenedPack, type Pull, type Purchase, type Tier } from "@/lib/shop";
 
 /**
  * Opening packs (owner's reference video, 19/10; the look is rebuilt here, nothing is taken from the video).
@@ -72,7 +72,7 @@ export function PackOpening({ purchase, onDone }: { purchase: Purchase; onDone: 
   }
 
   return (
-    <div className="po" role="dialog" aria-label={tr("Mở gói")} style={rowStyle(loadRowLook()) as CSSProperties}>
+    <div className="po" role="dialog" aria-label={tr("Mở gói")} style={rowStyle(DEFAULT_ROW) as CSSProperties}>
       {phase === "overview" ? (
         <Overview
           packs={purchase.packs}

@@ -594,10 +594,11 @@ export const PENDING_NOTES: string[] = [
   "Lá liên quan: lá có dạng tiến hoá hoặc dung hợp có biểu tượng chồng lá ở góc hình. Bấm hình lá trong bảng mô tả để mở cuộn 3D cả nhóm, kéo qua lại để xem, bấm lá bên cạnh để đưa vào giữa, bấm lá giữa để xem mô tả lá đó, bấm << để về cuộn 3D, bấm ra ngoài để về mô tả lá ban đầu. Có ở Chỉnh sửa bộ bài, Cửa hàng và trong trận.",
   "Cuộn 3D: sửa lỗi bấm ra ngoài hoặc bấm lá đôi khi không ăn, phải bấm 2-3 lần.",
   "Mở gói: hai lá hai bên xoay vào giữa như cuộn 3D, lá giữa giữ nguyên, viền dưới lá theo đường cong sàn, không còn bị méo như hình bình hành.",
-  "Cửa hàng, công cụ nhà phát hành: thêm Chỉnh hàng lá, kéo thanh để chỉnh góc xoay, độ ngả trước sau, độ xoay nghiêng trái phải, độ hạ thấp, độ gần xa màn hình của lá và khoảng cách hai lá bên với lá giữa khi mở gói, có hình xem trước. Bấm lá bên để chỉnh hai lá hai bên, bấm lá giữa để chỉnh lá giữa.",
   "Cài game như app: mở game trên Chrome, bấm menu ⋮ rồi Cài đặt ứng dụng (hoặc Thêm vào màn hình chính). Lần mở đầu game tải sẵn mọi hình, tiếng, nhạc về máy (khoảng 80 MB), từ đó mở và chơi Vs Máy, Test, Chỉnh sửa bộ bài, Cửa hàng không cần mạng. Đánh thường và Lấy mã vẫn cần mạng. Có bản mới thì game tự tải phần thay đổi, mở lại là dùng bản mới.",
-  "Mở gói: lá đã có (rút trùng) hơi mờ khi lật và ở bảng kết quả.",
+  "Mở gói: lá đã có (rút trùng) mờ cả lá, kể cả nhãn N, SR, UR, khi lật và ở bảng kết quả.",
   "Tỉ lệ gói nhập được số lẻ một chữ số, ví dụ UR 1,6% hay SR 8,6%, gõ dấu phẩy hay dấu chấm đều được.",
+  "Mở gói: 3 lá đứng theo góc chủ game chọn, lá giữa hơi ngả ra sau và lùi vào, hai lá bên xoay vào giữa theo đường cong sàn.",
+  "Tỉ lệ mặc định của Gói chung: mỗi lá rút ra UR 2,1%, SR 11,3%, Normal 86,6%.",
 ];
 
 function remarkOf(notes: string[]) {
