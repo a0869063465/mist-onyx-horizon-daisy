@@ -51,6 +51,11 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
   - Sao Đánh thường: bảo hiểm sau 2 trận thua (không cần liên tiếp), bảo hiểm xong đếm lại. Hết sao: mỗi ngày 1 lần được bảo hiểm 5 trận không nhận/mất sao dù thắng hay thua; thắng từ 3/5 trận thì được thêm 2 sao. Đầu hàng ván thứ 3 liên tiếp với cùng đối thủ: hiện cảnh báo phát hiện gian lận; OK để đánh tiếp thì không sao; chưa đủ điều kiện (tổng lượt RIÊNG của mình qua 3 ván dưới 10) mà bấm đầu hàng lần nữa thì không cảnh báo, trừ thẳng 2 sao cả hai người. Sao thắng thua 3 ván đó giữ nguyên. Thua Vs Máy không mất sao.
   - Bộ sưu tập: chỉ quái, nhóm theo tiểu sử quái (chủ game tự chia), sao mỗi nhóm tuỳ nhóm (nhiều lá, nhiều UR/SR thì nhiều sao). Lá đang bị xích cũng tính là sở hữu.
   - Tài khoản / lưu sao trên máy chủ: tạm để đó, chưa làm.
+- Câu trả lời của chủ game (19/10, phiên 2, lượt 3). CHƯA LÀM: chủ game sẽ gửi video tham khảo rồi mới làm Sao / Cửa hàng / Giám định / Bộ sưu tập. Không tự làm trước.
+  - Gói: mỗi lá rút theo tỉ lệ. Cần khung chỉnh tỉ lệ từng lá trong chế độ nhà phát hành, vừa thử vừa chỉnh.
+  - Bộ bài cơ bản: chủ game sẽ xây sau. Quái 5 sao không có trong gói; lá môi trường có. Nhà phát hành mở sẵn mọi lá.
+  - Sát hạch: mỗi lá 2–3 câu, chủ game viết hoặc Claude viết rồi chủ game duyệt; làm thử 1–2 quái trước. Thực chiến: Claude đề xuất tình huống, chủ game duyệt, nhưng phải xây xong Cửa hàng để thử trước.
+  - Chưa trả lời: (a) 0 sao, đã dùng hết bảo hiểm 5 trận trong ngày, thua tiếp thì giữ 0 (không âm)? (b) tạm lưu sao trên điện thoại, chống gian lận bật khi có tài khoản? Hỏi lại lúc bắt đầu làm.
 
 ## Đã xong (18/10): đợt chỉnh Chỉnh sửa bộ bài, Cửa hàng ở menu, danh sách Hướng dẫn
 
