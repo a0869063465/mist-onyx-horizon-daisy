@@ -524,6 +524,7 @@ const PAIRS: Array<[string, string]> = [
   ["Lá mới nhận", "New cards"],
   ["Lá trùng hoàn", "Duplicates refunded"],
   ["Lá liên quan", "Related cards"],
+  ["Đã nhận 300 sao.", "You got 300 stars."],
   ["Chỉnh hàng lá", "Card row look"],
   ["Góc xoay", "Turn of"],
   ["Hạ thấp", "Lower"],

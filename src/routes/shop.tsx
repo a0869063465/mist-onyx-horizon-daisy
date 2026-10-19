@@ -7,7 +7,18 @@ import { PackCards, RatePanel } from "@/components/shop/shop-panels";
 import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
-import { addStars, BUNDLE_PRICE, BUNDLE_SIZE, buyPacks, clearOwned, PACK, PACK_PRICE, useStars, type PackEntry, type Purchase } from "@/lib/shop";
+import {
+  addStars,
+  BUNDLE_PRICE,
+  BUNDLE_SIZE,
+  buyPacks,
+  clearOwned,
+  PACK,
+  PACK_PRICE,
+  useStars,
+  type PackEntry,
+  type Purchase,
+} from "@/lib/shop";
 
 export const Route = createFileRoute("/shop")({ component: ShopPage });
 
@@ -17,8 +28,8 @@ const TEST_STARS = BUNDLE_PRICE;
 /**
  * Cửa hàng (owner's reference video, 19/10): the packs on sale; a pack's page with its art, Tỉ lệ, Lá trong gói
  * and the buy buttons (1 pack, or 10 with a UR for sure); buying asks first, then the packs are opened.
- * Only the publisher can come in for now (owner, 19/10: guests get it once stars can be earned), with test tools
- * to add stars and to forget the cards drawn.
+ * Open to guests too (owner, 19/10); the publisher also gets test tools (add stars, forget the cards drawn) and sets
+ * the odds.
  */
 function ShopPage() {
   useLang();
@@ -40,19 +51,6 @@ function ShopPage() {
   }, [notice]);
 
   if (!booted) return <main className="shop" />;
-  if (mode !== "publisher") {
-    return (
-      <main className="shop is-shut">
-        <header className="shop-head">
-          <Link to="/" className="shop-back" aria-label={tr("Trở về")}>
-            {"<<"}
-          </Link>
-          <h1>{tr("Cửa hàng")}</h1>
-        </header>
-        <p className="shop-shut">{tr("Cửa hàng chưa mở.")}</p>
-      </main>
-    );
-  }
 
   function buy(count: 1 | 10) {
     const done = buyPacks(count);
@@ -70,7 +68,12 @@ function ShopPage() {
       <GlyphDefs />
       <header className="shop-head">
         {view === "pack" ? (
-          <button type="button" className="shop-back" aria-label={tr("Trở về")} onClick={() => setView("list")}>
+          <button
+            type="button"
+            className="shop-back"
+            aria-label={tr("Trở về")}
+            onClick={() => setView("list")}
+          >
             {"<<"}
           </button>
         ) : (
@@ -147,36 +150,51 @@ function ShopPage() {
         )}
       </div>
 
-      <footer className="shop-tools">
-        <span>{tr("Công cụ nhà phát hành")}</span>
-        <button
-          type="button"
-          onClick={() => {
-            playUi("select");
-            addStars(TEST_STARS);
-            setNotice(`+${TEST_STARS}★`);
-          }}
-        >
-          +{TEST_STARS} {tr("sao")}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            playUi("select");
-            clearOwned();
-            setNotice(tr("Đã xoá lá đã có."));
-          }}
-        >
-          {tr("Xoá lá đã có")}
-        </button>
-      </footer>
+      {mode === "publisher" ? (
+        <footer className="shop-tools">
+          <span>{tr("Công cụ nhà phát hành")}</span>
+          <button
+            type="button"
+            onClick={() => {
+              playUi("select");
+              addStars(TEST_STARS);
+              setNotice(`+${TEST_STARS}★`);
+            }}
+          >
+            +{TEST_STARS} {tr("sao")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              playUi("select");
+              clearOwned();
+              setNotice(tr("Đã xoá lá đã có."));
+            }}
+          >
+            {tr("Xoá lá đã có")}
+          </button>
+        </footer>
+      ) : null}
 
       {notice ? <p className="shop-notice">{notice}</p> : null}
-      {asking ? <ConfirmBuy count={asking} stars={stars} onCancel={() => setAsking(null)} onBuy={() => buy(asking)} /> : null}
-      {panel === "rates" ? <RatePanel editable onClose={() => setPanel(null)} /> : null}
+      {asking ? (
+        <ConfirmBuy
+          count={asking}
+          stars={stars}
+          onCancel={() => setAsking(null)}
+          onBuy={() => buy(asking)}
+        />
+      ) : null}
+      {panel === "rates" ? (
+        <RatePanel editable={mode === "publisher"} onClose={() => setPanel(null)} />
+      ) : null}
       {panel === "cards" ? <PackCards onTap={setSheet} onClose={() => setPanel(null)} /> : null}
       {sheet ? (
-        sheet.kind === "monster" ? <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} /> : <SpellSheet id={sheet.id} onClose={() => setSheet(null)} />
+        sheet.kind === "monster" ? (
+          <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} />
+        ) : (
+          <SpellSheet id={sheet.id} onClose={() => setSheet(null)} />
+        )
       ) : null}
       {opening ? <PackOpening purchase={opening} onDone={() => setOpening(null)} /> : null}
     </main>
@@ -184,11 +202,24 @@ function ShopPage() {
 }
 
 /** Xác nhận mua: what it costs and the stars before and after. */
-function ConfirmBuy({ count, stars, onCancel, onBuy }: { count: 1 | 10; stars: number; onCancel: () => void; onBuy: () => void }) {
+function ConfirmBuy({
+  count,
+  stars,
+  onCancel,
+  onBuy,
+}: {
+  count: 1 | 10;
+  stars: number;
+  onCancel: () => void;
+  onBuy: () => void;
+}) {
   const price = count === BUNDLE_SIZE ? BUNDLE_PRICE : PACK_PRICE;
   const short = stars < price;
   return (
-    <div className="shop-modal-back" onClick={(event) => event.target === event.currentTarget && onCancel()}>
+    <div
+      className="shop-modal-back"
+      onClick={(event) => event.target === event.currentTarget && onCancel()}
+    >
       <section className="shop-modal" role="dialog" aria-label={tr("Xác nhận mua")}>
         <h3>{tr("Xác nhận mua")}</h3>
         <p>

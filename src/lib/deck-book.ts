@@ -1,5 +1,6 @@
 import { raiseDefaultDeck, type BeastDeck } from "./deck.ts";
 import { DEFAULT_DECK, monsterCard, spellCard } from "./catalog.ts";
+import { canUseCard } from "./owned-cards.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
 const KEY = "clash-deck-book";
@@ -46,8 +47,9 @@ function entry(raw: unknown, used: Set<number>): DeckEntry | null {
   const kept: DeckEntry = {
     n,
     name: typeof row.name === "string" ? row.name.slice(0, 40) : `Bộ ${n}`,
-    monsters: ids(row.monsters, (id) => Boolean(monsterCard(id))),
-    spells: ids(row.spells, (id) => Boolean(spellCard(id))),
+    // A guest's saved deck drops the cards not owned (owner, 19/10).
+    monsters: ids(row.monsters, (id) => Boolean(monsterCard(id)) && canUseCard(id)),
+    spells: ids(row.spells, (id) => Boolean(spellCard(id)) && canUseCard(id)),
   };
   if (row.fav === true) kept.fav = true;
   if (typeof row.at === "number" && Number.isFinite(row.at)) kept.at = row.at;

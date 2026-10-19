@@ -74,6 +74,12 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Âm: `playPack` trong sfx.ts, tự tổng hợp (sét, sét đỏ, loé, bóc, tia N/SR/UR, chia lá, lật, lật SR, lật UR), theo âm lượng Hiệu ứng trận.
 - Ảnh gói / mặt sau làm bằng `scripts/art/pack.py` và `scripts/art/card-back.py` (đối số: đường dẫn logo gốc nền trong suốt, file ra, bậc N/SR/UR cho mặt sau). Logo gốc chủ game gửi 1254×1254; trong repo chỉ có bản thu nhỏ `public/ui/logo.webp`.
 
+## Đã xong (19/10): Cửa hàng mở cho khách, lá theo sở hữu, mã S300
+
+- Chủ game chốt: Cửa hàng mở cho mọi người (ô menu không còn khoá). Khách không thấy công cụ nhà phát hành (+150 sao, Xoá lá đã có) và khung Tỉ lệ chỉ xem.
+- Lá dùng được: `canUseCard` (src/lib/owned-cards.ts) = nhà phát hành dùng mọi lá; khách dùng lá của `DEFAULT_DECK` + lá trong `clash-owned` (mở gói ra là dùng được ngay, Giám định làm sau). Chỉnh sửa bộ bài: lá chưa có hiện khoá (cả phép), không kéo vào bộ được (tính sau lần render đầu để khớp trang máy chủ). Bộ đã lưu: `deck-book` `entry()` và `deck.ts` `clean()` bỏ lá chưa có, bộ thiếu lá thì hiện dấu !. LƯU Ý: nhà phát hành chuyển sang KHACH rồi mở trang bộ bài thì các bộ của mình cũng bị bỏ lá chưa có.
+- Mã S300 (Thông tin → Nhập mã): +300 sao, nhập bao nhiêu lần cũng được (để thử), không đổi chế độ.
+
 ## Đã xong (19/10): cài game như app, chạy không cần mạng (PWA)
 
 - Chủ game hỏi: tải app về 1 lần kèm file như app Google Play, chưa đụng tới Google Play. Đã làm PWA.

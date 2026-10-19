@@ -7,7 +7,8 @@ import { DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "@/l
 import { clearHabits, loadHabits, watchLines } from "@/lib/habits";
 import { diagnoseHistory, exportStoredHistory, matchHistoryProblem, type HistoryDiag, type HistoryPack } from "@/lib/match-history";
 import { loadStrategies, saveStrategies, sortCards, sortStrategies, type Strategy } from "@/lib/strategies";
-import { redeemCode, useAppMode } from "@/lib/app-mode";
+import { plainCode, redeemCode, useAppMode } from "@/lib/app-mode";
+import { addStars } from "@/lib/shop";
 import { tr, useLang } from "@/lib/i18n";
 import { UPDATE_RELEASES } from "@/lib/updates";
 
@@ -653,6 +654,13 @@ function CodeEntry({ onBack }: { onBack: () => void }) {
   const [text, setText] = useState("");
   const [note, setNote] = useState("");
   function submit() {
+    // S300: 300 stars, as many times as wanted while testing (owner, 19/10).
+    if (plainCode(text) === "S300") {
+      addStars(300);
+      setText("");
+      setNote("Đã nhận 300 sao.");
+      return;
+    }
     const mode = redeemCode(text);
     if (!mode) {
       setNote("Mã không đúng.");

@@ -5,6 +5,7 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
+import { canUseCard } from "@/lib/owned-cards";
 import { deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
@@ -83,6 +84,7 @@ function DeckPage() {
   useEffect(() => () => window.clearTimeout(savedTimer.current), []);
 
   function addCard(pick: Pick) {
+    if (!canUseCard(pick.id)) return;
     setDeck((current) => {
       const total = current.monsters.length + current.spells.length;
       if (total >= DECK_SIZE) return current;
@@ -193,7 +195,9 @@ function DeckPage() {
   const short = Math.max(0, DECK_SIZE - total);
   const canSave = short === 0 && !issue;
   const inDeck = new Set([...deck.monsters, ...deck.spells]);
-  const locked = new Set(FORMS.map((card) => card.id));
+  // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
+  // Read on this phone after the first render, so the page the server sent matches.
+  const locked = new Set([...FORMS.map((card) => card.id), ...(booted ? [...MONSTERS, ...SPELLS].map((card) => card.id).filter((id) => !canUseCard(id)) : [])]);
   const entry = book.find((row) => row.n === active) ?? null;
   const deckName = entry?.name ?? tr("Bộ bài");
 
@@ -307,12 +311,17 @@ function DeckPage() {
               key={card.id}
               role="button"
               tabIndex={0}
-              className={`dk-card is-spell${inDeck.has(card.id) ? " is-in" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
-              onPointerDown={(event) => press(event, { id: card.id, kind: "spell" }, "pool", !inDeck.has(card.id))}
+              className={`dk-card is-spell${inDeck.has(card.id) ? " is-in" : ""}${locked.has(card.id) ? " is-locked" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
+              onPointerDown={(event) => press(event, { id: card.id, kind: "spell" }, "pool", !inDeck.has(card.id) && !locked.has(card.id))}
               onClick={() => tap({ id: card.id, kind: "spell" })}
               onContextMenu={(event) => event.preventDefault()}
             >
               <CardFace spellId={card.id} hideName mark={markFace(card.id)} />
+              {locked.has(card.id) ? (
+                <span className="dk-lock" aria-hidden="true">
+                  <LockIcon />
+                </span>
+              ) : null}
             </div>
           ))}
         </div>

@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { listNotes, sendNote, type Note } from "@/lib/notes";
 import { playUi } from "@/lib/sfx";
@@ -27,7 +26,6 @@ function Home() {
   const [inbox, setInbox] = useState<Note[] | null>(null);
   const held = useRef(false);
   const timer = useRef(0);
-  const mode = useAppMode();
   useLang();
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
@@ -220,23 +218,11 @@ function Home() {
             </svg>
             <span>{tr("Chơi")}</span>
           </Link>
-          {/* Where the deck builder button was (owner, 18/10). Open to the publisher only for now (owner, 19/10:
-              guests get it once stars can be earned). */}
-          {mode === "publisher" ? (
-            <Link to="/shop" className="home-btn" data-sfx onPointerDown={() => playUi("select")}>
-              <ShopIcon />
-              <span>{tr("Cửa hàng")}</span>
-            </Link>
-          ) : (
-            <div className="home-btn is-shut" aria-disabled="true">
-              <ShopIcon />
-              <span>{tr("Cửa hàng")}</span>
-              <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="5" y="11" width="14" height="9.5" rx="2" />
-                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-              </svg>
-            </div>
-          )}
+          {/* Where the deck builder button was (owner, 18/10). Open to everyone (owner, 19/10). */}
+          <Link to="/shop" className="home-btn" data-sfx onPointerDown={() => playUi("select")}>
+            <ShopIcon />
+            <span>{tr("Cửa hàng")}</span>
+          </Link>
           {/* Bộ sưu tập under the shop (owner, 19/10). Not open yet either. */}
           <div className="home-btn is-shut" aria-disabled="true">
             <svg viewBox="0 0 24 24" aria-hidden="true">

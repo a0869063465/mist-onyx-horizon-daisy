@@ -1,4 +1,5 @@
 import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard } from "./catalog.ts";
+import { canUseCard } from "./owned-cards.ts";
 
 const KEY = "clash-beasts-deck";
 const BOOK_KEY = "clash-deck-book";
@@ -33,8 +34,8 @@ export function deckBalance(deck: BeastDeck): { monster: DeckSide; spell: DeckSi
 
 function clean(deck: Partial<BeastDeck> | undefined): BeastDeck {
   return {
-    monsters: (deck?.monsters ?? []).filter(playableMonster),
-    spells: (deck?.spells ?? []).filter((id) => spellCard(id)),
+    monsters: (deck?.monsters ?? []).filter((id) => playableMonster(id) && canUseCard(id)),
+    spells: (deck?.spells ?? []).filter((id) => Boolean(spellCard(id)) && canUseCard(id)),
   };
 }
 
