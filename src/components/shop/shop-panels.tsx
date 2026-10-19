@@ -265,6 +265,13 @@ export function RowTuner({ onClose }: { onClose: () => void }) {
         </span>
         <input type="range" min={-20} max={30} step={1} value={look.sink} onChange={(event) => update({ ...look, sink: Number(event.target.value) })} />
       </label>
+      <label className="row-tune">
+        <span>
+          {tr("Gần / xa màn hình")}: {look.near > 0 ? "+" : ""}
+          {look.near}px
+        </span>
+        <input type="range" min={-150} max={150} step={1} value={look.near} onChange={(event) => update({ ...look, near: Number(event.target.value) })} />
+      </label>
     </Panel>
   );
 }

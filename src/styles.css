@@ -8578,8 +8578,8 @@ button.watch-back {
 }
 /* The two side cards turn a little toward the middle (about the up-down axis), with the curve of the floor under
    them (owner, 19/10: turned on Y, not tilted on Z). */
-.po-slot:first-child:not(:only-child) { --lean: var(--side-lean, 24deg); --sink: var(--side-sink, 5px); }
-.po-slot:last-child:not(:only-child) { --lean: calc(var(--side-lean, 24deg) * -1); --sink: var(--side-sink, 5px); }
+.po-slot:first-child:not(:only-child) { --lean: var(--side-lean, 24deg); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); }
+.po-slot:last-child:not(:only-child) { --lean: calc(var(--side-lean, 24deg) * -1); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); }
 .po-card {
   position: relative;
   display: block;
@@ -8741,7 +8741,7 @@ button.watch-back {
 @keyframes po-flare { 0% { opacity: 1; transform: scale(0.2); } 100% { opacity: 0; transform: scale(2.2); } }
 @keyframes po-fly { from { opacity: 1; transform: translate(0, 0) rotate(45deg); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(220deg); } }
 @keyframes po-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes po-deal { from { opacity: 0; transform: translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: translateY(var(--sink, 0)) rotateY(var(--lean, 0deg)); } }
+@keyframes po-deal { from { opacity: 0; transform: translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)); } }
 @keyframes po-sheen { from { background-position: 130% 0; } to { background-position: -130% 0; } }
 @keyframes po-pop { 0% { transform: none; } 28% { transform: translateY(-8%) scale(1.32); } 72% { transform: translateY(-8%) scale(1.32); } 100% { transform: none; } }
 @keyframes po-spark-out { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(calc(var(--x) * var(--k, 1)), calc(var(--y) * var(--k, 1))) scale(0.3); } }
@@ -8839,6 +8839,6 @@ button.watch-back {
 .po.po-preview { position: relative; inset: auto; z-index: auto; height: 15rem; margin: 0.4rem 0 0.8rem; border-radius: 0.5rem; --floor: 78%; }
 /* The same floor curve as the full stage (it follows the screen, not the small box), so what is set here matches. */
 .po-preview .po-floor { left: calc(50% - 70vw); right: calc(50% - 70vw); height: 26vh; }
-.po-preview .po-slot { animation: none; transform: translateY(var(--sink, 0)) rotateY(var(--lean, 0deg)); }
+.po-preview .po-slot { animation: none; transform: translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)); }
 .row-tune { display: grid; gap: 0.3rem; margin-bottom: 0.7rem; font-family: var(--shop-cond); font-size: 1.05rem; font-weight: 800; }
 .row-tune input { width: 100%; accent-color: #e4ff5a; }
