@@ -101,9 +101,9 @@ export function freshRates(): Rates {
   return { tiers: { ...DEFAULT_TIERS }, moved: {} };
 }
 
-/** A percent as typed: 0 to 100, at most two decimals. */
+/** A percent as typed: 0 to 100, one decimal (owner, 19/10: 1,6% or 8,6%). */
 export function clampPercent(value: number): number {
-  return Math.max(0, Math.min(100, Math.round(value * 100) / 100));
+  return Math.max(0, Math.min(100, Math.round(value * 10) / 10));
 }
 
 /** UR and SR are typed; Normal is what is left of 100%. */

@@ -109,19 +109,7 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
           <label key={tier} className={`rate-tierline is-${tier}`}>
             <b className={`po-tag is-${tier}`}>{tier}</b>
             {editable && tier !== "N" ? (
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                max={100}
-                step={0.1}
-                value={rates.tiers[tier]}
-                aria-label={`${tier} %`}
-                onChange={(event) => {
-                  const value = Number(event.target.value);
-                  if (event.target.value !== "" && Number.isFinite(value)) update(withTier(rates, tier, value));
-                }}
-              />
+              <PercentInput label={`${tier} %`} value={rates.tiers[tier]} onValue={(value) => update(withTier(rates, tier, value))} />
             ) : (
               <span className="rate-tierval">{String(rates.tiers[tier]).replace(".", ",")}</span>
             )}
@@ -186,6 +174,31 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
         );
       })}
     </Panel>
+  );
+}
+
+/**
+ * A percent box that takes a comma or a dot (Vietnamese keyboards type 1,6), with one decimal. What is typed stays as
+ * typed until it is a number; leaving the box shows the number kept.
+ */
+function PercentInput({ label, value, onValue }: { label: string; value: number; onValue: (value: number) => void }) {
+  const shown = String(value).replace(".", ",");
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={draft ?? shown}
+      aria-label={label}
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => {
+        const text = event.target.value.replace(/[^0-9.,]/g, "");
+        setDraft(text);
+        const number = Number(text.replace(",", "."));
+        if (text !== "" && Number.isFinite(number)) onValue(number);
+      }}
+      onBlur={() => setDraft(null)}
+    />
   );
 }
 

@@ -596,6 +596,8 @@ export const PENDING_NOTES: string[] = [
   "Mở gói: hai lá hai bên xoay vào giữa như cuộn 3D, lá giữa giữ nguyên, viền dưới lá theo đường cong sàn, không còn bị méo như hình bình hành.",
   "Cửa hàng, công cụ nhà phát hành: thêm Chỉnh hàng lá, kéo thanh để chỉnh góc xoay, độ ngả trước sau, độ xoay nghiêng trái phải, độ hạ thấp, độ gần xa màn hình của lá và khoảng cách hai lá bên với lá giữa khi mở gói, có hình xem trước. Bấm lá bên để chỉnh hai lá hai bên, bấm lá giữa để chỉnh lá giữa.",
   "Cài game như app: mở game trên Chrome, bấm menu ⋮ rồi Cài đặt ứng dụng (hoặc Thêm vào màn hình chính). Lần mở đầu game tải sẵn mọi hình, tiếng, nhạc về máy (khoảng 80 MB), từ đó mở và chơi Vs Máy, Test, Chỉnh sửa bộ bài, Cửa hàng không cần mạng. Đánh thường và Lấy mã vẫn cần mạng. Có bản mới thì game tự tải phần thay đổi, mở lại là dùng bản mới.",
+  "Mở gói: lá đã có (rút trùng) hơi mờ khi lật và ở bảng kết quả.",
+  "Tỉ lệ gói nhập được số lẻ một chữ số, ví dụ UR 1,6% hay SR 8,6%, gõ dấu phẩy hay dấu chấm đều được.",
 ];
 
 function remarkOf(notes: string[]) {

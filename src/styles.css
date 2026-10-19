@@ -8848,3 +8848,5 @@ button.watch-back {
 .row-pick { margin: 0 0 0.5rem; font-size: 0.85rem; color: #b9c7ec; text-align: center; }
 /* The preview stays in sight while the lower sliders are scrolled to. */
 .shop-panel-body .po.po-preview { position: sticky; top: -0.7rem; z-index: 2; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6); }
+/* A card already owned (drawn again): slightly faded once turned, and on the results (owner, 19/10). */
+.po-card.is-owned.is-flipped .po-card-front, .po-res.is-owned .po-face { opacity: 0.55; filter: saturate(0.6); }
