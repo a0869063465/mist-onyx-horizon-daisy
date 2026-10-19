@@ -67,11 +67,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 2,
     "hp": 7,
-    "text": "9126cf65",
+    "text": "33c529d4",
     "added": null,
     "powerAt": "2026-10-16",
     "powerTone": "down",
-    "shiftAt": "2026-10-14"
+    "shiftAt": "2026-10-19"
   },
   "dau-si-bo-tot": {
     "kind": "monster",
@@ -1217,6 +1217,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "hp": 0,
     "text": "cb0c938e",
     "added": "2026-10-18",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "nui-dung-nham": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 0,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "a5ccde83",
+    "added": "2026-10-19",
     "powerAt": null,
     "powerTone": null,
     "shiftAt": null

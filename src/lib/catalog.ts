@@ -1023,7 +1023,15 @@ export const SPELLS: SpellCard[] = [
     "effect": "- Đối thủ không thể tấn công quái thú thiên sứ, và các thuật sư của ta, trước khi tấn công toàn bộ quái thú khác trên sân, hoặc các chiến binh thiên sứ khác.\n- Khi quái thú chiến binh thiên sứ của ta tấn công vào người chơi và quái thú đối phương, hồi 1 máu cho người chơi.",
     "env": true,
     "since": "2026-10-18"
+  },  {
+    "id": "nui-dung-nham",
+    "name": "Núi dung nham",
+    "gems": 0,
+    "effect": "Bắt đầu từ lượt thứ 2, mỗi khi bắt đầu lượt đấu, dựa sao số sao của ngươi. gây ngẫu nhiên bấy nhiêu sát thương phép lên các mục tiêu ngẫu nhiẻn (kể cả người chơi) trên sân đấu (có thể trùng)\n- quái thú hệ lửa nhận sát thương sẽ nhận được 1 cộng dồn: +1 công và +1 sát thương phép cho đòn tấn công kế tiếp (có thể để qua nhiều lượt) \nNếu trúng vào ngươi, thì tất cả quái lửa trên sân đều nhận được 1 cộng dồn.",
+    "env": true,
+    "since": "2026-10-19"
   },
+
   {
     "id": "virus-an-mon",
     "name": "Virus ăn mòn",

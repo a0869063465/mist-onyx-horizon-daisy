@@ -468,6 +468,7 @@ const PAIRS: Array<[string, string]> = [
   ["Dùng phép", "Cast"],
   ["Cứ địa máy móc", "Machine Base"],
   ["Thánh địa thiên sứ", "Angel Sanctuary"],
+  ["Núi dung nham", "Lava Mountain"],
   ["Tăng", "Up"],
   ["Giảm", "Down"],
   ["Thay đổi lối chơi", "Playstyle change"],

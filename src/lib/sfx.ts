@@ -5,7 +5,7 @@ const MUSIC_KEY = "clash-vol-music";
 /** Sent when the sound switch or the music volume changes, so the music follows at once. */
 export const MUSIC_EVENT = "clash-music-level";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/user-summon.ogg?v=4",
@@ -40,6 +40,8 @@ const CLIPS: Partial<Record<Cue, string>> = {
   reelSeven: "/sfx/quay-trung-7.mp3?v=5",
   reelSix: "/sfx/quay-truot.mp3?v=2",
   fusion: "/sfx/dung-hop.mp3?v=1",
+  // Núi dung nham (owner's file, 19/10): the eruption only, the first thunder cut off.
+  eruption: "/sfx/eruption.mp3?v=1",
 };
 
 const CLIP_DELAY: Partial<Record<Cue, number>> = {};

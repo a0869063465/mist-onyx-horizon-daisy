@@ -1,8 +1,6 @@
-import { monsterCard } from "./catalog.ts";
-
 /**
  * Hệ của quái cho từng lá môi trường. Mỗi quái thuộc một hệ.
- * Sửa danh sách ở đây khi chủ game xếp lại hệ. Quái 5 sao không được hưởng môi trường.
+ * Sửa danh sách ở đây khi chủ game xếp lại hệ. Quái 5 sao và dạng ngoài bộ cũng được hưởng môi trường (chủ game 19/10).
  */
 /**
  * Thánh địa thiên sứ. Guarded: the angels (thiên sứ, yêu tinh, tinh linh: frail buffers) and the sanctuary's
@@ -69,10 +67,12 @@ export const ENV_KINDS: Record<string, string[]> = {
   ],
 };
 
-/** True when the environment card `env` boosts this monster (its kind, and at most 4 stars). */
+/**
+ * True when the environment card `env` boosts this monster (its kind). Environments count for 5-star monsters and
+ * forms outside the deck too (owner, 19/10); they are only left out of deck counts.
+ */
 export function envFavors(env: string | undefined, cardId: string): boolean {
   if (!env) return false;
   const list = ENV_KINDS[env];
-  if (!list || !list.includes(cardId)) return false;
-  return (monsterCard(cardId)?.stars ?? 0) <= 4;
+  return Boolean(list && list.includes(cardId));
 }

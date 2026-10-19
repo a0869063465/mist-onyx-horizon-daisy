@@ -1858,6 +1858,26 @@ function PlayPage() {
     const prepGun =
       (beam && duel.pending?.kind === "beam" && skillLook(beamCaster, duel.pending.index) === "gun") ||
       (hellFace && attackNow ? skillLook(fieldMon(duel, attackNow.attacker)?.cardId ?? "", 0) === "gun" : false);
+    // Núi dung nham: the eruption, then the fire spell's explosion part on every target hit (owner, 19/10).
+    if (!quiet && duel.lava && duel.lava.seq !== prev.lava?.seq) {
+      playCue("eruption");
+      duel.lava.hits.forEach((hit, order) => {
+        let point: { x: number; y: number } | null = null;
+        if (hit.uid === null) {
+          const box = HP_BOX[screenSide(hit.side, viewerNow)];
+          point = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+        } else {
+          const live = duel.players[hit.side].field.findIndex((mon) => mon?.uid === hit.uid);
+          const was = prev.players[hit.side].field.findIndex((mon) => mon?.uid === hit.uid);
+          const index = live >= 0 ? live : was;
+          point = index >= 0 ? (SLOT_POS[screenSide(hit.side, viewerNow)][index] ?? null) : null;
+        }
+        window.setTimeout(() => {
+          playCue("swordBoom");
+          if (point && fireBlastOn()) emitFx({ t: "fire", x: point.x, y: point.y });
+        }, 2300 + order * 280);
+      });
+    }
     if (!quiet && firePrep && !prepGun) playCue("firePrep");
     if (!quiet && (blocked || gnawed)) playCue("block");
     if (!quiet && struck && spent !== "phuc-kich" && !curseBoom) playCue("hit");

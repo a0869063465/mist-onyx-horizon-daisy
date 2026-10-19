@@ -204,6 +204,8 @@ export type Duel = {
   recall?: { side: Side; caps: number[] } | null;
   rite?: { side: Side; slot: 0 | 1 | 2; seq: number } | null;
   ashes?: { side: Side; slots: Array<0 | 1 | 2>; seq: number } | null;
+  /** Núi dung nham's eruption at a turn start: who was hit (uid null = the player) and how hard, for its effect. */
+  lava?: { seq: number; hits: Array<{ side: Side; uid: string | null; n: number }> } | null;
   clock?: number;
   past?: Record<string, { mon: FieldMon; slot: 0 | 1 | 2 }>;
   history?: Array<Record<string, { mon: FieldMon; slot: 0 | 1 | 2 }>>;
@@ -7844,6 +7846,63 @@ function virusTick(state: Duel): { state: Duel; line: string } {
   return corrodeSide(state, (1 - state.virus.owner) as Side);
 }
 
+/**
+ * Núi dung nham (owner, 19/10): from the second turn of the match, at the start of every turn, its owner's star
+ * count in random hits of 1 magic damage lands on random targets on the field, both players included, hits may
+ * repeat. Hits on one target add up before its magic armor counts. 5-star monsters are hit too.
+ */
+function lavaTick(state: Duel): { state: Duel; line: string } {
+  let next = state;
+  const bits: string[] = [];
+  const hits: Array<{ side: Side; uid: string | null; n: number }> = [];
+  for (const owner of [0, 1] as const) {
+    if (next.winner != null) break;
+    if (next.players[owner].env !== "nui-dung-nham") continue;
+    const shots = next.players[owner].stars;
+    if (shots <= 0) continue;
+    const pool: Array<{ side: Side; uid: string | null }> = [{ side: 0, uid: null }, { side: 1, uid: null }];
+    for (const side of [0, 1] as const) {
+      for (const mon of next.players[side].field) if (mon && mon.hp > 0) pool.push({ side, uid: mon.uid });
+    }
+    const count = new Map<string, { side: Side; uid: string | null; n: number }>();
+    for (let i = 0; i < shots; i += 1) {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      const key = `${pick.side}:${pick.uid ?? "face"}`;
+      const row = count.get(key) ?? { ...pick, n: 0 };
+      row.n += 1;
+      count.set(key, row);
+    }
+    const parts: string[] = [];
+    const previous = charmDamage;
+    charmDamage = 0;
+    try {
+      for (const row of count.values()) {
+        const player = next.players[row.side];
+        if (row.uid === null) {
+          next = patch(next, row.side, { ...player, hp: player.hp - row.n });
+          parts.push(`${row.n} sát thương phép lên ${sideName(row.side)}`);
+        } else {
+          const mon = player.field.find((unit) => unit?.uid === row.uid);
+          if (!mon) continue;
+          const hurtMon = damageSpell(mon, row.n, player.field);
+          const field = player.field.map((unit) => (unit?.uid === row.uid ? hurtMon : unit));
+          next = patch(next, row.side, settleCocoon(dropDead({ ...player, field: field as Player["field"] })));
+          const name = shadeHidden(mon) ? "quái thú ẩn mình" : cardOf(mon).name;
+          const lost = Math.max(0, mon.hp - Math.max(0, hurtMon.hp));
+          parts.push(hurtMon.hp <= 0 ? `${lost} sát thương phép lên ${name}, ${name} gục` : `${lost} sát thương phép lên ${name}`);
+        }
+        hits.push(row);
+      }
+    } finally {
+      charmDamage = previous;
+    }
+    bits.push(`Núi dung nham phun trào: ${parts.join(", ")}.`);
+    next = checkWinner(next);
+  }
+  if (!hits.length) return { state: next, line: "" };
+  return { state: { ...next, lava: { seq: (state.lava?.seq ?? 0) + 1, hits } }, line: bits.join(" ") };
+}
+
 function erosionTick(state: Duel): { state: Duel; line: string } {
   let next = state;
   const bits: string[] = [];
@@ -8240,7 +8299,8 @@ function endTurnCore(state: Duel): Duel {
   };
   const eroded = erosionTick(next);
   const virused = virusTick(eroded.state);
-  let startedTurn = virused.state;
+  const lava = lavaTick(virused.state);
+  let startedTurn = lava.state;
   for (const at of [0, 1] as const) {
     const board = startedTurn.players[at];
     if (!board.hats) continue;
@@ -8265,7 +8325,7 @@ function endTurnCore(state: Duel): Duel {
     .join(". ");
   const offered = offerPrey(startedTurn);
   startedTurn = offered.state;
-  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, owed.line, offered.line].filter(Boolean).join(" ");
+  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, offered.line].filter(Boolean).join(" ");
   const mute = startedTurn.players[foe].drawLock ? " Lượt này không được rút bài." : "";
   const noted = note(stampTurn(startedTurn), extra ? `${due}${mute} ${extra}` : `${due}${mute}`);
   const mends = [...(noted.mends ?? []), ...vowHeals];
