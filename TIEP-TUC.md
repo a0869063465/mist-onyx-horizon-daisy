@@ -37,7 +37,13 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Cơn thịnh nộ của hải vương: bảng quái gộp 2 icon lá chắn thành 1 icon Hộ thần (chủ game chốt 18/10).
 - Màu chữ điểm nhấn: để sau (đang áp vào mô tả kỹ năng trên bảng quái).
 - Màu riêng của bảng quái (chủ game chốt 18/10, tô theo mô tả Hiến Tế): `src/components/game/sheet-ink.ts`, chỉ dùng trong `CopyText inked` (bảng quái), bảng thông báo không đổi. Lượt + công cam, thủ vàng, thủ phép tím, phòng ngự gradient vàng→tím, máu/máu tối đa/hồi máu xanh lá, hiến tế đỏ, tiến hoá hồng, giải bất lợi xanh lam, "không thể hành động/tấn công…" xám dễ đọc. Tô cả số đi kèm. CHỈ THÊM: `addSheetInk` chỉ tô phần chữ mà màu bảng thông báo để trống; chữ đã có màu (tên skill như Hiến tế, Phòng ngự, Tiến hoá; "tấn công") giữ nguyên. Chủ game nhắc 18/10: "chỉ thêm, đừng sửa".
-- Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh.
+- Nền màn tải game/trận: để sau, chủ game sẽ gửi ảnh. Logo (chủ game gửi 19/10, nền trong suốt): `public/ui/logo.webp`, nằm giữa màn tải game (`.load-logo`), thanh tải ở đáy. Màn tải trận chưa có logo.
+- Câu trả lời của chủ game (19/10, phiên 2):
+  - Sao ở Đánh thường: thắng +1 sao, thua -1 sao. Thua 2 trận thì trận thứ 3 được bảo hiểm (thua không mất sao), người thắng vẫn được sao. Chống gian lận: không được đầu hàng 3 ván liên tiếp trước cùng 1 đối thủ; đánh với cùng đối thủ 3 ván liên tục mà tổng số lượt đi của bạn dưới 10 thì bị coi là gian lận, trừ thẳng 2 sao mỗi người. Quà Vs Máy (3 trận) tính theo ngày. Đã hỏi lại các chỗ chưa rõ, CHƯA làm.
+  - Bộ sưu tập: album, lá sở hữu chia theo nhóm, hoàn thành mỗi nhóm được số sao nhất định. Đã hỏi lại, CHƯA làm.
+  - Lấy mã trên Vercel: đã chạy được (chủ game xác nhận 19/10). Đánh thường chưa thử.
+  - Màn chờ Đánh thường (ảnh nền, dòng mẹo): tạm thời chưa làm. Quái lửa: chủ game làm sau.
+  - Cửa hàng + Giám định: chủ game muốn hỏi lại từ đầu (câu hỏi cũ bị mất).
 
 ## Đã xong (18/10): đợt chỉnh Chỉnh sửa bộ bài, Cửa hàng ở menu, danh sách Hướng dẫn
 

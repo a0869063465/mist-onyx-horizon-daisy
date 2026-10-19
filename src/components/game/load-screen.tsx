@@ -32,6 +32,7 @@ export function LoadScreen({ kind, title, jobs, onDone }: { kind: "game" | "matc
 
   return (
     <div className={`load-screen is-${kind}`} role="status" aria-live="polite">
+      {kind === "game" ? <img className="load-logo" src="/ui/logo.webp" alt="Clash of the Beasts" fetchPriority="high" draggable={false} /> : null}
       <div className="load-foot">
         <div className="load-row">
           <span className="load-title">{title}</span>

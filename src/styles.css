@@ -5826,6 +5826,23 @@ button.watch-back {
 .load-bar { height: 0.42rem; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(233, 196, 106, 0.35); }
 .load-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b8862c, #f4d27a); box-shadow: 0 0 10px #f4d27a; transition: width 200ms ease-out; }
 .load-skip { justify-self: center; min-width: 8rem; }
+/* Game logo: centered in the space above the bar, as big as the screen allows. */
+.load-screen.is-game { flex-direction: column; align-items: center; justify-content: flex-end; }
+.load-logo {
+  min-height: 0;
+  width: min(92vw, 30rem);
+  max-height: 62vh;
+  margin: auto;
+  padding: max(1rem, env(safe-area-inset-top)) 0 1.2rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0.6rem 1.4rem rgba(0, 0, 0, 0.7));
+  animation: load-logo-in 600ms ease-out both;
+  user-select: none;
+  pointer-events: none;
+}
+@keyframes load-logo-in {
+  from { opacity: 0; transform: scale(0.94); }
+}
 
 /* ---- Tutorial: dimmed board, gold rings on what the line talks about, the line itself and "Bỏ qua". ---- */
 .tut-layer { position: fixed; inset: 0; z-index: 8000; pointer-events: none; }
