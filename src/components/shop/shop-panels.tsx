@@ -230,7 +230,7 @@ export function RowTuner({ onClose }: { onClose: () => void }) {
     saveRowLook(next);
     setLook(next);
   }
-  function change(key: "lean" | "tilt" | "sink" | "near", value: number) {
+  function change(key: "lean" | "tilt" | "sink" | "near" | "spread", value: number) {
     update({ ...look, [part]: { ...spot, [key]: value } });
   }
   const foot = (
@@ -295,6 +295,15 @@ export function RowTuner({ onClose }: { onClose: () => void }) {
         </span>
         <input type="range" min={-150} max={150} step={1} value={spot.near} onChange={(event) => change("near", Number(event.target.value))} />
       </label>
+      {part === "side" ? (
+        <label className="row-tune">
+          <span>
+            {tr("Gần vào giữa / xa ra")}: {spot.spread > 0 ? "+" : ""}
+            {spot.spread}px
+          </span>
+          <input type="range" min={-60} max={60} step={1} value={spot.spread} onChange={(event) => change("spread", Number(event.target.value))} />
+        </label>
+      ) : null}
     </Panel>
   );
 }
