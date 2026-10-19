@@ -55,7 +55,7 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
   - Gói: mỗi lá rút theo tỉ lệ. Cần khung chỉnh tỉ lệ từng lá trong chế độ nhà phát hành, vừa thử vừa chỉnh.
   - Bộ bài cơ bản: chủ game sẽ xây sau. Quái 5 sao không có trong gói; lá môi trường có. Nhà phát hành mở sẵn mọi lá.
   - Sát hạch: mỗi lá 2–3 câu, chủ game viết hoặc Claude viết rồi chủ game duyệt; làm thử 1–2 quái trước. Thực chiến: Claude đề xuất tình huống, chủ game duyệt, nhưng phải xây xong Cửa hàng để thử trước.
-  - Chưa trả lời: (a) 0 sao, đã dùng hết bảo hiểm 5 trận trong ngày, thua tiếp thì giữ 0 (không âm)? (b) tạm lưu sao trên điện thoại, chống gian lận bật khi có tài khoản? Hỏi lại lúc bắt đầu làm.
+  - Chủ game chốt: 0 sao, đã dùng hết bảo hiểm 5 trận trong ngày, thua tiếp thì giữ 0 (không âm). Tạm lưu sao trên điện thoại; chống gian lận bật khi có tài khoản.
 
 ## Đã xong (18/10): đợt chỉnh Chỉnh sửa bộ bài, Cửa hàng ở menu, danh sách Hướng dẫn
 
