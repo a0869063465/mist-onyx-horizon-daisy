@@ -8565,6 +8565,9 @@ button.watch-back {
   display: flex;
   gap: var(--gap);
   transform: translateX(-50%);
+  /* One shared eye for the row, as in the 3D fan, so the side cards turn naturally instead of skewing. */
+  perspective: 900px;
+  perspective-origin: 50% 70%;
 }
 .po-slot {
   display: block;
@@ -8575,8 +8578,8 @@ button.watch-back {
 }
 /* The two side cards turn a little toward the middle (about the up-down axis), with the curve of the floor under
    them (owner, 19/10: turned on Y, not tilted on Z). */
-.po-slot:first-child:not(:only-child) { --lean: 20deg; --sink: 4px; }
-.po-slot:last-child:not(:only-child) { --lean: -20deg; --sink: 4px; }
+.po-slot:first-child:not(:only-child) { --lean: 16deg; --sink: 2px; --back: -24px; }
+.po-slot:last-child:not(:only-child) { --lean: -16deg; --sink: 2px; --back: -24px; }
 .po-card {
   position: relative;
   display: block;
@@ -8738,7 +8741,7 @@ button.watch-back {
 @keyframes po-flare { 0% { opacity: 1; transform: scale(0.2); } 100% { opacity: 0; transform: scale(2.2); } }
 @keyframes po-fly { from { opacity: 1; transform: translate(0, 0) rotate(45deg); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(220deg); } }
 @keyframes po-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes po-deal { from { opacity: 0; transform: perspective(700px) translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: perspective(700px) translateY(var(--sink, 0)) rotateY(var(--lean, 0deg)); } }
+@keyframes po-deal { from { opacity: 0; transform: translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: translateY(var(--sink, 0)) translateZ(var(--back, 0)) rotateY(var(--lean, 0deg)); } }
 @keyframes po-sheen { from { background-position: 130% 0; } to { background-position: -130% 0; } }
 @keyframes po-pop { 0% { transform: none; } 28% { transform: translateY(-8%) scale(1.32); } 72% { transform: translateY(-8%) scale(1.32); } 100% { transform: none; } }
 @keyframes po-spark-out { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(calc(var(--x) * var(--k, 1)), calc(var(--y) * var(--k, 1))) scale(0.3); } }

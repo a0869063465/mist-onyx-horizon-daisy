@@ -592,6 +592,8 @@ export const PENDING_NOTES: string[] = [
   "Lá trong gói: lá đã có in mờ, lá phép xếp theo nhóm như Chỉnh sửa bộ bài. Khung Tỉ lệ cũng xếp phép theo nhóm.",
   "Mở gói: nhãn bậc hình thang như video, SR cam sang vàng, UR hồng sang xanh lam. Hai lá hai bên hơi xoay vào giữa (quay quanh trục dọc) cho khớp đường cong dưới chân. Viền lá UR úp mặt đổi sang ánh hồng xanh. Lá UR phóng to đứng yên đến khi bấm lần nữa.",
   "Lá liên quan: lá có dạng tiến hoá hoặc dung hợp có biểu tượng chồng lá ở góc hình. Bấm hình lá trong bảng mô tả để mở cuộn 3D cả nhóm, kéo qua lại để xem, bấm lá bên cạnh để đưa vào giữa, bấm lá giữa để xem mô tả lá đó, bấm << để về cuộn 3D, bấm ra ngoài để về mô tả lá ban đầu. Có ở Chỉnh sửa bộ bài, Cửa hàng và trong trận.",
+  "Cuộn 3D: sửa lỗi bấm ra ngoài hoặc bấm lá đôi khi không ăn, phải bấm 2-3 lần.",
+  "Mở gói: hai lá hai bên xoay vào giữa như cuộn 3D, lá giữa giữ nguyên, viền dưới lá theo đường cong sàn, không còn bị méo như hình bình hành.",
 ];
 
 function remarkOf(notes: string[]) {

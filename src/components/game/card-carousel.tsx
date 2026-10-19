@@ -6,7 +6,7 @@ import { markFace } from "@/lib/power-balance";
 import { playUi } from "@/lib/sfx";
 
 /** A move shorter than this is a tap, not a drag. */
-const NUDGE = 8;
+const NUDGE = 12;
 
 /**
  * The 3D fan of related cards (owner, 19/10, after the Legends of Runeterra card view he recorded): the card in
@@ -42,6 +42,9 @@ export function CardCarousel({ ids, focus, onOpen, onClose }: { ids: string[]; f
 
   function down(event: ReactPointerEvent) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    // A drag on a phone sends no click afterwards, so the "just dragged" mark must not wait for one (owner, 19/10:
+    // taps were sometimes lost after turning the fan).
+    dragged.current = false;
     grab.current = { pointer: event.pointerId, x0: event.clientX, pos0: pos, moved: false, t0: performance.now() };
   }
 
