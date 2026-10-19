@@ -481,6 +481,7 @@ const PAIRS: Array<[string, string]> = [
   ["Đặt làm ảnh bìa", "Set as cover"],
   ["Bộ bài chưa có quái thú.", "This deck has no monsters yet."],
   ["Cửa hàng", "Shop"],
+  ["Bộ sưu tập", "Collection"],
   ["Đang trong hàng chờ đối thủ", "Waiting in the queue"],
   ["Đang tìm trận đấu:", "Finding a match:"],
   ["Tìm trận với người chơi khác.", "Find a match with other players."],

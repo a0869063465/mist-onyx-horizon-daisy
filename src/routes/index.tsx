@@ -231,6 +231,19 @@ function Home() {
               <path d="M8 11V8a4 4 0 0 1 8 0v3" />
             </svg>
           </div>
+          {/* Bộ sưu tập under the shop (owner, 19/10). Not open yet either. */}
+          <div className="home-btn is-shut" aria-disabled="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="8" y="4" width="11" height="15" rx="1.8" />
+              <path d="M5.5 7.5v11A2.5 2.5 0 0 0 8 21h8.5" />
+              <path d="M11.5 9.5l2 2.5 2-2.5M13.5 12v3" />
+            </svg>
+            <span>{tr("Bộ sưu tập")}</span>
+            <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="9.5" rx="2" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+          </div>
           <div className="home-row">
             <Link to="/tune" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
