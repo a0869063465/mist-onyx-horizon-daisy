@@ -64,12 +64,23 @@ function whenReady(job: () => void) {
   }
 }
 
+/** Every volume starts at 50 (owner, 19/10). Phones that saved louder levels are set back to 50 once. */
+const DEFAULT_LEVEL = 50;
+const LEVELS_RESET = "clash-vol-reset-50";
+
+function resetLevelsOnce() {
+  if (typeof localStorage === "undefined" || localStorage.getItem(LEVELS_RESET)) return;
+  for (const key of [FX_KEY, TAP_KEY, MUSIC_KEY]) localStorage.setItem(key, String(DEFAULT_LEVEL));
+  localStorage.setItem(LEVELS_RESET, "1");
+}
+
 function readLevel(key: string) {
-  if (typeof localStorage === "undefined") return 100;
+  if (typeof localStorage === "undefined") return DEFAULT_LEVEL;
+  resetLevelsOnce();
   const raw = localStorage.getItem(key);
-  if (raw == null || raw.trim() === "") return 100;
+  if (raw == null || raw.trim() === "") return DEFAULT_LEVEL;
   const level = Number(raw);
-  if (!Number.isFinite(level)) return 100;
+  if (!Number.isFinite(level)) return DEFAULT_LEVEL;
   return Math.min(100, Math.max(0, level));
 }
 
@@ -85,10 +96,7 @@ export function setSound(next: boolean) {
 
 /** Background music volume, its own slider in Tuỳ chỉnh → Âm thanh (owner, 19/10). Starts at 50. */
 export function musicVolume() {
-  if (typeof localStorage === "undefined") return 50;
-  const raw = localStorage.getItem(MUSIC_KEY);
-  const value = raw == null || raw.trim() === "" ? 50 : Number(raw);
-  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 50;
+  return readLevel(MUSIC_KEY);
 }
 
 export function setMusicVolume(value: number) {
@@ -514,7 +522,30 @@ function fuseRite(delay: number) {
   });
 }
 
-/** Menu sounds: confirm = main action, select = secondary button, soft = small links. */
+/**
+ * A soft wooden "pop" for buttons: one rounded sine note that dips a little and fades fast, through a low-pass so
+ * nothing hisses or rings (owner, 19/10: taps should stay quiet under the music, no rustle, no beeping).
+ */
+function softPop(audio: AudioContext, start: number, freq: number, dur: number, level: number) {
+  const osc = audio.createOscillator();
+  const low = audio.createBiquadFilter();
+  const amp = audio.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, start);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.82, start + dur);
+  low.type = "lowpass";
+  low.frequency.value = 1600;
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + 0.006);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(low);
+  low.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
+}
+
+/** Button sounds: confirm = main action (two soft notes), select = other buttons, soft = small links. */
 export function playUi(cue: UiCue) {
   whenReady(() => {
     const audio = ctx;
@@ -523,18 +554,12 @@ export function playUi(cue: UiCue) {
     if (vol <= 0) return;
     const t = audio.currentTime;
     if (cue === "confirm") {
-      thump(audio, t, 0.55 * vol);
-      noiseBurst(audio, t, 0.32, 600, 5200, 0.16 * vol);
-      bell(audio, t + 0.04, 784, 0.6, 0.11 * vol);
-      bell(audio, t + 0.1, 1175, 0.7, 0.09 * vol);
-      bell(audio, t + 0.16, 1568, 0.8, 0.07 * vol);
+      softPop(audio, t, 523.3, 0.2, 0.11 * vol);
+      softPop(audio, t + 0.07, 784, 0.24, 0.08 * vol);
     } else if (cue === "select") {
-      noiseBurst(audio, t, 0.14, 1800, 4200, 0.08 * vol);
-      bell(audio, t + 0.01, 988, 0.32, 0.09 * vol);
-      bell(audio, t + 0.06, 1319, 0.36, 0.06 * vol);
+      softPop(audio, t, 659.3, 0.12, 0.08 * vol);
     } else {
-      noiseBurst(audio, t, 0.05, 3200, 2400, 0.06 * vol);
-      bell(audio, t, 1480, 0.12, 0.05 * vol);
+      softPop(audio, t, 587.3, 0.08, 0.05 * vol);
     }
   });
 }
