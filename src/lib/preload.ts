@@ -1,5 +1,6 @@
 import { artSrc, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_BOARDS, DEFAULT_BOARD_ART, bottomArt, topArt } from "./env-boards.ts";
+import { FIRST_TRACK, MATCH_TRACKS } from "./music.ts";
 import { soundJobs } from "./sfx.ts";
 import type { Duel } from "./duel.ts";
 
@@ -13,6 +14,11 @@ const clipJobs = new Map<string, Promise<unknown>>();
 
 export function fxUrl(src: string): string {
   return clips.get(src) ?? src;
+}
+
+/** A music track as an in-memory file once fetched (the music player asks with fxUrl); fetches it otherwise. */
+export function musicJob(src: string): Promise<unknown> {
+  return clip(src);
 }
 
 function picture(src: string): Promise<unknown> {
@@ -97,6 +103,7 @@ export function gameJobs(): Job[] {
     ...[...new Set([...CORE_PICTURES, ...boards])].map((src) => () => picture(src)),
     ...FX_VIDEOS.map((src) => () => clip(src)),
     ...soundJobs(),
+    () => clip(FIRST_TRACK),
   ];
 }
 
@@ -117,7 +124,7 @@ export function matchJobs(duel: Duel): Job[] {
     const spells = new Set<string>([...player.hand, ...player.spellDeck, ...(player.env ? [player.env] : [])]);
     for (const id of spells) if (spellCard(id)) srcs.add(spellSrc(id));
   }
-  return [...srcs].filter(Boolean).map((src) => () => picture(src));
+  return [...[...srcs].filter(Boolean).map((src) => () => picture(src)), ...MATCH_TRACKS.map((src) => () => clip(src))];
 }
 
 /** Runs every job, a few at a time; progress counts finished jobs, failed ones included, so it always reaches 100%. */

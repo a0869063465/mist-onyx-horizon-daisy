@@ -584,6 +584,9 @@ export const PENDING_NOTES: string[] = [
   "Mở gói: sét đánh cạnh gói; gói có UR thì thêm sét đỏ, loé trắng rồi hoá cầu vồng. Chạm để bóc gói, tia sáng xanh dương khi toàn Normal, vàng khi cao nhất là SR, cầu vồng khi có UR. Lá úp mặt: mặt sau vàng là SR, tím là UR. Chạm để lật: SR nhảy lên toả hạt vàng, UR phóng to trong vòng sáng.",
   "Bảng kết quả mở gói: mọi lá vừa nhận, nhãn MỚI cho lá lần đầu có, +1★ cho lá trùng. Chạm lá để xem thông tin.",
   "Trang gói có khung Tỉ lệ: số % mỗi lá có trong 1 gói. Nhà phát hành đổi bậc và trọng số từng lá, lưu trên máy, bấm Sao chép để gửi.",
+  "Nhạc nền được tải sẵn trong màn tải game, chạm lần đầu là phát ngay. Các bài sau tải ngầm trước khi tới lượt.",
+  "Âm lượng to hơn ở mọi mức, mức 50 vẫn là 50: hiệu ứng trận, nút bấm và nhạc nền.",
+  "Mở gói: chữ MỚI và nhãn N, SR, UR to hơn. Nhãn SR màu cam vàng.",
 ];
 
 function remarkOf(notes: string[]) {

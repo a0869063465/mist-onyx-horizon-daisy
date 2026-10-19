@@ -110,6 +110,26 @@ export function fxVolume() {
   return readLevel(FX_KEY);
 }
 
+/**
+ * How loud a slider level plays (owner, 19/10: everything was too quiet at 50; make it louder but keep 50 as 50).
+ * The sliders keep their numbers; the level goes through a curve that lifts the middle (50 plays at 0.75 of full,
+ * not 0.5), and effects and buttons get a little more on top.
+ */
+export function loudness(level: number) {
+  const share = Math.min(1, Math.max(0, level / 100));
+  return 1 - (1 - share) * (1 - share);
+}
+
+const LIFT = 1.2;
+
+function fxLoud() {
+  return loudness(fxVolume()) * LIFT;
+}
+
+function tapLoud() {
+  return loudness(tapVolume()) * LIFT;
+}
+
 export function tapVolume() {
   return readLevel(TAP_KEY);
 }
@@ -176,7 +196,7 @@ function playClip(src: string, delay = 0, replace = false, offset = 0) {
         const node = ctx.createBufferSource();
         const amp = ctx.createGain();
         node.buffer = buffer;
-        amp.gain.value = Math.min(1.5, (fxVolume() / 100) * 1.35);
+        amp.gain.value = Math.min(1.5, fxLoud() * 1.35);
         node.connect(amp);
         amp.connect(ctx.destination);
         node.start(ctx.currentTime + delay, Math.min(Math.max(0, offset), Math.max(0, buffer.duration - 0.05)));
@@ -199,7 +219,7 @@ function tone(freq: number, at: number, dur: number, type: OscillatorType, gain:
     const osc = audio.createOscillator();
     const amp = audio.createGain();
     const start = audio.currentTime + at;
-    const level = Math.min(0.9, gain * (fxVolume() / 100) * 6);
+    const level = Math.min(0.9, gain * fxLoud() * 6);
     osc.type = type;
     osc.frequency.setValueAtTime(Math.max(40, freq), start);
     osc.frequency.exponentialRampToValueAtTime(Math.max(40, slide), start + dur);
@@ -219,7 +239,7 @@ export function playTap() {
     const osc = audio.createOscillator();
     const amp = audio.createGain();
     const start = audio.currentTime;
-    const level = Math.min(0.55, (tapVolume() / 100) * 0.5);
+    const level = Math.min(0.55, tapLoud() * 0.5);
     osc.type = "square";
     osc.frequency.setValueAtTime(740, start);
     osc.frequency.exponentialRampToValueAtTime(420, start + 0.05);
@@ -312,7 +332,7 @@ function riteSummon(delay: number) {
   whenReady(() => {
     const audio = ctx;
     if (!audio) return;
-    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    const vol = Math.min(1.5, fxLoud() * 1.35);
     if (vol <= 0) return;
     const t = audio.currentTime + delay;
     const drone = audio.createOscillator();
@@ -497,7 +517,7 @@ function fuseRite(delay: number) {
   whenReady(() => {
     const audio = ctx;
     if (!audio) return;
-    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    const vol = Math.min(1.5, fxLoud() * 1.35);
     if (vol <= 0) return;
     const t = audio.currentTime + delay;
     noiseBurst(audio, t, 0.55, 300, 1800, 0.14 * vol);
@@ -555,7 +575,7 @@ export function playPack(cue: PackCue, delay = 0) {
   whenReady(() => {
     const audio = ctx;
     if (!audio) return;
-    const vol = Math.min(1.5, (fxVolume() / 100) * 1.35);
+    const vol = Math.min(1.5, fxLoud() * 1.35);
     if (vol <= 0) return;
     const t = audio.currentTime + delay;
     if (cue === "strike") crack(audio, t, vol, false);
@@ -628,7 +648,7 @@ export function playUi(cue: UiCue) {
   whenReady(() => {
     const audio = ctx;
     if (!audio) return;
-    const vol = tapVolume() / 100;
+    const vol = tapLoud();
     if (vol <= 0) return;
     const t = audio.currentTime;
     if (cue === "confirm") {
