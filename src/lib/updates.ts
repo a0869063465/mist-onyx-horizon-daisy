@@ -602,6 +602,7 @@ export const PENDING_NOTES: string[] = [
   "Mở Cửa hàng cho mọi người chơi. Người chơi bắt đầu với các lá của bộ bài mặc định; lá khác có khoá trong Chỉnh sửa bộ bài, mở gói ra lá nào thì dùng được lá đó. Bộ bài đã lưu có lá chưa sở hữu thì lá đó tự rời bộ.",
   "Nhập mã S300 trong Thông tin → Nhập mã để nhận 300 sao.",
   "Rồng địa ngục và Kẻ trộm áo trắng thuộc Bóng tối. Hũ nhốt linh hồn và Bình biến hình thuộc Đất đá. Linh hồn do Hũ nhốt linh hồn gọi ra là bản sao, giữ skill của quái bị nhốt, và thuộc Bóng tối. Sangan thuộc Rừng rậm. Kỳ nhông điện thuộc Núi. Thánh thuật sư và Người yêu hạnh phúc thuộc Thánh địa thiên sứ, được che trước khi các quái khác bị tấn công. Kỵ sĩ cánh cụt thuộc Thảo nguyên. Khủng long hình người thuộc Đất đá. Mặt nạ bóng tối thuộc Bóng tối.",
+  "Gói chung còn 10 sao một gói. Mua 10 gói còn 100 sao.",
 ];
 
 function remarkOf(notes: string[]) {
