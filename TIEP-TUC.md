@@ -44,6 +44,13 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
   - Lấy mã trên Vercel: đã chạy được (chủ game xác nhận 19/10). Đánh thường chưa thử.
   - Màn chờ Đánh thường (ảnh nền, dòng mẹo): tạm thời chưa làm. Quái lửa: chủ game làm sau.
   - Cửa hàng + Giám định: chủ game muốn hỏi lại từ đầu (câu hỏi cũ bị mất).
+- Hình nền menu mới (chủ game gửi 19/10, phiên 2): thay `public/home-bg.jpg` (cùng cỡ 841 × 1870).
+- Câu trả lời của chủ game (19/10, phiên 2, lượt 2), CHƯA làm gì, đang hỏi lại:
+  - Cửa hàng: bán gói ngẫu nhiên, 15 sao một gói, mỗi gói 5 lá khác nhau (có cả quái và phép). Rút trùng lá đã có thì hoàn 1 sao mỗi lá. Bậc (thông thường, có ngoại lệ): Normal xanh dương = phép 0 mana, quái 1–2 sao; SR vàng = phép 1 mana, quái 3 sao; UR cầu vồng = quái 4 sao, phép 2 mana trở lên.
+  - Bộ bài cơ bản dùng được ngay; lá nhận được hay quay ra đều phải giám định mới dùng, chưa giám định thì không bỏ vào bộ. Sát hạch sai thì tạm thời làm lại từ đầu (chưa mất lá). Thực chiến thắng là xong phần đó. Hai phần làm thứ tự nào cũng được.
+  - Sao Đánh thường: bảo hiểm sau 2 trận thua (không cần liên tiếp), bảo hiểm xong đếm lại. Hết sao: mỗi ngày 1 lần được bảo hiểm 5 trận không nhận/mất sao dù thắng hay thua; thắng từ 3/5 trận thì được thêm 2 sao. Đầu hàng ván thứ 3 liên tiếp với cùng đối thủ: hiện cảnh báo phát hiện gian lận; OK để đánh tiếp thì không sao; chưa đủ điều kiện (tổng lượt RIÊNG của mình qua 3 ván dưới 10) mà bấm đầu hàng lần nữa thì không cảnh báo, trừ thẳng 2 sao cả hai người. Sao thắng thua 3 ván đó giữ nguyên. Thua Vs Máy không mất sao.
+  - Bộ sưu tập: chỉ quái, nhóm theo tiểu sử quái (chủ game tự chia), sao mỗi nhóm tuỳ nhóm (nhiều lá, nhiều UR/SR thì nhiều sao). Lá đang bị xích cũng tính là sở hữu.
+  - Tài khoản / lưu sao trên máy chủ: tạm để đó, chưa làm.
 
 ## Đã xong (18/10): đợt chỉnh Chỉnh sửa bộ bài, Cửa hàng ở menu, danh sách Hướng dẫn
 

@@ -579,6 +579,7 @@ export const PENDING_NOTES: string[] = [
   "Tiếng bấm nút và thao tác nhẹ hẳn đi: một tiếng gõ tròn, nhỏ, không còn tiếng xoẹt xoẹt hay tít tít, để không át nhạc nền.",  "Vào game mặc định là chế độ khách. Nhập mã NHAPHATHANH trong Thông tin → Nhập mã để mở đủ các mục.",  "Thêm lá môi trường Núi dung nham: từ lượt thứ 2, mỗi đầu lượt núi phun trào, bắn số phát bằng số sao của người mang lá, mỗi phát 1 sát thương phép vào mục tiêu ngẫu nhiên trên sân, kể cả người chơi; trúng cùng mục tiêu thì cộng dồn rồi mới trừ thủ phép. Có âm phun trào và hiệu ứng nổ lửa trên mục tiêu. Bàn đấu có hình riêng.",
   "Môi trường áp dụng cho cả quái 5 sao và dạng ngoài bộ.",  "Núi dung nham: quái lửa đồng minh bị phun trào trúng nhận 1 cộng dồn mỗi phát, kể cả khi thủ phép chặn hết; phun trào trúng người mang lá thì mọi quái lửa đồng minh nhận thêm cộng dồn theo số phát. Đòn đánh thường kế tiếp dùng hết cộng dồn: mỗi cộng dồn +1 công và +1 sát thương phép lên mục tiêu bị đánh. Số cộng dồn hiện trên lá bằng số vàng đỏ. Hiện chưa có quái nào thuộc hệ lửa.",  "Núi dung nham: dùng kỹ năng cũng tiêu cộng dồn như đánh thường. Mỗi cộng dồn +1 công và +1 sát thương kỹ năng, giống phù hộ của Yêu tinh chúc phúc; kỹ năng không gây sát thương thì cộng dồn được giữ lại.",
   "Màn tải trò chơi có logo Clash of the Beasts ở giữa, thanh tải nằm bên dưới.",
+  "Menu chính có hình nền mới.",
 ];
 
 function remarkOf(notes: string[]) {
