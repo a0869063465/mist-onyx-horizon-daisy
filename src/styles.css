@@ -8578,8 +8578,8 @@ button.watch-back {
 }
 /* The two side cards turn a little toward the middle (about the up-down axis), with the curve of the floor under
    them (owner, 19/10: turned on Y, not tilted on Z). */
-.po-slot:first-child:not(:only-child) { --lean: 24deg; --sink: 5px; }
-.po-slot:last-child:not(:only-child) { --lean: -24deg; --sink: 5px; }
+.po-slot:first-child:not(:only-child) { --lean: var(--side-lean, 24deg); --sink: var(--side-sink, 5px); }
+.po-slot:last-child:not(:only-child) { --lean: calc(var(--side-lean, 24deg) * -1); --sink: var(--side-sink, 5px); }
 .po-card {
   position: relative;
   display: block;
@@ -8835,3 +8835,10 @@ button.watch-back {
 .cc-dots { display: flex; gap: 0.4rem; }
 .cc-dots i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: rgba(244, 230, 192, 0.3); }
 .cc-dots i.on { background: #f4d27a; box-shadow: 0 0 6px #f4d27a; }
+/* Chỉnh hàng lá (publisher): a small stage showing the row as the sliders move. */
+.po.po-preview { position: relative; inset: auto; z-index: auto; height: 15rem; margin: 0.4rem 0 0.8rem; border-radius: 0.5rem; --floor: 78%; }
+/* The same floor curve as the full stage (it follows the screen, not the small box), so what is set here matches. */
+.po-preview .po-floor { left: calc(50% - 70vw); right: calc(50% - 70vw); height: 26vh; }
+.po-preview .po-slot { animation: none; transform: translateY(var(--sink, 0)) rotateY(var(--lean, 0deg)); }
+.row-tune { display: grid; gap: 0.3rem; margin-bottom: 0.7rem; font-family: var(--shop-cond); font-size: 1.05rem; font-weight: 800; }
+.row-tune input { width: 100%; accent-color: #e4ff5a; }

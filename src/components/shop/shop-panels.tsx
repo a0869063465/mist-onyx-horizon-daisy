@@ -1,10 +1,14 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { CardFace } from "@/components/game/card-face";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import {
   byPower,
+  DEFAULT_ROW,
+  loadRowLook,
+  rowStyle,
+  saveRowLook,
   cardName,
   DEFAULT_TIERS,
   freshRates,
@@ -210,6 +214,57 @@ export function PackCards({ onTap, onClose }: { onTap: (entry: PackEntry) => voi
           );
         })}
       </div>
+    </Panel>
+  );
+}
+
+/** Chỉnh hàng lá (publisher, owner 19/10): how much the two side cards turn and sink, seen on a small stage. */
+export function RowTuner({ onClose }: { onClose: () => void }) {
+  const [look, setLook] = useState(() => loadRowLook());
+  function update(next: typeof look) {
+    saveRowLook(next);
+    setLook(next);
+  }
+  const foot = (
+    <>
+      <button type="button" className="shop-soft" onClick={() => update(DEFAULT_ROW)}>
+        {tr("Về mặc định")}
+      </button>
+      <button type="button" className="shop-main" onClick={onClose}>
+        OK
+      </button>
+    </>
+  );
+  return (
+    <Panel title={tr("Chỉnh hàng lá")} onClose={onClose} foot={foot}>
+      <div className="po po-preview" style={rowStyle(look) as CSSProperties}>
+        <span className="po-floor" aria-hidden="true" />
+        <div className="po-row">
+          {[0, 1, 2].map((slot) => (
+            <span key={slot} className="po-slot">
+              <span className="po-card">
+                <span className="po-card-inner">
+                  <span className="po-card-back">
+                    <img src="/ui/card-back.webp" alt="" draggable={false} />
+                  </span>
+                </span>
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <label className="row-tune">
+        <span>
+          {tr("Góc xoay lá hai bên")}: {look.lean}°
+        </span>
+        <input type="range" min={0} max={60} step={1} value={look.lean} onChange={(event) => update({ ...look, lean: Number(event.target.value) })} />
+      </label>
+      <label className="row-tune">
+        <span>
+          {tr("Hạ thấp lá hai bên")}: {look.sink}px
+        </span>
+        <input type="range" min={-20} max={30} step={1} value={look.sink} onChange={(event) => update({ ...look, sink: Number(event.target.value) })} />
+      </label>
     </Panel>
   );
 }

@@ -186,6 +186,29 @@ export function clearOwned() {
   write(OWNED_KEY, []);
 }
 
+// ---- The look of the opened row, tuned by the publisher (owner, 19/10: "make it custom, I'll set it myself") ----
+
+const ROW_KEY = "clash-pack-row";
+/** The side cards' turn toward the middle (degrees, about the up-down axis) and how far they sit lower (px). */
+export type RowLook = { lean: number; sink: number };
+export const DEFAULT_ROW: RowLook = { lean: 24, sink: 5 };
+
+export function loadRowLook(): RowLook {
+  const raw = read<Partial<RowLook> | null>(ROW_KEY, null);
+  const lean = Number(raw?.lean);
+  const sink = Number(raw?.sink);
+  return { lean: Number.isFinite(lean) ? lean : DEFAULT_ROW.lean, sink: Number.isFinite(sink) ? sink : DEFAULT_ROW.sink };
+}
+
+export function saveRowLook(look: RowLook) {
+  write(ROW_KEY, look);
+}
+
+/** The CSS variables the row reads. */
+export function rowStyle(look: RowLook): Record<string, string> {
+  return { "--side-lean": `${look.lean}deg`, "--side-sink": `${look.sink}px` };
+}
+
 // ---- Drawing ----
 
 type Drawn = PackEntry & { tier: Tier };
