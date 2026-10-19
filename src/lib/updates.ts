@@ -590,6 +590,7 @@ export const PENDING_NOTES: string[] = [
   "Mỗi gói còn 3 lá khác nhau, lá to hơn. Khi mở gói và ở bảng kết quả, lá chỉ là hình quái hoặc phép trong khung vàng, không chỉ số, không tên.",
   "Tỉ lệ gói: bỏ trọng số từng lá. Mỗi lá rút ra là UR 1%, SR 7%, Normal 92%, nhà phát hành nhập lại được; trong cùng bậc, lá nào cũng có cơ hội như nhau. Vẫn đổi bậc từng lá được.",
   "Lá trong gói: lá đã có in mờ, lá phép xếp theo nhóm như Chỉnh sửa bộ bài. Khung Tỉ lệ cũng xếp phép theo nhóm.",
+  "Mở gói: nhãn bậc hình thang như video, SR cam sang vàng, UR hồng sang xanh lam. Hai lá hai bên hơi nghiêng theo đường cong dưới chân. Viền lá UR úp mặt đổi sang ánh hồng xanh. Lá UR phóng to đứng yên đến khi bấm lần nữa.",
 ];
 
 function remarkOf(notes: string[]) {

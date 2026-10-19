@@ -12,7 +12,7 @@ import { PACK, tierRank, type OpenedPack, type Pull, type Purchase, type Tier } 
  * white flash and turns rainbow. Tap: a beam of light falls on it, its top is torn off and the stage bursts into
  * vertical light (blue = all Normal, gold = best is SR, rainbow = a UR). The 3 cards fly in face down (an SR back
  * glows gold, a UR back purple); tap to turn them: an SR jumps up in gold sparks, a UR comes forward in a ring of
- * light. Then Tiếp, and after the last pack the results: every card drawn, tap one to read it.
+ * light until the next tap. Then Tiếp, and after the last pack the results: every card drawn, tap one to read it.
  */
 type Step = "enter" | "omen" | "ready" | "cut" | "deal" | "flip";
 type Bolt = { key: number; x: number; tone: "blue" | "red"; path: string; branches: string[]; sparks: Spark[] };
@@ -370,14 +370,8 @@ function Burst({ count, rainbow = false }: { count: number; rainbow?: boolean })
   );
 }
 
-/** A UR comes forward in a ring of light, then goes back to its place (by itself, or on a tap). */
+/** A UR comes forward in a ring of light and stays there until a tap sends it back (owner, 19/10). */
 function Showcase({ pull, onClose }: { pull: Pull; onClose: () => void }) {
-  const close = useRef(onClose);
-  close.current = onClose;
-  useEffect(() => {
-    const timer = window.setTimeout(() => close.current(), 2000);
-    return () => window.clearTimeout(timer);
-  }, []);
   return (
     <div
       className="po-show"
