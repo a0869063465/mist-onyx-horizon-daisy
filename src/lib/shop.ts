@@ -189,20 +189,29 @@ export function clearOwned() {
 // ---- The look of the opened row, tuned by the publisher (owner, 19/10: "make it custom, I'll set it myself") ----
 
 const ROW_KEY = "clash-pack-row";
-/** The side cards' turn toward the middle (degrees, about the up-down axis), how far they sit lower (px) and how far they come toward the screen (px, below 0 = further away). */
-export type RowLook = { lean: number; sink: number; near: number };
-export const DEFAULT_ROW: RowLook = { lean: 24, sink: 5, near: 0 };
+/**
+ * One card place: its turn about the up-down axis (degrees; for the sides, toward the middle), how far it sits lower
+ * (px) and how far it comes toward the screen (px, below 0 = further away). The two sides share one setting, mirrored.
+ */
+export type CardSpot = { lean: number; sink: number; near: number };
+export type RowLook = { side: CardSpot; mid: CardSpot };
+export const DEFAULT_ROW: RowLook = { side: { lean: 24, sink: 5, near: 0 }, mid: { lean: 0, sink: 0, near: 0 } };
+
+function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
+  const row = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof CardSpot, unknown>>;
+  const pick = (key: keyof CardSpot) => {
+    const value = Number(row[key]);
+    return Number.isFinite(value) ? value : fallback[key];
+  };
+  return { lean: pick("lean"), sink: pick("sink"), near: pick("near") };
+}
 
 export function loadRowLook(): RowLook {
-  const raw = read<Partial<RowLook> | null>(ROW_KEY, null);
-  const lean = Number(raw?.lean);
-  const sink = Number(raw?.sink);
-  const near = Number(raw?.near);
-  return {
-    lean: Number.isFinite(lean) ? lean : DEFAULT_ROW.lean,
-    sink: Number.isFinite(sink) ? sink : DEFAULT_ROW.sink,
-    near: Number.isFinite(near) ? near : DEFAULT_ROW.near,
-  };
+  const raw = read<Record<string, unknown> | null>(ROW_KEY, null);
+  if (!raw) return DEFAULT_ROW;
+  // Saved before the middle card could be set: the numbers were the sides'.
+  const side = "side" in raw ? raw.side : raw;
+  return { side: spotOf(side, DEFAULT_ROW.side), mid: spotOf(raw.mid, DEFAULT_ROW.mid) };
 }
 
 export function saveRowLook(look: RowLook) {
@@ -211,7 +220,14 @@ export function saveRowLook(look: RowLook) {
 
 /** The CSS variables the row reads. */
 export function rowStyle(look: RowLook): Record<string, string> {
-  return { "--side-lean": `${look.lean}deg`, "--side-sink": `${look.sink}px`, "--side-near": `${look.near}px` };
+  return {
+    "--side-lean": `${look.side.lean}deg`,
+    "--side-sink": `${look.side.sink}px`,
+    "--side-near": `${look.side.near}px`,
+    "--mid-lean": `${look.mid.lean}deg`,
+    "--mid-sink": `${look.mid.sink}px`,
+    "--mid-near": `${look.mid.near}px`,
+  };
 }
 
 // ---- Drawing ----

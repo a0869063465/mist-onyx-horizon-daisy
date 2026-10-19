@@ -594,7 +594,7 @@ export const PENDING_NOTES: string[] = [
   "Lá liên quan: lá có dạng tiến hoá hoặc dung hợp có biểu tượng chồng lá ở góc hình. Bấm hình lá trong bảng mô tả để mở cuộn 3D cả nhóm, kéo qua lại để xem, bấm lá bên cạnh để đưa vào giữa, bấm lá giữa để xem mô tả lá đó, bấm << để về cuộn 3D, bấm ra ngoài để về mô tả lá ban đầu. Có ở Chỉnh sửa bộ bài, Cửa hàng và trong trận.",
   "Cuộn 3D: sửa lỗi bấm ra ngoài hoặc bấm lá đôi khi không ăn, phải bấm 2-3 lần.",
   "Mở gói: hai lá hai bên xoay vào giữa như cuộn 3D, lá giữa giữ nguyên, viền dưới lá theo đường cong sàn, không còn bị méo như hình bình hành.",
-  "Cửa hàng, công cụ nhà phát hành: thêm Chỉnh hàng lá, kéo thanh để chỉnh góc xoay, độ hạ thấp và độ gần xa màn hình của hai lá hai bên khi mở gói, có hình xem trước.",
+  "Cửa hàng, công cụ nhà phát hành: thêm Chỉnh hàng lá, kéo thanh để chỉnh góc xoay, độ hạ thấp và độ gần xa màn hình của lá khi mở gói, có hình xem trước. Bấm lá bên để chỉnh hai lá hai bên, bấm lá giữa để chỉnh lá giữa.",
 ];
 
 function remarkOf(notes: string[]) {

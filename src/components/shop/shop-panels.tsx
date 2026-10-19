@@ -218,12 +218,20 @@ export function PackCards({ onTap, onClose }: { onTap: (entry: PackEntry) => voi
   );
 }
 
-/** Chỉnh hàng lá (publisher, owner 19/10): how much the two side cards turn and sink, seen on a small stage. */
+/**
+ * Chỉnh hàng lá (publisher, owner 19/10): how much the cards turn, sink and come near, seen on a small stage.
+ * Tap a side card to set both sides (mirrored), tap the middle card to set the middle one.
+ */
 export function RowTuner({ onClose }: { onClose: () => void }) {
   const [look, setLook] = useState(() => loadRowLook());
+  const [part, setPart] = useState<"side" | "mid">("side");
+  const spot = look[part];
   function update(next: typeof look) {
     saveRowLook(next);
     setLook(next);
+  }
+  function change(key: "lean" | "sink" | "near", value: number) {
+    update({ ...look, [part]: { ...spot, [key]: value } });
   }
   const foot = (
     <>
@@ -235,13 +243,21 @@ export function RowTuner({ onClose }: { onClose: () => void }) {
       </button>
     </>
   );
+  const which = part === "side" ? tr("lá hai bên") : tr("lá giữa");
   return (
     <Panel title={tr("Chỉnh hàng lá")} onClose={onClose} foot={foot}>
       <div className="po po-preview" style={rowStyle(look) as CSSProperties}>
         <span className="po-floor" aria-hidden="true" />
         <div className="po-row">
           {[0, 1, 2].map((slot) => (
-            <span key={slot} className="po-slot">
+            <span
+              key={slot}
+              className={`po-slot${(slot === 1) === (part === "mid") ? " is-picked" : ""}`}
+              onClick={() => {
+                playUi("select");
+                setPart(slot === 1 ? "mid" : "side");
+              }}
+            >
               <span className="po-card">
                 <span className="po-card-inner">
                   <span className="po-card-back">
@@ -253,24 +269,25 @@ export function RowTuner({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       </div>
+      <p className="row-pick">{tr("Bấm lá để chọn lá cần chỉnh.")}</p>
       <label className="row-tune">
         <span>
-          {tr("Góc xoay lá hai bên")}: {look.lean}°
+          {tr("Góc xoay")} {which}: {spot.lean}°
         </span>
-        <input type="range" min={0} max={60} step={1} value={look.lean} onChange={(event) => update({ ...look, lean: Number(event.target.value) })} />
+        <input type="range" min={part === "side" ? 0 : -60} max={60} step={1} value={spot.lean} onChange={(event) => change("lean", Number(event.target.value))} />
       </label>
       <label className="row-tune">
         <span>
-          {tr("Hạ thấp lá hai bên")}: {look.sink}px
+          {tr("Hạ thấp")} {which}: {spot.sink}px
         </span>
-        <input type="range" min={-20} max={30} step={1} value={look.sink} onChange={(event) => update({ ...look, sink: Number(event.target.value) })} />
+        <input type="range" min={-20} max={30} step={1} value={spot.sink} onChange={(event) => change("sink", Number(event.target.value))} />
       </label>
       <label className="row-tune">
         <span>
-          {tr("Gần / xa màn hình")}: {look.near > 0 ? "+" : ""}
-          {look.near}px
+          {tr("Gần / xa màn hình")} ({which}): {spot.near > 0 ? "+" : ""}
+          {spot.near}px
         </span>
-        <input type="range" min={-150} max={150} step={1} value={look.near} onChange={(event) => update({ ...look, near: Number(event.target.value) })} />
+        <input type="range" min={-150} max={150} step={1} value={spot.near} onChange={(event) => change("near", Number(event.target.value))} />
       </label>
     </Panel>
   );
