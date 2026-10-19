@@ -5558,6 +5558,7 @@ function BoardSlot({
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
         <span className="badges">
           {bind > 0 ? <i className="is-hold">{bind >= 90 ? "∞" : bind}</i> : null}
+          {(mon.lava ?? 0) > 0 ? <i className="is-lava">{mon.lava}</i> : null}
           {mon.curse ? <i className="is-harm">∞</i> : null}
           {mon.vulnerable > 0 ? <i>X2</i> : null}
           {mon.noBlock && !isStill(mon.cardId) ? <i>{tr("Cấm")}</i> : null}

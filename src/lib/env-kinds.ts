@@ -48,6 +48,8 @@ export const ENV_KINDS: Record<string, string[]> = {
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
+  // Núi dung nham: quái hệ lửa (chủ game 19/10: chưa có quái nào; mỗi quái chỉ thuộc một môi trường)
+  "nui-dung-nham": [],
   // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ
   "thanh-dia-thien-su": [...SANCTUARY_GUARDED, ...SANCTUARY_WARRIORS],
   // Bóng tối (cả phù thuỷ: Phù thuỷ thời gian, Phù thuỷ tí hơn)

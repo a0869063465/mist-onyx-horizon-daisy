@@ -46,6 +46,8 @@ export type FieldMon = {
   stored?: number;
   blessAtk?: number;
   blessDmg?: number;
+  /** Núi dung nham stacks on an allied fire monster: each is +1 attack and +1 magic damage on its next normal attack. */
+  lava?: number;
   nextDef?: number;
   blessDef?: number;
   blessMdef?: number;
@@ -1734,10 +1736,10 @@ export function visibleStats(mon: FieldMon, allies: Array<FieldMon | null>) {
   const aura = auraGuard(allies, mon);
   const stanceAtk = mon.cardId === "rong-boc-trung" && mon.stance === "attack";
   return {
-    atk: liveAtk(mon),
+    atk: liveAtk(mon) + (mon.lava ?? 0),
     def: liveDef(mon, allies),
     mdef: liveMdef(mon, allies),
-    blueAtk: (mon.blessAtk ?? 0) > 0 || (mon.clash?.atk ?? 0) > 0 || stanceAtk || (mon.raised?.atk ?? 0) > 0 || (mon.cardId === "con-thinh-no-cua-hai-vuong" && (mon.stored ?? 0) > 0),
+    blueAtk: (mon.lava ?? 0) > 0 || (mon.blessAtk ?? 0) > 0 || (mon.clash?.atk ?? 0) > 0 || stanceAtk || (mon.raised?.atk ?? 0) > 0 || (mon.cardId === "con-thinh-no-cua-hai-vuong" && (mon.stored ?? 0) > 0),
     blueDef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.nextDef ?? 0) > 0 || (mon.blessDef ?? 0) > 0 || guardBonus(mon) > 0 || (mon.clash?.def ?? 0) > 0 || aura > 0 || (mon.raised?.def ?? 0) > 0 || (mon.buff?.def ?? 0) > 0),
     blueMdef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.blessMdef ?? 0) > 0 || guardBonus(mon) > 0 || aura > 0 || (mon.raised?.mdef ?? 0) > 0 || (mon.buff?.mdef ?? 0) > 0 || (mon.clash?.mdef ?? 0) > 0),
     blueHp: !mon.cage && ((mon.raised?.hp ?? 0) > 0 || (mon.clash?.maxHp ?? 0) > 0 || (mon.buff?.maxHp ?? 0) > 0),
@@ -4350,7 +4352,49 @@ function tideSkill(before: Duel, after: Duel, uid: string, targetUid: string | n
 }
 
 function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Duel {
-  return envGuard(state, [attackerUid, defenderUid], [attackerUid, defenderUid], () => resolveMeleeCore(state, attackerUid, defenderUid));
+  return lavaStrike(state, attackerUid, defenderUid, (armed) =>
+    envGuard(armed, [attackerUid, defenderUid], [attackerUid, defenderUid], () => resolveMeleeCore(armed, attackerUid, defenderUid)),
+  );
+}
+
+/**
+ * Núi dung nham stacks on a normal attack (owner, 19/10): all of them at once, +1 attack each for the blow, then
+ * that many magic damage on the one struck (a monster's magic armor counts, a player takes it whole). Spent after.
+ */
+function lavaStrike(state: Duel, attackerUid: string, targetUid: string | null, run: (armed: Duel) => Duel): Duel {
+  const side = ownerSide(state, attackerUid);
+  const attacker = side === null ? null : state.players[side].field.find((mon) => mon?.uid === attackerUid);
+  const n = attacker?.lava ?? 0;
+  if (side === null || !attacker || n <= 0) return run(state);
+  const lift = (duel: Duel, by: number, spend: boolean) => {
+    const player = duel.players[side];
+    const field = player.field.map((mon) => (mon?.uid === attackerUid ? { ...mon, atk: mon.atk + by, lava: spend ? undefined : mon.lava } : mon));
+    return patch(duel, side, { ...player, field: field as Player["field"] });
+  };
+  let next = run(lift(state, n, false));
+  if (next === state) return state;
+  if (next.players[side].field.some((mon) => mon?.uid === attackerUid)) next = lift(next, -n, true);
+  const foe = (1 - side) as Side;
+  const them = next.players[foe];
+  const struck = targetUid ? them.field.find((mon) => mon?.uid === targetUid) : null;
+  const name = shadeHidden(attacker) ? "Quái thú ẩn mình" : cardOf(attacker).name;
+  if (targetUid === null) {
+    next = checkWinner(patch(next, foe, { ...them, hp: them.hp - n }));
+    return note(next, `Cộng dồn dung nham của ${name}: +${n} công, ${n} sát thương phép lên ${sideName(foe)}.`, "hit");
+  }
+  if (!struck || struck.hp <= 0) return next;
+  const previous = charmDamage;
+  charmDamage = 0;
+  try {
+    const hurtMon = damageSpell(struck, n, them.field);
+    const field = them.field.map((mon) => (mon?.uid === struck.uid ? hurtMon : mon));
+    next = patch(next, foe, settleCocoon(dropDead({ ...them, field: field as Player["field"] })));
+    const target = shadeHidden(struck) ? "quái thú ẩn mình" : cardOf(struck).name;
+    const lost = Math.max(0, struck.hp - Math.max(0, hurtMon.hp));
+    return note(next, `Cộng dồn dung nham của ${name}: +${n} công, ${lost} sát thương phép lên ${target}.`, "hit");
+  } finally {
+    charmDamage = previous;
+  }
 }
 
 function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string): Duel {
@@ -4767,7 +4811,9 @@ function resolveHellFace(state: Duel, attacker: FieldMon, blocker: FieldMon | nu
 export function resolveFace(state: Duel, blockerUid: string | null, withSkill = false): Duel {
   const attackerUid = state.pending?.kind === "face" ? state.pending.attacker : null;
   const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
-  return envGuard(state, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(state, blockerUid, withSkill));
+  const run = (armed: Duel) =>
+    envGuard(armed, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(armed, blockerUid, withSkill));
+  return attackerUid && !withSkill ? lavaStrike(state, attackerUid, blockerUid, run) : run(state);
 }
 
 function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = false): Duel {
@@ -7873,6 +7919,16 @@ function lavaTick(state: Duel): { state: Duel; line: string } {
       count.set(key, row);
     }
     const parts: string[] = [];
+    // Allied fire monsters get one stack per hit landing on them, even when magic armor stops it all, and one per
+    // hit landing on their player (owner, 19/10).
+    const stacks = new Map<string, number>();
+    const fire = (mon: FieldMon | null | undefined) => Boolean(mon && envFavors("nui-dung-nham", mon.cardId));
+    for (const row of count.values()) {
+      if (row.side !== owner) continue;
+      if (row.uid === null) {
+        for (const mon of next.players[owner].field) if (mon && mon.hp > 0 && fire(mon)) stacks.set(mon.uid, (stacks.get(mon.uid) ?? 0) + row.n);
+      } else if (fire(next.players[owner].field.find((mon) => mon?.uid === row.uid))) stacks.set(row.uid, (stacks.get(row.uid) ?? 0) + row.n);
+    }
     const previous = charmDamage;
     charmDamage = 0;
     try {
@@ -7895,6 +7951,13 @@ function lavaTick(state: Duel): { state: Duel; line: string } {
       }
     } finally {
       charmDamage = previous;
+    }
+    if (stacks.size) {
+      const mine = next.players[owner];
+      const field = mine.field.map((mon) => (mon && mon.hp > 0 && stacks.has(mon.uid) ? { ...mon, lava: (mon.lava ?? 0) + (stacks.get(mon.uid) ?? 0) } : mon));
+      next = patch(next, owner, { ...mine, field: field as Player["field"] });
+      const named = mine.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && stacks.has(mon.uid)));
+      if (named.length) parts.push(`${named.map((mon) => `${shadeHidden(mon) ? "quái thú ẩn mình" : cardOf(mon).name} +${stacks.get(mon.uid)} cộng dồn`).join(", ")}`);
     }
     bits.push(`Núi dung nham phun trào: ${parts.join(", ")}.`);
     next = checkWinner(next);

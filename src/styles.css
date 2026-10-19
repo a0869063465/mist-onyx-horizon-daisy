@@ -3241,7 +3241,7 @@ button.trail-dot.is-on {
   border-radius: 999px;
   padding: 0.08rem 0.28rem;
 }
-.badges i.is-harm, .badges i.is-hold {
+.badges i.is-harm, .badges i.is-hold, .badges i.is-lava {
   font-size: 1.15rem;
   min-width: 1.85em;
   padding: 0.08rem 0.32rem;
@@ -3256,6 +3256,15 @@ button.trail-dot.is-on {
 .badges i.is-hold {
   color: #ffe7bc;
   background: rgba(18, 10, 6, 0.88);
+}
+/* Núi dung nham stacks: a clear count like the control turns, yellow to red so it is not taken for them. */
+.badges i.is-lava {
+  background: rgba(18, 10, 6, 0.88);
+  color: transparent;
+  background-image: linear-gradient(180deg, #fff27a 0%, #ffb02e 45%, #ff3d1f 100%), linear-gradient(rgba(18, 10, 6, 0.88), rgba(18, 10, 6, 0.88));
+  -webkit-background-clip: text, padding-box;
+  background-clip: text, padding-box;
+  box-shadow: 0 0 6px rgba(255, 90, 30, 0.6);
 }
 .badges i.is-ward-phys {
   color: #3a2a04;
