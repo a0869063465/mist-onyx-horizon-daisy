@@ -198,7 +198,8 @@ const ROW_KEY = "clash-pack-row";
  */
 export type CardSpot = { lean: number; tilt: number; roll: number; sink: number; near: number; spread: number };
 export type RowLook = { side: CardSpot; mid: CardSpot };
-export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 0, roll: 0, sink: 5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 0, roll: 0, sink: 0, near: 0, spread: 0 } };
+/** The owner's own numbers (19/10, set in Chỉnh hàng lá on his phone). */
+export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 2, roll: -3, sink: -5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 0, roll: 0, sink: 0, near: 0, spread: 0 } };
 
 function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
   const row = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof CardSpot, unknown>>;
