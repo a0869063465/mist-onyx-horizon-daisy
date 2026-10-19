@@ -527,6 +527,7 @@ const PAIRS: Array<[string, string]> = [
   ["Chỉnh hàng lá", "Card row look"],
   ["Góc xoay", "Turn of"],
   ["Hạ thấp", "Lower"],
+  ["Ngả trước / sau", "Tilt back / forward"],
   ["lá hai bên", "side cards"],
   ["lá giữa", "middle card"],
   ["Bấm lá để chọn lá cần chỉnh.", "Tap a card to pick what to set."],

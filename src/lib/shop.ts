@@ -190,12 +190,13 @@ export function clearOwned() {
 
 const ROW_KEY = "clash-pack-row";
 /**
- * One card place: its turn about the up-down axis (degrees; for the sides, toward the middle), how far it sits lower
+ * One card place: its turn about the up-down axis (degrees; for the sides, toward the middle), its tilt about the
+ * card's left-right axis (degrees, above 0 = top leans back), how far it sits lower
  * (px) and how far it comes toward the screen (px, below 0 = further away). The two sides share one setting, mirrored.
  */
-export type CardSpot = { lean: number; sink: number; near: number };
+export type CardSpot = { lean: number; tilt: number; sink: number; near: number };
 export type RowLook = { side: CardSpot; mid: CardSpot };
-export const DEFAULT_ROW: RowLook = { side: { lean: 24, sink: 5, near: 0 }, mid: { lean: 0, sink: 0, near: 0 } };
+export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 0, sink: 5, near: 0 }, mid: { lean: 0, tilt: 0, sink: 0, near: 0 } };
 
 function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
   const row = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof CardSpot, unknown>>;
@@ -203,7 +204,7 @@ function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
     const value = Number(row[key]);
     return Number.isFinite(value) ? value : fallback[key];
   };
-  return { lean: pick("lean"), sink: pick("sink"), near: pick("near") };
+  return { lean: pick("lean"), tilt: pick("tilt"), sink: pick("sink"), near: pick("near") };
 }
 
 export function loadRowLook(): RowLook {
@@ -222,6 +223,8 @@ export function saveRowLook(look: RowLook) {
 export function rowStyle(look: RowLook): Record<string, string> {
   return {
     "--side-lean": `${look.side.lean}deg`,
+    "--side-tilt": `${look.side.tilt}deg`,
+    "--mid-tilt": `${look.mid.tilt}deg`,
     "--side-sink": `${look.side.sink}px`,
     "--side-near": `${look.side.near}px`,
     "--mid-lean": `${look.mid.lean}deg`,
