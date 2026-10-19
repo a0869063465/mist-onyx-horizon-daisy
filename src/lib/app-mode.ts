@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 /**
  * Publisher or guest (owner, 18/10). Codes typed in Thông tin → Nhập mã switch it: NHAPHATHANH back to the
  * publisher's full app, KHACH to the guest view, where Tuỳ chỉnh keeps only Ngôn ngữ and Âm thanh and Thông tin
- * keeps only Chiến thuật and Nhập mã. Kept on this phone; the publisher view is the default.
+ * keeps only Chiến thuật and Nhập mã. Kept on this phone; the guest view is the default (owner, 19/10).
  */
 export type AppMode = "publisher" | "guest";
 
@@ -13,9 +13,9 @@ const listeners = new Set<(mode: AppMode) => void>();
 
 export function appMode(): AppMode {
   try {
-    return localStorage.getItem(KEY) === "guest" ? "guest" : "publisher";
+    return localStorage.getItem(KEY) === "publisher" ? "publisher" : "guest";
   } catch {
-    return "publisher";
+    return "guest";
   }
 }
 
@@ -43,7 +43,7 @@ export function redeemCode(text: string): AppMode | null {
 }
 
 export function useAppMode(): AppMode {
-  const [mode, setMode] = useState<AppMode>("publisher");
+  const [mode, setMode] = useState<AppMode>("guest");
   useEffect(() => {
     setMode(appMode());
     listeners.add(setMode);
