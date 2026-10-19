@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { applyCopySize, loadCopySize, parseCopy } from "@/lib/copy-mark";
 import { tr, useLang } from "@/lib/i18n";
+import { noticeParts } from "@/components/game/painted";
+import { addSheetInk } from "@/components/game/sheet-ink";
 
 export function CopySize() {
   useEffect(() => {
@@ -12,9 +14,13 @@ export function CopySize() {
   return null;
 }
 
-export function CopyText({ text }: { text: string }) {
+/**
+ * `inked`: plain words that stand out (monster names, skills, damage kinds…) take the notice board's colours,
+ * and the monster sheet's own colours are added only on the words those leave plain.
+ */
+export function CopyText({ text, firstTitle = true, inked = false }: { text: string; firstTitle?: boolean; inked?: boolean }) {
   useLang();
-  const bits = parseCopy(tr(text));
+  const bits = parseCopy(tr(text), firstTitle);
   const nodes = [];
   for (let index = 0; index < bits.length; index += 1) {
     const bit = bits[index];
@@ -43,6 +49,14 @@ export function CopyText({ text }: { text: string }) {
         </span>,
       );
       index += 1;
+      continue;
+    }
+    if (inked && !bit.bold && !bit.under) {
+      nodes.push(
+        <span key={index}>
+          {addSheetInk(noticeParts(bit.text, false, true)).map((part, at) => (part.ink ? <b key={at} className={`ink-${part.ink}`}>{part.text}</b> : <span key={at}>{part.text}</span>))}
+        </span>,
+      );
       continue;
     }
     const body = bit.bold ? <strong>{bit.text}</strong> : bit.text;

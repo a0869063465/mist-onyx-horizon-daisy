@@ -1,7 +1,10 @@
 {
   "name": "Clash of the Beasts",
   "short_name": "Clash",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait",
   "display": "standalone",
   "background_color": "#071018",
   "theme_color": "#071018",

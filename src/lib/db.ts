@@ -1,14 +1,14 @@
 import { pendingMigrations } from "../../scripts/migration-plan.mjs";
+import { findDatabaseUrl } from "../../scripts/database-url.mjs";
 
 /** Which database backend is active. */
 export type DbSource = "neon" | "pglite";
 
 // An empty/whitespace DATABASE_URL (an easy misconfig in deploy UIs) must mean
-// "unset" — otherwise production would silently run on the PGLite fallback.
-const rawDatabaseUrl =
-  typeof process !== "undefined" ? process.env.DATABASE_URL : undefined;
+// "unset" — otherwise production would silently run on the PGLite fallback. A
+// storage integration connected under another prefix (STORAGE_URL…) counts too.
 const databaseUrl =
-  rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl : undefined;
+  typeof process !== "undefined" ? findDatabaseUrl(process.env) : undefined;
 
 /**
  * Active backend: real **Neon** when `DATABASE_URL` is set (deployed / configured
@@ -175,6 +175,11 @@ async function createSql(): Promise<Sql> {
       "@/lib/db is server-only — call getSql() from a createServerFn handler " +
         "or a server route loader, never from client code.",
     );
+  }
+  // On Vercel the embedded fallback cannot start (its data file is not deployed) and would not be shared between
+  // calls anyway, so say plainly that the database address is missing.
+  if (dbSource === "pglite" && typeof process !== "undefined" && process.env.VERCEL) {
+    throw new Error("Máy chủ chưa nối kho dữ liệu (thiếu DATABASE_URL).");
   }
   return dbSource === "neon" ? createNeonSql() : createPgliteSql();
 }

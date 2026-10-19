@@ -94,8 +94,9 @@ function ruleBuckets(rules: Array<{ text: string; ink: Ink }>) {
 const BASE_BUCKETS = ruleBuckets(NOTICE_RULES);
 const SYSTEM_BUCKETS = ruleBuckets([...NOTICE_RULES, ...SYSTEM_RULES]);
 
-export function noticeParts(raw: string, system = false): Array<{ text: string; ink?: Ink }> {
-  const text = raw.replace(/^\d+\.\s*/, "");
+/** `keepLead`: keep a leading "1." (card text), which a notice line drops. */
+export function noticeParts(raw: string, system = false, keepLead = false): Array<{ text: string; ink?: Ink }> {
+  const text = keepLead ? raw : raw.replace(/^\d+\.\s*/, "");
   const extra: Array<{ text: string; ink: Ink }> = [];
   for (const [id, chips] of Object.entries(MONSTER_CHIPS)) {
     for (const chip of chips) {

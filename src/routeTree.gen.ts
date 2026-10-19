@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DeckRouteImport } from './routes/deck'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TuneRouteImport } from './routes/tune'
 import { Route as WatchRouteImport } from './routes/watch'
 
@@ -25,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const DeckRoute = DeckRouteImport.update({
   id: '/deck',
   path: '/deck',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HopThuRoute = HopThuRouteImport.update({
@@ -42,6 +49,11 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TuneRoute = TuneRouteImport.update({
   id: '/tune',
   path: '/tune',
@@ -56,18 +68,22 @@ const WatchRoute = WatchRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/deck': typeof DeckRoute
+  '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/deck': typeof DeckRoute
+  '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
@@ -75,25 +91,46 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/deck': typeof DeckRoute
+  '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
+  '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
   '/watch': typeof WatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/deck' | '/hop-thu' | '/modes' | '/play' | '/tune' | '/watch'
+    | '/'
+    | '/deck'
+    | '/guide'
+    | '/hop-thu'
+    | '/modes'
+    | '/play'
+    | '/shop'
+    | '/tune'
+    | '/watch'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/deck' | '/hop-thu' | '/modes' | '/play' | '/tune' | '/watch'
+  to:
+    | '/'
+    | '/deck'
+    | '/guide'
+    | '/hop-thu'
+    | '/modes'
+    | '/play'
+    | '/shop'
+    | '/tune'
+    | '/watch'
   id:
     | '__root__'
     | '/'
     | '/deck'
+    | '/guide'
     | '/hop-thu'
     | '/modes'
     | '/play'
+    | '/shop'
     | '/tune'
     | '/watch'
   fileRoutesById: FileRoutesById
@@ -101,9 +138,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DeckRoute: typeof DeckRoute
+  GuideRoute: typeof GuideRoute
   HopThuRoute: typeof HopThuRoute
   ModesRoute: typeof ModesRoute
   PlayRoute: typeof PlayRoute
+  ShopRoute: typeof ShopRoute
   TuneRoute: typeof TuneRoute
   WatchRoute: typeof WatchRoute
 }
@@ -122,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/deck'
       fullPath: '/deck'
       preLoaderRoute: typeof DeckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hop-thu': {
@@ -145,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tune': {
       id: '/tune'
       path: '/tune'
@@ -165,9 +218,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DeckRoute: DeckRoute,
+  GuideRoute: GuideRoute,
   HopThuRoute: HopThuRoute,
   ModesRoute: ModesRoute,
   PlayRoute: PlayRoute,
+  ShopRoute: ShopRoute,
   TuneRoute: TuneRoute,
   WatchRoute: WatchRoute,
 }

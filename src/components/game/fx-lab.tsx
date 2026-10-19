@@ -1,6 +1,8 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { BoltBurst, FireBurst, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { emitFx } from "@/lib/spectacle";
+import { ArenaFx } from "@/components/game/arena-fx";
+import { fxStyle, setFxStyle, type FxStyle } from "@/lib/fx-kinds";
 import { playCue } from "@/lib/sfx";
 import { loadAlertLook, saveAlert } from "@/lib/layouts";
 import {
@@ -46,6 +48,47 @@ function readUndo(pack: FxPack): FxPrefs | null {
   }
 }
 
+const NEW_KINDS = [
+  { card: "kiem-si-lua-thieng", label: "Lửa · chém" },
+  { card: "trai-tim-hai-long", label: "Nước · phép" },
+  { card: "phu-thuy-ti-hon", label: "Sấm · phép" },
+  { card: "ky-si-bong-toi", label: "Bóng tối · chém" },
+  { card: "hiep-si-cua-vua", label: "Thánh · chém" },
+  { card: "ong-khong-lo", label: "Rừng · đâm" },
+  { card: "linh-chien-da-khong-lo", label: "Đá · đập" },
+  { card: "ma-dao-si", label: "Ma thuật · phép" },
+  { card: "thuong-quan-long", label: "Máy · bắn" },
+  { card: "ke-san-moi-tu-than", label: "Máu · vuốt" },
+  { card: "chien-si-gam-nham", label: "Thú · vuốt" },
+] as const;
+
+const NEW_ACTS = [
+  { id: "summon", label: "Triệu hồi" },
+  { id: "attack", label: "Đánh" },
+  { id: "hurt", label: "Trúng đòn" },
+  { id: "kill", label: "Hạ quái" },
+  { id: "heal", label: "Hồi máu" },
+  { id: "spell", label: "Phép giữa bàn" },
+  { id: "ailment", label: "Bất lợi" },
+] as const;
+
+const YOU = { x: 32, y: 65.6 };
+const FOE = { x: 53, y: 29.6 };
+
+function previewNew(act: (typeof NEW_ACTS)[number]["id"], card: string) {
+  const base = { color: "#ffffff", spot: "target" as const };
+  if (act === "summon") emitFx({ t: "ring", act: "summon", ...base, spot: "self", x: YOU.x, y: YOU.y, power: 1.15, card });
+  else if (act === "attack") emitFx({ t: "beam", act: "attack", x1: YOU.x, y1: YOU.y, x2: FOE.x, y2: FOE.y, color: "#fff", card });
+  else if (act === "hurt") emitFx({ t: "burst", act: "hurt", ...base, x: FOE.x, y: FOE.y, power: 0.95, card });
+  else if (act === "kill") emitFx({ t: "burst", act: "kill", ...base, x: FOE.x, y: FOE.y, power: 1.4, card });
+  else if (act === "heal") emitFx({ t: "ring", act: "heal", ...base, spot: "self", x: YOU.x, y: YOU.y, power: 1.05 });
+  else if (act === "spell") emitFx({ t: "ring", act: "spell", ...base, spot: "center", x: 42, y: 44, power: 1.4, card });
+  else {
+    emitFx({ t: "ailments", act: "ailment", marks: [{ id: "demo", x: FOE.x, y: FOE.y, spot: "target" }] });
+    window.setTimeout(() => emitFx({ t: "ailments", act: "ailment", marks: [] }), 3500);
+  }
+}
+
 export function FxLab({ onBack }: { onBack: () => void }) {
   const [looks, setLooks] = useState(() => loadLooks());
   const [act, setAct] = useState<FxAct>("summon");
@@ -64,6 +107,9 @@ export function FxLab({ onBack }: { onBack: () => void }) {
   const [alertSize, setAlertSize] = useState(() => loadAlertLook().glow);
   const [alertBorder, setAlertBorder] = useState(() => loadAlertLook().border);
   const look = looks[act];
+  const [style, setStyle] = useState<FxStyle>("new");
+  const [demo, setDemo] = useState("kiem-si-lua-thieng");
+  useEffect(() => setStyle(fxStyle()), []);
 
   function play(next: FxAct, row: ActLook = looks[next]) {
     const shown = (["now", "m1"] as const).filter((id) => !row.hide[id]);
@@ -159,6 +205,44 @@ export function FxLab({ onBack }: { onBack: () => void }) {
         Về tuỳ chỉnh
       </button>
       <h1>Hiệu ứng</h1>
+      <section className="fx-alert">
+        <h2>Kiểu hiệu ứng trong trận</h2>
+        <p className="tuner-note">Mới: hiệu ứng theo hệ của từng lá. Cũ: hiệu ứng trước đây, chỉnh ở các mục bên dưới.</p>
+        <div className="pad2">
+          <button type="button" className={`tuner-item${style === "new" ? " on" : ""}`} onClick={() => { setFxStyle("new"); setStyle("new"); }}>
+            Mới
+          </button>
+          <button type="button" className={`tuner-item${style === "old" ? " on" : ""}`} onClick={() => { setFxStyle("old"); setStyle("old"); }}>
+            Cũ
+          </button>
+        </div>
+        {style === "new" ? (
+          <>
+            <div className="fx-stage" aria-hidden>
+              <img className="fx-board" src="/board.png" alt="" />
+              <img className="fx-card is-you" src="/art/kiem-si.jpg" alt="" />
+              <img className="fx-card is-foe" src="/art/ac-ma.jpg" alt="" />
+              <ArenaFx />
+            </div>
+            <p className="tuner-note">Hệ</p>
+            <div className="fx-kinds">
+              {NEW_KINDS.map((row) => (
+                <button key={row.card} type="button" className={`tuner-item${demo === row.card ? " on" : ""}`} onClick={() => setDemo(row.card)}>
+                  {row.label}
+                </button>
+              ))}
+            </div>
+            <p className="tuner-note">Xem thử</p>
+            <div className="fx-kinds">
+              {NEW_ACTS.map((row) => (
+                <button key={row.id} type="button" className="pad-btn" onClick={() => previewNew(row.id, demo)}>
+                  {row.label}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </section>
       <section className="fx-alert">
         <h2>Chớp cam</h2>
         <p className="tuner-note">Chỉnh riêng quầng sáng và độ dày viền.</p>

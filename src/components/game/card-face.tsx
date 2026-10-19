@@ -3,7 +3,13 @@ import { artSrc, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { loadCard, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
 
-const NAME_FLOOR = 0.75;
+// Long names may shrink to 0.75 of the old size; card text is now 1.3x, so 0.75 / 1.3.
+const NAME_FLOOR = 0.58;
+
+/** Card text size from a layout number, scaled by the --card-text factor in styles.css. */
+export function cardText(size: number, unit = "cqw") {
+  return `calc(${size}${unit} * var(--card-text, 1))`;
+}
 
 function FittedName({ spot, value }: { spot: Spot; value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -16,7 +22,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
     let dead = false;
 
     const linesAt = (next: number) => {
-      node.style.fontSize = `${next}cqw`;
+      node.style.fontSize = cardText(next);
       node.style.height = "auto";
       const line = parseFloat(getComputedStyle(node).lineHeight) || 1;
       return node.scrollHeight / line;
@@ -26,14 +32,16 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
       if (dead || card.clientWidth < 2) return;
       const base = spot.size;
       const floor = base * NAME_FLOOR;
+      const room = (card.clientHeight * spot.height) / 100 + 1;
+      const fits = (size: number) => linesAt(size) <= 2.2 && node.scrollHeight <= room;
       let next = base;
-      if (linesAt(base) > 2.2) {
+      if (!fits(base)) {
         let lo = floor;
         let hi = base;
         next = floor;
         for (let i = 0; i < 10; i++) {
           const mid = (lo + hi) / 2;
-          if (linesAt(mid) <= 2.2) {
+          if (fits(mid)) {
             next = mid;
             lo = mid;
           } else {
@@ -41,7 +49,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
           }
         }
       }
-      node.style.fontSize = `${next}cqw`;
+      node.style.fontSize = cardText(next);
       node.style.height = `${spot.height}%`;
       setSize((prev) => (Math.abs(prev - next) < 0.01 ? prev : next));
     };
@@ -68,7 +76,7 @@ function FittedName({ spot, value }: { spot: Spot; value: string }) {
         top: `${spot.y}%`,
         width: `${spot.width}%`,
         height: `${spot.height}%`,
-        fontSize: `${size}cqw`,
+        fontSize: cardText(size),
       }}
     >
       {value}
@@ -100,6 +108,7 @@ export function CardFace({
   dim = false,
   selected = false,
   hideStats = false,
+  hideName = false,
   showNew = false,
   mark = null,
   layout,
@@ -113,6 +122,8 @@ export function CardFace({
   dim?: boolean;
   selected?: boolean;
   hideStats?: boolean;
+  /** No name on the card (the deck builder's pool shows only the art and figures). */
+  hideName?: boolean;
   showNew?: boolean;
   mark?: "new" | "up" | "down" | null;
   layout?: Record<CardKey, Spot>;
@@ -137,7 +148,7 @@ export function CardFace({
           top: `${spot.y}%`,
           width: `${spot.width}%`,
           height: `${spot.height}%`,
-          fontSize: `${spot.size}cqw`,
+          fontSize: cardText(spot.size),
         }}
       >
         {value}
@@ -159,13 +170,13 @@ export function CardFace({
           {pin(spots.mdef, live?.mdef ?? monster.mdef)}
           {pin(spots.atk, live?.atk ?? monster.atk)}
           {pin(spots.hp, live?.hp ?? monster.hp)}
-          {pin(spots.name, tr(live?.name ?? monster.name), true)}
+          {hideName ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
           {badge ? <NewMark spot={spots.fresh} kind={badge} /> : null}
         </>
       ) : spell ? (
         <>
           {pin(spellSpots.gems, gems ?? spell.gems)}
-          {pin(spellSpots.name, tr(spell.name), true)}
+          {hideName ? null : pin(spellSpots.name, tr(spell.name), true)}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}
         </>
       ) : null}
