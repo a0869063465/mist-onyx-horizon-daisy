@@ -1,6 +1,9 @@
 const KEY = "clash-sound";
 const FX_KEY = "clash-vol-fx";
 const TAP_KEY = "clash-vol-tap";
+const MUSIC_KEY = "clash-vol-music";
+/** Sent when the sound switch or the music volume changes, so the music follows at once. */
+export const MUSIC_EVENT = "clash-music-level";
 
 export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite";
 
@@ -77,6 +80,20 @@ export function soundOn() {
 
 export function setSound(next: boolean) {
   localStorage.setItem(KEY, next ? "on" : "off");
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(MUSIC_EVENT));
+}
+
+/** Background music volume, its own slider in Tuỳ chỉnh → Âm thanh (owner, 19/10). Starts at 50. */
+export function musicVolume() {
+  if (typeof localStorage === "undefined") return 50;
+  const raw = localStorage.getItem(MUSIC_KEY);
+  const value = raw == null || raw.trim() === "" ? 50 : Number(raw);
+  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 50;
+}
+
+export function setMusicVolume(value: number) {
+  localStorage.setItem(MUSIC_KEY, String(Math.min(100, Math.max(0, Math.round(value)))));
+  setSound(true);
 }
 
 export function fxVolume() {

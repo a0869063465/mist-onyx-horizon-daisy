@@ -10,7 +10,7 @@ import { askDraft, attackLabel, chipDraft, MONSTER_ASKS, MONSTER_CHIPS, resetMon
 import { ailmentHolds, defaultFxPrefs, defaultLooks, loadActivePack, loadFxPrefs, loadLooks } from "@/lib/fx-prefs";
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { useAppMode } from "@/lib/app-mode";
-import { fxVolume, playCue, playUi, setFxVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
+import { fxVolume, musicVolume, playCue, playUi, setFxVolume, setMusicVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
 import {
   CARD_MARKS,
   DEFAULT_BOARD_LAYOUT,
@@ -208,10 +208,12 @@ function SoundTune({ onBack }: { onBack: () => void }) {
   const [on, setOn] = useState(true);
   const [fx, setFx] = useState(100);
   const [tap, setTap] = useState(100);
+  const [music, setMusic] = useState(50);
   useEffect(() => {
     setOn(soundOn());
     setFx(fxVolume());
     setTap(tapVolume());
+    setMusic(musicVolume());
   }, []);
   return (
     <main className="tuner menu-page is-sub">
@@ -234,6 +236,22 @@ function SoundTune({ onBack }: { onBack: () => void }) {
       </button>
       {on ? (
         <>
+          <label className="tune-field-label">
+            Nhạc nền · {music}
+            <input
+              className="vol-range"
+              type="range"
+              min={0}
+              max={100}
+              value={music}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                setMusic(next);
+                setMusicVolume(next);
+                setOn(true);
+              }}
+            />
+          </label>
           <label className="tune-field-label">
             Hiệu ứng trận · {fx}
             <input

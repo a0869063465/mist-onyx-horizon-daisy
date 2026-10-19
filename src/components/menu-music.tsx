@@ -1,14 +1,12 @@
 import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { fxVolume, soundOn } from "@/lib/sfx";
+import { MUSIC_EVENT, musicVolume, soundOn } from "@/lib/sfx";
 
 /** The owner's two outside-a-match tracks (18/10): one of them at random, then another at random when it ends. */
 const TRACKS = ["/music/vong-lap-thu-bai-1.m4a", "/music/vong-lap-thu-bai-2.m4a"];
-/** Music sits under the effects: half the effects volume. */
-const MUSIC_SHARE = 0.5;
-
+/** Its own volume (Tuỳ chỉnh → Âm thanh → Nhạc nền), silent when the sound is off. */
 function level() {
-  return soundOn() ? (fxVolume() / 100) * MUSIC_SHARE : 0;
+  return soundOn() ? musicVolume() / 100 : 0;
 }
 
 /**
@@ -37,10 +35,17 @@ export function MenuMusic() {
       audio.volume = level();
       if (wanted.current && audio.paused && audio.volume > 0) void audio.play().catch(() => undefined);
     };
-    // Volume or sound switched in Tuỳ chỉnh: follow it on the next touch.
     window.addEventListener("pointerdown", start);
+    // The music volume or the sound switch changed in Tuỳ chỉnh: follow it at once.
+    const follow = () => {
+      audio.volume = level();
+      if (audio.volume === 0) audio.pause();
+      else if (wanted.current && audio.paused) void audio.play().catch(() => undefined);
+    };
+    window.addEventListener(MUSIC_EVENT, follow);
     return () => {
       window.removeEventListener("pointerdown", start);
+      window.removeEventListener(MUSIC_EVENT, follow);
       audio.removeEventListener("ended", next);
       audio.pause();
       player.current = null;
