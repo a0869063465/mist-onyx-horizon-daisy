@@ -191,13 +191,14 @@ export function clearOwned() {
 const ROW_KEY = "clash-pack-row";
 /**
  * One card place: its turn about the up-down axis (degrees; for the sides, toward the middle), its tilt about the
- * card's left-right axis (degrees, above 0 = top leans back), how far it sits lower
+ * card's left-right axis (degrees, above 0 = top leans back), its roll about the axis out of the screen (degrees;
+ * the sides mirrored), how far it sits lower
  * (px) how far it comes toward the screen (px, below 0 = further away)
  * and, for the sides only, how far they move apart along the screen (px, below 0 = closer to the middle). The two sides share one setting, mirrored.
  */
-export type CardSpot = { lean: number; tilt: number; sink: number; near: number; spread: number };
+export type CardSpot = { lean: number; tilt: number; roll: number; sink: number; near: number; spread: number };
 export type RowLook = { side: CardSpot; mid: CardSpot };
-export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 0, sink: 5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 0, sink: 0, near: 0, spread: 0 } };
+export const DEFAULT_ROW: RowLook = { side: { lean: 24, tilt: 0, roll: 0, sink: 5, near: 0, spread: 0 }, mid: { lean: 0, tilt: 0, roll: 0, sink: 0, near: 0, spread: 0 } };
 
 function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
   const row = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof CardSpot, unknown>>;
@@ -205,7 +206,7 @@ function spotOf(raw: unknown, fallback: CardSpot): CardSpot {
     const value = Number(row[key]);
     return Number.isFinite(value) ? value : fallback[key];
   };
-  return { lean: pick("lean"), tilt: pick("tilt"), sink: pick("sink"), near: pick("near"), spread: pick("spread") };
+  return { lean: pick("lean"), tilt: pick("tilt"), roll: pick("roll"), sink: pick("sink"), near: pick("near"), spread: pick("spread") };
 }
 
 export function loadRowLook(): RowLook {
@@ -225,6 +226,8 @@ export function rowStyle(look: RowLook): Record<string, string> {
   return {
     "--side-lean": `${look.side.lean}deg`,
     "--side-tilt": `${look.side.tilt}deg`,
+    "--side-roll": `${look.side.roll}deg`,
+    "--mid-roll": `${look.mid.roll}deg`,
     "--side-spread": `${look.side.spread}px`,
     "--mid-tilt": `${look.mid.tilt}deg`,
     "--side-sink": `${look.side.sink}px`,

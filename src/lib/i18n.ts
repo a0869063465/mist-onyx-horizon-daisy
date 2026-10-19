@@ -528,6 +528,7 @@ const PAIRS: Array<[string, string]> = [
   ["Góc xoay", "Turn of"],
   ["Hạ thấp", "Lower"],
   ["Ngả trước / sau", "Tilt back / forward"],
+  ["Xoay nghiêng trái / phải", "Roll left / right"],
   ["Gần vào giữa / xa ra", "Closer in / further out"],
   ["lá hai bên", "side cards"],
   ["lá giữa", "middle card"],

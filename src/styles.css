@@ -8578,9 +8578,9 @@ button.watch-back {
 }
 /* The two side cards turn a little toward the middle (about the up-down axis), with the curve of the floor under
    them (owner, 19/10: turned on Y, not tilted on Z). */
-.po-slot:first-child:not(:only-child) { --lean: var(--side-lean, 24deg); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); --tilt: var(--side-tilt, 0deg); --shift: calc(var(--side-spread, 0px) * -1); }
-.po-slot:last-child:not(:only-child) { --lean: calc(var(--side-lean, 24deg) * -1); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); --tilt: var(--side-tilt, 0deg); --shift: var(--side-spread, 0px); }
-.po-slot:not(:first-child):not(:last-child) { position: relative; z-index: 1; --lean: var(--mid-lean, 0deg); --sink: var(--mid-sink, 0px); --near: var(--mid-near, 0px); --tilt: var(--mid-tilt, 0deg); }
+.po-slot:first-child:not(:only-child) { --lean: var(--side-lean, 24deg); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); --tilt: var(--side-tilt, 0deg); --shift: calc(var(--side-spread, 0px) * -1); --roll: var(--side-roll, 0deg); }
+.po-slot:last-child:not(:only-child) { --lean: calc(var(--side-lean, 24deg) * -1); --sink: var(--side-sink, 5px); --near: var(--side-near, 0px); --tilt: var(--side-tilt, 0deg); --shift: var(--side-spread, 0px); --roll: calc(var(--side-roll, 0deg) * -1); }
+.po-slot:not(:first-child):not(:last-child) { position: relative; z-index: 1; --lean: var(--mid-lean, 0deg); --sink: var(--mid-sink, 0px); --near: var(--mid-near, 0px); --tilt: var(--mid-tilt, 0deg); --roll: var(--mid-roll, 0deg); }
 .po-card {
   position: relative;
   display: block;
@@ -8742,7 +8742,7 @@ button.watch-back {
 @keyframes po-flare { 0% { opacity: 1; transform: scale(0.2); } 100% { opacity: 0; transform: scale(2.2); } }
 @keyframes po-fly { from { opacity: 1; transform: translate(0, 0) rotate(45deg); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(220deg); } }
 @keyframes po-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes po-deal { from { opacity: 0; transform: translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: translateX(var(--shift, 0px)) translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)) rotateX(var(--tilt, 0deg)); } }
+@keyframes po-deal { from { opacity: 0; transform: translate(-95vw, -60%) rotate(-18deg); } 55% { opacity: 1; } to { opacity: 1; transform: translateX(var(--shift, 0px)) translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)) rotateX(var(--tilt, 0deg)) rotateZ(var(--roll, 0deg)); } }
 @keyframes po-sheen { from { background-position: 130% 0; } to { background-position: -130% 0; } }
 @keyframes po-pop { 0% { transform: none; } 28% { transform: translateY(-8%) scale(1.32); } 72% { transform: translateY(-8%) scale(1.32); } 100% { transform: none; } }
 @keyframes po-spark-out { from { opacity: 1; transform: translate(0, 0) scale(1); } to { opacity: 0; transform: translate(calc(var(--x) * var(--k, 1)), calc(var(--y) * var(--k, 1))) scale(0.3); } }
@@ -8840,9 +8840,11 @@ button.watch-back {
 .po.po-preview { position: relative; inset: auto; z-index: auto; height: 15rem; margin: 0.4rem 0 0.8rem; border-radius: 0.5rem; --floor: 78%; }
 /* The same floor curve as the full stage (it follows the screen, not the small box), so what is set here matches. */
 .po-preview .po-floor { left: calc(50% - 70vw); right: calc(50% - 70vw); height: 26vh; }
-.po-preview .po-slot { animation: none; transform: translateX(var(--shift, 0px)) translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)) rotateX(var(--tilt, 0deg)); }
+.po-preview .po-slot { animation: none; transform: translateX(var(--shift, 0px)) translateY(var(--sink, 0)) translateZ(var(--near, 0px)) rotateY(var(--lean, 0deg)) rotateX(var(--tilt, 0deg)) rotateZ(var(--roll, 0deg)); }
 .row-tune { display: grid; gap: 0.3rem; margin-bottom: 0.7rem; font-family: var(--shop-cond); font-size: 1.05rem; font-weight: 800; }
 .row-tune input { width: 100%; accent-color: #e4ff5a; }
 .po-preview .po-slot { cursor: pointer; }
 .po-preview .po-slot.is-picked .po-card-back { box-shadow: 0 0 0 2px #e4ff5a, 0 0 14px 3px rgba(228, 255, 90, 0.7); }
 .row-pick { margin: 0 0 0.5rem; font-size: 0.85rem; color: #b9c7ec; text-align: center; }
+/* The preview stays in sight while the lower sliders are scrolled to. */
+.shop-panel-body .po.po-preview { position: sticky; top: -0.7rem; z-index: 2; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6); }
