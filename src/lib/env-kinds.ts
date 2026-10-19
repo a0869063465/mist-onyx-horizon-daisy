@@ -17,7 +17,7 @@ export const SANCTUARY_GUARDED = [
 export const SANCTUARY_WARRIORS: string[] = [];
 
 /** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
-export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong", "ky-si-canh-cut"];
+export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong"];
 
 export const ENV_KINDS: Record<string, string[]> = {
   // Biển sâu: quái biển
@@ -35,12 +35,12 @@ export const ENV_KINDS: Record<string, string[]> = {
     "kizuran",
     "ma-dao-si",
     "the-than-cua-shien",
-    "ke-trom-ao-trang",
+    "ky-si-canh-cut",
   ],
   // Đất đá
-  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat", "khung-long-hinh-nguoi"],
-  // Chim chóc và rồng
-  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet", "rong-dia-nguc"],
+  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat", "khung-long-hinh-nguoi", "hu-nhot-linh-hon", "binh-bien-hinh"],
+  // Chim chóc, rồng và quái điện
+  nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet", "ky-nhong-dien"],
   // Thú rừng và côn trùng
   "rung-ram": [
     "ong-khong-lo",
@@ -54,7 +54,6 @@ export const ENV_KINDS: Record<string, string[]> = {
     "te-giac-chien-binh",
     "hoa-an-thit-nguoi",
     "sangan",
-    "ky-nhong-dien",
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
@@ -76,9 +75,9 @@ export const ENV_KINDS: Record<string, string[]> = {
     "ke-giam-ho-linh-hon",
     "phu-thuy-thoi-gian",
     "phu-thuy-ti-hon",
-    "hu-nhot-linh-hon",
-    "binh-bien-hinh",
     "mat-na-bong-toi",
+    "rong-dia-nguc",
+    "ke-trom-ao-trang",
   ],
 };
 
@@ -86,8 +85,9 @@ export const ENV_KINDS: Record<string, string[]> = {
  * True when the environment card `env` boosts this monster (its kind). Environments count for 5-star monsters and
  * forms outside the deck too (owner, 19/10); they are only left out of deck counts.
  */
-export function envFavors(env: string | undefined, cardId: string): boolean {
+export function envFavors(env: string | undefined, cardId: string, jarSoul = false): boolean {
   if (!env) return false;
+  if (jarSoul) return env === "bong-toi";
   const list = ENV_KINDS[env];
   return Boolean(list && list.includes(cardId));
 }

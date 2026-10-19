@@ -601,7 +601,7 @@ export const PENDING_NOTES: string[] = [
   "Tỉ lệ mặc định của Gói chung: mỗi lá rút ra UR 2,1%, SR 11,3%, Normal 86,6%.",
   "Mở Cửa hàng cho mọi người chơi. Người chơi bắt đầu với các lá của bộ bài mặc định; lá khác có khoá trong Chỉnh sửa bộ bài, mở gói ra lá nào thì dùng được lá đó. Bộ bài đã lưu có lá chưa sở hữu thì lá đó tự rời bộ.",
   "Nhập mã S300 trong Thông tin → Nhập mã để nhận 300 sao.",
-  "Rồng địa ngục thuộc Núi. Hũ nhốt linh hồn, Bình biến hình và Mặt nạ bóng tối thuộc Bóng tối. Sangan và Kỳ nhông điện thuộc Rừng rậm. Thánh thuật sư và Người yêu hạnh phúc thuộc Thánh địa thiên sứ, được che trước khi các quái khác bị tấn công. Kẻ trộm áo trắng thuộc Thảo nguyên. Kỵ sĩ cánh cụt thuộc Biển sâu. Khủng long hình người thuộc Đất đá.",
+  "Rồng địa ngục và Kẻ trộm áo trắng thuộc Bóng tối. Hũ nhốt linh hồn và Bình biến hình thuộc Đất đá. Linh hồn do Hũ nhốt linh hồn gọi ra là bản sao, giữ skill của quái bị nhốt, và thuộc Bóng tối. Sangan thuộc Rừng rậm. Kỳ nhông điện thuộc Núi. Thánh thuật sư và Người yêu hạnh phúc thuộc Thánh địa thiên sứ, được che trước khi các quái khác bị tấn công. Kỵ sĩ cánh cụt thuộc Thảo nguyên. Khủng long hình người thuộc Đất đá. Mặt nạ bóng tối thuộc Bóng tối.",
 ];
 
 function remarkOf(notes: string[]) {

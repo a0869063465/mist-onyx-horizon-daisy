@@ -931,7 +931,7 @@ function envBoost(player: Player): Player {
   if (env !== "rung-ram" && env !== "nui" && env !== "cu-dia-may-moc") return player;
   let changed = false;
   const field = player.field.map((mon) => {
-    if (!mon || mon.hp <= 0 || !envFavors(env, mon.cardId)) return mon;
+    if (!mon || mon.hp <= 0 || !envFavors(env, mon.cardId, mon.jarSoul)) return mon;
     if (env === "cu-dia-may-moc") {
       const form = envForm(mon);
       if (mon.envArmor === form) return mon;
@@ -2419,7 +2419,7 @@ export function sanctuaryShielded(state: Duel, uid: string | null | undefined): 
   for (const player of state.players) {
     const mon = player.field.find((unit) => unit?.uid === uid);
     if (!mon) continue;
-    const guarded = (unit: FieldMon) => player.env === "thanh-dia-thien-su" && SANCTUARY_GUARDED.includes(unit.cardId) && envFavors(player.env, unit.cardId);
+    const guarded = (unit: FieldMon) => player.env === "thanh-dia-thien-su" && !unit.jarSoul && SANCTUARY_GUARDED.includes(unit.cardId) && envFavors(player.env, unit.cardId);
     if (!guarded(mon)) return false;
     return player.field.some((unit) => unit && unit.uid !== uid && unit.hp > 0 && !guarded(unit));
   }
@@ -8733,7 +8733,7 @@ function lavaTick(state: Duel): { state: Duel; line: string } {
     // Allied fire monsters get one stack per hit landing on them, even when magic armor stops it all, and one per
     // hit landing on their player (owner, 19/10).
     const stacks = new Map<string, number>();
-    const fire = (mon: FieldMon | null | undefined) => Boolean(mon && envFavors("nui-dung-nham", mon.cardId));
+    const fire = (mon: FieldMon | null | undefined) => Boolean(mon && envFavors("nui-dung-nham", mon.cardId, mon.jarSoul));
     for (const row of count.values()) {
       if (row.side !== owner) continue;
       if (row.uid === null) {
@@ -8919,7 +8919,7 @@ function rockOf(state: Duel, mon: FieldMon | null | undefined): number {
   const side = ownerSide(state, mon.uid);
   if (side === null) return 0;
   const owner = state.players[side];
-  if (owner.env !== "dat-da" || !envFavors("dat-da", mon.cardId)) return 0;
+  if (owner.env !== "dat-da" || !envFavors("dat-da", mon.cardId, mon.jarSoul)) return 0;
   const total = liveDef(mon, owner.field) + liveMdef(mon, owner.field);
   return total > 0 ? Math.round(total * 0.4) : 0;
 }
@@ -8976,7 +8976,7 @@ function markMeadow(state: Duel, clash: string[]): Duel {
     if (player.env !== "thao-nguyen") continue;
     let changed = false;
     const field = player.field.map((mon) => {
-      if (!mon || mon.meadow || mon.hp <= 0 || !clash.includes(mon.uid) || !envFavors("thao-nguyen", mon.cardId)) return mon;
+      if (!mon || mon.meadow || mon.hp <= 0 || !clash.includes(mon.uid) || !envFavors("thao-nguyen", mon.cardId, mon.jarSoul)) return mon;
       changed = true;
       return { ...mon, meadow: true };
     });
@@ -9018,7 +9018,7 @@ function darkToll(before: Duel, after: Duel, sources: string[]): Duel {
     if (owner.env !== "bong-toi") continue;
     const dark = sources
       .map((uid) => owner.field.find((mon) => mon?.uid === uid) ?? null)
-      .find((mon): mon is FieldMon => Boolean(mon && envFavors("bong-toi", mon.cardId)));
+      .find((mon): mon is FieldMon => Boolean(mon && envFavors("bong-toi", mon.cardId, mon.jarSoul)));
     if (!dark) continue;
     const foe = (1 - side) as Side;
     let toll = 0;
