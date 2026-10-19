@@ -595,6 +595,7 @@ export const PENDING_NOTES: string[] = [
   "Cuộn 3D: sửa lỗi bấm ra ngoài hoặc bấm lá đôi khi không ăn, phải bấm 2-3 lần.",
   "Mở gói: hai lá hai bên xoay vào giữa như cuộn 3D, lá giữa giữ nguyên, viền dưới lá theo đường cong sàn, không còn bị méo như hình bình hành.",
   "Cửa hàng, công cụ nhà phát hành: thêm Chỉnh hàng lá, kéo thanh để chỉnh góc xoay, độ ngả trước sau, độ hạ thấp, độ gần xa màn hình của lá và khoảng cách hai lá bên với lá giữa khi mở gói, có hình xem trước. Bấm lá bên để chỉnh hai lá hai bên, bấm lá giữa để chỉnh lá giữa.",
+  "Cài game như app: mở game trên Chrome, bấm menu ⋮ rồi Cài đặt ứng dụng (hoặc Thêm vào màn hình chính). Lần mở đầu game tải sẵn mọi hình, tiếng, nhạc về máy (khoảng 80 MB), từ đó mở và chơi Vs Máy, Test, Chỉnh sửa bộ bài, Cửa hàng không cần mạng. Đánh thường và Lấy mã vẫn cần mạng. Có bản mới thì game tự tải phần thay đổi, mở lại là dùng bản mới.",
 ];
 
 function remarkOf(notes: string[]) {

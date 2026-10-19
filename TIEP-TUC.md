@@ -74,6 +74,14 @@ Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi
 - Âm: `playPack` trong sfx.ts, tự tổng hợp (sét, sét đỏ, loé, bóc, tia N/SR/UR, chia lá, lật, lật SR, lật UR), theo âm lượng Hiệu ứng trận.
 - Ảnh gói / mặt sau làm bằng `scripts/art/pack.py` và `scripts/art/card-back.py` (đối số: đường dẫn logo gốc nền trong suốt, file ra, bậc N/SR/UR cho mặt sau). Logo gốc chủ game gửi 1254×1254; trong repo chỉ có bản thu nhỏ `public/ui/logo.webp`.
 
+## Đã xong (19/10): cài game như app, chạy không cần mạng (PWA)
+
+- Chủ game hỏi: tải app về 1 lần kèm file như app Google Play, chưa đụng tới Google Play. Đã làm PWA.
+- `offlineFilesPlugin` (vite.config.ts, chỉ khi build, môi trường client) ghi `offline-files.json`: mọi file trong public (trừ `clash-lite.zip`, `__grok/`, `sw.js`, `og.jpg`, `x-banner.jpg`) + mọi file `assets/` đã build, kèm hash 12 ký tự; khoảng 260 file, 80 MB.
+- `public/sw.js`: cài xong và mỗi lần mở game (`OfflineApp` trong src/components/offline-app.tsx gửi "sync") tải lại danh sách, chỉ tải file đổi hash, xoá file không còn; lưu ở cache `clash-files` (+ `/__offline-meta.json`). Trang (`/`, `/modes`, `/deck`, `/play`, `/shop`, `/tune`, `/watch`, `/guide`, `/hop-thu`) lấy mạng trước (chờ tối đa 4 giây) rồi mới dùng bản lưu `clash-pages`. File tĩnh lấy từ máy trước (bỏ qua `?v=`). `/_serverFn`, `/api/`, `/__*` luôn đi mạng. Phông Google lưu `clash-fonts`.
+- Không đăng ký ở dev server. Link manifest có `crossOrigin: "use-credentials"` để link xem trước có bảo vệ Vercel vẫn cài được. manifest.json thêm id/scope/orientation portrait.
+- Đã thử bằng `vite preview` (bản build thật): tải xong ~60 giây ở máy thử, tắt mạng vẫn mở menu, Chỉnh sửa bộ bài, Chọn bộ bài và vào trận Vs Máy.
+
 ## Đã xong (19/10): Lá liên quan, cuộn 3D (theo video LoR chủ game gửi)
 
 - Nhóm lá: `src/lib/related.ts` (`relatedCards`), lấy từ `EVOLUTIONS` (strategies.ts): lá cần trước, rồi các dạng; Chân kén đi sau Kén ngài. Chủ game duyệt 7 nhóm "trước mắt" (Mỹ điểu nhân, Sâu non, Tê giác, Rồng con + Phù thuỷ thời gian, Kỵ sĩ bóng tối + Lời nguyền của rồng, Mắt đỏ + Triệu hồi ác ma, 3 hiệp sĩ). Lá không có nhóm: bấm hình không có gì.

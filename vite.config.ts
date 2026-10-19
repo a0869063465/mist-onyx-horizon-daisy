@@ -1,5 +1,6 @@
-import { readdirSync } from "node:fs";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
@@ -61,6 +62,45 @@ function stampCardsPlugin(): Plugin {
     buildStart: run,
     watchChange(file) {
       if (file.replaceAll("\\", "/").endsWith("src/lib/catalog.ts")) run();
+    },
+  };
+}
+
+/** Public files the installed app does not keep on the phone: the old light-pack zip and the platform's own files. */
+const OFFLINE_SKIP = [/^clash-lite\.zip$/, /^__grok\//, /^sw\.js$/, /^offline-files\.json$/, /^og\.jpg$/, /^x-banner\.jpg$/];
+
+function publicFiles(dir: string, root = dir): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) return publicFiles(path, root);
+    return [relative(root, path).replaceAll("\\", "/")];
+  });
+}
+
+/**
+ * The installed app (owner, 19/10: download the game once with all its files, like a Play Store app): on a build,
+ * writes offline-files.json, every file the game needs (the public folder and the built scripts and styles) with a
+ * short content hash, so public/sw.js can keep them all on the phone and fetch only what changed in a new version.
+ */
+function offlineFilesPlugin(): Plugin {
+  return {
+    name: "clash:offline-files",
+    apply: "build",
+    generateBundle(_options, bundle) {
+      if (this.environment?.name && this.environment.name !== "client") return;
+      const hash = (data: Uint8Array | string) => createHash("sha1").update(data).digest("hex").slice(0, 12);
+      const files: Record<string, string> = {};
+      const root = join(process.cwd(), "public");
+      for (const file of publicFiles(root)) {
+        if (OFFLINE_SKIP.some((skip) => skip.test(file))) continue;
+        files[`/${file}`] = hash(readFileSync(join(root, file)));
+      }
+      for (const item of Object.values(bundle)) {
+        if (!item.fileName.startsWith("assets/")) continue;
+        files[`/${item.fileName}`] = hash(item.type === "chunk" ? item.code : item.source);
+      }
+      const version = hash(JSON.stringify(files));
+      this.emitFile({ type: "asset", fileName: "offline-files.json", source: JSON.stringify({ version, files }) });
     },
   };
 }
@@ -203,6 +243,7 @@ export default defineConfig(({ command, isPreview }) => ({
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.
     grokPwaPlugin(),
     tailwindcss(),
+    offlineFilesPlugin(),
     tanstackStart(),
     ...(command === "build" || isPreview
       ? [

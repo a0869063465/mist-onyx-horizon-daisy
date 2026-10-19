@@ -3,6 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { SoundTap } from "@/components/sound-tap";
 import { MenuMusic } from "@/components/menu-music";
+import { OfflineApp } from "@/components/offline-app";
 import { CopySize } from "@/components/game/copy-text";
 import { publishLayout } from "@/lib/layouts";
 import { GameLoad } from "@/components/game/load-screen";
@@ -22,7 +23,8 @@ export const Route = createRootRoute({
     links: [
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png?v=3" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/manifest.json" },
+      // With credentials, so a preview link behind a login can still be installed.
+      { rel: "manifest", href: "/manifest.json", crossOrigin: "use-credentials" },
       { rel: "apple-touch-icon", href: "/icon-192.png?v=3" },
       {
         rel: "stylesheet",
@@ -41,6 +43,7 @@ export const Route = createRootRoute({
         <PreviewHostBridge />
         <SoundTap />
         <MenuMusic />
+        <OfflineApp />
         <CopySize />
         <AuthProvider>
           <Outlet />
