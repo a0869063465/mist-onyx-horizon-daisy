@@ -997,6 +997,19 @@ export const FORMS: MonsterCard[] = [
     "mdef": 2,
     "hp": 5,
     "art": "te-giac-3"
+  },
+  {
+    "id": "zoa",
+    "name": "Zoa",
+    "stars": 3,
+    "gems": 1,
+    "skill": "Quái thú:\nKhi hắn tấn công, 50% sát thương hắn gây được vào đối thủ sẽ hồi máu cho hắn",
+    "atk": 7,
+    "def": 0,
+    "mdef": 0,
+    "hp": 6,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

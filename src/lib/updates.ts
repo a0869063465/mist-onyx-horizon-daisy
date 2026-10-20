@@ -604,6 +604,7 @@ export const PENDING_NOTES: string[] = [
   "Rồng địa ngục và Kẻ trộm áo trắng thuộc Bóng tối. Hũ nhốt linh hồn và Bình biến hình thuộc Đất đá. Linh hồn do Hũ nhốt linh hồn gọi ra là bản sao, giữ skill của quái bị nhốt, và thuộc Bóng tối. Sangan thuộc Rừng rậm. Kỳ nhông điện thuộc Núi. Thánh thuật sư và Người yêu hạnh phúc thuộc Thánh địa thiên sứ, được che trước khi các quái khác bị tấn công. Kỵ sĩ cánh cụt thuộc Thảo nguyên. Khủng long hình người thuộc Đất đá. Mặt nạ bóng tối thuộc Bóng tối.",
   "Gói chung còn 10 sao một gói. Mua 10 gói còn 100 sao.",
   "Dung hợp xong, bấm ra ngoài bảng quái cũng triệu hồi, giống bấm nút Triệu hồi.",
+  "Thêm Zoa. 3 sao, 1 mana, công 7, phòng ngự 0, máu 6. Khi đánh thường, hồi 50% số máu mục tiêu thực sự mất, làm tròn. Đánh quái hay đánh người chơi đều hồi. Zoa thuộc Bóng tối.",
 ];
 
 function remarkOf(notes: string[]) {
