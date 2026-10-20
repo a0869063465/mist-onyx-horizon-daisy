@@ -2656,7 +2656,7 @@ function mendHp(mon: FieldMon, amount: number): FieldMon {
 
 /** Zoa: a normal attack heals half the HP the target actually lost, rounded. */
 function zoaLeech(mon: FieldMon, lost: number): { mon: FieldMon; n: number; line: string } {
-  if (mon.cardId !== "zoa" || mon.hp <= 0 || lost <= 0) return { mon, n: 0, line: "" };
+  if ((mon.cardId !== "zoa" && mon.cardId !== "metal-zoa") || mon.hp <= 0 || lost <= 0) return { mon, n: 0, line: "" };
   const n = Math.round(lost / 2);
   if (n <= 0) return { mon, n: 0, line: "" };
   return { mon: mendHp(mon, n), n, line: ` ${cardOf(mon).name} hồi ${n} máu.` };
@@ -6388,6 +6388,12 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const casterUid = pending?.kind === "beam" ? pending.caster : "";
     const caster = next.players[0].field.find((mon) => mon?.uid === casterUid) ?? next.players[1].field.find((mon) => mon?.uid === casterUid) ?? null;
     if (!ally || !caster || pending?.kind !== "beam") return note(next, "Giáp cơ khí chỉ dùng khi kỹ năng đối phương nhắm một đồng minh.");
+    if (ally.cardId === "zoa") {
+      const born = { ...place({ ...next, seq: next.seq + 1 }, side, "metal-zoa"), uid: ally.uid };
+      const field = next.players[side].field.map((mon) => (mon?.uid === ally.uid ? born : mon));
+      const fused = patch(next, side, { ...next.players[side], field });
+      return keep(note(fused, `${cardOf(ally).name} dung hợp với Giáp cơ khí thành Metal Zoa.`, "spell"));
+    }
     const atkPlus = grabNums(card.effect, /(\d+)\s*công/gi)[0] ?? 2;
     const mdefPlus = grabNums(card.effect, /(\d+)\s*thủ phép/gi)[0] ?? 2;
     const buffed = { ...ally, atk: ally.atk + atkPlus, mdef: ally.mdef + mdefPlus, raised: markRaised(ally, { atk: atkPlus, mdef: mdefPlus }) };

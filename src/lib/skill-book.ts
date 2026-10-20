@@ -85,6 +85,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "mat-na-bong-toi": [A("Trùng chú", "ghost")],
   "khung-long-hinh-nguoi": [P("Thông minh", "all-seeing-eye")],
   "zoa": [P("Quái thú", "health-normal")],
+  "metal-zoa": [P("Quái thú", "health-normal")],
   "nguoi-yeu-hanh-phuc": [P("Tia sáng hạnh phúc", "angel-wings")],
   "kraken": [P("Đắm tàu", "kraken-tentacle")],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],

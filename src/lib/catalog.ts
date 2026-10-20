@@ -865,6 +865,19 @@ export const FORMS: MonsterCard[] = [
     "art": "rong-ac-ma"
   },
   {
+    "id": "metal-zoa",
+    "name": "Metal Zoa",
+    "stars": 4,
+    "gems": 0,
+    "skill": "Quái thú:\nKhi hắn tấn công, 50% sát thương hắn gây được vào đối thủ sẽ hồi máu cho hắn",
+    "atk": 7,
+    "def": 2,
+    "mdef": 0,
+    "hp": 6,
+    "art": "",
+    "since": "2026-10-20"
+  },
+  {
     "id": "nu-chua-dieu-nhan",
     "name": "Nữ chúa điểu nhân",
     "stars": 4,

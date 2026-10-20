@@ -123,6 +123,7 @@ export const EVOLUTIONS: { result: string; needs: string[] }[] = [
   { result: "chien-binh-huyen-thoai", needs: ["ky-si-bong-toi"] },
   { result: "ky-si-cuoi-rong", needs: ["ky-si-bong-toi", "loi-nguyen-cua-rong"] },
   { result: "rong-ac-ma", needs: ["mat-do-tan-pha", "trieu-hoi-ac-ma"] },
+  { result: "metal-zoa", needs: ["zoa"] },
   { result: "hiep-si-huyen-bi", needs: ["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"] },
 ];
 

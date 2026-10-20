@@ -1318,5 +1318,19 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerAt": null,
     "powerTone": null,
     "shiftAt": null
+  },
+  "metal-zoa": {
+    "kind": "monster",
+    "stars": 4,
+    "mana": 0,
+    "atk": 7,
+    "def": 2,
+    "mdef": 0,
+    "hp": 6,
+    "text": "metal-zoa-2026-10-20",
+    "added": "2026-10-20",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
   }
 };
