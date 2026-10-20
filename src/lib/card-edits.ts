@@ -37,7 +37,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   ],
   "chien-si-gam-nham": [{ key: "guard", label: "Khiên thú sĩ", tone: "z" }],
   "chien-binh-xuong": [{ key: "agile", label: "Linh hoạt", tone: "z" }],
-  medusa: [{ key: "stone", label: "Hoá đá", tone: "y" }],
+  "medusa": [{ key: "stone", label: "Hoá đá", tone: "y" }],
   "linh-chien-da-khong-lo": [{ key: "wall", label: "Tường thành", tone: "z" }],
   "the-than-cua-shien": [{ key: "stand", label: "Thế thân", tone: "z" }],
   "phu-thuy-rung-den": [{ key: "curse", label: "Nguyền rủa", tone: "y" }],
