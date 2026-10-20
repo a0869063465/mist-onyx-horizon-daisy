@@ -1088,7 +1088,7 @@ export const SPELLS: SpellCard[] = [
     "id": "phuc-kich",
     "name": "Phục kích",
     "gems": 0,
-    "effect": "Khi bị tấn công, chặn đòn trước.\nChọn 1 quái thú bất kỳ. Quái đó tăng 2 công trong đòn này và gây sát thương giáp lá cà lên quái đang tấn công, mà không bị phản đòn.",
+    "effect": "Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó trước.\nChọn 1 quái thú bất kỳ. Quái đó tăng 2 công trong đòn này và gây sát thương giáp lá cà lên quái ra kỹ năng, mà không bị phản đòn.",
     "picture": "spell:vong-xoay-bao-ho"
   },
   {

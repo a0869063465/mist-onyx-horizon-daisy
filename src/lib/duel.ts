@@ -6438,10 +6438,15 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (card.id === "phuc-kich") {
     const pending = state.pending;
-    if (state.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee")) return note(next, "Phục kích chỉ dùng khi bị tấn công.");
+    if (state.step !== "respond" || !pending || (pending.kind !== "beam" && pending.kind !== "gnaw-skill" && !(pending.kind === "face" && pending.skill))) {
+      return note(next, "Phục kích chỉ dùng khi quái địch dùng kỹ năng gây sát thương.");
+    }
+    if (pending.kind === "beam" && pending.back) return note(next, "Phục kích chỉ dùng khi quái địch dùng kỹ năng gây sát thương.");
+    const casterUid = pending.kind === "face" ? pending.attacker : pending.caster;
     const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
-    const attacker = next.players[foe].field.find((mon) => mon?.uid === pending.attacker) ?? null;
+    const attacker = next.players[foe].field.find((mon) => mon?.uid === casterUid) ?? null;
+    if (attacker && pending.kind !== "face" && !harmSkill(attacker.cardId, pending.index)) return note(next, "Phục kích chỉ chặn kỹ năng gây sát thương.");
     if (!fighter || !attacker) return note(next, "Chọn quái để phục kích.");
     const bonus = spellFigure("phuc-kich", "atk", 2);
     const raw = fighter.atk + bonus;
@@ -6459,7 +6464,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return releaseLegend({
       ...note(
         hit,
-        actNotice("Phục kích", ["chặn đòn tấn công", `đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]),
+        actNotice("Phục kích", ["chặn kỹ năng", `đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]),
         "hit",
       ),
       step: "main",

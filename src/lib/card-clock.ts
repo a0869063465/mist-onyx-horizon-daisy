@@ -1023,7 +1023,7 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-10-20"
   },
   "mua-ma-thuat": {
     "kind": "spell",

@@ -775,7 +775,18 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
     }
     return false;
   }
-  if (id === "phuc-kich") return attacked || pending?.kind === "face";
+  if (id === "phuc-kich") {
+    const side = duel.hold?.priority;
+    const shot = pending;
+    if (side === undefined || !shot) return false;
+    const casterUid = shot.kind === "beam" && !shot.back ? shot.caster : shot.kind === "gnaw-skill" ? shot.caster : shot.kind === "face" && shot.skill ? shot.attacker : "";
+    if (!casterUid) return false;
+    const caster = fieldMon(duel, casterUid);
+    if (!caster) return false;
+    if (shot.kind !== "face" && !harmSkill(caster.cardId, shot.kind === "beam" || shot.kind === "gnaw-skill" ? shot.index : 0)) return false;
+    const casterSide = duel.players[0].field.some((unit) => unit?.uid === caster.uid) ? 0 : 1;
+    return casterSide !== side;
+  }
   if (id === "ham-chong") return pending?.kind === "face" || pending?.kind === "melee";
   if (id === "hoan-doi") return attacked || skilled || pending?.kind === "face";
   if (id === "co-may-thoi-gian") {
@@ -4678,7 +4689,7 @@ function PlayPage() {
                         }
                         if (id === "phuc-kich") {
                           const pending = duel.pending;
-                          const attacker = pending && "attacker" in pending ? pending.attacker : "";
+                          const attacker = pending && (pending.kind === "beam" || pending.kind === "gnaw-skill") ? pending.caster : pending?.kind === "face" && pending.skill ? pending.attacker : "";
                           const ready = you.field.some((unit) => unit && unit.stun === 0 && (unit.chain ?? 0) === 0 && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai");
                           if (!attacker || !ready) {
                             apply(castSpell(duel, index, null));

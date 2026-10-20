@@ -408,7 +408,7 @@ const PAIRS: Array<[string, string]> = [
   ["Chọn đồng minh đang mang trạng thái xấu trước.", "Choose the ally with a bad status first."],
   ["Không có đồng minh đang mang trạng thái xấu.", "No ally has a bad status."],
   ["Chọn quái đối thủ để chuyển trạng thái.", "Choose an enemy monster to move the status onto."],
-  ["Khi bị tấn công, chặn đòn trước.\nChọn 1 quái thú bất kỳ. Quái đó tăng 2 công trong đòn này và gây sát thương giáp lá cà lên quái đang tấn công, mà không bị phản đòn.", "When you are attacked, block the hit first.\nChoose any monster. It gains 2 attack for this strike and deals clash damage to the attacker, and it cannot be reflected."],
+  ["Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó trước.\nChọn 1 quái thú bất kỳ. Quái đó tăng 2 công trong đòn này và gây sát thương giáp lá cà lên quái ra kỹ năng, mà không bị phản đòn.", "When an enemy monster uses a damaging skill, block that skill first.\nChoose any monster. It gains 2 attack for this strike and deals clash damage to the monster that used the skill, and it cannot be reflected."],
   ["Hồi phục 2 máu cho tất cả đồng minh. Giải trừ tất cả trạng thái bất lợi.", "Heal 2 HP for every ally. Remove every harmful status."],
   ["Khi bị tấn công hoặc nhắm đến. Quái đang bị nhắm đã khoá. Chọn 1 quái khác rồi bấm OK. (Quái dự bị phải đủ điều kiện triệu hồi.) Hoán đổi vị trí của nó với quái thú đó.", "When you are attacked or targeted. The targeted monster is locked. Choose 1 other monster, then press OK. A reserve monster must be legal to summon. Swap places with that monster."],
   ["Ngăn chặn đòn tấn công, và buộc đối thủ kết thúc ngay lượt.", "Stop the attack, and force the opponent to end the turn at once."],
