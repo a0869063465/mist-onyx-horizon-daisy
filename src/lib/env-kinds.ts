@@ -36,6 +36,7 @@ export const ENV_KINDS: Record<string, string[]> = {
     "ma-dao-si",
     "the-than-cua-shien",
     "ky-si-canh-cut",
+    "chien-binh-nam-cham",
   ],
   // Đất đá
   "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat", "khung-long-hinh-nguoi", "hu-nhot-linh-hon", "binh-bien-hinh", "te-te-da"],

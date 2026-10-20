@@ -1036,6 +1036,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 2,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "chien-binh-nam-cham",
+    "name": "Chiến binh nam châm",
+    "stars": 1,
+    "gems": 1,
+    "skill": "Siêu tốc:\nĐòn đánh của hắn không bị phản đòn\nTừ Tính:\n- Đòn đánh thứ 1 của hắn kích dấu ấn S (màu đỏ) trên mục tiêu.\n- Đòn đánh thứ 2 của hắn kích dấu ấn N (màu xanh dương) trên mục tiêu.\nLực từ:\n- Khi có đủ SN, quái thú S và N sẽ tấn công nhau ngay sau đó.\n- Khi Lực từ được kích hoạt, dấu ấn có trước sẽ mất, chỉ giữ lại dấu ấn gần nhất.",
+    "atk": 1,
+    "def": 1,
+    "mdef": 1,
+    "hp": 4,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

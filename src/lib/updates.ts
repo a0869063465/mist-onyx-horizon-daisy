@@ -609,6 +609,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm phép Hầm chông, 0 mana. Khi đối thủ lao vào tấn công, chặn đòn đó, gây sát thương vật lý và sát thương phép bằng số sao của quái tấn công.",
   "Phục kích không còn chặn đòn công vật lý. Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó, rồi chọn quái đánh thường vào quái ra kỹ năng.",
   "Thêm Tê tê đá. 1 sao, 1 mana, công 1, thủ 2, thủ phép 3, máu 2. Đòn đánh thường tích 50% tổng phòng ngự vào công cho đòn sau, làm tròn. Đòn được cộng xong thì phần công đó mất. Tê tê đá thuộc Đất đá.",
+  "Thêm Chiến binh nam châm. 1 sao, 1 mana, công 1, thủ 1, thủ phép 1, máu 4. Đòn của hắn không bị đánh trả. Đòn lẻ đóng dấu S đỏ, đòn chẵn đóng dấu N xanh. Đủ hai dấu thì hai quái đó đánh nhau, rồi chỉ giữ dấu vừa đóng. Chiến binh nam châm thuộc Thảo nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

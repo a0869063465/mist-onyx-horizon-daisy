@@ -86,6 +86,10 @@ export type FieldMon = {
   envArmor?: string;
   /** Tê tê đá: công Giáp Cứng đang chờ đòn đánh sau. */
   shell?: number;
+  /** Chiến binh nam châm: số đòn đã đóng dấu. */
+  swings?: number;
+  /** Dấu từ tính: S đỏ hoặc N xanh. */
+  pole?: "s" | "n";
   /** Núi: already got +2 skill damage. */
   envSkill?: boolean;
   path?: number;
@@ -2679,6 +2683,68 @@ function pangolinShell(mon: FieldMon, allies: Array<FieldMon | null>): { mon: Fi
   return { mon: { ...mon, atk: mon.atk + bonus, shell: bonus }, line: ` ${name} tích ${bonus} công cho đòn sau.`, mend: bonus };
 }
 
+function magnetSide(state: Duel, uid: string): { side: Side; mon: FieldMon } | null {
+  for (const side of [0, 1] as const) {
+    const mon = state.players[side].field.find((unit) => unit?.uid === uid && unit.hp > 0);
+    if (mon) return { side, mon };
+  }
+  return null;
+}
+
+function magnetWrite(state: Duel, side: Side, mon: FieldMon): Duel {
+  const player = state.players[side];
+  return patch(state, side, { ...player, field: player.field.map((unit) => (unit?.uid === mon.uid ? mon : unit)) });
+}
+
+/** Keeps the attack's floaters and tone, and only adds a log line. */
+function magnetSay(state: Duel, line: string): Duel {
+  const mends = state.mends;
+  const skill = state.skill;
+  const tone = state.tone;
+  const told = note(state, line, tone ?? "hit");
+  return { ...told, mends, skill, tone };
+}
+
+/** Chiến binh nam châm: mark the monster he just attacked, then crash S into N. */
+function magnetPull(state: Duel, attacker: FieldMon, targetUid: string): Duel {
+  if (attacker.cardId !== "chien-binh-nam-cham") return state;
+  const hit = magnetSide(state, targetUid);
+  if (!hit) return state;
+  const pole: "s" | "n" = (attacker.swings ?? 0) % 2 === 0 ? "s" : "n";
+  const other: "s" | "n" = pole === "s" ? "n" : "s";
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const live = next.players[side].field.find((unit) => unit?.uid === attacker.uid && unit.hp > 0);
+    if (live) next = magnetWrite(next, side, { ...live, swings: (attacker.swings ?? 0) + 1 });
+  }
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    const field = player.field.map((unit) => {
+      if (!unit) return unit;
+      if (unit.uid === hit.mon.uid) return { ...unit, pole };
+      if (unit.pole === pole) return { ...unit, pole: undefined };
+      return unit;
+    });
+    next = patch(next, side, { ...player, field: field as Player["field"] });
+  }
+  const letter = pole === "s" ? "S" : "N";
+  next = magnetSay(next, `${cardOf(attacker).name} đóng dấu ${letter} lên ${cardOf(hit.mon).name}.`);
+  const mate = [0, 1].flatMap((side) => next.players[side as Side].field.filter((unit) => unit && unit.hp > 0 && unit.pole === other && unit.uid !== hit.mon.uid));
+  const old = mate[0];
+  if (!old) return next;
+  const south = magnetSide(next, pole === "s" ? hit.mon.uid : old.uid);
+  const north = magnetSide(next, pole === "n" ? hit.mon.uid : old.uid);
+  if (!south || !north) return next;
+  const southBlow = takePhysical(north.mon, outgoing(south.mon, liveAtk(south.mon)), next.players[north.side].field);
+  const northBlow = takePhysical(south.mon, outgoing(north.mon, liveAtk(north.mon)), next.players[south.side].field);
+  const southLost = Math.max(0, south.mon.hp - northBlow.mon.hp);
+  const northLost = Math.max(0, north.mon.hp - southBlow.mon.hp);
+  next = magnetWrite(next, south.side, { ...northBlow.mon, pole: pole === "s" ? "s" : undefined });
+  next = magnetWrite(next, north.side, { ...southBlow.mon, pole: pole === "n" ? "n" : undefined });
+  for (const side of [0, 1] as const) next = patch(next, side, dropDead(next.players[side]));
+  return magnetSay(next, `${cardOf(south.mon).name} và ${cardOf(north.mon).name} tấn công nhau. ${cardOf(south.mon).name} gây ${northLost} máu, ${cardOf(north.mon).name} gây ${southLost} máu. Dấu cũ mất.`);
+}
+
 function leechKazura(attacker: FieldMon, bite: number, surplus: number, allies: Array<FieldMon | null>): { attacker: FieldMon; allies: Array<FieldMon | null> } {
   if (attacker.cardId !== "kazura") return { attacker, allies };
   const healed = mendHp(attacker, surplus);
@@ -3602,10 +3668,10 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const attackerDodged = rabbitDodge(attacker, defender) || cloakDodge(attacker);
   const defenderDodged = rabbitDodge(defender, attacker) || cloakDodge(defender);
   const beam = Boolean(attacker.horn || attacker.gaze || bolt);
-  if (shadeHidden(attacker) || (shadeHidden(defender) && !beam) || defender.cage) counter = 0;
+  if (shadeHidden(attacker) || (shadeHidden(defender) && !beam) || defender.cage || attacker.cardId === "chien-binh-nam-cham") counter = 0;
   const hiddenTrue = shadeHidden(attacker) && !beam;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt) || hiddenTrue;
-  const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) ? riderPackets(defender, attacker, alliesA) : null;
+  const counterBlow = attacker.cardId !== "chien-binh-nam-cham" && defender.cardId === RIDER && !beam && !shadeHidden(attacker) ? riderPackets(defender, attacker, alliesA) : null;
   const blockSpell = !attackerDodged && !beam && !counterBlow && defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell" && counter > 0;
   const counterRaw = outgoing(defender, counter);
   let spark = "";
@@ -5318,7 +5384,8 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   const origin = state.pending?.kind === "melee" ? state.pending.defender : defender.uid;
   const hunted = markPrey(swung, side, attacker, origin, origin === defender.uid && !hit.dodged, riderAttacker.hp <= 0);
   const fought = covered ? mysticRiposte(hunted, defender.uid, attacker.uid) : hunted;
-  return attacker.shape ? releaseShape(fought, attacker.uid) : fought;
+  const ended = attacker.shape ? releaseShape(fought, attacker.uid) : fought;
+  return magnetPull(ended, attacker, defender.uid);
 }
 
 const SOUL_ID = "ke-giam-ho-linh-hon";
@@ -5684,7 +5751,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     ), attacker.uid, swordSwing(attacker)), attacker.uid, blocker.uid)), foe, attacker.uid);
     const hunted = markPrey(swung, side, attacker, "face", false, worn.attacker.hp <= 0);
     const fought = blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
-    return attacker.shape ? releaseShape(fought, attacker.uid) : fought;
+    const ended = attacker.shape ? releaseShape(fought, attacker.uid) : fought;
+    return magnetPull(ended, attacker, blocker.uid);
   }
   if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, null);
   if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {

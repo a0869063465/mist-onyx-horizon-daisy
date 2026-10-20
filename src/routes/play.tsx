@@ -5676,6 +5676,8 @@ function BoardSlot({
           {glassLabel ? <i className="is-hold">{glassLabel}</i> : null}
           {mon.preyAim ? <i>{mon.preyKind === "spell" ? "Phép" : mon.preyKind === "tru" ? "Chuẩn" : "Vật"}</i> : null}
           {mon.cage ? <i>Khoá</i> : null}
+          {mon.pole === "s" ? <i className="is-pole-s">S</i> : null}
+          {mon.pole === "n" ? <i className="is-pole-n">N</i> : null}
         </span>
         )}
         {veil || (decoy ? false : !mask && hideName) ? null : spot("name", decoy ? "Thế thân" : mask ? "Mũ" : fieldName(mon))}

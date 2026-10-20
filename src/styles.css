@@ -3274,6 +3274,14 @@ button.trail-dot.is-on {
   color: #2a1038;
   background: #c084fc;
 }
+.badges i.is-pole-s {
+  color: #fff;
+  background: #e23b3b;
+}
+.badges i.is-pole-n {
+  color: #fff;
+  background: #2f6bff;
+}
 .field-unit .art, .field-unit .frame {
   position: absolute;
   inset: 0;
