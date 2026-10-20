@@ -1554,6 +1554,10 @@ export function confirmRex(state: Duel): Duel {
 function castRexDump(state: Duel, side: Side, mon: FieldMon): Duel {
   const pool = mon.volt ?? 0;
   if (pool <= 0) return note(state, `${cardOf(mon).name} chưa tích điện.`);
+  const you = state.players[side];
+  const before = you.stars;
+  const paid = pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana.");
   const foe = (1 - side) as Side;
   const targets: Array<string | null> = [null];
   for (const unit of state.players[foe].field) if (unit && unit.hp > 0) targets.push(unit.uid);
@@ -1563,10 +1567,10 @@ function castRexDump(state: Duel, side: Side, mon: FieldMon): Duel {
     const key = pick ?? "face";
     count.set(key, (count.get(key) ?? 0) + 1);
   }
-  let next = patch(state, side, {
-    ...state.players[side],
-    field: state.players[side].field.map((unit) => (unit?.uid === mon.uid ? { ...unit, volt: 0, dim: true } : unit)),
-  });
+  let next = pingStars(patch(state, side, {
+    ...paid,
+    field: paid.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, volt: 0, dim: true } : unit)),
+  }), side, before, paid.stars);
   const bits: string[] = [];
   const hits: string[] = [];
   const vols: number[] = [];
@@ -10115,7 +10119,7 @@ export function aiStep(state: Duel): Duel {
 
   if (canTargetFoe(state) && me.attackLock === 0 && ready.length > 0) {
     const rex = ready.find((mon) => mon.cardId === "sieu-dan-t-rex");
-    if (rex && (rex.volt ?? 0) >= 6) {
+    if (rex && (rex.volt ?? 0) >= 6 && me.orb >= 1) {
       const dumped = progress(state, useSkill(state, rex.uid, null, 1));
       if (dumped) return dumped;
     }
