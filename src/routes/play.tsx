@@ -36,6 +36,8 @@ import {
   standFor,
   standIn,
   canGuardCover,
+  canAgile,
+  agileDodge,
   guardCover,
   startParley,
   pickParley,
@@ -3258,9 +3260,10 @@ function PlayPage() {
     const wallUp = side === viewer && canWall(duel, mon.uid);
     const spiritUp = side === viewer && canSpirit(duel, mon.uid);
     const mysticUp = side === viewer && mysticAlert(duel, mon, side);
-    const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
+    const agileUp = side === viewer && canAgile(duel, mon.uid);
+    const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp || agileUp;
     if (side === viewer && sealed) return;
-    if (side === viewer && (hatchReady || reelReady || (!mon.dim && (canPlay || reactive)))) {
+    if (side === viewer && (hatchReady || reelReady || agileUp || (!mon.dim && (canPlay || reactive)))) {
       setAim({ kind: "menu", uid: mon.uid });
       setLook(null);
       return;
@@ -5450,6 +5453,9 @@ function UnitChips({
           ),
       });
     }
+  }
+  if (canAgile(duel, uid)) {
+    z.push({ key: "agile", label: chipLabel(card.id, "agile"), go: () => apply(agileDodge(duel, uid)) });
   }
   const strikeShown = attackable && !noAttack && visibleStats(mon, you.field).atk > 0;
   if (!strikeShown && y.length === 0 && z.length === 0) return null;

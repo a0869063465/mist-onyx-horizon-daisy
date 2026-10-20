@@ -9594,6 +9594,76 @@ function darkToll(before: Duel, after: Duel, sources: string[]): Duel {
   return next;
 }
 
+const BONE = "chien-binh-xuong";
+
+function plainSwing(state: Duel): { attacker: FieldMon; kind: "melee" | "face" } | null {
+  const pending = state.pending;
+  if (!pending || (pending.kind !== "melee" && pending.kind !== "face")) return null;
+  if (pending.kind === "face" && pending.skill) return null;
+  const attacker = state.players[state.turn].field.find((mon) => mon?.uid === pending.attacker && mon.hp > 0) ?? null;
+  if (!attacker || attacker.horn || attacker.gaze) return null;
+  return { attacker, kind: pending.kind };
+}
+
+/** Linh hoạt: đòn đánh thường nhắm vào hắn, hoặc vào người chơi khi hắn chưa bị người khác đỡ. */
+export function canAgile(state: Duel, uid: string): boolean {
+  if (state.step !== "respond" || !state.hold || !state.pending || state.winner) return false;
+  const side = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
+  if (state.hold.priority !== side || side === state.turn) return false;
+  const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon || mon.cardId !== BONE || mon.hp <= 0 || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.seal ?? 0) > 0 || mon.cage || (mon.path ?? 0) > 0 || hexLocked(mon)) return false;
+  if (state.players[side].orb < 1 && !state.parley) return false;
+  const swing = plainSwing(state);
+  if (!swing) return false;
+  const pending = state.pending;
+  if (pending.kind === "melee") return (state.hold.blocker ?? pending.defender) === uid;
+  if (state.hold.blocker && state.hold.blocker !== uid) return false;
+  return true;
+}
+
+export function agileDodge(state: Duel, uid: string): Duel {
+  if (!canAgile(state, uid) || !state.pending) return state;
+  const pending = state.pending;
+  if (pending.kind !== "melee" && pending.kind !== "face") return state;
+  const side = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
+  const foe = state.turn;
+  const you = state.players[side];
+  const mon = you.field.find((unit) => unit?.uid === uid);
+  if (!mon) return state;
+  const before = you.stars;
+  const paid = state.parley ? you : pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana.");
+  const attacker = state.players[foe].field.find((unit) => unit?.uid === pending.attacker && unit.hp > 0) ?? null;
+  const yours = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
+  let next = pingStars(patch(state, side, { ...paid, field: yours }), side, before, paid.stars);
+  const name = cardOf(mon).name;
+  if (!attacker) {
+    return { ...note(next, `${name} né đòn.`, "hit"), step: "main", pending: null, hold: null };
+  }
+  const quiet = attacker.cardId === "chien-binh-nam-cham";
+  const spent = { ...attacker, dim: true };
+  if (quiet) {
+    const foeField = next.players[foe].field.map((unit) => (unit?.uid === attacker.uid ? spent : unit));
+    next = patch(next, foe, { ...next.players[foe], field: foeField });
+    return { ...note(next, `${name} né đòn. ${cardOf(attacker).name} không bị trả đòn.`, "hit"), step: "main", pending: null, hold: null };
+  }
+  const amount = outgoing({ ...mon, dim: true }, liveAtk(mon));
+  const prevBlame = blameNow;
+  blameNow = { uid, kind: "phys" };
+  const hit = takePhysical(spent, amount, next.players[foe].field);
+  blameNow = prevBlame;
+  const lost = Math.max(0, attacker.hp - Math.max(0, hit.mon.hp));
+  const foeField = next.players[foe].field.map((unit) => (unit?.uid === attacker.uid ? hit.mon : unit));
+  next = patch(next, foe, dropDead({ ...next.players[foe], field: foeField }));
+  return {
+    ...note(next, `${name} né đòn và trả đòn, gây ${lost} sát thương vật lý lên ${cardOf(attacker).name}.`, "hit"),
+    step: "main",
+    pending: null,
+    hold: null,
+    skill: { id: BONE, index: 0, aim: attacker.uid, hits: [attacker.uid], vols: [lost] },
+  };
+}
+
 const HELL_GHOST = "bong-ma-dia-nguc";
 
 /** Đầu lượt đối thủ: đầy sân bằng bản sao đã hành động, cả đàn lao ngẫu nhiên gây sát thương chuẩn bằng công, rồi chỉ chừa 1 bản sao. */
@@ -10301,6 +10371,10 @@ export function aiStep(state: Duel): Duel {
     if (state.pending?.kind === "spell" && state.turn !== 1) {
       const index = state.players[1].hand.indexOf("hap-thu-ma-phap");
       if (index >= 0) return withLive(castSpell(state, index, null));
+    }
+    if ((state.pending?.kind === "face" || state.pending?.kind === "melee") && state.turn !== 1) {
+      const bone = state.players[1].field.find((mon) => mon && canAgile(state, mon.uid));
+      if (bone) return withLive(agileDodge(state, bone.uid));
     }
     if ((state.pending?.kind === "face" || state.pending?.kind === "melee") && state.turn !== 1) {
       const index = state.players[1].hand.indexOf("ham-chong");

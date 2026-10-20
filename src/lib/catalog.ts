@@ -1114,6 +1114,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 1,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "chien-binh-xuong",
+    "name": "Chiến binh xương",
+    "stars": 2,
+    "gems": 1,
+    "skill": "__**Linh hoạt**__\nDùng 1 mana để né đòn đánh thường của đối thủ và trả đòn.",
+    "atk": 4,
+    "def": 2,
+    "mdef": 3,
+    "hp": 2,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

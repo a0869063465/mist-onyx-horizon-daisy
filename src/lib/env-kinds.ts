@@ -80,6 +80,7 @@ export const ENV_KINDS: Record<string, string[]> = {
     "rong-dia-nguc",
     "ke-trom-ao-trang",
     "bong-ma-dia-nguc",
+    "chien-binh-xuong",
   ],
 };
 
