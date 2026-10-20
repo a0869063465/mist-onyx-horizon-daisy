@@ -236,7 +236,7 @@ export const MONSTERS: MonsterCard[] = [
     "stars": 1,
     "gems": 0,
     "skill": "__**Phát nổ**__\nKhông hao mana, Tự huỷ, gây sát thương phép lên kẻ địch bằng với công.\n\n__**Pháo kích**__\nDùng 1 mana nhân bản chính nó. \n\n__**Bông mềm**__\nKhi người chơi bị tấn công, Trên tay người chơi bấm Use: Triệu hồi bản thân chặn tốn 1 mana, các bản sao còn lại sẽ lấp đầy sân đấu.\n\n__**Lưu ý:**__\nMỗi loại kỹ năng chỉ dùng 1 lần rồi mất. \nCác kỹ năng ngoài Phát nổ đều không tính là đã hành động.",
-    "atk": 2,
+    "atk": 1,
     "def": 0,
     "mdef": 0,
     "hp": 1,

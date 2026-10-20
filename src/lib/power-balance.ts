@@ -377,6 +377,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "down",
     notes: ["Chim chóc và rồng chỉ tăng 1 sát thương kỹ năng (2)"],
   },
+  {
+    id: "cuc-bong-ma-quai",
+    at: "2026-10-20",
+    wave: 31,
+    tone: "down",
+    stats: { atk: { from: 2, to: 1 } },
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];
