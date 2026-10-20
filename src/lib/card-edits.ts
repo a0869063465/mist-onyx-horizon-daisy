@@ -61,6 +61,10 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "binh-bien-hinh": [{ key: "shape", label: "Biến hình", tone: "y" }],
   "ky-si-canh-cut": [{ key: "swap", label: "Đổi bài", tone: "y" }],
   "mat-na-bong-toi": [{ key: "curse", label: "Trùng chú", tone: "y" }],
+  "sieu-dan-t-rex": [
+    { key: "charge", label: "Kích điện", tone: "y" },
+    { key: "dump", label: "Phóng điện", tone: "y" },
+  ],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
   "trai-tim-hai-long": [{ key: "tide", label: "Triều lên", tone: "y" }],
   "kizuran": [{ key: "cover", label: "Vì Anh Em", tone: "z" }],

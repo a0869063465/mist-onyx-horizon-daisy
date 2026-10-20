@@ -1049,6 +1049,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 4,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "sieu-dan-t-rex",
+    "name": "Siêu dẫn T-rex",
+    "stars": 4,
+    "gems": 0,
+    "skill": "Kích điện:\nTiêu hao 0 mana, tối đa 2 quái thú đồng minh sẽ giúp hắn kích điện (2 quái thú kia sáp lá cà với hắn, sẽ có hiệu ứng nổ điện ở cả hắn và các quái kích cho hắn, không có lao vào hay các hiệu ứng tương tự, chỉ có hiệu ứng nổ thay bằng nổ điện thôi). Hắn sẽ tích luỹ 80% số công của hắn và các quái thú hỗ trợ kích điện (tính công được cộng tất cả các hiệu ứng, tức là nếu có 2 quái kích điện, sẽ có công của hắn ở 2 lần, và 2 lần của 2 quái kia)\nPhóng điện:\nXả hết tất cả sát thương phép đó, ngẫu nhiên lên các quái và người chơi đối phương (12 sát thương đó chia đều lên các mục tiêu, ví dụ 6 người chơi, 2 quái 1, 4 quái 2)\nBảo trì:\nHồi đầy máu ở cuối lượt người chơi.",
+    "atk": 3,
+    "def": 2,
+    "mdef": 2,
+    "hp": 9,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

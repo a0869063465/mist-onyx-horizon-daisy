@@ -83,6 +83,9 @@ import {
   cancelMask,
   answerSaint,
   cancelSaint,
+  toggleRex,
+  confirmRex,
+  cancelRex,
   evolveBird,
   wallAlly,
   confirmSwap,
@@ -1889,6 +1892,24 @@ function PlayPage() {
       (beam && duel.pending?.kind === "beam" && skillLook(beamCaster, duel.pending.index) === "gun") ||
       (hellFace && attackNow ? skillLook(fieldMon(duel, attackNow.attacker)?.cardId ?? "", 0) === "gun" : false);
     // Núi dung nham: the eruption, then the fire spell's explosion part on every target hit (owner, 19/10).
+    if (!quiet && duel.fx !== prev.fx && duel.skill?.id === "sieu-dan-t-rex") {
+      playCue("boltPrep");
+      (duel.skill.hits ?? []).forEach((id, order) => {
+        window.setTimeout(() => {
+          if (id.startsWith("face:")) {
+            const face = Number(id.slice(5)) as Side;
+            const box = HP_BOX[screenSide(face, viewerNow)];
+            emitFx({ t: "bolt", rank: duel.skill?.index === 1 ? "big" : "small", x: box.x + box.w / 2, y: box.y + box.h / 2 });
+            return;
+          }
+          for (const owner of [0, 1] as const) {
+            const index = duel.players[owner].field.findIndex((mon) => mon?.uid === id);
+            const spot = index >= 0 ? SLOT_POS[screenSide(owner, viewerNow)][index] : null;
+            if (spot) emitFx({ t: "bolt", rank: "small", self: owner === viewerNow, x: spot.x, y: spot.y });
+          }
+        }, order * 160);
+      });
+    }
     if (!quiet && duel.lava && duel.lava.seq !== prev.lava?.seq) {
       playCue("eruption");
       duel.lava.hits.forEach((hit, order) => {
@@ -4235,6 +4256,16 @@ function PlayPage() {
             <button type="button" onClick={() => apply(cancelSaint(duel))}>{tr("Không")}</button>
           </div>
         ) : null}
+        {duel.rexAsk && duel.turn === viewer ? (
+          <div className="ask-card">
+            <p>Chọn tối đa 2 đồng minh kích điện.</p>
+            {duel.players[viewer].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.uid !== duel.rexAsk?.uid)).map((mon) => (
+              <button key={mon.uid} type="button" className={duel.rexAsk?.picks.includes(mon.uid) ? "on" : ""} onClick={() => apply(toggleRex(duel, mon.uid))}>{fieldName(mon)}</button>
+            ))}
+            <button type="button" onClick={() => apply(confirmRex(duel))}>{tr("Kích điện")}</button>
+            <button type="button" onClick={() => apply(cancelRex(duel))}>{tr("Không")}</button>
+          </div>
+        ) : null}
         {cottonAsk === "hand" && cotton.hand ? (
           <div className="ask-card">
             <p>{monsterCard("cuc-bong-ma-quai")?.name}</p>
@@ -5237,7 +5268,7 @@ function UnitChips({
       level: mon.level ?? 1,
       hp: mon.hp,
       beat: mon.beat ?? 0,
-      stored: mon.stored ?? 0,
+      stored: mon.cardId === "sieu-dan-t-rex" ? (mon.volt ?? 0) : (mon.stored ?? 0),
       skillText: plainCopy(card.skill),
       afford,
       aim: aimSkill,
@@ -5491,6 +5522,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
           ? 2 + 3 * (mon.stored ?? 0)
         : mon.cardId === "hiep-si-cua-hau"
           ? mon.beat === 1 ? 2 : 1
+        : mon.cardId === "sieu-dan-t-rex" && (mon.volt ?? 0) > 0
+          ? mon.volt ?? 0
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""

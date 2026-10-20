@@ -90,6 +90,8 @@ export type FieldMon = {
   swings?: number;
   /** Dấu từ tính: S đỏ hoặc N xanh. */
   pole?: "s" | "n";
+  /** Siêu dẫn T-rex: sát thương phép đang tích. */
+  volt?: number;
   /** Núi: already got +2 skill damage. */
   envSkill?: boolean;
   path?: number;
@@ -223,6 +225,7 @@ export type Duel = {
   penguinAsk?: { uid: string; side: Side; key: string | null } | null;
   maskAsk?: { uid: string; side: Side; picks: number[]; key: string | null } | null;
   saintAsk?: { uid: string } | null;
+  rexAsk?: { uid: string; picks: string[] } | null;
   recall?: { side: Side; caps: number[] } | null;
   rite?: { side: Side; slot: 0 | 1 | 2; seq: number } | null;
   ashes?: { side: Side; slots: Array<0 | 1 | 2>; seq: number } | null;
@@ -1501,6 +1504,94 @@ export function cancelSaint(state: Duel): Duel {
   return state.saintAsk ? { ...state, saintAsk: null } : state;
 }
 
+const REX = "sieu-dan-t-rex";
+
+export function openRex(state: Duel, uid: string): Duel {
+  if (state.step !== "main" || state.winner || state.rexAsk) return state;
+  const side = state.turn;
+  const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon || mon.cardId !== REX || mon.dim || held(mon) || hexLocked(mon) || (mon.path ?? 0) > 0) return state;
+  return { ...state, rexAsk: { uid, picks: [] } };
+}
+
+export function toggleRex(state: Duel, uid: string): Duel {
+  const ask = state.rexAsk;
+  if (!ask || uid === ask.uid) return state;
+  const ally = state.players[state.turn].field.find((mon) => mon?.uid === uid && mon.hp > 0);
+  if (!ally) return state;
+  const picks = ask.picks.includes(uid) ? ask.picks.filter((id) => id !== uid) : [...ask.picks, uid].slice(-2);
+  return { ...state, rexAsk: { ...ask, picks } };
+}
+
+export function cancelRex(state: Duel): Duel {
+  return state.rexAsk ? { ...state, rexAsk: null } : state;
+}
+
+/** Each helper pairs with him: his live attack once per helper, plus each helper once. Alone, just his attack. 80%, rounded, added to the pool. */
+export function confirmRex(state: Duel): Duel {
+  const ask = state.rexAsk;
+  if (!ask) return state;
+  const side = state.turn;
+  const you = state.players[side];
+  const mon = you.field.find((unit) => unit?.uid === ask.uid && unit.hp > 0) ?? null;
+  if (!mon || mon.cardId !== REX) return { ...state, rexAsk: null };
+  const helpers = ask.picks
+    .map((id) => you.field.find((unit) => unit?.uid === id && unit.hp > 0 && unit.uid !== mon.uid) ?? null)
+    .filter((unit): unit is FieldMon => Boolean(unit));
+  const his = liveAtk(mon);
+  const sum = helpers.length === 0 ? his : his * helpers.length + helpers.reduce((total, ally) => total + liveAtk(ally), 0);
+  const gain = Math.round(sum * 0.8);
+  const volt = (mon.volt ?? 0) + gain;
+  const field = you.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, volt, dim: true } : unit));
+  const names = helpers.map((ally) => cardOf(ally).name);
+  const line = names.length
+    ? `${cardOf(mon).name} kích điện với ${names.join(", ")}. Tích ${gain} sát thương phép. Đang giữ ${volt}.`
+    : `${cardOf(mon).name} kích điện. Tích ${gain} sát thương phép. Đang giữ ${volt}.`;
+  const noted = note(patch({ ...state, rexAsk: null }, side, { ...you, field }), line, "spell");
+  return { ...noted, mends: [{ uid: mon.uid, n: 0 }], skill: { id: REX, index: 0, aim: null, hits: [mon.uid, ...helpers.map((ally) => ally.uid)] } };
+}
+
+function castRexDump(state: Duel, side: Side, mon: FieldMon): Duel {
+  const pool = mon.volt ?? 0;
+  if (pool <= 0) return note(state, `${cardOf(mon).name} chưa tích điện.`);
+  const foe = (1 - side) as Side;
+  const targets: Array<string | null> = [null];
+  for (const unit of state.players[foe].field) if (unit && unit.hp > 0) targets.push(unit.uid);
+  const count = new Map<string, number>();
+  for (let i = 0; i < pool; i += 1) {
+    const pick = targets[Math.floor(Math.random() * targets.length)] ?? "face";
+    const key = pick ?? "face";
+    count.set(key, (count.get(key) ?? 0) + 1);
+  }
+  let next = patch(state, side, {
+    ...state.players[side],
+    field: state.players[side].field.map((unit) => (unit?.uid === mon.uid ? { ...unit, volt: 0, dim: true } : unit)),
+  });
+  const bits: string[] = [];
+  const hits: string[] = [];
+  const vols: number[] = [];
+  for (const [key, n] of count) {
+    if (key === "face") {
+      const them = next.players[foe];
+      next = checkWinner(patch(next, foe, { ...them, hp: them.hp - n }));
+      bits.push(`người chơi ${n}`);
+      hits.push(`face:${foe}`);
+      vols.push(n);
+      continue;
+    }
+    const them = next.players[foe];
+    const body = them.field.find((unit) => unit?.uid === key);
+    if (!body) continue;
+    const hurt = damageSpell(body, n, them.field, mon);
+    next = patch(next, foe, dropDead({ ...next.players[foe], field: them.field.map((unit) => (unit?.uid === key ? hurt : unit)) }));
+    bits.push(`${cardOf(body).name} ${n}`);
+    hits.push(key);
+    vols.push(n);
+  }
+  const noted = note(next, `${cardOf(mon).name} phóng ${pool} sát thương phép: ${bits.join(", ")}.`, "spell");
+  return { ...noted, skill: { id: REX, index: 1, aim: null, hits, vols } };
+}
+
 function castDarkFire(state: Duel, side: Side, mon: FieldMon): Duel {
   if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
   const you = state.players[side];
@@ -1837,6 +1928,7 @@ function talkLock(state: Duel): Duel | null {
   if (state.penguinAsk) return note(state, "Hãy chọn lá để đổi.");
   if (state.maskAsk) return note(state, "Hãy chọn phép để trùng chú đưa về tay.");
   if (state.saintAsk) return note(state, "Hãy chọn mục tiêu Thánh thuật.");
+  if (state.rexAsk) return note(state, "Hãy chọn quái kích điện.");
   if (state.parley && state.step === "main") return note(state, "Hãy chọn quái cho Đàm phán.");
   return null;
 }
@@ -7635,6 +7727,8 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   if (mon.cardId === DARK) return castDarkFire(state, side, mon);
   if (mon.cardId === JAR) return castJar(state, side, mon, extra);
   if (mon.cardId === SAINT) return openSaint(state, mon.uid);
+  if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 0) return openRex(state, mon.uid);
+  if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 1) return castRexDump(state, side, mon);
   if (mon.cardId === VASE) return openShape(state, mon.uid);
   if (mon.cardId === PENGUIN) return openPenguin(state, mon.uid);
   if (mon.cardId === MASK) return openMask(state, mon.uid);
@@ -9210,6 +9304,8 @@ function endTurnCore(state: Duel): Duel {
       const rabbit = mon.cardId === "tho-den-tinh-nghich";
       const charge = clown ? (mon.held ? mon.charge + 1 : 0) : rabbit ? 0 : mon.charge;
       const cap = mon.maxHp || mon.hp;
+      const full = mon.cardId === "sieu-dan-t-rex" && mon.hp > 0 ? Math.max(0, cap - mon.hp - heal) : 0;
+      if (full > 0) vowHeals.push({ uid: mon.uid, n: full });
       const next = {
         ...mon,
         dim: mon.cardId === "ken-ngai" || mon.cardId === "chan-ken" ? true : clown,
@@ -9221,7 +9317,7 @@ function endTurnCore(state: Duel): Duel {
         gag: Math.max(0, (mon.gag ?? 0) - 1),
         shown: (mon.shown ?? 0) > 1 ? (mon.shown ?? 0) - 1 : undefined,
         stored: mon.cardId === SHADE && (mon.shown ?? 0) === 1 ? undefined : mon.stored,
-        hp: Math.min(cap, mon.hp + heal),
+        hp: Math.min(cap, mon.hp + heal + full),
         stun: Math.max(0, mon.stun - 1),
         hex: mon.hex && mon.hex.left > 1 ? { left: mon.hex.left - 1 } : undefined,
         vulnerable: Math.max(0, mon.vulnerable - 1),
@@ -9754,6 +9850,14 @@ export function aiStep(state: Duel): Duel {
     const hurt = [...allies].sort((a, b) => a.hp - b.hp)[0];
     return withLive(answerSaint(state, hurt && hurt.hp < (hurt.maxHp || hurt.hp) ? hurt.uid : null));
   }
+  if (state.rexAsk && state.turn === 1) {
+    const you = state.players[1];
+    const rex = you.field.find((mon) => mon?.uid === state.rexAsk?.uid);
+    if (!rex) return withLive(cancelRex(state));
+    const mates = you.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.uid !== rex.uid));
+    const best = [...mates].sort((a, b) => liveAtk(b) - liveAtk(a)).slice(0, 2);
+    return withLive(confirmRex({ ...state, rexAsk: { uid: rex.uid, picks: best.map((mon) => mon.uid) } }));
+  }
   if (state.step === "respond" && state.hold?.priority === 1) {
     const plume = harpyOffer(state, 1);
     if (plume === "armor") return withLive(harpyWard(state));
@@ -10010,6 +10114,15 @@ export function aiStep(state: Duel): Duel {
   }
 
   if (canTargetFoe(state) && me.attackLock === 0 && ready.length > 0) {
+    const rex = ready.find((mon) => mon.cardId === "sieu-dan-t-rex");
+    if (rex && (rex.volt ?? 0) >= 6) {
+      const dumped = progress(state, useSkill(state, rex.uid, null, 1));
+      if (dumped) return dumped;
+    }
+    if (rex && (rex.volt ?? 0) === 0 && ready.some((mon) => mon.uid !== rex.uid)) {
+      const mates = ready.filter((mon) => mon.uid !== rex.uid).sort((a, b) => liveAtk(b) - liveAtk(a)).slice(0, 2);
+      return withLive(confirmRex({ ...state, rexAsk: { uid: rex.uid, picks: mates.map((mon) => mon.uid) } }));
+    }
     const style = readStyle();
     const lean = state.adapt ?? readLean();
     const faceFirst = [...ready].filter((mon) => (!smashPlain(mon) && !swordDue(mon)) || me.orb >= 1).sort((a, b) => b.atk - a.atk)[0];

@@ -610,6 +610,7 @@ export const PENDING_NOTES: string[] = [
   "Phục kích không còn chặn đòn công vật lý. Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó, rồi chọn quái đánh thường vào quái ra kỹ năng.",
   "Thêm Tê tê đá. 1 sao, 1 mana, công 1, thủ 2, thủ phép 3, máu 2. Đòn đánh thường tích 50% tổng phòng ngự vào công cho đòn sau, làm tròn. Đòn được cộng xong thì phần công đó mất. Tê tê đá thuộc Đất đá.",
   "Thêm Chiến binh nam châm. 1 sao, 1 mana, công 1, thủ 1, thủ phép 1, máu 4. Đòn của hắn không bị đánh trả. Đòn lẻ đóng dấu S đỏ, đòn chẵn đóng dấu N xanh. Đủ hai dấu thì hai quái đó đánh nhau, rồi chỉ giữ dấu vừa đóng. Chiến binh nam châm thuộc Thảo nguyên.",
+  "Thêm Siêu dẫn T-rex. 4 sao, 0 mana, công 3, thủ 2, thủ phép 2, máu 9. Kích điện chọn tối đa 2 đồng minh, tích 80% công đã cộng hiệu ứng. Có 2 đồng minh thì công của hắn tính 2 lần, mỗi đồng minh 1 lần. Phóng điện xả hết số đó thành sát thương phép, chia ngẫu nhiên lên quái địch và người chơi địch. Cuối lượt hồi đầy máu. Số đang tích hiện trên lá. Tạm thuộc Núi.",
 ];
 
 function remarkOf(notes: string[]) {

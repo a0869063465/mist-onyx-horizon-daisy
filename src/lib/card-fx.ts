@@ -137,6 +137,7 @@ export function baseSkillLook(cardId: string, index = 0): SkillLook {
   if (cardId === "may-nem-bom-hinh-nhen") return "gun";
   if (cardId === "may-quay-thuong") return index === 1 ? "spell" : null;
   if (cardId === "rong-con" || cardId === "rong-ngan-tuoi" || cardId === "rong-ac-ma") return "fire";
+  if (cardId === "sieu-dan-t-rex") return "spell";
   return null;
 }
 
