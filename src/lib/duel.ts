@@ -92,6 +92,8 @@ export type FieldMon = {
   pole?: "s" | "n";
   /** Siêu dẫn T-rex: sát thương phép đang tích. */
   volt?: number;
+  /** Leviathan: sát thương đã chịu, theo kẻ gây và loại. */
+  grudge?: Array<{ uid: string; kind: "phys" | "spell" | "tru"; n: number }>;
   /** Núi: already got +2 skill damage. */
   envSkill?: boolean;
   path?: number;
@@ -146,6 +148,8 @@ export type Player = {
   attackLock: number;
   mirror: number;
   sea?: boolean;
+  /** Biển sâu bị tắt. Đếm lượt còn lại. */
+  seaOff?: number;
   env?: string;
   locked?: [number, number, number];
   hats?: boolean;
@@ -1596,6 +1600,61 @@ function castRexDump(state: Duel, side: Side, mon: FieldMon): Duel {
   return { ...noted, skill: { id: REX, index: 1, aim: null, hits, vols } };
 }
 
+function castLeviathan(state: Duel, side: Side, mon: FieldMon, targetUid: string | null): Duel {
+  const foe = (1 - side) as Side;
+  const aim = state.players[foe].field.find((unit) => unit?.uid === targetUid && unit.hp > 0 && unit.cardId !== "mu") ?? null;
+  if (!aim) return note(state, "Chọn một kẻ địch.");
+  const you = state.players[side];
+  const before = you.stars;
+  const paid = pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana.");
+  let next = pingStars(patch(state, side, {
+    ...paid,
+    field: paid.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, dim: true } : unit)),
+  }), side, before, paid.stars);
+  const grudges = mon.grudge ?? [];
+  let field = [...next.players[foe].field];
+  const bits: string[] = [];
+  for (let i = 0; i < field.length; i += 1) {
+    const body = field[i];
+    if (!body || body.hp <= 0 || body.cardId === "mu") continue;
+    let unit = damageSpell(body, 2, field, mon);
+    const rows = grudges.filter((row) => row.uid === body.uid);
+    const parts = ["2 phép"];
+    if (rows.length && unit.hp > 0) {
+      if ((unit.wet ?? 0) > 0) {
+        const n = rows.reduce((sum, row) => sum + row.n, 0);
+        unit = landTrue(unit, n, field).mon;
+        parts.push(`${n} chuẩn`);
+      } else {
+        for (const row of rows) {
+          if (unit.hp <= 0) break;
+          if (row.kind === "spell") unit = damageSpell(unit, row.n, field, mon);
+          else if (row.kind === "tru") unit = landTrue(unit, row.n, field).mon;
+          else unit = takePhysical(unit, row.n, field).mon;
+          parts.push(`${row.n} ${row.kind === "spell" ? "phép" : row.kind === "tru" ? "chuẩn" : "vật lý"}`);
+        }
+      }
+    }
+    field[i] = unit;
+    bits.push(`${cardOf(body).name}: ${parts.join(", ")}`);
+  }
+  next = checkWinner(patch(next, foe, dropDead({ ...next.players[foe], field: field as Player["field"] })));
+  let muted = false;
+  for (const at of [0, 1] as const) {
+    const player = next.players[at];
+    if (!player.sea && player.env !== "bien-sau") continue;
+    muted = true;
+    next = patch(next, at, { ...next.players[at], seaOff: 2 });
+  }
+  const tail = muted ? " Biển mất hiệu lực trong 2 lượt." : "";
+  const noted = note(next, `${cardOf(mon).name} nổi giận. ${bits.join(". ")}.${tail}`, "spell");
+  return {
+    ...noted,
+    skill: { id: "leviathan", index: 0, aim: aim.uid, hits: field.filter((unit): unit is FieldMon => Boolean(unit && unit.hp >= 0 && bits.some((bit) => bit.startsWith(cardOf(unit).name)))).map((unit) => unit.uid) },
+  };
+}
+
 function castDarkFire(state: Duel, side: Side, mon: FieldMon): Duel {
   if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
   const you = state.players[side];
@@ -2644,7 +2703,7 @@ function settleCocoon(player: Player): Player {
 }
 
 function shuffleSea(player: Player): Player {
-  if (!player.sea) return player;
+  if (!player.sea || (player.seaOff ?? 0) > 0) return player;
   const seats = player.field.map((mon, index) => (mon && isSea(mon.cardId) ? index : -1)).filter((index) => index >= 0);
   if (seats.length < 2) return player;
   const order = [...seats];
@@ -2738,6 +2797,18 @@ function takePhysicalCore(mon: FieldMon, raw: number, allies?: Array<FieldMon | 
   return applyIncoming(soaked.mon, soaked.amount, allies);
 }
 
+let blameNow: { uid: string; kind: "phys" | "spell" | "tru" } | null = null;
+let blameUid: string | null = null;
+
+function noteGrudge(mon: FieldMon, uid: string, kind: "phys" | "spell" | "tru", n: number): FieldMon {
+  if (mon.cardId !== "leviathan" || !uid || n <= 0) return mon;
+  const rows = [...(mon.grudge ?? [])];
+  const row = rows.find((item) => item.uid === uid && item.kind === kind);
+  if (row) row.n += n;
+  else rows.push({ uid, kind, n });
+  return { ...mon, grudge: rows };
+}
+
 function applyIncoming(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): { mon: FieldMon; bite: number; surplus: number } {
   let incoming = mindCut(mon, Math.max(0, amount));
   const cap = veilBudget !== undefined ? veilBudget : mon.veil && incoming > 0 && mon.hp > 0 ? 2 : 0;
@@ -2748,7 +2819,7 @@ function applyIncoming(mon: FieldMon, amount: number, allies?: Array<FieldMon | 
   const spent = spendPartners(allies, partnerId(mon.cardId), bite);
   const left = bite - spent;
   const stored = mon.cardId === "kizuran" ? (mon.stored ?? 0) + left : mon.stored;
-  return { mon: { ...mon, hp: before - left, stored }, bite, surplus };
+  return { mon: noteGrudge({ ...mon, hp: before - left, stored }, blameNow?.uid ?? "", blameNow?.kind ?? "phys", blameNow ? left : 0), bite, surplus };
 }
 
 function mendHp(mon: FieldMon, amount: number): FieldMon {
@@ -2925,17 +2996,23 @@ function soak(mon: FieldMon, kind: "phys" | "spell", amount: number): { mon: Fie
 }
 
 function damageSpell(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): FieldMon {
-  if (spellSwing && cloakDodge(mon)) return mon;
+  const prev = blameNow;
+  if (source) blameNow = { uid: source.uid, kind: "spell" };
+  const done = (body: FieldMon) => {
+    blameNow = prev;
+    return body;
+  };
+  if (spellSwing && cloakDodge(mon)) return done(mon);
   mon = openShade(mon);
   const total = source ? outgoing(source, amount + charmDamage) : amount + charmDamage;
   const gated = swallowOath(mon, "spell", total);
-  if (gated.mon !== mon) return settleMystic(mon, gated.mon, null, allies, Boolean(mon.guarding)).mon;
+  if (gated.mon !== mon) return done(settleMystic(mon, gated.mon, null, allies, Boolean(mon.guarding)).mon);
   if (mon.cardId === "chien-binh-rong") {
     const slice = third(total);
     const queued = pushDebt(mon, { p: 0, s: slice, t: 0 });
     const dealt = Math.max(0, slice - liveMdef(queued, allies));
     const soaked = soak(queued, "spell", hurt(queued, dealt));
-    return applyIncoming(soaked.mon, soaked.amount, allies).mon;
+    return done(applyIncoming(soaked.mon, soaked.amount, allies).mon);
   }
   const mdef = liveMdef(mon, allies);
   const dealt = Math.max(0, total - mdef);
@@ -2944,7 +3021,7 @@ function damageSpell(mon: FieldMon, amount: number, allies?: Array<FieldMon | nu
   const soaked = soak(plated, "spell", hurt(plated, dealt));
   const hit = applyIncoming(soaked.mon, soaked.amount, allies);
   const stored = mon.cardId === "sua-hut-ma-phap" ? (mon.stored ?? 0) + blocked : hit.mon.stored;
-  return settleMystic(mon, { ...hit.mon, stored }, null, allies, Boolean(mon.guarding)).mon;
+  return done(settleMystic(mon, { ...hit.mon, stored }, null, allies, Boolean(mon.guarding)).mon);
 }
 
 function spellLanded(target: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): number {
@@ -2972,7 +3049,11 @@ function aimNotice(title: string, rows: Array<{ name: string; bits: string }>, t
 }
 
 function trueDamage(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): FieldMon {
-  return landTrue(mon, amount, allies, veilBudget).mon;
+  const prev = blameNow;
+  if (!blameNow && blameUid) blameNow = { uid: blameUid, kind: "tru" };
+  const hit = landTrue(mon, amount, allies, veilBudget);
+  blameNow = prev;
+  return hit.mon;
 }
 
 function landTrue(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): { mon: FieldMon; bite: number; surplus: number } {
@@ -3792,7 +3873,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
           : takePhysical(attacker, counterRaw, alliesA, softA);
   if (blockSpell && counterRaw > 0) wardLines.push(`${cardOf(defender).name} gây ${counterRaw} sát thương phép`);
   const nextAttacker = spendBless(clearClash({
-    ...struck.mon,
+    ...noteGrudge(struck.mon, defender.uid, blockSpell ? "spell" : "phys", defender.cardId === NEWT ? 0 : struck.bite),
     charge: attacker.charge + (attackerDodged ? 1 : 0),
     dim: true,
     def: defender.cardId === "khung-long-vay-kiem" ? attacker.def - skillLoss(defender.cardId, "def", 2) : struck.mon.def,
@@ -3893,9 +3974,14 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     bite = hit.bite;
     surplus = hit.surplus;
   }
-  if (!beam && plate.s > 0) defenderBody = damageSpell(defenderBody, plate.s, alliesB);
+  if (!beam && plate.s > 0) defenderBody = damageSpell(defenderBody, plate.s, alliesB, attacker);
   const nextDefender = {
-    ...defenderBody,
+    ...noteGrudge(
+      defenderBody,
+      attacker.uid,
+      gazeTrue || attacker.preyKind === "tru" ? "tru" : beam || guardStrikeKind(attacker, rosterA) === "spell" ? "spell" : "phys",
+      attacker.cardId === NEWT || attacker.preyKind === "spell" ? 0 : bite,
+    ),
     charge: defender.charge + (defenderDodged ? 1 : 0),
     def: attacker.cardId === "khung-long-vay-kiem" ? defender.def - skillLoss(attacker.cardId, "def", 2) : defenderBody.def,
     mdef: defenderBody.mdef,
@@ -7677,8 +7763,10 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
   const bonus = caster?.blessDmg ?? 0;
   const previous = charmDamage;
   const previousHex = skillHex;
+  const previousBlame = blameUid;
   charmDamage = bonus;
   skillHex = caster?.hex && caster.hex.left > 0 ? { uid: caster.uid, left: 3, clips: [] } : null;
+  blameUid = caster?.uid ?? null;
   mindDepth += 1;
   const savedPool = happyPool;
   const savedJoy = new Map(happyLeft);
@@ -7706,6 +7794,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
   } finally {
     charmDamage = previous;
     skillHex = previousHex;
+    blameUid = previousBlame;
     happyPool = savedPool;
     happyLeft.clear();
     for (const [key, left] of savedJoy) happyLeft.set(key, left);
@@ -7733,6 +7822,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   if (mon.cardId === SAINT) return openSaint(state, mon.uid);
   if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 0) return openRex(state, mon.uid);
   if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 1) return castRexDump(state, side, mon);
+  if (mon.cardId === "leviathan") return castLeviathan(state, side, mon, targetUid);
   if (mon.cardId === VASE) return openShape(state, mon.uid);
   if (mon.cardId === PENGUIN) return openPenguin(state, mon.uid);
   if (mon.cardId === MASK) return openMask(state, mon.uid);
@@ -9344,6 +9434,7 @@ function endTurnCore(state: Duel): Duel {
     summons: 0,
     aside: 0,
     turns: (current.turns ?? 0) + 1,
+    seaOff: Math.max(0, (current.seaOff ?? 0) - 1),
     reserve: current.reserve.map((pile) => (pile.freeAt == null ? pile : { ...pile, freeAt: undefined })),
   };
   let next = patch(state, side, current);
@@ -9366,6 +9457,7 @@ function endTurnCore(state: Duel): Duel {
     summons: 0,
     aside: 0,
     acted: false,
+    seaOff: Math.max(0, (incoming.seaOff ?? 0) - 1),
     attackLock: Math.max(0, incoming.attackLock - 1),
     mirror: Math.max(0, incoming.mirror - 1),
     field: incoming.field.map((mon) => {
@@ -10126,6 +10218,12 @@ export function aiStep(state: Duel): Duel {
     if (rex && (rex.volt ?? 0) === 0 && ready.some((mon) => mon.uid !== rex.uid)) {
       const mates = ready.filter((mon) => mon.uid !== rex.uid).sort((a, b) => liveAtk(b) - liveAtk(a)).slice(0, 2);
       return withLive(confirmRex({ ...state, rexAsk: { uid: rex.uid, picks: mates.map((mon) => mon.uid) } }));
+    }
+    const levi = ready.find((mon) => mon.cardId === "leviathan" && (mon.grudge?.length ?? 0) > 0);
+    const marked = foes.find((mon) => mon.hp > 0);
+    if (levi && marked && me.orb >= 1) {
+      const cast = progress(state, useSkill(state, levi.uid, marked.uid, 0));
+      if (cast) return cast;
     }
     const style = readStyle();
     const lean = state.adapt ?? readLean();

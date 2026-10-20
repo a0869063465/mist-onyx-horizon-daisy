@@ -17,7 +17,7 @@ export const SANCTUARY_GUARDED = [
 export const SANCTUARY_WARRIORS: string[] = [];
 
 /** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
-export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong"];
+export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong", "leviathan"];
 
 export const ENV_KINDS: Record<string, string[]> = {
   // Biển sâu: quái biển

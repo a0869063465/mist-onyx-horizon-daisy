@@ -153,7 +153,7 @@ function seaVeiled(duel: Duel, viewer: Side, uid: string): boolean {
   for (const side of [0, 1] as const) {
     const mon = duel.players[side].field.find((unit) => unit?.uid === uid);
     if (!mon) continue;
-    return side !== viewer && Boolean(duel.players[side].sea && SEA_IDS.has(mon.cardId) && !mon.shown);
+    return side !== viewer && Boolean(duel.players[side].sea && !(duel.players[side].seaOff ?? 0) && SEA_IDS.has(mon.cardId) && !mon.shown);
   }
   return false;
 }
@@ -174,7 +174,7 @@ function hiddenStrike(prev: Duel, next: Duel, viewer: Side): boolean {
 function fallenSea(prev: Duel, next: Duel, viewer: Side): string[] {
   const names: string[] = [];
   for (const side of [0, 1] as const) {
-    if (side === viewer || !prev.players[side].sea) continue;
+    if (side === viewer || !prev.players[side].sea || (prev.players[side].seaOff ?? 0) > 0) continue;
     for (const mon of prev.players[side].field) {
       if (!mon || mon.shown || !SEA_IDS.has(mon.cardId)) continue;
       const still = next.players[side].field.some((unit) => unit?.uid === mon.uid && unit.hp > 0);
@@ -192,7 +192,7 @@ function veilSlain(prev: Duel, next: Duel, viewer: Side): boolean {
 
 function deathReveal(text: string, duel: Duel, viewer: Side): boolean {
   const foe = duel.players[viewer === 0 ? 1 : 0];
-  if (!foe.sea) return false;
+  if (!foe.sea || (foe.seaOff ?? 0) > 0) return false;
   const onFoe = new Set(foe.field.filter((mon) => mon).map((mon) => fieldName(mon!)));
   const yours = new Set(duel.players[viewer].field.filter((mon) => mon).map((mon) => fieldName(mon!)));
   return SEA_NAMES.some((name) => text.includes(name) && !onFoe.has(name) && !yours.has(name));
@@ -230,7 +230,7 @@ function veilNotice(text: string, duel: Duel, viewer: Side): string {
 
 function maskSeaHit(text: string, duel: Duel, viewer: Side): string {
   const foe = duel.players[viewer === 0 ? 1 : 0];
-  if (!foe.sea) return text;
+  if (!foe.sea || (foe.seaOff ?? 0) > 0) return text;
   const visible = new Set(foe.field.filter((mon) => mon && (!SEA_IDS.has(mon.cardId) || mon.shown)).map((mon) => fieldName(mon!)));
   let out = text;
   for (const name of [...SEA_NAMES].sort((a, b) => b.length - a.length)) {
@@ -242,7 +242,7 @@ function maskSeaHit(text: string, duel: Duel, viewer: Side): string {
 
 function maskHidden(text: string, duel: Duel, viewer: Side): string {
   const foe = duel.players[viewer === 0 ? 1 : 0];
-  if (!foe.sea) return text;
+  if (!foe.sea || (foe.seaOff ?? 0) > 0) return text;
   const onFoe = new Set(foe.field.filter((mon) => mon && !mon.shown && SEA_NAMES.includes(fieldName(mon))).map((mon) => fieldName(mon!)));
   let out = text;
   for (const name of [...SEA_NAMES].sort((a, b) => b.length - a.length)) {
@@ -5524,6 +5524,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
           ? mon.beat === 1 ? 2 : 1
         : mon.cardId === "sieu-dan-t-rex" && (mon.volt ?? 0) > 0
           ? mon.volt ?? 0
+        : mon.cardId === "leviathan" && (mon.grudge?.length ?? 0) > 0
+          ? new Set(mon.grudge?.map((row) => row.uid)).size
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""

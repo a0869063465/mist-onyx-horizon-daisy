@@ -1388,5 +1388,19 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerAt": null,
     "powerTone": null,
     "shiftAt": null
+  },
+  "leviathan": {
+    "kind": "monster",
+    "stars": 4,
+    "mana": 0,
+    "atk": 5,
+    "def": 3,
+    "mdef": 2,
+    "hp": 7,
+    "text": "leviathan-2026-10-20",
+    "added": "2026-10-20",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
   }
 };

@@ -1062,6 +1062,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 9,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "leviathan",
+    "name": "Leviathan",
+    "stars": 4,
+    "gems": 0,
+    "skill": "Không được mạo phạm:\nMỗi loại sát thương, và kẻ gây sát thương vào ta sẽ được ghi nhớ.\nThần biển nổi giận:\nTiêu hao 1 mana, chọn 1 kẻ địch, gây 2 sát thương phép lên tất cả kẻ địch đối phương, những kẻ mạo phạm sẽ phải nhận thêm sát thương của chính hắn. Nếu hắn bị ẩm, thì toàn bộ sát thương của chính hắn sẽ biến thành sát thương chuẩn.\nSau cơn thịnh nộ, môi trường biển (nếu có) sẽ mất hiệu lực trong 2 lượt.",
+    "atk": 5,
+    "def": 3,
+    "mdef": 2,
+    "hp": 7,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

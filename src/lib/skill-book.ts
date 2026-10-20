@@ -89,6 +89,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "te-te-da": [P("Giáp Cứng", "checked-shield"), NOTE("cường hoá")],
   "chien-binh-nam-cham": [P("Siêu tốc", "energy-sword"), P("Từ Tính", "electric-whip"), P("Lực từ", "crossed-swords")],
   "sieu-dan-t-rex": [A("Kích điện", "lightning-flame"), A("Phóng điện", "bolt-spell-cast"), P("Bảo trì", "health-normal")],
+  leviathan: [P("Không được mạo phạm", "shield"), A("Thần biển nổi giận", "trident")],
   "nguoi-yeu-hanh-phuc": [P("Tia sáng hạnh phúc", "angel-wings")],
   "kraken": [P("Đắm tàu", "kraken-tentacle")],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],
