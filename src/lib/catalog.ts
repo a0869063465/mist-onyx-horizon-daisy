@@ -1101,6 +1101,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 1,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "bong-ma-dia-nguc",
+    "name": "Bóng ma địa ngục",
+    "stars": 1,
+    "gems": 0,
+    "skill": "__**Gieo rắc**__\nNhân các bản sao đã hành động của ta đầy bàn chơi.\n-Khi đối thủ bắt đầu lượt đấu.\nTất cả các bóng ma sẽ lao vào tấn công quái địch và người chơi đối phương 1 cách ngẫu nhiên, sát thương mỗi bóng ma gây ra là sát thương chuẩn, chỉ để chừa lại 1 bản sao.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

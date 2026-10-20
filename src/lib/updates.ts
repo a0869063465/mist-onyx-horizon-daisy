@@ -615,6 +615,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm Phù thuỷ đồ chơi. 1 sao, 0 mana, công 0, thủ 0, thủ phép 2, máu 3. Ở trên tay, khi đối phương nhắm quái mình bằng phép hoặc kỹ năng, xoá hiệu ứng đó rồi triệu hồi cô nếu còn chỗ, hết chỗ thì biến mất. Phong ấn tiêu 1 mana, khoá kỹ năng kích hoạt của một quái địch trong 4 lượt. Vẫn đánh thường được. Phù thuỷ đồ chơi không thuộc hệ nào.",
   "Thêm phép Mặt đất phá vỡ. Tiêu hao 0 mana. Khi đối phương triệu hồi, bấm Use. Gây sát thương chuẩn bằng 1,5 lần số sao của quái đó, rồi giam cầm nó đến hết lượt này. Không bấm thì lượt triệu hồi vẫn tiếp tục.",
   "Cục bông ma quái giảm công xuống 1. Phát nổ gây sát thương phép bằng đúng công, nên còn 1.",
+  "Thêm Bóng ma địa ngục. 1 sao, 0 mana, công 2, thủ 0, thủ phép 0, máu 1. Đầu lượt đối thủ, nhân bản đã hành động cho đầy sân mình. Cả đàn lao ngẫu nhiên vào quái địch và người chơi địch, mỗi con gây sát thương chuẩn bằng đúng công, rồi chỉ còn 1 bản sao. Tạm thuộc Bóng tối.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -1913,6 +1913,34 @@ function PlayPage() {
         }, order * 160);
       });
     }
+    if (!quiet && duel.fx !== prev.fx && duel.skill?.id === "bong-ma-dia-nguc") {
+      const owner = (1 - duel.turn) as Side;
+      const slots = (duel.skill.aim ?? "").split(",").filter((bit) => bit !== "");
+      playCue("swordBoom");
+      (duel.skill.hits ?? []).forEach((id, order) => {
+        const slot = Number(slots[order]);
+        const from = Number.isInteger(slot) ? SLOT_POS[screenSide(owner, viewerNow)][slot] : null;
+        if (!from) return;
+        let to: { x: number; y: number } | null = null;
+        if (id.startsWith("face:")) {
+          const face = Number(id.slice(5)) as Side;
+          const box = HP_BOX[screenSide(face, viewerNow)];
+          to = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+        } else {
+          for (const side of [0, 1] as const) {
+            const live = duel.players[side].field.findIndex((mon) => mon?.uid === id);
+            const index = live >= 0 ? live : prev.players[side].field.findIndex((mon) => mon?.uid === id);
+            const spot = index >= 0 ? SLOT_POS[screenSide(side, viewerNow)][index] : null;
+            if (spot) to = spot;
+          }
+        }
+        if (!to) return;
+        const point = to;
+        window.setTimeout(() => {
+          emitFx({ t: "beam", act: "attack", x1: from.x, y1: from.y, x2: point.x, y2: point.y, color: "#c084fc", card: "bong-ma-dia-nguc" });
+        }, order * 140);
+      });
+    }
     if (!quiet && duel.lava && duel.lava.seq !== prev.lava?.seq) {
       playCue("eruption");
       duel.lava.hits.forEach((hit, order) => {

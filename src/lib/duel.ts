@@ -9594,6 +9594,79 @@ function darkToll(before: Duel, after: Duel, sources: string[]): Duel {
   return next;
 }
 
+const HELL_GHOST = "bong-ma-dia-nguc";
+
+/** Đầu lượt đối thủ: đầy sân bằng bản sao đã hành động, cả đàn lao ngẫu nhiên gây sát thương chuẩn bằng công, rồi chỉ chừa 1 bản sao. */
+function sowHell(state: Duel, owner: Side): { state: Duel; line: string; skill: Duel["skill"] } {
+  const foe = (1 - owner) as Side;
+  const player = state.players[owner];
+  const seeds = player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.cardId === HELL_GHOST));
+  if (seeds.length === 0 || state.winner) return { state, line: "", skill: null };
+  const field = [...player.field] as Player["field"];
+  let seq = state.seq;
+  for (let slot = 0; slot < field.length; slot += 1) {
+    if (field[slot] || (player.locked?.[slot] ?? 0) > 0) continue;
+    seq += 1;
+    field[slot] = { ...place({ ...state, seq }, owner, HELL_GHOST), copy: true, dim: true };
+  }
+  let next = patch({ ...state, seq }, owner, { ...player, field });
+  const source = seeds.find((mon) => !mon.copy)?.uid ?? seeds[0].uid;
+  const hits: string[] = [];
+  const vols: number[] = [];
+  const from: number[] = [];
+  const bits: string[] = [];
+  const attackers = field.flatMap((mon, slot) => (mon && mon.hp > 0 && mon.cardId === HELL_GHOST ? [{ mon, slot }] : []));
+  for (const row of attackers) {
+    if (next.winner) break;
+    const them = next.players[foe];
+    const options: Array<{ kind: "mon"; uid: string } | { kind: "face" }> = [];
+    for (const unit of them.field) if (unit && unit.hp > 0) options.push({ kind: "mon", uid: unit.uid });
+    if (them.hp > 0) options.push({ kind: "face" });
+    if (options.length === 0) break;
+    const pick = options[Math.floor(Math.random() * options.length)]!;
+    const amount = Math.max(0, visibleStats(row.mon, next.players[owner].field).atk);
+    const prevBlame = blameNow;
+    blameNow = { uid: source, kind: "tru" };
+    if (pick.kind === "face") {
+      blameNow = prevBlame;
+      const left = Math.max(0, them.hp - amount);
+      next = checkWinner(patch(next, foe, { ...them, hp: left }));
+      hits.push(`face:${foe}`);
+      vols.push(amount);
+      bits.push(`${amount} vào người chơi`);
+    } else {
+      const target = them.field.find((unit) => unit?.uid === pick.uid) ?? null;
+      if (!target) {
+        blameNow = prevBlame;
+        continue;
+      }
+      const struck = trueDamage(target, amount, them.field);
+      blameNow = prevBlame;
+      const lost = Math.max(0, target.hp - Math.max(0, struck.hp));
+      const foeField = them.field.map((unit) => (unit?.uid === target.uid ? struck : unit));
+      next = checkWinner(patch(next, foe, dropDead({ ...them, field: foeField })));
+      hits.push(target.uid);
+      vols.push(lost);
+      bits.push(`${lost} vào ${cardOf(target).name}`);
+    }
+    from.push(row.slot);
+  }
+  const owned = next.players[owner];
+  let kept = false;
+  const pruned = owned.field.map((mon) => {
+    if (!mon || mon.cardId !== HELL_GHOST || !mon.copy || mon.hp <= 0) return mon;
+    if (!kept) {
+      kept = true;
+      return { ...mon, dim: true };
+    }
+    return null;
+  }) as Player["field"];
+  next = patch(next, owner, { ...owned, field: pruned });
+  const name = cardOf(seeds[0]).name;
+  const line = bits.length ? `${name} gieo rắc. ${bits.join(", ")}. Chỉ còn 1 bản sao.` : `${name} gieo rắc. Chỉ còn 1 bản sao.`;
+  return { state: next, line, skill: { id: HELL_GHOST, index: 0, aim: from.join(","), hits, vols } };
+}
+
 export function endTurn(state: Duel): Duel {
   const next = endTurnCore(state);
   if (next === state) return next;
@@ -9746,6 +9819,8 @@ function endTurnCore(state: Duel): Duel {
   }
   const owed = settleDragonDebt(startedTurn);
   startedTurn = owed.state;
+  const ghosts = sowHell(startedTurn, side);
+  startedTurn = ghosts.state;
   const started = angels > 0 ? `${sideName(foe)} bắt đầu lượt. Quái thú thiên sứ cho thêm ${angels} gem.` : `${sideName(foe)} bắt đầu lượt.`;
   const pact = dueNow?.cardId === "trieu-hoi-ac-ma" ? `${cardOf(dueNow).name} thiếu sao phải trả khế ước: 1 mana, hoặc rời sân.` : "";
   const pray = angels > 0 ? "Quái thú thiên sứ cần cầu nguyện: tiêu 1 mana, hoặc rời sân." : "";
@@ -9767,11 +9842,12 @@ function endTurnCore(state: Duel): Duel {
   startedTurn = offered.state;
   const filtered = filterHeal(startedTurn, foe);
   startedTurn = filtered.state;
-  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, masked.line, offered.line, filtered.line].filter(Boolean).join(" ");
+  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, masked.line, offered.line, filtered.line, ghosts.line].filter(Boolean).join(" ");
   const mute = startedTurn.players[foe].drawLock ? " Lượt này không được rút bài." : "";
   const noted = note(stampTurn(startedTurn), extra ? `${due}${mute} ${extra}` : `${due}${mute}`);
   const mends = [...(noted.mends ?? []), ...vowHeals];
-  return mends.length ? { ...noted, mends } : noted;
+  const finished = mends.length ? { ...noted, mends } : noted;
+  return ghosts.skill ? { ...finished, skill: ghosts.skill } : finished;
 }
 
 function summonAside(state: Duel): Duel | null {
