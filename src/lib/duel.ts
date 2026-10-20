@@ -949,12 +949,12 @@ function envForm(mon: FieldMon): string {
 }
 
 /**
- * Rừng rậm: +2 max HP and HP. Núi: +1 skill damage. Cứ địa máy móc: a 2-point armour counted as def. Applied once
- * per form while the card is on the field.
+ * Rừng rậm: +2 max HP and HP. Núi: +1 skill damage. Cứ địa máy móc: a 2-point armour counted as def.
+ * Đất đá: a monster whose def is 0 is given +1 def. Applied while the card is on the field.
  */
 function envBoost(player: Player): Player {
   const env = player.env;
-  if (env !== "rung-ram" && env !== "nui" && env !== "cu-dia-may-moc") return player;
+  if (env !== "rung-ram" && env !== "nui" && env !== "cu-dia-may-moc" && env !== "dat-da") return player;
   let changed = false;
   const field = player.field.map((mon) => {
     if (!mon || mon.hp <= 0 || !envFavors(env, mon.cardId, mon.jarSoul)) return mon;
@@ -963,6 +963,11 @@ function envBoost(player: Player): Player {
       if (mon.envArmor === form) return mon;
       changed = true;
       return { ...mon, def: mon.def + MECH_ARMOR, armor: MECH_ARMOR, raised: markRaised(mon, { def: MECH_ARMOR }), envArmor: form };
+    }
+    if (env === "dat-da") {
+      if (mon.def !== 0) return mon;
+      changed = true;
+      return { ...mon, def: 1, raised: markRaised(mon, { def: 1 }) };
     }
     if (env === "rung-ram") {
       const form = envForm(mon);

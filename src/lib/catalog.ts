@@ -1253,7 +1253,7 @@ export const SPELLS: SpellCard[] = [
     "id": "dat-da",
     "name": "Đất đá",
     "gems": 0,
-    "effect": "Nếu 1 đồng minh hệ đất đá tham gia giao tranh tăng công bằng với 40% điểm tổng phòng ngự hiện có.",
+    "effect": "Nếu 1 đồng minh hệ đất đá tham gia giao tranh tăng công bằng với 40% điểm tổng phòng ngự hiện có.\nNếu quái thú đất đá nào không có phòng ngự, trao +1 phòng ngự cho quái thú đó.",
     "env": true,
     "since": "2026-10-16"
   },
