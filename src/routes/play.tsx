@@ -753,6 +753,7 @@ const ANSWER_SPELLS = new Set([
   "co-may-thoi-gian",
   "giap-co-khi",
   "ham-chong",
+  "mat-dat-pha-vo",
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -792,6 +793,7 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
     return casterSide !== side;
   }
   if (id === "ham-chong") return pending?.kind === "face" || pending?.kind === "melee";
+  if (id === "mat-dat-pha-vo") return pending?.kind === "arrive";
   if (id === "hoan-doi") return attacked || skilled || pending?.kind === "face";
   if (id === "co-may-thoi-gian") {
     const side = duel.hold?.priority;

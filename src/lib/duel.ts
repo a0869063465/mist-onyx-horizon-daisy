@@ -173,6 +173,7 @@ export type Pending =
   | { kind: "beam"; caster: string; target: string | null; index: number; back?: boolean; extra?: string | null }
   | { kind: "spell"; owner: Side; cardId: string; target: string | null; source?: string | null }
   | { kind: "lash"; owner: Side; bird: string; foe: string; stun: boolean }
+  | { kind: "arrive"; uid: string }
   | null;
 
 export type Hold = {
@@ -3459,9 +3460,13 @@ function summonCore(state: Duel, reserveIndex: number, slot: 0 | 1 | 2): Duel {
     : forced
       ? `${sideName(side)} bất chấp triệu hồi ${card.name}. Đầu lượt phải trả khế ước.${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`
       : `${sideName(side)} triệu hồi ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`;
-  return note(
-    pingStars(patch({ ...state, seq: state.seq + 1, rite: vow.eaten ? { side, slot, seq: state.seq + 1 } : state.rite }, side, placed), side, before, placed.stars),
-    line,
+  return offerCrack(
+    note(
+      pingStars(patch({ ...state, seq: state.seq + 1, rite: vow.eaten ? { side, slot, seq: state.seq + 1 } : state.rite }, side, placed), side, before, placed.stars),
+      line,
+    ),
+    side,
+    next.uid,
   );
 }
 
@@ -3562,23 +3567,27 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: 0 | 1 | 2, picks
   const eaten = names.length ? `${names.join(", ")} bị hiến tế. ` : "";
   const line = vow.eaten ? `${eaten}${card.name} bị hiến tế.` : `${eaten}${sideName(side)} triệu hồi ${card.name}${bits.length ? `. ${bits.join(", ")}.` : "."}`;
   const seq = state.seq + 1;
-  return note(
-    pingStars(
-      patch(
-        {
-          ...state,
-          seq,
-          ashes: names.length ? { side, slots: freed as Array<0 | 1 | 2>, seq } : state.ashes,
-          rite: vow.eaten ? { side, slot: land, seq } : state.rite,
-        },
+  return offerCrack(
+    note(
+      pingStars(
+        patch(
+          {
+            ...state,
+            seq,
+            ashes: names.length ? { side, slots: freed as Array<0 | 1 | 2>, seq } : state.ashes,
+            rite: vow.eaten ? { side, slot: land, seq } : state.rite,
+          },
+          side,
+          placed,
+        ),
         side,
-        placed,
+        before,
+        placed.stars,
       ),
-      side,
-      before,
-      placed.stars,
+      line,
     ),
-    line,
+    side,
+    born.uid,
   );
 }
 
@@ -4258,6 +4267,15 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
+}
+
+function offerCrack(state: Duel, summoner: Side, uid: string): Duel {
+  if (state.step !== "main" || state.winner) return state;
+  const foe = (1 - summoner) as Side;
+  if (!state.players[foe].hand.includes("mat-dat-pha-vo")) return state;
+  const mon = state.players[summoner].field.find((unit) => unit?.uid === uid && unit.hp > 0);
+  if (!mon) return state;
+  return beginHold(state, { kind: "arrive", uid }, `${cardOf(mon).name} vừa được triệu hồi. Có thể dùng Mặt đất phá vỡ.`);
 }
 
 const PARASITE = "ky-sinh-trung-kim-loai";
@@ -6576,6 +6594,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     "co-may-thoi-gian",
     "giap-co-khi",
     "ham-chong",
+    "mat-dat-pha-vo",
   ]);
   if (!replay && card.id === "hoan-doi") {
     if (!canCastSwap(state, side)) {
@@ -6960,6 +6979,20 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       pending: null,
       hold: null,
     });
+  }
+  if (card.id === "mat-dat-pha-vo") {
+    const pending = state.pending;
+    if (state.step !== "respond" || pending?.kind !== "arrive") return note(next, "Mặt đất phá vỡ chỉ dùng khi đối phương triệu hồi.");
+    const mon = next.players[state.turn].field.find((unit) => unit?.uid === pending.uid && unit.hp > 0) ?? null;
+    if (!mon) return { ...note(next, "Quái vừa triệu hồi không còn."), step: "main", pending: null, hold: null };
+    const amount = cardStars(mon.cardId, mon.level ?? 1) * 1.5;
+    const struck = trueDamage(mon, amount, next.players[state.turn].field);
+    const lost = Math.max(0, mon.hp - Math.max(0, struck.hp));
+    const body = struck.hp > 0 ? { ...struck, stun: Math.max(struck.stun, 1), dim: true } : struck;
+    const field = next.players[state.turn].field.map((unit) => (unit?.uid === mon.uid ? body : unit));
+    const hit = patch(next, state.turn, dropDead({ ...next.players[state.turn], field }));
+    const jail = body.hp > 0 ? ` Giam cầm ${cardOf(mon).name} trong lượt này.` : "";
+    return { ...note(hit, `Mặt đất phá vỡ gây ${lost} sát thương chuẩn lên ${cardOf(mon).name}.${jail}`, "hit"), step: "main", pending: null, hold: null };
   }
   if (card.id === "ngan-chan-phong-ngu") {
     if (!foeMon) return note(next, "Không có quái để chặn phòng ngự.");
@@ -10195,6 +10228,10 @@ export function aiStep(state: Duel): Duel {
     }
     if ((state.pending?.kind === "face" || state.pending?.kind === "melee") && state.turn !== 1) {
       const index = state.players[1].hand.indexOf("ham-chong");
+      if (index >= 0) return withLive(castSpell(state, index, null));
+    }
+    if (state.pending?.kind === "arrive" && state.turn !== 1) {
+      const index = state.players[1].hand.indexOf("mat-dat-pha-vo");
       if (index >= 0) return withLive(castSpell(state, index, null));
     }
     if (state.pending?.kind === "face") {
