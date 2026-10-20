@@ -242,6 +242,7 @@ export function MonsterSheet({
   onClose,
   onArt,
   onBack,
+  onAway,
 }: {
   name: string;
   card: ReactNode;
@@ -260,6 +261,8 @@ export function MonsterSheet({
   onArt?: () => void;
   /** A sheet opened from the fan: "<<" (and a tap outside the sheet) goes back to the fan. */
   onBack?: () => void;
+  /** A tap on the dim area around the sheet, when that should not close it. */
+  onAway?: () => void;
 }) {
   const first = skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
   const [picked, setPicked] = useState(first);
@@ -330,7 +333,7 @@ export function MonsterSheet({
   // The extra icons sit at the right end of the first row of icons.
   const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
   return (
-    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? onClose)()}>
+    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? onAway ?? onClose)()}>
       <GlyphDefs />
       <div className="msheet" role="dialog" aria-label={name}>
         {onBack ? (

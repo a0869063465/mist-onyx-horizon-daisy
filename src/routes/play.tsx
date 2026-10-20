@@ -1434,6 +1434,7 @@ function PlayPage() {
   const wave = useRef(0);
   const grab = useRef<Grab | null>(null);
   const fuseHold = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const fuseGo = useRef(false);
   const origin = useRef({ x: 0, y: 0, moved: false, t: 0, pan: false, lastX: 0 });
   const handStrip = useRef<HTMLDivElement | null>(null);
   const noticeRef = useRef<HTMLParagraphElement | null>(null);
@@ -3359,7 +3360,7 @@ function PlayPage() {
   const formOf = (mon: FieldMon) =>
     mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
-  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string) => (
+  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, onAway?: () => void) => (
     <RelatedFlow
       id={formOf(mon)}
       onClose={onClose}
@@ -3373,6 +3374,7 @@ function PlayPage() {
           note={note}
           onClose={onClose}
           onArt={onArt}
+          onAway={onAway}
         />
       )}
     />
@@ -3385,30 +3387,35 @@ function PlayPage() {
   const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
   const fusePartner = fuseShow ? you.field.find((mon) => mon?.uid === fuseShow.uid) ?? null : null;
   const fuseBorn = fuseShow ? previewMon(duel, viewer, { id: fuseShow.resultId, hp: monsterCard(fuseShow.resultId)?.hp ?? 1, maxHp: monsterCard(fuseShow.resultId)?.hp ?? 1 }) : null;
+  function landFuse(show: FuseShow) {
+    if (fuseGo.current || show.phase !== "reveal") return;
+    fuseGo.current = true;
+    setFuseShow({ ...show, phase: "land" });
+    // Lightning strikes the slot as the fused monster lands, with its thunder.
+    playCue("boltPrep", 0.35);
+    window.setTimeout(() => {
+      apply(fuse(duel, show.index, show.uid, show.slot));
+      setFuseShow(null);
+      fuseGo.current = false;
+      emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
+      emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
+      playCue("boltBoom");
+      window.setTimeout(() => {
+        emitFx({ t: "bolt", rank: "small", x: show.at.x - 7, y: show.at.y - 2 });
+        emitFx({ t: "bolt", rank: "small", x: show.at.x + 7, y: show.at.y + 1 });
+        playCue("boltSmall");
+      }, 260);
+    }, 750);
+  }
   const fuseSheet =
     fuseShow?.phase === "reveal" && fuseBorn
       ? sheetFor(
           fuseBorn,
           you.field,
-          [{ key: "go", label: "Triệu hồi", tone: "fuse", cost: 0, onPress: () => {
-            const show = fuseShow;
-            setFuseShow({ ...show, phase: "land" });
-            // Lightning strikes the slot as the fused monster lands, with its thunder.
-            playCue("boltPrep", 0.35);
-            window.setTimeout(() => {
-              apply(fuse(duel, show.index, show.uid, show.slot));
-              setFuseShow(null);
-              emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
-              emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
-              playCue("boltBoom");
-              window.setTimeout(() => {
-                emitFx({ t: "bolt", rank: "small", x: show.at.x - 7, y: show.at.y - 2 });
-                emitFx({ t: "bolt", rank: "small", x: show.at.x + 7, y: show.at.y + 1 });
-                playCue("boltSmall");
-              }, 260);
-            }, 750);
-          } }],
+          [{ key: "go", label: "Triệu hồi", tone: "fuse", cost: 0, onPress: () => landFuse(fuseShow) }],
           () => setFuseShow(null),
+          undefined,
+          () => landFuse(fuseShow),
         )
       : null;
 
