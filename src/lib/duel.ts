@@ -995,6 +995,7 @@ const MASK_SPELLS = new Set([
   "giap-co-khi",
   "soi-xich-dia-nguc",
   "thanh-guom-anh-sang",
+  "ham-chong",
 ]);
 
 const joyAura = new Map<string, number>();
@@ -6121,6 +6122,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     "virus-an-mon",
     "co-may-thoi-gian",
     "giap-co-khi",
+    "ham-chong",
   ]);
   if (!replay && card.id === "hoan-doi") {
     if (!canCastSwap(state, side)) {
@@ -6477,6 +6479,28 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (card.id === "vong-xoay-bao-ho") {
     if (state.step !== "respond") return note(next, "Vòng xoáy chỉ dùng khi đang bị tấn công.");
     return endTurn({ ...note(next, "Vòng xoáy bảo hộ chặn đòn và kết thúc lượt.", "spell"), step: "main", pending: null });
+  }
+  if (card.id === "ham-chong") {
+    const pending = state.pending;
+    if (state.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee")) {
+      return note(next, "Hầm chông chỉ dùng khi đối thủ lao vào tấn công.");
+    }
+    const attacker = next.players[foe].field.find((mon) => mon?.uid === pending.attacker) ?? null;
+    if (!attacker) return note(next, "Không có quái đang tấn công.");
+    const stars = cardStars(attacker.cardId, attacker.level ?? 1);
+    const body = openShade(attacker);
+    const phys = takePhysical(body, stars, next.players[foe].field);
+    const spelled = damageSpell(phys.mon, stars, next.players[foe].field);
+    const foeField = next.players[foe].field.map((mon) => (mon?.uid === attacker.uid ? { ...spelled, dim: true } : mon));
+    const hit = patch(next, foe, dropDead({ ...next.players[foe], field: foeField }));
+    const physDealt = Math.max(0, body.hp - phys.mon.hp);
+    const spellDealt = Math.max(0, phys.mon.hp - Math.max(0, spelled.hp));
+    return releaseLegend({
+      ...note(hit, `Hầm chông chặn đòn của ${cardOf(attacker).name}, gây ${physDealt} sát thương vật lý và ${spellDealt} sát thương phép.`, "hit"),
+      step: "main",
+      pending: null,
+      hold: null,
+    });
   }
   if (card.id === "ngan-chan-phong-ngu") {
     if (!foeMon) return note(next, "Không có quái để chặn phòng ngự.");
@@ -9674,6 +9698,10 @@ export function aiStep(state: Duel): Duel {
     }
     if (state.pending?.kind === "spell" && state.turn !== 1) {
       const index = state.players[1].hand.indexOf("hap-thu-ma-phap");
+      if (index >= 0) return withLive(castSpell(state, index, null));
+    }
+    if ((state.pending?.kind === "face" || state.pending?.kind === "melee") && state.turn !== 1) {
+      const index = state.players[1].hand.indexOf("ham-chong");
       if (index >= 0) return withLive(castSpell(state, index, null));
     }
     if (state.pending?.kind === "face") {

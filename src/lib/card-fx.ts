@@ -163,7 +163,7 @@ export function setMonsterFx(cardId: string, skillKey: string, fx: CardFx) {
   write(store);
 }
 
-const SPELL_HIT = new Set(["sam-set-tan-the", "phuc-kich", "virus-an-mon"]);
+const SPELL_HIT = new Set(["sam-set-tan-the", "phuc-kich", "virus-an-mon", "ham-chong"]);
 
 export function spellBase(cardId: string): SpellFx {
   if (cardId === "sam-set-tan-the") return "bolt";

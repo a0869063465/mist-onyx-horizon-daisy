@@ -1234,6 +1234,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Cần có quái trên sân.\nTạo mũ che sân của bạn. Đối phương chỉ thấy mũ. Bạn vẫn thấy quái thật.\nMũ: 0 công, 0 thủ, 0 thủ phép, 1 máu. Không điều khiển. Không buff.\nMũ và quái đổi chỗ khi bạn triệu hồi, và khi bắt đầu lượt chung.\nĐòn, kỹ năng, phép trúng đúng ô quái thì vào quái. Trúng ô mũ thì mũ chịu.\nHết khi còn đúng 1 mũ che đúng 1 quái thật.",
     "picture": "spell:mu-ma-phap"
+  },
+  {
+    "id": "ham-chong",
+    "name": "Hầm chông",
+    "gems": 0,
+    "effect": "Khi đối thủ lao vào tấn công, ngăn chặn đòn tấn công đó, gây sát thương vật lý và sát thương phép bằng với số sao của quái thú đó.\n(Ví dụ 3 sao thì 3 vật lý và 3 phép)",
+    "since": "2026-10-20"
   }
 ];
 

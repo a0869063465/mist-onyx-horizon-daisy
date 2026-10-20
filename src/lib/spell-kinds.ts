@@ -17,7 +17,7 @@ export type SpellKind = {
 
 export const SPELL_KINDS: SpellKind[] = [
   { key: "env", label: "Môi trường", glyph: "mountains", tone: "#e0a85a", ids: ["bien-sau", "thao-nguyen", "dat-da", "nui", "rung-ram", "bong-toi", "cu-dia-may-moc", "thanh-dia-thien-su", "nui-dung-nham"] },
-  { key: "rebound", label: "Phản đòn", react: "rebound", tone: "#ff4f93", ids: ["co-may-thoi-gian", "giap-co-khi", "hoan-doi", "la-chan-phan-don", "phuc-kich", "guong-phong-ho"] },
+  { key: "rebound", label: "Phản đòn", react: "rebound", tone: "#ff4f93", ids: ["co-may-thoi-gian", "giap-co-khi", "hoan-doi", "la-chan-phan-don", "phuc-kich", "guong-phong-ho", "ham-chong"] },
   { key: "cleanse", label: "Giải trừ", react: "block", tone: "#f5c542", ids: ["hap-thu-ma-phap", "mua-ma-thuat", "phan-nguyen", "vong-xoay-bao-ho"] },
   { key: "multi", label: "Đa năng", react: "buff", tone: "#3ddc6a", ids: ["ke-dao-mo", "mu-ma-phap", "thu-hoi-quai-thu"] },
   { key: "bind", label: "Khống chế", react: "chain", tone: "#d7d7e2", ids: ["soi-xich-dia-nguc", "thanh-guom-anh-sang", "vong-nguyen-rua-ac-ma", "ngan-chan-phong-ngu"] },
