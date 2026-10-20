@@ -1088,6 +1088,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 3,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "ky-sinh-trung-kim-loai",
+    "name": "Ký sinh trùng Kim loại",
+    "stars": 1,
+    "gems": 2,
+    "skill": "Máy lọc:\nTăng 1 công và 1 sát thương kỹ năng cho các quái thú biển đồng minh, và hồi 1 máu cho chúng ở đầu lượt của người chơi.\nTăng sinh khối:\nKhi 1 quái thú biển đồng minh khác bị nhắm tới, tăng ngẫu nhiên 1 thủ, 1 thủ phép hoặc 2 máu tối đa cho ta.\nKhi tăng sinh khối kích đủ 3 lần, nhận thêm 1 lần hiệu ứng của máy lọc.",
+    "atk": 0,
+    "def": 1,
+    "mdef": 1,
+    "hp": 1,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

@@ -39,8 +39,11 @@ export type FieldMon = {
   maxHp: number;
   chain?: number;
   gag?: number;
-  /** Phù thuỷ đồ chơi: số lượt còn phong ấn kỹ năng kích hoạt. */
-  seal?: number;
+  /** Ký sinh trùng kim loại: số lần tăng sinh khối. */
+  bulk?: number;
+  /** Máy lọc đang cộng, tính lại mỗi lần sân đổi. */
+  seaAtk?: number;
+  seaSkill?: number;
   buff?: { def: number; mdef: number; maxHp: number };
   erode?: { from: Side; left: number | null };
   wet?: number;
@@ -895,13 +898,16 @@ function monsterTarget(state: Duel, uid: string | null | undefined): EventTarget
   return { kind: "monster", cardId: mon?.cardId ?? null, uid };
 }
 
+let bulkNote = "";
+
 function note(state: Duel, line: string, tone: Duel["tone"] = "info"): Duel {
   const stepNo = state.stepNo + 1;
   const extra = state.starPing
     ? ` ${sideName(state.starPing.side)} có thể triệu hồi quái thú ${state.starPing.stars} sao`
     : "";
   const ward = wardLines.length ? ` ${wardLines.splice(0).join(" ")}` : "";
-  const text = unperiod(`${stepNo}. ${unperiod(line)}${ward}${extra}`);
+  const text = unperiod(`${stepNo}. ${unperiod(line)}${ward}${extra}${bulkNote ? ` ${bulkNote}` : ""}`);
+  bulkNote = "";
   return soulSync(reapVirus({
     ...state,
     starPing: null,
@@ -967,7 +973,7 @@ function envBoost(player: Player): Player {
 }
 
 function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
-  const player = envBoost(rawPlayer);
+  const player = seaAura(envBoost(rawPlayer));
   const prev = state.players[side];
   const gone = [
     ...departed(prev.field, player.field),
@@ -2468,6 +2474,7 @@ function rawAtk(mon: FieldMon) {
   let atk = mon.atk + (mon.blessAtk ?? 0) + (mon.clash?.atk ?? 0);
   if (mon.cardId === "rong-boc-trung" && mon.stance === "attack") atk += skillFigure(mon.cardId, "atk", 4);
   if (mon.cardId === "con-thinh-no-cua-hai-vuong") atk += 3 * (mon.stored ?? 0);
+  atk += mon.seaAtk ?? 0;
   return atk;
 }
 
@@ -2490,7 +2497,7 @@ export function visibleStats(mon: FieldMon, allies: Array<FieldMon | null>) {
     atk: liveAtk(mon) + (mon.lava ?? 0),
     def: liveDef(mon, allies),
     mdef: liveMdef(mon, allies),
-    blueAtk: (mon.lava ?? 0) > 0 || (mon.blessAtk ?? 0) > 0 || (mon.clash?.atk ?? 0) > 0 || stanceAtk || (mon.raised?.atk ?? 0) > 0 || (mon.cardId === "con-thinh-no-cua-hai-vuong" && (mon.stored ?? 0) > 0),
+    blueAtk: (mon.lava ?? 0) > 0 || (mon.blessAtk ?? 0) > 0 || (mon.clash?.atk ?? 0) > 0 || stanceAtk || (mon.raised?.atk ?? 0) > 0 || (mon.seaAtk ?? 0) > 0 || (mon.cardId === "con-thinh-no-cua-hai-vuong" && (mon.stored ?? 0) > 0),
     blueDef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.nextDef ?? 0) > 0 || (mon.blessDef ?? 0) > 0 || guardBonus(mon) > 0 || (mon.clash?.def ?? 0) > 0 || aura > 0 || (mon.raised?.def ?? 0) > 0 || (mon.buff?.def ?? 0) > 0),
     blueMdef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.blessMdef ?? 0) > 0 || guardBonus(mon) > 0 || aura > 0 || (mon.raised?.mdef ?? 0) > 0 || (mon.buff?.mdef ?? 0) > 0 || (mon.clash?.mdef ?? 0) > 0),
     blueHp: !mon.cage && ((mon.raised?.hp ?? 0) > 0 || (mon.clash?.maxHp ?? 0) > 0 || (mon.buff?.maxHp ?? 0) > 0),
@@ -4183,9 +4190,11 @@ function fadeBuff(mon: FieldMon): FieldMon {
 }
 
 function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): Duel {
-  const warded = toyPending(state, pending);
+  const aim = pending.kind === "melee" || pending.kind === "gnaw" ? pending.defender : pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell" ? pending.target : null;
+  const grown = growBulk(state, aim ?? null);
+  const warded = toyPending(grown, pending);
   if (warded) return warded;
-  const noted = note(state, line);
+  const noted = note(grown, line);
   const opened: Duel = {
     ...noted,
     step: "respond",
@@ -4194,6 +4203,71 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
+}
+
+const PARASITE = "ky-sinh-trung-kim-loai";
+
+function seaPower(mon: FieldMon) {
+  return mon.cardId === PARASITE && mon.hp > 0 ? ((mon.bulk ?? 0) >= 3 ? 2 : 1) : 0;
+}
+
+function seaAura(player: Player): Player {
+  let power = 0;
+  for (const mon of player.field) if (mon) power += seaPower(mon);
+  const field = player.field.map((mon) => {
+    if (!mon) return mon;
+    const bonus = isSea(mon.cardId) && mon.hp > 0 ? power : 0;
+    if ((mon.seaAtk ?? 0) === bonus && (mon.seaSkill ?? 0) === bonus) return mon;
+    return { ...mon, seaAtk: bonus, seaSkill: bonus };
+  });
+  return { ...player, field: field as Player["field"] };
+}
+
+function growBulk(state: Duel, targetUid: string | null): Duel {
+  if (!targetUid) return state;
+  const home = ([0, 1] as const).find((side) => state.players[side].field.some((mon) => mon?.uid === targetUid && mon.hp > 0 && isSea(mon.cardId)));
+  if (home === undefined) return state;
+  const player = state.players[home];
+  const bits: string[] = [];
+  let doubled = false;
+  const field = player.field.map((mon) => {
+    if (!mon || mon.hp <= 0 || mon.cardId !== PARASITE || mon.uid === targetUid) return mon;
+    const bulk = (mon.bulk ?? 0) + 1;
+    if (bulk === 3) doubled = true;
+    const roll = Math.floor(Math.random() * 3);
+    if (roll === 0) {
+      bits.push("thủ");
+      return { ...mon, bulk, def: mon.def + 1 };
+    }
+    if (roll === 1) {
+      bits.push("thủ phép");
+      return { ...mon, bulk, mdef: mon.mdef + 1 };
+    }
+    bits.push("máu");
+    const maxHp = (mon.maxHp || mon.hp) + 2;
+    return { ...mon, bulk, maxHp, hp: mon.hp + 2 };
+  });
+  if (!bits.length) return state;
+  bulkNote = `${monsterCard(PARASITE)?.name ?? "Ký sinh trùng kim loại"} tăng sinh khối: ${bits.join(", ")}.${doubled ? " Máy lọc thêm một lần." : ""}`;
+  return patch(state, home, { ...player, field: field as Player["field"] });
+}
+
+function filterHeal(state: Duel, side: Side): { state: Duel; line: string } {
+  const player = state.players[side];
+  let power = 0;
+  for (const mon of player.field) if (mon) power += seaPower(mon);
+  if (power <= 0) return { state, line: "" };
+  const names: string[] = [];
+  const field = player.field.map((mon) => {
+    if (!mon || mon.hp <= 0 || !isSea(mon.cardId)) return mon;
+    const cap = mon.maxHp || mon.hp;
+    const n = Math.min(power, Math.max(0, cap - mon.hp));
+    if (n <= 0) return mon;
+    names.push(cardOf(mon).name);
+    return { ...mon, hp: mon.hp + n };
+  });
+  if (!names.length) return { state, line: "" };
+  return { state: patch(state, side, { ...player, field: field as Player["field"] }), line: `Máy lọc hồi máu cho ${names.join(", ")}.` };
 }
 
 const TOY = "phu-thuy-do-choi";
@@ -6573,6 +6647,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     next = patch(state, side, dropHandCard(player, handIndex));
   }
   if (targetUid) targetUid = redirectCover(next.players[foe].field, targetUid);
+  if (!replay) next = growBulk(next, targetUid);
   const enemy = next.players[foe];
   const foeMon = targetUid ? enemy.field.find((mon) => mon?.uid === targetUid) ?? null : enemy.field.find((mon) => mon) ?? null;
 
@@ -7810,12 +7885,13 @@ function lavaSkill(state: Duel, uid: string, run: (armed: Duel) => Duel): Duel {
 
 function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => useSkill(next, uid, targetUid, skillIndex, skipGnaw, extra, silent));
+  if (!silent) state = growBulk(state, targetUid);
   const caster = state.players.flatMap((player) => player.field).find((unit) => unit?.uid === uid) ?? null;
   const bonus = caster?.blessDmg ?? 0;
   const previous = charmDamage;
   const previousHex = skillHex;
   const previousBlame = blameUid;
-  charmDamage = bonus;
+  charmDamage = bonus + (caster?.seaSkill ?? 0);
   skillHex = caster?.hex && caster.hex.left > 0 ? { uid: caster.uid, left: 3, clips: [] } : null;
   blameUid = caster?.uid ?? null;
   mindDepth += 1;
@@ -7846,6 +7922,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
     charmDamage = previous;
     skillHex = previousHex;
     blameUid = previousBlame;
+    bulkNote = "";
     happyPool = savedPool;
     happyLeft.clear();
     for (const [key, left] of savedJoy) happyLeft.set(key, left);
@@ -9593,7 +9670,9 @@ function endTurnCore(state: Duel): Duel {
   startedTurn = masked.state;
   const offered = offerPrey(startedTurn);
   startedTurn = offered.state;
-  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, masked.line, offered.line].filter(Boolean).join(" ");
+  const filtered = filterHeal(startedTurn, foe);
+  startedTurn = filtered.state;
+  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, masked.line, offered.line, filtered.line].filter(Boolean).join(" ");
   const mute = startedTurn.players[foe].drawLock ? " Lượt này không được rút bài." : "";
   const noted = note(stampTurn(startedTurn), extra ? `${due}${mute} ${extra}` : `${due}${mute}`);
   const mends = [...(noted.mends ?? []), ...vowHeals];

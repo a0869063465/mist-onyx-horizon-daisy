@@ -5526,6 +5526,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
           ? mon.volt ?? 0
         : mon.cardId === "leviathan" && (mon.grudge?.length ?? 0) > 0
           ? new Set(mon.grudge?.map((row) => row.uid)).size
+        : mon.cardId === "ky-sinh-trung-kim-loai" && (mon.bulk ?? 0) > 0
+          ? mon.bulk ?? 0
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""
