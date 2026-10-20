@@ -1453,7 +1453,7 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 0,
-    "text": "mat-dat-pha-vo-2026-10-20",
+    "text": "mat-dat-pha-vo-0-mana",
     "added": "2026-10-20",
     "powerAt": null,
     "powerTone": null,

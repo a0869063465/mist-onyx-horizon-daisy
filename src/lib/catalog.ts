@@ -1331,7 +1331,7 @@ export const SPELLS: SpellCard[] = [
     "id": "mat-dat-pha-vo",
     "name": "Mặt đất phá vỡ",
     "gems": 0,
-    "effect": "Kích hoạt khi đối phương triệu hồi quái thú. Gây sát thương chuẩn bằng với 1,5 lần số sao của quái thú đó và giam cầm nó trong lượt này.",
+    "effect": "Tiêu hao 0 mana. Kích hoạt khi đối phương triệu hồi quái thú. Gây sát thương chuẩn bằng với 1,5 lần số sao của quái thú đó và giam cầm nó trong lượt này.",
     "since": "2026-10-20"
   }
 ];

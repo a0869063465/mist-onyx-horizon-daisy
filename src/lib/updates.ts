@@ -613,7 +613,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm Siêu dẫn T-rex. 4 sao, 0 mana, công 3, thủ 2, thủ phép 2, máu 9. Kích điện chọn tối đa 2 đồng minh, tích 80% công đã cộng hiệu ứng. Có 2 đồng minh thì công của hắn tính 2 lần, mỗi đồng minh 1 lần. Phóng điện tiêu hao 1 mana, xả hết số đó thành sát thương phép, chia ngẫu nhiên lên quái địch và người chơi địch. Cuối lượt hồi đầy máu. Số đang tích hiện trên lá. Tạm thuộc Núi.",
   "Thêm Leviathan. 4 sao, 0 mana, công 5, thủ 3, thủ phép 2, máu 7. Ghi nhớ kẻ gây sát thương và loại sát thương. Thần biển nổi giận tiêu 1 mana, gây 2 sát thương phép lên mọi quái địch. Kẻ đã đánh hắn chịu thêm đúng lượng sát thương đó. Kẻ đó đang ẩm thì phần thêm thành sát thương chuẩn. Sau đó biển, nếu có, mất hiệu lực 2 lượt. Số kẻ đã mạo phạm hiện trên lá. Tạm thuộc Biển sâu.",
   "Thêm Phù thuỷ đồ chơi. 1 sao, 0 mana, công 0, thủ 0, thủ phép 2, máu 3. Ở trên tay, khi đối phương nhắm quái mình bằng phép hoặc kỹ năng, xoá hiệu ứng đó rồi triệu hồi cô nếu còn chỗ, hết chỗ thì biến mất. Phong ấn tiêu 1 mana, khoá kỹ năng kích hoạt của một quái địch trong 4 lượt. Vẫn đánh thường được. Phù thuỷ đồ chơi không thuộc hệ nào.",
-  "Thêm phép Mặt đất phá vỡ, 0 mana. Khi đối phương triệu hồi, bấm Use. Gây sát thương chuẩn bằng 1,5 lần số sao của quái đó, rồi giam cầm nó đến hết lượt này. Không bấm thì lượt triệu hồi vẫn tiếp tục.",
+  "Thêm phép Mặt đất phá vỡ. Tiêu hao 0 mana. Khi đối phương triệu hồi, bấm Use. Gây sát thương chuẩn bằng 1,5 lần số sao của quái đó, rồi giam cầm nó đến hết lượt này. Không bấm thì lượt triệu hồi vẫn tiếp tục.",
 ];
 
 function remarkOf(notes: string[]) {
