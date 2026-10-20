@@ -84,6 +84,8 @@ export type FieldMon = {
   /** Cứ địa máy móc: armour points (already counted in def) and the form that got them. */
   armor?: number;
   envArmor?: string;
+  /** Tê tê đá: công Giáp Cứng đang chờ đòn đánh sau. */
+  shell?: number;
   /** Núi: already got +2 skill damage. */
   envSkill?: boolean;
   path?: number;
@@ -2661,6 +2663,20 @@ function zoaLeech(mon: FieldMon, lost: number): { mon: FieldMon; n: number; line
   const n = Math.round(lost / 2);
   if (n <= 0) return { mon, n: 0, line: "" };
   return { mon: mendHp(mon, n), n, line: ` ${cardOf(mon).name} hồi ${n} máu.` };
+}
+
+/** Tê tê đá: a plain attack banks half its total defense as attack for the next one. The powered attack then drops that attack. */
+function pangolinShell(mon: FieldMon, allies: Array<FieldMon | null>): { mon: FieldMon; line: string; mend: number } {
+  if (mon.cardId !== "te-te-da" || mon.hp <= 0) return { mon, line: "", mend: 0 };
+  const name = cardOf(mon).name;
+  if ((mon.shell ?? 0) > 0) {
+    const back = Math.max(0, mon.atk - (mon.shell ?? 0));
+    return { mon: { ...mon, atk: back, shell: undefined }, line: ` ${name} hết cường hoá. Công về ${back}.`, mend: 0 };
+  }
+  const total = Math.max(0, liveDef(mon, allies)) + Math.max(0, liveMdef(mon, allies));
+  const bonus = Math.round(total / 2);
+  if (bonus <= 0) return { mon, line: "", mend: 0 };
+  return { mon: { ...mon, atk: mon.atk + bonus, shell: bonus }, line: ` ${name} tích ${bonus} công cho đòn sau.`, mend: bonus };
 }
 
 function leechKazura(attacker: FieldMon, bite: number, surplus: number, allies: Array<FieldMon | null>): { attacker: FieldMon; allies: Array<FieldMon | null> } {
@@ -5243,13 +5259,14 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
     if (fires.length) riderBits.push(riderFireLine(fires));
   }
   const riderLine = riderBits.length ? `${monsterCard(RIDER)?.name ?? "Kỵ sĩ cưỡi rồng"} dùng\n${riderBits.join("\n")}` : "";
-  const drain = zoaLeech(riderAttacker, hit.dodged ? 0 : Math.max(0, shot.defender.hp - hit.defender.hp));
+  const shell = pangolinShell(riderAttacker, you.field);
+  const drain = zoaLeech(shell.mon, hit.dodged ? 0 : Math.max(0, shot.defender.hp - hit.defender.hp));
   const fed = withLeech(you.field, drain.mon, hit.bite, hit.surplus);
   let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
   next = patch(next, foe, settleCocoon(dropDead({ ...them, field: them.field.map((mon) => (mon?.uid === defender.uid ? body : mon)) })));
   const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
   next = slapPlayers(soul.state, side, hit.sparkFace, hit.sparkBack);
-  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.spark}${dodgeNote(attacker, defender, hit.dodged)}${soul.line}${drain.line}`;
+  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.spark}${dodgeNote(attacker, defender, hit.dodged)}${soul.line}${drain.line}${shell.line}`;
   const hornRows = attacker.horn
     ? [
         { name: cardOf(defender).name, bits: `${hornDealt} sát thương phép` },
@@ -5289,6 +5306,7 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
     mends: [
       ...[awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend })),
       ...(drain.n > 0 && drain.mon.hp > 0 ? [{ uid: drain.mon.uid, n: drain.n }] : []),
+      ...(shell.mend > 0 ? [{ uid: shell.mon.uid, n: shell.mend }] : []),
     ],
   });
   const covered = defender.cardId === MYSTIC && Boolean(defender.guarding);
@@ -5618,7 +5636,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     let wornA = dullHorn(awardA.mon, attacker.horn);
     let wornD = awardD.mon;
     const worn = combatErode(wornA, wornD, side);
-    const drain = zoaLeech(worn.attacker, hit.dodged ? 0 : Math.max(0, shot.defender.hp - hit.defender.hp));
+    const shell = pangolinShell(worn.attacker, you.field);
+    const drain = zoaLeech(shell.mon, hit.dodged ? 0 : Math.max(0, shot.defender.hp - hit.defender.hp));
     const fed = withLeech(you.field, drain.mon, hit.bite, hit.surplus);
     let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
     next = patch(next, foe, settleCocoon(dropDead({ ...guarding, field: guarding.field.map((mon) => (mon?.uid === body.uid ? worn.defender : mon)) })));
@@ -5649,12 +5668,13 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
         : 0;
     const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly || hiddenOnly ? `, chịu ${taken} sát thương chuẩn` : "";
     const blocked = releaseLegend({
-      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.spark}${dodgeNote(attacker, body, hit.dodged)}${soul.line}${drain.line}`, beamed || gazeOnly ? "spell" : "hit"),
+      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.spark}${dodgeNote(attacker, body, hit.dodged)}${soul.line}${drain.line}${shell.line}`, beamed || gazeOnly ? "spell" : "hit"),
       step: "main",
       pending: null,
       mends: [
         ...[awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend })),
         ...(drain.n > 0 && drain.mon.hp > 0 ? [{ uid: drain.mon.uid, n: drain.n }] : []),
+        ...(shell.mend > 0 ? [{ uid: shell.mon.uid, n: shell.mend }] : []),
       ],
     });
     const swung = tideSwing(finishParley(mysticSecond(swingSword(growSmash(
@@ -5696,7 +5716,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     spark = sparkNote(mates, false, mates.length);
   }
   const bitten = Math.min(dealt, Math.max(0, them.hp));
-  const drainFace = zoaLeech(spent, bitten);
+  const shellFace = pangolinShell(spent, you.field);
+  const drainFace = zoaLeech(shellFace.mon, bitten);
   const fed = withLeech(you.field, drainFace.mon, bitten, Math.max(0, dealt - bitten));
   let next = patch(state, side, { ...you, field: fed.field });
   next = patch(next, foe, dropDead({ ...them, hp: them.hp - dealt, field: faceField }));
@@ -5714,10 +5735,11 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   const preyHit = attacker.cardId === PREY && attacker.preyKind === "spell" ? "sát thương phép" : attacker.cardId === PREY && attacker.preyKind === "tru" ? "sát thương chuẩn" : "";
   const hiddenFace = shadeHidden(attacker) && !beamed ? "sát thương chuẩn" : "";
   const faceWord = guardSpell ? "sát thương phép" : preyHit || hiddenFace || (spark ? "sát thương phép" : "máu");
-  next = checkWinner(note(next, beamed ? `${cardOf(attacker).name} gây ${dealt} ${gazeTrue ? "sát thương chuẩn" : "sát thương phép"} lên người chơi.${soul.line}${drainFace.line}${stolen}` : `${cardOf(attacker).name} gây ${dealt} ${faceWord} lên người chơi.${spark}${soul.line}${drainFace.line}${stolen}`, beamed || guardSpell || Boolean(spark) || preyHit === "sát thương phép" ? "spell" : "hit"));
+  next = checkWinner(note(next, beamed ? `${cardOf(attacker).name} gây ${dealt} ${gazeTrue ? "sát thương chuẩn" : "sát thương phép"} lên người chơi.${soul.line}${drainFace.line}${shellFace.line}${stolen}` : `${cardOf(attacker).name} gây ${dealt} ${faceWord} lên người chơi.${spark}${soul.line}${drainFace.line}${shellFace.line}${stolen}`, beamed || guardSpell || Boolean(spark) || preyHit === "sát thương phép" ? "spell" : "hit"));
   const hunted = markPrey(tideSwing(finishParley(mysticSecond(swingSword(growSmash(becomePerfect(releaseLegend({ ...next, step: next.winner !== null ? "over" : "main", pending: null }), side, attacker.uid), attacker.uid, smashPlain(attacker)), attacker.uid, swordSwing(attacker)), attacker.uid, null)), foe, attacker.uid), side, attacker, "face", true, spent.hp <= 0);
   const shown = drainFace.n > 0 && drainFace.mon.hp > 0 ? { ...hunted, mends: [...(hunted.mends ?? []), { uid: drainFace.mon.uid, n: drainFace.n }] } : hunted;
-  return attacker.shape ? releaseShape(shown, attacker.uid) : shown;
+  const plated = shellFace.mend > 0 ? { ...shown, mends: [...(shown.mends ?? []), { uid: shellFace.mon.uid, n: shellFace.mend }] } : shown;
+  return attacker.shape ? releaseShape(plated, attacker.uid) : plated;
 }
 
 export function answerGnaw(state: Duel, useSkillNow: boolean): Duel {

@@ -1023,6 +1023,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 6,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "te-te-da",
+    "name": "Tê tê đá",
+    "stars": 1,
+    "gems": 1,
+    "skill": "Giáp Cứng:\nĐòn đánh tích 50% tổng phòng ngự nó vào công, cho đòn đánh sau.\nLưu ý:\nSau đòn đánh cường hoá, thì công về trạng thái ban đầu",
+    "atk": 1,
+    "def": 2,
+    "mdef": 3,
+    "hp": 2,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

@@ -608,6 +608,7 @@ export const PENDING_NOTES: string[] = [
   "Giáp cơ khí dùng lên Zoa thì dung hợp thành Metal Zoa. Metal Zoa 4 sao, công 7, thủ 2, thủ phép 0, máu 6. Đánh thường vẫn hồi 50% máu mục tiêu thực sự mất. Metal Zoa thuộc Cứ địa máy móc.",
   "Thêm phép Hầm chông, 0 mana. Khi đối thủ lao vào tấn công, chặn đòn đó, gây sát thương vật lý và sát thương phép bằng số sao của quái tấn công.",
   "Phục kích không còn chặn đòn công vật lý. Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó, rồi chọn quái đánh thường vào quái ra kỹ năng.",
+  "Thêm Tê tê đá. 1 sao, 1 mana, công 1, thủ 2, thủ phép 3, máu 2. Đòn đánh thường tích 50% tổng phòng ngự vào công cho đòn sau, làm tròn. Đòn được cộng xong thì phần công đó mất. Tê tê đá thuộc Đất đá.",
 ];
 
 function remarkOf(notes: string[]) {
