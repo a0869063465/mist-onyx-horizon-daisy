@@ -1127,6 +1127,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 2,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "medusa",
+    "name": "Medusa",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Hoá đá**__\nTiêu hao 1 mana hoá đá 1 kẻ địch trong 4 lượt. Không thể hành động, nhưng phòng ngự +2.\n__**Tan vỡ**__\nKẻ nào dính phải hoá đá 2 lần sẽ tan vỡ. (Bị tiêu diệt)",
+    "atk": 3,
+    "def": 0,
+    "mdef": 0,
+    "hp": 5,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

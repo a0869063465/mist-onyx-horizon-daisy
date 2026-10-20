@@ -137,6 +137,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ngai-hoan-my": [A("Thổi độc", "poison-cloud"), NOTE("độc sẽ cộng dồn")],
   "bong-ma-dia-nguc": [P("Gieo rắc", "ghost")],
   "chien-binh-xuong": [S("Linh hoạt", "sword-clash")],
+  medusa: [A("Hoá đá", "medusa-head"), P("Tan vỡ", "cracked-glass")],
 };
 
 function norm(text: string) {

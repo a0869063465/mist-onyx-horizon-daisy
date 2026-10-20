@@ -39,6 +39,10 @@ export type FieldMon = {
   maxHp: number;
   chain?: number;
   gag?: number;
+  /** Medusa: số lượt hoá đá còn lại. Hết lượt thì mất cộng thủ, dấu lần hoá đá vẫn còn. */
+  stone?: number;
+  /** Medusa: số lần đã dính hoá đá. Lần thứ hai thì tan vỡ. */
+  stoneN?: number;
   /** Ký sinh trùng kim loại: số lần tăng sinh khối. */
   bulk?: number;
   /** Máy lọc đang cộng, tính lại mỗi lần sân đổi. */
@@ -2417,7 +2421,7 @@ function isSea(id: string) {
 }
 
 function held(mon: FieldMon) {
-  return mon.stun > 0 || (mon.chain ?? 0) > 0;
+  return mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.stone ?? 0) > 0;
 }
 
 function canIntercept(mon: FieldMon | null, committed = false): mon is FieldMon {
@@ -2465,7 +2469,7 @@ export function hornFit(cardId: string) {
 
 export function harmShift(mon: FieldMon) {
   if (mon.stun > 0 || mon.bleed > 0 || mon.curse || mon.vulnerable > 0) return true;
-  if ((mon.chain ?? 0) > 0 || (mon.gag ?? 0) > 0 || mon.poison || mon.erode) return true;
+  if ((mon.chain ?? 0) > 0 || (mon.gag ?? 0) > 0 || (mon.stone ?? 0) > 0 || (mon.stoneN ?? 0) > 0 || mon.poison || mon.erode) return true;
   if (mon.wet && mon.wet < 90) return true;
   if (mon.hex && mon.hex.left > 0) return true;
   return mon.noBlock && !isStill(mon.cardId);
@@ -2486,11 +2490,15 @@ function freshHarm(mon: FieldMon): Partial<FieldMon> {
   if (mon.erode) part.erode = { from: mon.erode.from, left: mon.erode.left === null ? null : (mammothFightErode() ?? 2) };
   if (mon.wet && mon.wet < 90) part.wet = 2;
   if (mon.hex && mon.hex.left > 0) part.hex = { left: 6 };
+  if ((mon.stone ?? 0) > 0) part.stone = mon.stone;
+  if ((mon.stoneN ?? 0) > 0) part.stoneN = mon.stoneN;
   if (mon.noBlock && !isStill(mon.cardId)) part.noBlock = true;
   return part;
 }
 
 function clearHarm(mon: FieldMon): FieldMon {
+  const stoned = (mon.stone ?? 0) > 0;
+  const raised = stoned && mon.raised ? { ...mon.raised, def: Math.max(0, mon.raised.def - 2) } : mon.raised;
   return {
     ...mon,
     stun: 0,
@@ -2499,6 +2507,10 @@ function clearHarm(mon: FieldMon): FieldMon {
     vulnerable: 0,
     chain: 0,
     gag: 0,
+    stone: undefined,
+    stoneN: undefined,
+    def: stoned ? Math.max(0, mon.def - 2) : mon.def,
+    raised,
     poison: undefined,
     erode: undefined,
     wet: mon.wet && mon.wet >= 90 ? mon.wet : undefined,
@@ -3683,6 +3695,8 @@ function becomeLegend(mon: FieldMon): FieldMon {
     maxHp,
     hp: maxHp,
     path: undefined,
+    stone: undefined,
+    stoneN: undefined,
     fed,
     clash: undefined,
     gaze: undefined,
@@ -4393,6 +4407,39 @@ function castToySeal(state: Duel, side: Side, mon: FieldMon, targetUid: string |
   const field = next.players[foe].field.map((unit) => (unit?.uid === aim.uid ? { ...unit, seal: 4 } : unit));
   next = patch(next, foe, { ...next.players[foe], field });
   return note(next, `${cardOf(mon).name} phong ấn kỹ năng kích hoạt của ${cardOf(aim).name} trong 4 lượt.`, "spell");
+}
+
+const MEDUSA = "medusa";
+
+function tickStone(mon: FieldMon): FieldMon {
+  const left = mon.stone ?? 0;
+  if (left <= 0) return mon;
+  if (left > 1) return { ...mon, stone: left - 1 };
+  const raised = mon.raised ? { ...mon.raised, def: Math.max(0, mon.raised.def - 2) } : undefined;
+  return { ...mon, stone: undefined, def: Math.max(0, mon.def - 2), raised };
+}
+
+function castMedusa(state: Duel, side: Side, mon: FieldMon, targetUid: string | null): Duel {
+  const foe = (1 - side) as Side;
+  const aim = state.players[foe].field.find((unit) => unit?.uid === targetUid && unit.hp > 0 && unit.cardId !== "mu") ?? null;
+  if (!aim) return note(state, "Chọn một kẻ địch.");
+  const you = state.players[side];
+  const before = you.stars;
+  const paid = pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana.");
+  const yours = paid.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, dim: true } : unit));
+  let next = pingStars(patch(state, side, { ...paid, field: yours }), side, before, paid.stars);
+  const name = cardOf(mon).name;
+  const foeName = cardOf(aim).name;
+  if ((aim.stoneN ?? 0) >= 1) {
+    const field = next.players[foe].field.map((unit) => (unit?.uid === aim.uid ? { ...unit, hp: 0 } : unit));
+    next = patch(next, foe, dropDead({ ...next.players[foe], field }));
+    return note(next, `${name} hoá đá ${foeName} lần thứ hai. ${foeName} tan vỡ.`, "spell");
+  }
+  const rocked = { ...aim, stone: 4, stoneN: 1, def: aim.def + 2, raised: markRaised(aim, { def: 2 }) };
+  const field = next.players[foe].field.map((unit) => (unit?.uid === aim.uid ? rocked : unit));
+  next = patch(next, foe, { ...next.players[foe], field });
+  return note(next, `${name} hoá đá ${foeName} trong 4 lượt. Phòng ngự +2.`, "spell");
 }
 
 function keep(state: Duel): Duel {
@@ -6909,7 +6956,12 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     if (!ally || !foeMon || !harmShift(ally)) return state;
     const moved = freshHarm(ally);
     const mine = next.players[side].field.map((mon) => (mon?.uid === ally.uid ? clearHarm(mon) : mon));
-    const theirs = enemy.field.map((mon) => (mon?.uid === foeMon.uid ? { ...mon, ...moved } : mon));
+    const theirs = enemy.field.map((mon) => {
+      if (mon?.uid !== foeMon.uid) return mon;
+      const nextMon = { ...mon, ...moved };
+      if ((moved.stone ?? 0) > 0 && !(mon.stone ?? 0)) return { ...nextMon, def: nextMon.def + 2, raised: markRaised(nextMon, { def: 2 }) };
+      return nextMon;
+    });
     let shifted = patch(next, side, { ...next.players[side], field: mine });
     shifted = patch(shifted, foe, { ...enemy, field: theirs });
     return note(shifted, `Phản nguyền chuyển trạng thái xấu từ ${cardOf(ally).name} sang ${cardOf(foeMon).name}.`, "spell");
@@ -6921,7 +6973,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     }
     if (pending.kind === "beam" && pending.back) return note(next, "Phục kích chỉ dùng khi quái địch dùng kỹ năng gây sát thương.");
     const casterUid = pending.kind === "face" ? pending.attacker : pending.caster;
-    const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
+    const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && !(mon.stone ?? 0) && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
     const attacker = next.players[foe].field.find((mon) => mon?.uid === casterUid) ?? null;
     if (attacker && pending.kind !== "face" && !harmSkill(attacker.cardId, pending.index)) return note(next, "Phục kích chỉ chặn kỹ năng gây sát thương.");
@@ -8055,6 +8107,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 1) return castRexDump(state, side, mon);
   if (mon.cardId === "leviathan") return castLeviathan(state, side, mon, targetUid);
   if (mon.cardId === "phu-thuy-do-choi") return castToySeal(state, side, mon, targetUid);
+  if (mon.cardId === "medusa") return castMedusa(state, side, mon, targetUid);
   if (mon.cardId === VASE) return openShape(state, mon.uid);
   if (mon.cardId === PENGUIN) return openPenguin(state, mon.uid);
   if (mon.cardId === MASK) return openMask(state, mon.uid);
@@ -9045,7 +9098,7 @@ export function setCover(state: Duel, uid: string, on: boolean): Duel {
   const you = state.players[side];
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon || mon.cardId !== "kizuran") return state;
-  if (mon.stun > 0 || (mon.chain ?? 0) > 0) return note(state, `${cardOf(mon).name} đang bị khống chế.`);
+  if (mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.stone ?? 0) > 0) return note(state, `${cardOf(mon).name} đang bị khống chế.`);
   if (on && !you.field.some((unit) => unit && unit.cardId === "kazura" && unit.hp > 0)) return note(state, `Cần ${monsterCard("kazura")?.name} trên sân.`);
   const field = you.field.map((unit) => (unit?.uid === uid ? { ...unit, cover: on } : unit));
   let next = patch(state, side, { ...you, field });
@@ -9616,7 +9669,7 @@ export function canAgile(state: Duel, uid: string): boolean {
   const side = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   if (state.hold.priority !== side || side === state.turn) return false;
   const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || mon.cardId !== BONE || mon.hp <= 0 || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.seal ?? 0) > 0 || mon.cage || (mon.path ?? 0) > 0 || hexLocked(mon)) return false;
+  if (!mon || mon.cardId !== BONE || mon.hp <= 0 || mon.stun > 0 || (mon.stone ?? 0) > 0 || (mon.chain ?? 0) > 0 || (mon.seal ?? 0) > 0 || mon.cage || (mon.path ?? 0) > 0 || hexLocked(mon)) return false;
   if (state.players[side].orb < 1 && !state.parley) return false;
   const swing = plainSwing(state);
   if (!swing) return false;
@@ -9801,7 +9854,7 @@ function endTurnCore(state: Duel): Duel {
         seized: undefined,
       };
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
-      return tickShape(settleGuard(settleVow(next)));
+      return tickStone(tickShape(settleGuard(settleVow(next))));
     }).map((mon) => (mon ? fadeBuff(mon) : mon)),
     attackLock: Math.max(0, current.attackLock - 1),
     mirror: Math.max(0, current.mirror - 1),
@@ -9861,7 +9914,7 @@ function endTurnCore(state: Duel): Duel {
         tempGuard: 0,
       });
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
-      return freeCage(settleGuard(settleVow(faded)));
+      return tickStone(freeCage(settleGuard(settleVow(faded))));
     }),
   });
   const bloomed = bloomCocoons(next.players[foe]);
@@ -10440,7 +10493,7 @@ export function aiStep(state: Duel): Duel {
   const foe = state.players[0];
   const foes = foe.field.filter((mon): mon is FieldMon => Boolean(mon));
   const threats = foes.filter(mustKill).sort((a, b) => threatRank(b) - threatRank(a));
-  const ready = me.field.filter((mon): mon is FieldMon => Boolean(mon && !mon.dim && mon.stun === 0));
+  const ready = me.field.filter((mon): mon is FieldMon => Boolean(mon && !mon.dim && mon.stun === 0 && !(mon.stone ?? 0)));
   const room = me.field.some((slot) => !slot);
   const canSummon = me.reserve.some((held) => {
     const card = monsterCard(held.id);
@@ -10629,6 +10682,12 @@ export function aiStep(state: Duel): Duel {
     const unsealed = foes.find((mon) => mon.hp > 0 && !(mon.seal ?? 0));
     if (toy && unsealed && me.orb >= 1) {
       const cast = progress(state, useSkill(state, toy.uid, unsealed.uid, 0));
+      if (cast) return cast;
+    }
+    const medusa = ready.find((mon) => mon.cardId === "medusa");
+    const cracked = foes.find((mon) => mon.hp > 0 && (mon.stoneN ?? 0) >= 1) ?? threats[0] ?? foes.find((mon) => mon.hp > 0);
+    if (medusa && cracked && me.orb >= 1) {
+      const cast = progress(state, useSkill(state, medusa.uid, cracked.uid, 0));
       if (cast) return cast;
     }
     const style = readStyle();

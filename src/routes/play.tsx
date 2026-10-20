@@ -891,14 +891,14 @@ function mysticAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (mon.cardId !== "hiep-si-huyen-bi" || mon.dim || mon.hp <= 0) return false;
   if (canGuardCover(duel, mon.uid)) return true;
   if (duel.step !== "main" || duel.turn !== viewer || duel.parley || duel.winner) return false;
-  if (mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0) return false;
+  if (mon.stun > 0 || (mon.stone ?? 0) > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0) return false;
   if (duel.players[viewer].orb < 2) return false;
   return duel.players[(1 - viewer) as Side].field.some((unit) => unit && unit.hp > 0 && unit.cardId !== "mu");
 }
 
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (canStand(duel, mon.uid)) return true;
-  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0) return false;
+  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0 || (mon.stone ?? 0) > 0) return false;
   const pending = duel.pending;
   if (mon.cardId === "chien-si-gam-nham" && pending?.kind === "face") return true;
   if (mon.cardId === "yeu-tinh-chuc-phuc" && (pending?.kind === "face" || pending?.kind === "melee")) return true;
@@ -2803,7 +2803,7 @@ function PlayPage() {
   function offerBlock(uid: string) {
     if (!duel) return;
     const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
-    if (!mon || mon.dim || mon.stun > 0 || mon.noBlock || (mon.path ?? 0) > 0) {
+    if (!mon || mon.dim || mon.stun > 0 || (mon.stone ?? 0) > 0 || mon.noBlock || (mon.path ?? 0) > 0) {
       holdNotice("Quái này không chặn được");
       return;
     }
@@ -3251,7 +3251,7 @@ function PlayPage() {
       mon.stun === 0 &&
       (mon.chain ?? 0) === 0 &&
       (mon.path ?? 0) === 0;
-    const sealed = mon.stun > 0 || (mon.chain ?? 0) > 0;
+    const sealed = mon.stun > 0 || (mon.stone ?? 0) > 0 || (mon.chain ?? 0) > 0;
     if (side === viewer && canPlay && aim?.kind === "menu" && aim.uid === mon.uid) {
       setAim(null);
       return;
@@ -4507,7 +4507,7 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || canIntercept)));
+          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.stone ?? 0) && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || canIntercept)));
           return (
             <BoardSlot
               key={`y${index}`}
@@ -5269,7 +5269,7 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
 }
 
 function gnawReady(duel: Duel, mon: FieldMon, side: Side) {
-  if (mon.cardId !== "chien-si-gam-nham" || mon.dim || mon.stun > 0 || mon.noBlock) return false;
+  if (mon.cardId !== "chien-si-gam-nham" || mon.dim || mon.stun > 0 || (mon.stone ?? 0) > 0 || mon.noBlock) return false;
   if ((duel.players[side].orb < skillManaCost(mon.cardId) && !duel.parley) || duel.step !== "respond" || duel.hold?.priority !== side || !duel.pending) return false;
   const pending = duel.pending;
   if (pending.kind === "melee") return pending.attacker !== mon.uid && (pending.defender === mon.uid || duel.hold?.blocker === mon.uid);
@@ -5280,7 +5280,7 @@ function gnawReady(duel: Duel, mon: FieldMon, side: Side) {
 }
 
 function isPrime(duel: Duel, mon: FieldMon, side: Side) {
-  if (mon.stun > 0) return false;
+  if (mon.stun > 0 || (mon.stone ?? 0) > 0) return false;
   if (mon.cardId === "ga-he-dang-so" && mon.charge >= 2 && !mon.dim) return true;
   return gnawReady(duel, mon, side);
 }
@@ -5315,8 +5315,8 @@ function UnitChips({
   if (!mon || !card || index < 0) return null;
   const box = SLOT_BOX[screenSide(side, viewer)][index];
   const you = duel.players[side];
-  const noSkill = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.seal ?? 0) > 0;
-  const noAttack = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
+  const noSkill = mon.dim || mon.stun > 0 || (mon.stone ?? 0) > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.seal ?? 0) > 0;
+  const noAttack = mon.dim || mon.stun > 0 || (mon.stone ?? 0) > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
   const empty = you.field.filter((unit) => !unit).length;
   const y: Array<{ key: string; label: string; go: () => void }> = [];
   const z: Array<{ key: string; label: string; go: () => void }> = [];
@@ -5592,6 +5592,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
           ? new Set(mon.grudge?.map((row) => row.uid)).size
         : mon.cardId === "ky-sinh-trung-kim-loai" && (mon.bulk ?? 0) > 0
           ? mon.bulk ?? 0
+        : (mon.stoneN ?? 0) > 0 && !(mon.stone ?? 0)
+          ? mon.stoneN ?? 1
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""
@@ -5729,7 +5731,7 @@ function BoardSlot({
     </span>
     );
   };
-  const bind = Math.max(mon.stun, mon.chain ?? 0, mon.gag ?? 0, mon.seal ?? 0, mon.path ?? 0);
+  const bind = Math.max(mon.stun, mon.chain ?? 0, mon.gag ?? 0, mon.seal ?? 0, mon.stone ?? 0, mon.path ?? 0);
   const count = fieldCount(mon, allies);
   const glassLabel = mon.glass ? tr("Suy") : "";
   const lit = (mon.shown ?? 0) > 0 ? mon.shown ?? 0 : 0;

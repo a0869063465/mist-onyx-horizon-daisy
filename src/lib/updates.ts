@@ -618,6 +618,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm Bóng ma địa ngục. 1 sao, 0 mana, công 2, thủ 0, thủ phép 0, máu 1. Đầu lượt đối thủ, nhân bản đã hành động cho đầy sân mình. Cả đàn lao ngẫu nhiên vào quái địch và người chơi địch, mỗi con gây sát thương chuẩn bằng đúng công, rồi chỉ còn 1 bản sao. Thuộc Đất đá.",
   "Thêm Chiến binh xương. 2 sao, 1 mana, công 4, thủ 2, thủ phép 3, máu 2. Khi đối thủ đánh thường vào hắn hoặc vào người chơi, bấm Linh hoạt, tốn 1 mana. Né đòn đó, rồi trả đòn vật lý bằng đúng công. Thuộc Đất đá.",
   "Đất đá bổ sung: quái thú đất đá không có phòng ngự được trao +1 phòng ngự.",
+  "Thêm Medusa. 2 sao, 0 mana, công 3, thủ 0, thủ phép 0, máu 5. Hoá đá tiêu 1 mana, khoá 1 kẻ địch trong 4 lượt và cộng 2 thủ. Kẻ dính hoá đá lần thứ hai thì tan vỡ. Thuộc Đất đá.",
 ];
 
 function remarkOf(notes: string[]) {

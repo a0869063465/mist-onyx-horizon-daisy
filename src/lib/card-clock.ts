@@ -1486,5 +1486,19 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerAt": null,
     "powerTone": null,
     "shiftAt": null
+  },
+  "medusa": {
+    "kind": "monster",
+    "stars": 2,
+    "mana": 0,
+    "atk": 3,
+    "def": 0,
+    "mdef": 0,
+    "hp": 5,
+    "text": "medusa-2026-10-20",
+    "added": "2026-10-20",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
   }
 };
