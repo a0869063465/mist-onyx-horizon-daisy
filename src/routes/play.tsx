@@ -43,6 +43,7 @@ import {
   canSpirit,
   spiritCover,
   castSpell,
+  chargeSpell,
   concede,
   createDuel,
   declareSkill,
@@ -4654,6 +4655,8 @@ function PlayPage() {
                   (aim?.kind === "spell" && aim.spellId === id && aim.index === index) ||
                   (reflectPick?.index === index && id === "la-chan-phan-don") ||
                   (ambushPick?.index === index && id === "phuc-kich");
+                const stored = id === "tru-ma-phap" ? (you.stores?.[index] ?? 0) : 0;
+                const storedTurn = (you.storeMark?.[index] ?? -1) === (you.turns ?? 0);
                 const card = (
                   <button
                     key={`${id}-${index}`}
@@ -4664,9 +4667,34 @@ function PlayPage() {
                     onPointerMove={move}
                     onPointerUp={end}
                   >
-                    <CardFace spellId={id} gems={tolled ? `${spellCard(id)?.gems ?? 0}+1` : undefined} selected={open} />
+                    <CardFace spellId={id} gems={stored > 0 ? `${stored}/2` : tolled ? `${spellCard(id)?.gems ?? 0}+1` : undefined} selected={open} />
                   </button>
                 );
+                if (id === "tru-ma-phap" && canPlay) {
+                  const verb = stored >= 2 ? "Dùng" : !storedTurn && you.orb >= 1 ? "Trữ" : "";
+                  if (!verb) return card;
+                  return (
+                    <div key={`${id}-${index}`} className="hand-spell is-use">
+                      {card}
+                      <button
+                        type="button"
+                        className="spell-use"
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                          event.preventDefault();
+                        }}
+                        onPointerUp={(event) => {
+                          event.stopPropagation();
+                          event.preventDefault();
+                          swallowNextClick();
+                          apply(chargeSpell(duel, index));
+                        }}
+                      >
+                        {verb}
+                      </button>
+                    </div>
+                  );
+                }
                 if ((!usable && !slowUse) || using) return card;
                 return (
                   <div key={`${id}-${index}`} className="hand-spell is-use">

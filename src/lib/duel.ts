@@ -138,6 +138,10 @@ export type Player = {
   reserve: PileMon[];
   hand: string[];
   tolls?: boolean[];
+  /** Trữ ma pháp: mana đang nằm trên từng lá bài trên tay. */
+  stores?: number[];
+  /** Lượt đã trữ, để mỗi lá chỉ trữ một lần mỗi lượt. */
+  storeMark?: number[];
   monsterDeck: PileMon[];
   spellDeck: string[];
   spellTax?: boolean[];
@@ -1320,6 +1324,8 @@ export function confirmPenguin(state: Duel): Duel {
     if (!id || spellCard(id)?.env) return note(state, "Lá đó không còn trên tay.");
     const hand = player.hand.filter((_, at) => at !== index);
     const tolls = handTolls(player).filter((_, at) => at !== index);
+    const stores = handStores(player).filter((_, at) => at !== index);
+    const storeMark = handMarks(player).filter((_, at) => at !== index);
     const pairs = player.spellDeck.map((cardId, at) => ({ id: cardId, tax: Boolean(player.spellTax?.[at]) }));
     pairs.push({ id, tax: Boolean(handTolls(you)[index]) });
     const mixed = shuffle(pairs);
@@ -1330,6 +1336,8 @@ export function confirmPenguin(state: Duel): Duel {
       ...player,
       hand: [...hand, top.id],
       tolls: [...tolls, top.tax],
+      stores,
+      storeMark,
       spellDeck: rest.map((row) => row.id),
       spellTax: rest.map((row) => row.tax),
     };
@@ -2048,12 +2056,49 @@ function handTolls(player: Player): boolean[] {
   return player.hand.map((_, index) => Boolean(player.tolls?.[index]));
 }
 
+function handStores(player: Player): number[] {
+  return player.hand.map((_, index) => player.stores?.[index] ?? 0);
+}
+
+function handMarks(player: Player): number[] {
+  return player.hand.map((_, index) => player.storeMark?.[index] ?? -1);
+}
+
 function dropHandCard(player: Player, index: number): Player {
   return {
     ...player,
     hand: player.hand.filter((_, at) => at !== index),
     tolls: handTolls(player).filter((_, at) => at !== index),
+    stores: handStores(player).filter((_, at) => at !== index),
+    storeMark: handMarks(player).filter((_, at) => at !== index),
   };
+}
+
+export function chargeSpell(state: Duel, handIndex: number): Duel {
+  if (state.step !== "main" || state.winner || state.turn === undefined) return state;
+  const locked = talkLock(state);
+  if (locked) return locked;
+  const waiting = needUpkeep(state);
+  if (waiting) return waiting;
+  const side = state.turn;
+  const you = state.players[side];
+  if (you.hand[handIndex] !== "tru-ma-phap") return state;
+  const held = handStores(you)[handIndex] ?? 0;
+  const name = spellCard("tru-ma-phap")?.name ?? "Trữ ma pháp";
+  if (held >= 2) {
+    const dropped = dropHandCard(you, handIndex);
+    const spent = [...(dropped.spent ?? []), "tru-ma-phap"];
+    return note(patch(state, side, { ...dropped, orb: you.orb + held, spent }), `${name} trả ${held} mana.`, "spell");
+  }
+  if ((handMarks(you)[handIndex] ?? -1) === (you.turns ?? 0)) return note(state, "Lượt này đã trữ rồi.");
+  const before = you.stars;
+  const paid = pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana để trữ.");
+  const stores = handStores(paid);
+  const marks = handMarks(paid);
+  stores[handIndex] = held + 1;
+  marks[handIndex] = you.turns ?? 0;
+  return note(pingStars(patch(state, side, { ...paid, stores, storeMark: marks }), side, before, paid.stars), `${name} giữ ${held + 1} mana.`, "spell");
 }
 
 export function digChoices(state: Duel, side: Side): Array<{ id: string; kind: "monster" | "spell" }> {
@@ -3805,11 +3850,21 @@ function stealHand(state: Duel, thiefSide: Side): { state: Duel; line: string } 
   }
   const id = them.hand[pick.index];
   const toll = Boolean(handTolls(them)[pick.index]);
+  const store = handStores(them)[pick.index] ?? 0;
+  const mark = handMarks(them)[pick.index] ?? -1;
   const hand = them.hand.filter((_, index) => index !== pick.index);
   const tolls = handTolls(them).filter((_, index) => index !== pick.index);
-  const next = patch(state, foe, { ...them, hand, tolls });
+  const stores = handStores(them).filter((_, index) => index !== pick.index);
+  const storeMark = handMarks(them).filter((_, index) => index !== pick.index);
+  const next = patch(state, foe, { ...them, hand, tolls, stores, storeMark });
   const mine = next.players[thiefSide];
-  const gained = patch(next, thiefSide, { ...mine, hand: [...mine.hand, id], tolls: [...handTolls(mine), toll] });
+  const gained = patch(next, thiefSide, {
+    ...mine,
+    hand: [...mine.hand, id],
+    tolls: [...handTolls(mine), toll],
+    stores: [...handStores(mine), store],
+    storeMark: [...handMarks(mine), mark],
+  });
   return { state: gained, line: ` Trộm ${spellCard(id)?.name ?? "1 phép"}.` };
 }
 
@@ -6505,6 +6560,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   const cardId = player.hand[handIndex];
   const card = cardId ? spellCard(cardId) : undefined;
   if (!card) return state;
+  if (card.id === "tru-ma-phap") return chargeSpell(state, handIndex);
   if (card.id === "ke-dao-mo") return state;
   if (card.env) return note(state, "Lá môi trường đã nằm trên sân.");
   const response = new Set([
@@ -6928,8 +6984,8 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const reserve = monsterDeck.splice(0, fieldKept.length + reserveKept.length);
     const deckTax = owner.spellTax ?? [];
     const pairs = [
-      ...owner.spellDeck.map((id, index) => ({ id, tax: Boolean(deckTax[index]) })),
-      ...owner.hand.map((id, index) => ({ id, tax: Boolean(handTolls(owner)[index]) })),
+      ...owner.spellDeck.map((id, index) => ({ id, tax: Boolean(deckTax[index]), store: 0, mark: -1 })),
+      ...owner.hand.map((id, index) => ({ id, tax: Boolean(handTolls(owner)[index]), store: handStores(owner)[index] ?? 0, mark: handMarks(owner)[index] ?? -1 })),
     ];
     const mixed = shuffle(pairs);
     const handPairs = mixed.splice(0, owner.hand.length);
@@ -6939,6 +6995,8 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       reserve,
       hand: handPairs.map((row) => row.id),
       tolls: handPairs.map((row) => row.tax),
+      stores: handPairs.map((row) => row.store ?? 0),
+      storeMark: handPairs.map((row) => row.mark ?? -1),
       monsterDeck,
       spellDeck: mixed.map((row) => row.id),
       spellTax: mixed.map((row) => row.tax),
@@ -7692,10 +7750,12 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     const pick = spells[Math.floor(Math.random() * spells.length)]!;
     hand.splice(pick.index, 1);
     const tolls = handTolls(state.players[foe]).filter((_, index) => index !== pick.index);
+    const stores = handStores(state.players[foe]).filter((_, index) => index !== pick.index);
+    const storeMark = handMarks(state.players[foe]).filter((_, index) => index !== pick.index);
     const grown = { ...mon, dim: true, shed: [...spent, "gust"] };
     const field = paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit));
     let next = patch(state, side, { ...paid, field });
-    next = patch(next, foe, { ...state.players[foe], hand, tolls });
+    next = patch(next, foe, { ...state.players[foe], hand, tolls, stores, storeMark });
     return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`]), "spell");
   }
   if (spent.includes("charm")) return note(state, "Mê hoặc đã biến mất.");
@@ -7766,7 +7826,9 @@ function castPerfect(state: Duel, side: Side, mon: FieldMon, skillIndex: number,
   const pick = spells[Math.floor(Math.random() * spells.length)]!;
   hand.splice(pick.index, 1);
   const tolls = handTolls(state.players[foe]).filter((_, index) => index !== pick.index);
-  next = patch(next, foe, { ...state.players[foe], hand, tolls });
+  const stores = handStores(state.players[foe]).filter((_, index) => index !== pick.index);
+  const storeMark = handMarks(state.players[foe]).filter((_, index) => index !== pick.index);
+  next = patch(next, foe, { ...state.players[foe], hand, tolls, stores, storeMark });
   return note(next, actNotice("Gió xoáy", [`thổi bay ${spellCard(pick.id)?.name ?? "1 phép"}`, "lượt sau không được rút bài"]), "spell");
 }
 
@@ -10340,6 +10402,16 @@ export function aiStep(state: Duel): Duel {
 
   const offered = learnedOffer(state);
   if (offered) return withLive(offered);
+  const storeAt = me.hand.findIndex((id, index) => id === "tru-ma-phap" && (me.stores?.[index] ?? 0) >= 2);
+  if (storeAt >= 0) {
+    const used = progress(state, chargeSpell(state, storeAt));
+    if (used) return used;
+  }
+  const chargeAt = me.hand.findIndex((id, index) => id === "tru-ma-phap" && (me.stores?.[index] ?? 0) < 2 && (me.storeMark?.[index] ?? -1) !== (me.turns ?? 0));
+  if (chargeAt >= 0 && me.orb >= 2) {
+    const charged = progress(state, chargeSpell(state, chargeAt));
+    if (charged) return charged;
+  }
   if (deferSummon && threats.length === 0 && room) {
     const aside = oneMain(state, summonAside(state));
     if (aside) return withLive(aside);

@@ -1319,6 +1319,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Khi đối thủ lao vào tấn công, ngăn chặn đòn tấn công đó, gây sát thương vật lý và sát thương phép bằng với số sao của quái thú đó.\n(Ví dụ 3 sao thì 3 vật lý và 3 phép)",
     "since": "2026-10-20"
+  },
+  {
+    "id": "tru-ma-phap",
+    "name": "Trữ ma pháp",
+    "gems": 0,
+    "effect": "Có thể tích trữ 1 mana vào lá bài này mỗi lượt. Tối đa 2. Đủ 2 thì có thể dùng, trả lại số mana đã trữ.",
+    "since": "2026-10-20"
   }
 ];
 
