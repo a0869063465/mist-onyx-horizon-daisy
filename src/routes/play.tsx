@@ -5254,8 +5254,8 @@ function UnitChips({
   if (!mon || !card || index < 0) return null;
   const box = SLOT_BOX[screenSide(side, viewer)][index];
   const you = duel.players[side];
-  const noSkill = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
-  const noAttack = noSkill || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
+  const noSkill = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.seal ?? 0) > 0;
+  const noAttack = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon) || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
   const empty = you.field.filter((unit) => !unit).length;
   const y: Array<{ key: string; label: string; go: () => void }> = [];
   const z: Array<{ key: string; label: string; go: () => void }> = [];
@@ -5663,7 +5663,7 @@ function BoardSlot({
     </span>
     );
   };
-  const bind = Math.max(mon.stun, mon.chain ?? 0, mon.gag ?? 0, mon.path ?? 0);
+  const bind = Math.max(mon.stun, mon.chain ?? 0, mon.gag ?? 0, mon.seal ?? 0, mon.path ?? 0);
   const count = fieldCount(mon, allies);
   const glassLabel = mon.glass ? tr("Suy") : "";
   const lit = (mon.shown ?? 0) > 0 ? mon.shown ?? 0 : 0;

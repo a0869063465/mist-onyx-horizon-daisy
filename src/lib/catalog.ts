@@ -1075,6 +1075,19 @@ export const FORMS: MonsterCard[] = [
     "hp": 7,
     "art": "",
     "since": "2026-10-20"
+  },
+  {
+    "id": "phu-thuy-do-choi",
+    "name": "Phù thuỷ đồ chơi",
+    "stars": 1,
+    "gems": 0,
+    "skill": "Hộ pháp:\nTrên tay, khi đối phương nhắm đến quái thú phe mình bằng lá phép hoặc kỹ năng quái thú, xoá bỏ nó. Triệu hồi ta lên sân (nếu trên sân còn chỗ, không thì biến mất)\nPhong ấn:\nTiêu hao 1 mana, phong ấn kỹ năng kích hoạt của một quái thú trong 4 lượt.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 2,
+    "hp": 3,
+    "art": "",
+    "since": "2026-10-20"
   }
 ];
 

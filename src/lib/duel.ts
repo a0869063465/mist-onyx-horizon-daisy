@@ -39,6 +39,8 @@ export type FieldMon = {
   maxHp: number;
   chain?: number;
   gag?: number;
+  /** Phù thuỷ đồ chơi: số lượt còn phong ấn kỹ năng kích hoạt. */
+  seal?: number;
   buff?: { def: number; mdef: number; maxHp: number };
   erode?: { from: Side; left: number | null };
   wet?: number;
@@ -4181,6 +4183,8 @@ function fadeBuff(mon: FieldMon): FieldMon {
 }
 
 function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): Duel {
+  const warded = toyPending(state, pending);
+  if (warded) return warded;
   const noted = note(state, line);
   const opened: Duel = {
     ...noted,
@@ -4190,6 +4194,53 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
+}
+
+const TOY = "phu-thuy-do-choi";
+
+function toyWard(state: Duel, actor: Side, targetUid: string | null, what: string): Duel | null {
+  if (!targetUid) return null;
+  const home = (1 - actor) as Side;
+  const ally = state.players[home].field.find((mon) => mon?.uid === targetUid && mon.hp > 0);
+  if (!ally) return null;
+  const owner = state.players[home];
+  const index = owner.hand.indexOf(TOY);
+  if (index < 0) return null;
+  const slot = ([0, 1, 2] as const).find((at) => !owner.field[at] && (owner.locked?.[at] ?? 0) === 0);
+  const dropped = dropHandCard(owner, index);
+  const name = monsterCard(TOY)?.name ?? "Phù thuỷ đồ chơi";
+  if (slot === undefined) {
+    const gone = { ...dropped, spent: [...(dropped.spent ?? []), TOY] };
+    return note(patch(state, home, gone), `${name} xoá ${what}. Không còn chỗ, ${name} biến mất.`, "spell");
+  }
+  const body = place({ ...state, seq: state.seq + 1 }, home, TOY);
+  const field = [...dropped.field] as Player["field"];
+  field[slot] = body;
+  return note(patch({ ...state, seq: state.seq + 1 }, home, { ...dropped, field }), `${name} xoá ${what}. ${name} vào sân.`, "spell");
+}
+
+function toyPending(state: Duel, pending: Exclude<Pending, null>): Duel | null {
+  if (pending.kind === "spell") return toyWard(state, pending.owner, pending.target, spellCard(pending.cardId)?.name ?? "lá phép");
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
+    const caster = state.players[state.turn].field.find((mon) => mon?.uid === pending.caster) ?? null;
+    return toyWard(state, state.turn, pending.target, caster ? cardOf(caster).name : "kỹ năng");
+  }
+  return null;
+}
+
+function castToySeal(state: Duel, side: Side, mon: FieldMon, targetUid: string | null): Duel {
+  const foe = (1 - side) as Side;
+  const aim = state.players[foe].field.find((unit) => unit?.uid === targetUid && unit.hp > 0 && unit.cardId !== "mu") ?? null;
+  if (!aim) return note(state, "Chọn một quái thú.");
+  const you = state.players[side];
+  const before = you.stars;
+  const paid = pay(you, 1);
+  if (!paid) return note(state, "Cần 1 mana.");
+  const yours = paid.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, dim: true } : unit));
+  let next = pingStars(patch(state, side, { ...paid, field: yours }), side, before, paid.stars);
+  const field = next.players[foe].field.map((unit) => (unit?.uid === aim.uid ? { ...unit, seal: 4 } : unit));
+  next = patch(next, foe, { ...next.players[foe], field });
+  return note(next, `${cardOf(mon).name} phong ấn kỹ năng kích hoạt của ${cardOf(aim).name} trong 4 lượt.`, "spell");
 }
 
 function keep(state: Duel): Duel {
@@ -7817,12 +7868,16 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   if (mon?.cardId === "sat-nhan-bat-giu") return castSeize(state, side, mon, targetUid);
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
   if (!mon || held(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
+  if ((mon.seal ?? 0) > 0) return note(state, "Kỹ năng kích hoạt đang bị phong ấn.");
+  const warded = toyWard(state, side, targetUid, cardOf(mon).name);
+  if (warded) return warded;
   if (mon.cardId === DARK) return castDarkFire(state, side, mon);
   if (mon.cardId === JAR) return castJar(state, side, mon, extra);
   if (mon.cardId === SAINT) return openSaint(state, mon.uid);
   if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 0) return openRex(state, mon.uid);
   if (mon.cardId === "sieu-dan-t-rex" && skillIndex === 1) return castRexDump(state, side, mon);
   if (mon.cardId === "leviathan") return castLeviathan(state, side, mon, targetUid);
+  if (mon.cardId === "phu-thuy-do-choi") return castToySeal(state, side, mon, targetUid);
   if (mon.cardId === VASE) return openShape(state, mon.uid);
   if (mon.cardId === PENGUIN) return openPenguin(state, mon.uid);
   if (mon.cardId === MASK) return openMask(state, mon.uid);
@@ -9409,6 +9464,7 @@ function endTurnCore(state: Duel): Duel {
         noBlock: isStill(mon.cardId) ? true : false,
         chain: Math.max(0, (mon.chain ?? 0) - 1),
         gag: Math.max(0, (mon.gag ?? 0) - 1),
+        seal: Math.max(0, (mon.seal ?? 0) - 1),
         shown: (mon.shown ?? 0) > 1 ? (mon.shown ?? 0) - 1 : undefined,
         stored: mon.cardId === SHADE && (mon.shown ?? 0) === 1 ? undefined : mon.stored,
         hp: Math.min(cap, mon.hp + heal + full),
@@ -9476,6 +9532,7 @@ function endTurnCore(state: Duel): Duel {
         vulnerable: Math.max(0, mon.vulnerable - 1),
         chain: Math.max(0, (mon.chain ?? 0) - 1),
         gag: Math.max(0, (mon.gag ?? 0) - 1),
+        seal: Math.max(0, (mon.seal ?? 0) - 1),
         shown: (mon.shown ?? 0) > 1 ? (mon.shown ?? 0) - 1 : undefined,
         stored: mon.cardId === SHADE && (mon.shown ?? 0) === 1 ? undefined : mon.stored,
         safe: Math.max(0, (mon.safe ?? 0) - 1),
@@ -10223,6 +10280,12 @@ export function aiStep(state: Duel): Duel {
     const marked = foes.find((mon) => mon.hp > 0);
     if (levi && marked && me.orb >= 1) {
       const cast = progress(state, useSkill(state, levi.uid, marked.uid, 0));
+      if (cast) return cast;
+    }
+    const toy = ready.find((mon) => mon.cardId === "phu-thuy-do-choi");
+    const unsealed = foes.find((mon) => mon.hp > 0 && !(mon.seal ?? 0));
+    if (toy && unsealed && me.orb >= 1) {
+      const cast = progress(state, useSkill(state, toy.uid, unsealed.uid, 0));
       if (cast) return cast;
     }
     const style = readStyle();

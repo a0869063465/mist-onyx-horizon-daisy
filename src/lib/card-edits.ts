@@ -66,6 +66,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "dump", label: "Phóng điện", tone: "y" },
   ],
   leviathan: [{ key: "rage", label: "Thần biển nổi giận", tone: "y" }],
+  "phu-thuy-do-choi": [{ key: "seal", label: "Phong ấn", tone: "y" }],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
   "trai-tim-hai-long": [{ key: "tide", label: "Triều lên", tone: "y" }],
   "kizuran": [{ key: "cover", label: "Vì Anh Em", tone: "z" }],

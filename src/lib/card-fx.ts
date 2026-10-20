@@ -139,6 +139,7 @@ export function baseSkillLook(cardId: string, index = 0): SkillLook {
   if (cardId === "rong-con" || cardId === "rong-ngan-tuoi" || cardId === "rong-ac-ma") return "fire";
   if (cardId === "sieu-dan-t-rex") return "spell";
   if (cardId === "leviathan") return "spell";
+  if (cardId === "phu-thuy-do-choi") return "spell";
   return null;
 }
 
