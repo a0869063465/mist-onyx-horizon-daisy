@@ -62,7 +62,7 @@ export const ENV_KINDS: Record<string, string[]> = {
   "nui-dung-nham": [],
   // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ
   "thanh-dia-thien-su": [...SANCTUARY_GUARDED, ...SANCTUARY_WARRIORS],
-  // Bóng tối (cả phù thuỷ: Phù thuỷ thời gian, Phù thuỷ tí hơn)
+  // Bóng tối (cả phù thuỷ: Phù thuỷ thời gian, Phù thuỷ tí hơn). Zoa là Ác ma, chưa có lá môi trường Ác ma.
   "bong-toi": [
     "trieu-hoi-ac-ma",
     "ky-si-bong-toi",
@@ -79,7 +79,6 @@ export const ENV_KINDS: Record<string, string[]> = {
     "mat-na-bong-toi",
     "rong-dia-nguc",
     "ke-trom-ao-trang",
-    "zoa",
   ],
 };
 

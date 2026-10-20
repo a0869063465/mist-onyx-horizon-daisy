@@ -604,7 +604,7 @@ export const PENDING_NOTES: string[] = [
   "Rồng địa ngục và Kẻ trộm áo trắng thuộc Bóng tối. Hũ nhốt linh hồn và Bình biến hình thuộc Đất đá. Linh hồn do Hũ nhốt linh hồn gọi ra là bản sao, giữ skill của quái bị nhốt, và thuộc Bóng tối. Sangan thuộc Rừng rậm. Kỳ nhông điện thuộc Núi. Thánh thuật sư và Người yêu hạnh phúc thuộc Thánh địa thiên sứ, được che trước khi các quái khác bị tấn công. Kỵ sĩ cánh cụt thuộc Thảo nguyên. Khủng long hình người thuộc Đất đá. Mặt nạ bóng tối thuộc Bóng tối.",
   "Gói chung còn 10 sao một gói. Mua 10 gói còn 100 sao.",
   "Dung hợp xong, bấm ra ngoài bảng quái cũng triệu hồi, giống bấm nút Triệu hồi.",
-  "Thêm Zoa. 3 sao, 1 mana, công 7, phòng ngự 0, máu 6. Khi đánh thường, hồi 50% số máu mục tiêu thực sự mất, làm tròn. Đánh quái hay đánh người chơi đều hồi. Zoa thuộc Bóng tối.",
+  "Thêm Zoa. 3 sao, 1 mana, công 7, phòng ngự 0, máu 6. Khi đánh thường, hồi 50% số máu mục tiêu thực sự mất, làm tròn. Đánh quái hay đánh người chơi đều hồi. Zoa thuộc Ác ma. Chưa có lá môi trường Ác ma, nên Zoa chưa hưởng môi trường nào.",
   "Giáp cơ khí dùng lên Zoa thì dung hợp thành Metal Zoa. Metal Zoa 4 sao, công 7, thủ 2, thủ phép 0, máu 6. Đánh thường vẫn hồi 50% máu mục tiêu thực sự mất. Metal Zoa thuộc Cứ địa máy móc.",
   "Thêm phép Hầm chông, 0 mana. Khi đối thủ lao vào tấn công, chặn đòn đó, gây sát thương vật lý và sát thương phép bằng số sao của quái tấn công.",
   "Phục kích không còn chặn đòn công vật lý. Khi quái địch dùng kỹ năng gây sát thương, chặn kỹ năng đó, rồi chọn quái đánh thường vào quái ra kỹ năng.",
