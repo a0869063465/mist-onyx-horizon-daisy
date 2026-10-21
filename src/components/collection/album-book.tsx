@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumCover, AlbumPic, CardsIcon, ChainIcon } from "@/components/collection/album-parts";
+import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { FORMS, monsterCard } from "@/lib/catalog";
-import { albumPages, cardName, cardNumbers, formatNo, rarityOf, type Album, type AlbumCard, type CardSet, type PageItem } from "@/lib/collection";
+import { albumPages, awaitsAppraisal, cardName, cardNumbers, formatNo, rarityOf, setsOf, type Album, type AlbumCard, type CardSet, type PageItem } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
 import { loadRates, type Rates, type Tier } from "@/lib/shop";
 
@@ -34,8 +34,8 @@ const without = (from: Set<string>, ids: string[]) => new Set([...from].filter((
  * page a screen, 4 cards a row and 4 rows, each card's art in the gold frame with its No. under it, grey while not
  * owned. The cover flies in from the shelf and opens like a book; a swipe or the arrows turn the pages. The cards of
  * one set stand together in a gold frame with the set's name and its stars, which light up once all are owned and
- * are taken with Nhận. A card in more than one set, or in a set with cards in another album, carries a chain and a
- * light running round it; tapping it flares it up and opens its sets. Any other card opens its sheet, where a card not
+ * are taken with Nhận. A card in more than one set, or in a set with cards in another album, stands alone in the same
+ * gold frame, without a name (owner, 21/10); tapping it flares it up and opens its sets. Any other card opens its sheet, where a card not
  * owned can be bought with stars (Đổi). Cards new since the album was last looked at, and a card just bought, drop
  * into their pockets in a glow of their rarity's colour, page after page, then Tiến độ sưu tập counts the album up.
  */
@@ -228,6 +228,7 @@ export function AlbumBook({
     <div key={page} className={`al-leaf${kind ? ` ${kind}` : ""}`}>
       <AlbumPage
         items={pages[page]}
+        sets={sets}
         owned={owned}
         claimed={claimed}
         rates={rates}
@@ -240,7 +241,10 @@ export function AlbumBook({
     </div>
   );
   const leaves = !turn ? [leaf(index, "")] : turn.dir === 1 ? [leaf(turn.to, "is-under"), leaf(index, "is-turn-next")] : [leaf(index, "is-under"), leaf(turn.to, "is-turn-back")];
-  const asideFor = (id: string) => (owned.has(id) || forms.has(id) || !numbered.has(id) ? null : <ExchangeBox id={id} onAsk={setAsk} />);
+  // Not owned: Đổi; got from a pack or bought: Giám định; the default deck's and forms: nothing.
+  const asideFor = (id: string) =>
+    forms.has(id) || !numbered.has(id) ? null : !owned.has(id) ? <ExchangeBox id={id} onAsk={setAsk} /> : awaitsAppraisal(id, owned) ? <AppraiseBox /> : null;
+  const badgeFor = (id: string) => <RarityBadge id={id} />;
   const shown = turn ? turn.to : index;
 
   return (
@@ -279,9 +283,9 @@ export function AlbumBook({
       ) : null}
       {sheet ? (
         monsterCard(sheet) ? (
-          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
         ) : (
-          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
         )
       ) : null}
       {ask ? <ExchangeAsk id={ask} albums={albums} onCancel={() => setAsk(null)} onConfirm={() => buy(ask)} /> : null}
@@ -299,6 +303,7 @@ export function AlbumBook({
 /** One binder page: 16 pockets, a framed set taking as many as its cards. */
 function AlbumPage({
   items,
+  sets,
   owned,
   claimed,
   rates,
@@ -309,6 +314,7 @@ function AlbumPage({
   onClaim,
 }: {
   items: PageItem[];
+  sets: CardSet[];
   owned: Set<string>;
   claimed: Set<string>;
   rates: Rates;
@@ -324,6 +330,7 @@ function AlbumPage({
       card={card}
       owned={owned.has(card.id)}
       linked={linked}
+      lit={linked && setsOf(card.id, sets).every((set) => set.ids.every((id) => owned.has(id)))}
       tier={rarityOf(card.id, rates)}
       burst={burst === card.id}
       pending={pending.has(card.id)}
@@ -364,6 +371,7 @@ function Pocket({
   card,
   owned,
   linked,
+  lit,
   tier,
   burst,
   pending,
@@ -373,6 +381,8 @@ function Pocket({
   card: AlbumCard;
   owned: boolean;
   linked: boolean;
+  /** Linked, and all its sets complete: its frame lights up like a set's. */
+  lit: boolean;
   tier: Tier;
   burst: boolean;
   pending: boolean;
@@ -393,14 +403,10 @@ function Pocket({
     >
       <span className="al-slot">
         <AlbumPic id={card.id} missing={!owned} />
-        {linked ? (
-          <i className="al-link">
-            <ChainIcon />
-          </i>
-        ) : null}
         {arrive >= 0 ? <i className="al-flash" aria-hidden="true" /> : null}
       </span>
       <span className="al-no">{formatNo(card.no)}</span>
+      {linked ? <span className={`al-solo${lit ? " is-done" : ""}`} aria-hidden="true" /> : null}
     </button>
   );
 }

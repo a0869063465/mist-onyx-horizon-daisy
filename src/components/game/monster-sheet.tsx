@@ -239,6 +239,7 @@ export function MonsterSheet({
   actions,
   aside,
   note,
+  badge,
   onClose,
   onArt,
   onBack,
@@ -255,6 +256,8 @@ export function MonsterSheet({
   aside?: ReactNode;
   /** Live figure for this monster (e.g. its current skill damage), shown under the first skill. */
   note?: string;
+  /** On the card's top right corner (the collection's rarity tag). */
+  badge?: ReactNode;
   onClose: () => void;
   /** Tapping the card: the 3D fan of its related cards (owner, 19/10). Without it the card is only a picture. */
   onArt?: () => void;
@@ -356,6 +359,7 @@ export function MonsterSheet({
             onClick={onArt}
           >
             {card}
+            {badge}
             {count ? <span className="msheet-count">{count}</span> : null}
             {onArt ? (
               <span className="msheet-fan" aria-hidden="true">

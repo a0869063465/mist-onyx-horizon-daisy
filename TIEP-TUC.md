@@ -95,6 +95,8 @@ Phiên trước dừng ở đây: Bộ sưu tập đủ 3 đợt (số No, Kho b
   - `:where(.cv) button` (trước là `.cv button`, đè màu chữ của mọi nút 1 class): nút Đổi, nút << trong album, nút Quái thú/Phép đang tắt, Bỏ lọc, Bỏ chọn giờ đúng màu đã viết.
   - Đã báo chủ game: bộ bài mặc định có đủ 3 hiệp sĩ nên người chơi mới nhận được ngay 12 sao của set Hiệp sĩ huyền bí.
   - Chạy thử: Playwright cần `click({ force: true })` cho nút Nhận (đang nhấp nháy nên "không đứng yên"). Muốn chụp chậm: CDP `Animation.setPlaybackRate` (làm chậm CSS) + bọc `window.setTimeout` nhân thời gian (làm chậm hẹn giờ của trang).
+- Chỉnh sau đợt 3 (chủ game 21/10): Kho bài mặc định xếp độ hiếm UR → SR → N, bấm Độ hiếm lần đầu cũng cao → thấp (huy hiệu số trên nút sắp xếp chỉ hiện khi khác mặc định). Lá trong lưới Kho bài là `AlbumPic` (hình khung vàng, không chỉ số, không tên; dấu MỚI/↑/↓ của Chỉnh sửa bộ bài không còn ở đây). Bảng mô tả trong Bộ sưu tập có `RarityBadge` góc phải trên của lá (prop `badge`/`badgeFor` của sheet, đi qua cả cuộn 3D). Ô bên lá: chưa có = "Chưa có lá này" (album: + Đổi); có từ gói/đổi sao (`awaitsAppraisal`, không phải bộ mặc định) = ô "Giám định" (chưa làm gì, chủ game: "hiện tại thì chưa làm gì"); bộ mặc định và lá ngoài bộ = không có ô. Lá linked trong album: bỏ dấu xích + viền chạy, thay bằng khung vàng như set (`.al-solo`, không tên, sáng khi mọi set của nó đủ), bấm vẫn mở bảng set.
+- Đang hỏi (chưa làm): Câu 6, chọn môi trường ở Kho bài thì hiện quái + phép của môi trường đó; hỏi chủ game "phép thuộc môi trường" có phải chỉ lá môi trường đó không.
 
 ## Đã xong (21/10): sửa lỗi lá phép phản ứng (chủ game báo), dung hợp 3 lá
 

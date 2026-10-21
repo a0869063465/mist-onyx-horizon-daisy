@@ -625,6 +625,11 @@ export const PENDING_NOTES: string[] = [
   "Bảng set (lá có dấu xích) có thêm nút Đổi cho lá chưa có.",
   "Set đủ lá thì sao thưởng thành nút Nhận, bấm để nhận sao (mỗi set một lần), số sao bay lên, sau đó ghi số sao kèm dấu ✓. Có ở khung set trên trang và trong bảng set.",
   "Kho bài: trong bảng lọc, nút Quái thú hoặc Phép đang tắt hiện mờ hơn cho dễ thấy.",
+  "Kho bài mở ra xếp theo độ hiếm UR → SR → N. Bấm Độ hiếm lần đầu cũng UR → SR → N, bấm lại thì N → SR → UR.",
+  "Kho bài: lá chỉ hiện hình trong khung vàng như album, không chỉ số, không tên, góc trái trên vẫn có nhãn N, SR, UR.",
+  "Bộ sưu tập: bảng mô tả lá có nhãn độ hiếm N, SR, UR ở góc phải trên của lá.",
+  "Bộ sưu tập: lá có từ mở gói hoặc đổi sao hiện ô Giám định trong bảng mô tả (chưa dùng được). Lá chưa có vẫn hiện ô Chưa có lá này, trong album kèm nút Đổi.",
+  "Album: lá có set nằm ở album khác (Kỵ sĩ bóng tối, Lời nguyền của rồng, Rồng con, Phù thuỷ thời gian) giờ chỉ có khung vàng như set, không tên; đủ set thì khung sáng lên. Bấm vào vẫn mở bảng set.",
 ];
 
 function remarkOf(notes: string[]) {

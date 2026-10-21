@@ -1,14 +1,12 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { CardFace } from "@/components/game/card-face";
+import { AlbumPic, AppraiseBox, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
-import { collectionOwned, rarityOf } from "@/lib/collection";
+import { awaitsAppraisal, collectionOwned, rarityOf } from "@/lib/collection";
 import { ENV_FILTERS, MONSTER_TYPES, passesFilter, plainName, STAR_FILTERS } from "@/lib/deck-filters";
 import { tr } from "@/lib/i18n";
-import { loadCard, loadSpell } from "@/lib/layouts";
-import { markFace } from "@/lib/power-balance";
 import { loadRates, ownedIds, tierRank, type Tier } from "@/lib/shop";
 import { SPELL_KINDS, spellKind, spellKindRank, type SpellKind, type SpellKindKey } from "@/lib/spell-kinds";
 import { loadStrategies } from "@/lib/strategies";
@@ -16,7 +14,7 @@ import { loadStrategies } from "@/lib/strategies";
 type Kind = "monster" | "spell";
 type Pick = { id: string; kind: Kind };
 type Row = Pick & { name: string; stars: number; form: boolean; owned: boolean; tier: Tier };
-/** Thông thường, or by rarity: Normal first (up), then UR first on the second tap (owner, 21/10). */
+/** By rarity, UR first (the default; owner, 21/10), Normal first on the next tap; or Thông thường. */
 type Sort = { by: "normal" } | { by: "rarity"; up: boolean };
 type Panel = "env" | "filter" | "sort" | null;
 /** Monsters and spells shown (at least one), monster types and stars, spell groups, rarities. */
@@ -37,16 +35,13 @@ export function CardVault() {
   const [query, setQuery] = useState("");
   const [envs, setEnvs] = useState<string[]>([]);
   const [filter, setFilter] = useState<VaultFilter>(NO_FILTER);
-  const [sort, setSort] = useState<Sort>({ by: "normal" });
+  const [sort, setSort] = useState<Sort>({ by: "rarity", up: false });
   const [panel, setPanel] = useState<Panel>(null);
   const [sheet, setSheet] = useState<Pick | null>(null);
   const plans = useMemo(() => loadStrategies(), []);
   const owned = useMemo(() => collectionOwned(ownedIds()), []);
   const rates = useMemo(() => loadRates(), []);
   const forms = useMemo(() => new Set(FORMS.map((card) => card.id)), []);
-  // The rarity tag takes the top left corner, where a spell shows its MỚI mark, so here the mark sits where a
-  // monster's does.
-  const spellSpots = useMemo(() => ({ ...loadSpell(), fresh: loadCard().fresh }), []);
 
   const q = plainName(query);
   const named = (name: string) => !q || plainName(name).includes(q) || plainName(tr(name)).includes(q);
@@ -69,7 +64,9 @@ export function CardVault() {
   const shown = (filter.tiers.length ? rows.filter((row) => filter.tiers.includes(row.tier)) : rows).sort((a, b) => order(a, b, sort));
 
   const filterCount = filter.types.length + filter.stars.length + filter.kinds.length + filter.tiers.length + (filter.monsters && filter.spells ? 0 : 1);
-  const lock = (id: string) => (owned.has(id) || forms.has(id) ? null : <LockBox />);
+  // Not owned: the lock; got from a pack or bought: Giám định; the default deck's and forms: nothing.
+  const lock = (id: string) => (forms.has(id) ? null : !owned.has(id) ? <LockBox /> : awaitsAppraisal(id, owned) ? <AppraiseBox /> : null);
+  const badge = (id: string) => <RarityBadge id={id} />;
 
   function flip(next: Exclude<Panel, null>) {
     setPanel((now) => (now === next ? null : next));
@@ -109,7 +106,7 @@ export function CardVault() {
         <ToolButton label={tr("Lọc")} on={panel === "filter"} count={filterCount} onClick={() => flip("filter")}>
           <Glyph name="funnel" />
         </ToolButton>
-        <ToolButton label={tr("Sắp xếp")} on={panel === "sort"} count={sort.by === "rarity" ? 1 : 0} onClick={() => flip("sort")}>
+        <ToolButton label={tr("Sắp xếp")} on={panel === "sort"} count={sort.by === "rarity" && !sort.up ? 0 : 1} onClick={() => flip("sort")}>
           <SortIcon up={sort.by === "rarity" ? sort.up : null} />
         </ToolButton>
       </div>
@@ -206,7 +203,7 @@ export function CardVault() {
 
       {panel === "sort" ? (
         <div className="cv-drop is-sort">
-          <button type="button" data-ui="soft" className={`cv-sort${sort.by === "rarity" ? " on" : ""}`} onClick={() => setSort((now) => ({ by: "rarity", up: now.by === "rarity" ? !now.up : true }))}>
+          <button type="button" data-ui="soft" className={`cv-sort${sort.by === "rarity" ? " on" : ""}`} onClick={() => setSort((now) => ({ by: "rarity", up: now.by === "rarity" ? !now.up : false }))}>
             <span>{tr("Độ hiếm")}</span>
             <small>{sort.by === "rarity" && !sort.up ? "UR → SR → N" : "N → SR → UR"}</small>
           </button>
@@ -221,7 +218,7 @@ export function CardVault() {
         <div className="cv-grid">
           {shown.map((row) => (
             <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
-              {row.kind === "monster" ? <CardFace monster={monsterCard(row.id)} hideName mark={markFace(row.id)} /> : <CardFace spellId={row.id} hideName mark={markFace(row.id)} spellLayout={spellSpots} />}
+              <AlbumPic id={row.id} missing={!row.owned} />
               <b className={`cv-tag is-${row.tier}`}>{RARITY_NAME[row.tier]}</b>
             </button>
           ))}
@@ -231,9 +228,9 @@ export function CardVault() {
 
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
         ) : (
-          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
         )
       ) : null}
     </section>

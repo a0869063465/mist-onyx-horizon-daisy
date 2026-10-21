@@ -259,6 +259,14 @@ export function markAlbumSeen(ids: Iterable<string>): Set<string> {
   return seen;
 }
 
+/**
+ * A card owned that will need Giám định (owner, 21/10): any card got from a pack or bought with stars, not the default
+ * deck's. Giám định itself is still to come.
+ */
+export function awaitsAppraisal(id: string, owned: Set<string>): boolean {
+  return owned.has(id) && !DEFAULT_DECK.monsters.includes(id) && !DEFAULT_DECK.spells.includes(id);
+}
+
 /** Cards owned and not looked at in their album yet; the default deck's cards are never new. */
 export function newCards(owned: Set<string>, seen: Set<string>): Set<string> {
   const starters = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);

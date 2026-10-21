@@ -107,7 +107,8 @@ export function FieldFace({ id }: { id: string }) {
 }
 
 /** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
-export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined };
+/** `badgeFor`: drawn on the corner of a card's picture on its sheet (the collection's rarity tag). */
+export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode };
 
 /**
  * A card's sheet with its related cards (owner, 19/10): tapping the card on the sheet opens the 3D fan of its family;
@@ -115,7 +116,7 @@ export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id:
  * back to the first sheet. A card with no family is only a picture. `sheet` draws the first sheet, given what a tap on
  * its card does.
  */
-export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
+export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor, badgeFor }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
   const family = relatedCards(id);
   const [view, setView] = useState<{ fan: string } | { open: string } | null>(null);
   return (
@@ -124,9 +125,9 @@ export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor }: { id: str
       {view && "fan" in view ? <CardCarousel ids={family} focus={view.fan} onOpen={(next) => setView({ open: next })} onClose={() => setView(null)} /> : null}
       {view && "open" in view ? (
         monsterCard(view.open) ? (
-          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
         ) : (
-          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
         )
       ) : null}
     </>
@@ -140,16 +141,19 @@ export function CardMonsterSheet({
   actions = [],
   aside,
   note,
+  badge,
   onClose,
   onBack,
   asideFor,
   noteFor,
+  badgeFor,
 }: {
   id: string;
   extras?: SheetExtra[];
   actions?: SheetAction[];
   aside?: ReactNode;
   note?: string;
+  badge?: ReactNode;
   onClose: () => void;
   /** Opened from the fan: back to it. */
   onBack?: () => void;
@@ -166,6 +170,7 @@ export function CardMonsterSheet({
       actions={actions}
       aside={aside}
       note={note}
+      badge={badge}
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
@@ -173,7 +178,7 @@ export function CardMonsterSheet({
   );
   // A sheet opened from the fan does not open another fan: its card goes back to the one it came from.
   if (onBack) return sheet(onBack);
-  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} />;
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} />;
 }
 
 /**
@@ -187,10 +192,12 @@ export function SpellSheet({
   actions = [],
   aside,
   note,
+  badge,
   onClose,
   onBack,
   asideFor,
   noteFor,
+  badgeFor,
 }: {
   id: string;
   gems?: number | string;
@@ -198,6 +205,7 @@ export function SpellSheet({
   actions?: SheetAction[];
   aside?: ReactNode;
   note?: string;
+  badge?: ReactNode;
   onClose: () => void;
   /** Opened from the fan: back to it. */
   onBack?: () => void;
@@ -213,11 +221,12 @@ export function SpellSheet({
       extras={[spellKindExtra(id, gems, note), ...extras]}
       actions={actions}
       aside={aside}
+      badge={badge}
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
     />
   );
   if (onBack) return sheet(onBack);
-  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} />;
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} />;
 }

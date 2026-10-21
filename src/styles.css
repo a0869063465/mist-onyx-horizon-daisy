@@ -9189,7 +9189,7 @@ button.watch-back {
   transition: transform 0.12s;
 }
 .cv-card:active { transform: scale(0.96); }
-.cv-card.is-dim .card { filter: grayscale(0.9) brightness(0.5); }
+.cv-card.is-dim .al-pic { filter: grayscale(0.9) brightness(0.5); }
 .cv-card.is-dim .cv-tag { opacity: 0.45; filter: saturate(0.4); }
 .cv-tag {
   position: absolute;
@@ -9589,38 +9589,19 @@ button.watch-back {
 .al-prize.is-claim:active { transform: scale(0.94); }
 @keyframes al-claim { 50% { transform: scale(1.08); box-shadow: 0 0 0 0.3cqw #fff6cf, 0 0 4cqw rgba(255, 190, 40, 1); } }
 
-/* A card with sets in other albums or in more than one set: a chain, and a light running round it. */
-@property --al-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-.al-pocket.is-linked .al-slot { box-shadow: inset 0 0.5cqw 1cqw rgba(0, 0, 0, 0.38), 0 0 2.2cqw rgba(110, 200, 255, 0.6); }
-.al-pocket.is-linked .al-slot::before {
-  content: "";
+/* A card with sets in other albums or in more than one set stands in the gold frame of a set, without a name. */
+.al-solo {
   position: absolute;
-  inset: -0.7cqw;
-  z-index: 3;
-  padding: 0.55cqw;
-  border-radius: 1.5cqw;
-  background: conic-gradient(from var(--al-spin), rgba(120, 214, 255, 0) 0deg 200deg, #79d4ff 255deg, #fff 285deg, #c99bff 315deg, rgba(120, 214, 255, 0) 355deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  inset: -1.7cqw -1.1cqw -1cqw;
+  z-index: -1;
+  border: 0.5cqw solid #c39a42;
+  border-radius: 1.8cqw;
+  background: linear-gradient(180deg, rgba(255, 214, 120, 0.22), rgba(255, 214, 120, 0.06));
+  box-shadow: inset 0 0 0 0.25cqw rgba(255, 244, 210, 0.6), 0 0.3cqw 0.8cqw rgba(90, 60, 10, 0.25);
   pointer-events: none;
-  animation: al-spin 2.6s linear infinite;
 }
-@keyframes al-spin { to { --al-spin: 360deg; } }
-.al-link {
-  position: absolute;
-  z-index: 4;
-  top: -1.6cqw;
-  right: -1.6cqw;
-  display: grid;
-  place-items: center;
-  width: 6cqw;
-  height: 6cqw;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #a8e6ff, #2d7fd6 60%, #123e7a);
-  box-shadow: 0 0 0 0.4cqw #fff, 0 0 1.4cqw rgba(110, 200, 255, 0.9);
-}
-.al-link svg { width: 70%; height: 70%; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.al-solo.is-done { border-color: #ffd76a; background: linear-gradient(180deg, rgba(255, 220, 120, 0.42), rgba(255, 200, 80, 0.12)); animation: al-set-lit 2.4s ease-in-out infinite; }
+.al-pocket.is-linked { isolation: isolate; }
 /* Tapped, it flares before its sets open: the card jumps up bright inside two rings of light. */
 .al-pocket.is-burst { z-index: 5; }
 .al-pocket.is-burst .al-slot { animation: al-burst 0.38s ease-out both; }
@@ -9748,11 +9729,9 @@ button.watch-back {
 .al-view .tone-UR { --tone: #ff8ad8; --tone-2: #7b8cff; }
 
 /* A new card waits as an empty pocket, then drops in glowing in its rarity's colour. */
-.al-pocket.is-pending .al-slot > .al-pic,
-.al-pocket.is-pending .al-link { opacity: 0; }
+.al-pocket.is-pending .al-slot > .al-pic { opacity: 0; }
 .al-pocket.is-arriving { z-index: 4; }
 .al-pocket.is-arriving .al-slot > .al-pic { animation: al-arrive 0.8s cubic-bezier(0.2, 0.75, 0.25, 1) calc(var(--i, 0) * 0.13s) both; }
-.al-pocket.is-arriving .al-link { animation: al-fade-in 0.3s ease-out calc(var(--i, 0) * 0.13s + 0.6s) both; }
 .al-flash {
   position: absolute;
   inset: -14% -20%;
@@ -9775,7 +9754,6 @@ button.watch-back {
   58% { opacity: 1; transform: scale(1.1); }
   100% { opacity: 0; transform: scale(1.35); }
 }
-@keyframes al-fade-in { from { opacity: 0; } }
 
 /* Stars taken from a set rise from its Nhận. */
 .al-float {
@@ -10060,3 +10038,6 @@ button.watch-back {
 .al-stat-ok { margin-top: 0.7rem; transition: opacity 0.4s 0.3s; }
 .al-stat-back.is-lit .al-stat-pct,
 .al-stat-back.is-lit .al-stat-ok { opacity: 1; }
+
+/* The rarity on a card's sheet in the collection, top right of its picture. */
+.msheet-rarity { position: absolute; top: -0.5rem; right: -0.45rem; z-index: 4; font-style: normal; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }

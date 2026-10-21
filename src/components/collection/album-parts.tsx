@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
-import type { Album } from "@/lib/collection";
+import { rarityOf, type Album } from "@/lib/collection";
+import { tr } from "@/lib/i18n";
 
 /** A card in an album: its art in the gold frame of Đổi hình nền, no figures, no name; grey while not owned. */
 export function AlbumPic({ id, missing = false }: { id: string; missing?: boolean }) {
@@ -31,12 +32,21 @@ export function CardsIcon() {
   );
 }
 
-/** Two links of a chain: a card whose sets open from it. */
-export function ChainIcon() {
+/** A card's rarity on the top right corner of its picture on the sheet, in the collection (owner, 21/10). */
+export function RarityBadge({ id }: { id: string }) {
+  const tier = rarityOf(id);
+  return <b className={`al-rarity msheet-rarity is-${tier}`}>{tier}</b>;
+}
+
+/** On the sheet of a card got from a pack or bought: Giám định, which does nothing yet (owner, 21/10). */
+export function AppraiseBox() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10.2 13.8a4 4 0 0 0 5.66 0l3.2-3.2a4 4 0 0 0-5.66-5.66l-1.1 1.1" />
-      <path d="M13.8 10.2a4 4 0 0 0-5.66 0l-3.2 3.2a4 4 0 0 0 5.66 5.66l1.1-1.1" />
-    </svg>
+    <section className="cv-lockbox al-appraise">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" strokeWidth="2.4" />
+        <path d="M15 15l5 5" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+      </svg>
+      <b>{tr("Giám định")}</b>
+    </section>
   );
 }
