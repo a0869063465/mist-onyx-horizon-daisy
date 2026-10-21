@@ -4,7 +4,7 @@ export type DanceSpot = { x: number; y: number; w: number };
 
 /**
  * A card in the fusion scene as its picture only, in the gold frame of Đổi hình nền: no name, no figures. Used for
- * the cards flying in and for the fused monster that appears after the flash (owner, 21/10).
+ * the cards flying in; the fused monster that appears after the flash keeps its full card (owner, 21/10).
  */
 export function FusePic({ src }: { src: string }) {
   return (

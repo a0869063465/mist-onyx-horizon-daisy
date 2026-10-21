@@ -5092,7 +5092,7 @@ function PlayPage() {
             ) : null}
             {(fuseShow.phase === "turn" || fuseShow.phase === "land") && fuseBorn ? (
               <div className="fuse3d-big" style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}>
-                <FusePic src={artSrc(fuseShow.resultId, 1)} />
+                <CardFace monster={monsterCard(fuseShow.resultId)!} />
               </div>
             ) : null}
             {fuseSheet}
