@@ -74,6 +74,7 @@ const CORE_PICTURES = [
   "/env/seam.png",
   "/tutorial/nguoi-giu-khoa.webp",
   "/ui/fuse-swirl.webp",
+  "/ui/cover-frame.png",
   "/ui/logo.webp",
   "/ui/pack.webp",
   "/ui/card-back.webp",

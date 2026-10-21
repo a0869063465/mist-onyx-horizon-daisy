@@ -15,7 +15,7 @@ import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen } from "@/components/game/load-screen";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
-import { FUSE_BEATS, FuseDance } from "@/components/game/fuse-dance";
+import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTutorialDone } from "@/lib/tutorial-list";
@@ -5063,11 +5063,13 @@ function PlayPage() {
           <div className={`fuse3d is-${fuseShow.phase}`}>
             {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
               <FuseDance a={fuseShow.a} b={fuseShow.b} c={fuseThird ? fuseShow.c : undefined}>
-                {[
-                  <CardFace key="a" monster={monsterCard(fuseHeld.id)} />,
-                  <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />,
-                  ...(fuseThird ? [<CardFace key="c" monster={monsterCard(formOf(fuseThird))} />] : []),
-                ]}
+                {fuseThird
+                  ? [
+                      <FusePic key="a" src={artSrc(fuseHeld.id, fuseHeld.saved?.level ?? 1)} />,
+                      <FusePic key="b" src={artSrc(fusePartner.cardId, fusePartner.level ?? 1)} />,
+                      <FusePic key="c" src={artSrc(fuseThird.cardId, fuseThird.level ?? 1)} />,
+                    ]
+                  : [<CardFace key="a" monster={monsterCard(fuseHeld.id)} />, <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />]}
               </FuseDance>
             ) : null}
             {fuseShow.phase === "swirl" || fuseShow.phase === "flash" || fuseShow.phase === "turn" ? <i className="fuse3d-glow" /> : null}

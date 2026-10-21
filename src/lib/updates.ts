@@ -605,6 +605,9 @@ export const PENDING_NOTES: string[] = [
   "Lá phép chỉ chớp cam khi có nút Use bấm được. Hoán đổi chỉ chớp khi một quái của bạn đang bị nhắm, và chỉ đổi quái đó với 1 quái khác.",
   "Ngăn chặn phòng ngự chỉ chớp và chỉ dùng được ở phe đang tấn công.",
   "Dung hợp Hiệp sĩ của vua, Hiệp sĩ hộ vệ và Hiệp sĩ của hậu thành Hiệp sĩ huyền bí có cảnh 3 lá: lá trên tay ở 3 giờ, hai lá trên sân ở trên trái và dưới trái, cùng đập vào nhau, bật ra rồi xoáy vào tâm theo vòng tròn đứng.",
+  "Dung hợp Hiệp sĩ huyền bí: ba lá chỉ chạm nhẹ vào nhau và đan vòng tròn, lá trên tay nằm trên lá dưới trái, lá dưới trái nằm trên lá trên trái, lá trên trái nằm trên lá trên tay, cả lúc va và lúc xoáy.",
+  "Dung hợp Hiệp sĩ huyền bí: ba lá bay vào chỉ hiện hình quái trong khung vàng như Đổi hình nền, không tên, không chỉ số.",
+  "Dung hợp Hiệp sĩ huyền bí: cuối vòng xoáy ba lá hút thẳng vào tâm, không còn quay vòng nhỏ quanh tâm nên hết rung giật.",
 ];
 
 function remarkOf(notes: string[]) {

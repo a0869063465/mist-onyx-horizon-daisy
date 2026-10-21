@@ -2,6 +2,16 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 export type DanceSpot = { x: number; y: number; w: number };
 
+/** A card in the fusion scene as its picture only, in the gold frame of Đổi hình nền: no name, no figures (owner, 21/10). */
+export function FusePic({ src }: { src: string }) {
+  return (
+    <span className="fuse3d-pic">
+      <span className="fuse3d-pic-art" style={{ backgroundImage: `url(${src})` }} />
+      <img className="fuse3d-pic-frame" src="/ui/cover-frame.png" alt="" draggable={false} />
+    </span>
+  );
+}
+
 /**
  * Beat lengths (ms) of the fusion scene, after the owner's reference video. The phase clock in play.tsx and the
  * fusion sound in sfx.ts follow the same beats: lift 0, clash 0.56 s, apart 0.78 s, swirl 1.2 s, flash 2.3 s,
@@ -39,7 +49,8 @@ const ease = {
 const clamp = (u: number) => Math.min(1, Math.max(0, u));
 const mix = (from: number, to: number, u: number) => from + (to - from) * u;
 
-type Pose = { x: number; y: number; w: number; scale: number; tilt: number; front: number; glow: number; fade: number };
+/** `axis`: three cards only, the direction (radians) from the middle to the card, which the card leans back about. */
+type Pose = { x: number; y: number; w: number; scale: number; tilt: number; front: number; glow: number; fade: number; axis?: number };
 
 /** One card's pose at `t` ms after the scene starts; `side` is -1 for the card that goes left, 1 for the right. */
 function pose(t: number, side: number, from: DanceSpot, tall: number): Pose {
@@ -87,13 +98,24 @@ function pose(t: number, side: number, from: DanceSpot, tall: number): Pose {
  * do not cover each other, and where they spring back to before the whirlpool. */
 const TRIO_START = 27;
 const TRIO_FAR = 33;
+/** How close they come in the blow: they only just overlap instead of smashing deep (owner, 21/10: picture B). */
+const TRIO_HIT = 13.3;
 /** The two field cards wait 120° from the hand card, one upper left and one lower left. */
 const TRIO_ANGLE = (2 * Math.PI) / 3;
+/**
+ * Each card leans back this many degrees about the line from the middle through it. The leans are too small to see,
+ * but they make the browser draw the three cards crossing each other in a ring wherever they overlap: the hand card
+ * lies over the lower left one, that one over the upper left one, and the upper left one over the hand card
+ * (owner, 21/10), in the blow and in the whirlpool alike.
+ */
+const TRIO_PITCH = 6;
 
 /**
  * One card's pose in the three-card fusion; `angle` is where it waits around the middle (0 = 3 o'clock, growing
- * clockwise on screen). They smash and spring apart like two cards do, then whirl in the upright plane of the screen:
- * a true circle, every card standing upright and keeping its size, clockwise like the two-card whirlpool.
+ * clockwise on screen). They meet and spring apart like two cards do, then whirl in the upright plane of the screen:
+ * a true circle, every card standing upright and keeping its size, clockwise like the two-card whirlpool. The ring
+ * stays wide and closes on the middle at the very end, so the cards never spin on a tiny circle around it, which
+ * looked like shaking (owner, 21/10).
  */
 function trioPose(t: number, angle: number, from: DanceSpot, tall: number): Pose {
   const lift = FUSE_BEATS.lift[0];
@@ -106,29 +128,33 @@ function trioPose(t: number, angle: number, from: DanceSpot, tall: number): Pose
   if (t < lift) {
     const u = ease.inOut(clamp(t / lift));
     const end = at(TRIO_START, angle);
-    return { x: mix(from.x, end.x, u), y: mix(from.y, end.y, u), w: mix(from.w, WIDE, u), scale: 1 + 0.08 * Math.sin(Math.PI * u), tilt: 0, front: 0, glow: 0.15 * u, fade: 1 };
+    return { x: mix(from.x, end.x, u), y: mix(from.y, end.y, u), w: mix(from.w, WIDE, u), scale: 1 + 0.08 * Math.sin(Math.PI * u), tilt: 0, front: 0, glow: 0.15 * u, fade: 1, axis: angle };
   }
   if (t < clash) {
     const u = ease.in(clamp((t - lift) / (clash - lift)));
-    return { ...at(mix(TRIO_START, HIT, u), angle), w: WIDE, scale: 1, tilt: lean * u, front: 0, glow: 0.15, fade: 1 };
+    return { ...at(mix(TRIO_START, TRIO_HIT, u), angle), w: WIDE, scale: 1, tilt: lean * u, front: 0, glow: 0.15, fade: 1, axis: angle };
   }
   if (t < apart) {
     const u = clamp((t - clash) / (apart - clash));
     const back = ease.out(u);
-    return { ...at(mix(HIT, TRIO_FAR, back), angle), w: WIDE, scale: 1 + 0.08 * (1 - back), tilt: lean * (1 - back) * Math.cos(u * Math.PI * 2), front: 0, glow: 0.15, fade: 1 };
+    return { ...at(mix(TRIO_HIT, TRIO_FAR, back), angle), w: WIDE, scale: 1 + 0.08 * (1 - back), tilt: lean * (1 - back) * Math.cos(u * Math.PI * 2), front: 0, glow: 0.15, fade: 1, axis: angle };
   }
   const u = (t - apart) / (swirl - apart);
   const spin = u <= 1 ? u ** 1.7 : 1 + 1.7 * (u - 1);
-  const reach = u <= 1 ? LAST + (TRIO_FAR - LAST) * (1 - u) ** 1.35 : LAST;
+  // Wide for most of the whirlpool, then drawn straight into the middle as it ends; after that they stay there and
+  // fade inside the flash.
+  const reach = u <= 1 ? TRIO_FAR * (1 - u * u) : 0;
+  const turn = angle + TURNS * 2 * Math.PI * spin;
   const late = clamp(u);
   return {
-    ...at(reach, angle + TURNS * 2 * Math.PI * spin),
+    ...at(reach, turn),
     w: WIDE,
     scale: 1,
     tilt: 0,
     front: 0,
     glow: 0.15 + 0.85 * late * late,
     fade: u <= 1 ? 1 : clamp(1 - (t - swirl) / TAIL),
+    axis: turn,
   };
 }
 
@@ -150,35 +176,48 @@ export function FuseDance({ a, b, c, children }: { a: DanceSpot; b: DanceSpot; c
     const sides = a.x <= b.x ? [-1, 1] : [1, -1];
     const spots = c ? [a, b, c] : [a, b];
     const angles = c ? [0, b.x <= c.x ? -TRIO_ANGLE : TRIO_ANGLE, b.x <= c.x ? TRIO_ANGLE : -TRIO_ANGLE] : null;
+    const glowOf = (p: Pose) =>
+      `brightness(${1 + 1.6 * p.glow}) drop-shadow(0 0 ${4 + 20 * p.glow}px rgba(232, 200, 255, ${0.35 + 0.6 * p.glow})) drop-shadow(0 10px 12px rgba(0, 0, 0, ${0.75 * (1 - p.glow)}))`;
     let frame = 0;
     const draw = () => {
       const t = performance.now() - start;
-      spots.forEach((spot, index) => {
+      for (let index = 0; index < spots.length; index += 1) {
         const el = cards.current[index];
-        if (!el) return;
-        const p = angles ? trioPose(t, angles[index], spot, tall) : pose(t, sides[index], spot, tall);
+        if (!el) continue;
+        const p = angles ? trioPose(t, angles[index], spots[index], tall) : pose(t, sides[index], spots[index], tall);
         el.style.left = `${p.x}%`;
         el.style.top = `${p.y}%`;
         el.style.width = `${p.w}%`;
-        el.style.transform = `translate(-50%, -50%) rotate(${p.tilt}deg) scale(${p.scale})`;
-        // Three cards keep their size, so the hand card simply stays on top (owner, 21/10).
-        el.style.zIndex = angles ? `${3 - index}` : p.front > 0 ? "3" : "2";
-        el.style.opacity = `${p.fade}`;
-        el.style.filter = `brightness(${1 + 1.6 * p.glow}) drop-shadow(0 0 ${4 + 20 * p.glow}px rgba(232, 200, 255, ${0.35 + 0.6 * p.glow})) drop-shadow(0 10px 12px rgba(0, 0, 0, ${0.75 * (1 - p.glow)}))`;
-      });
+        const lean = p.axis === undefined ? "" : ` rotate3d(${Math.cos(p.axis)}, ${Math.sin(p.axis)}, 0, ${TRIO_PITCH}deg)`;
+        el.style.transform = `translate(-50%, -50%)${lean} rotate(${p.tilt}deg) scale(${p.scale})`;
+        if (angles) {
+          // A filter on a card stops the browser drawing the three crossing each other, so the glow and the fade go
+          // on the group around them and each card keeps only a plain shadow.
+          el.style.boxShadow = `0 8px 12px rgba(0, 0, 0, ${0.6 * (1 - p.glow)})`;
+          if (index === 0 && root.current) {
+            root.current.style.opacity = `${p.fade}`;
+            root.current.style.filter = glowOf(p);
+          }
+        } else {
+          el.style.zIndex = p.front > 0 ? "3" : "2";
+          el.style.opacity = `${p.fade}`;
+          el.style.filter = glowOf(p);
+        }
+      }
       frame = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(frame);
   }, [a, b, c]);
 
+  const faces = children.map((face, index) => (
+    <div key={index} ref={(el) => void (cards.current[index] = el)} className="fuse3d-card">
+      {face}
+    </div>
+  ));
   return (
-    <div ref={root} className="fuse3d-dance">
-      {children.map((face, index) => (
-        <div key={index} ref={(el) => void (cards.current[index] = el)} className="fuse3d-card">
-          {face}
-        </div>
-      ))}
+    <div ref={root} className={`fuse3d-dance${c ? " is-trio" : ""}`}>
+      {c ? <div className="fuse3d-ring">{faces}</div> : faces}
     </div>
   );
 }
