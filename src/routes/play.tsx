@@ -3386,7 +3386,9 @@ function PlayPage() {
       const index = duel.players[side].field.findIndex((mon) => mon?.uid === end.uid);
       if (index < 0) continue;
       const box = SLOT_BOX[screenSide(side, viewer)][index];
-      return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+      // The attacker stands where it lunged to, so its stream leaves from the card itself.
+      const lunge = attackShift(duel, end.uid, viewer);
+      return { x: box.x + box.w / 2 + (lunge ? (lunge.x * box.w) / 100 : 0), y: box.y + box.h / 2 + (lunge ? (lunge.y * box.h) / 100 : 0), w: box.w, h: box.h };
     }
     return null;
   };

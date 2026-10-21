@@ -637,6 +637,7 @@ export const PENDING_NOTES: string[] = [
   "Giáp và Vuốt, Roi điện của Mỹ điểu nhân và Nữ chúa điểu nhân: quái chớp cam khi bị nhắm, bấm quái rồi bấm skill như các skill phản ứng khác. Không còn nút bên hông.",
   "Thanh phản ứng mới: vạch sáng chạy ngang giữa hai sân. Mỗi đòn đánh, skill hay phép đang chờ là một viên tròn có đường cong chỉ tới mục tiêu. Phép đáp trả nằm bên trái và chỉ vào thứ nó tác động, ví dụ Hấp thụ ma pháp chỉ vào Sợi xích địa ngục. Viên đã xong thì mờ đi. Bấm vào viên để xem lá.",
   "Lúc thanh phản ứng hiện, bảng thông báo ẩn đi. Thông báo hiện thành dòng nhỏ cạnh vạch rồi mờ dần, vẫn ghi trong lịch sử thông báo.",
+  "Thanh phản ứng: đường chỉ mục tiêu vẽ lại thành dòng sáng xanh lơ mềm, mờ, có ánh sáng chạy dọc và loé chỗ chạm, không còn nét đứt. Đòn đánh có dòng chạy từ quái đánh tới quái bị đánh (hoặc tới máu người chơi), viên đòn đánh là bàn tay cầm kiếm. Skill và phép chỉ có dòng từ viên tới mục tiêu.",
 ];
 
 function remarkOf(notes: string[]) {

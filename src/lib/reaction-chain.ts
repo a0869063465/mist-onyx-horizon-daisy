@@ -4,7 +4,7 @@ import type { Duel, Pending, Side } from "./duel.ts";
  * The reaction line's orbs (thanh phản ứng kiểu Runeterra, chủ game 21/10): one orb for what is waiting (an attack,
  * a skill, a slow spell) and one for each spell played to answer it. The rules do not change; the chain only
  * follows the duel from one state to the next. An orb points at what it acts on: a monster, a player, or another
- * orb (Hấp thụ ma pháp flows into the spell it swallows). Only the orb of what is still waiting stays lit; an orb
+ * orb (Hấp thụ ma pháp flows into the spell it swallows); an attack flows from the attacker to what it hits. Only the orb of what is still waiting stays lit; an orb
  * that has done its work dims and stays on the line until the line closes.
  */
 export type FlowEnd = { uid: string } | { face: Side } | { orb: string };
@@ -73,12 +73,12 @@ function pendingFlows(duel: Duel): { from: FlowEnd[]; to: FlowEnd[] } {
   if (!pending) return { from: [], to: [] };
   const blocker = duel.hold?.blocker ?? null;
   switch (pending.kind) {
-    // The attacker already lunges at its target on the board, so a swing only flows from its orb.
+    // A swing flows from the attacker to what it hits (the line draws it straight, not through the orb).
     case "face":
-      return { from: [], to: [blocker ? { uid: blocker } : { face: (1 - duel.turn) as Side }] };
+      return { from: [{ uid: pending.attacker }], to: [blocker ? { uid: blocker } : { face: (1 - duel.turn) as Side }] };
     case "melee":
     case "gnaw":
-      return { from: [], to: [{ uid: blocker ?? pending.defender }] };
+      return { from: [{ uid: pending.attacker }], to: [{ uid: blocker ?? pending.defender }] };
     case "beam":
     case "gnaw-skill": {
       if ("back" in pending && pending.back) return { from: [{ uid: pending.caster }], to: [{ uid: pending.caster }] };
