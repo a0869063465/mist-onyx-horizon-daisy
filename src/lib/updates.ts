@@ -614,6 +614,11 @@ export const PENDING_NOTES: string[] = [
   "Kho bài: ô tìm lá, nút môi trường (bấm xổ danh sách, chọn được nhiều môi trường, bấm lại thì thu vào; chỉ lọc quái), nút lọc (bật tắt quái và phép, loại quái, sao, nhóm phép, độ hiếm) và nút sắp xếp (Độ hiếm: N → SR → UR, bấm lại UR → SR → N; Thông thường: quái nhiều sao trước, rồi phép theo nhóm).",
   "Cửa hàng: Gói chung còn 10 sao một gói, 10 gói 100 sao, vẫn chắc chắn có ít nhất 1 lá UR.",
   "Lá môi trường Thảo nguyên, Đất đá, Núi, Rừng rậm, Bóng tối, Biển sâu, Cứ địa máy móc, Thánh địa thiên sứ, Núi dung nham thành bậc SR, cả khi mở gói.",
+  "Album sưu tập: mỗi môi trường một album, thêm album Phép. Bìa là ảnh lá môi trường (album Phép là Sấm sét tận thế), dưới bìa ghi số lá đã có, đủ hết thì hiện Hoàn thành!, album có lá mới chưa xem thì có chấm đỏ.",
+  "Bấm bìa thì album bay ra giữa và mở ra như sách. Mỗi trang 4 lá một hàng, 4 hàng; mỗi lá là hình trong khung vàng kèm số No., lá chưa có in xám. Vuốt ngang hoặc bấm mũi tên để lật trang.",
+  "Album: lá cùng set đứng chung trong khung vàng, có tên set và sao thưởng (nhận thưởng có ở bản sau); đủ lá thì khung sáng lên. Set hiện có: Hiệp sĩ huyền bí, Rồng ác ma, Kỵ sĩ cưỡi rồng, Rồng ngàn tuổi.",
+  "Album: lá có set nằm ở album khác (Kỵ sĩ bóng tối, Lời nguyền của rồng, Rồng con, Phù thuỷ thời gian) có dấu xích và viền sáng chạy quanh. Bấm vào thì lá loé sáng rồi mở bảng các set của lá đó, lá thiếu in mờ; bấm Xem hoặc bấm lá trong bảng để xem mô tả.",
+  "Album: bấm lá khác để xem mô tả, lá chưa có hiện khoá.",
 ];
 
 function remarkOf(notes: string[]) {

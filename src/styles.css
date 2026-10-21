@@ -8953,7 +8953,6 @@ button.watch-back {
   background: linear-gradient(180deg, #fff1bf 0%, #f2c75c 55%, #c4902a 100%);
   box-shadow: 0 3px 12px rgba(255, 196, 70, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-.cv-soon { margin: 3rem 1.5rem; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.7); }
 
 .cv-vault { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .cv-tools { flex: none; display: flex; align-items: center; gap: 0.45rem; padding: 0 0.9rem 0.6rem; }
@@ -9231,3 +9230,510 @@ button.watch-back {
 }
 .cv-lockbox svg { flex: none; width: 1.5rem; height: 1.5rem; color: #ffd76a; filter: drop-shadow(0 0 4px rgba(255, 200, 70, 0.6)); }
 .cv-lockbox b { font-size: 0.86rem; }
+
+/* ── Album sưu tập (owner, 21/10, after the Collector's Files of the video, made for a phone held upright) ── */
+.al-shelf { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0.3rem 1rem 1.8rem; }
+.al-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem 0.95rem; }
+.al-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.al-item:active .al-cover { transform: scale(0.97); }
+.al-name {
+  font-family: var(--cv-cond);
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  color: #fff1c4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.al-item-cover { position: relative; display: block; width: 100%; }
+
+/* A binder: steel frame, the picture inside, three rings down the spine, gold guards on the open corners. */
+.al-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 0.45rem 0.85rem 0.85rem 0.45rem;
+  background: linear-gradient(145deg, #f1f4f9 0%, #98a3b4 26%, #f8fafc 47%, #76829a 70%, #cfd5df 100%);
+  box-shadow: 0 0.8rem 1.3rem rgba(0, 0, 0, 0.62), inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 0 3px rgba(36, 42, 56, 0.35);
+  transition: transform 0.12s;
+}
+.al-cover-art {
+  position: absolute;
+  inset: 0.42rem 0.42rem 0.42rem 1.05rem;
+  border-radius: 0.22rem 0.6rem 0.6rem 0.22rem;
+  background: #0b0f1c center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.65), inset 0 0 1.4rem rgba(0, 0, 0, 0.6);
+}
+.al-cover::before {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 12%;
+  bottom: 12%;
+  width: 0.62rem;
+  background: radial-gradient(circle, #232833 0 30%, #e3e8ef 34% 50%, #6b7486 54% 60%, transparent 63%) center top / 0.62rem 33.3% repeat-y;
+}
+.al-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(225deg, #fff0b8 0, #d9a940 0.95rem, #8a5d12 1.05rem, transparent 1.1rem) right top / 1.9rem 1.9rem no-repeat,
+    linear-gradient(315deg, #fff0b8 0, #d9a940 0.95rem, #8a5d12 1.05rem, transparent 1.1rem) right bottom / 1.9rem 1.9rem no-repeat;
+}
+.al-cover.is-done {
+  background: linear-gradient(145deg, #fff7d6 0%, #cf9f3e 26%, #fff2bd 47%, #a6771e 70%, #f2d78f 100%);
+  box-shadow: 0 0.8rem 1.3rem rgba(0, 0, 0, 0.62), 0 0 1.3rem rgba(255, 200, 80, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.75), inset 0 0 0 3px rgba(90, 60, 10, 0.4);
+}
+.al-new {
+  position: absolute;
+  right: -0.4rem;
+  top: -0.4rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  font-family: var(--cv-cond);
+  font-size: 1.05rem;
+  font-style: normal;
+  font-weight: 900;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ff9a9a, #e3161b 58%, #8c0408);
+  box-shadow: 0 0 0 2px #fff, 0 0 12px rgba(255, 40, 40, 0.85);
+  animation: al-new 1.5s ease-in-out infinite;
+}
+@keyframes al-new { 50% { transform: scale(1.14); } }
+.al-count,
+.al-done,
+.al-tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.6rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-family: var(--cv-cond);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.al-count,
+.al-tally { color: #e8efff; background: rgba(4, 10, 34, 0.75); border: 1px solid var(--cv-line); }
+.al-done,
+.al-tally.is-done { color: #3b1d00; border-color: transparent; background: linear-gradient(180deg, #ffd36b, #ff9d1c 60%, #e2700a); box-shadow: 0 0 10px rgba(255, 160, 40, 0.55); }
+.al-cards-ico { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+
+/* An album opened: its own screen over the page. */
+.al-view {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  color: #e8efff;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Only the backdrop fades in, so the cover flying from the shelf stays solid. */
+.al-view::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(118deg, transparent 0 9rem, rgba(110, 140, 255, 0.05) 9rem 13rem, transparent 13rem 22rem),
+    radial-gradient(120% 60% at 50% 40%, #121a44 0%, #070a1c 70%, #04050e 100%);
+  animation: al-in 0.24s ease-out both;
+}
+.al-view.is-closing { animation: al-out 0.22s ease-in both; }
+@keyframes al-in { from { opacity: 0; } }
+@keyframes al-out { to { opacity: 0; transform: scale(0.98); } }
+.al-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.9rem 0.3rem;
+  transition: opacity 0.3s;
+}
+.al-head h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--cv-cond);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--cv-gold);
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+}
+.al-view.is-fly .al-head,
+.al-view.is-fly .al-foot { opacity: 0; }
+.al-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.4rem 0.75rem;
+  container-type: size;
+  touch-action: none;
+}
+/* The page keeps its shape on any phone; everything on it is sized from its width. */
+.al-book { position: relative; width: min(100cqw, 100cqh * 0.625); aspect-ratio: 0.625; container-type: inline-size; perspective: 2200px; }
+.al-view.is-fly .al-book { visibility: hidden; }
+
+/* The cover from the shelf: flies to the page, then swings open toward the player. */
+.al-fly { position: fixed; z-index: 4; aspect-ratio: auto; transform-origin: left center; backface-visibility: hidden; pointer-events: none; }
+.al-fly.is-flying {
+  transition:
+    left 0.46s cubic-bezier(0.3, 0.7, 0.2, 1),
+    top 0.46s cubic-bezier(0.3, 0.7, 0.2, 1),
+    width 0.46s cubic-bezier(0.3, 0.7, 0.2, 1),
+    height 0.46s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.al-fly.is-opening {
+  opacity: 0;
+  transform: perspective(1800px) rotateY(-172deg);
+  transition: transform 0.9s cubic-bezier(0.55, 0, 0.35, 1), opacity 0.22s ease-in 0.68s;
+}
+
+/* Pages turn about the spine on the left. */
+.al-leaf { position: absolute; inset: 0; transform-origin: left center; backface-visibility: hidden; }
+.al-leaf::after { content: ""; position: absolute; inset: 0; border-radius: 1.6cqw 2.6cqw 2.6cqw 1.6cqw; opacity: 0; pointer-events: none; }
+.al-leaf.is-turn-next,
+.al-leaf.is-turn-back { z-index: 2; }
+.al-leaf.is-turn-next { animation: al-turn-next 0.64s cubic-bezier(0.45, 0.05, 0.35, 1) both; }
+.al-leaf.is-turn-back { animation: al-turn-back 0.64s cubic-bezier(0.45, 0.05, 0.35, 1) both; }
+.al-leaf.is-turn-next::after,
+.al-leaf.is-turn-back::after { background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.12) 60%, rgba(255, 255, 255, 0.1)); animation: al-shade 0.64s ease-in-out both; }
+.al-leaf.is-turn-back::after { animation-direction: reverse; }
+.al-leaf.is-under::after { background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 55%); animation: al-shade-under 0.64s ease-in-out both; }
+@keyframes al-turn-next { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
+@keyframes al-turn-back { from { transform: rotateY(-180deg); } to { transform: rotateY(0deg); } }
+@keyframes al-shade { to { opacity: 1; } }
+@keyframes al-shade-under { 50% { opacity: 1; } }
+
+/* A binder page: ivory, a ringed spine, rivets in the corners, 16 pockets. */
+.al-page {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.6cqw 2.6cqw 2.6cqw 1.6cqw;
+  background: linear-gradient(165deg, #f6f3ea 0%, #e7e2d5 55%, #d9d3c3 100%);
+  box-shadow: 0 2.4cqw 6cqw rgba(0, 0, 0, 0.65), inset 0 0 0 0.35cqw rgba(255, 255, 255, 0.65), inset -0.8cqw -0.8cqw 2cqw rgba(0, 0, 0, 0.12);
+}
+.al-page::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7.5cqw;
+  border-radius: 1.6cqw 0 0 1.6cqw;
+  background:
+    radial-gradient(circle, #3a3529 0 26%, #c9c2b0 30% 40%, transparent 46%) center 3cqw / 7.5cqw 13.5cqw repeat-y,
+    linear-gradient(90deg, #cfc8b6, #ece7da 45%, #bfb7a3);
+  box-shadow: inset -0.3cqw 0 0.6cqw rgba(0, 0, 0, 0.2);
+}
+.al-page::after {
+  content: "";
+  position: absolute;
+  inset: 1.3cqw 1.3cqw 1.3cqw 8.6cqw;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, #fbfcfd 0 18%, #9aa1ad 32% 46%, transparent 50%) left top / 3.2cqw 3.2cqw no-repeat,
+    radial-gradient(circle, #fbfcfd 0 18%, #9aa1ad 32% 46%, transparent 50%) right top / 3.2cqw 3.2cqw no-repeat,
+    radial-gradient(circle, #fbfcfd 0 18%, #9aa1ad 32% 46%, transparent 50%) left bottom / 3.2cqw 3.2cqw no-repeat,
+    radial-gradient(circle, #fbfcfd 0 18%, #9aa1ad 32% 46%, transparent 50%) right bottom / 3.2cqw 3.2cqw no-repeat;
+}
+.al-pockets {
+  position: absolute;
+  inset: 5.6cqw 3.2cqw 2.8cqw 10cqw;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 4.6cqw 2.2cqw;
+}
+.al-pocket {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.al-slot {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 3;
+  border-radius: 1cqw;
+  background: linear-gradient(165deg, rgba(70, 63, 48, 0.24), rgba(36, 32, 24, 0.36));
+  box-shadow: inset 0 0.5cqw 1cqw rgba(0, 0, 0, 0.38), 0 0.25cqw 0 rgba(255, 255, 255, 0.75);
+}
+/* The plastic sleeve shines over the card. */
+.al-slot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.34) 0 14%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.12) 86%);
+}
+.al-pocket.is-blank .al-slot { background: linear-gradient(165deg, rgba(70, 63, 48, 0.1), rgba(36, 32, 24, 0.18)); }
+.al-pocket:active:not(.is-blank) .al-slot { transform: scale(0.96); }
+.al-no {
+  display: block;
+  margin-top: 0.8cqw;
+  font-family: var(--cv-cond);
+  font-size: 3cqw;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.15;
+  text-align: center;
+  color: #4f4737;
+}
+.al-pocket.is-missing .al-no { color: #a09784; }
+
+/* A card's picture in the gold frame; grey while not owned. */
+.al-pic { position: relative; display: block; aspect-ratio: 2 / 3; }
+.al-slot > .al-pic { position: absolute; inset: 3.5% 4.5%; aspect-ratio: auto; }
+.al-pic-art { position: absolute; inset: 2.6% 3.8%; border-radius: 9% / 6%; background: #0b0b0e center 20% / cover no-repeat; }
+.al-pic-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.al-pic.is-missing { filter: grayscale(1) brightness(0.62) contrast(0.9); opacity: 0.88; }
+
+/* The cards of one set stand framed together, the set's name and stars on the frame; lit once all are owned. */
+.al-set { position: relative; grid-column: span var(--n); display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 2.2cqw; }
+.al-set::before {
+  content: "";
+  position: absolute;
+  inset: -1.7cqw -1.1cqw -1cqw;
+  border: 0.5cqw solid #c39a42;
+  border-radius: 1.8cqw;
+  background: linear-gradient(180deg, rgba(255, 214, 120, 0.22), rgba(255, 214, 120, 0.06));
+  box-shadow: inset 0 0 0 0.25cqw rgba(255, 244, 210, 0.6), 0 0.3cqw 0.8cqw rgba(90, 60, 10, 0.25);
+  pointer-events: none;
+}
+.al-set.is-done::before {
+  border-color: #ffd76a;
+  background: linear-gradient(180deg, rgba(255, 220, 120, 0.42), rgba(255, 200, 80, 0.12));
+  animation: al-set-lit 2.4s ease-in-out infinite;
+}
+@keyframes al-set-lit {
+  0%,
+  100% { box-shadow: inset 0 0 0 0.25cqw rgba(255, 250, 225, 0.8), 0 0 1.6cqw rgba(255, 196, 60, 0.55); }
+  50% { box-shadow: inset 0 0 0 0.25cqw rgba(255, 250, 225, 0.95), 0 0 3.6cqw rgba(255, 196, 60, 0.95); }
+}
+.al-set-tag {
+  position: absolute;
+  z-index: 3;
+  top: -3.5cqw;
+  left: 1.2cqw;
+  right: 1.2cqw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1cqw;
+  pointer-events: none;
+}
+.al-set-tag b,
+.al-set-tag i {
+  padding: 0.35cqw 1.6cqw;
+  border-radius: 999px;
+  font-family: var(--cv-cond);
+  font-size: 2.9cqw;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.al-set-tag b { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #3a2600; background: linear-gradient(180deg, #fff0b8, #e2b24c 60%, #b8861f); box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.25); }
+.al-set-tag i { color: #fff8dc; background: linear-gradient(180deg, #6b4a12, #3c2706); box-shadow: inset 0 0 0 0.25cqw #e2b24c; }
+.al-set:not(.is-done) .al-set-tag i { filter: grayscale(1); opacity: 0.5; }
+
+/* A card with sets in other albums or in more than one set: a chain, and a light running round it. */
+@property --al-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.al-pocket.is-linked .al-slot { box-shadow: inset 0 0.5cqw 1cqw rgba(0, 0, 0, 0.38), 0 0 2.2cqw rgba(110, 200, 255, 0.6); }
+.al-pocket.is-linked .al-slot::before {
+  content: "";
+  position: absolute;
+  inset: -0.7cqw;
+  z-index: 3;
+  padding: 0.55cqw;
+  border-radius: 1.5cqw;
+  background: conic-gradient(from var(--al-spin), rgba(120, 214, 255, 0) 0deg 200deg, #79d4ff 255deg, #fff 285deg, #c99bff 315deg, rgba(120, 214, 255, 0) 355deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: al-spin 2.6s linear infinite;
+}
+@keyframes al-spin { to { --al-spin: 360deg; } }
+.al-link {
+  position: absolute;
+  z-index: 4;
+  top: -1.6cqw;
+  right: -1.6cqw;
+  display: grid;
+  place-items: center;
+  width: 6cqw;
+  height: 6cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a8e6ff, #2d7fd6 60%, #123e7a);
+  box-shadow: 0 0 0 0.4cqw #fff, 0 0 1.4cqw rgba(110, 200, 255, 0.9);
+}
+.al-link svg { width: 70%; height: 70%; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+/* Tapped, it flares before its sets open: the card jumps up bright inside two rings of light. */
+.al-pocket.is-burst { z-index: 5; }
+.al-pocket.is-burst .al-slot { animation: al-burst 0.38s ease-out both; }
+.al-pocket.is-burst::before,
+.al-pocket.is-burst::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 6;
+  width: 14cqw;
+  height: 14cqw;
+  margin: -7cqw 0 0 -7cqw;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.al-pocket.is-burst::before {
+  border: 0.9cqw solid #1fa8ff;
+  box-shadow: 0 0 2.4cqw #1fa8ff, inset 0 0 1.6cqw rgba(255, 255, 255, 0.9);
+  animation: al-ring 0.38s ease-out both;
+}
+.al-pocket.is-burst::after {
+  border: 0.7cqw solid #ffc23a;
+  box-shadow: 0 0 2cqw #ff9d1c;
+  animation: al-ring 0.38s ease-out 0.08s both;
+}
+@keyframes al-burst {
+  45% { transform: scale(1.18); filter: brightness(1.7) drop-shadow(0 0 2.4cqw #5cc8ff); }
+  100% { transform: scale(1.1); filter: brightness(1.3) drop-shadow(0 0 1.6cqw #5cc8ff); }
+}
+@keyframes al-ring {
+  from { transform: scale(0.35); opacity: 1; }
+  to { transform: scale(3.4); opacity: 0; }
+}
+
+.al-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3rem;
+  padding: 0.3rem 1rem max(0.8rem, env(safe-area-inset-bottom));
+  transition: opacity 0.3s;
+}
+.al-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--cv-line);
+  background: radial-gradient(circle at 35% 28%, rgba(120, 150, 230, 0.4), rgba(8, 14, 40, 0.92) 70%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.12s, opacity 0.2s;
+}
+.al-arrow svg { width: 1.5rem; height: 1.5rem; fill: none; stroke: var(--cv-gold); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.al-arrow:disabled { opacity: 0.3; }
+.al-arrow:active:not(:disabled) { transform: scale(0.93); }
+.al-dots { display: flex; justify-content: center; gap: 0.45rem; min-width: 3rem; }
+.al-dots i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: rgba(200, 214, 255, 0.35); transition: transform 0.2s, background 0.2s; }
+.al-dots i.on { background: var(--cv-gold); box-shadow: 0 0 8px rgba(255, 210, 90, 0.8); transform: scale(1.25); }
+
+/* The sets of a linked card, grown out of the card. */
+.al-panel-back {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(4, 8, 16, 0.6), rgba(0, 0, 0, 0.85));
+  animation: msheet-fade 180ms ease-out both;
+}
+.al-panel {
+  position: relative;
+  width: min(100%, 24rem);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 1rem 0.9rem;
+  border: 1px solid rgba(255, 215, 106, 0.55);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, rgba(22, 30, 70, 0.97), rgba(8, 12, 32, 0.98));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(120, 190, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: al-panel-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes al-panel-in { from { opacity: 0.2; transform: translate(var(--from-x), var(--from-y)) scale(0.22); } }
+.al-panel-top { display: flex; align-items: center; gap: 0.9rem; padding-right: 2rem; }
+.al-panel-pic { flex: none; width: 34%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
+.al-panel-info { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.al-panel-info h3 { margin: 0; font-family: var(--cv-cond); font-size: 1.35rem; font-weight: 700; line-height: 1.1; color: #fff1c4; }
+.al-panel-info small { font-family: var(--cv-cond); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.03em; color: rgba(214, 226, 255, 0.75); }
+.al-panel-view {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+  padding: 0.45rem 1.4rem;
+  border: 1px solid rgba(160, 196, 255, 0.5);
+  border-radius: 0.65rem;
+  background: linear-gradient(180deg, #3b6fd8, #1e3f94);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-family: var(--cv-cond);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.al-panel-view:active { transform: scale(0.95); }
+.al-panel-set { margin-top: 0.9rem; padding: 0.6rem 0.6rem 0.7rem; border: 1px solid rgba(195, 154, 66, 0.6); border-radius: 0.8rem; background: rgba(255, 214, 120, 0.06); }
+.al-panel-set.is-done { border-color: #ffd76a; box-shadow: 0 0 14px rgba(255, 200, 80, 0.4); }
+.al-panel-set header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+.al-panel-set header b { font-family: var(--cv-cond); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.03em; color: #ffe6a6; }
+.al-panel-set header i {
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6b4a12, #3c2706);
+  box-shadow: inset 0 0 0 1px #e2b24c;
+  color: #fff8dc;
+  font-family: var(--cv-cond);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 800;
+}
+.al-panel-set:not(.is-done) header i { filter: grayscale(1); opacity: 0.5; }
+.al-panel-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+.al-panel-card { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; }
+.al-panel-card .al-pic { width: 100%; margin-bottom: 0.15rem; }
+.al-panel-card.is-self .al-pic { border-radius: 6%; outline: 2px solid #79d4ff; outline-offset: 2px; }
+.al-panel-card small { font-family: var(--cv-cond); font-size: 0.78rem; font-weight: 700; line-height: 1.1; text-align: center; color: rgba(214, 226, 255, 0.8); }
+.al-panel-card.is-missing small { color: rgba(214, 226, 255, 0.4); }

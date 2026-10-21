@@ -282,7 +282,7 @@ function SortIcon({ up }: { up: boolean | null }) {
 }
 
 /** On the sheet of a card not owned yet: the lock (Giám định comes here later; owner, 21/10). */
-function LockBox() {
+export function LockBox() {
   return (
     <section className="cv-lockbox">
       <svg viewBox="0 0 24 24" aria-hidden="true">

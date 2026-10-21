@@ -1,4 +1,4 @@
-import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "./catalog.ts";
+import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
 import { loadRates, naturalTier, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { spellKindRank } from "./spell-kinds.ts";
@@ -14,6 +14,8 @@ import { EVOLUTIONS } from "./strategies.ts";
 
 export const BLOCK = 60;
 export const SPELL_START = 601;
+/** The spell album's cover. */
+const SPELL_COVER = "sam-set-tan-the";
 
 /** A kind inside an environment's block, starting `offset` numbers in; `rest` takes the monsters no kind lists. */
 type Part = { label: string; offset: number; ids?: string[]; rest?: boolean };
@@ -53,7 +55,8 @@ const ALBUM_ENVS: Array<{ env: string; parts?: Part[] }> = [
 ];
 
 export type AlbumCard = { id: string; no: number; kind: "monster" | "spell"; part: string };
-export type Album = { id: string; name: string; env: string | null; cards: AlbumCard[] };
+/** `cover`: the picture on the album's cover, the environment card's (the spells: one spell's). */
+export type Album = { id: string; name: string; env: string | null; cover: string; cards: AlbumCard[] };
 export type CardSet = { id: string; name: string; ids: string[] };
 
 const forms = new Set(FORMS.map((card) => card.id));
@@ -126,10 +129,16 @@ export function albums(): Album[] {
   ALBUM_ENVS.forEach((row, index) => {
     const cards = numberEnv(row.env, 1 + index * BLOCK, row.parts, sets);
     if (!cards.length) return;
-    list.push({ id: row.env, name: spellCard(row.env)?.name ?? row.env, env: spellCard(row.env) ? row.env : null, cards });
+    list.push({ id: row.env, name: spellCard(row.env)?.name ?? row.env, env: spellCard(row.env) ? row.env : null, cover: spellSrc(row.env), cards });
   });
   const spells = SPELLS.map((card) => card.id).sort((a, b) => spellKindRank(a) - spellKindRank(b));
-  list.push({ id: "phep", name: "Phép", env: null, cards: spells.map((id, index) => ({ id, no: SPELL_START + index, kind: "spell", part: "" })) });
+  list.push({
+    id: "phep",
+    name: "Phép",
+    env: null,
+    cover: spellSrc(SPELL_COVER),
+    cards: spells.map((id, index) => ({ id, no: SPELL_START + index, kind: "spell", part: "" })),
+  });
   return list;
 }
 
@@ -145,4 +154,103 @@ export function formatNo(no: number): string {
 /** The cards the player really has (owner, 21/10: the publisher's collection too): the default deck's and the ones opened. */
 export function collectionOwned(owned: Set<string>): Set<string> {
   return new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells, ...owned]);
+}
+
+/** An album page: 4 cards a row, 4 rows. */
+export const PAGE_COLS = 4;
+export const PAGE_ROWS = 4;
+
+/**
+ * What a page pocket holds: a card (`linked` when it belongs to more than one set or to a set with cards in another
+ * album: its sets open from it), a set standing framed together on the page, or nothing.
+ */
+export type PageItem = { type: "card"; card: AlbumCard; linked: boolean } | { type: "set"; set: CardSet; cards: AlbumCard[] } | { type: "blank" };
+
+/**
+ * An album's pages. A set stands framed when all its cards are in this album side by side and none of them is in
+ * another set; it never breaks over two rows, so the row before it may end with empty pockets. The last page is
+ * filled up with empty pockets, like a binder.
+ */
+export function albumPages(album: Album, sets = cardSets()): PageItem[][] {
+  const at = new Map(album.cards.map((card, index) => [card.id, index]));
+  const count = new Map<string, number>();
+  for (const set of sets) for (const id of set.ids) count.set(id, (count.get(id) ?? 0) + 1);
+  const framed = new Map<string, CardSet>();
+  for (const set of sets) {
+    const spots = set.ids.map((id) => at.get(id));
+    if (set.ids.length > PAGE_COLS || spots.some((spot) => spot === undefined) || set.ids.some((id) => count.get(id) !== 1)) continue;
+    const order = (spots as number[]).sort((a, b) => a - b);
+    if (order.every((spot, index) => index === 0 || spot === order[index - 1] + 1)) for (const id of set.ids) framed.set(id, set);
+  }
+  const items: PageItem[] = [];
+  let col = 0;
+  for (let index = 0; index < album.cards.length; ) {
+    const card = album.cards[index];
+    const set = framed.get(card.id);
+    if (!set) {
+      items.push({ type: "card", card, linked: count.has(card.id) });
+      col = (col + 1) % PAGE_COLS;
+      index += 1;
+      continue;
+    }
+    if (col + set.ids.length > PAGE_COLS) {
+      for (; col < PAGE_COLS; col += 1) items.push({ type: "blank" });
+      col = 0;
+    }
+    items.push({ type: "set", set, cards: album.cards.slice(index, index + set.ids.length) });
+    col = (col + set.ids.length) % PAGE_COLS;
+    index += set.ids.length;
+  }
+  const size = PAGE_COLS * PAGE_ROWS;
+  const pages: PageItem[][] = [];
+  let page: PageItem[] = [];
+  let used = 0;
+  for (const item of items) {
+    page.push(item);
+    used += item.type === "set" ? item.cards.length : 1;
+    if (used === size) {
+      pages.push(page);
+      page = [];
+      used = 0;
+    }
+  }
+  if (used || !pages.length) {
+    for (; used < size; used += 1) page.push({ type: "blank" });
+    pages.push(page);
+  }
+  return pages;
+}
+
+/** The album a card is in. */
+export function albumOf(id: string, list = albums()): Album | undefined {
+  return list.find((album) => album.cards.some((card) => card.id === id));
+}
+
+const SEEN_KEY = "clash-album-seen";
+
+/** The cards already looked at in their album, on this phone. */
+export function loadAlbumSeen(): Set<string> {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]");
+    return new Set(Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function markAlbumSeen(ids: Iterable<string>): Set<string> {
+  const seen = loadAlbumSeen();
+  for (const id of ids) seen.add(id);
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+  } catch {
+    // Only for this visit then.
+  }
+  return seen;
+}
+
+/** Cards owned and not looked at in their album yet; the default deck's cards are never new. */
+export function newCards(owned: Set<string>, seen: Set<string>): Set<string> {
+  const starters = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);
+  return new Set([...owned].filter((id) => !starters.has(id) && !seen.has(id)));
 }

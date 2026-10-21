@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { AlbumTab } from "@/components/collection/album-shelf";
 import { CardVault } from "@/components/collection/card-vault";
 import { GlyphDefs } from "@/components/game/monster-sheet";
 import { tr, useLang } from "@/lib/i18n";
@@ -39,7 +40,7 @@ function CollectionPage() {
           {tr("Album sưu tập")}
         </button>
       </nav>
-      {booted ? tab === "vault" ? <CardVault /> : <p className="cv-soon">{tr("Album sưu tập có ở đợt sau.")}</p> : null}
+      {booted ? tab === "vault" ? <CardVault /> : <AlbumTab /> : null}
     </main>
   );
 }

@@ -549,6 +549,20 @@ const PAIRS: Array<[string, string]> = [
   ["Sao chép", "Copy"],
   ["Đã sao chép", "Copied"],
   ["lá", "cards"],
+  ["Kho bài", "Card Vault"],
+  ["Album sưu tập", "Albums"],
+  ["Sắp xếp", "Sort"],
+  ["Độ hiếm", "Rarity"],
+  ["Nhóm phép", "Spell groups"],
+  ["Thông thường", "Default"],
+  ["Quái nhiều sao trước, rồi phép theo nhóm", "Monsters with the most stars first, then spells by group"],
+  ["Bỏ chọn", "Clear"],
+  ["Chưa có lá này", "Not owned yet"],
+  ["Có lá mới", "New cards"],
+  ["Số lá đã có", "Cards owned"],
+  ["Trang trước", "Previous page"],
+  ["Trang sau", "Next page"],
+  ["Xem", "View"],
 ];
 
 const EXACT = new Map(PAIRS);
