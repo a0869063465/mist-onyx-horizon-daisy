@@ -9213,6 +9213,10 @@ button.watch-back {
 .cv-tag.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
 .cv-empty { margin: 2.5rem 0; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.65); }
 
+/* A card's sheet and its 3D roll dim the whole page, the header and tabs too. */
+.cv .msheet-back,
+.cv .cc-back { position: fixed; }
+
 /* On the sheet of a card not owned yet. */
 .cv-lockbox {
   display: flex;
