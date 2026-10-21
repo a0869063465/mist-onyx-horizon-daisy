@@ -632,6 +632,7 @@ export const PENDING_NOTES: string[] = [
   "Album: lá có set nằm ở album khác (Kỵ sĩ bóng tối, Lời nguyền của rồng, Rồng con, Phù thuỷ thời gian) giờ chỉ có khung vàng như set, không tên; đủ set thì khung sáng lên. Bấm vào vẫn mở bảng set.",
   "Kho bài: chọn một môi trường thì chỉ hiện quái và phép của môi trường đó (lá môi trường đó, và các phép của nó thêm sau này), các phép khác ẩn đi.",
   "Bộ sưu tập: ô Giám định có hình ổ khoá như ô Chưa có lá này và là nút bấm được (chưa có tác dụng).",
+  "Chỉnh sửa bộ bài: kho bài chỉ hiện lá đã sở hữu. Dạng tiến hoá, dung hợp chỉ hiện khi có đủ mọi lá cần, ví dụ có Rồng con mà chưa có Phù thuỷ thời gian thì không hiện Rồng ngàn tuổi. Chế độ nhà phát hành vẫn hiện đủ mọi lá.",
 ];
 
 function remarkOf(notes: string[]) {

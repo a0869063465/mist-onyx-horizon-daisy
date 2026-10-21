@@ -5,7 +5,7 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canUseCard } from "@/lib/owned-cards";
+import { canReachForm, canUseCard } from "@/lib/owned-cards";
 import { deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
@@ -204,8 +204,14 @@ function DeckPage() {
   const q = plainName(query);
   const named = (name: string) => !q || plainName(name).includes(q) || plainName(tr(name)).includes(q);
   const live = (card: MonsterCard) => monsterCard(card.id) ?? card;
-  const allMonsters = [...MONSTERS.map(live).sort(byStars), ...FORMS.map(live).sort(byStars)];
-  const allSpells = SPELLS.map((card) => spellCard(card.id) ?? card).sort((a, b) => spellKindRank(a.id) - spellKindRank(b.id) || byMana(a, b));
+  // Cards not owned are left out of the pool, and forms unless all the cards they need are owned (owner, 21/10); the
+  // publisher has them all. Read after the first render, like the locks.
+  const formIds = new Set(FORMS.map((card) => card.id));
+  const shown = (id: string) => !booted || (formIds.has(id) ? canReachForm(id) : canUseCard(id));
+  const allMonsters = [...MONSTERS.map(live).sort(byStars), ...FORMS.map(live).sort(byStars)].filter((card) => shown(card.id));
+  const allSpells = SPELLS.map((card) => spellCard(card.id) ?? card)
+    .filter((card) => shown(card.id))
+    .sort((a, b) => spellKindRank(a.id) - spellKindRank(b.id) || byMana(a, b));
   // Typing a name searches monsters and spells together; otherwise the pool shows the kind its icon picked.
   const poolMonsters = q || mode === "monster" ? allMonsters.filter((card) => named(card.name) && passesFilter(card.id, filter, plans)) : [];
   const poolSpells = q || mode === "spell" ? allSpells.filter((card) => named(card.name)) : [];
