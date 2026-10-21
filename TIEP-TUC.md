@@ -1,6 +1,6 @@
 # Việc đang dở (đọc trước khi làm)
 
-Ghi lại cuối phiên ngày 19/10/2026 (cập nhật 21/10). Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này (lần cuối commit 7c0f4ee: Cửa hàng mở cho khách, lá theo sở hữu, mã S300), hai nhánh đang giống hệt nhau.
+Ghi lại cuối phiên ngày 19/10/2026 (cập nhật 21/10). Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này lần cuối ở commit 7c0f4ee (Cửa hàng mở cho khách, lá theo sở hữu, mã S300). Các việc ngày 21/10 mới ở nhánh này, CHƯA lên `main` (chờ chủ game bảo).
 Vercel tự dựng bản xem thử cho nhánh này; link chính đi theo `main`. Chỉ cập nhật `main` khi chủ game bảo (đẩy nhánh lên `main`, không ép, không viết lại lịch sử). `main` cũ trước 19/10 là bản xuất từ Grok không chung lịch sử; lần gộp đầu dùng `--allow-unrelated-histories -s ours`.
 Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đã đẩy. Chờ chủ game giao việc mới; các mục "CHƯA làm" bên dưới vẫn phải hỏi trước.
 
@@ -64,14 +64,15 @@ Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đ�
   - Bảng kết quả "Card Pack Open Results": lưới lá nhận được (New! + bậc), nút Show Number Owned, To Collector's File, OK.
   - Cửa hàng: thanh trên (nút lùi, Shop, số đá), tab trên, cột danh mục trái, lưới ô gói 2 cột (tên, ảnh, hạn, giá "1 Pack 100"). Trang gói: ảnh lớn + hạn, mô tả, nút Details / Odds / Limited List / Cards included, ảnh nhỏ cuộn, nút giá lớn "1800 — 10 Packs (1 UR Guaranteed)". Bảng xác nhận mua: "Spend 1800 Gems...", "Your Gems 3605→1805", Cancel / Purchase. Rồi màn Connecting, nổ tia xanh toả tròn, 10 gói xếp 2 hàng trên sân vàng + nút OPEN; gói chứa UR viền cầu vồng đổi màu.
 
-## Đã xong (21/10): sửa lỗi lá phép phản ứng (chủ game báo)
+## Đã xong (21/10): sửa lỗi lá phép phản ứng (chủ game báo), dung hợp 3 lá
 
 - Gương phòng hộ cướp chỉ số quái của chính mình: sau khi địch chặn, phe tấn công được quyền phản ứng và dùng được Gương. Giờ `answerSide` (duel.ts) = phe bị nhắm (melee/gnaw: phe quái bị đánh hoặc quái chặn; face: phe đối thủ người tấn công; beam/gnaw-skill: phe mục tiêu; spell/lash: đối thủ người dùng). Gương phòng hộ, Lá chắn phản đòn, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Hoán đổi, Hấp thụ ma pháp chỉ dùng/chớp cho phe đó (`GUARD_SPELLS` trong play.tsx, `guards` trong castSpellCore).
 - Lá chớp mà không có Use: chớp cam, tự mở tay phép, chớp xấp bài và nút trong bảng phép giờ đều dùng `answerUsable` (cùng điều kiện với nút Use: quyền, mana, `answerPayoff`, Hoán đổi cần `canCastSwap`).
 - Hoán đổi: `canCastSwap` chỉ đúng khi có quái của mình đang bị nhắm (`lockedSwapToken`); `confirmSwap` từ chối nếu lá đầu không phải quái bị nhắm. Không còn đổi 2 lá dự bị bất kỳ.
 - Ngăn chặn phòng ngự (chủ game 21/10: "chỉ chớp phe công"): chỉ phe đang tấn công (`duel.turn`) dùng/chớp, ở `spellCanAnswer` và castSpellCore.
 - Máy: Hấp thụ ma pháp chỉ dùng khi `answerSide(state) === 1`; lá bị từ chối thì máy bỏ qua (không thử lại mãi, tránh kẹt trận).
-- Dung hợp 3 lá (ba hiệp sĩ → Hiệp sĩ huyền bí), chủ game trả lời 21/10, ĐANG CHỜ chủ game duyệt bản tóm tắt rồi mới làm: lá trên tay ở 3 giờ, 2 lá trên sân ở trên trái (lá ở ô bên trái hơn) và dưới trái (cách nhau 120 độ), bay từ chỗ của chúng tới 3 điểm đó, lao vào tâm đập nhau, bật ra, rồi xoáy trên mặt phẳng đứng (vòng tròn thật trên màn hình), lá luôn thẳng đứng như dung hợp 2 lá, theo chiều kim đồng hồ, giữ nguyên cỡ, lá trên tay nằm trên cùng. Phần còn lại (nhịp, âm, loé, trắng xoá, lá mới xoay hiện, bảng quái, Triệu hồi, sét) giữ y như 2 lá. Chỉ cảnh khi người chơi dung hợp. Kỵ sĩ cưỡi rồng, Rồng ác ma giữ cảnh 2 lá.
+- Dung hợp 3 lá (ba hiệp sĩ → Hiệp sĩ huyền bí), chủ game duyệt 21/10, ĐÃ LÀM: `trioPose` trong fuse-dance.tsx (FuseDance nhận thêm `c`), `thirdKnight` trong fusion.ts, `trioOf` + `FuseShow.third/c` trong play.tsx (nút Dung hợp và kéo thả). Lá trên tay ở 3 giờ, 2 lá trên sân ở -120° / +120° (lá có x nhỏ hơn trên màn hình lên trên trái), đứng chờ ở `TRIO_START` 27 (% bề ngang bàn, đủ hở cả tên lá), đập vào `HIT` 9, bật ra `TRIO_FAR` 33, xoáy vòng tròn thật trên mặt màn hình (y nhân `tall`), theo chiều kim đồng hồ, lá luôn đứng thẳng, giữ cỡ, z cố định (lá trên tay trên cùng). Nhịp, âm, loé, trắng xoá, lá mới, bảng quái, Triệu hồi, sét giữ y như 2 lá. Kỵ sĩ cưỡi rồng, Rồng ác ma giữ cảnh 2 lá (đã so vị trí từng khung trước/sau, không đổi).
+- Chạy thử cảnh trên trình duyệt: chế độ Test đọc trận ở sessionStorage `clash-test-duel` (+ `clash-mode`=test), nên dựng trận bằng `testGrant` qua Vite rồi nạp bằng Playwright (`executablePath: /opt/pw-browsers/chromium`); `page.clock.install()` + `pauseAt` + `runFor` để chụp đúng từng mốc thời gian.
 
 ## Đã xong (19/10): Cửa hàng và mở gói (theo video Master Duel chủ game gửi, tự dựng lại, không lấy hình/âm của Konami)
 

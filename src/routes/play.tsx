@@ -115,7 +115,7 @@ import {
   type ReelFace,
   type Side,
 } from "@/lib/duel";
-import { findFusion, findKnightFusion } from "@/lib/fusion";
+import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
@@ -255,7 +255,8 @@ type BoardSpot = { x: number; y: number; w: number };
  * appears (turn). Its sheet asks to summon (reveal), and it lays down onto the slot with lightning (land).
  */
 type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "land";
-type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot };
+/** `third` and `c`: the third knight of a three-knight fusion and where it stands, so all three cards fly in. */
+type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
 
 /** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
 const FUSE_RAYS = [
@@ -2823,6 +2824,7 @@ function PlayPage() {
           a: boardSpot(document.querySelector(`[data-reserve="${payload.index}"]`), { x: 30, y: 88, w: 18 }),
           b: slotSpot,
           at: slotSpot,
+          ...trioOf(payload.card.id, partner),
         });
         return;
       }
@@ -3290,6 +3292,14 @@ function PlayPage() {
     placeFuse(index as 0 | 1 | 2);
   }
 
+  /** For three knights, the third one on the field and where it stands, so all three fly into the fusion scene. */
+  function trioOf(handId: string, host: FieldMon): Pick<FuseShow, "third" | "c"> {
+    const third = thirdKnight(handId, host, you.field);
+    if (!third) return {};
+    const slot = you.field.findIndex((mon) => mon?.uid === third.uid);
+    return { third: third.uid, c: boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), { x: 50, y: 62, w: 18 }) };
+  }
+
   const fuseHands = new Set<number>();
   const fuseUids = new Set<string>();
   if (fuseOn) {
@@ -3355,6 +3365,7 @@ function PlayPage() {
           a: boardSpot(document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
           b: slotSpot,
           at: slotSpot,
+          ...trioOf(held.id, mon),
         });
         setInspect(null);
       } });
@@ -3392,6 +3403,7 @@ function PlayPage() {
   const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined) : null;
   const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
   const fusePartner = fuseShow ? you.field.find((mon) => mon?.uid === fuseShow.uid) ?? null : null;
+  const fuseThird = fuseShow?.third ? you.field.find((mon) => mon?.uid === fuseShow.third) ?? null : null;
   const fuseBorn = fuseShow ? previewMon(duel, viewer, { id: fuseShow.resultId, hp: monsterCard(fuseShow.resultId)?.hp ?? 1, maxHp: monsterCard(fuseShow.resultId)?.hp ?? 1 }) : null;
   const fuseSheet =
     fuseShow?.phase === "reveal" && fuseBorn
@@ -5050,8 +5062,12 @@ function PlayPage() {
         {fuseShow ? (
           <div className={`fuse3d is-${fuseShow.phase}`}>
             {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
-              <FuseDance a={fuseShow.a} b={fuseShow.b}>
-                {[<CardFace key="a" monster={monsterCard(fuseHeld.id)} />, <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />]}
+              <FuseDance a={fuseShow.a} b={fuseShow.b} c={fuseThird ? fuseShow.c : undefined}>
+                {[
+                  <CardFace key="a" monster={monsterCard(fuseHeld.id)} />,
+                  <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />,
+                  ...(fuseThird ? [<CardFace key="c" monster={monsterCard(formOf(fuseThird))} />] : []),
+                ]}
               </FuseDance>
             ) : null}
             {fuseShow.phase === "swirl" || fuseShow.phase === "flash" || fuseShow.phase === "turn" ? <i className="fuse3d-glow" /> : null}

@@ -604,6 +604,7 @@ export const PENDING_NOTES: string[] = [
   "Gương phòng hộ, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Lá chắn phản đòn, Hấp thụ ma pháp và Hoán đổi chỉ dùng được khi phe bạn bị nhắm. Không còn chớp và cướp chỉ số quái của chính bạn khi bạn tấn công.",
   "Lá phép chỉ chớp cam khi có nút Use bấm được. Hoán đổi chỉ chớp khi một quái của bạn đang bị nhắm, và chỉ đổi quái đó với 1 quái khác.",
   "Ngăn chặn phòng ngự chỉ chớp và chỉ dùng được ở phe đang tấn công.",
+  "Dung hợp Hiệp sĩ của vua, Hiệp sĩ hộ vệ và Hiệp sĩ của hậu thành Hiệp sĩ huyền bí có cảnh 3 lá: lá trên tay ở 3 giờ, hai lá trên sân ở trên trái và dưới trái, cùng đập vào nhau, bật ra rồi xoáy vào tâm theo vòng tròn đứng.",
 ];
 
 function remarkOf(notes: string[]) {

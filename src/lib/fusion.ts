@@ -25,3 +25,10 @@ export function findKnightFusion(hand: string, host: string, fieldIds: string[])
   if (!KNIGHTS.every((id) => present.has(id))) return null;
   return { result: "hiep-si-huyen-bi" };
 }
+
+/** The third card of a three-knight fusion: the knight on the field that is neither the hand card nor the host. */
+export function thirdKnight<T extends { uid: string; cardId: string }>(hand: string, host: T, field: Array<T | null>): T | null {
+  const ids = field.filter((mon): mon is T => Boolean(mon)).map((mon) => mon.cardId);
+  if (!findKnightFusion(hand, host.cardId, ids)) return null;
+  return field.find((mon): mon is T => Boolean(mon && mon.uid !== host.uid && KNIGHTS.includes(mon.cardId) && mon.cardId !== hand && mon.cardId !== host.cardId)) ?? null;
+}
