@@ -10082,7 +10082,7 @@ button.watch-back {
    The notice board hides while the line is up; the notice of the moment shows as a small line by the newest orb. */
 .banner.is-quiet { visibility: hidden; }
 .rx { position: absolute; inset: 0; z-index: 9; pointer-events: none; }
-.rx.is-closing { animation: rx-out 0.8s ease 0.2s forwards; }
+.rx.is-closing { animation: rx-out 0.5s ease var(--close, 1.15s) forwards; }
 @keyframes rx-out { to { opacity: 0; } }
 @keyframes rx-in { from { opacity: 0; } }
 .rx-veil {
@@ -10232,4 +10232,75 @@ button.watch-back {
   0% { opacity: 0; transform: translate(-50%, calc(-100% - 6cqw)); }
   10%, 80% { opacity: 1; transform: translate(-50%, calc(-100% - 7.5cqw)); }
   100% { opacity: 0; transform: translate(-50%, calc(-100% - 7.5cqw)); }
+}
+
+/* Thanh phản ứng, bước 2: as the wait ends its orb fires (a flash, a bolt of light down each stream, a burst where it
+   lands) or fizzles (shakes, greys and shrinks, its streams fade) when an answer stopped it. Answers fire as they
+   land. A spell or a skill landing on the line first shows big at the left, then flies into its orb. */
+.rx-orb.is-fire { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fire 0.5s ease-out calc(0.08s + var(--late, 0s)) forwards; }
+.rx-orb.is-fire > * { animation: rx-settle 1.2s ease calc(0.6s + var(--late, 0s)) both; }
+.rx-orb.is-fizzle { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fizzle 0.7s ease-in calc(0.1s + var(--late, 0s)) forwards; }
+.rx-orb.is-fizzle > * { animation: none; }
+@keyframes rx-fire {
+  0% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
+  30% { filter: brightness(2.2) drop-shadow(0 0 3cqw #9fe9ff); transform: translate(-50%, -50%) scale(1.3); }
+  100% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes rx-fizzle {
+  0% { transform: translate(-50%, -50%); }
+  15% { transform: translate(calc(-50% - 1.2cqw), -50%) rotate(-8deg); }
+  30% { transform: translate(calc(-50% + 1.2cqw), -50%) rotate(8deg); }
+  45% { opacity: 1; filter: none; transform: translate(-50%, -50%); }
+  100% { opacity: 0.45; filter: grayscale(1) brightness(0.55); transform: translate(-50%, -50%) scale(0.72); }
+}
+.rx-stream.is-fire { animation: rx-flow-settle 1.5s ease calc(0.6s + var(--late, 0s)) both; }
+.rx-stream.is-fizzle { animation: rx-fizzle-flow 0.6s ease var(--late, 0s) both; }
+@keyframes rx-fizzle-flow { to { opacity: 0.08; } }
+.rx-stream .rx-bolt {
+  fill: none;
+  stroke: #bff0ff;
+  stroke-width: 6.5;
+  stroke-linecap: round;
+  /* One dash with a gap longer than the stream (pathLength 100), so no second bolt follows it in; it starts and ends
+     just off the stream, where its round caps cannot leave a dot. */
+  stroke-dasharray: 24 176;
+  stroke-dashoffset: 25;
+  opacity: 0;
+  animation: rx-bolt 0.4s ease-in calc(0.1s + var(--late, 0s)) forwards;
+}
+.rx-stream .rx-bolt.is-core { stroke: #ffffff; stroke-width: 2.6; }
+@keyframes rx-bolt {
+  0% { opacity: 1; stroke-dashoffset: 25; }
+  100% { opacity: 1; stroke-dashoffset: -101; }
+}
+.rx-stream .rx-hit { opacity: 0; transform-box: fill-box; transform-origin: center; animation: rx-hit 0.55s ease-out calc(0.44s + var(--late, 0s)) forwards; }
+@keyframes rx-hit {
+  0% { opacity: 1; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+.rx-show {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2cqw rgb(80 180 255 / 0.9)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.6));
+  transform: translateY(-50%);
+  animation: rx-show 1.9s cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+@keyframes rx-show {
+  0% { opacity: 0; transform: translate(-30%, -50%) scale(0.6); }
+  14% { opacity: 1; transform: translate(0, -50%) scale(1); }
+  72% { opacity: 1; transform: translate(0, -50%) scale(1); }
+  100% { opacity: 0.2; transform: translate(calc(var(--dx) * 1cqw), -50%) scale(var(--shrink)); }
+}
+.rx-show-name {
+  display: block;
+  margin-top: 1cqw;
+  padding: 0.6cqw 1.5cqw;
+  border: 1px solid rgb(241 212 138 / 0.7);
+  border-radius: 1.2cqw;
+  background: linear-gradient(180deg, #2a1d0f, #120c06);
+  color: #ffd98a;
+  font: 700 3.6cqw/1.15 "Barlow Condensed", system-ui, sans-serif;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
 }

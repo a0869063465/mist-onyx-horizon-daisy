@@ -621,6 +621,35 @@ export function playPack(cue: PackCue, delay = 0) {
 }
 
 /**
+ * Thanh phản ứng sounds (made here, nothing taken from the reference video): a soft rising air with a small chime as
+ * a spell or a skill lands on the line, a bright swell as an orb fires at its target, and a falling puff as an answer
+ * stops one. Quiet, under the effects volume, so they sit under the spells' own sounds.
+ */
+export type LineCue = "orb" | "fire" | "fizzle";
+
+export function playLine(cue: LineCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = fxLoud();
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "orb") {
+      noiseBurst(audio, t, 0.3, 700, 3000, 0.07 * vol);
+      bell(audio, t + 0.06, 1318.5, 0.55, 0.022 * vol);
+      bell(audio, t + 0.11, 1975.5, 0.45, 0.016 * vol);
+    } else if (cue === "fire") {
+      noiseBurst(audio, t, 0.32, 500, 5200, 0.11 * vol);
+      pad(audio, t, 392, 0.45, 0.022 * vol);
+      bell(audio, t + 0.04, 2093, 0.5, 0.026 * vol);
+    } else {
+      noiseBurst(audio, t, 0.34, 2600, 420, 0.07 * vol);
+      softPop(audio, t + 0.02, 311.1, 0.2, 0.05 * vol);
+    }
+  });
+}
+
+/**
  * A soft wooden "pop" for buttons: one rounded sine note that dips a little and fades fast, through a low-pass so
  * nothing hisses or rings (owner, 19/10: taps should stay quiet under the music, no rustle, no beeping).
  */

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
@@ -43,6 +43,7 @@ import {
   parleyPicker,
   canSpirit,
   spiritCover,
+  castName,
   castSpell,
   concede,
   createDuel,
@@ -1419,6 +1420,8 @@ function PlayPage() {
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
   const [burst, setBurst] = useState<Burst | null>(null);
   const [chain, setChain] = useState<ChainOrb[]>([]);
+  /** The slot of each monster the reaction line points at, so a stream still lands where one fell as its orb fired. */
+  const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
@@ -1727,10 +1730,12 @@ function PlayPage() {
     setLaserHp(Object.fromEntries(drops.map((drop) => [drop.key, drop.from])));
   }, [duel]);
 
-  // The reaction line closes a moment after the wait is over, with every orb dimmed.
+  // The reaction line fades out a moment after the wait is over and then reports it (onClosed); this is the backstop
+  // in case the fade never runs (the line hidden in Tuỳ chỉnh).
   useEffect(() => {
+    if (chain.length === 0) lineSeats.current.clear();
     if (duel?.step === "respond" || chain.length === 0) return;
-    const timer = window.setTimeout(() => setChain((list) => (list.every((orb) => orb.done) ? [] : list)), 1000);
+    const timer = window.setTimeout(() => setChain((list) => (list.every((orb) => orb.done) ? [] : list)), 5000);
     return () => window.clearTimeout(timer);
   }, [duel?.step, chain]);
 
@@ -3382,15 +3387,18 @@ function PlayPage() {
       const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
       return { x: mark.x, y: mark.y };
     }
+    let seat: { side: Side; index: number } | null = null;
     for (const side of [0, 1] as const) {
       const index = duel.players[side].field.findIndex((mon) => mon?.uid === end.uid);
-      if (index < 0) continue;
-      const box = SLOT_BOX[screenSide(side, viewer)][index];
-      // The attacker stands where it lunged to, so its stream leaves from the card itself.
-      const lunge = attackShift(duel, end.uid, viewer);
-      return { x: box.x + box.w / 2 + (lunge ? (lunge.x * box.w) / 100 : 0), y: box.y + box.h / 2 + (lunge ? (lunge.y * box.h) / 100 : 0), w: box.w, h: box.h };
+      if (index >= 0) seat = { side, index };
     }
-    return null;
+    if (seat) lineSeats.current.set(end.uid, seat);
+    else seat = lineSeats.current.get(end.uid) ?? null;
+    if (!seat) return null;
+    const box = SLOT_BOX[screenSide(seat.side, viewer)][seat.index];
+    // The attacker stands where it lunged to, so its stream leaves from the card itself.
+    const lunge = attackShift(duel, end.uid, viewer);
+    return { x: box.x + box.w / 2 + (lunge ? (lunge.x * box.w) / 100 : 0), y: box.y + box.h / 2 + (lunge ? (lunge.y * box.h) / 100 : 0), w: box.w, h: box.h };
   };
   const orbLook = (orb: ChainOrb): OrbLook => {
     if (orb.kind === "spell") return { src: orb.spell ? spellSrc(orb.spell) : null, dark: false, attack: false, tone: spellKind(orb.spell ?? "").tone };
@@ -3413,6 +3421,23 @@ function PlayPage() {
       return;
     }
     setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid });
+  };
+  // The big card as a spell or a skill lands on the line: the spell, or the monster with its skill's name. A monster
+  // hidden by Biển sâu or under a hat shows none.
+  const orbCard = (orb: ChainOrb): ReactNode => {
+    if (orb.kind === "spell") return orb.spell ? <CardFace spellId={orb.spell} /> : null;
+    const mon = orb.kind === "skill" && orb.source ? fieldMon(duel, orb.source) : null;
+    if (!mon || seaVeiled(duel, viewer, mon.uid) || (orb.side !== viewer && duel.players[orb.side].hats && mon.cardId !== "mu")) return null;
+    const card = monsterCard(mon.cardId);
+    if (!card) return null;
+    const stats = visibleStats(mon, duel.players[orb.side].field);
+    const name = orb.skill === "lash" ? chipLabel(mon.cardId, "lash") : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
+    return (
+      <>
+        <CardFace monster={card} level={mon.level ?? 1} live={{ name: fieldName(mon), atk: stats.atk, def: stats.def, mdef: stats.mdef, hp: mon.hp }} />
+        {name ? <b className="rx-show-name">{tr(name)}</b> : null}
+      </>
+    );
   };
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   const lineText = pinnedLine ?? toast;
@@ -3663,7 +3688,9 @@ function PlayPage() {
             note={lineText ? <NoticeText text={veilNotice(spoken(lineText, viewer), duel, viewer)} /> : null}
             noteKey={`${pinnedId ?? ""}:${lineText}`}
             notePinned={pinnedLine !== null}
+            cardOf={orbCard}
             onOrb={openOrb}
+            onClosed={() => setChain((list) => (list.every((orb) => orb.done) ? [] : list))}
           />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (

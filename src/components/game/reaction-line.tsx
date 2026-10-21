@@ -1,7 +1,8 @@
-import { useId, type CSSProperties, type ReactNode } from "react";
+import { useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Glyph } from "@/components/game/monster-sheet";
 import { Medal } from "@/components/game/medal";
 import type { ChainOrb, FlowEnd } from "@/lib/reaction-chain";
+import { playLine } from "@/lib/sfx";
 
 /** A point on the board in % of its width and height; a card also gives its size, so a stream can meet its edge. */
 export type BoardSpot = { x: number; y: number; w?: number; h?: number };
@@ -14,6 +15,16 @@ const VY = 1.6;
 /** Orb size in % of the board's width. */
 const ORB = 11.5;
 const GAP = 17;
+/** The big card shown at the left as a spell or a skill lands on the line: left edge and width, in % of the width. */
+const SHOW_LEFT = 3;
+const SHOW_W = 30;
+/** The big card has flown into its orb this long after it shows (seconds). What ends meanwhile waits for it: an orb
+ *  fires then, and what an answer stopped fizzles a moment later, as the answer's bolt lands on it. */
+const SHOW_LAND = 1.82;
+const FIZZLE_AFTER = 0.35;
+/** The line fades out this long after the last orb fired or fizzled. */
+const FIRE_TAIL = 1.15;
+const FIZZLE_TAIL = 0.8;
 
 type Pt = { x: number; y: number };
 type Bezier = [Pt, Pt, Pt, Pt];
@@ -84,13 +95,14 @@ function centre(c: Bezier): string {
 }
 
 /** One soft flowing stream in the reaction line's light blue, as in Runeterra: a blurred halo, a fuller body that
- *  brightens toward where it lands, a bright thread, lights running along it and a glow where it lands. */
+ *  brightens toward where it lands, a bright thread, lights running along it and a glow where it lands. When its
+ *  orb fires, a bolt of light runs down it and bursts where it lands; when its orb fizzles, it fades out. */
 type StreamFx = { soft: string; mid: string; run: string; land: string };
 
-function Stream({ id, c, done, fx }: { id: string; c: Bezier; done: boolean; fx: StreamFx }) {
+function Stream({ id, c, done, end, late, fx }: { id: string; c: Bezier; done: boolean; end: ChainOrb["end"]; late: string; fx: StreamFx }) {
   const line = centre(c);
   return (
-    <g className={`rx-stream${done ? " is-done" : ""}`}>
+    <g className={`rx-stream${done ? " is-done" : ""}${end ? ` is-${end}` : ""}`} style={{ "--late": late } as CSSProperties}>
       <defs>
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1={c[0].x} y1={c[0].y} x2={c[3].x} y2={c[3].y}>
           <stop offset="0" stopColor="#1f9bff" stopOpacity="0.9" />
@@ -107,6 +119,13 @@ function Stream({ id, c, done, fx }: { id: string; c: Bezier; done: boolean; fx:
       <path className="rx-run is-late" d={line} pathLength={100} filter={fx.run} />
       <circle className="rx-rise" cx={c[0].x.toFixed(2)} cy={c[0].y.toFixed(2)} r="2" fill={fx.land} />
       <circle className="rx-land" cx={c[3].x.toFixed(2)} cy={c[3].y.toFixed(2)} r="4" fill={fx.land} />
+      {end === "fire" ? (
+        <>
+          <path className="rx-bolt" d={line} pathLength={100} filter={fx.soft} />
+          <path className="rx-bolt is-core" d={line} pathLength={100} filter={fx.run} />
+          <circle className="rx-hit" cx={c[3].x.toFixed(2)} cy={c[3].y.toFixed(2)} r="7" fill={fx.land} />
+        </>
+      ) : null}
     </g>
   );
 }
@@ -129,7 +148,9 @@ export function ReactionLine({
   note,
   noteKey,
   notePinned = false,
+  cardOf,
   onOrb,
+  onClosed,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
@@ -142,7 +163,12 @@ export function ReactionLine({
   noteKey: string;
   /** A notice picked from the history stays; the others fade. */
   notePinned?: boolean;
+  /** The big card for an orb (a spell, or a monster with its skill's name); null shows none (an attack, a hidden
+   *  monster). */
+  cardOf: (orb: ChainOrb) => ReactNode;
   onOrb: (orb: ChainOrb) => void;
+  /** The line has faded out after the wait ended. */
+  onClosed: () => void;
 }) {
   const uid = `rx${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const span = x1 - x0 - ORB * 1.2;
@@ -152,9 +178,50 @@ export function ReactionLine({
   const newest = orbs.length ? at.get(orbs[orbs.length - 1].id)! : { x: x1 - ORB * 0.6, y: lineY };
   const noteLeft = Math.min(Math.max(newest.x, x0 + 18), x1 - 18);
   const fx: StreamFx = { soft: `url(#${uid}-soft)`, mid: `url(#${uid}-mid)`, run: `url(#${uid}-run)`, land: `url(#${uid}-land)` };
+  // A spell or a skill landing on the line shows big at the left for a moment (chủ game 21/10, câu 5), then flies
+  // into its orb; what ends meanwhile waits for it (`late`). Each orb sounds once as it lands, and once as it fires
+  // or fizzles. Worked out before the screen paints, so nothing flashes without its delay first.
+  const [show, setShow] = useState<string | null>(null);
+  const [late, setLate] = useState<ReadonlyMap<string, number>>(() => new Map());
+  const heard = useRef(new Map<string, ChainOrb["end"]>());
+  const showing = useRef<{ id: string; at: number } | null>(null);
+  useLayoutEffect(() => {
+    const now = performance.now() / 1000;
+    let landed: ChainOrb | null = null;
+    const ended: ChainOrb[] = [];
+    for (const orb of orbs) {
+      const known = heard.current.has(orb.id);
+      const was = heard.current.get(orb.id) ?? null;
+      heard.current.set(orb.id, orb.end);
+      if (!known) {
+        landed = orb;
+        if (orb.kind !== "attack") playLine("orb");
+      }
+      if (orb.end && orb.end !== was) ended.push(orb);
+    }
+    if (landed && cardOf(landed)) {
+      showing.current = { id: landed.id, at: now };
+      setShow(landed.id);
+    }
+    const land = showing.current ? Math.max(0, showing.current.at + SHOW_LAND - now) : 0;
+    const delays = ended.map((orb) => [orb.id, land > 0 ? land + (orb.end === "fizzle" ? FIZZLE_AFTER : 0) : 0] as const);
+    if (land > 0 && delays.length) setLate((map) => new Map([...map, ...delays]));
+    for (const [index, orb] of ended.entries()) playLine(orb.end!, delays[index][1] + (orb.end === "fire" ? 0.1 : 0.08));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orbs]);
+  const shown = show ? orbs.find((orb) => orb.id === show) ?? null : null;
+  const showAt = shown ? at.get(shown.id) : null;
+  const lateOf = (orb: ChainOrb) => `${(late.get(orb.id) ?? 0).toFixed(2)}s`;
+  const close = Math.max(FIRE_TAIL, ...orbs.map((orb) => (late.get(orb.id) ?? 0) + (orb.end === "fizzle" ? FIZZLE_TAIL : FIRE_TAIL)));
 
   return (
-    <div className={`rx${closing ? " is-closing" : ""}`}>
+    <div
+      className={`rx${closing ? " is-closing" : ""}`}
+      style={{ "--close": `${close.toFixed(2)}s` } as CSSProperties}
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget && event.animationName === "rx-out") onClosed();
+      }}
+    >
       <div className="rx-veil" style={{ "--rx-y": `${lineY}%` } as CSSProperties} />
       <div className="rx-line" style={{ left: `${x0}%`, width: `${x1 - x0}%`, top: `${lineY}%` }} />
       <svg className="rx-flows" viewBox="0 0 90 160" preserveAspectRatio="none" aria-hidden="true">
@@ -187,7 +254,7 @@ export function ReactionLine({
                 const down = spot.y > start.y;
                 const from = arch ? start : edgeOf(start, down);
                 const to = arch ? spot : edgeOf(spot, !down);
-                return <Stream key={`${orb.id}-${s}-${index}`} id={`${uid}-${orb.id}-${s}-${index}`} c={bezierOf(from, to, arch)} done={orb.done} fx={fx} />;
+                return <Stream key={`${orb.id}-${s}-${index}`} id={`${uid}-${orb.id}-${s}-${index}`} c={bezierOf(from, to, arch)} done={orb.done} end={orb.end} late={lateOf(orb)} fx={fx} />;
               }),
             );
           })}
@@ -200,8 +267,8 @@ export function ReactionLine({
           <button
             key={orb.id}
             type="button"
-            className={`rx-orb is-${look.attack ? "attack" : orb.kind}${orb.done ? " is-done" : " is-live"}`}
-            style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${ORB}cqw`, height: `${ORB}cqw`, "--tone": look.tone } as CSSProperties}
+            className={`rx-orb is-${look.attack ? "attack" : orb.kind}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}`}
+            style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${ORB}cqw`, height: `${ORB}cqw`, "--tone": look.tone, "--late": lateOf(orb) } as CSSProperties}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation();
@@ -224,6 +291,20 @@ export function ReactionLine({
           </button>
         );
       })}
+      {shown && showAt ? (
+        <div
+          key={shown.id}
+          className="rx-show"
+          style={{ left: `${SHOW_LEFT}%`, top: `${lineY}%`, width: `${SHOW_W}cqw`, "--dx": showAt.x - (SHOW_LEFT + SHOW_W / 2), "--shrink": ORB / SHOW_W } as CSSProperties}
+          onAnimationEnd={(event) => {
+            if (event.target !== event.currentTarget) return;
+            showing.current = null;
+            setShow(null);
+          }}
+        >
+          {cardOf(shown)}
+        </div>
+      ) : null}
       {note ? (
         <p key={noteKey} className={`rx-note${notePinned ? " is-pinned" : ""}`} style={{ left: `${noteLeft}%`, top: `${lineY}%` }}>
           {note}

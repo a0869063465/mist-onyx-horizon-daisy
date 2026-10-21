@@ -4,8 +4,9 @@ import type { Duel, Pending, Side } from "./duel.ts";
  * The reaction line's orbs (thanh phản ứng kiểu Runeterra, chủ game 21/10): one orb for what is waiting (an attack,
  * a skill, a slow spell) and one for each spell played to answer it. The rules do not change; the chain only
  * follows the duel from one state to the next. An orb points at what it acts on: a monster, a player, or another
- * orb (Hấp thụ ma pháp flows into the spell it swallows); an attack flows from the attacker to what it hits. Only the orb of what is still waiting stays lit; an orb
- * that has done its work dims and stays on the line until the line closes.
+ * orb (Hấp thụ ma pháp flows into the spell it swallows); an attack flows from the attacker to what it hits. Only
+ * the orb of what is still waiting stays lit; an orb that has done its work dims and stays on the line until the
+ * line closes. When the wait ends, its orb fires if both sides let it through, or fizzles if an answer stopped it.
  */
 export type FlowEnd = { uid: string } | { face: Side } | { orb: string };
 
@@ -22,9 +23,13 @@ export type ChainOrb = {
   /** Flows drawn into the orb (Phản nguyền takes the curse from an ally) and out of it. */
   from: FlowEnd[];
   to: FlowEnd[];
+  /** The skill's index for a skill orb ("lash" for Roi điện), to name it on the big card. */
+  skill: number | "lash" | null;
   /** The waiting action this orb stands for, without its target, so a block or a swap only turns its flow. */
   base: string | null;
   done: boolean;
+  /** How it ended: it fired at what it acts on, or an answer stopped it. Answers fire as they are played. */
+  end: "fire" | "fizzle" | null;
 };
 
 let orbSeq = 1;
@@ -107,7 +112,7 @@ function pendingOrb(duel: Duel): ChainOrb | null {
   const flows = pendingFlows(duel);
   const base = pendingBase(pending);
   if (pending.kind === "spell") {
-    return { id: `orb${orbSeq++}`, kind: "spell", side: pending.owner, source: pending.source ?? null, cardId: cardOfUid(duel, pending.source), spell: pending.cardId, ...flows, base, done: false };
+    return { id: `orb${orbSeq++}`, kind: "spell", side: pending.owner, source: pending.source ?? null, cardId: cardOfUid(duel, pending.source), spell: pending.cardId, ...flows, skill: null, base, done: false, end: null };
   }
   const source = pending.kind === "lash" ? pending.bird : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : pending.attacker;
   const swing = pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw";
@@ -120,8 +125,10 @@ function pendingOrb(duel: Duel): ChainOrb | null {
     cardId: cardOfUid(duel, source),
     spell: null,
     ...flows,
+    skill: pending.kind === "lash" ? "lash" : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.index : null,
     base,
     done: false,
+    end: null,
   };
 }
 
@@ -155,7 +162,7 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     default:
       to = target ? [target] : into;
   }
-  return { id: `orb${orbSeq++}`, kind: "spell", side, source: null, cardId: null, spell, from: [], to, base: null, done: true };
+  return { id: `orb${orbSeq++}`, kind: "spell", side, source: null, cardId: null, spell, from: [], to, skill: null, base: null, done: true, end: "fire" };
 }
 
 /** Spells that left a hand between two states, with their owner. */
@@ -214,5 +221,12 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[]): Cha
       if (orb) list.push(orb);
     }
   }
-  return list.map((orb) => ({ ...orb, done: !open || orb.base === null || orb.base !== base }));
+  // What was waiting and is no longer: it went through if both sides passed, else an answer stopped it.
+  const seen = new Set((prev.events ?? []).map((row) => row.id));
+  const passed = (next.events ?? []).some((row) => !seen.has(row.id) && row.kind === "pass");
+  return list.map((orb) => {
+    const done = !open || orb.base === null || orb.base !== base;
+    if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
+    return { ...orb, done, end: orb.end ?? (passed ? "fire" : "fizzle") };
+  });
 }

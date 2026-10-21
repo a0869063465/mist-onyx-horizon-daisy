@@ -638,6 +638,9 @@ export const PENDING_NOTES: string[] = [
   "Thanh phản ứng mới: vạch sáng chạy ngang giữa hai sân. Mỗi đòn đánh, skill hay phép đang chờ là một viên tròn có đường cong chỉ tới mục tiêu. Phép đáp trả nằm bên trái và chỉ vào thứ nó tác động, ví dụ Hấp thụ ma pháp chỉ vào Sợi xích địa ngục. Viên đã xong thì mờ đi. Bấm vào viên để xem lá.",
   "Lúc thanh phản ứng hiện, bảng thông báo ẩn đi. Thông báo hiện thành dòng nhỏ cạnh vạch rồi mờ dần, vẫn ghi trong lịch sử thông báo.",
   "Thanh phản ứng: đường chỉ mục tiêu vẽ lại thành dòng sáng xanh lơ mềm, mờ, có ánh sáng chạy dọc và loé chỗ chạm, không còn nét đứt. Đòn đánh có dòng chạy từ quái đánh tới quái bị đánh (hoặc tới máu người chơi), viên đòn đánh là bàn tay cầm kiếm. Skill và phép chỉ có dòng từ viên tới mục tiêu.",
+  "Thanh phản ứng: phép hoặc skill vừa dùng hiện lá to bên trái khoảng 1,5 giây rồi thu nhỏ bay vào viên của nó. Skill hiện lá quái kèm tên skill. Quái ẩn mình không hiện lá.",
+  "Thanh phản ứng: khi hết chờ, viên được cho qua loé sáng rồi bắn một tia sáng theo dòng tới mục tiêu; viên bị chặn rung lên rồi xám và nhỏ lại, dòng của nó tắt dần. Ví dụ Hấp thụ ma pháp bắn vào Sợi xích địa ngục, Sợi xích địa ngục xám lại. Quái bị hạ thì tia vẫn tới đúng ô của quái đó.",
+  "Thanh phản ứng có tiếng nhỏ khi viên hiện ra, khi viên bắn và khi viên bị chặn.",
 ];
 
 function remarkOf(notes: string[]) {

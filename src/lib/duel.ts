@@ -5054,7 +5054,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   return beginHold(state, { kind: "beam", caster: uid, target: aimed, index: skillIndex, extra }, `${cardOf(mon).name} dùng ${skill}${onto}.`);
 }
 
-function castName(cardId: string, index: number): string {
+export function castName(cardId: string, index: number): string {
   if (cardId === "kiem-si-lua-thieng") {
     if (index === 8) return "Đòn thêm";
     if (index === 9) return "Hoả thần long";
