@@ -12,6 +12,17 @@ export const SANCTUARY_WARRIORS: string[] = [];
 /** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
 export const SEA_KINDS = ["trai-tim-hai-long", "sua-hut-ma-phap", "kraken", "con-thinh-no-cua-hai-vuong"];
 
+/**
+ * Spells of an environment besides its own card (owner, 21/10: later spells of Núi and the others go here), for the
+ * environment filter of Kho bài. None yet.
+ */
+export const ENV_SPELLS: Record<string, string[]> = {};
+
+/** A spell shown when one of these environments is picked: the environment card itself, or one of its spells. */
+export function spellOfEnvs(id: string, envs: string[]): boolean {
+  return envs.some((env) => id === env || (ENV_SPELLS[env] ?? []).includes(id));
+}
+
 export const ENV_KINDS: Record<string, string[]> = {
   // Biển sâu: quái biển
   "bien-sau": SEA_KINDS,

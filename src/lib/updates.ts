@@ -630,6 +630,7 @@ export const PENDING_NOTES: string[] = [
   "Bộ sưu tập: bảng mô tả lá có nhãn độ hiếm N, SR, UR ở góc phải trên của lá.",
   "Bộ sưu tập: lá có từ mở gói hoặc đổi sao hiện ô Giám định trong bảng mô tả (chưa dùng được). Lá chưa có vẫn hiện ô Chưa có lá này, trong album kèm nút Đổi.",
   "Album: lá có set nằm ở album khác (Kỵ sĩ bóng tối, Lời nguyền của rồng, Rồng con, Phù thuỷ thời gian) giờ chỉ có khung vàng như set, không tên; đủ set thì khung sáng lên. Bấm vào vẫn mở bảng set.",
+  "Kho bài: chọn một môi trường thì chỉ hiện quái và phép của môi trường đó (lá môi trường đó, và các phép của nó thêm sau này), các phép khác ẩn đi.",
 ];
 
 function remarkOf(notes: string[]) {
