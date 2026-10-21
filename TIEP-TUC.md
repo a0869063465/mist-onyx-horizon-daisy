@@ -68,7 +68,15 @@ Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đ�
 
 - Chủ game gửi video Collector's Files của Yu-Gi-Oh Master Duel (Konami): danh sách bìa album → mở album như sách → trang 3×3 lá (chưa có thì xám) → lá mới loé sáng → bảng đếm x/y → bấm lá → đổi điểm lấy lá (vòng sáng xoay rồi lá hiện ra). Tự dựng lại, KHÔNG lấy hình/âm của Konami; màn dọc.
 - Yêu cầu: Kho bài (như Chỉnh sửa bộ bài, giao diện mới; trên cùng icon lọc + icon môi trường (bấm xổ bảng chọn môi trường, bấm lại thu), bảng lọc không còn môi trường, đầu bảng có icon quái + phép bật tắt (cả 2: thêm lọc nhóm phép; tắt quái: chỉ lọc phép), lọc độ hiếm, icon sắp xếp: độ hiếm tăng / bấm lại giảm, thông thường = quái theo sao, phép theo nhóm). Album: theo môi trường, mỗi môi trường 60 số No (theo sao), "đầu tiên là rồng, đến bóng tối, ... cuối cùng là lửa và vương quốc (bổ sung sau)", lá liên quan số sát nhau, phép từ No.601, lá trong album không chỉ số + có No, nhóm nhỏ trong album trình bày có liên kết (ví dụ 3 hiệp sĩ). Đổi sao lấy lá: N 7, SR 50, UR 140. Gói còn 10 sao.
-- Đã gửi chủ game 21 câu hỏi (thứ tự môi trường, "lửa và vương quốc" là 1 hay 2 môi trường, dạng tiến hoá/dung hợp trong album, 2 nhóm khác môi trường: Rồng con + Phù thuỷ thời gian, Kỵ sĩ bóng tối + Lời nguyền của rồng, album Phép, lọc, sắp xếp, giá 10 gói, nhà phát hành, làm 3 đợt). Chờ trả lời rồi mới làm.
+- Đã gửi chủ game 21 câu hỏi. Chủ game trả lời (21/10):
+  - C1 thẻ Kho bài đặt trước. C2 khối số: Núi 001–030 rồng, 031–060 chim; rồi Bóng tối, Thảo nguyên, Rừng (côn trùng + thú), Đất đá (đá, khủng long, xác sống), ... Lửa = Núi dung nham, Vương quốc = môi trường mới; "bạn tự chia" phần còn lại.
+  - C3 trong khối xếp sao CAO → THẤP, set nằm cạnh lá nhiều sao nhất của set; lá ngoài bộ (dạng tiến hoá/dung hợp) KHÔNG vào album, không tính. Số No tạm thời vẫn đổi (chủ game sẽ thêm nhiều lá). C4: như C3.
+  - C5 lá thuộc nhiều set hoặc set khác album: có hiệu ứng đặc biệt, bấm mở khung (Claude thiết kế) hiện lá đó + các set, có tên set, lá còn thiếu in mờ, góc trên phải set ghi sao thưởng (cũng in mờ).
+  - C6 album Phép riêng theo nhóm phép: OK. C7 thưởng hoàn thành set: thử set hiệp sĩ 10 sao trước.
+  - C8 Chỉnh sửa bộ bài sau này sẽ không hiện lá chưa có và lá ngoài bộ không liên quan, NHƯNG tạm giữ nguyên, chủ game thấy Kho bài đẹp mới chuyển. Kho bài: lá chưa có in mờ, KHÔNG khoá trên lưới; chỉ khi mở thẻ mới khoá (để sau này bấm Giám định). C11: khoá dành cho Giám định, lá ngoài bộ chỉ in mờ.
+  - C9 môi trường chọn nhiều, chỉ lọc quái: đúng. C10 tắt cả 2 icon quái/phép: Claude tự quyết. C12 sắp xếp, C13 danh sách album, C15 viền nối set, C16 lá mới loé sáng + bảng đếm, C17 bấm lá trong album có nút Đổi: OK. C14 album mỗi hàng 4 lá.
+  - C18 đổi sao OK, lá MÔI TRƯỜNG là SR. C19 gói 10 sao, 10 gói 100: OK. C20 nhà phát hành thấy đúng lá đã có: OK. C21 làm 3 đợt, mỗi đợt gửi video: OK.
+- Đang hỏi lại lần cuối (chưa làm): chia nhóm con (Hoa ăn thịt người, Khổng lồ 1 mắt), thứ tự Biển sâu / Cứ địa máy móc / Thánh địa thiên sứ, tên + thưởng 4 set (đặt theo lá mà set tạo thành), nhận thưởng bằng nút hay tự cộng, sắp xếp Thông thường cao→thấp hay thấp→cao, album 4×4, lá môi trường SR cả trong gói.
 
 ## Đã xong (21/10): sửa lỗi lá phép phản ứng (chủ game báo), dung hợp 3 lá
 
