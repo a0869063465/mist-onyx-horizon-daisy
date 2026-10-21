@@ -4,12 +4,14 @@ import { spellKindRank } from "@/lib/spell-kinds";
 
 /**
  * Cửa hàng (owner, 19/10): packs bought with stars. A pack holds 3 different cards (owner: 3, not 5).
- * Tiers: Normal (blue) = spells of 0 mana and 1–2 star monsters, SR (gold) = spells of 1 mana and 3 star monsters,
- * UR (rainbow) = 4 star monsters and spells of 2 mana or more. That is the usual rule; the rate panel can move a card.
+ * Tiers: Normal (blue) = spells of 0 mana and 1–2 star monsters, SR (gold) = spells of 1 mana, environments
+ * (owner, 21/10) and 3 star monsters, UR (rainbow) = 4 star monsters and spells of 2 mana or more. That is the usual
+ * rule; the rate panel can move a card.
  * Each card drawn is first a tier, by the tier's percent (only those 3 numbers are tuned; owner, 19/10), then any card
- * of that tier, all with the same chance. A card drawn again refunds 1 star. 10 packs cost 150 stars and hold at
- * least one UR. For now there is one common pack for testing (9 packs later), with every card a deck can hold except
- * 5-star monsters, environments included. Stars, owned cards and the rates the publisher tunes are kept on this phone.
+ * of that tier, all with the same chance. A card drawn again refunds 1 star. A pack costs 10 stars, 10 packs 100
+ * (owner, 21/10), and 10 packs hold at least one UR. For now there is one common pack for testing (9 packs later),
+ * with every card a deck can hold except 5-star monsters, environments included. Stars, owned cards and the rates
+ * the publisher tunes are kept on this phone.
  */
 export type Tier = "N" | "SR" | "UR";
 export type PackKind = "monster" | "spell";
@@ -21,9 +23,9 @@ export type OpenedPack = { pulls: Pull[]; best: Tier };
 export type Purchase = { packs: OpenedPack[]; spent: number; refund: number; fresh: number };
 
 export const PACK_SIZE = 3;
-export const PACK_PRICE = 15;
+export const PACK_PRICE = 10;
 export const BUNDLE_SIZE = 10;
-export const BUNDLE_PRICE = 150;
+export const BUNDLE_PRICE = 100;
 /** Highest first. */
 export const TIERS: Tier[] = ["UR", "SR", "N"];
 export const TIER_NAME: Record<Tier, string> = { N: "Normal", SR: "SR", UR: "UR" };
@@ -56,12 +58,13 @@ export function packPool(): PackEntry[] {
   return [...monsters, ...spells];
 }
 
-/** The usual tier: by stars for a monster, by mana for a spell. */
+/** The usual tier: by stars for a monster, by mana for a spell; an environment is SR (owner, 21/10). */
 export function naturalTier(entry: PackEntry): Tier {
   if (entry.kind === "monster") {
     const stars = monsterCard(entry.id)?.stars ?? 1;
     return stars >= 4 ? "UR" : stars === 3 ? "SR" : "N";
   }
+  if (spellCard(entry.id)?.env) return "SR";
   const gems = spellCard(entry.id)?.gems ?? 0;
   return gems >= 2 ? "UR" : gems === 1 ? "SR" : "N";
 }

@@ -609,6 +609,11 @@ export const PENDING_NOTES: string[] = [
   "Dung hợp Hiệp sĩ huyền bí: ba lá bay vào chỉ hiện hình quái trong khung vàng như Đổi hình nền, không tên, không chỉ số.",
   "Dung hợp Hiệp sĩ huyền bí: cuối vòng xoáy ba lá hút thẳng vào tâm, không còn quay vòng nhỏ quanh tâm nên hết rung giật.",
   "Dung hợp Kỵ sĩ cưỡi rồng và Rồng ác ma: hai lá bay vào chỉ hiện hình quái trong khung vàng, không tên, không chỉ số.",
+  "Mở Bộ sưu tập ở menu chính, gồm thẻ Kho bài và thẻ Album sưu tập (Album sưu tập có ở bản sau).",
+  "Kho bài: mọi lá trong game, 4 lá một hàng, góc trái trên mỗi lá có nhãn N, SR, UR. Lá chưa có in mờ, bấm vào xem được mô tả và hiện khoá. Dạng tiến hoá và dung hợp nằm cuối, in mờ.",
+  "Kho bài: ô tìm lá, nút môi trường (bấm xổ danh sách, chọn được nhiều môi trường, bấm lại thì thu vào; chỉ lọc quái), nút lọc (bật tắt quái và phép, loại quái, sao, nhóm phép, độ hiếm) và nút sắp xếp (Độ hiếm: N → SR → UR, bấm lại UR → SR → N; Thông thường: quái nhiều sao trước, rồi phép theo nhóm).",
+  "Cửa hàng: Gói chung còn 10 sao một gói, 10 gói 100 sao, vẫn chắc chắn có ít nhất 1 lá UR.",
+  "Lá môi trường Thảo nguyên, Đất đá, Núi, Rừng rậm, Bóng tối, Biển sâu, Cứ địa máy móc, Thánh địa thiên sứ, Núi dung nham thành bậc SR, cả khi mở gói.",
 ];
 
 function remarkOf(notes: string[]) {

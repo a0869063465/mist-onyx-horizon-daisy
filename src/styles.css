@@ -8845,3 +8845,385 @@ button.watch-back {
 .cc-dots i.on { background: #f4d27a; box-shadow: 0 0 6px #f4d27a; }
 /* A card already owned (drawn again): the whole card faded once turned, and on the results, tags included (owner, 19/10). */
 .po-card.is-owned.is-flipped, .po-res.is-owned { opacity: 0.55; filter: saturate(0.6); }
+
+/* ---- Bộ sưu tập (owner, 21/10): Kho bài and Album sưu tập, a newer look: glass bars on a deep blue night. ---- */
+.cv {
+  --cv-cond: "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif;
+  --cv-gold: #ffd76a;
+  --cv-line: rgba(160, 196, 255, 0.24);
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e8efff;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  background:
+    radial-gradient(110% 45% at 85% -5%, rgba(124, 92, 255, 0.38), transparent 62%),
+    radial-gradient(90% 40% at -10% 105%, rgba(30, 170, 255, 0.26), transparent 66%),
+    radial-gradient(60% 30% at 50% 40%, rgba(255, 210, 120, 0.05), transparent 70%),
+    linear-gradient(170deg, #0a1438 0%, #101a4a 45%, #0b0c2c 100%);
+}
+.cv button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.cv-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.9rem 0.6rem;
+}
+.cv-head h1 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--cv-cond);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #fff7d8 0%, #f3cc6a 55%, #b07c22 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.75));
+}
+.cv-back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 215, 106, 0.85);
+  background: radial-gradient(circle at 50% 30%, rgba(60, 80, 150, 0.9), rgba(8, 12, 36, 0.95));
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--cv-gold);
+  font-family: var(--cv-cond);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  text-decoration: none;
+}
+.cv-back:active { transform: scale(0.94); }
+.cv-wallet {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.85rem 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 90, 0.55);
+  background: linear-gradient(180deg, rgba(22, 28, 70, 0.92), rgba(8, 10, 30, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  font-family: var(--cv-cond);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.cv-wallet i { font-style: normal; color: var(--cv-gold); text-shadow: 0 0 8px rgba(255, 200, 60, 0.8); }
+
+/* Two tabs as one segmented bar; the open tab glows gold. */
+.cv-tabs {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+  margin: 0 0.9rem 0.55rem;
+  padding: 0.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--cv-line);
+  background: rgba(6, 10, 34, 0.55);
+  box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+.cv-tabs button {
+  height: 2.35rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: none;
+  font-family: var(--cv-cond);
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(214, 226, 255, 0.62);
+  transition: background 0.18s, color 0.18s;
+}
+.cv-tabs button.on {
+  color: #2a1a00;
+  background: linear-gradient(180deg, #fff1bf 0%, #f2c75c 55%, #c4902a 100%);
+  box-shadow: 0 3px 12px rgba(255, 196, 70, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.cv-soon { margin: 3rem 1.5rem; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.7); }
+
+.cv-vault { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.cv-tools { flex: none; display: flex; align-items: center; gap: 0.45rem; padding: 0 0.9rem 0.6rem; }
+.cv-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.6rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--cv-line);
+  background: rgba(4, 8, 30, 0.6);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.cv-search .glyph3d { flex: none; width: 1.15rem; height: 1.15rem; }
+.cv-search input { flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: 0; background: none; color: #f1f5ff; font: inherit; font-size: 0.92rem; }
+.cv-search input::placeholder { color: rgba(200, 214, 255, 0.5); }
+.cv-search-x { flex: none; border: 0; background: none; font-size: 0.9rem; opacity: 0.75; }
+.cv-tool {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--cv-line);
+  background: radial-gradient(circle at 50% 28%, rgba(84, 110, 200, 0.55), rgba(10, 16, 48, 0.9) 70%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+}
+.cv-tool:active { transform: scale(0.93); }
+.cv-tool .glyph3d { width: 1.45rem; height: 1.45rem; }
+.cv-tool.on { border-color: var(--cv-gold); box-shadow: 0 0 0 2px rgba(255, 215, 106, 0.25), 0 0 14px rgba(255, 200, 80, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.cv-tool-count {
+  position: absolute;
+  right: -0.2rem;
+  top: -0.25rem;
+  display: grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff0b0, #e6a92c);
+  color: #3a2400;
+  font-family: var(--cv-cond);
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.cv-sort-ico { width: 1.45rem; height: 1.45rem; fill: none; stroke: #eef3ff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
+
+/* The lists that drop down under the tools, over the cards. */
+.cv-drop {
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  top: 3.25rem;
+  z-index: 6;
+  max-height: min(66vh, 30rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0.8rem 0.8rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(170, 200, 255, 0.32);
+  background: linear-gradient(180deg, rgba(20, 30, 78, 0.94), rgba(8, 12, 40, 0.96));
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: cv-drop 0.2s ease-out both;
+}
+@keyframes cv-drop {
+  from { opacity: 0; transform: translateY(-0.5rem) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.cv-drop-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.45rem;
+  font-family: var(--cv-cond);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(214, 228, 255, 0.78);
+}
+.cv-drop-head::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(170, 200, 255, 0.45), transparent); }
+.cv-envs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.55rem; }
+.cv-env {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.3rem 0.3rem 0.4rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(170, 200, 255, 0.2);
+  background: rgba(4, 8, 30, 0.55);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.15;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.cv-env img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 0.55rem; filter: saturate(0.5) brightness(0.65); transition: filter 0.15s; }
+.cv-env.on { border-color: var(--cv-gold); box-shadow: 0 0 12px rgba(255, 200, 80, 0.45); color: #fff1c4; }
+.cv-env.on img { filter: none; }
+.cv-clear {
+  display: block;
+  margin: 0.8rem 0 0 auto;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 170, 150, 0.5);
+  background: rgba(60, 12, 20, 0.45);
+  color: #ffd5cc;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.cv-clear:disabled { opacity: 0.35; }
+
+/* Monsters and spells, each on or off, at the head of the filter. */
+.cv-show { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+.cv-show-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(170, 200, 255, 0.22);
+  background: rgba(4, 8, 30, 0.55);
+  font-family: var(--cv-cond);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: rgba(214, 226, 255, 0.45);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.cv-show-btn .glyph3d { width: 1.7rem; height: 1.7rem; opacity: 0.45; transition: opacity 0.18s; }
+.cv-show-btn.on .glyph3d { opacity: 1; }
+.cv-show-btn.is-monster.on { color: #fff0bd; border-color: #ffd23c; background: linear-gradient(180deg, rgba(120, 84, 10, 0.75), rgba(60, 40, 4, 0.8)); box-shadow: 0 0 14px rgba(255, 200, 60, 0.4); }
+.cv-show-btn.is-spell.on { color: #f1dcff; border-color: #c27bff; background: linear-gradient(180deg, rgba(96, 40, 150, 0.75), rgba(40, 14, 70, 0.8)); box-shadow: 0 0 14px rgba(180, 92, 255, 0.4); }
+.cv-chips { display: flex; flex-wrap: wrap; gap: 0.42rem; }
+.cv-chip {
+  --tone: var(--cv-gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.2rem;
+  padding: 0 0.75rem 0 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(170, 200, 255, 0.22);
+  background: rgba(4, 8, 30, 0.55);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(222, 232, 255, 0.78);
+}
+.cv-chip .glyph3d, .cv-chip svg, .cv-chip img { flex: none; width: 1.4rem; height: 1.4rem; }
+.cv-chip.is-kind svg { color: var(--tone); filter: drop-shadow(0 0 3px var(--tone)); }
+.cv-kind-pic { display: grid; width: 1.4rem; height: 1.4rem; overflow: hidden; border-radius: 50%; mix-blend-mode: screen; }
+.cv-kind-pic img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.14); }
+.cv-chip.on { color: #fff6d8; border-color: var(--tone); background: color-mix(in srgb, var(--tone) 24%, rgba(4, 8, 30, 0.7)); box-shadow: 0 0 10px color-mix(in srgb, var(--tone) 55%, transparent); }
+.cv-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cv-star {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  height: 2.2rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(170, 200, 255, 0.22);
+  background: rgba(4, 8, 30, 0.55);
+  font-family: var(--cv-cond);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.cv-star i { font-style: normal; color: var(--cv-gold); }
+.cv-star.on { color: #3a2400; border-color: #fff1b8; background: linear-gradient(180deg, #fff3c0, #e7b640 60%, #9a6610); box-shadow: 0 0 12px rgba(255, 210, 90, 0.5); }
+.cv-star.on i { color: #6a3e00; }
+.cv-rarity {
+  min-width: 3.6rem;
+  height: 2.2rem;
+  padding: 0 0.9rem 0 1.2rem;
+  border: 0;
+  clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+  font-family: var(--cv-cond);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  opacity: 0.42;
+  filter: saturate(0.5);
+  transition: opacity 0.15s, filter 0.15s;
+}
+.cv-rarity.is-N { background: linear-gradient(90deg, #1d4fd1, #5b95ff); }
+.cv-rarity.is-SR { background: linear-gradient(90deg, #ff5a0a 0%, #ff8a14 45%, #ffc21f 85%, #ffe14a 100%); text-shadow: 0 1px 1px #8a3000; }
+.cv-rarity.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
+.cv-rarity.on { opacity: 1; filter: none; }
+.cv-drop.is-sort { display: grid; gap: 0.5rem; }
+.cv-sort {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(170, 200, 255, 0.2);
+  border-left: 4px solid transparent;
+  background: rgba(4, 8, 30, 0.55);
+  text-align: left;
+}
+.cv-sort span { font-family: var(--cv-cond); font-size: 1.15rem; font-weight: 800; letter-spacing: 0.03em; }
+.cv-sort small { font-size: 0.76rem; color: rgba(214, 226, 255, 0.65); }
+.cv-sort.on { border-left-color: var(--cv-gold); background: linear-gradient(90deg, rgba(255, 210, 90, 0.18), rgba(4, 8, 30, 0.55) 70%); }
+.cv-sort.on span { color: #fff0bd; }
+
+/* The cards: four to a row; a card not owned yet is dimmed (no lock: the lock is for Giám định). */
+.cv-pool {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.7rem 0.85rem max(1.2rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--cv-line);
+  background: linear-gradient(180deg, rgba(4, 8, 28, 0.55), rgba(4, 8, 28, 0.25));
+  box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.45);
+}
+.cv-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem 0.5rem; }
+.cv-card {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.12s;
+}
+.cv-card:active { transform: scale(0.96); }
+.cv-card.is-dim .card { filter: grayscale(0.9) brightness(0.5); }
+.cv-card.is-dim .cv-tag { opacity: 0.45; filter: saturate(0.4); }
+.cv-tag {
+  position: absolute;
+  left: -0.25rem;
+  top: -0.4rem;
+  z-index: 6;
+  min-width: 1.9rem;
+  padding: 0.1rem 0.5rem 0.1rem 0.3rem;
+  clip-path: polygon(0 0, 100% 0, 76% 100%, 0 100%);
+  font-family: var(--cv-cond);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  color: #fff;
+  pointer-events: none;
+}
+.cv-tag.is-N { background: linear-gradient(90deg, #1d4fd1, #5b95ff); }
+.cv-tag.is-SR { background: linear-gradient(90deg, #ff5a0a 0%, #ff8a14 45%, #ffc21f 85%, #ffe14a 100%); text-shadow: 0 1px 1px #8a3000; }
+.cv-tag.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
+.cv-empty { margin: 2.5rem 0; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.65); }
+
+/* On the sheet of a card not owned yet. */
+.cv-lockbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 215, 106, 0.45);
+  background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9));
+  color: #ffe6a6;
+}
+.cv-lockbox svg { flex: none; width: 1.5rem; height: 1.5rem; color: #ffd76a; filter: drop-shadow(0 0 4px rgba(255, 200, 70, 0.6)); }
+.cv-lockbox b { font-size: 0.86rem; }
