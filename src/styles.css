@@ -6444,8 +6444,8 @@ button.watch-back {
   background: radial-gradient(90% 70% at 50% 45%, rgba(20, 10, 40, 0.25), rgba(0, 0, 0, 0.5));
 }
 .fuse3d-dance { position: absolute; inset: 0; }
-/* The fusion cards: one 3D scene, so where they overlap the browser draws them crossing each other. The glow sits
-   on the group around it, since a filter on a card would stop the crossing. */
+/* Three cards: one 3D scene, so where they overlap the browser draws them crossing each other in a ring. The glow
+   sits on the group around it, since a filter on a card would stop the crossing. */
 .fuse3d-ring { position: absolute; inset: 0; transform-style: preserve-3d; }
 .fuse3d-ring .fuse3d-card { border-radius: 3% / 2%; }
 .fuse3d-pic { position: relative; display: block; aspect-ratio: 2 / 3; }
