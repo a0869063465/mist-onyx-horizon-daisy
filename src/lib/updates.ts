@@ -608,6 +608,8 @@ export const PENDING_NOTES: string[] = [
   "Dung hợp Hiệp sĩ huyền bí: ba lá chỉ chạm nhẹ vào nhau và đan vòng tròn, lá trên tay nằm trên lá dưới trái, lá dưới trái nằm trên lá trên trái, lá trên trái nằm trên lá trên tay, cả lúc va và lúc xoáy.",
   "Dung hợp Hiệp sĩ huyền bí: ba lá bay vào chỉ hiện hình quái trong khung vàng như Đổi hình nền, không tên, không chỉ số.",
   "Dung hợp Hiệp sĩ huyền bí: cuối vòng xoáy ba lá hút thẳng vào tâm, không còn quay vòng nhỏ quanh tâm nên hết rung giật.",
+  "Dung hợp Kỵ sĩ cưỡi rồng và Rồng ác ma: hai lá bay vào chỉ hiện hình quái trong khung vàng, không tên, không chỉ số.",
+  "Dung hợp: quái mới hiện ra sau khi loé sáng chỉ hiện hình trong khung vàng, không tên, không chỉ số.",
 ];
 
 function remarkOf(notes: string[]) {

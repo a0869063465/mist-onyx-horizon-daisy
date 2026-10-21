@@ -2,7 +2,10 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 export type DanceSpot = { x: number; y: number; w: number };
 
-/** A card in the fusion scene as its picture only, in the gold frame of Đổi hình nền: no name, no figures (owner, 21/10). */
+/**
+ * A card in the fusion scene as its picture only, in the gold frame of Đổi hình nền: no name, no figures. Used for
+ * the cards flying in and for the fused monster that appears after the flash (owner, 21/10).
+ */
 export function FusePic({ src }: { src: string }) {
   return (
     <span className="fuse3d-pic">

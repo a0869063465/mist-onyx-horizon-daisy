@@ -5063,13 +5063,11 @@ function PlayPage() {
           <div className={`fuse3d is-${fuseShow.phase}`}>
             {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
               <FuseDance a={fuseShow.a} b={fuseShow.b} c={fuseThird ? fuseShow.c : undefined}>
-                {fuseThird
-                  ? [
-                      <FusePic key="a" src={artSrc(fuseHeld.id, fuseHeld.saved?.level ?? 1)} />,
-                      <FusePic key="b" src={artSrc(fusePartner.cardId, fusePartner.level ?? 1)} />,
-                      <FusePic key="c" src={artSrc(fuseThird.cardId, fuseThird.level ?? 1)} />,
-                    ]
-                  : [<CardFace key="a" monster={monsterCard(fuseHeld.id)} />, <CardFace key="b" monster={monsterCard(formOf(fusePartner))} />]}
+                {[
+                  <FusePic key="a" src={artSrc(fuseHeld.id, fuseHeld.saved?.level ?? 1)} />,
+                  <FusePic key="b" src={artSrc(fusePartner.cardId, fusePartner.level ?? 1)} />,
+                  ...(fuseThird ? [<FusePic key="c" src={artSrc(fuseThird.cardId, fuseThird.level ?? 1)} />] : []),
+                ]}
               </FuseDance>
             ) : null}
             {fuseShow.phase === "swirl" || fuseShow.phase === "flash" || fuseShow.phase === "turn" ? <i className="fuse3d-glow" /> : null}
@@ -5094,7 +5092,7 @@ function PlayPage() {
             ) : null}
             {(fuseShow.phase === "turn" || fuseShow.phase === "land") && fuseBorn ? (
               <div className="fuse3d-big" style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}>
-                <CardFace monster={monsterCard(fuseShow.resultId)!} />
+                <FusePic src={artSrc(fuseShow.resultId, 1)} />
               </div>
             ) : null}
             {fuseSheet}
