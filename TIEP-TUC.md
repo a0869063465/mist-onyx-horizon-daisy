@@ -69,7 +69,9 @@ Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đ�
 - Gương phòng hộ cướp chỉ số quái của chính mình: sau khi địch chặn, phe tấn công được quyền phản ứng và dùng được Gương. Giờ `answerSide` (duel.ts) = phe bị nhắm (melee/gnaw: phe quái bị đánh hoặc quái chặn; face: phe đối thủ người tấn công; beam/gnaw-skill: phe mục tiêu; spell/lash: đối thủ người dùng). Gương phòng hộ, Lá chắn phản đòn, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Hoán đổi, Hấp thụ ma pháp chỉ dùng/chớp cho phe đó (`GUARD_SPELLS` trong play.tsx, `guards` trong castSpellCore).
 - Lá chớp mà không có Use: chớp cam, tự mở tay phép, chớp xấp bài và nút trong bảng phép giờ đều dùng `answerUsable` (cùng điều kiện với nút Use: quyền, mana, `answerPayoff`, Hoán đổi cần `canCastSwap`).
 - Hoán đổi: `canCastSwap` chỉ đúng khi có quái của mình đang bị nhắm (`lockedSwapToken`); `confirmSwap` từ chối nếu lá đầu không phải quái bị nhắm. Không còn đổi 2 lá dự bị bất kỳ.
-- Còn hỏi chủ game: Ngăn chặn phòng ngự vẫn chớp cho phe bị tấn công (dùng lên quái của người tấn công, gần như vô dụng).
+- Ngăn chặn phòng ngự (chủ game 21/10: "chỉ chớp phe công"): chỉ phe đang tấn công (`duel.turn`) dùng/chớp, ở `spellCanAnswer` và castSpellCore.
+- Máy: Hấp thụ ma pháp chỉ dùng khi `answerSide(state) === 1`; lá bị từ chối thì máy bỏ qua (không thử lại mãi, tránh kẹt trận).
+- Dung hợp 3 lá (ba hiệp sĩ → Hiệp sĩ huyền bí), chủ game trả lời 21/10, ĐANG CHỜ chủ game duyệt bản tóm tắt rồi mới làm: lá trên tay ở 3 giờ, 2 lá trên sân ở trên trái (lá ở ô bên trái hơn) và dưới trái (cách nhau 120 độ), bay từ chỗ của chúng tới 3 điểm đó, lao vào tâm đập nhau, bật ra, rồi xoáy trên mặt phẳng đứng (vòng tròn thật trên màn hình), lá luôn thẳng đứng như dung hợp 2 lá, theo chiều kim đồng hồ, giữ nguyên cỡ, lá trên tay nằm trên cùng. Phần còn lại (nhịp, âm, loé, trắng xoá, lá mới xoay hiện, bảng quái, Triệu hồi, sét) giữ y như 2 lá. Chỉ cảnh khi người chơi dung hợp. Kỵ sĩ cưỡi rồng, Rồng ác ma giữ cảnh 2 lá.
 
 ## Đã xong (19/10): Cửa hàng và mở gói (theo video Master Duel chủ game gửi, tự dựng lại, không lấy hình/âm của Konami)
 

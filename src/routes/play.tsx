@@ -762,7 +762,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   if (id === "vong-xoay-bao-ho" || id === "guong-phong-ho") return attacked;
   if (id === "la-chan-phan-don") return skilled && !bindBeam(duel);
   if (id === "hap-thu-ma-phap") return pending?.kind === "spell" || pending?.kind === "lash";
-  if (id === "ngan-chan-phong-ngu") return Boolean(duel.hold?.blocker) || attacked;
+  // Only the attacking side may use it, to stop a foe from blocking (owner, 21/10).
+  if (id === "ngan-chan-phong-ngu") return duel.hold?.priority === duel.turn && (Boolean(duel.hold?.blocker) || attacked);
   if (id === "vong-nguyen-rua-ac-ma") {
     if (pending?.kind === "face" || pending?.kind === "melee") return true;
     if (pending?.kind === "beam" || pending?.kind === "gnaw-skill") {

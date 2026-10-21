@@ -603,6 +603,7 @@ export const PENDING_NOTES: string[] = [
   "Nhập mã S300 trong Thông tin → Nhập mã để nhận 300 sao.",
   "Gương phòng hộ, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Lá chắn phản đòn, Hấp thụ ma pháp và Hoán đổi chỉ dùng được khi phe bạn bị nhắm. Không còn chớp và cướp chỉ số quái của chính bạn khi bạn tấn công.",
   "Lá phép chỉ chớp cam khi có nút Use bấm được. Hoán đổi chỉ chớp khi một quái của bạn đang bị nhắm, và chỉ đổi quái đó với 1 quái khác.",
+  "Ngăn chặn phòng ngự chỉ chớp và chỉ dùng được ở phe đang tấn công.",
 ];
 
 function remarkOf(notes: string[]) {

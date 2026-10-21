@@ -5390,6 +5390,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side) {
     return note(state, `${card.name} chỉ dùng khi phe bạn bị nhắm.`);
   }
+  if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && side !== state.turn) {
+    return note(state, `${card.name} chỉ dùng khi bạn tấn công.`);
+  }
   if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap") {
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
@@ -8859,13 +8862,11 @@ export function aiStep(state: Duel): Duel {
       const room = other && (other.atk > knight.atk || stars >= 4);
       return withLive(primeKnight(state, knight.uid, room ? ["atk", "def"] : ["atk"]));
     }
-    if (state.pending?.kind === "lash" || chargedWhip(state)) {
+    // The machine only absorbs what lands on its own side; a refused cast is skipped, never retried.
+    if ((state.pending?.kind === "lash" || chargedWhip(state) || (state.pending?.kind === "spell" && state.turn !== 1)) && answerSide(state) === 1) {
       const index = state.players[1].hand.indexOf("hap-thu-ma-phap");
-      if (index >= 0) return withLive(castSpell(state, index, null));
-    }
-    if (state.pending?.kind === "spell" && state.turn !== 1) {
-      const index = state.players[1].hand.indexOf("hap-thu-ma-phap");
-      if (index >= 0) return withLive(castSpell(state, index, null));
+      const cast = index >= 0 ? castSpell(state, index, null) : state;
+      if (cast.players !== state.players || cast.step !== state.step) return withLive(cast);
     }
     if (state.pending?.kind === "face") {
       if (!state.hold.blocker) {
