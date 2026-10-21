@@ -95,6 +95,7 @@ import {
   testEnv,
   testReset,
   canCastSwap,
+  answerSide,
   canTestReset,
   toggleStance,
   useSkill,
@@ -740,8 +741,20 @@ function hornPending(duel: Duel): boolean {
   return Boolean(fieldMon(duel, pending.attacker)?.horn || fieldMon(duel, pending.attacker)?.gaze);
 }
 
+// Answer spells that guard against an attack, skill or spell: only the side it lands on may use them.
+const GUARD_SPELLS = new Set([
+  "guong-phong-ho",
+  "la-chan-phan-don",
+  "vong-xoay-bao-ho",
+  "phuc-kich",
+  "vong-nguyen-rua-ac-ma",
+  "hoan-doi",
+  "hap-thu-ma-phap",
+]);
+
 function spellCanAnswer(id: string, duel: Duel): boolean {
   if (duel.step !== "respond" || !ANSWER_SPELLS.has(id)) return false;
+  if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
   const horn = hornPending(duel);
   const attacked = (pending?.kind === "face" || pending?.kind === "melee") && !horn;
@@ -822,6 +835,16 @@ function answerPayoff(id: string, duel: Duel, viewer: Side) {
   }
   if (id === "la-chan-phan-don" || id === "ngan-chan-phong-ngu") return foeAlive(duel, viewer);
   return true;
+}
+
+// An answer spell flashes only when its Use button can be pressed.
+function answerUsable(id: string, duel: Duel, viewer: Side, index: number) {
+  const you = duel.players[viewer];
+  const card = spellCard(id);
+  if (!card || duel.hold?.priority !== viewer || !spellCanAnswer(id, duel)) return false;
+  if (!tollOk(card.gems, Boolean(you.tolls?.[index]), you.orb, you.flask)) return false;
+  if (!answerPayoff(id, duel, viewer)) return false;
+  return id !== "hoan-doi" || canCastSwap(duel, viewer);
 }
 
 function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
@@ -1768,7 +1791,7 @@ function PlayPage() {
         }, 1000);
       }
     } else {
-      const answerReady = (id: string, state: Duel) => state.hold?.priority === viewerNow && state.players[viewerNow].hand.includes(id) && spellCanAnswer(id, state);
+      const answerReady = (id: string, state: Duel) => state.players[viewerNow].hand.some((held, index) => held === id && answerUsable(id, state, viewerNow, index));
       if ([...ANSWER_SPELLS].some((id) => answerReady(id, duel) && !answerReady(id, prev))) setHand("spell");
       const mark = reactionMark(prev, duel);
       const veiled = hiddenStrike(prev, duel, viewerNow);
@@ -4427,7 +4450,7 @@ function PlayPage() {
         {board.stack.hidden ? null : (
         <button
           type="button"
-          className={`face-pile press${(you.hand.some((id) => spellCanAnswer(id, duel)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
+          className={`face-pile press${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
           style={{
             left: `${board.stack.x}%`,
             top: `${board.stack.y}%`,
@@ -4517,11 +4540,10 @@ function PlayPage() {
               })
             : you.hand.map((id, index) => {
                 const open = inspect?.pile === "spell" && inspect.index === index;
-                const yours = mine && duel.hold?.priority === viewer;
-                const ready = spellCanAnswer(id, duel) && (id !== "hoan-doi" || yours);
                 const tolled = Boolean(you.tolls?.[index]);
                 const payable = tollOk(spellCard(id)?.gems ?? 0, tolled, you.orb, you.flask);
-                const usable = ready && yours && payable && answerPayoff(id, duel, viewer) && (id !== "hoan-doi" || canCastSwap(duel, viewer));
+                const usable = mine && answerUsable(id, duel, viewer, index);
+                const ready = usable;
                 const slowUse = canPlay && slowUsable(id, duel, viewer) && payable;
                 const using =
                   (aim?.kind === "spell" && aim.spellId === id && aim.index === index) ||
@@ -4806,7 +4828,7 @@ function PlayPage() {
               id={shownSpell.id}
               gems={spellToll ? `${shownSpell.gems}+1` : undefined}
               actions={
-                mine && inspect.pile === "spell" && (shownSpell.id !== "hoan-doi" || spellCanAnswer(shownSpell.id, duel))
+                mine && inspect.pile === "spell" && (duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
                   ? [
                       {
                         key: "cast",

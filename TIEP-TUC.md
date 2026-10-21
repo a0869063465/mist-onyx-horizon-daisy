@@ -64,6 +64,13 @@ Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đ�
   - Bảng kết quả "Card Pack Open Results": lưới lá nhận được (New! + bậc), nút Show Number Owned, To Collector's File, OK.
   - Cửa hàng: thanh trên (nút lùi, Shop, số đá), tab trên, cột danh mục trái, lưới ô gói 2 cột (tên, ảnh, hạn, giá "1 Pack 100"). Trang gói: ảnh lớn + hạn, mô tả, nút Details / Odds / Limited List / Cards included, ảnh nhỏ cuộn, nút giá lớn "1800 — 10 Packs (1 UR Guaranteed)". Bảng xác nhận mua: "Spend 1800 Gems...", "Your Gems 3605→1805", Cancel / Purchase. Rồi màn Connecting, nổ tia xanh toả tròn, 10 gói xếp 2 hàng trên sân vàng + nút OPEN; gói chứa UR viền cầu vồng đổi màu.
 
+## Đã xong (21/10): sửa lỗi lá phép phản ứng (chủ game báo)
+
+- Gương phòng hộ cướp chỉ số quái của chính mình: sau khi địch chặn, phe tấn công được quyền phản ứng và dùng được Gương. Giờ `answerSide` (duel.ts) = phe bị nhắm (melee/gnaw: phe quái bị đánh hoặc quái chặn; face: phe đối thủ người tấn công; beam/gnaw-skill: phe mục tiêu; spell/lash: đối thủ người dùng). Gương phòng hộ, Lá chắn phản đòn, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Hoán đổi, Hấp thụ ma pháp chỉ dùng/chớp cho phe đó (`GUARD_SPELLS` trong play.tsx, `guards` trong castSpellCore).
+- Lá chớp mà không có Use: chớp cam, tự mở tay phép, chớp xấp bài và nút trong bảng phép giờ đều dùng `answerUsable` (cùng điều kiện với nút Use: quyền, mana, `answerPayoff`, Hoán đổi cần `canCastSwap`).
+- Hoán đổi: `canCastSwap` chỉ đúng khi có quái của mình đang bị nhắm (`lockedSwapToken`); `confirmSwap` từ chối nếu lá đầu không phải quái bị nhắm. Không còn đổi 2 lá dự bị bất kỳ.
+- Còn hỏi chủ game: Ngăn chặn phòng ngự vẫn chớp cho phe bị tấn công (dùng lên quái của người tấn công, gần như vô dụng).
+
 ## Đã xong (19/10): Cửa hàng và mở gói (theo video Master Duel chủ game gửi, tự dựng lại, không lấy hình/âm của Konami)
 
 - Dữ liệu: `src/lib/shop.ts`. Gói chung (`PACK`, ảnh `public/ui/pack.webp`) = `packPool()`: MONSTERS (trừ FORMS, ≤4 sao) + mọi SPELLS (có môi trường), 78 lá. Bậc `naturalTier`: quái 1–2 sao / phép 0 mana = N, quái 3 sao / phép 1 mana = SR, quái 4 sao / phép ≥2 mana = UR (lá môi trường 0 mana nên đang là N). Trọng số mặc định N 10, SR 4, UR 1; chỉnh từng lá (bậc + trọng số) lưu ở `clash-pack-rates` trên máy (chủ game chốt), `ratesText` cho nút Sao chép. Mỗi gói 5 lá khác nhau, rút theo trọng số không lặp (`drawPacks`); 10 gói không có UR thì thay 1 lá ngẫu nhiên của 1 gói ngẫu nhiên bằng 1 UR. Sao `clash-stars`, lá đã có `clash-owned` (danh sách id). `buyPacks` trừ sao, rút, lưu lá mới, hoàn 1 sao mỗi lá trùng (cả trùng trong cùng 10 gói), lưu hết TRƯỚC khi chạy hiệu ứng. Tỉ lệ mặc định: gói có UR ~5,4%, cao nhất SR ~29%, toàn N ~65% (`packOdds` mô phỏng 20000 gói, số cố định).

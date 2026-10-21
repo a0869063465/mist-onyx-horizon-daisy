@@ -601,6 +601,8 @@ export const PENDING_NOTES: string[] = [
   "Tỉ lệ mặc định của Gói chung: mỗi lá rút ra UR 2,1%, SR 11,3%, Normal 86,6%.",
   "Mở Cửa hàng cho mọi người chơi. Người chơi bắt đầu với các lá của bộ bài mặc định; lá khác có khoá trong Chỉnh sửa bộ bài, mở gói ra lá nào thì dùng được lá đó. Bộ bài đã lưu có lá chưa sở hữu thì lá đó tự rời bộ.",
   "Nhập mã S300 trong Thông tin → Nhập mã để nhận 300 sao.",
+  "Gương phòng hộ, Vòng xoáy bảo hộ, Phục kích, Vòng nguyền rủa ác ma, Lá chắn phản đòn, Hấp thụ ma pháp và Hoán đổi chỉ dùng được khi phe bạn bị nhắm. Không còn chớp và cướp chỉ số quái của chính bạn khi bạn tấn công.",
+  "Lá phép chỉ chớp cam khi có nút Use bấm được. Hoán đổi chỉ chớp khi một quái của bạn đang bị nhắm, và chỉ đổi quái đó với 1 quái khác.",
 ];
 
 function remarkOf(notes: string[]) {

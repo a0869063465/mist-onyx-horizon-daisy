@@ -5386,6 +5386,10 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     }
   }
   if (!replay && state.step === "respond" && !response.has(card.id)) return note(state, "Phép này không ứng biến được.");
+  const guards = ["guong-phong-ho", "la-chan-phan-don", "vong-xoay-bao-ho", "phuc-kich", "vong-nguyen-rua-ac-ma", "hoan-doi", "hap-thu-ma-phap"];
+  if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side) {
+    return note(state, `${card.name} chỉ dùng khi phe bạn bị nhắm.`);
+  }
   if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap") {
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
@@ -5524,7 +5528,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const attackerUid = swing && "attacker" in pending ? pending.attacker : "";
     const attackerSide = state.turn;
     const you = armed.players[attackerSide];
-    const attacker = attackerUid ? you.field.find((mon) => mon?.uid === attackerUid) ?? null : null;
+    const attacker = attackerUid && attackerSide !== side ? you.field.find((mon) => mon?.uid === attackerUid) ?? null : null;
     if (!attacker) return note(armed, "Gương phòng hộ dựng lên trong 3 lượt.", "spell");
     const plain = dropClash(openShade(attacker));
     const robbed = {
@@ -5742,6 +5746,26 @@ function aimedId(state: Duel): string | null {
   return state.hold?.blocker ?? null;
 }
 
+// The side the pending attack, skill or spell lands on. Answer spells that guard
+// against a threat only work for that side, never for the side throwing it.
+export function answerSide(state: Duel): Side | null {
+  const pending = state.pending;
+  if (!pending || state.step !== "respond") return null;
+  const sideOf = (uid: string | null | undefined): Side | null => {
+    if (!uid) return null;
+    if (state.players[0].field.some((mon) => mon?.uid === uid)) return 0;
+    if (state.players[1].field.some((mon) => mon?.uid === uid)) return 1;
+    return null;
+  };
+  const flip = (side: Side | null): Side | null => (side === null ? null : ((1 - side) as Side));
+  if (pending.kind === "melee" || pending.kind === "gnaw") return sideOf(state.hold?.blocker ?? pending.defender) ?? flip(sideOf(pending.attacker));
+  if (pending.kind === "face") return flip(sideOf(pending.attacker)) ?? ((1 - state.turn) as Side);
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") return sideOf(pending.target) ?? flip(sideOf(pending.caster));
+  if (pending.kind === "spell") return (1 - pending.owner) as Side;
+  if (pending.kind === "lash") return (1 - pending.owner) as Side;
+  return null;
+}
+
 function redirectAim(state: Duel, fromUid: string | null, toUid: string | null): Duel {
   if (!fromUid || !toUid || fromUid === toUid) return state;
   const pending = state.pending;
@@ -5802,13 +5826,14 @@ export function canCastSwap(state: Duel, side: Side): boolean {
   if (state.step !== "respond" || !state.pending) return false;
   const rows = swapRows(state.players[side]);
   const locked = lockedSwapToken(state, side);
-  if (!locked) return rows.length >= 2;
+  if (!locked) return false;
   return rows.some((token) => token !== locked);
 }
 
 export function confirmSwap(state: Duel, firstToken: string, secondToken: string): Duel {
   if (!state.swap) return state;
   if (firstToken === secondToken) return note(state, "Chọn hai quái khác nhau.");
+  if (!state.swap.locked || firstToken !== state.swap.locked) return note(state, "Hoán đổi chỉ đổi quái đang bị nhắm.");
   const side = state.swap.side;
   const done = pickSwap({ ...state, swap: { first: firstToken, side } }, secondToken);
   if (done.swap) return { ...done, swap: { first: null, side } };
