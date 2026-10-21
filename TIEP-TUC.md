@@ -1,7 +1,8 @@
 # Việc đang dở (đọc trước khi làm)
 
-Ghi lại cuối phiên ngày 19/10/2026. Nhánh làm việc: `claude/test-app-phf3et`. Đã gộp vào `main` ngày 19/10 (chủ game bảo). `main` cũ là một bản xuất từ Grok (15/10) không chung lịch sử git; gộp bằng `--allow-unrelated-histories -s ours`, nên cây file của `main` = nhánh này.
-Vercel tự dựng bản xem thử cho nhánh này. Link chính chỉ đổi khi gộp vào `main`, và phải hỏi chủ game trước khi gộp.
+Ghi lại cuối phiên ngày 19/10/2026 (cập nhật 21/10). Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này (lần cuối commit 7c0f4ee: Cửa hàng mở cho khách, lá theo sở hữu, mã S300), hai nhánh đang giống hệt nhau.
+Vercel tự dựng bản xem thử cho nhánh này; link chính đi theo `main`. Chỉ cập nhật `main` khi chủ game bảo (đẩy nhánh lên `main`, không ép, không viết lại lịch sử). `main` cũ trước 19/10 là bản xuất từ Grok không chung lịch sử; lần gộp đầu dùng `--allow-unrelated-histories -s ours`.
+Phiên trước dừng ở đây: mọi việc chủ game giao đã xong và đã đẩy. Chờ chủ game giao việc mới; các mục "CHƯA làm" bên dưới vẫn phải hỏi trước.
 
 ## Quy tắc làm việc với chủ game
 
