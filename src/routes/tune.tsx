@@ -564,13 +564,14 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             </span>
           ))}
         </button>
+        {/* The reaction line runs across the notice board's width; its middle sits at the middle of this box. */}
         <button
           type="button"
           className={`tune-notice${picked === "reaction" ? " on" : ""}${layout.reaction.hidden ? " is-hidden" : ""}`}
           style={{
-            left: `${layout.reaction.x}%`,
+            left: `${layout.notice.x}%`,
             top: `${layout.reaction.y}%`,
-            width: `${layout.reaction.w}%`,
+            width: `${layout.notice.w}%`,
             height: `${layout.reaction.h}%`,
             fontSize: `${layout.reaction.font}cqw`,
           }}
@@ -762,7 +763,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
           Môi trường địch{layout.envFoe.hidden ? " · ẩn" : ""} · rộng {layout.envFoe.width} · cao {layout.envFoe.height} · chữ {layout.envFoe.size}
         </button>
         <button type="button" className={`tuner-item${picked === "actions" ? " on" : ""}`} onClick={() => setPicked("actions")}>
-          Nút Rút quái, Rút phép, Hết lượt · rộng {layout.actions.width} · cao {layout.actions.height} · chữ {layout.actions.size}
+          Nút Rút quái, Rút phép, Hết lượt · rộng {layout.actions.width} · cao {layout.actions.height} · cỡ {layout.actions.size}
         </button>
         {HUD_MARKS.map((mark) => (
           <button key={mark.key} type="button" className={`tuner-item${picked === mark.key ? " on" : ""}`} onClick={() => setPicked(mark.key)}>

@@ -16,6 +16,7 @@ import { LoadScreen } from "@/components/game/load-screen";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
+import { Medal } from "@/components/game/medal";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTutorialDone } from "@/lib/tutorial-list";
@@ -119,7 +120,9 @@ import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
-import { ReactGlyph, type ReactMark } from "@/components/game/react-glyph";
+import { ReactionLine, type BoardSpot as LineSpot, type OrbLook } from "@/components/game/reaction-line";
+import { stepChain, type ChainOrb, type FlowEnd } from "@/lib/reaction-chain";
+import { spellKind } from "@/lib/spell-kinds";
 import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
@@ -884,8 +887,19 @@ function mysticAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   return duel.players[(1 - viewer) as Side].field.some((unit) => unit && unit.hp > 0 && unit.cardId !== "mu");
 }
 
+/** Mỹ điểu nhân and Nữ chúa điểu nhân answer from the board, as other reaction skills do: the bird the skill, spell
+ *  or swing is aimed at flashes, and tapping it shows Giáp và Vuốt or Roi điện. */
+function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
+  const offer = harpyOffer(duel, viewer);
+  const pending = duel.pending;
+  if (!offer || !pending) return false;
+  if (offer === "lash") return pending.kind === "melee" && (duel.hold?.blocker ?? pending.defender) === mon.uid;
+  return (pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell") && pending.target === mon.uid;
+}
+
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (canStand(duel, mon.uid)) return true;
+  if (harpyAlert(duel, mon, viewer)) return true;
   if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0) return false;
   const pending = duel.pending;
   if (mon.cardId === "chien-si-gam-nham" && pending?.kind === "face") return true;
@@ -894,32 +908,6 @@ function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (canSpirit(duel, mon.uid)) return true;
   if (mon.cardId === "ky-si-bong-toi" && !(mon.path ?? 0) && pending?.kind === "melee" && pending.defender === mon.uid && !mon.clash) return true;
   return false;
-}
-
-function reactionMark(prev: Duel, next: Duel): ReactMark | null {
-  if (next.step !== "respond") return null;
-  if (next.hold?.blocker && next.hold.blocker !== prev.hold?.blocker) return "block";
-  const pending = next.pending;
-  const horn = hornPending(next);
-  if ((pending?.kind === "face" || pending?.kind === "melee") && !horn && prev.pending?.kind !== pending.kind) {
-    return fieldMon(next, pending.attacker)?.bolt ? "rebound" : "attack";
-  }
-  if (pending?.kind === "lash" && prev.pending?.kind !== "lash") return "rebound";
-  if (((pending?.kind === "beam" || pending?.kind === "gnaw-skill") || horn) && prev.pending?.kind !== pending?.kind) {
-    return pending?.kind === "beam" && fieldMon(next, pending.caster)?.cardId === "ong-khong-lo" ? "chain" : "skill";
-  }
-  if (pending?.kind === "spell" && pending.cardId === "sam-set-tan-the" && !(prev.pending?.kind === "spell" && prev.pending.cardId === "sam-set-tan-the")) return "skill";
-  if (pending?.kind === "spell" && (pending.cardId === "soi-xich-dia-nguc" || pending.cardId === "thanh-guom-anh-sang" || pending.cardId === "vong-nguyen-rua-ac-ma") && !(prev.pending?.kind === "spell" && prev.pending.cardId === pending.cardId)) return "chain";
-  for (const side of [0, 1] as const) {
-    for (const mon of next.players[side].field) {
-      if (!mon) continue;
-      const was = prev.players[side].field.find((unit) => unit?.uid === mon.uid);
-      if (!was) continue;
-      if ((mon.blessAtk ?? 0) > (was.blessAtk ?? 0) || (mon.blessDef ?? 0) > (was.blessDef ?? 0) || (mon.clash && !was.clash) || (mon.horn && !was.horn)) return "buff";
-      if (mon.cardId === "chien-si-gam-nham" && (mon.def > was.def || mon.maxHp > was.maxHp)) return "buff";
-    }
-  }
-  return null;
 }
 
 function reserveLive(held: { id: string; hp: number; saved?: { level?: number; atk: number; def: number; mdef: number } }, card: { name: string; atk: number; def: number; mdef: number }) {
@@ -1430,7 +1418,7 @@ function PlayPage() {
   const [linger, setLinger] = useState<Linger[]>([]);
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
   const [burst, setBurst] = useState<Burst | null>(null);
-  const [reactMarks, setReactMarks] = useState<ReactMark[]>([]);
+  const [chain, setChain] = useState<ChainOrb[]>([]);
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
@@ -1453,8 +1441,6 @@ function PlayPage() {
   const scratch = useRef<Scratch>(freshScratch());
   const matchRef = useRef<{ id: string; startedAt: number; decks: OpeningDecks | null; saved: boolean } | null>(null);
   const starTimer = useRef(0);
-  const skullTimer = useRef(0);
-  const reboundTimer = useRef(0);
   const stall = useRef({ live: "", n: 0 });
   const resetHold = useRef(0);
   const riteHold = useRef(0);
@@ -1741,6 +1727,13 @@ function PlayPage() {
     setLaserHp(Object.fromEntries(drops.map((drop) => [drop.key, drop.from])));
   }, [duel]);
 
+  // The reaction line closes a moment after the wait is over, with every orb dimmed.
+  useEffect(() => {
+    if (duel?.step === "respond" || chain.length === 0) return;
+    const timer = window.setTimeout(() => setChain((list) => (list.every((orb) => orb.done) ? [] : list)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [duel?.step, chain]);
+
   useEffect(() => {
     if (!duel) return;
     const prev = prevDuel.current;
@@ -1748,7 +1741,11 @@ function PlayPage() {
     prevDuel.current = duel;
     for (const id of laserTimers.current) window.clearTimeout(id);
     laserTimers.current = [];
-    if (!prev) return;
+    if (!prev) {
+      // A match opened while something waits (a reload in an online match): the line shows what waits.
+      setChain((list) => stepChain(null, duel, list));
+      return;
+    }
     if (prev.step !== "respond" && duel.step === "respond") windupText.current = duel.live || null;
     if (prev.step === "respond" && duel.step !== "respond") {
       const open = windupText.current;
@@ -1769,7 +1766,6 @@ function PlayPage() {
       const line = names.every((name) => duel.live.includes(name)) ? duel.live : `${duel.live} ${names.join(", ")} bị hạ.`;
       holdNotice(line, false, duel.clock);
     }
-    const reflected = duel.fx !== prev.fx && /bị phản vào|Phản nguyền chuyển|Gương phòng hộ dựng lên|Gương phòng hộ chặn/.test(duel.live);
     if (duel.step !== "respond") {
       if (prev.step === "respond") {
         setBlessArm(false);
@@ -1777,37 +1773,11 @@ function PlayPage() {
         setReflectPick(null);
         setAmbushPick(null);
       }
-      if (reflected) {
-        setReactMarks(["rebound"]);
-        window.clearTimeout(reboundTimer.current);
-        reboundTimer.current = window.setTimeout(() => setReactMarks((list) => (list.length === 1 && list[0] === "rebound" ? [] : list)), 1400);
-      } else if (prev.step === "respond") {
-        window.clearTimeout(reboundTimer.current);
-        setReactMarks([]);
-      }
-      if (duel.fx !== prev.fx && /cường hoá và tiêu diệt|quét cả sân/.test(duel.live)) {
-        window.clearTimeout(skullTimer.current);
-        skullTimer.current = window.setTimeout(() => {
-          setReactMarks(["skull"]);
-          skullTimer.current = window.setTimeout(() => setReactMarks((list) => (list.length === 1 && list[0] === "skull" ? [] : list)), 1400);
-        }, 1000);
-      }
     } else {
       const answerReady = (id: string, state: Duel) => state.players[viewerNow].hand.some((held, index) => held === id && answerUsable(id, state, viewerNow, index));
       if ([...ANSWER_SPELLS].some((id) => answerReady(id, duel) && !answerReady(id, prev))) setHand("spell");
-      const mark = reactionMark(prev, duel);
-      const veiled = hiddenStrike(prev, duel, viewerNow);
-      const shown = mark && veiled ? "attack" : mark;
-      if (prev.step !== "respond") setReactMarks(shown ? [shown] : []);
-      else if (shown) {
-        setReactMarks((list) => {
-          if (veiled && shown === "attack" && list.includes("attack")) return list;
-          if (shown === "rebound") return ["rebound", ...list];
-          return list.includes(shown) ? list : [shown, ...list];
-        });
-      }
-      if (reflected) setReactMarks((list) => (list.includes("rebound") ? list : ["rebound", ...list]));
     }
+    setChain((list) => stepChain(prev, duel, list));
     if (prev.mode === "ai" && duel.mode === "ai") {
       try {
         const learned = absorb(loadHabits(), watchSnap(prev), watchSnap(duel), scratch.current);
@@ -2586,7 +2556,7 @@ function PlayPage() {
     setMotion({ pops: [], lunges: [], hits: [] });
     setBurst(null);
     setShake(false);
-    setReactMarks([]);
+    setChain([]);
     setLockFlash(null);
     setStarFlash(null);
   }
@@ -3202,9 +3172,10 @@ function PlayPage() {
     const wallUp = side === viewer && canWall(duel, mon.uid);
     const spiritUp = side === viewer && canSpirit(duel, mon.uid);
     const mysticUp = side === viewer && mysticAlert(duel, mon, side);
+    const harpyUp = side === viewer && harpyAlert(duel, mon, viewer);
     const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
-    if (side === viewer && sealed) return;
-    if (side === viewer && (hatchReady || reelReady || (!mon.dim && (canPlay || reactive)))) {
+    if (side === viewer && sealed && !harpyUp) return;
+    if (side === viewer && (hatchReady || reelReady || harpyUp || (!mon.dim && (canPlay || reactive)))) {
       setAim({ kind: "menu", uid: mon.uid });
       setLook(null);
       return;
@@ -3401,6 +3372,48 @@ function PlayPage() {
   const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
   const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
   const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined) : null;
+
+  // Thanh phản ứng: where each flow ends and how each orb looks from the viewer's seat. A striker hidden by Biển
+  // sâu shows as a plain attack and the hats of Mũ ma pháp stay hats, as on the board and in the notices.
+  const lineOn = chain.length > 0 && !board.reaction.hidden;
+  const orbSpot = (end: FlowEnd): LineSpot | null => {
+    if ("orb" in end) return null;
+    if ("face" in end) {
+      const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
+      return { x: mark.x, y: mark.y };
+    }
+    for (const side of [0, 1] as const) {
+      const index = duel.players[side].field.findIndex((mon) => mon?.uid === end.uid);
+      if (index < 0) continue;
+      const box = SLOT_BOX[screenSide(side, viewer)][index];
+      return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+    }
+    return null;
+  };
+  const orbLook = (orb: ChainOrb): OrbLook => {
+    if (orb.kind === "spell") return { src: orb.spell ? spellSrc(orb.spell) : null, dark: false, attack: false, tone: spellKind(orb.spell ?? "").tone };
+    const mon = orb.source ? fieldMon(duel, orb.source) : null;
+    if (orb.kind === "attack" || (orb.source && seaVeiled(duel, viewer, orb.source))) return { src: null, dark: false, attack: true, tone: "#ff9a3c" };
+    const hat = orb.side !== viewer && duel.players[orb.side].hats && (mon?.cardId ?? orb.cardId) !== "mu";
+    const cardId = hat ? "mu" : mon?.cardId ?? orb.cardId;
+    return { src: cardId ? artSrc(cardId, hat ? 1 : mon?.level ?? 1) : null, dark: false, attack: false, tone: "#5cc8ff" };
+  };
+  const openOrb = (orb: ChainOrb) => {
+    if (orb.kind === "spell" && orb.spell) {
+      setInspect({ pile: "env", id: orb.spell });
+      return;
+    }
+    const mon = orb.source ? fieldMon(duel, orb.source) : null;
+    if (!mon) return;
+    const side: Side = duel.players[0].field.some((unit) => unit?.uid === mon.uid) ? 0 : 1;
+    if (seaVeiled(duel, viewer, mon.uid) || (side !== viewer && duel.players[side].hats && mon.cardId !== "mu")) {
+      setLook({ name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." });
+      return;
+    }
+    setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid });
+  };
+  const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
+  const lineText = pinnedLine ?? toast;
   const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
   const fusePartner = fuseShow ? you.field.find((mon) => mon?.uid === fuseShow.uid) ?? null : null;
   const fuseThird = fuseShow?.third ? you.field.find((mon) => mon?.uid === fuseShow.third) ?? null : null;
@@ -3597,7 +3610,7 @@ function PlayPage() {
         )}
         {board.notice.hidden ? null : (
           <p
-            className="banner"
+            className={`banner${lineOn ? " is-quiet" : ""}`}
             ref={noticeRef}
             style={{
               left: `${board.notice.x}%`,
@@ -3636,24 +3649,20 @@ function PlayPage() {
             </span>
           </p>
         )}
-        {((responding || reactMarks.includes("rebound")) && !board.reaction.hidden) ? (
-          <div
-            className={`banner is-react${duel.pending?.kind === "face" ? " is-drop" : ""}`}
-            data-react={duel.pending?.kind === "face" ? "attack" : undefined}
-            style={{
-              left: `${board.reaction.x}%`,
-              top: `${board.reaction.y}%`,
-              width: `${board.reaction.w}%`,
-              height: `${board.reaction.h}%`,
-              right: "auto",
-            }}
-          >
-            {[...reactMarks].reverse().map((kind, index) => (
-              <span key={`${kind}-${index}`} className={`react-ico is-${kind}`} data-react={kind}>
-                <ReactGlyph kind={kind} />
-              </span>
-            ))}
-          </div>
+        {lineOn ? (
+          <ReactionLine
+            orbs={chain}
+            closing={!responding}
+            lineY={board.reaction.y + board.reaction.h / 2}
+            x0={board.notice.x}
+            x1={board.notice.x + board.notice.w}
+            spotOf={orbSpot}
+            lookOf={orbLook}
+            note={lineText ? <NoticeText text={veilNotice(spoken(lineText, viewer), duel, viewer)} /> : null}
+            noteKey={`${pinnedId ?? ""}:${lineText}`}
+            notePinned={pinnedLine !== null}
+            onOrb={openOrb}
+          />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (
           <div className="overlay is-ask">
@@ -4634,7 +4643,6 @@ function PlayPage() {
                             apply(castSpell(duel, index, null));
                             return;
                           }
-                          setReactMarks((list) => (list.includes("chain") ? list : ["chain", ...list]));
                           playCue("chain");
                           setLockFlash(attacker);
                           window.setTimeout(() => setLockFlash((now) => (now === attacker ? null : now)), 800);
@@ -4676,41 +4684,23 @@ function PlayPage() {
           }
         >
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.monsterDeck.length > 0 ? (
-            <button type="button" className="act ax is-draw-mon press" onClick={() => apply(draw(duel, "monster"))}>
-              <span className="ax-ico">
-                <Glyph name="card-draw" />
-              </span>
-              <span className="ax-label">{tr("Rút quái")}</span>
+            <button type="button" className="act medal-act is-draw-mon press" aria-label={tr("Rút quái")} onClick={() => apply(draw(duel, "monster"))}>
+              <Medal tone="orange" icon="claw-card" />
             </button>
           ) : null}
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.spellDeck.length > 0 ? (
-            <button type="button" className="act ax is-draw-spell press" onClick={() => apply(draw(duel, "spell"))}>
-              <span className="ax-ico">
-                <Glyph name="spell-book" />
-              </span>
-              <span className="ax-label">{tr("Rút phép")}</span>
-            </button>
-          ) : null}
-          {responding && duel.hold?.priority === viewer && harpyOffer(duel, viewer) === "armor" ? (
-            <button type="button" className="act press is-skillbox" onClick={() => apply(harpyWard(duel))}>
-              Giáp và Vuốt
-            </button>
-          ) : null}
-          {responding && duel.hold?.priority === viewer && harpyOffer(duel, viewer) === "lash" ? (
-            <button type="button" className="act press is-skillbox" onClick={() => apply(harpyLash(duel))}>
-              Roi điện
+            <button type="button" className="act medal-act is-draw-spell press" aria-label={tr("Rút phép")} onClick={() => apply(draw(duel, "spell"))}>
+              <Medal tone="purple" icon="spell-book" />
             </button>
           ) : null}
           {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
-              className={`act ax press ${responding ? "is-pass" : "is-end"}`}
+              className={`act medal-act press ${responding ? "is-pass" : "is-end"}`}
+              aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
-              <span className="ax-ico">
-                <Glyph name={responding ? "check-mark" : "sands-of-time"} />
-              </span>
-              <span className="ax-label">{responding ? "OK" : tr("Hết lượt")}</span>
+              <Medal tone={responding ? "blue" : "red"} icon={responding ? "check-mark" : "hourglass"} />
             </button>
           ) : null}
         </div>
@@ -5272,6 +5262,10 @@ function UnitChips({
         onBless();
       },
     });
+  }
+  if (side === viewer && harpyAlert(duel, mon, viewer)) {
+    if (harpyOffer(duel, viewer) === "armor") z.push({ key: "armor", label: chipLabel(card.id, "armor"), go: () => apply(harpyWard(duel)) });
+    else z.push({ key: "lash", label: chipLabel(card.id, "lash"), go: () => apply(harpyLash(duel)) });
   }
   if (canWall(duel, uid) && !mon.dim) {
     z.push({ key: "wall", label: chipLabel(mon.cardId, "wall"), go: () => apply(wallAlly(duel, uid)) });

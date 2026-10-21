@@ -10044,3 +10044,180 @@ button.watch-back {
 /* Giám định: the lock box as a button. */
 .al-appraise { width: 100%; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 0 10px rgba(255, 200, 70, 0.25); }
 .al-appraise:active { transform: scale(0.97); }
+
+/* Rút quái, Rút phép, Hết lượt and OK: round stone-rimmed 3D buttons with only the icon (the Medal face),
+   in place of the glass pills. The size follows the action column's size from Tuỳ chỉnh. */
+.stage .actions .act.medal-act {
+  --medal: calc(3.05rem * var(--act-scale, 1));
+  align-self: center;
+  flex: none;
+  width: var(--medal);
+  height: var(--medal);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  animation: none;
+}
+.stage .actions .act.medal-act::before,
+.stage .actions .act.medal-act::after { content: none; }
+.stage .actions:has(.medal-act) { gap: 0.2rem; }
+.stage .actions .act.medal-act .medal {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.6));
+}
+.stage .actions .act.medal-act.is-pass .medal { animation: medal-call 1.6s ease-in-out infinite; }
+@keyframes medal-call {
+  50% { filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.6)) drop-shadow(0 0 10px #4aa8ff); }
+}
+.stage .actions .act.medal-act:active { transform: translateY(1px) scale(0.95); filter: brightness(1.12); }
+
+/* Thanh phản ứng kiểu Runeterra (chủ game 21/10): a glowing line between the two fields with one orb per action,
+   flows from the acting monster into its orb and from the orb to what it acts on, and a blue veil over the board.
+   The notice board hides while the line is up; the notice of the moment shows as a small line by the newest orb. */
+.banner.is-quiet { visibility: hidden; }
+.rx { position: absolute; inset: 0; z-index: 9; pointer-events: none; }
+.rx.is-closing { animation: rx-out 0.8s ease 0.2s forwards; }
+@keyframes rx-out { to { opacity: 0; } }
+@keyframes rx-in { from { opacity: 0; } }
+.rx-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(40 120 255 / 0.1) calc(var(--rx-y) - 24%),
+    rgb(70 160 255 / 0.24) var(--rx-y),
+    rgb(40 120 255 / 0.1) calc(var(--rx-y) + 24%),
+    transparent 100%
+  );
+  animation: rx-in 0.35s ease both;
+}
+.rx-line {
+  position: absolute;
+  height: 12cqw;
+  transform: translateY(-50%);
+  animation: rx-in 0.35s ease both;
+}
+.rx-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.7cqw;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #7fd0ff 10%, #e8f7ff 50%, #7fd0ff 90%, transparent);
+  box-shadow: 0 0 2cqw 0.4cqw rgb(80 170 255 / 0.8), 0 0 5cqw 1cqw rgb(40 120 255 / 0.45);
+}
+.rx-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.6cqw;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, #fff 0 0.32cqw, transparent 0.6cqw) 0 50% / 9cqw 100% repeat-x;
+  opacity: 0.75;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  animation: rx-sparks 2.4s linear infinite;
+}
+@keyframes rx-sparks { to { background-position: 9cqw 50%; } }
+.rx-flows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rx-flow path { fill: none; stroke-linecap: round; }
+.rx-flow .rx-glow { stroke: var(--tone); stroke-width: 2.2; opacity: 0.38; }
+.rx-flow .rx-core { stroke: color-mix(in srgb, var(--tone) 45%, #fff); stroke-width: 0.8; stroke-dasharray: 2.4 1.6; animation: rx-run 0.8s linear infinite; }
+.rx-flow .rx-tip { fill: color-mix(in srgb, var(--tone) 40%, #fff); animation: rx-tip 1s ease-in-out infinite; }
+.rx-flow.is-done { animation: rx-flow-settle 1.5s ease both; }
+@keyframes rx-run { to { stroke-dashoffset: -4; } }
+@keyframes rx-tip { 50% { opacity: 0.55; } }
+@keyframes rx-flow-settle { 0%, 40% { opacity: 1; } 100% { opacity: 0.3; } }
+.rx-orb {
+  position: absolute;
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.rx-orb.is-live { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-live 1.6s ease-in-out 0.5s infinite; }
+.rx-orb.is-done > * { animation: rx-settle 1.5s ease both; }
+@keyframes rx-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.2); } }
+@keyframes rx-live { 50% { filter: brightness(1.2) drop-shadow(0 0 1.6cqw var(--tone)); } }
+@keyframes rx-settle { 0%, 40% { opacity: 1; filter: none; } 100% { opacity: 0.5; filter: saturate(0.45) brightness(0.8); } }
+.rx-orb .medal { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6)); }
+.rx-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #10131c;
+  box-shadow: 0 0 0 0.55cqw #f1d48a, 0 0 0 1cqw rgb(20 16 10 / 0.85), 0 0 2.6cqw 0.6cqw var(--tone), 0 2px 4px rgb(0 0 0 / 0.6);
+}
+.rx-face img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 28%; }
+.rx-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgb(255 255 255 / 0.35), transparent 45%), radial-gradient(circle, transparent 55%, rgb(0 0 0 / 0.45));
+  pointer-events: none;
+}
+.rx-badge {
+  position: absolute;
+  right: -6%;
+  bottom: -6%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #bfe6ff, #1f84e8 60%, #0a2c66);
+  box-shadow: 0 0 0 0.35cqw #f1d48a, 0 1px 2px rgb(0 0 0 / 0.6);
+}
+.rx-badge .glyph3d { width: 70%; height: 70%; }
+.rx-hidden {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #cfe3ff;
+  font: 800 6cqw/1 "Barlow Condensed", system-ui, sans-serif;
+  font-style: normal;
+  text-shadow: 0 0 1.5cqw #4aa8ff;
+}
+.rx-note {
+  position: absolute;
+  z-index: 4;
+  max-width: 66%;
+  margin: 0;
+  padding: 1cqw 2.4cqw;
+  border: 1px solid rgb(120 190 255 / 0.55);
+  border-radius: 2cqw;
+  background: rgb(8 14 28 / 0.88);
+  box-shadow: 0 0 2cqw rgb(60 150 255 / 0.35);
+  color: #eef6ff;
+  font: 600 3.6cqw/1.25 "Barlow Condensed", system-ui, sans-serif;
+  text-align: center;
+  white-space: pre-line;
+  transform: translate(-50%, calc(-100% - 7.5cqw));
+  pointer-events: none;
+  animation: rx-note 3.6s ease both;
+}
+.rx-note.is-pinned { animation: rx-in 0.25s ease both; }
+@keyframes rx-note {
+  0% { opacity: 0; transform: translate(-50%, calc(-100% - 6cqw)); }
+  10%, 80% { opacity: 1; transform: translate(-50%, calc(-100% - 7.5cqw)); }
+  100% { opacity: 0; transform: translate(-50%, calc(-100% - 7.5cqw)); }
+}

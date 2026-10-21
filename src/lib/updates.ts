@@ -633,6 +633,10 @@ export const PENDING_NOTES: string[] = [
   "Kho bài: chọn một môi trường thì chỉ hiện quái và phép của môi trường đó (lá môi trường đó, và các phép của nó thêm sau này), các phép khác ẩn đi.",
   "Bộ sưu tập: ô Giám định có hình ổ khoá như ô Chưa có lá này và là nút bấm được (chưa có tác dụng).",
   "Chỉnh sửa bộ bài: kho bài chỉ hiện lá đã sở hữu. Dạng tiến hoá, dung hợp chỉ hiện khi có đủ mọi lá cần, ví dụ có Rồng con mà chưa có Phù thuỷ thời gian thì không hiện Rồng ngàn tuổi. Chế độ nhà phát hành vẫn hiện đủ mọi lá.",
+  "Nút Rút quái, Rút phép, Hết lượt và OK thành nút tròn 3D chỉ có hình: Rút quái là lá bài có vuốt (cam), Rút phép là sách phép (tím), Hết lượt là đồng hồ cát (đỏ), OK là dấu tích (xanh).",
+  "Giáp và Vuốt, Roi điện của Mỹ điểu nhân và Nữ chúa điểu nhân: quái chớp cam khi bị nhắm, bấm quái rồi bấm skill như các skill phản ứng khác. Không còn nút bên hông.",
+  "Thanh phản ứng mới: vạch sáng chạy ngang giữa hai sân. Mỗi đòn đánh, skill hay phép đang chờ là một viên tròn có đường cong chỉ tới mục tiêu. Phép đáp trả nằm bên trái và chỉ vào thứ nó tác động, ví dụ Hấp thụ ma pháp chỉ vào Sợi xích địa ngục. Viên đã xong thì mờ đi. Bấm vào viên để xem lá.",
+  "Lúc thanh phản ứng hiện, bảng thông báo ẩn đi. Thông báo hiện thành dòng nhỏ cạnh vạch rồi mờ dần, vẫn ghi trong lịch sử thông báo.",
 ];
 
 function remarkOf(notes: string[]) {
