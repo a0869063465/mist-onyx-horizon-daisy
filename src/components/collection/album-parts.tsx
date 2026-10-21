@@ -38,15 +38,18 @@ export function RarityBadge({ id }: { id: string }) {
   return <b className={`al-rarity msheet-rarity is-${tier}`}>{tier}</b>;
 }
 
-/** On the sheet of a card got from a pack or bought: Giám định, which does nothing yet (owner, 21/10). */
+/**
+ * On the sheet of a card got from a pack or bought: the lock with Giám định, a button this time (owner, 21/10), which
+ * does nothing until Giám định is made.
+ */
 export function AppraiseBox() {
   return (
-    <section className="cv-lockbox al-appraise">
+    <button type="button" className="cv-lockbox al-appraise">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" strokeWidth="2.4" />
-        <path d="M15 15l5 5" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+        <path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+        <rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="currentColor" />
       </svg>
       <b>{tr("Giám định")}</b>
-    </section>
+    </button>
   );
 }
