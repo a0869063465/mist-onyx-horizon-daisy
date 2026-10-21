@@ -1,8 +1,8 @@
 # Việc đang dở (đọc trước khi làm)
 
-Ghi lại cuối phiên ngày 19/10/2026 (cập nhật 21/10). Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này lần cuối ở commit 7c0f4ee (Cửa hàng mở cho khách, lá theo sở hữu, mã S300). Các việc ngày 21/10 mới ở nhánh này, CHƯA lên `main` (chờ chủ game bảo).
+Ghi lại cuối phiên ngày 21/10/2026. Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này lần cuối ngày 21/10 (chủ game bảo "Xong thì áp lên main"), gồm mọi việc tới hết Bộ sưu tập và kho bài Chỉnh sửa bộ bài chỉ hiện lá sở hữu.
 Vercel tự dựng bản xem thử cho nhánh này; link chính đi theo `main`. Chỉ cập nhật `main` khi chủ game bảo (đẩy nhánh lên `main`, không ép, không viết lại lịch sử). `main` cũ trước 19/10 là bản xuất từ Grok không chung lịch sử; lần gộp đầu dùng `--allow-unrelated-histories -s ours`.
-Phiên trước dừng ở đây: Bộ sưu tập đủ 3 đợt (số No, Kho bài, giá gói mới; Album sưu tập; đổi sao lấy lá, lá mới bay vào ô + Tiến độ sưu tập, nút Nhận thưởng set) đã làm và đã đẩy; chủ game nói không cần quay video (21/10), tự xem trên bản xem thử. Chờ chủ game duyệt / giao việc mới. Các mục "CHƯA làm" bên dưới vẫn phải hỏi trước.
+Phiên trước dừng ở đây: mọi việc chủ game giao đã xong, đã đẩy nhánh và đã áp lên `main`; chủ game chuyển sang cửa sổ (phiên) mới. Chờ chủ game giao việc mới. Các mục "CHƯA làm" bên dưới vẫn phải hỏi trước.
 
 ## Quy tắc làm việc với chủ game
 
