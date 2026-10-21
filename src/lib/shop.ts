@@ -162,7 +162,7 @@ function setStarCount(value: number) {
   for (const hear of starListeners) hear(next);
 }
 
-/** Publisher tool: more stars to test with. */
+/** More stars (the publisher's test button, a set's reward) or fewer (a card bought in the albums). */
 export function addStars(amount: number) {
   setStarCount(starCount() + amount);
 }
@@ -182,6 +182,11 @@ export function useStars(): number {
 export function ownedIds(): Set<string> {
   const raw = read<unknown>(OWNED_KEY, []);
   return new Set(Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : []);
+}
+
+/** A card the player now has (Đổi sao lấy lá in the albums). */
+export function addOwned(id: string) {
+  write(OWNED_KEY, [...ownedIds(), id]);
 }
 
 /** Publisher tool: forget the cards drawn, to see NEW and the refunds again. */

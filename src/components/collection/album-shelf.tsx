@@ -1,26 +1,54 @@
 import { useMemo, useState } from "react";
 import { AlbumBook } from "@/components/collection/album-book";
 import { AlbumCover, CardsIcon } from "@/components/collection/album-parts";
-import { albums, cardSets, collectionOwned, loadAlbumSeen, markAlbumSeen, newCards, type Album } from "@/lib/collection";
+import {
+  albums,
+  cardSets,
+  claimedSets,
+  claimSet,
+  collectionOwned,
+  exchangeCard,
+  loadAlbumSeen,
+  markAlbumSeen,
+  newCards,
+  type Album,
+  type CardSet,
+} from "@/lib/collection";
 import { tr } from "@/lib/i18n";
 import { ownedIds } from "@/lib/shop";
 
 /**
  * Album sưu tập (owner, 21/10, after the Collector's Files of the video): the albums in two columns, each with its
  * name, its cover, how many of its cards are owned (Hoàn thành! when all) and a red ! while it holds cards not looked
- * at yet. A cover opens its album like a book.
+ * at yet. A cover opens its album like a book. Cards bought with stars and set rewards taken there are kept here too.
  */
 export function AlbumTab() {
   const list = useMemo(() => albums(), []);
   const sets = useMemo(() => cardSets(), []);
-  const owned = useMemo(() => collectionOwned(ownedIds()), []);
+  const [owned, setOwned] = useState(() => collectionOwned(ownedIds()));
   const [seen, setSeen] = useState(() => loadAlbumSeen());
-  const [open, setOpen] = useState<{ album: Album; from: DOMRect | null } | null>(null);
+  const [claimed, setClaimed] = useState(() => claimedSets());
+  const [open, setOpen] = useState<{ album: Album; from: DOMRect | null; fresh: string[] } | null>(null);
   const fresh = useMemo(() => newCards(owned, seen), [owned, seen]);
 
+  // The album's new cards arrive as it opens, so they count as looked at from then on.
   function openAlbum(album: Album, from: DOMRect | null) {
-    setOpen({ album, from });
+    setOpen({ album, from, fresh: album.cards.filter((card) => fresh.has(card.id)).map((card) => card.id) });
     setSeen(markAlbumSeen(album.cards.filter((card) => owned.has(card.id)).map((card) => card.id)));
+  }
+
+  // A card bought in another album stays new there until that album is opened.
+  function exchange(id: string): boolean {
+    if (!exchangeCard(id)) return false;
+    setOwned(collectionOwned(ownedIds()));
+    if (open?.album.cards.some((card) => card.id === id)) setSeen(markAlbumSeen([id]));
+    return true;
+  }
+
+  function claim(set: CardSet): number {
+    const stars = claimSet(set);
+    if (stars) setClaimed(claimedSets());
+    return stars;
   }
 
   return (
@@ -59,7 +87,20 @@ export function AlbumTab() {
           })}
         </div>
       </div>
-      {open ? <AlbumBook album={open.album} from={open.from} owned={owned} sets={sets} albums={list} onClose={() => setOpen(null)} /> : null}
+      {open ? (
+        <AlbumBook
+          album={open.album}
+          from={open.from}
+          fresh={open.fresh}
+          owned={owned}
+          claimed={claimed}
+          sets={sets}
+          albums={list}
+          onExchange={exchange}
+          onClaim={claim}
+          onClose={() => setOpen(null)}
+        />
+      ) : null}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
-import { loadRates, naturalTier, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
+import { addOwned, addStars, loadRates, naturalTier, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { spellKindRank } from "./spell-kinds.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
@@ -62,7 +62,8 @@ export type CardSet = { id: string; name: string; ids: string[] };
 const forms = new Set(FORMS.map((card) => card.id));
 const deckMonsters = () => MONSTERS.map((card) => monsterCard(card.id) ?? card).filter((card) => !forms.has(card.id));
 const starsOf = (id: string) => monsterCard(id)?.stars ?? 0;
-const nameOf = (id: string) => monsterCard(id)?.name ?? spellCard(id)?.name ?? id;
+/** A card's name, a monster's or a spell's. */
+export const cardName = (id: string) => monsterCard(id)?.name ?? spellCard(id)?.name ?? id;
 
 /**
  * Sets (owner, 21/10): the cards that make a form together, named after that form, for now. Forms are not in the
@@ -115,7 +116,7 @@ function numberEnv(env: string, base: number, parts: Part[] | undefined, sets: C
       units.push(inside);
     }
     for (const id of ids) if (!placed.has(id)) units.push([id]);
-    units.sort((a, b) => starsOf(b[0]) - starsOf(a[0]) || nameOf(a[0]).localeCompare(nameOf(b[0]), "vi"));
+    units.sort((a, b) => starsOf(b[0]) - starsOf(a[0]) || cardName(a[0]).localeCompare(cardName(b[0]), "vi"));
     let no = base + part.offset;
     for (const unit of units) for (const id of unit) out.push({ id, no: no++, kind: "monster", part: part.label });
   }
@@ -227,25 +228,34 @@ export function albumOf(id: string, list = albums()): Album | undefined {
 }
 
 const SEEN_KEY = "clash-album-seen";
+const CLAIMED_KEY = "clash-set-claimed";
 
-/** The cards already looked at in their album, on this phone. */
-export function loadAlbumSeen(): Set<string> {
+function readIds(key: string): Set<string> {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]");
+    const raw: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
     return new Set(Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : []);
   } catch {
     return new Set();
   }
 }
 
-export function markAlbumSeen(ids: Iterable<string>): Set<string> {
-  const seen = loadAlbumSeen();
-  for (const id of ids) seen.add(id);
+function writeIds(key: string, ids: Set<string>) {
   try {
-    localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+    localStorage.setItem(key, JSON.stringify([...ids]));
   } catch {
     // Only for this visit then.
   }
+}
+
+/** The cards already looked at in their album, on this phone. */
+export function loadAlbumSeen(): Set<string> {
+  return readIds(SEEN_KEY);
+}
+
+export function markAlbumSeen(ids: Iterable<string>): Set<string> {
+  const seen = loadAlbumSeen();
+  for (const id of ids) seen.add(id);
+  writeIds(SEEN_KEY, seen);
   return seen;
 }
 
@@ -253,4 +263,37 @@ export function markAlbumSeen(ids: Iterable<string>): Set<string> {
 export function newCards(owned: Set<string>, seen: Set<string>): Set<string> {
   const starters = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);
   return new Set([...owned].filter((id) => !starters.has(id) && !seen.has(id)));
+}
+
+/** Đổi sao lấy lá (owner, 21/10): the stars a card of the albums costs, by its rarity; an environment card is SR. */
+export const EXCHANGE_PRICE: Record<Tier, number> = { N: 7, SR: 50, UR: 140 };
+
+export function exchangePrice(id: string, rates: Rates = loadRates()): number {
+  return EXCHANGE_PRICE[rarityOf(id, rates)];
+}
+
+/** Buys a card of the albums not owned yet, saved before any light show; false when owned or short of stars. */
+export function exchangeCard(id: string): boolean {
+  const price = exchangePrice(id);
+  if (collectionOwned(ownedIds()).has(id) || !cardNumbers().has(id) || starCount() < price) return false;
+  addOwned(id);
+  addStars(-price);
+  return true;
+}
+
+/** The sets whose stars were taken already (owner, 21/10: once each, with Nhận). */
+export function claimedSets(): Set<string> {
+  return readIds(CLAIMED_KEY);
+}
+
+/** A set's stars, once, when all its cards are owned; 0 otherwise. */
+export function claimSet(set: CardSet): number {
+  const claimed = claimedSets();
+  const owned = collectionOwned(ownedIds());
+  if (claimed.has(set.id) || !set.ids.every((id) => owned.has(id))) return 0;
+  const stars = setReward(set);
+  claimed.add(set.id);
+  writeIds(CLAIMED_KEY, claimed);
+  addStars(stars);
+  return stars;
 }

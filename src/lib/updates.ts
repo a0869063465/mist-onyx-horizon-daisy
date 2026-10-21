@@ -619,6 +619,12 @@ export const PENDING_NOTES: string[] = [
   "Album: lá cùng set đứng chung trong khung vàng, có tên set và sao thưởng (nhận thưởng có ở bản sau); đủ lá thì khung sáng lên. Set hiện có: Hiệp sĩ huyền bí, Rồng ác ma, Kỵ sĩ cưỡi rồng, Rồng ngàn tuổi.",
   "Album: lá có set nằm ở album khác (Kỵ sĩ bóng tối, Lời nguyền của rồng, Rồng con, Phù thuỷ thời gian) có dấu xích và viền sáng chạy quanh. Bấm vào thì lá loé sáng rồi mở bảng các set của lá đó, lá thiếu in mờ; bấm Xem hoặc bấm lá trong bảng để xem mô tả.",
   "Album: bấm lá khác để xem mô tả, lá chưa có hiện khoá.",
+  "Album: lá mới có (mở gói, đổi sao) mà chưa xem thì lúc mở album, ô của lá đó trống rồi lá bay vào ô, loé sáng theo độ hiếm (N xanh, SR vàng, UR hồng), lần lượt từng trang. Xong hiện bảng Tiến độ sưu tập: số lá đếm tăng dần, ánh vàng toả lên, ghi đã sưu tập bao nhiêu % album, bấm OK.",
+  "Đổi sao lấy lá: trong album bấm lá chưa có, bảng mô tả có nút Đổi kèm giá: N 7 sao, SR 50 sao, UR 140 sao, lá môi trường là SR. Bấm Đổi thì hỏi lại, ghi giá và sao trước → sau; không đủ sao thì không đổi được. Kho bài không có nút Đổi.",
+  "Đổi lá xong: các vệt sáng hút vào giữa thành vòng sáng xoay, hoá thành lá trắng rồi hiện lá, ghi Đã nhận lá. Bấm OK thì lá bay vào ô trong album và bảng Tiến độ sưu tập đếm lên. Lá ở album khác thì bay vào ô khi mở album đó.",
+  "Bảng set (lá có dấu xích) có thêm nút Đổi cho lá chưa có.",
+  "Set đủ lá thì sao thưởng thành nút Nhận, bấm để nhận sao (mỗi set một lần), số sao bay lên, sau đó ghi số sao kèm dấu ✓. Có ở khung set trên trang và trong bảng set.",
+  "Kho bài: trong bảng lọc, nút Quái thú hoặc Phép đang tắt hiện mờ hơn cho dễ thấy.",
 ];
 
 function remarkOf(notes: string[]) {

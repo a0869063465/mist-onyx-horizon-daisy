@@ -8865,7 +8865,8 @@ button.watch-back {
     radial-gradient(60% 30% at 50% 40%, rgba(255, 210, 120, 0.05), transparent 70%),
     linear-gradient(170deg, #0a1438 0%, #101a4a 45%, #0b0c2c 100%);
 }
-.cv button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+/* Low enough that any button class of the page sets its own colour. */
+:where(.cv) button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
 .cv-head {
   flex: none;
   display: flex;
@@ -9562,7 +9563,7 @@ button.watch-back {
   pointer-events: none;
 }
 .al-set-tag b,
-.al-set-tag i {
+.al-prize {
   padding: 0.35cqw 1.6cqw;
   border-radius: 999px;
   font-family: var(--cv-cond);
@@ -9574,8 +9575,19 @@ button.watch-back {
   white-space: nowrap;
 }
 .al-set-tag b { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #3a2600; background: linear-gradient(180deg, #fff0b8, #e2b24c 60%, #b8861f); box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.25); }
-.al-set-tag i { color: #fff8dc; background: linear-gradient(180deg, #6b4a12, #3c2706); box-shadow: inset 0 0 0 0.25cqw #e2b24c; }
-.al-set:not(.is-done) .al-set-tag i { filter: grayscale(1); opacity: 0.5; }
+/* A set's stars: dimmed until it is complete, Nhận to take them, ticked once taken. */
+.al-prize { border: 0; color: #fff8dc; background: linear-gradient(180deg, #6b4a12, #3c2706); box-shadow: inset 0 0 0 0.25cqw #e2b24c; }
+.al-prize.is-dim { filter: grayscale(1); opacity: 0.5; }
+.al-prize.is-got { color: #ffe9a6; background: linear-gradient(180deg, #4b3a1a, #2a1f0a); box-shadow: inset 0 0 0 0.25cqw rgba(226, 178, 76, 0.6); opacity: 0.85; }
+.al-prize.is-claim {
+  pointer-events: auto;
+  color: #3a2200;
+  background: linear-gradient(180deg, #fff3b0, #ffc22e 55%, #e58a00);
+  box-shadow: 0 0 0 0.3cqw #fff6cf, 0 0 2.4cqw rgba(255, 190, 40, 0.95);
+  animation: al-claim 1.2s ease-in-out infinite;
+}
+.al-prize.is-claim:active { transform: scale(0.94); }
+@keyframes al-claim { 50% { transform: scale(1.08); box-shadow: 0 0 0 0.3cqw #fff6cf, 0 0 4cqw rgba(255, 190, 40, 1); } }
 
 /* A card with sets in other albums or in more than one set: a chain, and a light running round it. */
 @property --al-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -9700,9 +9712,8 @@ button.watch-back {
 .al-panel-info { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
 .al-panel-info h3 { margin: 0; font-family: var(--cv-cond); font-size: 1.35rem; font-weight: 700; line-height: 1.1; color: #fff1c4; }
 .al-panel-info small { font-family: var(--cv-cond); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.03em; color: rgba(214, 226, 255, 0.75); }
+.al-panel-btns { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.3rem; }
 .al-panel-view {
-  align-self: flex-start;
-  margin-top: 0.3rem;
   padding: 0.45rem 1.4rem;
   border: 1px solid rgba(160, 196, 255, 0.5);
   border-radius: 0.65rem;
@@ -9715,25 +9726,337 @@ button.watch-back {
   letter-spacing: 0.04em;
 }
 .al-panel-view:active { transform: scale(0.95); }
+.al-panel-view i { font-style: normal; }
+.al-panel-view.is-trade { color: #3a2200; border-color: #ffe08a; background: linear-gradient(180deg, #fff1b0, #ffc23a 55%, #e08a0c); }
 .al-panel-set { margin-top: 0.9rem; padding: 0.6rem 0.6rem 0.7rem; border: 1px solid rgba(195, 154, 66, 0.6); border-radius: 0.8rem; background: rgba(255, 214, 120, 0.06); }
 .al-panel-set.is-done { border-color: #ffd76a; box-shadow: 0 0 14px rgba(255, 200, 80, 0.4); }
 .al-panel-set header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
 .al-panel-set header b { font-family: var(--cv-cond); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.03em; color: #ffe6a6; }
-.al-panel-set header i {
-  padding: 0.1rem 0.6rem;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #6b4a12, #3c2706);
-  box-shadow: inset 0 0 0 1px #e2b24c;
-  color: #fff8dc;
-  font-family: var(--cv-cond);
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: 800;
-}
-.al-panel-set:not(.is-done) header i { filter: grayscale(1); opacity: 0.5; }
+.al-panel-set header .al-prize { padding: 0.12rem 0.65rem; font-size: 1rem; }
+.al-panel-set header .al-prize:not(.is-claim) { box-shadow: inset 0 0 0 1px #e2b24c; }
+.al-panel-set header .al-prize.is-claim { padding: 0.25rem 0.85rem; font-size: 1.05rem; }
 .al-panel-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
 .al-panel-card { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; }
 .al-panel-card .al-pic { width: 100%; margin-bottom: 0.15rem; }
 .al-panel-card.is-self .al-pic { border-radius: 6%; outline: 2px solid #79d4ff; outline-offset: 2px; }
 .al-panel-card small { font-family: var(--cv-cond); font-size: 0.78rem; font-weight: 700; line-height: 1.1; text-align: center; color: rgba(214, 226, 255, 0.8); }
 .al-panel-card.is-missing small { color: rgba(214, 226, 255, 0.4); }
+
+/* ── Album sưu tập, part 3 (owner, 21/10): new cards arriving, Tiến độ sưu tập, Đổi sao lấy lá, Nhận ── */
+.al-view .tone-N { --tone: #7cc8ff; --tone-2: #2f7bff; }
+.al-view .tone-SR { --tone: #ffd36b; --tone-2: #ff9d1c; }
+.al-view .tone-UR { --tone: #ff8ad8; --tone-2: #7b8cff; }
+
+/* A new card waits as an empty pocket, then drops in glowing in its rarity's colour. */
+.al-pocket.is-pending .al-slot > .al-pic,
+.al-pocket.is-pending .al-link { opacity: 0; }
+.al-pocket.is-arriving { z-index: 4; }
+.al-pocket.is-arriving .al-slot > .al-pic { animation: al-arrive 0.8s cubic-bezier(0.2, 0.75, 0.25, 1) calc(var(--i, 0) * 0.13s) both; }
+.al-pocket.is-arriving .al-link { animation: al-fade-in 0.3s ease-out calc(var(--i, 0) * 0.13s + 0.6s) both; }
+.al-flash {
+  position: absolute;
+  inset: -14% -20%;
+  z-index: 3;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 0%, var(--tone) 36%, transparent 72%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: al-flash 0.8s ease-out calc(var(--i, 0) * 0.13s) both;
+}
+@keyframes al-arrive {
+  0% { opacity: 0; transform: translateY(-70%) scale(1.08); filter: brightness(3.4) saturate(0) drop-shadow(0 0 2.6cqw var(--tone)); }
+  25% { opacity: 1; }
+  58% { transform: none; filter: brightness(2.6) saturate(0.2) drop-shadow(0 0 3cqw var(--tone)); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+@keyframes al-flash {
+  0%,
+  40% { opacity: 0; transform: scale(0.6); }
+  58% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+@keyframes al-fade-in { from { opacity: 0; } }
+
+/* Stars taken from a set rise from its Nhận. */
+.al-float {
+  position: fixed;
+  z-index: 80;
+  font-family: var(--cv-cond);
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #ffe27a;
+  text-shadow: 0 0 10px rgba(255, 190, 60, 0.9), 0 2px 3px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: al-float 1.3s ease-out both;
+}
+@keyframes al-float {
+  from { opacity: 0; transform: translate(-50%, -60%) scale(0.7); }
+  20% { opacity: 1; transform: translate(-50%, -110%) scale(1.1); }
+  to { opacity: 0; transform: translate(-50%, -260%) scale(1); }
+}
+
+/* On the sheet of an album card not owned: the lock, then Đổi with the price. */
+.al-trade { flex-wrap: wrap; }
+.al-trade-btn {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: linear-gradient(180deg, #fff1b0, #ffc23a 55%, #e08a0c);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  color: #3a2200;
+  font-family: var(--cv-cond);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.al-trade-btn i { font-style: normal; }
+.al-trade-btn:active { transform: scale(0.96); }
+
+/* Đổi lá, asked once more. */
+.al-ask-back {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  animation: msheet-fade 180ms ease-out both;
+}
+.al-ask {
+  width: min(100%, 21rem);
+  padding: 1rem 1rem 0.95rem;
+  border: 1px solid rgba(255, 215, 106, 0.6);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(24, 34, 78, 0.98), rgba(8, 12, 32, 0.98));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: al-ask-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes al-ask-in { from { opacity: 0; transform: scale(0.92); } }
+.al-ask h3 { margin: 0 0 0.7rem; font-family: var(--cv-cond); font-size: 1.4rem; font-weight: 700; letter-spacing: 0.05em; text-align: center; color: var(--cv-gold); }
+.al-ask-card { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem; }
+.al-ask-pic { flex: none; width: 28%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
+.al-ask-info { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; min-width: 0; }
+.al-ask-info b { font-family: var(--cv-cond); font-size: 1.25rem; font-weight: 700; line-height: 1.1; color: #fff1c4; }
+.al-ask-info small { font-family: var(--cv-cond); font-size: 0.92rem; font-weight: 700; color: rgba(214, 226, 255, 0.75); }
+.al-rarity {
+  display: inline-block;
+  min-width: 2.2rem;
+  padding: 0.1rem 0.55rem 0.1rem 0.75rem;
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
+  font-family: var(--cv-cond);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: #fff;
+}
+.al-rarity.is-N { background: linear-gradient(90deg, #1d4fd1, #5b95ff); }
+.al-rarity.is-SR { background: linear-gradient(90deg, #ff5a0a 0%, #ff8a14 45%, #ffc21f 85%, #ffe14a 100%); text-shadow: 0 1px 1px #8a3000; }
+.al-rarity.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
+.al-ask-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.5rem 0.7rem; border-top: 1px solid var(--cv-line); }
+.al-ask-row span { font-size: 0.95rem; font-weight: 700; color: rgba(214, 226, 255, 0.8); }
+.al-ask-row b { font-family: var(--cv-cond); font-size: 1.25rem; font-weight: 800; color: #ffe27a; }
+.al-ask-row b i { margin: 0 0.2rem; font-style: normal; color: rgba(214, 226, 255, 0.6); }
+.al-ask-row b em { font-style: normal; color: #ff8a7a; }
+.al-ask-short { margin: 0.2rem 0 0; font-weight: 700; text-align: center; color: #ff8a7a; }
+.al-ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.85rem; }
+.al-ask-btns button { padding: 0.65rem 0; border-radius: 0.7rem; font-family: var(--cv-cond); font-size: 1.2rem; font-weight: 800; letter-spacing: 0.05em; }
+.al-ask-btns button:active:not(:disabled) { transform: scale(0.96); }
+.al-ask-no { border: 1px solid var(--cv-line); background: rgba(4, 10, 34, 0.75); color: #e8efff; }
+.al-ask-yes { border: 1px solid #ffe08a; background: linear-gradient(180deg, #fff1b0, #ffc23a 55%, #e08a0c); box-shadow: 0 0 12px rgba(255, 190, 60, 0.45); color: #3a2200; }
+.al-ask-yes:disabled { box-shadow: none; filter: grayscale(0.6); opacity: 0.4; }
+
+/* The card bought: light rushes in, whirls into a ring of sparks, closes into a white card, and the card shows. */
+.al-forge {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  background: radial-gradient(70% 50% at 50% 50%, rgba(10, 18, 46, 0.86), rgba(0, 0, 0, 0.94));
+  animation: msheet-fade 200ms ease-out both;
+}
+.al-forge-streaks,
+.al-forge-ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.al-forge-streaks i {
+  position: absolute;
+  left: 0;
+  top: -0.09rem;
+  width: 26vmin;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff, var(--tone) 18%, transparent);
+  box-shadow: 0 0 8px var(--tone);
+  opacity: 0;
+  transform-origin: 0 50%;
+  animation: al-streak 0.62s cubic-bezier(0.5, 0, 0.75, 0.4) var(--d) both;
+}
+@keyframes al-streak {
+  from { opacity: 0; transform: rotate(var(--a)) translateX(var(--r)); }
+  20% { opacity: 1; }
+  to { opacity: 0.2; transform: rotate(var(--a)) translateX(2vmin); }
+}
+.al-forge-ring { display: none; }
+.al-forge.is-ring .al-forge-ring { display: block; animation: al-ring-spin 0.7s linear infinite, al-ring-close 0.86s cubic-bezier(0.6, 0, 0.8, 0.6) both; }
+.al-forge:not(.is-streak) .al-forge-streaks { display: none; }
+.al-forge-ring::before {
+  content: "";
+  position: absolute;
+  left: -30vmin;
+  top: -30vmin;
+  width: 60vmin;
+  height: 60vmin;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 62%, var(--tone) 90%, #fff 100%);
+  -webkit-mask: radial-gradient(closest-side, transparent 92%, #000 93% 99%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 92%, #000 93% 99%, transparent 100%);
+  opacity: 0.9;
+}
+.al-forge-ring i {
+  position: absolute;
+  left: -0.45rem;
+  top: -0.45rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, var(--tone) 55%, transparent 72%);
+  box-shadow: 0 0 14px var(--tone);
+  transform: rotate(calc(var(--k) * 45deg)) translateX(30vmin);
+}
+@keyframes al-ring-spin { to { rotate: 360deg; } }
+@keyframes al-ring-close {
+  from { opacity: 0; scale: 1.15; }
+  15% { opacity: 1; }
+  to { opacity: 1; scale: 0.25; }
+}
+.al-forge-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(56vw, 15rem);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.3);
+}
+.al-forge.is-card .al-forge-card,
+.al-forge.is-shown .al-forge-card { opacity: 1; transform: translate(-50%, -50%); transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2), opacity 0.2s; }
+.al-forge-card .al-pic { filter: drop-shadow(0 0 22px var(--tone)); }
+.al-forge-white { position: absolute; inset: 0; border-radius: 6%; background: #fff; box-shadow: 0 0 40px 10px var(--tone), 0 0 90px 20px var(--tone-2); }
+.al-forge.is-shown .al-forge-white { opacity: 0; transition: opacity 0.45s ease-out; }
+.al-forge-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + min(42vw, 11.25rem) + 0.9rem);
+  margin: 0;
+  font-family: var(--cv-cond);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 12px var(--tone);
+  opacity: 0;
+}
+.al-forge-ok,
+.al-stat-ok {
+  min-width: 9rem;
+  padding: 0.55rem 1.6rem;
+  border: 1px solid #ffe08a;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1c2340, #0b0f22);
+  box-shadow: inset 0.3rem 0 0 #ffc23a, 0 0 14px rgba(255, 196, 70, 0.35);
+  color: #fff;
+  font-family: var(--cv-cond);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0;
+}
+.al-forge-ok { position: absolute; left: 50%; top: calc(50% + min(42vw, 11.25rem) + 3.4rem); transform: translateX(-50%); }
+.al-forge.is-shown .al-forge-text,
+.al-forge.is-shown .al-forge-ok { opacity: 1; transition: opacity 0.35s 0.2s; }
+
+/* Tiến độ sưu tập: the album's count climbs, a golden light rises under it, then the share of the album and OK. */
+.al-stat-back {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.62);
+  animation: msheet-fade 200ms ease-out both;
+}
+.al-stat-back::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 100%;
+  background: radial-gradient(38% 75% at 50% 100%, rgba(255, 200, 70, 0.9), rgba(255, 170, 30, 0.4) 45%, transparent 78%);
+  opacity: 0;
+  transform: translateY(30%);
+  transition: opacity 0.5s, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.al-stat-back.is-lit::before { opacity: 1; transform: none; }
+.al-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: min(100%, 20rem);
+  padding: 1.7rem 1rem 1.2rem;
+  border: 1px solid rgba(255, 215, 106, 0.4);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(10, 14, 34, 0.78), rgba(6, 8, 20, 0.8));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  animation: al-ask-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.al-stat-tag {
+  position: absolute;
+  top: -0.85rem;
+  padding: 0.2rem 1rem;
+  border: 1px solid rgba(255, 215, 106, 0.5);
+  border-radius: 999px;
+  background: #0b0f22;
+  font-family: var(--cv-cond);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #f1f5ff;
+}
+.al-stat-num {
+  font-family: var(--cv-cond);
+  font-size: 3.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(255, 210, 110, 0.6);
+}
+.al-stat-swoosh {
+  display: block;
+  width: 72%;
+  height: 0.9rem;
+  margin-top: -0.4rem;
+  border-bottom: 3px solid #f2b33c;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  filter: drop-shadow(0 0 6px #ffb52e);
+}
+.al-stat-pct { margin: 0.5rem 0 0; font-weight: 700; color: #ffe9a6; opacity: 0; transition: opacity 0.4s 0.15s; }
+.al-stat-ok { margin-top: 0.7rem; transition: opacity 0.4s 0.3s; }
+.al-stat-back.is-lit .al-stat-pct,
+.al-stat-back.is-lit .al-stat-ok { opacity: 1; }

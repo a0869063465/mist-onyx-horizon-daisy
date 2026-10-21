@@ -563,6 +563,14 @@ const PAIRS: Array<[string, string]> = [
   ["Trang trước", "Previous page"],
   ["Trang sau", "Next page"],
   ["Xem", "View"],
+  ["Đổi", "Exchange"],
+  ["Đổi lá", "Exchange card"],
+  ["Giá", "Price"],
+  ["Nhận", "Claim"],
+  ["Đã nhận lá", "Card received"],
+  ["Tiến độ sưu tập", "Collection progress"],
+  ["Đã sưu tập", "Collected"],
+  ["Hoàn thành album!", "Album complete!"],
 ];
 
 const EXACT = new Map(PAIRS);
