@@ -658,6 +658,7 @@ export const PENDING_NOTES: string[] = [
   "Bộ sưu tập: nhãn độ hiếm trên bảng mô tả lá phép dời sang bên trái, không còn che mana tiêu hao.",
   "Bộ sưu tập: bấm Thông thường lần nữa để sắp xếp ngược lại.",
   "Bảng quái: Máy quay thưởng chỉ có Quay thưởng và Con bạc nổi giận là kỹ năng chủ động, Số 7, Kiếm, Khiên, Thập tự, Số 6 đi kèm Quay thưởng. Trái tim hải long chỉ có Triều lên là chủ động, Con nước lớn tàn phá và Đại hồng thuỷ huỷ diệt đi kèm.",
+  "Bộ sưu tập và Album: lá fake của Bộ bài Khởi đầu hiện đủ màu, vẫn chưa sở hữu nên không tính vào số lá, phần thưởng hay các chức năng khác.",
 ];
 
 function remarkOf(notes: string[]) {

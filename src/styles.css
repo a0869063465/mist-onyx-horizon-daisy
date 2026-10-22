@@ -9581,6 +9581,7 @@ button.watch-back {
 .al-slot > .al-pic { position: absolute; inset: 3.5% 4.5%; aspect-ratio: auto; }
 .al-pic-art { position: absolute; inset: 2.6% 3.8%; border-radius: 9% / 6%; background: #0b0b0e center 20% / cover no-repeat; }
 .al-pic-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.al-pic.is-fake { opacity: 0.95; }
 .al-pic.is-missing { filter: grayscale(1) brightness(0.62) contrast(0.9); opacity: 0.88; }
 
 /* The cards of one set stand framed together, the set's name and stars on the frame; lit once all are owned. */
