@@ -10572,3 +10572,25 @@ button.watch-back {
 @keyframes op-from-pile { from { opacity: 0; transform: translate(var(--to-pile), 26cqh) scale(0.42) rotate(12deg); } }
 .op.is-leave .op-card { animation: op-to-hand 0.45s ease-in both; }
 @keyframes op-to-hand { to { opacity: 0; transform: translateY(30cqh) scale(0.6); } }
+
+/* Giám định: Sát hạch + Thực chiến panel */
+.ap-back { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(6, 8, 14, 0.82); padding: 1rem; }
+.ap-panel { width: min(24rem, 100%); max-height: 88vh; overflow: auto; display: grid; gap: 0.6rem; padding: 1rem; border: 2px solid #c9a24b; border-radius: 0.8rem; background: #141a2a; color: #f1e8cf; }
+.ap-panel h2 { margin: 0; text-align: center; color: #e8c872; font-size: 1.5rem; }
+.ap-row, .ap-opt, .ap-go, .ap-close { position: relative; display: grid; gap: 0.15rem; text-align: left; padding: 0.7rem 0.8rem; border: 1px solid #5b6480; border-radius: 0.6rem; background: #1f2740; color: inherit; font: inherit; }
+.ap-row span { font-size: 0.9rem; opacity: 0.8; }
+.ap-row i { position: absolute; right: 0.7rem; top: 0.6rem; color: #6fe09a; font-style: normal; font-weight: 700; }
+.ap-opt.is-right { border-color: #6fe09a; background: #1d3a2c; }
+.ap-opt.is-wrong { border-color: #ff7a6b; background: #4a2420; }
+.ap-go { text-align: center; background: #c9a24b; color: #1a1406; font-weight: 700; }
+.ap-close { text-align: center; }
+.ap-ask { margin: 0; font-size: 1.1rem; }
+.ap-count, .ap-why { margin: 0; opacity: 0.8; font-size: 0.92rem; }
+.ap-paid { margin: 0; text-align: center; color: #6fe09a; }
+.ap-trial { position: fixed; left: 0.5rem; right: 0.5rem; top: 0.4rem; z-index: 60; display: grid; gap: 0.15rem; padding: 0.5rem 0.7rem; border: 1px solid #c9a24b; border-radius: 0.6rem; background: rgba(20, 26, 42, 0.92); color: #f1e8cf; font-size: 0.85rem; pointer-events: none; }
+.ap-trial b { color: #e8c872; }
+.ap-trial .ap-quit { pointer-events: auto; justify-self: end; font: inherit; color: inherit; background: none; border: 0; text-decoration: underline; }
+.ap-result { pointer-events: auto; position: fixed; inset: 0; z-index: 95; display: grid; align-content: center; justify-items: center; gap: 0.6rem; background: rgba(6, 8, 14, 0.85); text-align: center; padding: 1.5rem; }
+.ap-result h3 { margin: 0; font-size: 2rem; color: #e8c872; }
+.ap-result p { margin: 0; max-width: 20rem; }
+.ap-result button { padding: 0.6rem 1.6rem; border-radius: 0.6rem; border: 1px solid #c9a24b; background: #c9a24b; color: #1a1406; font: inherit; font-weight: 700; }

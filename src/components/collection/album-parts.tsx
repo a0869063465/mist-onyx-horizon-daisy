@@ -1,4 +1,6 @@
-import type { Ref } from "react";
+import { useState, type Ref } from "react";
+import { AppraisePanel } from "@/components/collection/appraise-panel";
+import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { rarityOf, rarityTag, type Album } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
@@ -42,14 +44,18 @@ export function RarityBadge({ id }: { id: string }) {
  * On the sheet of a card got from a pack or bought: the lock with Giám định, a button this time (owner, 21/10), which
  * does nothing until Giám định is made.
  */
-export function AppraiseBox() {
+export function AppraiseBox({ id }: { id: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <button type="button" className="cv-lockbox al-appraise">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-        <rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="currentColor" />
-      </svg>
-      <b>{tr("Giám định")}</b>
-    </button>
+    <>
+      <button type="button" className="cv-lockbox al-appraise" onClick={() => canAppraise(id) && setOpen(true)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+          <rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="currentColor" />
+        </svg>
+        <b>{tr("Giám định")}</b>
+      </button>
+      {open ? <AppraisePanel id={id} onClose={() => setOpen(false)} /> : null}
+    </>
   );
 }

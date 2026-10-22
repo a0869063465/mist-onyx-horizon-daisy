@@ -243,7 +243,7 @@ export function AlbumBook({
   const leaves = !turn ? [leaf(index, "")] : turn.dir === 1 ? [leaf(turn.to, "is-under"), leaf(index, "is-turn-next")] : [leaf(index, "is-under"), leaf(turn.to, "is-turn-back")];
   // Not owned: Đổi; got from a pack or bought: Giám định; the default deck's and forms: nothing.
   const asideFor = (id: string) =>
-    forms.has(id) || !numbered.has(id) ? null : !owned.has(id) ? <ExchangeBox id={id} onAsk={setAsk} /> : awaitsAppraisal(id, owned) ? <AppraiseBox /> : null;
+    forms.has(id) || !numbered.has(id) ? null : !owned.has(id) ? <ExchangeBox id={id} onAsk={setAsk} /> : awaitsAppraisal(id, owned) ? <AppraiseBox id={id} /> : null;
   const badgeFor = (id: string) => <RarityBadge id={id} />;
   const shown = turn ? turn.to : index;
 

@@ -21,6 +21,8 @@ import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
+import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
+import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/trial";
 import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
@@ -1407,6 +1409,9 @@ function PlayPage() {
   const [duel, setDuel] = useState<Duel | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tutorial, setTutorial] = useState(false);
+  /** Thực chiến of a Giám định: the card and level being played. */
+  const [trial, setTrial] = useState<{ id: string; level: number } | null>(null);
+  const [trialPaid, setTrialPaid] = useState(false);
   const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
@@ -1633,6 +1638,20 @@ function PlayPage() {
         setDuel(createTutorialDuel());
         return;
       }
+      if (saved === TRIAL_MODE) {
+        let picked: { id: string; level: number } | null = null;
+        try {
+          picked = JSON.parse(sessionStorage.getItem(TRIAL_KEY) ?? "null") as { id: string; level: number } | null;
+        } catch {
+          picked = null;
+        }
+        if (picked) {
+          matchRef.current = null;
+          setTrial(picked);
+          setDuel(createTrialDuel(picked.id, picked.level));
+          return;
+        }
+      }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
       const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : withMachineFaces(createDuel(loadDeck(), mode));
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
@@ -1706,7 +1725,7 @@ function PlayPage() {
   }, [duel?.recall]);
 
   useEffect(() => {
-    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial) return;
+    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial || trial) return;
     const aiResponds = duel.step === "respond" && duel.hold?.priority === 1;
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
@@ -1730,7 +1749,26 @@ function PlayPage() {
       });
     }, wait);
     return () => window.clearTimeout(timer);
-  }, [duel, busy, loaded, tutorial]);
+  }, [duel, busy, loaded, tutorial, trial]);
+
+  // Thực chiến: the opponent follows its script, and the match is judged after every move.
+  const verdict = trial && duel ? trialVerdict(duel, trial.level) : null;
+  useEffect(() => {
+    if (!trial || !duel || !loaded || busy || verdict) return;
+    const timer = window.setTimeout(() => {
+      setDuel((current) => {
+        if (!current) return current;
+        const next = trialFoe(current, trial.level);
+        if (!next || next === current) return current;
+        if (next.live !== current.live) holdNotice(next.live, false, next.clock);
+        return next;
+      });
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [duel, trial, loaded, busy, verdict]);
+  useEffect(() => {
+    if (trial && verdict === "pass") setTrialPaid(markTrial(trial.id, trial.level));
+  }, [trial, verdict]);
 
   useEffect(() => {
     if (!duel || busy || duel.winner !== null || duel.step !== "main" || duel.upkeep || duel.reel?.kind !== "gun" || duel.reel.phase !== "wait") return;
@@ -1775,8 +1813,8 @@ function PlayPage() {
   // hand opens.
   // The tutorial needs no match loading (chủ game 22/10).
   useEffect(() => {
-    if (tutorial) setLoaded(true);
-  }, [tutorial]);
+    if (tutorial || trial) setLoaded(true);
+  }, [tutorial, trial]);
   const openerLive = Boolean(duel?.opener);
   useEffect(() => {
     if (openerLive && !wasOpener.current) setIntroSeen(false);
@@ -3579,7 +3617,7 @@ function PlayPage() {
   return (
     <main className="stage">
       <GlyphDefs />
-      {loaded || tutorial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
+      {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroSeen(true)} /> : null}
       {openerOpen ? (
         <OpenerPanel
@@ -3590,6 +3628,31 @@ function PlayPage() {
           onConfirm={confirmOpener}
           onClosed={() => setOpenerOpen(false)}
         />
+      ) : null}
+      {trial && duel ? (
+        <div className="ap-trial">
+          <b>{tr(trialLevels(trial.id)[trial.level]?.title ?? "")}</b>
+          <span>{tr(trialLevels(trial.id)[trial.level]?.goal ?? "")}</span>
+          {verdict ? (
+            <div className="ap-result">
+              <h3>{tr(verdict === "pass" ? "Hoàn thành!" : "Chưa đạt")}</h3>
+              {verdict === "pass" && trialPaid ? <p>{tr("Đã hoàn thành cả hai phần: nhận ★2")}</p> : null}
+              <p>{tr(verdict === "pass" ? "" : trialLevels(trial.id)[trial.level]?.hint ?? "")}</p>
+              {verdict === "fail" ? (
+                <button type="button" onClick={() => setDuel(createTrialDuel(trial.id, trial.level))}>
+                  {tr("Thử lại")}
+                </button>
+              ) : null}
+              <button type="button" onClick={leaveTutorial}>
+                {tr("Thoát")}
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="ap-quit" onClick={leaveTutorial}>
+              {tr("Bỏ qua")}
+            </button>
+          )}
+        </div>
       ) : null}
       {loaded && tutorial ? (
         <Tutorial

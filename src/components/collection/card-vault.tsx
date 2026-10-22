@@ -68,7 +68,7 @@ export function CardVault() {
 
   const filterCount = filter.types.length + filter.stars.length + filter.kinds.length + filter.tiers.length + (filter.monsters && filter.spells ? 0 : 1);
   // Not owned: the lock; got from a pack or bought: Giám định; the default deck's and forms: nothing.
-  const lock = (id: string) => (forms.has(id) ? null : !owned.has(id) ? <LockBox /> : awaitsAppraisal(id, owned) ? <AppraiseBox /> : null);
+  const lock = (id: string) => (forms.has(id) ? null : !owned.has(id) ? <LockBox /> : awaitsAppraisal(id, owned) ? <AppraiseBox id={id} /> : null);
   const badge = (id: string) => <RarityBadge id={id} />;
 
   function flip(next: Exclude<Panel, null>) {

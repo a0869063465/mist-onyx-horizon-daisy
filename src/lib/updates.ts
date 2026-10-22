@@ -654,6 +654,7 @@ export const PENDING_NOTES: string[] = [
   "Nút Rút quái trong trận đổi icon thành đầu sói, giống icon quái thú trong Chỉnh sửa bộ bài.",
   "Hướng dẫn: khi người giữ khoá nói, bảng thông báo ẩn đi, nên không còn hai khung chồng lên nhau (ví dụ lúc Hãy rút 1 lá bài).",
   "Hướng dẫn chơi không còn màn tải trận, vào thẳng trận hướng dẫn.",
+  "Giám định: bấm nút Giám định của lá để làm Sát hạch (5 câu trắc nghiệm) và Thực chiến. Hiện có cho Khổng lồ 1 mắt. Xong cả hai phần được ★2.",
 ];
 
 function remarkOf(notes: string[]) {
