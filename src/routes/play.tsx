@@ -454,10 +454,16 @@ function NoticeText({ text }: { text: string }) {
 function spoken(text: string, viewer: Side): string {
   let out = text;
   if (viewer === 1) out = out.replaceAll("Đối thủ", "\u0001").replaceAll("Bạn", "Đối thủ").replaceAll("\u0001", "Bạn");
-  return out.replace(/Đối thủ rút ([^.]*)/g, (_, name: string) => {
-    const called = name.trim();
-    const monster = MONSTERS.some((card) => card.name === called);
-    return monster ? "Đối thủ rút 1 quái" : "Đối thủ rút 1 phép";
+  // The drawn card's name may be followed by more of the notice ("… có thể triệu hồi quái thú N sao"): only the name is
+  // hidden, the rest stays.
+  return out.replace(/Đối thủ rút ([^.]*)/g, (_, rest: string) => {
+    const called = rest.trim();
+    const named = (cards: Array<{ name: string }>) =>
+      [...cards].sort((a, b) => b.name.length - a.name.length).find((card) => called === card.name || called.startsWith(`${card.name} `));
+    const monster = named(MONSTERS);
+    const spell = monster ? null : named(SPELLS);
+    const tail = monster ? called.slice(monster.name.length) : spell ? called.slice(spell.name.length) : "";
+    return `${monster ? "Đối thủ rút 1 quái" : "Đối thủ rút 1 phép"}${tail}`;
   });
 }
 
