@@ -22,13 +22,6 @@ export function ownFace(): DuelFace {
   return { deck: entry?.name ?? null, cover: entry ? coverOf(entry) : null };
 }
 
-/** Vs Máy: the computer plays a copy of your deck, so its champion is another of the deck's monsters with the most
- *  stars, other than yours, when the deck has one. It shows no deck name, only "Máy". */
-export function machineFace(monsters: string[], yours: string | null): DuelFace {
-  const pool = topMonsters(monsters, yours);
-  return { deck: null, cover: pool[Math.floor(Math.random() * pool.length)] ?? yours };
-}
-
 /** The other player's deck as the room has it. A game that sends no cover gets the first of its top monsters. */
 export function roomFace(deck: NetDeck | null): DuelFace {
   if (!deck) return { deck: null, cover: null };

@@ -700,6 +700,37 @@ export function playLine(cue: LineCue, delay = 0) {
 }
 
 /**
+ * Nhiệm vụ after a match (chủ game 22/10), made here like the other sounds: a soft rising run as a bar fills, a bright
+ * chord when a mission is done, a whoosh with sparkle as the gold streak flies, and a coin as it lands in the total.
+ */
+export type RewardCue = "rise" | "done" | "streak" | "coin";
+
+export function playReward(cue: RewardCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = fxLoud();
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "rise") {
+      noiseBurst(audio, t, 0.5, 500, 2600, 0.05 * vol);
+      for (const [freq, at] of [[523.3, 0], [659.3, 0.09], [784, 0.18], [1046.5, 0.27]] as const) softPop(audio, t + at, freq, 0.16, 0.05 * vol);
+    } else if (cue === "done") {
+      for (const freq of [523.3, 659.3, 784]) pad(audio, t, freq, 0.9, 0.03 * vol);
+      for (const [freq, at] of [[1568, 0.02], [2093, 0.08], [2637, 0.14]] as const) bell(audio, t + at, freq, 0.9, 0.04 * vol);
+      shimmer(audio, t + 0.05, 0.7, 0.025 * vol);
+    } else if (cue === "streak") {
+      noiseBurst(audio, t, 0.55, 900, 6000, 0.09 * vol);
+      shimmer(audio, t, 0.6, 0.03 * vol);
+    } else {
+      bell(audio, t, 2093, 0.5, 0.05 * vol);
+      bell(audio, t + 0.05, 2637, 0.6, 0.04 * vol);
+      softPop(audio, t, 880, 0.12, 0.06 * vol);
+    }
+  });
+}
+
+/**
  * A soft wooden "pop" for buttons: one rounded sine note that dips a little and fades fast, through a low-pass so
  * nothing hisses or rings (owner, 19/10: taps should stay quiet under the music, no rustle, no beeping).
  */

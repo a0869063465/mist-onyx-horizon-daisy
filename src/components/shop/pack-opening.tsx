@@ -20,7 +20,7 @@ type Spark = { dx: number; dy: number; size: number; delay: number };
 
 const BEAM: Record<Tier, PackCue> = { N: "beamN", SR: "beamSR", UR: "beamUR" };
 /** The card back by tier (owner, 19/10: an SR back is gold, a UR back purple). */
-const BACK: Record<Tier, string> = { N: "/ui/card-back.webp", SR: "/ui/card-back-sr.webp", UR: "/ui/card-back-ur.webp" };
+export const CARD_BACK: Record<Tier, string> = { N: "/ui/card-back.webp", SR: "/ui/card-back-sr.webp", UR: "/ui/card-back-ur.webp" };
 const TIER_LABEL: Record<Tier, string> = { N: "N", SR: "SR", UR: "UR" };
 /** When the cards start flying in after the tap, and how far apart. */
 const DEAL_AT = 1900;
@@ -309,7 +309,7 @@ function Stripes({ tier }: { tier: Tier }) {
  * The card as a picture only (owner, 19/10): its art in the gold frame of Đổi hình nền (Chỉnh sửa bộ bài),
  * no figures and no name.
  */
-function Face({ pull }: { pull: Pull }) {
+export function Face({ pull }: { pull: Pull }) {
   const art = pull.kind === "monster" ? artSrc(pull.id, 1) : spellSrc(pull.id);
   return (
     <span className="po-face">
@@ -320,7 +320,7 @@ function Face({ pull }: { pull: Pull }) {
 }
 
 /** MỚI for a card drawn for the first time, its tier, and +1★ for a card already owned. */
-function Badges({ pull }: { pull: Pull }) {
+export function Badges({ pull }: { pull: Pull }) {
   return (
     <>
       {pull.fresh ? <b className="po-new">{tr("MỚI")}</b> : null}
@@ -336,7 +336,7 @@ function PackCard({ pull, slot, flipped, pop, away, onFlip }: { pull: Pull; slot
       <button type="button" className={`po-card is-${pull.tier}${flipped ? " is-flipped" : ""}${pull.fresh ? "" : " is-owned"}${pop ? " is-pop" : ""}${away ? " is-away" : ""}`} onClick={onFlip} aria-label={flipped ? undefined : tr("Lật lá")}>
         <span className="po-card-inner">
           <span className="po-card-back">
-            <img src={BACK[pull.tier]} alt="" draggable={false} />
+            <img src={CARD_BACK[pull.tier]} alt="" draggable={false} />
           </span>
           <span className="po-card-front">
             <Face pull={pull} />
@@ -350,7 +350,7 @@ function PackCard({ pull, slot, flipped, pop, away, onFlip }: { pull: Pull; slot
 }
 
 /** Sparks flying out from the middle of their box. */
-function Burst({ count, rainbow = false }: { count: number; rainbow?: boolean }) {
+export function Burst({ count, rainbow = false }: { count: number; rainbow?: boolean }) {
   const sparks = useMemo(
     () =>
       Array.from({ length: count }, (_, index) => {

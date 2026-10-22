@@ -659,6 +659,10 @@ export const PENDING_NOTES: string[] = [
   "Bộ sưu tập: bấm Thông thường lần nữa để sắp xếp ngược lại.",
   "Bảng quái: Máy quay thưởng chỉ có Quay thưởng và Con bạc nổi giận là kỹ năng chủ động, Số 7, Kiếm, Khiên, Thập tự, Số 6 đi kèm Quay thưởng. Trái tim hải long chỉ có Triều lên là chủ động, Con nước lớn tàn phá và Đại hồng thuỷ huỷ diệt đi kèm.",
   "Bộ sưu tập và Album: lá fake của Bộ bài Khởi đầu hiện đủ màu, vẫn chưa sở hữu nên không tính vào số lá, phần thưởng hay các chức năng khác.",
+  "Vs Máy: máy có bộ bài riêng (máy Chiến binh) bằng lá thật, môi trường Thảo nguyên. Màn VS ghi tên máy (tên Nhật, mỗi trận một tên) và nhóm Chiến binh.",
+  "Nhiệm vụ: thắng trận đầu tiên trong ngày được ★2, thắng thêm 2 trận mỗi trận ★1. Tính ở Vs Máy, Đánh thường và Tuỳ chọn.",
+  "Nhiệm vụ: thắng máy Chiến binh 3 trận được 1 lá ngẫu nhiên trong Gói chung theo tỉ lệ gói (trùng lá thì hoàn ★1). Mỗi ngày nhận 1 lần, tiến độ không mất khi sang ngày.",
+  "Sau trận thắng có bảng Nhiệm vụ: thanh tiến độ chạy, sao bay vào ô tổng, lá thưởng lật như khi mở gói. Menu chính có thêm nút Nhiệm vụ.",
 ];
 
 function remarkOf(notes: string[]) {

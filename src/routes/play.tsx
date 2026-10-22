@@ -22,13 +22,16 @@ import { Medal } from "@/components/game/medal";
 import { skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
+import { settleWin, type MatchReward } from "@/lib/missions";
+import { MissionPanel } from "@/components/game/mission-panel";
 import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/trial";
 import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
-import { machineFace, ownFace, roomFace } from "@/lib/match-faces";
+import { MACHINE, withMachine } from "@/lib/machines";
+import { ownFace, roomFace } from "@/lib/match-faces";
 import {
   aiStep,
   assignBlock,
@@ -177,11 +180,10 @@ function fallenSea(prev: Duel, next: Duel, viewer: Side): string[] {
   return names;
 }
 
-/** Vs Máy: you and the computer as the VS screen shows them (chủ game 22/10, câu 8 và 9). */
-function withMachineFaces(duel: Duel): Duel {
-  if (duel.mode !== "ai") return duel;
-  const you = ownFace();
-  return { ...duel, faces: [you, machineFace(duel.players[1].roster ?? [], you.cover)] };
+/** A new match of this mode; Vs Máy plays máy chung's own deck (chủ game 22/10), shown with its name and group. */
+function newMatch(mode: Duel["mode"]): Duel {
+  const duel = createDuel(loadDeck(), mode, mode === "ai" ? MACHINE : undefined);
+  return mode === "ai" ? withMachine(duel, MACHINE, ownFace()) : duel;
 }
 
 function veilSlain(prev: Duel, next: Duel, viewer: Side): boolean {
@@ -1412,6 +1414,10 @@ function PlayPage() {
   /** Thực chiến of a Giám định: the card and level being played. */
   const [trial, setTrial] = useState<{ id: string; level: number } | null>(null);
   const [trialPaid, setTrialPaid] = useState(false);
+  /** Nhiệm vụ after a won match (chủ game 22/10): what it paid, and whether the end panels are past. */
+  const [reward, setReward] = useState<MatchReward | null>(null);
+  const [endStep, setEndStep] = useState<"wait" | "rewards" | "done">("wait");
+  const paidMatch = useRef<{ mid: string; reward: MatchReward | null } | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
@@ -1653,7 +1659,7 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
-      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : withMachineFaces(createDuel(loadDeck(), mode));
+      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
         matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
@@ -1769,6 +1775,34 @@ function PlayPage() {
   useEffect(() => {
     if (trial && verdict === "pass") setTrialPaid(markTrial(trial.id, trial.level));
   }, [trial, verdict]);
+
+  // A won match in Vs Máy, Đánh thường or Tuỳ chọn pays its missions once; when one moved, its panel comes first.
+  const ended = duel?.winner ?? null;
+  useEffect(() => {
+    if (!duel || duel.winner === null) {
+      setEndStep("wait");
+      setReward(null);
+      return;
+    }
+    const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
+    const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
+    let paid: MatchReward | null = null;
+    if (earns && duel.mid) {
+      if (paidMatch.current?.mid === duel.mid) paid = paidMatch.current.reward;
+      else {
+        paid = settleWin(duel.mid, duel.mode === "ai" ? duel.machine : null);
+        paidMatch.current = { mid: duel.mid, reward: paid };
+      }
+    }
+    if (!paid?.changed) {
+      setEndStep("done");
+      return;
+    }
+    setReward(paid);
+    const timer = window.setTimeout(() => setEndStep("rewards"), 1300);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ended, duel?.mid]);
 
   useEffect(() => {
     if (!duel || busy || duel.winner !== null || duel.step !== "main" || duel.upkeep || duel.reel?.kind !== "gun" || duel.reel.phase !== "wait") return;
@@ -3565,8 +3599,8 @@ function PlayPage() {
     const face = duel.faces?.[side] ?? null;
     const mine = side === viewer;
     return {
-      label: mine ? "Bạn" : duel.mode === "ai" ? "Máy" : "Đối thủ",
-      deck: !mine && duel.mode === "ai" ? null : face?.deck ?? null,
+      label: mine ? "Bạn" : face?.name ?? (duel.mode === "ai" ? "Máy" : "Đối thủ"),
+      deck: face?.deck ?? null,
       art: face?.cover ? artSrc(face.cover, 1) : null,
     };
   };
@@ -5223,13 +5257,14 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
-        {duel.winner !== null ? (
+        {duel.winner !== null && endStep === "rewards" && reward ? <MissionPanel reward={reward} onDone={() => setEndStep("done")} /> : null}
+        {duel.winner !== null && endStep === "done" ? (
           <div className="overlay">
             <div className="sheet">
               <h2>{duel.mode === "hotseat" || duel.mode === "test" ? (duel.winner === 0 ? "Bên 1 thắng" : "Bên 2 thắng") : duel.winner === viewer ? "Bạn thắng" : "Bạn thua"}</h2>
               {duel.mode === "net" ? null : (
                 <button type="button" className="act press" onClick={() => {
-                  const next = withMachineFaces(createDuel(loadDeck(), duel.mode));
+                  const next = newMatch(duel.mode);
                   if (next.mode === "ai" && next.step === "main" && next.winner === null) {
                     warmMatchHistory();
                     matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };

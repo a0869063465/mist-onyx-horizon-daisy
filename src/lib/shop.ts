@@ -312,6 +312,21 @@ export function buyPacks(count: 1 | 10, rng: () => number = Math.random): Purcha
   return { packs, spent: price, refund, fresh };
 }
 
+/**
+ * One card of the pack by its odds, as a mission's reward (chủ game 22/10): kept when new, else 1 star back, as in a
+ * pack. Saved at once, before the card is shown.
+ */
+export function drawReward(rng: () => number = Math.random): Pull | null {
+  const rates = loadRates();
+  const [card] = drawFrom(pools(rates), rates, 1, rng);
+  if (!card) return null;
+  const owned = ownedIds();
+  const fresh = !owned.has(card.id);
+  if (fresh) write(OWNED_KEY, [...owned, card.id]);
+  else setStarCount(starCount() + 1);
+  return { ...card, fresh, refund: fresh ? 0 : 1 };
+}
+
 // ---- Odds for the rate panel ----
 
 /** A small seeded random, so the odds shown do not jitter between renders. */

@@ -158,8 +158,9 @@ export type Hold = {
   armed: string | null;
 };
 
-/** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover). */
-export type DuelFace = { deck: string | null; cover: string | null };
+/** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
+ *  also has its own name (a Japanese name, chủ game 22/10). */
+export type DuelFace = { deck: string | null; cover: string | null; name?: string | null };
 
 /** Opening cards picked to replace: indexes into the reserve (the 2 monsters) and the hand (the spell). */
 export type OpenerPick = { reserve: number[]; hand: number[] };
@@ -168,6 +169,10 @@ export type Duel = {
   players: [Player, Player];
   turn: Side;
   opening: boolean;
+  /** This match's own id: the rewards of a match are paid once (missions.ts). */
+  mid?: string;
+  /** Vs Máy: the machine played (machines.ts), for the mission "win against the same machine 3 times". */
+  machine?: string | null;
   /** Each side's deck name and champion for the VS screen; set by the page that opens the match. */
   faces?: [DuelFace, DuelFace] | null;
   /** Đổi bài đầu trận (chủ game 22/10): before the first turn each side may replace any of its 3 opening cards once.
@@ -348,6 +353,7 @@ export function createDuel(
     players,
     turn: 0,
     opening: mode !== "test",
+    mid: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     opener: mode === "ai" || mode === "net" ? { done: [false, false] } : null,
     step: "main",
     pending: null,

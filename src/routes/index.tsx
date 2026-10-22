@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { tr, useLang } from "@/lib/i18n";
 import { listNotes, sendNote, type Note } from "@/lib/notes";
 import { playUi } from "@/lib/sfx";
+import { MissionBoard } from "@/components/game/mission-panel";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -24,6 +25,7 @@ function Home() {
   const [lock, setLock] = useState(false);
   const [code, setCode] = useState("");
   const [inbox, setInbox] = useState<Note[] | null>(null);
+  const [missions, setMissions] = useState(false);
   const held = useRef(false);
   const timer = useRef(0);
   useLang();
@@ -237,6 +239,14 @@ function Home() {
             </svg>
             <span>{tr("Bộ sưu tập")}</span>
           </Link>
+          {/* Nhiệm vụ (chủ game 22/10): today's missions, the same rows as after a match. */}
+          <button type="button" className="home-btn" data-sfx onPointerDown={() => playUi("select")} onClick={() => setMissions(true)}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 3.5h10.5a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-3 0v-1.5H4.5V5.5a2 2 0 0 1 2-2" />
+              <path d="M16.5 17.5V19a1.5 1.5 0 0 0 1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-1.5M8 8l1.2 1.2L11.5 7M8 12.5l1.2 1.2 2.3-2.2M13.5 8.2h3M13.5 12.7h3" />
+            </svg>
+            <span>{tr("Nhiệm vụ")}</span>
+          </button>
           <div className="home-row">
             <Link to="/tune" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -256,6 +266,7 @@ function Home() {
           </div>
         </nav>
       </div>
+      {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
     </main>
   );
 }
