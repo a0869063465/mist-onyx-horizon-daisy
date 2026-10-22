@@ -1,4 +1,4 @@
-import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard, STARTER_NAME } from "./catalog.ts";
+import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard, STARTER_NAME, type MonsterCard, type SpellCard } from "./catalog.ts";
 import { canUseCard, fakeIds } from "./owned-cards.ts";
 
 const KEY = "clash-beasts-deck";
@@ -8,6 +8,15 @@ const outside = new Set(FORMS.map((card) => card.id));
 
 /** `fake`: the cards of the deck that play as fakes (the starter deck's, until their real cards are owned). */
 export type BeastDeck = { monsters: string[]; spells: string[]; fake?: string[] };
+
+/** The deck list's order: monsters by stars, spells by mana, then by name. */
+export function byStars(a: MonsterCard, b: MonsterCard) {
+  return a.stars - b.stars || a.name.localeCompare(b.name, "vi");
+}
+
+export function byMana(a: SpellCard, b: SpellCard) {
+  return a.gems - b.gems || a.name.localeCompare(b.name, "vi");
+}
 
 export function withFake(deck: BeastDeck): BeastDeck {
   return { monsters: deck.monsters, spells: deck.spells, fake: fakeIds([...deck.monsters, ...deck.spells]) };

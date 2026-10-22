@@ -552,6 +552,11 @@ const PAIRS: Array<[string, string]> = [
   ["Chạm để tiếp tục", "Tap to continue"],
   ["Tiếp tục", "Continue"],
   ["/trận", "/win"],
+  ["Chơi lại", "Play again"],
+  ["Tìm hiểu bộ bài", "Deck details"],
+  ["Bộ bài của", "Deck of"],
+  ["Đối thủ muốn chơi lại.", "Your opponent wants to play again."],
+  ["Đối thủ đã rời phòng.", "Your opponent has left the room."],
 
   ["Mỗi gói", "Per pack"],
   ["có UR", "has a UR"],

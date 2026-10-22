@@ -25,6 +25,7 @@ import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { settleWin, type MatchReward } from "@/lib/missions";
 import { MissionPanel } from "@/components/game/mission-panel";
 import { EndScene } from "@/components/game/end-scene";
+import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
 import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/trial";
 import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
@@ -122,6 +123,7 @@ import {
   pullReel,
   settleReel,
   openerSwap,
+  type AgainVote,
   type Duel,
   type FieldMon,
   type OpenerPick,
@@ -183,8 +185,9 @@ function fallenSea(prev: Duel, next: Duel, viewer: Side): string[] {
 
 /** A new match of this mode; Vs Máy plays máy chung's own deck (chủ game 22/10), shown with its name and group. */
 function newMatch(mode: Duel["mode"]): Duel {
-  const duel = createDuel(loadDeck(), mode, mode === "ai" ? MACHINE : undefined);
-  return mode === "ai" ? withMachine(duel, MACHINE, ownFace()) : duel;
+  const deck = loadDeck();
+  const duel = createDuel(deck, mode, mode === "ai" ? MACHINE : undefined);
+  return mode === "ai" ? withMachine(duel, MACHINE, ownFace(deck)) : duel;
 }
 
 function veilSlain(prev: Duel, next: Duel, viewer: Side): boolean {
@@ -1527,11 +1530,12 @@ function PlayPage() {
   const [chain, setChain] = useState<ChainOrb[]>([]);
   // Màn VS (T1) and Bài khởi đầu (T2), chủ game 22/10: the VS screen plays once per match before the opening hand, and
   // the opening hand stays open until its cards have flown, even once both sides are done.
-  const [introSeen, setIntroSeen] = useState(false);
+  // introMid: the match whose VS screen has played, so a new match (Đấu lại, Chơi lại) plays it again first.
+  const [introMid, setIntroMid] = useState<string | null>(null);
+  const introSeen = introMid !== null && introMid === (duel?.mid ?? "");
   const [openerOpen, setOpenerOpen] = useState(false);
   /** Online: this side's opening pick, put again on top of the other side's when both were sent at once. */
   const openerWant = useRef<{ side: Side; pick: OpenerPick } | null>(null);
-  const wasOpener = useRef(false);
   /** The slot of each monster the reaction line points at, so a stream still lands where one fell as its orb fired. */
   const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
@@ -1563,6 +1567,15 @@ function PlayPage() {
   const rev = useRef(0);
   const pushGen = useRef(0);
   const opening = useRef(false);
+  // Chơi lại in Tuỳ chọn (chủ game 22/10): this side's vote goes to the room once per match; the host then opens the
+  // next match. `liveDuel` is the duel as last drawn, for the room's poll.
+  const againRef = useRef(false);
+  const voteSent = useRef<string | null>(null);
+  const liveDuel = useRef<Duel | null>(null);
+  liveDuel.current = duel;
+  const [again, setAgain] = useState(false);
+  // When this game saw the match end, for the time on the summary.
+  const endedAt = useRef<{ mid: string | undefined; at: number } | null>(null);
   const noticeQ = useRef<{ text: string; until: number; ink: TrailInk; clock: number }[]>([]);
   const noticeTimer = useRef(0);
   const trailLog = useRef<TrailMark[]>([]);
@@ -1742,8 +1755,10 @@ function PlayPage() {
     const quick = Boolean((join as { quick?: boolean }).quick);
     setWait(quick ? "Đang vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
     let stop = false;
+    let voting = false;
     const tick = async () => {
-      const room = await pollRoom({ data: { code: join.code, seat: join.seat } });
+      const wantDeck = join.seat === "host" && (againRef.current || liveDuel.current?.again?.[0] === "want");
+      const room = await pollRoom({ data: { code: join.code, seat: join.seat, ...(wantDeck ? { deck: true } : {}) } });
       if (stop) return;
       if (room.phase === "gone") {
         setWait("Mã không còn. Hãy tạo mã mới.");
@@ -1751,7 +1766,8 @@ function PlayPage() {
       }
       if (join.seat === "host" && room.guestDeck && !room.duel && !opening.current) {
         opening.current = true;
-        const opened: Duel = { ...createDuel(loadDeck(), "net", room.guestDeck), faces: [ownFace(), roomFace(room.guestDeck)] };
+        const deck = loadDeck();
+        const opened: Duel = { ...createDuel(deck, "net", room.guestDeck), faces: [ownFace(deck), roomFace(room.guestDeck)] };
         const pushed = await pushDuel({
           data: { code: join.code, seat: "host", duel: JSON.stringify({ ...opened, glimpse: null }) },
         });
@@ -1780,7 +1796,37 @@ function PlayPage() {
         setWait("");
         holdNotice(next.live ?? "", false, next.clock);
         setDuel(next);
+        liveDuel.current = next;
       }
+      // Chơi lại (Tuỳ chọn): send this side's vote on the finished match; the host opens the next match in the same
+      // room, with the same two decks, once the guest wants it too.
+      const last = liveDuel.current;
+      if (voting || !last || last.winner === null) return;
+      const side: Side = join.seat === "host" ? 0 : 1;
+      const votes: [AgainVote, AgainVote] = last.again ?? [null, null];
+      // A vote already in the room counts too (the page opened again while waiting).
+      if (!againRef.current && votes[side] !== "want") return;
+      if (side === 0 && votes[1] === "want") {
+        if (!room.guestDeck) return;
+        voting = true;
+        const deck = loadDeck();
+        const opened: Duel = { ...createDuel(deck, "net", room.guestDeck), faces: [ownFace(deck), roomFace(room.guestDeck)] };
+        const pushed = await pushDuel({ data: { code: join.code, seat: "host", duel: JSON.stringify({ ...opened, glimpse: null }) } }).catch(() => null);
+        voting = false;
+        if (stop || !pushed?.ok) return;
+        rev.current = pushed.rev;
+        openerWant.current = null;
+        setDuel(opened);
+        liveDuel.current = opened;
+        return;
+      }
+      if (votes[side] === "want" || voteSent.current === last.mid) return;
+      voting = true;
+      const mine: [AgainVote, AgainVote] = side === 0 ? ["want", votes[1]] : [votes[0], "want"];
+      const pushed = await pushDuel({ data: { code: join.code, seat: join.seat, duel: JSON.stringify({ ...last, again: mine, glimpse: null }) } }).catch(() => null);
+      voting = false;
+      // The room keeps the other side's vote; the next poll brings both.
+      if (pushed?.ok) voteSent.current = last.mid ?? null;
     };
     void tick();
     const timer = window.setInterval(() => void tick(), 280);
@@ -1852,8 +1898,11 @@ function PlayPage() {
       setEndStep("wait");
       setReward(null);
       setScene(null);
+      againRef.current = false;
+      setAgain(false);
       return;
     }
+    if (endedAt.current?.mid !== duel.mid) endedAt.current = { mid: duel.mid, at: Date.now() };
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
@@ -1930,10 +1979,6 @@ function PlayPage() {
   }, [tutorial, trial]);
   const openerLive = Boolean(duel?.opener);
   useEffect(() => {
-    if (openerLive && !wasOpener.current) setIntroSeen(false);
-    wasOpener.current = openerLive;
-  }, [openerLive]);
-  useEffect(() => {
     if (loaded && introSeen && openerLive) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
 
@@ -1956,6 +2001,14 @@ function PlayPage() {
     if (!prev) {
       // A match opened while something waits (a reload in an online match): the line shows what waits.
       setChain((list) => stepChain(null, duel, list));
+      return;
+    }
+    // A new match (Đấu lại, Chơi lại) starts clean: nothing of the last one plays out on it.
+    if (prev.mid !== duel.mid) {
+      setFloaters([]);
+      setMotion({ pops: [], lunges: [], hits: [] });
+      setBurst(null);
+      setChain([]);
       return;
     }
     if (prev.step !== "respond" && duel.step === "respond") windupText.current = duel.live || null;
@@ -2739,6 +2792,48 @@ function PlayPage() {
     if (!kept.saved) return;
     if (memo) memo.saved = true;
     else matchRef.current = { id: kept.id, startedAt: kept.startedAt, decks: null, saved: true };
+  }
+
+  /** Đấu lại / Chơi lại here: a new match of the same mode (Vs Máy against the machine again). */
+  function rematchHere() {
+    if (!duel) return;
+    const next = newMatch(duel.mode);
+    if (next.mode === "ai" && next.step === "main" && next.winner === null) {
+      warmMatchHistory();
+      matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
+    } else matchRef.current = null;
+    apply(next);
+  }
+
+  /** Chơi lại on the summary: Vs Máy plays the machine again, Đánh thường looks for a new match with the same deck,
+   *  Tuỳ chọn asks the same pair to play again in the same room. */
+  function playAgain() {
+    if (!duel) return;
+    if (duel.mode !== "net") {
+      rematchHere();
+      return;
+    }
+    if ((net as { quick?: boolean } | null)?.quick) {
+      sessionStorage.removeItem("clash-net");
+      sessionStorage.setItem("clash-requeue", "1");
+      void navigate({ to: "/modes" });
+      return;
+    }
+    againRef.current = true;
+    setAgain(true);
+  }
+
+  /** Tiếp tục: back to Chọn bộ bài; online, the room is told this side has left. */
+  function leaveMatch() {
+    const seat = netRef.current;
+    if (duel?.mode === "net" && seat && duel.winner !== null) {
+      const votes: [AgainVote, AgainVote] = duel.again ?? [null, null];
+      const left: [AgainVote, AgainVote] = seat.seat === "host" ? ["left", votes[1]] : [votes[0], "left"];
+      void pushDuel({ data: { code: seat.code, seat: seat.seat, duel: JSON.stringify({ ...duel, again: left, glimpse: null }) } }).catch(() => undefined);
+    }
+    againRef.current = false;
+    sessionStorage.removeItem("clash-net");
+    void navigate({ to: "/modes" });
   }
 
   function apply(next: Duel) {
@@ -3713,15 +3808,35 @@ function PlayPage() {
       return card ? [{ name: tr(card.name), art: artSrc(id, 1) }] : [];
     }),
   };
+  const sideLabel = (side: Side) => (side === viewer ? "Bạn" : duel.faces?.[side]?.name ?? (duel.mode === "ai" ? "Máy" : "Đối thủ"));
   const introSide = (side: Side): IntroSide => {
     const face = duel.faces?.[side] ?? null;
-    const mine = side === viewer;
-    return {
-      label: mine ? "Bạn" : face?.name ?? (duel.mode === "ai" ? "Máy" : "Đối thủ"),
-      deck: face?.deck ?? null,
-      art: face?.cover ? artSrc(face.cover, 1) : null,
-    };
+    return { label: sideLabel(side), deck: face?.deck ?? null, art: face?.cover ? artSrc(face.cover, 1) : null };
   };
+  // Tổng kết trận (chủ game 22/10) after Vs Máy, Đánh thường and Tuỳ chọn; Test, Hướng dẫn and Thực chiến keep the
+  // old panel. Each row has the side's name and deck as the VS screen shows them, over the board it played on.
+  const quickNet = Boolean((net as { quick?: boolean } | null)?.quick);
+  const summed = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net");
+  const summarySeat = (side: Side): SummarySeat => {
+    const face = duel.faces?.[side] ?? null;
+    const env = duel.players[side].env;
+    return { label: sideLabel(side), deck: face?.deck ?? null, cover: face?.cover ?? null, board: side === viewer ? bottomArt(env) : topArt(env), cards: face?.cards ?? null };
+  };
+  const sawEnd = endedAt.current;
+  const endAt = sawEnd && sawEnd.mid === duel.mid ? sawEnd.at : Date.now();
+  const matchSeconds = Math.max(0, Math.round((endAt - (duel.started ?? endAt)) / 1000));
+  const votes: [AgainVote, AgainVote] = duel.again ?? [null, null];
+  const theirVote = votes[viewer === 0 ? 1 : 0];
+  const againLook: SummaryAgain =
+    duel.mode !== "net" || quickNet
+      ? {}
+      : theirVote === "left"
+        ? { off: true, note: "Đối thủ đã rời phòng.", tone: "red" }
+        : again || votes[viewer] === "want"
+          ? { waiting: true }
+          : theirVote === "want"
+            ? { note: "Đối thủ muốn chơi lại." }
+            : {};
   const openerCards: OpenerCard[] = [
     ...you.reserve.map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
@@ -3770,7 +3885,7 @@ function PlayPage() {
     <main className="stage">
       <GlyphDefs />
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
-      {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroSeen(true)} /> : null}
+      {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroMid(duel.mid ?? "")} /> : null}
       {openerOpen ? (
         <OpenerPanel
           cards={openerCards}
@@ -5381,19 +5496,24 @@ function PlayPage() {
           <EndScene win={scene.win} at={scene.at} tone={scene.tone} onDone={() => setEndStep(paidMatch.current?.reward?.changed ? "rewards" : "done")} />
         ) : null}
         {duel.winner !== null && endStep === "rewards" && reward ? <MissionPanel reward={reward} onDone={() => setEndStep("done")} /> : null}
-        {duel.winner !== null && endStep === "done" ? (
+        {duel.winner !== null && endStep === "done" && summed ? (
+          <MatchSummary
+            win={duel.winner === viewer}
+            mode={duel.mode === "ai" ? "Đấu với máy" : quickNet ? "Đánh thường" : "Tuỳ chọn"}
+            seconds={matchSeconds}
+            you={summarySeat(viewer)}
+            foe={summarySeat(viewer === 0 ? 1 : 0)}
+            again={againLook}
+            onContinue={leaveMatch}
+            onAgain={playAgain}
+          />
+        ) : null}
+        {duel.winner !== null && endStep === "done" && !summed ? (
           <div className="overlay">
             <div className="sheet">
               <h2>{duel.mode === "hotseat" || duel.mode === "test" ? (duel.winner === 0 ? "Bên 1 thắng" : "Bên 2 thắng") : duel.winner === viewer ? "Bạn thắng" : "Bạn thua"}</h2>
               {duel.mode === "net" ? null : (
-                <button type="button" className="act press" onClick={() => {
-                  const next = newMatch(duel.mode);
-                  if (next.mode === "ai" && next.step === "main" && next.winner === null) {
-                    warmMatchHistory();
-                    matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
-                  } else matchRef.current = null;
-                  apply(next);
-                }}>
+                <button type="button" className="act press" onClick={rematchHere}>
                   Đấu lại
                 </button>
               )}

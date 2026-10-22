@@ -159,8 +159,12 @@ export type Hold = {
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
- *  also has its own name (a Japanese name, chủ game 22/10). */
-export type DuelFace = { deck: string | null; cover: string | null; name?: string | null };
+ *  also has its own name (a Japanese name, chủ game 22/10). `cards`: the deck it brought, for Tìm hiểu bộ bài on the
+ *  summary after the match. */
+export type DuelFace = { deck: string | null; cover: string | null; name?: string | null; cards?: { monsters: string[]; spells: string[] } | null };
+
+/** Chơi lại in Tuỳ chọn (chủ game 22/10): a side wants the same pair to play again, or has left the room. */
+export type AgainVote = "want" | "left" | null;
 
 /** Opening cards picked to replace: indexes into the reserve (the 2 monsters) and the hand (the spell). */
 export type OpenerPick = { reserve: number[]; hand: number[] };
@@ -175,6 +179,10 @@ export type Duel = {
   machine?: string | null;
   /** Each side's deck name and champion for the VS screen; set by the page that opens the match. */
   faces?: [DuelFace, DuelFace] | null;
+  /** When the match was made (ms): the time on the summary after it. */
+  started?: number;
+  /** Tuỳ chọn, after the match: each side's Chơi lại (or leaving); the host then opens the next match in the room. */
+  again?: [AgainVote, AgainVote] | null;
   /** Đổi bài đầu trận (chủ game 22/10): before the first turn each side may replace any of its 3 opening cards once.
    *  Which sides are done; null when there is none (Test, Hướng dẫn) or both are done. */
   opener?: { done: [boolean, boolean] } | null;
@@ -354,6 +362,7 @@ export function createDuel(
     turn: 0,
     opening: mode !== "test",
     mid: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    started: Date.now(),
     opener: mode === "ai" || mode === "net" ? { done: [false, false] } : null,
     step: "main",
     pending: null,

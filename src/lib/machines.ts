@@ -117,7 +117,12 @@ const NAMES = [
 ];
 
 export function machineFace(machine: Machine, rng: () => number = Math.random): DuelFace {
-  return { name: NAMES[Math.floor(rng() * NAMES.length)], deck: machineGroup(machine), cover: machineChampion(machine) };
+  return {
+    name: NAMES[Math.floor(rng() * NAMES.length)],
+    deck: machineGroup(machine),
+    cover: machineChampion(machine),
+    cards: { monsters: [...machine.monsters], spells: [...machine.spells] },
+  };
 }
 
 /** Marks a new Vs Máy match as played against this machine. */

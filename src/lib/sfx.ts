@@ -823,6 +823,33 @@ export function playReward(cue: RewardCue, delay = 0) {
 }
 
 /**
+ * Tổng kết trận (chủ game 22/10), made here: a wide soft rise with a warm chord as the summary opens, an airy swish
+ * as each player's row slides in, and a sliding whoosh with a light tick as the deck drawer opens.
+ */
+export type SummaryCue = "open" | "row" | "drawer";
+
+export function playSummary(cue: SummaryCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = fxLoud();
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "open") {
+      noiseBurst(audio, t, 0.7, 300, 3800, 0.08 * vol);
+      for (const freq of [196, 293.7, 392]) pad(audio, t + 0.05, freq, 1.3, 0.026 * vol);
+      for (const [freq, at] of [[1174.7, 0.18], [1568, 0.26], [2349.3, 0.34]] as const) bell(audio, t + at, freq, 0.8, 0.022 * vol);
+    } else if (cue === "row") {
+      noiseBurst(audio, t, 0.26, 2400, 700, 0.06 * vol);
+      softPop(audio, t + 0.12, 220, 0.16, 0.05 * vol);
+    } else {
+      noiseBurst(audio, t, 0.3, 3200, 900, 0.08 * vol);
+      softPop(audio, t + 0.2, 523.3, 0.1, 0.045 * vol);
+    }
+  });
+}
+
+/**
  * A soft wooden "pop" for buttons: one rounded sine note that dips a little and fades fast, through a low-pass so
  * nothing hisses or rings (owner, 19/10: taps should stay quiet under the music, no rustle, no beeping).
  */

@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { DeckRow } from "@/components/deck-row";
 import { CardFace } from "@/components/game/card-face";
 import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
-import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
-import { deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
+import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
 import { tr, useLang } from "@/lib/i18n";
 import { infoBlocks, markFace } from "@/lib/power-balance";
-import { spellKind, spellKindRank } from "@/lib/spell-kinds";
+import { spellKindRank } from "@/lib/spell-kinds";
 import { deckTactics, loadStrategies } from "@/lib/strategies";
 
 export const Route = createFileRoute("/deck")({ component: DeckPage });
@@ -545,14 +545,6 @@ function sameIds(left: string[], right: string[]) {
   return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
-function byStars(a: MonsterCard, b: MonsterCard) {
-  return a.stars - b.stars || a.name.localeCompare(b.name, "vi");
-}
-
-function byMana(a: SpellCard, b: SpellCard) {
-  return a.gems - b.gems || a.name.localeCompare(b.name, "vi");
-}
-
 /** A round 3D gem with a game icon, like the skill icons, for the tool buttons. */
 function ToolGem({ glyph, rim, ring, deep }: { glyph: string; rim: string; ring: string; deep: string }) {
   return (
@@ -570,65 +562,6 @@ function ToolGem({ glyph, rim, ring, deep }: { glyph: string; rim: string; ring:
 /** How far the monsters or spells are from the least the deck needs: -x in red when short, +x spare. */
 function Count({ side }: { side: DeckSide }) {
   return <b className={`dk-count${side.bad ? " is-bad" : " is-ok"}`}>{`${side.sign}${side.n}`}</b>;
-}
-
-/**
- * One row of the deck list: the stars (monster) or mana (spell, blank at 0) on the left, the name over a strip
- * of the card's art, and on the right the summoning mana crystal (monster, hidden at 0) or the spell's kind icon.
- */
-function DeckRow({ id, kind, lifted, onPress, onTap }: { id: string; kind: Kind; lifted: boolean; onPress: (event: ReactPointerEvent) => void; onTap: () => void }) {
-  const monster = kind === "monster" ? monsterCard(id) : undefined;
-  const spell = kind === "spell" ? spellCard(id) : undefined;
-  if (!monster && !spell) return null;
-  const art = monster ? artSrc(id, 1) : spellSrc(id);
-  const sort = spell ? spellKind(id) : null;
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`dk-row is-${kind}${lifted ? " is-lifted" : ""}`}
-      onPointerDown={onPress}
-      onClick={onTap}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      {art ? <span className="dk-row-art" style={{ backgroundImage: `url(${art})` }} /> : null}
-      <span className={`dk-row-badge is-${kind}${monster ? ` is-s${Math.min(5, Math.max(1, monster.stars))}` : ""}`}>
-        {monster ? (
-          <>
-            <i className="dk-row-star" aria-hidden="true">
-              ★
-            </i>
-            <b>{monster.stars}</b>
-          </>
-        ) : spell && spell.gems > 0 ? (
-          <b>{spell.gems}</b>
-        ) : null}
-      </span>
-      <span className="dk-row-name">{tr(monster?.name ?? spell?.name ?? "")}</span>
-      <span className="dk-row-end">
-        {monster ? (
-          monster.gems > 0 ? (
-            <span className="dk-row-cost">
-              <i className="mana-gem" />
-              <b>{monster.gems}</b>
-            </span>
-          ) : null
-        ) : sort ? (
-          <span className="dk-row-kind" style={{ "--tone": sort.tone } as CSSProperties} title={tr(sort.label)}>
-            {sort.react === "rebound" ? (
-              <span className="dk-row-kind-pic">
-                <ReactGlyph kind="rebound" />
-              </span>
-            ) : sort.react ? (
-              <ReactGlyph kind={sort.react} />
-            ) : (
-              <Glyph name={sort.glyph ?? "info"} fill={sort.tone} />
-            )}
-          </span>
-        ) : null}
-      </span>
-    </div>
-  );
 }
 
 /** The pool filter, over the deck list: environment, monster type and stars; tap the filter icon to hide it. */

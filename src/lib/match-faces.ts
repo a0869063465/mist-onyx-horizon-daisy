@@ -15,16 +15,16 @@ function topMonsters(monsters: string[], skip: string | null): string[] {
   return cards.filter((card) => card.stars === top).map((card) => card.id);
 }
 
-/** The deck this match was opened with: Chơi ngay makes it the deck book's active deck. */
-export function ownFace(): DuelFace {
+/** The deck this match was opened with (`cards`, the saved deck): Chơi ngay makes it the deck book's active deck. */
+export function ownFace(cards: { monsters: string[]; spells: string[] }): DuelFace {
   const book = loadBook();
   const entry = book.decks.find((row) => row.n === book.active) ?? null;
-  return { deck: entry?.name ?? null, cover: entry ? coverOf(entry) : null };
+  return { deck: entry?.name ?? null, cover: entry ? coverOf(entry) : null, cards: { monsters: [...cards.monsters], spells: [...cards.spells] } };
 }
 
 /** The other player's deck as the room has it. A game that sends no cover gets the first of its top monsters. */
 export function roomFace(deck: NetDeck | null): DuelFace {
   if (!deck) return { deck: null, cover: null };
   const cover = deck.cover && monsterCard(deck.cover) ? deck.cover : topMonsters(deck.monsters, null)[0] ?? null;
-  return { deck: deck.name ?? null, cover };
+  return { deck: deck.name ?? null, cover, cards: { monsters: [...deck.monsters], spells: [...deck.spells] } };
 }

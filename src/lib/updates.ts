@@ -667,6 +667,11 @@ export const PENDING_NOTES: string[] = [
   "Quái đánh quái, hoặc quái chặn đòn: có vòm tia điện ở chỗ hai lá va chạm.",
   "Thanh phản ứng: dòng xanh của đòn đánh tắt ngay khi đòn trúng, nhường chỗ cho hiệu ứng trúng đòn.",
   "Hết trận ở Vs Máy, Đánh thường và Tuỳ chọn, kể cả khi đầu hàng: viên máu bên thua bị lốc đỏ cuốn rồi vỡ thành mảnh pha lê, màn hình tối lại với tia đỏ hút vào giữa, rồi hiện huy hiệu CHIẾN THẮNG có cánh pha lê xanh, hoặc THẤT BẠI màu đỏ. Chạm để tiếp tục.",
+  "Màn Tổng kết sau trận ở Vs Máy, Đánh thường và Tuỳ chọn: CHIẾN THẮNG hoặc THẤT BẠI, chế độ chơi và thời gian trận, rồi hàng của bạn và của đối thủ (tên, bộ bài, hộp bộ bài) trên nền bàn đấu của mỗi bên.",
+  "Tìm hiểu bộ bài trên màn Tổng kết: mở danh sách lá trong bộ bài của bạn hoặc của đối thủ, cả khi đấu online. Bấm lá để xem mô tả.",
+  "Màn Tổng kết chỉ còn 2 nút: Tiếp tục về màn Chọn bộ bài, và Chơi lại. Bỏ Sửa bộ bài và Về menu chính.",
+  "Chơi lại: Vs Máy đấu lại với máy, Đánh thường vào hàng chờ tìm trận mới với bộ bài đó, Tuỳ chọn mời đúng đối thủ cũ đấu lại trong cùng phòng. Bên kia thấy Đối thủ muốn chơi lại, hoặc Đối thủ đã rời phòng khi họ bấm Tiếp tục.",
+  "Sửa lỗi: bấm Đấu lại thì bảng Bài khởi đầu hiện cùng lúc với màn VS. Giờ màn VS chạy xong mới tới Bài khởi đầu.",
 ];
 
 function remarkOf(notes: string[]) {

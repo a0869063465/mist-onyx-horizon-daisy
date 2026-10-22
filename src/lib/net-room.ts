@@ -4,12 +4,16 @@ import { createServerFn } from "@tanstack/react-start";
 export type NetDeck = { monsters: string[]; spells: string[]; name?: string; cover?: string | null; fake?: string[] };
 export type NetSeat = "host" | "guest";
 
+type Vote = "want" | "left" | null;
+
 type WireDuel = {
+  mid?: string;
   turn: 0 | 1;
   step: "main" | "respond" | "over";
   winner: 0 | 1 | null;
   hold: { priority: 0 | 1 } | null;
   opener?: { done: [boolean, boolean] } | null;
+  again?: [Vote, Vote] | null;
 };
 
 type RoomRow = {
@@ -127,7 +131,21 @@ export const pushDuel = createServerFn({ method: "POST" })
     const conceded = duel.winner !== null && duel.winner !== side;
     // Đổi bài đầu trận: both sides choose at the same time, so a side still choosing may send its pick.
     const swapping = Boolean(current?.opener && !current.opener.done[side]);
-    if (!current) {
+    let body = data.duel;
+    if (current && current.winner !== null && current.winner !== undefined) {
+      // Chơi lại (Tuỳ chọn, chủ game 22/10): after a match each side sends its vote, which changes only that side's
+      // vote on the finished match; once the guest wants to play again the host opens the next match.
+      if (duel.winner === null) {
+        if (side !== 0 || current.again?.[1] !== "want" || duel.mid === current.mid) return { ok: false as const, error: "Chưa tới lượt." };
+      } else {
+        const votes: [Vote, Vote] = [current.again?.[0] ?? null, current.again?.[1] ?? null];
+        votes[side] = duel.again?.[side] ?? null;
+        body = JSON.stringify({ ...current, again: votes });
+      }
+    } else if (current?.mid && duel.mid && current.mid !== duel.mid) {
+      // A move from the match before (Chơi lại has opened a new one).
+      return { ok: false as const, error: "Ván đã đổi." };
+    } else if (!current) {
       if (data.seat !== "host") return { ok: false as const, error: "Chưa tới lượt." };
     } else if (!conceded && !swapping && actor(current) !== side) {
       return { ok: false as const, error: "Chưa tới lượt." };
@@ -135,7 +153,7 @@ export const pushDuel = createServerFn({ method: "POST" })
     const rev = Number(room.rev);
     const saved = await sql<{ rev: number | string }>`
       update clash_rooms
-      set duel = ${data.duel}, rev = ${rev + 1}, updated_at = ${Date.now()}
+      set duel = ${body}, rev = ${rev + 1}, updated_at = ${Date.now()}
       where code = ${data.code} and rev = ${rev}
       returning rev
     `;
@@ -143,8 +161,9 @@ export const pushDuel = createServerFn({ method: "POST" })
     return { ok: true as const, rev: Number(saved[0].rev) };
   });
 
+/** `deck`: the host also gets the guest's deck after the match has opened (Chơi lại opens the next one). */
 export const pollRoom = createServerFn({ method: "POST" })
-  .validator((data: { code: string; seat: NetSeat }) => data)
+  .validator((data: { code: string; seat: NetSeat; deck?: boolean }) => data)
   .handler(async ({ data }) => {
     const sql = await db();
     const now = Date.now();
@@ -161,7 +180,7 @@ export const pollRoom = createServerFn({ method: "POST" })
       phase: room.duel ? ("play" as const) : ("wait" as const),
       rev: Number(room.rev),
       duel: room.duel ?? "",
-      guestDeck: data.seat === "host" && !room.duel ? readDeck(room.guest_deck) : null,
+      guestDeck: data.seat === "host" && (!room.duel || data.deck) ? readDeck(room.guest_deck) : null,
     };
   });
 
