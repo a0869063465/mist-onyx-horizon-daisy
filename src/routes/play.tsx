@@ -6,7 +6,7 @@ import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
 import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
-import { artSrc, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
+import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, setSound, soundOn, unlockSound } from "@/lib/sfx";
@@ -929,14 +929,22 @@ function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   return false;
 }
 
-function reserveLive(held: { id: string; hp: number; saved?: { level?: number; atk: number; def: number; mdef: number } }, card: { name: string; atk: number; def: number; mdef: number }) {
+function reserveLive(held: { id: string; hp: number; fake?: boolean; saved?: { level?: number; atk: number; def: number; mdef: number } }, card: MonsterCard) {
+  const shown = held.fake ? fakeMonsterCard(card) : card;
   return {
     name: held.saved ? fieldName({ cardId: held.id, level: held.saved.level } as FieldMon) : card.name,
-    atk: held.saved?.atk ?? card.atk,
-    def: held.saved?.def ?? card.def,
-    mdef: held.saved?.mdef ?? card.mdef,
+    atk: held.saved?.atk ?? shown.atk,
+    def: held.saved?.def ?? shown.def,
+    mdef: held.saved?.mdef ?? shown.mdef,
     hp: held.hp,
   };
+}
+
+/** A fake card's stat that is below the real card's is shown in red (chủ game 22/10); health by its top value. */
+function fakeCut(mon: FieldMon, key: "atk" | "def" | "mdef" | "hp", value: number): boolean {
+  if (!mon.fake) return false;
+  const real = monsterCard(mon.cardId);
+  return Boolean(real && (key === "hp" ? (mon.maxHp || value) : value) < real[key]);
 }
 
 function holdingMend(mon: FieldMon) {
@@ -3525,11 +3533,11 @@ function PlayPage() {
       const card = monsterCard(held.id);
       return {
         key: `m${index}:${held.id}`,
-        face: card ? <CardFace monster={card} level={held.saved?.level ?? 1} live={reserveLive(held, card)} /> : null,
+        face: card ? <CardFace monster={card} level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null,
         can: you.monsterDeck.length > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} />, can: you.spellDeck.length > 0 })),
+    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: you.spellDeck.length > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   const lineText = pinnedLine ?? toast;
@@ -4668,7 +4676,7 @@ function PlayPage() {
                     onPointerMove={move}
                     onPointerUp={end}
                   >
-                    <CardFace monster={card} level={held.saved?.level ?? 1} live={live} gems={held.toll ? `${card.gems}+1` : undefined} selected={open || (aim?.kind === "summon" && aim.index === index)} />
+                    <CardFace monster={card} level={held.saved?.level ?? 1} live={live} gems={held.toll ? `${card.gems}+1` : undefined} fake={held.fake} selected={open || (aim?.kind === "summon" && aim.index === index)} />
                     {riteHand === index && !(drag?.kind === "summon" && drag.index === index) ? <RiteRing /> : null}
                   </button>
                 );
@@ -5569,10 +5577,10 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
 /** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
 function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
   const stats = visibleStats(mon, allies);
-  const spot = (key: FieldKey, value: number, blue: boolean) =>
+  const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
-        className={`fstat${value < 0 ? " is-red" : blue ? " is-blue" : ""}`}
+        className={`fstat${value < 0 || cut ? " is-red" : blue ? " is-blue" : ""}`}
         style={{
           left: `${layout[key].x}%`,
           top: `${layout[key].y}%`,
@@ -5590,10 +5598,10 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
         <img className="frame" src="/field-frame.png" alt="" draggable={false} />
-        {spot("def", stats.def, stats.blueDef)}
-        {spot("mdef", stats.mdef, stats.blueMdef)}
-        {spot("atk", stats.atk, stats.blueAtk)}
-        {spot("hp", mon.hp, stats.blueHp)}
+        {spot("def", stats.def, stats.blueDef, fakeCut(mon, "def", stats.def))}
+        {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
+        {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}
+        {spot("hp", mon.hp, stats.blueHp, fakeCut(mon, "hp", mon.hp))}
       </span>
     </span>
   );
@@ -5679,9 +5687,9 @@ function BoardSlot({
   }
   const tokenName = (monsterCard(mon.cardId)?.stars ?? 1) <= 0;
   const stats = visibleStats(mon, allies);
-  const spot = (key: FieldKey, value: string | number, blue = false, hold = false) => {
+  const spot = (key: FieldKey, value: string | number, blue = false, hold = false, cut = false) => {
     if (typeof value === "number" && value === 0) return null;
-    const red = typeof value === "number" && value < 0;
+    const red = (typeof value === "number" && value < 0) || cut;
     return (
     <span
       className={`fstat${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && blue ? " is-blue" : ""}`}
@@ -5748,10 +5756,10 @@ function BoardSlot({
         </span>
         )}
         {veil || (decoy ? false : !mask && hideName) ? null : spot("name", decoy ? "Thế thân" : mask ? "Mũ" : fieldName(mon))}
-        {veil || mask || decoy ? null : spot("def", stats.def, stats.blueDef)}
-        {veil || mask || decoy ? null : spot("mdef", stats.mdef, stats.blueMdef)}
-        {veil || mask || decoy ? null : spot("atk", stats.atk, stats.blueAtk)}
-        {veil ? null : spot("hp", decoy ? (mon.stored ?? 1) : mask ? 1 : (hpOverride ?? mon.hp), decoy || mask ? false : stats.blueHp)}
+        {veil || mask || decoy ? null : spot("def", stats.def, stats.blueDef, false, fakeCut(mon, "def", stats.def))}
+        {veil || mask || decoy ? null : spot("mdef", stats.mdef, stats.blueMdef, false, fakeCut(mon, "mdef", stats.mdef))}
+        {veil || mask || decoy ? null : spot("atk", stats.atk, stats.blueAtk, false, fakeCut(mon, "atk", stats.atk))}
+        {veil ? null : spot("hp", decoy ? (mon.stored ?? 1) : mask ? 1 : (hpOverride ?? mon.hp), decoy || mask ? false : stats.blueHp, false, !decoy && !mask && fakeCut(mon, "hp", mon.hp))}
         {!veil && !mask && !decoy && debtOn ? (
           <span
             className="fstat is-debt"

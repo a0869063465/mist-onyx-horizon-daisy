@@ -13,6 +13,7 @@ import {
   type DeckEntry,
 } from "@/lib/deck-book";
 import { tr, useLang } from "@/lib/i18n";
+import { fakeIds } from "@/lib/owned-cards";
 import { joinRoom, leaveQueue, openRoom, seekMatch, type NetDeck } from "@/lib/net-room";
 
 export const Route = createFileRoute("/modes")({ component: DeckSelectPage });
@@ -405,7 +406,8 @@ function DeckSelectPage() {
 /** Gradients the deck boxes and the panel icons share; drawn once on the page. */
 /** A deck as a room gets it: the cards, with its name and cover for the VS screen (chủ game 22/10). */
 function netDeck(row: DeckEntry): NetDeck {
-  return { ...cardsOf(row), name: row.name, cover: coverOf(row) };
+  const cards = cardsOf(row);
+  return { ...cards, fake: fakeIds([...cards.monsters, ...cards.spells]), name: row.name, cover: coverOf(row) };
 }
 
 /**

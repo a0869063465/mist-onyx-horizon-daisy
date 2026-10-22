@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { artSrc, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
+import { artSrc, fakeMonsterCard, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { loadCard, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
 
@@ -115,6 +115,7 @@ export function CardFace({
   spellLayout,
   live,
   gems,
+  fake = false,
 }: {
   monster?: MonsterCard | null;
   spellId?: string;
@@ -130,6 +131,8 @@ export function CardFace({
   spellLayout?: Record<SpellKey, Spot>;
   live?: { name: string; atk: number; def: number; mdef: number; hp: number };
   gems?: number | string;
+  /** A fake card (the starter deck's weaker copy): shows its cut stats, in red where below the real card's. */
+  fake?: boolean;
 }) {
   const badge = mark ?? (showNew ? "new" : null);
   const spell = spellId ? spellCard(spellId) : undefined;
@@ -137,12 +140,13 @@ export function CardFace({
   const spots = layout ?? loadCard();
   const spellSpots = spellLayout ?? loadSpell();
   const tier = monster ? monsterTier(monster.stars) : spell ? spellTier(spell.gems) : "";
-  const pin = (spot: Spot, value: string | number, name = false) =>
+  const cut = monster && fake && !live ? fakeMonsterCard(monster) : monster;
+  const pin = (spot: Spot, value: string | number, name = false, key?: "atk" | "def" | "mdef" | "hp") =>
     hideStats || (!name && value === 0) ? null : name ? (
       <FittedName spot={spot} value={String(value)} />
     ) : (
       <span
-        className="socket"
+        className={`socket${fake && monster && key && typeof value === "number" && value < monster[key] ? " is-cut" : ""}`}
         style={{
           left: `${spot.x}%`,
           top: `${spot.y}%`,
@@ -166,10 +170,10 @@ export function CardFace({
         <>
           {pin(spots.stars, monster.stars)}
           {pin(spots.gems, gems ?? monster.gems)}
-          {pin(spots.def, live?.def ?? monster.def)}
-          {pin(spots.mdef, live?.mdef ?? monster.mdef)}
-          {pin(spots.atk, live?.atk ?? monster.atk)}
-          {pin(spots.hp, live?.hp ?? monster.hp)}
+          {pin(spots.def, live?.def ?? cut?.def ?? monster.def, false, "def")}
+          {pin(spots.mdef, live?.mdef ?? cut?.mdef ?? monster.mdef, false, "mdef")}
+          {pin(spots.atk, live?.atk ?? cut?.atk ?? monster.atk, false, "atk")}
+          {pin(spots.hp, live?.hp ?? cut?.hp ?? monster.hp, false, "hp")}
           {hideName ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
           {badge ? <NewMark spot={spots.fresh} kind={badge} /> : null}
         </>

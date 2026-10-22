@@ -152,9 +152,10 @@ export function formatNo(no: number): string {
   return `No.${String(no).padStart(3, "0")}`;
 }
 
-/** The cards the player really has (owner, 21/10: the publisher's collection too): the default deck's and the ones opened. */
+/** The cards the player really has (owner, 21/10: the publisher's collection too): the ones opened, bought or given.
+ *  The starter deck's cards are fakes (chủ game 22/10): they show in the collection and play, but are not owned. */
 export function collectionOwned(owned: Set<string>): Set<string> {
-  return new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells, ...owned]);
+  return new Set(owned);
 }
 
 /** An album page: 4 cards a row, 4 rows. */
@@ -264,13 +265,12 @@ export function markAlbumSeen(ids: Iterable<string>): Set<string> {
  * deck's. Giám định itself is still to come.
  */
 export function awaitsAppraisal(id: string, owned: Set<string>): boolean {
-  return owned.has(id) && !DEFAULT_DECK.monsters.includes(id) && !DEFAULT_DECK.spells.includes(id);
+  return owned.has(id);
 }
 
-/** Cards owned and not looked at in their album yet; the default deck's cards are never new. */
+/** Cards owned and not looked at in their album yet (a real card whose fake the player played counts as new too). */
 export function newCards(owned: Set<string>, seen: Set<string>): Set<string> {
-  const starters = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);
-  return new Set([...owned].filter((id) => !starters.has(id) && !seen.has(id)));
+  return new Set([...owned].filter((id) => !seen.has(id)));
 }
 
 /** Đổi sao lấy lá (owner, 21/10): the stars a card of the albums costs, by its rarity; an environment card is SR. */

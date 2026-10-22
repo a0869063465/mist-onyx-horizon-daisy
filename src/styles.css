@@ -3027,6 +3027,8 @@ button.trail-dot.is-on {
   pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
+/* A fake card's cut stat (chủ game 22/10). */
+.socket.is-cut { color: #ff5a4d; text-shadow: 0 1px 0 #2a0502, 0 0 3px #000, 0 0 6px rgb(255 60 40 / 0.55); }
 .socket.is-name {
   line-height: 1.05;
   overflow: hidden;

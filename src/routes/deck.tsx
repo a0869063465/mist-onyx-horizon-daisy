@@ -5,7 +5,7 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canReachForm, canUseCard } from "@/lib/owned-cards";
+import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
 import { deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
@@ -192,9 +192,12 @@ function DeckPage() {
   const issue = deckIssues(deck);
   const balance = deckBalance(deck);
   const total = deck.monsters.length + deck.spells.length;
-  const short = Math.max(0, DECK_SIZE - total);
+  // At least 13 monsters and 7 spells; 24 cards at most (chủ game 22/10).
+  const short = Math.max(0, 13 - deck.monsters.length) + Math.max(0, 7 - deck.spells.length);
   const canSave = short === 0 && !issue;
   const inDeck = new Set([...deck.monsters, ...deck.spells]);
+  // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
+  const fakes = new Set(booted ? fakeIds([...MONSTERS, ...SPELLS].map((card) => card.id)) : []);
   // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
   // Read on this phone after the first render, so the page the server sent matches.
   const locked = new Set([...FORMS.map((card) => card.id), ...(booted ? [...MONSTERS, ...SPELLS].map((card) => card.id).filter((id) => !canUseCard(id)) : [])]);
@@ -304,7 +307,7 @@ function DeckPage() {
               onClick={() => tap({ id: card.id, kind: "monster" })}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace monster={card} hideName mark={markFace(card.id)} />
+              <CardFace monster={card} hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />
@@ -322,7 +325,7 @@ function DeckPage() {
               onClick={() => tap({ id: card.id, kind: "spell" })}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace spellId={card.id} hideName mark={markFace(card.id)} />
+              <CardFace spellId={card.id} hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />

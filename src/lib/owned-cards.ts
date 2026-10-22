@@ -19,6 +19,23 @@ export function canUseCard(id: string): boolean {
   }
 }
 
+/** The cards opened from packs, bought or given: the real ones (the starter deck's cards are only fakes until then). */
+export function realOwned(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OWNED_KEY) ?? "[]") as unknown;
+    return new Set(Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+/** Of these cards, the ones that play as FAKE: starter-deck cards whose real card is not owned (chủ game 22/10). */
+export function fakeIds(ids: string[]): string[] {
+  if (typeof localStorage === "undefined") return ids.filter((id) => STARTER.has(id));
+  const real = realOwned();
+  return ids.filter((id) => STARTER.has(id) && !real.has(id));
+}
+
 /** Chân kén is no evolution of its own: it comes out of Kén ngài, so it needs what Kén ngài needs. */
 const COMES_FROM: Record<string, string> = { "chan-ken": "ken-ngai" };
 

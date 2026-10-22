@@ -1,5 +1,7 @@
 import {
   DEFAULT_DECK,
+  fakeMonsterCard,
+  FAKE_SPELLS,
   isStill,
   monsterCard,
   spellCard,
@@ -17,6 +19,8 @@ import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from 
 export type Side = 0 | 1;
 
 export type FieldMon = {
+  /** A fake card (the starter deck's weaker copy): its stats are cut, shown in red where they are below the real card. */
+  fake?: boolean;
   uid: string;
   cardId: string;
   hp: number;
@@ -104,7 +108,7 @@ export type FieldMon = {
   beat?: number;
 };
 
-export type PileMon = { id: string; hp: number; maxHp: number; saved?: Omit<FieldMon, "uid">; toll?: boolean; freeAt?: number };
+export type PileMon = { id: string; hp: number; maxHp: number; saved?: Omit<FieldMon, "uid">; toll?: boolean; freeAt?: number; fake?: boolean };
 
 export type Player = {
   hp: number;
@@ -247,16 +251,17 @@ function shuffle<T>(list: T[]): T[] {
   return next;
 }
 
-function asPile(id: string, hp?: number, maxHp?: number): PileMon {
-  const card = monsterCard(id);
+function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon {
+  const base = monsterCard(id);
+  const card = base && fake ? fakeMonsterCard(base) : base;
   const cap = maxHp ?? card?.hp ?? 1;
-  return { id, maxHp: cap, hp: Math.max(0, Math.min(cap, hp ?? cap)) };
+  return { id, maxHp: cap, hp: Math.max(0, Math.min(cap, hp ?? cap)), ...(fake ? { fake: true } : {}) };
 }
 
 function pileFromField(mon: FieldMon): PileMon {
   const { uid: _uid, ...saved } = mon;
   const cap = saved.maxHp || saved.hp;
-  return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved };
+  return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
 }
 
 function pileNow(card: PileMon): number {
@@ -271,12 +276,14 @@ function woundPile(card: PileMon, dmg: number): PileMon | null {
 
 const LIFE = 16;
 
-function emptyPlayer(monsters: string[], spells: string[]): Player {
+function emptyPlayer(monsters: string[], spells: string[], fake: string[] = []): Player {
+  const fakes = new Set(fake);
   const env = spells.find((id) => spellCard(id)?.env);
-  const monsterDeck = shuffle(monsters).map((id) => asPile(id));
+  const monsterDeck = shuffle(monsters).map((id) => asPile(id, undefined, undefined, fakes.has(id)));
   const reserve = monsterDeck.splice(0, 2);
   const spellDeck = shuffle(spells.filter((id) => id !== env));
-  const spellTax = spellDeck.map(() => false);
+  // A fake spell costs 1 mana more: the same +1 a "toll" card has.
+  const spellTax = spellDeck.map((id) => fakes.has(id) && FAKE_SPELLS.has(id));
   const openingSpell = spellDeck.shift();
   const openingToll = openingSpell ? Boolean(spellTax.shift()) : false;
   return {
@@ -317,14 +324,16 @@ function refill(player: Player): Player {
 }
 
 export function createDuel(
-  deck = DEFAULT_DECK,
+  deck: { monsters: string[]; spells: string[]; fake?: string[] } = DEFAULT_DECK,
   mode: Duel["mode"] = "ai",
-  foeDeck?: { monsters: string[]; spells: string[] },
+  foeDeck?: { monsters: string[]; spells: string[]; fake?: string[] },
 ): Duel {
   const other = foeDeck ?? deck;
+  // Test has no fakes: it is for trying the real cards.
+  const fakes = (list?: string[]) => (mode === "test" ? [] : (list ?? []));
   const players: [Player, Player] = [
-    refill(emptyPlayer(deck.monsters, deck.spells)),
-    refill(emptyPlayer(other.monsters, other.spells)),
+    refill(emptyPlayer(deck.monsters, deck.spells, fakes(deck.fake))),
+    refill(emptyPlayer(other.monsters, other.spells, fakes(other.fake))),
   ];
   if (mode === "test") {
     for (const player of players) {
@@ -1492,8 +1501,10 @@ function makeHat(seq: number, side: Side, n: number): FieldMon {
 }
 
 function place(state: Duel, side: Side, cardId: string, held?: PileMon): FieldMon {
-  const card = monsterCard(cardId);
-  if (!card) throw new Error(cardId);
+  const real = monsterCard(cardId);
+  if (!real) throw new Error(cardId);
+  const fake = Boolean(held?.fake);
+  const card = fake ? fakeMonsterCard(real) : real;
   const used = new Set<string>();
   for (const player of state.players) for (const mon of player.field) if (mon) used.add(mon.uid);
   let seq = state.seq;
@@ -1528,6 +1539,7 @@ function place(state: Duel, side: Side, cardId: string, held?: PileMon): FieldMo
     copy: false,
     level: 1,
     maxHp,
+    ...(fake ? { fake: true } : {}),
     ...(cardId === "kazura" ? { safe: 2 } : {}),
     ...(cardId === "ken-ngai" || cardId === "chan-ken" ? { dim: true } : {}),
     ...(isStill(cardId) ? { noBlock: true } : {}),
@@ -4343,7 +4355,8 @@ function shadeHidden(mon: FieldMon | null | undefined) {
 }
 
 function armCage(mon: FieldMon): FieldMon {
-  const printed = monsterCard(mon.cardId)?.hp ?? mon.hp;
+  const base = monsterCard(mon.cardId);
+  const printed = (mon.fake && base ? fakeMonsterCard(base) : base)?.hp ?? mon.hp;
   const maxHp = mon.maxHp || mon.hp;
   const baseMax = Math.max(1, Math.min(maxHp, printed));
   const hp = Math.min(mon.hp, baseMax);
@@ -7328,7 +7341,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     if (!paid) return note(state, "Cần 1 gem.");
     const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
     let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
-    const amount = 3 + next.players[side].stars + (mon.skillUp ?? 0);
+    const amount = Math.max(0, 3 + next.players[side].stars + (mon.skillUp ?? 0) - (mon.fake ? 1 : 0));
     const them = next.players[foe];
     if (!targetUid) {
       const dealt = outgoing(mon, amount);

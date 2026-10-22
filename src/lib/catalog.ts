@@ -1122,36 +1122,72 @@ export function artSrc(id: string, level = 1): string {
 export const DECK_SIZE = 24;
 
 export function deckLegal(monsterCount: number, spellCount: number): boolean {
-  return monsterCount + spellCount === DECK_SIZE && monsterCount >= 13 && monsterCount <= 17 && spellCount >= 7 && spellCount <= 11;
+  // Chủ game 22/10: at least 13 monsters and 7 spells, 24 cards at most (not exactly 24), so a new player builds sooner.
+  return monsterCount >= 13 && spellCount >= 7 && monsterCount + spellCount <= DECK_SIZE;
 }
 
+/** Bộ bài Khởi đầu (chủ game 22/10): the only deck a new player has, made of FAKE cards (see FAKE_MONSTERS). */
 export const DEFAULT_DECK = {
   monsters: [
-    "khong-lo-mot-mat",
-    "phu-thuy-ti-hon",
-    "quai-thu-thien-su",
-    "rong-con",
-    "thien-than-be-nho",
+    "chien-binh-rong",
     "hiep-si-cua-vua",
-    "hiep-si-ho-ve",
     "kazura",
     "kizuran",
-    "my-dieu-nhan",
-    "chien-binh-rong",
-    "ma-dao-si",
-    "may-nem-bom-hinh-nhen",
-    "thuong-quan-long",
-    "hiep-si-cua-hau",
+    "rong-phun-hoa-cau",
+    "khung-long-vay-kiem",
+    "khong-lo-mot-mat",
+    "phu-thuy-ti-hon",
+    "rong-con",
+    "quai-thu-thien-su",
+    "tho-den-tinh-nghich",
+    "hoa-an-thit-nguoi",
+    "may-chem",
   ],
   spells: [
-    "giap-co-khi",
-    "la-chan-phan-don",
-    "phuc-kich",
-    "guong-phong-ho",
-    "ke-dao-mo",
+    "vong-xoay-bao-ho",
     "soi-xich-dia-nguc",
-    "sam-set-tan-the",
-    "virus-an-mon",
     "hoan-doi",
+    "phuc-kich",
+    "thu-hoi-quai-thu",
+    "thanh-guom-anh-sang",
+    "hap-thu-ma-phap",
   ],
 };
+export const STARTER_NAME = "Bộ bài Khởi đầu";
+
+/**
+ * Lá fake (chủ game 22/10): the starter deck's cards are weaker copies until the real card is owned (from a pack, a
+ * gift or bought with stars). What each loses: attack, defence (thủ), magic defence (kháng phép), health, and for
+ * Phù thuỷ tí hơn the damage of its one skill. Every fake spell costs 1 mana more.
+ */
+export type FakeCut = { atk?: number; def?: number; mdef?: number; hp?: number; skill?: number };
+export const FAKE_MONSTERS: Record<string, FakeCut> = {
+  "chien-binh-rong": { atk: 1, def: 1, mdef: 1 },
+  "hiep-si-cua-vua": { atk: 1, def: 1, hp: 2 },
+  kazura: { atk: 2, hp: 1 },
+  kizuran: { hp: 3 },
+  "rong-phun-hoa-cau": { atk: 2, def: 1, hp: 2 },
+  "khung-long-vay-kiem": { def: 1, hp: 2 },
+  "khong-lo-mot-mat": { atk: 1, def: 1 },
+  "phu-thuy-ti-hon": { hp: 1, skill: 1 },
+  "rong-con": { hp: 1, mdef: 1 },
+  "quai-thu-thien-su": { hp: 2 },
+  "tho-den-tinh-nghich": { atk: 1, hp: 1 },
+  "hoa-an-thit-nguoi": { def: 1, hp: 1 },
+  "may-chem": { atk: 1, mdef: 1, hp: 2 },
+};
+export const FAKE_SPELLS = new Set(DEFAULT_DECK.spells);
+
+/** The same monster as its fake: lower stats, never below 0 (health never below 1). */
+export function fakeMonsterCard(card: MonsterCard): MonsterCard {
+  const cut = FAKE_MONSTERS[card.id];
+  if (!cut) return card;
+  return {
+    ...card,
+    atk: Math.max(0, card.atk - (cut.atk ?? 0)),
+    def: Math.max(0, card.def - (cut.def ?? 0)),
+    mdef: Math.max(0, card.mdef - (cut.mdef ?? 0)),
+    hp: Math.max(1, card.hp - (cut.hp ?? 0)),
+  };
+}
+

@@ -646,6 +646,10 @@ export const PENDING_NOTES: string[] = [
   "Bài khởi đầu: đầu trận được đổi một lần các lá trong 3 lá đầu (2 quái dự bị và 1 phép). Chạm lá hoặc nút Thay thế để chọn, Hoàn tác để bỏ chọn, OK để đổi. Lá mới lấy từ xấp cùng loại, lá bị đổi xáo lại vào xấp, nên không rút lại đúng lá vừa đổi. Lá môi trường không đổi. Có 20 giây, hết giờ thì đổi các lá đang chọn. Có dòng Bạn đi trước hoặc Bạn sẽ đi sau.",
   "Đánh thường và Tuỳ chọn: hai bên đổi bài khởi đầu cùng lúc, bên xong trước thấy Đang chờ đối thủ. Vs Máy: máy cũng đổi bài, đổi các quái 3 và 4 sao, giữ lá phép. Test và Hướng dẫn không có màn VS, không đổi bài.",
   "Sửa lỗi: đối thủ rút quái mà thông báo ghi \"Đối thủ rút 1 phép\" (khi lần rút đó đủ để lên sao). Giờ ghi đúng \"Đối thủ rút 1 quái\", kèm câu có thể triệu hồi quái thú mấy sao.",
+  "Luật bộ bài: cần ít nhất 13 quái và 7 phép, tối đa 24 lá (không còn bắt buộc đủ 24), để người mới dễ xây bộ bài hơn.",
+  "Bộ bài Khởi đầu: bộ Meta bỏ. Người chơi mới chỉ có một bộ tên Bộ bài Khởi đầu gồm 13 quái và 7 phép là lá fake (bản yếu hơn). Các lá bài đã sở hữu từ trước được đưa về lại mặc định.",
+  "Lá fake: chỉ số bị giảm in đỏ. Chiến binh rồng giảm 1 công, 1 thủ, 1 thủ phép. Hiệp sĩ của vua giảm 1 công, 1 thủ, 2 máu. Kazura giảm 2 công, 1 máu. Kizuran giảm 3 máu. Rồng canh pháo đài giảm 2 công, 1 thủ, 2 máu. Khủng long vãy kiếm giảm 1 thủ, 2 máu. Khổng lồ 1 mắt giảm 1 công, 1 thủ. Phù thuỷ tí hơn giảm 1 máu và 1 sát thương Cầu sấm. Rồng con giảm 1 máu, 1 thủ phép. Quái thú thiên sứ giảm 2 máu. Thỏ đen tinh nghịch giảm 1 công, 1 máu. Hoa ăn thịt người giảm 1 thủ, 1 máu. Máy chém giảm 1 công, 1 thủ phép, 2 máu. Mọi phép fake tốn thêm 1 mana: Vòng xoáy bảo hộ, Sợi xích địa ngục, Hoán đổi, Phục kích, Thu hồi quái thú, Thanh gươm ánh sáng, Hấp thụ ma pháp.",
+  "Lá fake dùng được và hiện trong Bộ sưu tập, nhưng vẫn có ổ khoá và chưa sở hữu. Có được lá xịn (mở gói, được tặng, đổi bằng sao) thì lá đó thành lá mới và bộ bài dùng bản xịn.",
 ];
 
 function remarkOf(notes: string[]) {

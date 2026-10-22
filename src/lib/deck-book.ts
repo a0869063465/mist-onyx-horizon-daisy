@@ -1,5 +1,5 @@
 import { raiseDefaultDeck, type BeastDeck } from "./deck.ts";
-import { DEFAULT_DECK, monsterCard, spellCard } from "./catalog.ts";
+import { DEFAULT_DECK, monsterCard, spellCard, STARTER_NAME } from "./catalog.ts";
 import { canUseCard } from "./owned-cards.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
@@ -75,7 +75,7 @@ export function parseBook(raw: string): DeckBook | null {
 
 function seed(): DeckBook {
   return {
-    decks: [{ n: 1, name: "Lv 1 Meta deck", monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells] }],
+    decks: [{ n: 1, name: STARTER_NAME, monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells] }],
     active: 1,
   };
 }

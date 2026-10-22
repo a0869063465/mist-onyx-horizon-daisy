@@ -1,12 +1,17 @@
-import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard } from "./catalog.ts";
-import { canUseCard } from "./owned-cards.ts";
+import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard, STARTER_NAME } from "./catalog.ts";
+import { canUseCard, fakeIds } from "./owned-cards.ts";
 
 const KEY = "clash-beasts-deck";
 const BOOK_KEY = "clash-deck-book";
 const RAISED_KEY = "clash-deck-raised";
 const outside = new Set(FORMS.map((card) => card.id));
 
-export type BeastDeck = { monsters: string[]; spells: string[] };
+/** `fake`: the cards of the deck that play as fakes (the starter deck's, until their real cards are owned). */
+export type BeastDeck = { monsters: string[]; spells: string[]; fake?: string[] };
+
+export function withFake(deck: BeastDeck): BeastDeck {
+  return { monsters: deck.monsters, spells: deck.spells, fake: fakeIds([...deck.monsters, ...deck.spells]) };
+}
 
 function playableMonster(id: string) {
   return Boolean(monsterCard(id)) && !outside.has(id);
@@ -17,7 +22,7 @@ export function deckIssues(deck: BeastDeck): string | null {
   const spells = deck.spells.filter((id) => spellCard(id));
   if (new Set(monsters).size !== monsters.length || new Set(spells).size !== spells.length) return "Mỗi lá chỉ được một bản.";
   if (spells.filter((id) => spellCard(id)?.env).length > 1) return "Chỉ được một lá môi trường.";
-  if (!deckLegal(monsters.length, spells.length)) return "Cần đúng 24 lá: quái 13–17, phép 7–11.";
+  if (!deckLegal(monsters.length, spells.length)) return "Cần ít nhất 13 quái và 7 phép, tối đa 24 lá.";
   return null;
 }
 
@@ -53,8 +58,36 @@ function keptIds(list: unknown, ok: (id: string) => boolean) {
   return next;
 }
 
+const STARTER_KEY = "clash-starter-v1";
+
+/**
+ * Bộ bài Khởi đầu (chủ game 22/10), once per phone: the Meta deck is dropped and the cards a player owned are gone;
+ * the starter deck of fake cards is the one deck to begin with (other decks stay, with only the cards still usable).
+ */
+function startOver() {
+  if (localStorage.getItem(STARTER_KEY) === "1") return;
+  localStorage.setItem(STARTER_KEY, "1");
+  localStorage.removeItem("clash-owned");
+  localStorage.removeItem("clash-album-seen");
+  try {
+    const raw = localStorage.getItem(BOOK_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw) as { decks?: Array<{ n?: unknown; name?: unknown }> };
+    const decks = Array.isArray(data.decks) ? data.decks.filter((row) => row && row.name !== "Lv 1 Meta deck") : [];
+    const n = decks.reduce((max, row) => Math.max(max, Number(row.n) || 0), 0) + 1;
+    const starter = { n, name: STARTER_NAME, monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells], at: Date.now() };
+    localStorage.setItem(BOOK_KEY, JSON.stringify({ active: n, decks: [starter, ...decks] }));
+    localStorage.setItem(KEY, JSON.stringify({ monsters: starter.monsters, spells: starter.spells }));
+  } catch {
+    // A book that cannot be read is rebuilt from the starter deck.
+    localStorage.removeItem(BOOK_KEY);
+  }
+}
+
 export function raiseDefaultDeck() {
-  if (typeof localStorage === "undefined" || localStorage.getItem(RAISED_KEY) === "1") return;
+  if (typeof localStorage === "undefined") return;
+  startOver();
+  if (localStorage.getItem(RAISED_KEY) === "1") return;
   const base: BeastDeck = { monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells] };
   const rows: Array<BeastDeck & { n: number; name: string }> = [];
   try {
@@ -94,10 +127,10 @@ export function raiseDefaultDeck() {
     rows.push({ n: 0, name: "Bộ riêng", monsters: [...saved.monsters], spells: [...saved.spells] });
   }
   const hit = rows.findIndex((row) => sameDeck(row, base));
-  const top = hit >= 0 ? rows.splice(hit, 1)[0] : { n: 1, name: "Lv 1 Meta deck", monsters: base.monsters, spells: base.spells };
-  if (!top.name.trim()) top.name = "Lv 1 Meta deck";
+  const top = hit >= 0 ? rows.splice(hit, 1)[0] : { n: 1, name: STARTER_NAME, monsters: base.monsters, spells: base.spells };
+  if (!top.name.trim()) top.name = STARTER_NAME;
   for (const row of rows) {
-    if (row.name === "Lv 1 Meta deck") row.name = "Bộ riêng";
+    if (row.name === STARTER_NAME) row.name = "Bộ riêng";
   }
   const decks = [top, ...rows].map((row, index) => ({ ...row, n: index + 1 }));
   localStorage.setItem(BOOK_KEY, JSON.stringify({ active: 1, decks }));
@@ -110,12 +143,12 @@ export function loadDeck(): BeastDeck {
   raiseDefaultDeck();
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_DECK;
+    if (!raw) return withFake(DEFAULT_DECK);
     const deck = clean(JSON.parse(raw) as Partial<BeastDeck>);
-    if (deck.monsters.length + deck.spells.length === 0) return DEFAULT_DECK;
-    return deck;
+    if (deck.monsters.length + deck.spells.length === 0) return withFake(DEFAULT_DECK);
+    return withFake(deck);
   } catch {
-    return DEFAULT_DECK;
+    return withFake(DEFAULT_DECK);
   }
 }
 
