@@ -178,7 +178,7 @@ function DeckSelectPage() {
     setBusy(true);
     setNote("");
     try {
-      const opened = await openRoom({ data: { deck: cardsOf(row) } });
+      const opened = await openRoom({ data: { deck: netDeck(row) } });
       remember(opened.code, "host");
       await navigate({ to: "/play" });
     } catch (error) {
@@ -197,7 +197,7 @@ function DeckSelectPage() {
     setBusy(true);
     setNote("");
     try {
-      const joined = await joinRoom({ data: { code: next, deck: cardsOf(row) } });
+      const joined = await joinRoom({ data: { code: next, deck: netDeck(row) } });
       if (!joined.ok) {
         setNote(joined.error);
         setBusy(false);
@@ -338,7 +338,7 @@ function DeckSelectPage() {
       ) : null}
       {queueing && shown ? (
         <QueueScreen
-          deck={cardsOf(shown)}
+          deck={netDeck(shown)}
           art={coverArt}
           onMatched={(found, seat) => {
             remember(found, seat, true);
@@ -403,6 +403,11 @@ function DeckSelectPage() {
 }
 
 /** Gradients the deck boxes and the panel icons share; drawn once on the page. */
+/** A deck as a room gets it: the cards, with its name and cover for the VS screen (chủ game 22/10). */
+function netDeck(row: DeckEntry): NetDeck {
+  return { ...cardsOf(row), name: row.name, cover: coverOf(row) };
+}
+
 /**
  * Đánh thường's waiting screen, after LoR's (owner, 18/10): a framed panel in the middle of the screen, not a strip
  * down it, with the mode, "Đang trong hàng chờ đối thủ", the deck's portrait, the time waited and Huỷ. It waits

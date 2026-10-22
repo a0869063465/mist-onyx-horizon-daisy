@@ -12,7 +12,9 @@ import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
-import { LoadScreen } from "@/components/game/load-screen";
+import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
+import { MatchIntro, type IntroSide } from "@/components/game/match-intro";
+import { OpenerPanel, type OpenerCard } from "@/components/game/opener-panel";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
@@ -24,6 +26,7 @@ import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch }
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
+import { machineFace, ownFace, roomFace } from "@/lib/match-faces";
 import {
   aiStep,
   assignBlock,
@@ -112,8 +115,10 @@ import {
   startReel,
   pullReel,
   settleReel,
+  openerSwap,
   type Duel,
   type FieldMon,
+  type OpenerPick,
   type ReelFace,
   type Side,
 } from "@/lib/duel";
@@ -168,6 +173,13 @@ function fallenSea(prev: Duel, next: Duel, viewer: Side): string[] {
     }
   }
   return names;
+}
+
+/** Vs Máy: you and the computer as the VS screen shows them (chủ game 22/10, câu 8 và 9). */
+function withMachineFaces(duel: Duel): Duel {
+  if (duel.mode !== "ai") return duel;
+  const you = ownFace();
+  return { ...duel, faces: [you, machineFace(duel.players[1].roster ?? [], you.cover)] };
 }
 
 function veilSlain(prev: Duel, next: Duel, viewer: Side): boolean {
@@ -1420,6 +1432,13 @@ function PlayPage() {
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
   const [burst, setBurst] = useState<Burst | null>(null);
   const [chain, setChain] = useState<ChainOrb[]>([]);
+  // Màn VS (T1) and Bài khởi đầu (T2), chủ game 22/10: the VS screen plays once per match before the opening hand, and
+  // the opening hand stays open until its cards have flown, even once both sides are done.
+  const [introSeen, setIntroSeen] = useState(false);
+  const [openerOpen, setOpenerOpen] = useState(false);
+  /** Online: this side's opening pick, put again on top of the other side's when both were sent at once. */
+  const openerWant = useRef<{ side: Side; pick: OpenerPick } | null>(null);
+  const wasOpener = useRef(false);
   /** The slot of each monster the reaction line points at, so a stream still lands where one fell as its orb fired. */
   const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
@@ -1601,7 +1620,7 @@ function PlayPage() {
         return;
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
-      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : createDuel(loadDeck(), mode);
+      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : withMachineFaces(createDuel(loadDeck(), mode));
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
         matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
@@ -1625,7 +1644,7 @@ function PlayPage() {
       }
       if (join.seat === "host" && room.guestDeck && !room.duel && !opening.current) {
         opening.current = true;
-        const opened = createDuel(loadDeck(), "net", room.guestDeck);
+        const opened: Duel = { ...createDuel(loadDeck(), "net", room.guestDeck), faces: [ownFace(), roomFace(room.guestDeck)] };
         const pushed = await pushDuel({
           data: { code: join.code, seat: "host", duel: JSON.stringify({ ...opened, glimpse: null }) },
         });
@@ -1642,7 +1661,15 @@ function PlayPage() {
       }
       if (room.duel && room.rev > rev.current) {
         rev.current = room.rev;
-        const next = JSON.parse(room.duel) as Duel;
+        let next = JSON.parse(room.duel) as Duel;
+        // Đổi bài đầu trận: when both sides sent their pick at once, the later one lost this side's pick; it goes on top.
+        const want = openerWant.current;
+        if (want && next.opener && !next.opener.done[want.side]) {
+          next = openerSwap(next, want.side, want.pick);
+          void pushDuel({ data: { code: join.code, seat: join.seat, duel: JSON.stringify({ ...next, glimpse: null }) } }).then((pushed) => {
+            if (pushed.ok) rev.current = pushed.rev;
+          });
+        } else if (want) openerWant.current = null;
         setWait("");
         holdNotice(next.live ?? "", false, next.clock);
         setDuel(next);
@@ -1729,6 +1756,17 @@ function PlayPage() {
     if (!drops.length) return;
     setLaserHp(Object.fromEntries(drops.map((drop) => [drop.key, drop.from])));
   }, [duel]);
+
+  // A new match whose opening hands are not chosen yet (Đấu lại too) plays the VS screen again; after it, the opening
+  // hand opens.
+  const openerLive = Boolean(duel?.opener);
+  useEffect(() => {
+    if (openerLive && !wasOpener.current) setIntroSeen(false);
+    wasOpener.current = openerLive;
+  }, [openerLive]);
+  useEffect(() => {
+    if (loaded && introSeen && openerLive) setOpenerOpen(true);
+  }, [loaded, introSeen, openerLive]);
 
   // The reaction line fades out a moment after the wait is over and then reports it (onClosed); this is the backstop
   // in case the fade never runs (the line hidden in Tuỳ chỉnh).
@@ -2522,6 +2560,25 @@ function PlayPage() {
         return;
       }
       rev.current = pushed.rev;
+    });
+  }
+
+  /** Bài khởi đầu: the picked opening cards (indexes over the 2 monsters, then the spell) are replaced. Online, both
+   *  sides choose at once, so a pick that clashes with the other side's is put on top of it when the poll brings it. */
+  function confirmOpener(picked: number[]) {
+    if (!duel?.opener) return;
+    const count = you.reserve.length;
+    const pick: OpenerPick = { reserve: picked.filter((index) => index < count), hand: picked.filter((index) => index >= count).map((index) => index - count) };
+    const next = openerSwap(duel, viewer, pick);
+    if (next === duel) return;
+    setDuel(next);
+    const seat = netRef.current;
+    if (duel.mode !== "net" || !seat) return;
+    openerWant.current = { side: viewer, pick };
+    const ticket = pushGen.current + 1;
+    pushGen.current = ticket;
+    void pushDuel({ data: { code: seat.code, seat: seat.seat, duel: JSON.stringify({ ...next, glimpse: null }) } }).then((pushed) => {
+      if (ticket === pushGen.current && pushed.ok) rev.current = pushed.rev;
     });
   }
 
@@ -3439,6 +3496,35 @@ function PlayPage() {
       </>
     );
   };
+  // Đầu trận (chủ game 22/10): the match loading banner picks a monster of your deck (T15); the VS screen shows each
+  // side's deck and champion (T1); the opening hand is the 2 monsters and the spell (T2).
+  const loadFace: LoadFace = {
+    mode: tr(tutorial ? "Hướng dẫn" : duel.mode === "ai" ? "Vs Máy" : duel.mode === "net" ? ((net as { quick?: boolean } | null)?.quick ? "Đánh thường" : "Tuỳ chọn") : duel.mode === "test" ? "Test" : "2 người"),
+    pool: (you.roster ?? []).flatMap((id) => {
+      const card = monsterCard(id);
+      return card ? [{ name: tr(card.name), art: artSrc(id, 1) }] : [];
+    }),
+  };
+  const introSide = (side: Side): IntroSide => {
+    const face = duel.faces?.[side] ?? null;
+    const mine = side === viewer;
+    return {
+      label: mine ? "Bạn" : duel.mode === "ai" ? "Máy" : "Đối thủ",
+      deck: !mine && duel.mode === "ai" ? null : face?.deck ?? null,
+      art: face?.cover ? artSrc(face.cover, 1) : null,
+    };
+  };
+  const openerCards: OpenerCard[] = [
+    ...you.reserve.map((held, index): OpenerCard => {
+      const card = monsterCard(held.id);
+      return {
+        key: `m${index}:${held.id}`,
+        face: card ? <CardFace monster={card} level={held.saved?.level ?? 1} live={reserveLive(held, card)} /> : null,
+        can: you.monsterDeck.length > 0,
+      };
+    }),
+    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} />, can: you.spellDeck.length > 0 })),
+  ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   const lineText = pinnedLine ?? toast;
   const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
@@ -3475,7 +3561,18 @@ function PlayPage() {
   return (
     <main className="stage">
       <GlyphDefs />
-      {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} />}
+      {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
+      {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroSeen(true)} /> : null}
+      {openerOpen ? (
+        <OpenerPanel
+          cards={openerCards}
+          first={duel.turn === viewer}
+          ready={!duel.opener}
+          startWaiting={Boolean(duel.opener?.done[viewer])}
+          onConfirm={confirmOpener}
+          onClosed={() => setOpenerOpen(false)}
+        />
+      ) : null}
       {loaded && tutorial ? (
         <Tutorial
           duel={duel}
@@ -5051,7 +5148,7 @@ function PlayPage() {
               <h2>{duel.mode === "hotseat" || duel.mode === "test" ? (duel.winner === 0 ? "Bên 1 thắng" : "Bên 2 thắng") : duel.winner === viewer ? "Bạn thắng" : "Bạn thua"}</h2>
               {duel.mode === "net" ? null : (
                 <button type="button" className="act press" onClick={() => {
-                  const next = createDuel(loadDeck(), duel.mode);
+                  const next = withMachineFaces(createDuel(loadDeck(), duel.mode));
                   if (next.mode === "ai" && next.step === "main" && next.winner === null) {
                     warmMatchHistory();
                     matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };

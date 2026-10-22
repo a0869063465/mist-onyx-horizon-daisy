@@ -571,6 +571,14 @@ const PAIRS: Array<[string, string]> = [
   ["Tiến độ sưu tập", "Collection progress"],
   ["Đã sưu tập", "Collected"],
   ["Hoàn thành album!", "Album complete!"],
+  ["Bài khởi đầu", "Opening hand"],
+  ["Chọn các lá bài để thay thế", "Choose cards to replace"],
+  ["Đang chờ đối thủ…", "Waiting for opponent…"],
+  ["Thay thế", "Replace"],
+  ["Hoàn tác", "Undo"],
+  ["Bạn đi trước", "You go first"],
+  ["Bạn sẽ đi sau", "You go second"],
+  ["Máy", "Computer"],
 ];
 
 const EXACT = new Map(PAIRS);

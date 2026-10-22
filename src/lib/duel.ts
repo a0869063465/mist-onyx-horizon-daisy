@@ -154,10 +154,21 @@ export type Hold = {
   armed: string | null;
 };
 
+/** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover). */
+export type DuelFace = { deck: string | null; cover: string | null };
+
+/** Opening cards picked to replace: indexes into the reserve (the 2 monsters) and the hand (the spell). */
+export type OpenerPick = { reserve: number[]; hand: number[] };
+
 export type Duel = {
   players: [Player, Player];
   turn: Side;
   opening: boolean;
+  /** Each side's deck name and champion for the VS screen; set by the page that opens the match. */
+  faces?: [DuelFace, DuelFace] | null;
+  /** Đổi bài đầu trận (chủ game 22/10): before the first turn each side may replace any of its 3 opening cards once.
+   *  Which sides are done; null when there is none (Test, Hướng dẫn) or both are done. */
+  opener?: { done: [boolean, boolean] } | null;
   step: "main" | "respond" | "over";
   pending: Pending;
   hold: Hold | null;
@@ -324,10 +335,11 @@ export function createDuel(
       player.turns = 1;
     }
   }
-  return {
+  const duel: Duel = {
     players,
     turn: 0,
     opening: mode !== "test",
+    opener: mode === "ai" || mode === "net" ? { done: [false, false] } : null,
     step: "main",
     pending: null,
     hold: null,
@@ -350,6 +362,65 @@ export function createDuel(
     past: {},
     now: {},
     born: {},
+  };
+  // Máy đổi bài ngay lúc vào trận, nên người chơi không phải chờ máy.
+  return mode === "ai" ? openerSwap(duel, 1, aiOpenerPick(duel.players[1])) : duel;
+}
+
+/**
+ * Đổi bài đầu trận (chủ game 22/10). Each picked opening card is replaced by the next card of its own pile (monster
+ * or spell), and only then do the replaced cards go back into that pile, which is shuffled, so a card never comes
+ * back in its own place (câu 2). The environment card is never in the hand (câu 3). Once per side; the match starts
+ * when both sides are done.
+ */
+export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
+  const opener = state.opener;
+  if (!opener || opener.done[side]) return state;
+  const player = state.players[side];
+  const reserve = [...player.reserve];
+  const monsterDeck = [...player.monsterDeck];
+  const backMonsters: PileMon[] = [];
+  for (const index of new Set(pick.reserve)) {
+    const next = index >= 0 && index < reserve.length ? monsterDeck.shift() : undefined;
+    if (!next) continue;
+    backMonsters.push(reserve[index]);
+    reserve[index] = next;
+  }
+  const hand = [...player.hand];
+  const tolls = hand.map((_, index) => player.tolls?.[index] ?? false);
+  const spellDeck = [...player.spellDeck];
+  const spellTax = spellDeck.map((_, index) => player.spellTax?.[index] ?? false);
+  const backSpells: Array<[string, boolean]> = [];
+  for (const index of new Set(pick.hand)) {
+    const next = index >= 0 && index < hand.length ? spellDeck.shift() : undefined;
+    if (next === undefined) continue;
+    backSpells.push([hand[index], tolls[index]]);
+    hand[index] = next;
+    tolls[index] = spellTax.shift() ?? false;
+  }
+  const spellPile = shuffle([...spellDeck.map((id, index): [string, boolean] => [id, spellTax[index]]), ...backSpells]);
+  const swapped: Player = {
+    ...player,
+    reserve,
+    monsterDeck: shuffle([...monsterDeck, ...backMonsters]),
+    hand,
+    tolls,
+    spellDeck: spellPile.map(([id]) => id),
+    spellTax: spellPile.map(([, tax]) => tax),
+  };
+  const done: [boolean, boolean] = side === 0 ? [true, opener.done[1]] : [opener.done[0], true];
+  const players: [Player, Player] = side === 0 ? [swapped, state.players[1]] : [state.players[0], swapped];
+  return { ...state, players, opener: done[0] && done[1] ? null : { done } };
+}
+
+/** Máy đổi bài (chủ game 22/10, câu 5): the 3 and 4 star monsters, which it cannot summon early; the spell stays. */
+export function aiOpenerPick(player: Player): OpenerPick {
+  return {
+    reserve: player.reserve.flatMap((held, index) => {
+      const stars = monsterCard(held.id)?.stars ?? 0;
+      return stars >= 3 && stars <= 4 ? [index] : [];
+    }),
+    hand: [],
   };
 }
 

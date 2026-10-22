@@ -125,6 +125,8 @@ export function matchJobs(duel: Duel): Job[] {
     const spells = new Set<string>([...player.hand, ...player.spellDeck, ...(player.env ? [player.env] : [])]);
     for (const id of spells) if (spellCard(id)) srcs.add(spellSrc(id));
   }
+  // The champions of the VS screen: a cover can be a form the deck makes, not a card in it.
+  for (const face of duel.faces ?? []) if (face.cover && monsterCard(face.cover)) srcs.add(artSrc(face.cover));
   return [...[...srcs].filter(Boolean).map((src) => () => picture(src)), ...MATCH_TRACKS.map((src) => () => clip(src))];
 }
 

@@ -4,11 +4,18 @@ import { runJobs, type Job } from "@/lib/preload";
 /** Seconds before "Vào luôn" appears, for a slow connection. */
 const SKIP_AFTER = 20;
 
+/** What the match loading screen shows above the bar: the mode, and the monsters of your deck to pick one from. */
+export type LoadFace = { mode: string; pool: Array<{ name: string; art: string }> };
+
 /**
  * Full-screen loading screen with a real progress bar: it counts finished downloads, and calls onDone
  * once every job settled (or the player pressed "Vào luôn"). The background is /load-<kind>.jpg when present.
+ * Before a match it also shows a dark banner like Runeterra's (chủ game 22/10, T15): the mode, and one monster of your
+ * deck picked at random, in a gold ring with its name. Its foot stops a little above the loading line and the bar, so
+ * it never covers them (chủ game, câu 12). The monster's story is for later (câu 11).
  */
-export function LoadScreen({ kind, title, jobs, onDone }: { kind: "game" | "match"; title: string; jobs: () => Job[]; onDone: () => void }) {
+export function LoadScreen({ kind, title, jobs, onDone, face }: { kind: "game" | "match"; title: string; jobs: () => Job[]; onDone: () => void; face?: LoadFace }) {
+  const [shown] = useState(() => (face?.pool.length ? face.pool[Math.floor(Math.random() * face.pool.length)] : null));
   const [pct, setPct] = useState(0);
   const [skip, setSkip] = useState(false);
   const finished = useRef(false);
@@ -31,8 +38,22 @@ export function LoadScreen({ kind, title, jobs, onDone }: { kind: "game" | "matc
   }, []);
 
   return (
-    <div className={`load-screen is-${kind}`} role="status" aria-live="polite">
+    <div className={`load-screen is-${kind}${face ? " has-banner" : ""}`} role="status" aria-live="polite">
       {kind === "game" ? <img className="load-logo" src="/ui/logo.webp" alt="Clash of the Beasts" fetchPriority="high" draggable={false} /> : null}
+      {face ? (
+        <div className="load-banner">
+          <b className="load-mode">{face.mode}</b>
+          <i className="load-rule" />
+          {shown ? (
+            <>
+              <span className="load-ring">
+                <img src={shown.art} alt="" draggable={false} />
+              </span>
+              <span className="load-name">{shown.name}</span>
+            </>
+          ) : null}
+        </div>
+      ) : null}
       <div className="load-foot">
         <div className="load-row">
           <span className="load-title">{title}</span>

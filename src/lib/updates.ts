@@ -641,6 +641,10 @@ export const PENDING_NOTES: string[] = [
   "Thanh phản ứng: phép hoặc skill vừa dùng hiện lá to bên trái khoảng 1,5 giây rồi thu nhỏ bay vào viên của nó. Skill hiện lá quái kèm tên skill. Quái ẩn mình không hiện lá.",
   "Thanh phản ứng: khi hết chờ, viên được cho qua loé sáng rồi bắn một tia sáng theo dòng tới mục tiêu; viên bị chặn rung lên rồi xám và nhỏ lại, dòng của nó tắt dần. Ví dụ Hấp thụ ma pháp bắn vào Sợi xích địa ngục, Sợi xích địa ngục xám lại. Quái bị hạ thì tia vẫn tới đúng ô của quái đó.",
   "Thanh phản ứng có tiếng nhỏ khi viên hiện ra, khi viên bắn và khi viên bị chặn.",
+  "Màn tải trận có dải đen giữa màn hình: tên chế độ (Vs Máy, Đánh thường, Tuỳ chọn…), chân dung một quái ngẫu nhiên trong bộ bài của bạn trong vòng vàng và tên quái. Dải dừng phía trên dòng chữ tải và thanh tải.",
+  "Màn VS đầu trận ở Vs Máy, Đánh thường và Tuỳ chọn: logo sư tử lướt qua trong mưa hạt vàng, hai bên trượt vào (đối thủ trên, bạn dưới) với tên, tên bộ bài và quái chủ lực là ảnh bìa bộ bài. Viên VS xoay giữa vạch sáng, sét xanh, loé trắng, rồi quái chủ lực rơi xuống bàn và mờ đi. Khoảng 4 giây, chạm màn hình để bỏ qua.",
+  "Bài khởi đầu: đầu trận được đổi một lần các lá trong 3 lá đầu (2 quái dự bị và 1 phép). Chạm lá hoặc nút Thay thế để chọn, Hoàn tác để bỏ chọn, OK để đổi. Lá mới lấy từ xấp cùng loại, lá bị đổi xáo lại vào xấp, nên không rút lại đúng lá vừa đổi. Lá môi trường không đổi. Có 20 giây, hết giờ thì đổi các lá đang chọn. Có dòng Bạn đi trước hoặc Bạn sẽ đi sau.",
+  "Đánh thường và Tuỳ chọn: hai bên đổi bài khởi đầu cùng lúc, bên xong trước thấy Đang chờ đối thủ. Vs Máy: máy cũng đổi bài, đổi các quái 3 và 4 sao, giữ lá phép. Test và Hướng dẫn không có màn VS, không đổi bài.",
 ];
 
 function remarkOf(notes: string[]) {

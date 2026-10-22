@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
-export type NetDeck = { monsters: string[]; spells: string[] };
+/** A deck sent to a room: its cards, and its name and cover for the VS screen (chủ game 22/10). */
+export type NetDeck = { monsters: string[]; spells: string[]; name?: string; cover?: string | null };
 export type NetSeat = "host" | "guest";
 
 type WireDuel = {
@@ -8,6 +9,7 @@ type WireDuel = {
   step: "main" | "respond" | "over";
   winner: 0 | 1 | null;
   hold: { priority: 0 | 1 } | null;
+  opener?: { done: [boolean, boolean] } | null;
 };
 
 type RoomRow = {
@@ -34,7 +36,8 @@ async function sweep() {
 function deckOf(value: NetDeck): NetDeck {
   const list = (ids: unknown) =>
     Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string" && id.length < 80).slice(0, 40) : [];
-  return { monsters: list(value?.monsters), spells: list(value?.spells) };
+  const text = (raw: unknown, max: number) => (typeof raw === "string" ? raw.slice(0, max) : undefined);
+  return { monsters: list(value?.monsters), spells: list(value?.spells), name: text(value?.name, 40), cover: text(value?.cover, 80) ?? null };
 }
 
 function readDeck(raw: string | null): NetDeck | null {
@@ -122,9 +125,11 @@ export const pushDuel = createServerFn({ method: "POST" })
     }
     const side = data.seat === "host" ? 0 : 1;
     const conceded = duel.winner !== null && duel.winner !== side;
+    // Đổi bài đầu trận: both sides choose at the same time, so a side still choosing may send its pick.
+    const swapping = Boolean(current?.opener && !current.opener.done[side]);
     if (!current) {
       if (data.seat !== "host") return { ok: false as const, error: "Chưa tới lượt." };
-    } else if (!conceded && actor(current) !== side) {
+    } else if (!conceded && !swapping && actor(current) !== side) {
       return { ok: false as const, error: "Chưa tới lượt." };
     }
     const rev = Number(room.rev);

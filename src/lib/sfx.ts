@@ -621,6 +621,56 @@ export function playPack(cue: PackCue, delay = 0) {
 }
 
 /**
+ * Màn VS and Đổi bài đầu trận sounds (chủ game 22/10), made here like the pack sounds, nothing taken from the
+ * reference video: the logo's rush, the gold rain, the VS medallion's hum, the lightning, the white flash, the
+ * champions landing; for the opening hand a swirl as a card is marked, a puff as it is unmarked, a whoosh as it goes
+ * back, a deal and a flip as the new card comes, and a small chord when the hand is ready.
+ */
+export type IntroCue = "rush" | "rain" | "hum" | "strike" | "flash" | "land" | "mark" | "unmark" | "back" | "deal" | "flip" | "ready";
+
+export function playIntro(cue: IntroCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = Math.min(1.5, fxLoud() * 1.35);
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "rush") {
+      noiseBurst(audio, t, 0.5, 260, 6400, 0.2 * vol);
+      thump(audio, t + 0.38, 0.4 * vol);
+    } else if (cue === "rain") {
+      shimmer(audio, t, 1.8, 0.04 * vol);
+      for (const [freq, at] of [[1568, 0], [1975.5, 0.16], [2349.3, 0.32], [2637, 0.5], [3136, 0.7]] as const) bell(audio, t + at, freq, 0.9, 0.035 * vol);
+    } else if (cue === "hum") {
+      for (const freq of [146.8, 220, 293.7]) pad(audio, t, freq, 1.5, 0.035 * vol);
+    } else if (cue === "strike") {
+      crack(audio, t, vol, false);
+    } else if (cue === "flash") {
+      thump(audio, t, 0.6 * vol);
+      noiseBurst(audio, t, 0.8, 400, 7000, 0.16 * vol);
+      for (const [freq, at] of [[1046.5, 0.06], [1318.5, 0.12], [1568, 0.18], [2093, 0.24]] as const) bell(audio, t + at, freq, 1.1, 0.05 * vol);
+    } else if (cue === "land") {
+      thump(audio, t, 0.42 * vol);
+      noiseBurst(audio, t, 0.22, 1800, 500, 0.08 * vol);
+    } else if (cue === "mark") {
+      noiseBurst(audio, t, 0.32, 600, 2600, 0.08 * vol);
+      bell(audio, t + 0.08, 880, 0.5, 0.03 * vol);
+    } else if (cue === "unmark") {
+      softPop(audio, t, 392, 0.14, 0.05 * vol);
+    } else if (cue === "back") {
+      noiseBurst(audio, t, 0.28, 3200, 800, 0.12 * vol);
+    } else if (cue === "deal") {
+      noiseBurst(audio, t, 0.12, 3400, 1300, 0.12 * vol);
+    } else if (cue === "flip") {
+      noiseBurst(audio, t, 0.07, 2600, 5200, 0.12 * vol);
+      softPop(audio, t + 0.02, 659.3, 0.1, 0.05 * vol);
+    } else {
+      for (const [freq, at] of [[523.3, 0], [659.3, 0.06], [784, 0.12]] as const) bell(audio, t + at, freq, 0.9, 0.04 * vol);
+    }
+  });
+}
+
+/**
  * Thanh phản ứng sounds (made here, nothing taken from the reference video): a soft rising air with a small chime as
  * a spell or a skill lands on the line, a bright swell as an orb fires at its target, and a falling puff as an answer
  * stops one. Quiet, under the effects volume, so they sit under the spells' own sounds.
