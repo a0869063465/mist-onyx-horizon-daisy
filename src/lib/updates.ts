@@ -655,6 +655,9 @@ export const PENDING_NOTES: string[] = [
   "Hướng dẫn: khi người giữ khoá nói, bảng thông báo ẩn đi, nên không còn hai khung chồng lên nhau (ví dụ lúc Hãy rút 1 lá bài).",
   "Hướng dẫn chơi không còn màn tải trận, vào thẳng trận hướng dẫn.",
   "Giám định: bấm nút Giám định của lá để làm Sát hạch (5 câu trắc nghiệm) và Thực chiến. Hiện có cho Khổng lồ 1 mắt. Xong cả hai phần được ★2.",
+  "Bộ sưu tập: nhãn độ hiếm trên bảng mô tả lá phép dời sang bên trái, không còn che mana tiêu hao.",
+  "Bộ sưu tập: bấm Thông thường lần nữa để sắp xếp ngược lại.",
+  "Bảng quái: Máy quay thưởng chỉ có Quay thưởng và Con bạc nổi giận là kỹ năng chủ động, Số 7, Kiếm, Khiên, Thập tự, Số 6 đi kèm Quay thưởng. Trái tim hải long chỉ có Triều lên là chủ động, Con nước lớn tàn phá và Đại hồng thuỷ huỷ diệt đi kèm.",
 ];
 
 function remarkOf(notes: string[]) {

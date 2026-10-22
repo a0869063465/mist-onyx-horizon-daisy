@@ -16,7 +16,7 @@ type Kind = "monster" | "spell";
 type Pick = { id: string; kind: Kind };
 type Row = Pick & { name: string; stars: number; form: boolean; owned: boolean; tier: Tier };
 /** By rarity, UR first (the default; owner, 21/10), Normal first on the next tap; or Thông thường. */
-type Sort = { by: "normal" } | { by: "rarity"; up: boolean };
+type Sort = { by: "normal"; up: boolean } | { by: "rarity"; up: boolean };
 type Panel = "env" | "filter" | "sort" | null;
 /** Monsters and spells shown (at least one), monster types and stars, spell groups, rarities. */
 type VaultFilter = { monsters: boolean; spells: boolean; types: string[]; stars: number[]; kinds: SpellKindKey[]; tiers: Tier[] };
@@ -210,9 +210,9 @@ export function CardVault() {
             <span>{tr("Độ hiếm")}</span>
             <small>{sort.by === "rarity" && !sort.up ? "UR → SR → N" : "N → SR → UR"}</small>
           </button>
-          <button type="button" data-ui="soft" className={`cv-sort${sort.by === "normal" ? " on" : ""}`} onClick={() => setSort({ by: "normal" })}>
+          <button type="button" data-ui="soft" className={`cv-sort${sort.by === "normal" ? " on" : ""}`} onClick={() => setSort((now) => ({ by: "normal", up: now.by === "normal" ? !now.up : false }))}>
             <span>{tr("Thông thường")}</span>
-            <small>{tr("Quái nhiều sao trước, rồi phép theo nhóm")}</small>
+            <small>{sort.by === "normal" && sort.up ? tr("Quái ít sao trước, rồi phép theo nhóm ngược lại") : tr("Quái nhiều sao trước, rồi phép theo nhóm")}</small>
           </button>
         </div>
       ) : null}
@@ -245,8 +245,9 @@ function order(a: Row, b: Row, sort: Sort): number {
   if (a.form !== b.form) return a.form ? 1 : -1;
   if (sort.by === "rarity" && a.tier !== b.tier) return (tierRank(a.tier) - tierRank(b.tier)) * (sort.up ? 1 : -1);
   if (a.kind !== b.kind) return a.kind === "monster" ? -1 : 1;
-  if (a.kind === "monster") return b.stars - a.stars || a.name.localeCompare(b.name, "vi");
-  return spellKindRank(a.id) - spellKindRank(b.id) || a.name.localeCompare(b.name, "vi");
+  const flip = sort.by === "normal" && sort.up ? -1 : 1;
+  if (a.kind === "monster") return (b.stars - a.stars) * flip || a.name.localeCompare(b.name, "vi");
+  return (spellKindRank(a.id) - spellKindRank(b.id)) * flip || a.name.localeCompare(b.name, "vi");
 }
 
 function ToolButton({ label, on, count, onClick, children }: { label: string; on: boolean; count: number; onClick: () => void; children: ReactNode }) {

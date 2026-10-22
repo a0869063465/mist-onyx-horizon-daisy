@@ -10095,7 +10095,9 @@ button.watch-back {
 .al-stat-back.is-lit .al-stat-ok { opacity: 1; }
 
 /* The rarity on a card's sheet in the collection, top right of its picture. */
-.msheet-rarity { position: absolute; top: -0.5rem; right: -0.45rem; z-index: 4; font-style: normal; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
+.msheet-rarity { position: absolute; top: -0.5rem; left: -0.45rem; z-index: 4; font-style: normal; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
+/* A spell's mana sits top right of the picture, so its rarity goes left (owner 22/10); a monster's own number keeps the old place. */
+.msheet-card:has(.msheet-count) .msheet-rarity { left: auto; right: -0.45rem; }
 /* Giám định: the lock box as a button. */
 .al-appraise { width: 100%; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 0 10px rgba(255, 200, 70, 0.25); }
 .al-appraise:active { transform: scale(0.97); }
