@@ -10313,6 +10313,8 @@ button.watch-back {
 }
 .rx-stream.is-fire { animation: rx-flow-settle 1.5s ease calc(0.6s + var(--late, 0s)) both; }
 .rx-stream.is-fizzle { animation: rx-fizzle-flow 0.6s ease var(--late, 0s) both; }
+.rx-stream.is-fire.is-strike { animation: rx-strike-out 0.3s ease-out calc(0.1s + var(--late, 0s)) both; }
+@keyframes rx-strike-out { to { opacity: 0; } }
 @keyframes rx-fizzle-flow { to { opacity: 0.08; } }
 .rx-stream .rx-bolt {
   fill: none;
@@ -10865,3 +10867,83 @@ button.watch-back {
 @keyframes mp-sy { from { transform: translateY(0); } to { transform: translateY(var(--dy)); } }
 @keyframes mp-drop { 0% { opacity: 0; transform: translateY(-70%) rotate(-8deg) scale(0.8); } 60% { opacity: 1; transform: translateY(4%) rotate(1deg) scale(1.02); } 100% { opacity: 1; transform: none; } }
 @keyframes mp-ur-forward { 0% { transform: none; } 45% { transform: scale(1.22); } 100% { transform: scale(1.12); } }
+
+/* The last thrust of a landing blow (chủ game 22/10): quick, accelerating into the hit. */
+.slot.is-thrust { z-index: 12; transition: transform 110ms cubic-bezier(0.55, 0, 0.9, 0.45); }
+
+/* Hết trận (chủ game 22/10, after LoR's nexus falling): the HP bursts, the screen goes dark, the crest rises. */
+.es {
+  --m: min(44vw, 210px);
+  position: fixed;
+  inset: 0;
+  z-index: 9250;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.es-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.es-crest { position: absolute; left: 50%; top: 42%; width: 0; height: 0; }
+.es-medal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--m);
+  transform: translate(-50%, -54%);
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 22px rgba(120, 190, 255, 0.6));
+  animation: es-medal-in 720ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.is-lose .es-medal { filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 24px rgba(255, 50, 70, 0.65)); }
+.es-medal .es-gem { animation: es-gem 2.4s ease-in-out 700ms infinite; }
+.es-wings {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(122vw, 580px);
+  transform: translate(-50%, -60%);
+  filter: drop-shadow(0 0 10px rgba(90, 200, 255, 0.9));
+  pointer-events: none;
+}
+.es-feather { transform: rotate(var(--a)); animation: es-feather-in 760ms calc(200ms + var(--i) * 60ms) cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.es-title {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--m) * 0.5 + 0.6rem);
+  margin: 0;
+  white-space: nowrap;
+  font-family: "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif;
+  font-size: clamp(2.5rem, 11.5vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  color: transparent;
+  background: linear-gradient(100deg, #9fd8ff 0%, #ffffff 30%, #ffffff 40%, #8fd0ff 55%, #e9f8ff 70%, #6ab8ff 100%) 0 0 / 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)) drop-shadow(0 0 14px rgba(110, 190, 255, 0.75));
+  transform: translateX(-50%);
+  animation: es-title-in 620ms 320ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both, es-shine 2.6s linear 1s infinite;
+}
+.is-lose .es-title {
+  background-image: linear-gradient(100deg, #ff7d8a 0%, #ffe0e3 30%, #ffe0e3 40%, #ff5466 55%, #ffc3c9 70%, #c1162b 100%);
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)) drop-shadow(0 0 14px rgba(255, 50, 70, 0.75));
+}
+.es-hint {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--m) * 0.5 + 5rem);
+  margin: 0;
+  white-space: nowrap;
+  font-family: "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: #cfe0ff;
+  transform: translateX(-50%);
+  animation: mp-in 400ms ease-out both, po-breathe 1.6s ease-in-out 400ms infinite;
+}
+.is-lose .es-hint { color: #ffd0d5; }
+@keyframes es-medal-in { 0% { opacity: 0; transform: translate(-50%, -54%) scale(0.25) rotate(-30deg); } 60% { opacity: 1; transform: translate(-50%, -54%) scale(1.12) rotate(4deg); } 100% { opacity: 1; transform: translate(-50%, -54%) scale(1) rotate(0); } }
+@keyframes es-feather-in { from { opacity: 0; transform: rotate(calc(var(--a) + 70deg)) scale(0.15); } to { opacity: 1; transform: rotate(var(--a)) scale(1); } }
+@keyframes es-title-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(1.25); filter: blur(6px); } }
+@keyframes es-shine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes es-gem { 50% { filter: brightness(1.5) drop-shadow(0 0 6px rgba(255, 255, 255, 0.9)); } }

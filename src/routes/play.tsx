@@ -9,7 +9,7 @@ import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { fieldBindsFor } from "@/lib/field-chips";
-import { playCue, setSound, soundOn, unlockSound } from "@/lib/sfx";
+import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
@@ -24,6 +24,7 @@ import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { settleWin, type MatchReward } from "@/lib/missions";
 import { MissionPanel } from "@/components/game/mission-panel";
+import { EndScene } from "@/components/game/end-scene";
 import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/trial";
 import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
@@ -584,6 +585,67 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
     x: from.x + from.w / 2 + (face.x + face.w / 2 - (from.x + from.w / 2)) * travel,
     y: from.y + from.h / 2 + (face.y + face.h / 2 - (from.y + from.h / 2)) * travel,
   };
+}
+
+/**
+ * A normal attack landing (chủ game 22/10, LoR): on a player, the attacker thrusts to the edge of that player's field
+ * row, an electric dome lights where it hits and lightning runs along the edge of the board to the player's HP; on a
+ * monster (attacked or blocking), the two cards collide. Hellfire balls and shots keep their own looks.
+ */
+type Landing =
+  | { kind: "face"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
+  | { kind: "clash"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; target: { x: number; y: number } };
+
+const HELL_IDS = new Set(["mat-do-tan-pha", "rong-ac-ma"]);
+const BOARD_EDGE = 4;
+
+function seatOf(duel: Duel, uid: string): { side: Side; index: number } | null {
+  for (const side of [0, 1] as const) {
+    const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
+    if (index >= 0) return { side, index };
+  }
+  return null;
+}
+
+function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }): Landing | null {
+  const pending = prev.pending;
+  if (prev.step !== "respond" || !pending || next.pending === pending) return null;
+  if (pending.kind !== "face" && pending.kind !== "melee") return null;
+  if (pending.kind === "face" && pending.skill) return null;
+  const attacker = fieldMon(prev, pending.attacker);
+  if (!attacker || attacker.horn || attacker.gaze || attacker.bolt || HELL_IDS.has(attacker.cardId) || seaVeiled(prev, viewer, attacker.uid)) return null;
+  const seat = seatOf(prev, attacker.uid);
+  if (!seat) return null;
+  const foe = (1 - seat.side) as Side;
+  const home = SLOT_BOX[screenSide(seat.side, viewer)][seat.index];
+  const from = { x: home.x + home.w / 2, y: home.y + home.h / 2 };
+  const toward = (point: { x: number; y: number }, travel: number) => ({ x: ((point.x - from.x) * travel * 100) / home.w, y: ((point.y - from.y) * travel * 100) / home.h });
+  const blocker = prev.hold?.blocker ?? null;
+  const struck = pending.kind === "melee" ? (blocker ?? pending.defender) : blocker;
+  if (struck) {
+    const where = seatOf(prev, struck);
+    const before = fieldMon(prev, struck);
+    if (!where || !before) return null;
+    const after = fieldMon(next, struck);
+    const hurt = !after || after.hp !== before.hp || fieldMon(next, attacker.uid)?.hp !== attacker.hp;
+    if (!hurt) return null;
+    const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
+    const target = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+    const at = { x: from.x + (target.x - from.x) * 0.8, y: from.y + (target.y - from.y) * 0.8 };
+    return { kind: "clash", uid: attacker.uid, thrust: toward(target, 0.72), at, target };
+  }
+  if (next.players[foe].hp >= prev.players[foe].hp) return null;
+  const top = screenSide(foe, viewer) === 1;
+  const orb = top ? marks.foeHp : marks.youHp;
+  const row = SLOT_BOX[screenSide(foe, viewer)];
+  const edgeY = top ? Math.max(...row.map((box) => box.y + box.h)) + 1 : Math.min(...row.map((box) => box.y)) - 1;
+  const span = orb.y - from.y;
+  if (Math.abs(span) < 1) return null;
+  const reach = Math.max(0.2, Math.min(1, (edgeY - from.y) / span));
+  const at = { x: from.x + (orb.x - from.x) * reach, y: edgeY };
+  const edgeX = orb.x < 50 ? BOARD_EDGE : 100 - BOARD_EDGE;
+  const path: Array<[number, number]> = [[at.x, at.y], [edgeX, at.y], [edgeX, orb.y], [orb.x, orb.y]];
+  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), at, dir: top ? -1 : 1, path, orb };
 }
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
@@ -1416,7 +1478,9 @@ function PlayPage() {
   const [trialPaid, setTrialPaid] = useState(false);
   /** Nhiệm vụ after a won match (chủ game 22/10): what it paid, and whether the end panels are past. */
   const [reward, setReward] = useState<MatchReward | null>(null);
-  const [endStep, setEndStep] = useState<"wait" | "rewards" | "done">("wait");
+  const [endStep, setEndStep] = useState<"wait" | "scene" | "rewards" | "done">("wait");
+  /** Hết trận (chủ game 22/10): the losing side's HP on screen, where the end scene bursts it. */
+  const [scene, setScene] = useState<{ win: boolean; at: { x: number; y: number }; tone: "red" | "blue" } | null>(null);
   const paidMatch = useRef<{ mid: string; reward: MatchReward | null } | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1452,6 +1516,10 @@ function PlayPage() {
   const [digPick, setDigPick] = useState<{ index: number; id: string | null } | null>(null);
   const [lockFlash, setLockFlash] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  /** The attacker's last thrust as its blow lands (chủ game 22/10). */
+  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number } | null>(null);
+  /** A player's HP held at its old value until the lightning of a landing blow reaches it. */
+  const [hpHold, setHpHold] = useState<Record<string, number>>({});
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const [linger, setLinger] = useState<Linger[]>([]);
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
@@ -1776,12 +1844,14 @@ function PlayPage() {
     if (trial && verdict === "pass") setTrialPaid(markTrial(trial.id, trial.level));
   }, [trial, verdict]);
 
-  // A won match in Vs Máy, Đánh thường or Tuỳ chọn pays its missions once; when one moved, its panel comes first.
+  // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions a win
+  // moved (paid once), then the old panel. Elsewhere only the old panel.
   const ended = duel?.winner ?? null;
   useEffect(() => {
     if (!duel || duel.winner === null) {
       setEndStep("wait");
       setReward(null);
+      setScene(null);
       return;
     }
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
@@ -1794,12 +1864,21 @@ function PlayPage() {
         paidMatch.current = { mid: duel.mid, reward: paid };
       }
     }
-    if (!paid?.changed) {
+    if (paid?.changed) setReward(paid);
+    const staged = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net");
+    if (!staged) {
       setEndStep("done");
       return;
     }
-    setReward(paid);
-    const timer = window.setTimeout(() => setEndStep("rewards"), 1300);
+    // After the last blow has landed (its lightning reaches the HP in 0.5 s), the losing HP bursts.
+    const win = duel.winner === mine;
+    const spot = matchBoard(duel.players[(1 - mine) as Side].env, duel.players[mine].env).marks[win ? "foeHp" : "youHp"];
+    const timer = window.setTimeout(() => {
+      const box = document.querySelector(".board")?.getBoundingClientRect();
+      const at = box ? { x: box.left + (spot.x / 100) * box.width, y: box.top + (spot.y / 100) * box.height } : { x: window.innerWidth * 0.15, y: window.innerHeight * (win ? 0.1 : 0.88) };
+      setScene({ win, at, tone: win ? "red" : "blue" });
+      setEndStep("scene");
+    }, 750);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ended, duel?.mid]);
@@ -1926,7 +2005,7 @@ function PlayPage() {
       window.clearTimeout(starTimer.current);
       starTimer.current = window.setTimeout(() => setStarFlash(null), 3500);
     }
-    if (duel.winner !== null && prev.winner === null) playCue(duel.winner === viewerNow ? "win" : "lose");
+    if (duel.winner !== null && prev.winner === null && !(!tutorial && !trial && (duel.mode === "ai" || duel.mode === "net"))) playCue(duel.winner === viewerNow ? "win" : "lose");
     if (rose !== undefined) playCue("star");
     const spent = spentSpell(prev, duel);
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
@@ -2247,6 +2326,38 @@ function PlayPage() {
           },
         }
       : rawShown;
+    // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
+    // lightning to reach it.
+    const landing = quiet ? null : attackLanding(prev, duel, viewerNow, hud);
+    const LAND_MS = 110;
+    const orbLate = new Set<number>();
+    if (landing && shown) {
+      for (const item of shown.floaters) {
+        if (item.heal) continue;
+        const onOrb = landing.kind === "face" && Math.abs(item.x - landing.orb.x) < 0.5 && Math.abs(item.y - landing.orb.y) < 0.5;
+        if (onOrb) orbLate.add(item.id);
+        item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
+      }
+      setThrust({ uid: landing.uid, ...landing.thrust });
+      if (landing.kind === "face") {
+        const struck = ([0, 1] as const).find((side) => duel.players[side].hp < prev.players[side].hp);
+        if (struck !== undefined) {
+          const key = `face:${struck}`;
+          setHpHold((now) => ({ ...now, [key]: prev.players[struck].hp }));
+          window.setTimeout(() => setHpHold((now) => {
+            const rest = { ...now };
+            delete rest[key];
+            return rest;
+          }), 500);
+        }
+      }
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 50);
+      window.setTimeout(() => {
+        if (landing.kind === "face") emitFx({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
+        else emitFx({ t: "clash", x: landing.at.x, y: landing.at.y });
+      }, LAND_MS);
+      playHit(landing.kind === "face" ? "zap" : "clash", LAND_MS / 1000);
+    }
     const fxSourceUid = strikeUid(prev) || strikeUid(duel);
     const fxCard = (fxSourceUid ? (fieldMon(prev, fxSourceUid) ?? fieldMon(duel, fxSourceUid))?.cardId : undefined)
       ?? (spent || boomSpell || duel.skill?.id || undefined);
@@ -2276,6 +2387,8 @@ function PlayPage() {
       if (!quiet) for (const item of shown.floaters) {
         const act = item.heal ? "heal" : item.text === "Hạ" ? "kill" : casting === "healSpell" ? "heal" : "hurt";
         if (grouped && !item.heal && item.text !== "Hạ") continue;
+        // The HP a landing blow hits gets its own flash when the lightning reaches it.
+        if (orbLate.has(item.id)) continue;
         if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
         else {
           emitFx({
@@ -2449,8 +2562,9 @@ function PlayPage() {
     const token = wave.current + 1;
     wave.current = token;
     if (shown.shake) {
-      setShake(true);
-      window.setTimeout(() => setShake(false), 640);
+      const late = landing ? LAND_MS : 0;
+      window.setTimeout(() => setShake(true), late);
+      window.setTimeout(() => setShake(false), 640 + late);
     }
     if (shown.floaters.length > 0) {
       setFloaters((current) => [...current, ...shown.floaters]);
@@ -2607,6 +2721,10 @@ function PlayPage() {
   const groupedShot = shotLook(duel, duel.pending);
   const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : horning ? you.field.some((unit) => unit?.uid === (duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending.attacker : "")) : false;
   const board = matchBoard(foe.env, you.env);
+  // Before the transition effect has run, a blow about to land still shows the HP it hits at its old value.
+  const lastDuel = prevDuel.current;
+  const landingNow = lastDuel && lastDuel !== duel ? attackLanding(lastDuel, duel, viewer, board.marks) : null;
+  const heldHp = (side: Side) => (landingNow?.kind === "face" && lastDuel && duel.players[side].hp < lastDuel.players[side].hp ? lastDuel.players[side].hp : undefined);
   const marks = board.marks;
   const artTop = topArt(foe.env);
   const artBottom = bottomArt(you.env);
@@ -3343,14 +3461,14 @@ function PlayPage() {
 
   const foeSide = (viewer === 0 ? 1 : 0) as Side;
   const marksView = [
-    ["foeHp", laserHp[`face:${foeSide}`] ?? foe.hp, ""],
+    ["foeHp", laserHp[`face:${foeSide}`] ?? hpHold[`face:${foeSide}`] ?? heldHp(foeSide) ?? foe.hp, ""],
     ["foeOrb", tutView?.foeOrb ?? foe.orb, ""],
     ["foeFlask", Math.min(1, foe.flask), "bình"],
     ["foeStars", foe.stars, "sao"],
     ["foeGems", foe.starGems, "thừa"],
     ["foeHand", foe.hand.length, "phép"],
     ["foeReserve", foe.reserve.length, "dự bị"],
-    ["youHp", laserHp[`face:${viewer}`] ?? you.hp, ""],
+    ["youHp", laserHp[`face:${viewer}`] ?? hpHold[`face:${viewer}`] ?? heldHp(viewer) ?? you.hp, ""],
     ["youOrb", tutView?.youOrb ?? you.orb, ""],
     ["youFlask", Math.min(1, you.flask), "bình"],
     ["youStars", tutView?.youStars ?? you.stars, "sao"],
@@ -4600,7 +4718,8 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
-              shift={mon ? attackShift(duel, mon.uid, viewer) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={Boolean(duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken"))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
@@ -4650,7 +4769,8 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               attack={false}
-              shift={mon ? attackShift(duel, mon.uid, viewer) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={false}
               allies={you.field}
@@ -5257,6 +5377,9 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
+        {duel.winner !== null && endStep === "scene" && scene ? (
+          <EndScene win={scene.win} at={scene.at} tone={scene.tone} onDone={() => setEndStep(paidMatch.current?.reward?.changed ? "rewards" : "done")} />
+        ) : null}
         {duel.winner !== null && endStep === "rewards" && reward ? <MissionPanel reward={reward} onDone={() => setEndStep("done")} /> : null}
         {duel.winner !== null && endStep === "done" ? (
           <div className="overlay">
@@ -5728,6 +5851,7 @@ function BoardSlot({
   picked = false,
   attack,
   shift = null,
+  thrust = false,
   motion,
   ghosting,
   frozen = false,
@@ -5758,6 +5882,8 @@ function BoardSlot({
   picked?: boolean;
   attack: boolean;
   shift?: { x: number; y: number } | null;
+  /** The last thrust of a landing blow: a quick move in place of the slow lunge. */
+  thrust?: boolean;
   motion: Motion;
   ghosting?: boolean;
   frozen?: boolean;
@@ -5776,7 +5902,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}`;
   const slotProps = {
     "data-slot": `${side}-${index}`,
     "data-owner": side,

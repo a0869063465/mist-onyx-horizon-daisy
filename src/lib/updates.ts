@@ -663,6 +663,10 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ: thắng trận đầu tiên trong ngày được ★2, thắng thêm 2 trận mỗi trận ★1. Tính ở Vs Máy, Đánh thường và Tuỳ chọn.",
   "Nhiệm vụ: thắng máy Chiến binh 3 trận được 1 lá ngẫu nhiên trong Gói chung theo tỉ lệ gói (trùng lá thì hoàn ★1). Mỗi ngày nhận 1 lần, tiến độ không mất khi sang ngày.",
   "Sau trận thắng có bảng Nhiệm vụ: thanh tiến độ chạy, sao bay vào ô tổng, lá thưởng lật như khi mở gói. Menu chính có thêm nút Nhiệm vụ.",
+  "Đòn đánh thường vào người chơi: quái lao tới mép sân, vòm tia điện loé ở chỗ chạm, tia sét trắng chạy dọc mép sân tới viên máu rồi mới trừ máu.",
+  "Quái đánh quái, hoặc quái chặn đòn: có vòm tia điện ở chỗ hai lá va chạm.",
+  "Thanh phản ứng: dòng xanh của đòn đánh tắt ngay khi đòn trúng, nhường chỗ cho hiệu ứng trúng đòn.",
+  "Hết trận ở Vs Máy, Đánh thường và Tuỳ chọn, kể cả khi đầu hàng: viên máu bên thua bị lốc đỏ cuốn rồi vỡ thành mảnh pha lê, màn hình tối lại với tia đỏ hút vào giữa, rồi hiện huy hiệu CHIẾN THẮNG có cánh pha lê xanh, hoặc THẤT BẠI màu đỏ. Chạm để tiếp tục.",
 ];
 
 function remarkOf(notes: string[]) {

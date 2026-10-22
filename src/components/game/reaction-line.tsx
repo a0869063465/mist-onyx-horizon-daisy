@@ -99,10 +99,10 @@ function centre(c: Bezier): string {
  *  orb fires, a bolt of light runs down it and bursts where it lands; when its orb fizzles, it fades out. */
 type StreamFx = { soft: string; mid: string; run: string; land: string };
 
-function Stream({ id, c, done, end, late, fx }: { id: string; c: Bezier; done: boolean; end: ChainOrb["end"]; late: string; fx: StreamFx }) {
+function Stream({ id, c, done, end, late, fx, strike = false }: { id: string; c: Bezier; done: boolean; end: ChainOrb["end"]; late: string; fx: StreamFx; strike?: boolean }) {
   const line = centre(c);
   return (
-    <g className={`rx-stream${done ? " is-done" : ""}${end ? ` is-${end}` : ""}`} style={{ "--late": late } as CSSProperties}>
+    <g className={`rx-stream${done ? " is-done" : ""}${end ? ` is-${end}` : ""}${strike ? " is-strike" : ""}`} style={{ "--late": late } as CSSProperties}>
       <defs>
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1={c[0].x} y1={c[0].y} x2={c[3].x} y2={c[3].y}>
           <stop offset="0" stopColor="#1f9bff" stopOpacity="0.9" />
@@ -119,7 +119,7 @@ function Stream({ id, c, done, end, late, fx }: { id: string; c: Bezier; done: b
       <path className="rx-run is-late" d={line} pathLength={100} filter={fx.run} />
       <circle className="rx-rise" cx={c[0].x.toFixed(2)} cy={c[0].y.toFixed(2)} r="2" fill={fx.land} />
       <circle className="rx-land" cx={c[3].x.toFixed(2)} cy={c[3].y.toFixed(2)} r="4" fill={fx.land} />
-      {end === "fire" ? (
+      {end === "fire" && !strike ? (
         <>
           <path className="rx-bolt" d={line} pathLength={100} filter={fx.soft} />
           <path className="rx-bolt is-core" d={line} pathLength={100} filter={fx.run} />
@@ -254,7 +254,8 @@ export function ReactionLine({
                 const down = spot.y > start.y;
                 const from = arch ? start : edgeOf(start, down);
                 const to = arch ? spot : edgeOf(spot, !down);
-                return <Stream key={`${orb.id}-${s}-${index}`} id={`${uid}-${orb.id}-${s}-${index}`} c={bezierOf(from, to, arch)} done={orb.done} end={orb.end} late={lateOf(orb)} fx={fx} />;
+                // An attack's own hit is shown on the board (chủ game 22/10), so its stream just fades as it lands.
+                return <Stream key={`${orb.id}-${s}-${index}`} id={`${uid}-${orb.id}-${s}-${index}`} c={bezierOf(from, to, arch)} done={orb.done} end={orb.end} late={lateOf(orb)} fx={fx} strike={orb.kind === "attack"} />;
               }),
             );
           })}

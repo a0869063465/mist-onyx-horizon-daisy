@@ -547,6 +547,9 @@ const PAIRS: Array<[string, string]> = [
   ["Đã nhận hôm nay, mai đếm tiếp", "Claimed today, counting again tomorrow"],
   ["PHẦN THƯỞNG", "REWARD"],
   ["Chạm để lật", "Tap to flip"],
+  ["CHIẾN THẮNG", "VICTORY"],
+  ["THẤT BẠI", "DEFEAT"],
+  ["Chạm để tiếp tục", "Tap to continue"],
   ["Tiếp tục", "Continue"],
   ["/trận", "/win"],
 

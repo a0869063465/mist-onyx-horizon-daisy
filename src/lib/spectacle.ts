@@ -15,7 +15,13 @@ export type FxEvent =
   | { t: "shield"; kind: "phys" | "spell"; x: number; y: number; pack?: FxPack }
   /** A monster arriving on a slot in a summoning circle (always played, whatever the effect style):
    * blood = sacrifice summon, holy = summon, fuse = fused monster. */
-  | { t: "rite"; x: number; y: number; kind?: "blood" | "holy" | "fuse"; pack?: FxPack };
+  | { t: "rite"; x: number; y: number; kind?: "blood" | "holy" | "fuse"; pack?: FxPack }
+  /** A normal attack landing on a player (chủ game 22/10, LoR's nexus hit): an electric dome where the attacker hits
+   *  the edge of the field (bulging away from it, dir -1 up / 1 down), then white lightning running along the path
+   *  to the player's HP. Always played. */
+  | { t: "zap"; x: number; y: number; dir: -1 | 1; path: Array<[number, number]>; pack?: FxPack }
+  /** Two monsters colliding: an attack on a monster, or a blocker taking the hit (chủ game 22/10). Always played. */
+  | { t: "clash"; x: number; y: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

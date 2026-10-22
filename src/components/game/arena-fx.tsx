@@ -39,6 +39,10 @@ type Mark = { kind: "blade" | "claw" | "crack" | "pierce" | "tracer" | "bolt"; x
 type Orb = { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; pal: Pal; done: () => void };
 type Flash = { life: number; max: number; color: string; power: number };
 type Aura = { id: string; x: number; y: number };
+/** An electric dome: a half (or whole) shell of lightning arcs from where a blow lands. */
+type Dome = { x: number; y: number; r: number; dir: number; full: boolean; life: number; max: number; seed: number };
+/** Lightning running along a path, its head racing ahead; the whole bolt flickers a moment after it arrives. */
+type Runner = { pts: Array<[number, number]>; len: number; t: number; dur: number; hold: number; seed: number; arrived: boolean; done: () => void };
 
 const MAX_P = 900;
 
@@ -103,6 +107,8 @@ export function ArenaFx() {
     const orbs: Orb[] = [];
     const flashes: Flash[] = [];
     let auras: Aura[] = [];
+    const domes: Dome[] = [];
+    const runners: Runner[] = [];
     const timers: number[] = [];
     let raf = 0;
     let last = 0;
@@ -331,12 +337,219 @@ export function ArenaFx() {
       later(1150, () => bits(x, y + 2 * u, blood, 20, 16, { up: 34, life: 1.6 }));
     };
 
+    // ---------- attacks landing (chủ game 22/10, LoR): electric dome, edge lightning, collisions ----------
+
+    const ZAP: Pal = { core: "#ffffff", mid: "#9fe4ff", deep: "#3a6bff", bit: "spark" };
+
+    const zapHit = (x: number, y: number, dir: number, path: Array<[number, number]>) => {
+      const u = unit();
+      domes.push({ x, y, r: 15 * u, dir, full: false, life: 0.62, max: 0.62, seed: rand(0, 1000) });
+      add({ x, y, life: 0.24, max: 0.24, size: 11 * u, grow: 1.7, color: "#c8f2ff", shape: "dot" });
+      ring(x, y, "#e8fbff", 2, 130, 0.42, 4.5, 0.42);
+      bits(x, y, ZAP, 28, 72, { shape: "spark", life: 0.5 });
+      flash("#a8e6ff", 0.13, 0.22);
+      shakeLight(0.9);
+      const pts = path.map(([a, b]) => [px(a), py(b)] as [number, number]);
+      let len = 0;
+      for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      if (pts.length < 2 || len <= 0) return;
+      const [hx, hy] = pts[pts.length - 1];
+      later(90, () =>
+        runners.push({
+          pts,
+          len,
+          t: 0,
+          dur: 0.3,
+          hold: 0.3,
+          seed: rand(0, 1000),
+          arrived: false,
+          done: () => {
+            ring(hx, hy, "#ffffff", 2, 115, 0.45, 5, 1);
+            ring(hx, hy, "#ff6a6a", 1, 75, 0.6, 4, 1);
+            add({ x: hx, y: hy, life: 0.26, max: 0.26, size: 12 * unit(), grow: 1.3, color: "#ffffff", shape: "dot" });
+            bits(hx, hy, ZAP, 24, 62, { shape: "spark", life: 0.5 });
+            flash("#ff5050", 0.12, 0.28);
+            shakeLight(0.8);
+          },
+        }),
+      );
+    };
+
+    const clashHit = (x: number, y: number) => {
+      const u = unit();
+      domes.push({ x, y, r: 8.5 * u, dir: 0, full: true, life: 0.45, max: 0.45, seed: rand(0, 1000) });
+      add({ x, y, life: 0.2, max: 0.2, size: 10 * u, grow: 1.6, color: "#ffffff", shape: "dot" });
+      ring(x, y, "#e8fbff", 2, 120, 0.38, 4, 0.8);
+      bits(x, y, ZAP, 22, 68, { shape: "spark", life: 0.45 });
+      bits(x, y, PAL.steel, 10, 50, { shape: "spark", life: 0.4 });
+      flash("#bfeaff", 0.1, 0.18);
+      shakeLight(0.7);
+    };
+
+    /** A jagged copy of a polyline: each leg cut into short pieces pushed sideways at random. */
+    const jagged = (pts: Array<[number, number]>, step: number, amp: number, rnd: () => number) => {
+      const out: Array<[number, number]> = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const [ax, ay] = pts[i - 1];
+        const [bx, by] = pts[i];
+        const d = Math.hypot(bx - ax, by - ay);
+        const n = Math.max(1, Math.round(d / step));
+        const nx = -(by - ay) / (d || 1);
+        const ny = (bx - ax) / (d || 1);
+        for (let s = 1; s <= n; s++) {
+          const f = s / n;
+          const off = s === n ? 0 : (rnd() - 0.5) * amp;
+          out.push([ax + (bx - ax) * f + nx * off, ay + (by - ay) * f + ny * off]);
+        }
+      }
+      return out;
+    };
+
+    const strokeBolt = (pts: Array<[number, number]>, alpha: number, glow: number, core: number) => {
+      for (const [w, c, al] of [[glow, "#7fd2ff", 0.5], [core, "#ffffff", 1]] as const) {
+        ctx.globalAlpha = alpha * al;
+        ctx.strokeStyle = c;
+        ctx.lineWidth = w;
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.stroke();
+      }
+    };
+
+    const drawDome = (d: Dome, k: number) => {
+      const u = unit();
+      const grow = Math.min(1, (1 - k) * 5);
+      const r = d.r * (0.5 + 0.5 * grow);
+      const a = Math.min(1, k * 2.4);
+      const squash = d.full ? 1 : 0.66;
+      let seed = Math.floor(clock * 30) + d.seed;
+      const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+      const from = d.full ? 0 : d.dir < 0 ? Math.PI : 0;
+      const to = d.full ? Math.PI * 2 : from + Math.PI;
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      const fill = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+      fill.addColorStop(0, "rgba(255,255,255,0.95)");
+      fill.addColorStop(0.3, "rgba(170,230,255,0.5)");
+      fill.addColorStop(0.75, "rgba(80,150,255,0.18)");
+      fill.addColorStop(1, "rgba(60,110,255,0)");
+      ctx.globalAlpha = a * (0.45 + 0.55 * k);
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r, r * squash, 0, from, to);
+      if (!d.full) ctx.closePath();
+      ctx.fill();
+      // a half dome stands on the edge it hit: the edge flares out to both sides
+      if (!d.full) {
+        const flare = ctx.createLinearGradient(-r * 2.2, 0, r * 2.2, 0);
+        flare.addColorStop(0, "rgba(160,225,255,0)");
+        flare.addColorStop(0.5, "rgba(255,255,255,1)");
+        flare.addColorStop(1, "rgba(160,225,255,0)");
+        ctx.globalAlpha = a * k;
+        ctx.strokeStyle = flare;
+        ctx.lineWidth = u * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-r * 2.2 * grow, 0);
+        ctx.lineTo(r * 2.2 * grow, 0);
+        ctx.stroke();
+      }
+      // the shell, brightest at its rim
+      ctx.globalAlpha = a * 0.85;
+      ctx.strokeStyle = "#c8f2ff";
+      ctx.lineWidth = u * 0.7;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r, r * squash, 0, from, to);
+      ctx.stroke();
+      // arcs from the point of contact out to the shell
+      const n = d.full ? 11 : 9;
+      for (let i = 0; i < n; i++) {
+        if (rnd() < 0.22) continue;
+        const t = from + ((i + 0.5) / n) * (to - from) + (rnd() - 0.5) * 0.3;
+        const reach = 0.75 + rnd() * 0.3;
+        const ex = Math.cos(t) * r * reach;
+        const ey = Math.sin(t) * r * squash * reach;
+        strokeBolt(jagged([[0, 0], [ex, ey]], r * 0.16, r * 0.22, rnd), a * (0.6 + rnd() * 0.4), u * 2.4, u * 0.8);
+      }
+      // two arcs crawling over the shell
+      for (let j = 0; j < 2; j++) {
+        const t0 = from + rnd() * (to - from) * 0.6;
+        const t1 = t0 + (to - from) * (0.2 + rnd() * 0.25);
+        const pts: Array<[number, number]> = [];
+        for (let s = 0; s <= 6; s++) {
+          const t = t0 + ((t1 - t0) * s) / 6;
+          pts.push([Math.cos(t) * r, Math.sin(t) * r * squash]);
+        }
+        strokeBolt(jagged(pts, r * 0.12, r * 0.12, rnd), a * 0.8, u * 2, u * 0.7);
+      }
+      ctx.restore();
+      ctx.globalAlpha = a * 0.7;
+      const glow = sprite("#9fe4ff", true);
+      ctx.drawImage(glow, d.x - r * 1.3, d.y - r * 1.3 * squash, r * 2.6, r * 2.6 * squash);
+    };
+
+    const drawRunner = (r: Runner, dt: number) => {
+      r.t += dt;
+      const u = unit();
+      const travel = Math.min(1, r.t / r.dur);
+      const head = r.len * (1 - (1 - travel) * (1 - travel));
+      // the path up to the head
+      const part: Array<[number, number]> = [r.pts[0]];
+      let walked = 0;
+      let hx = r.pts[0][0];
+      let hy = r.pts[0][1];
+      for (let i = 1; i < r.pts.length; i++) {
+        const [ax, ay] = r.pts[i - 1];
+        const [bx, by] = r.pts[i];
+        const d = Math.hypot(bx - ax, by - ay);
+        if (walked + d >= head) {
+          const f = d ? (head - walked) / d : 0;
+          hx = ax + (bx - ax) * f;
+          hy = ay + (by - ay) * f;
+          part.push([hx, hy]);
+          break;
+        }
+        walked += d;
+        part.push([bx, by]);
+        hx = bx;
+        hy = by;
+      }
+      let seed = Math.floor(clock * 32) + r.seed;
+      const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+      const fade = r.t <= r.dur ? 1 : Math.max(0, 1 - (r.t - r.dur) / r.hold);
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      strokeBolt(jagged(part, 2.6 * u, 2.4 * u, rnd), fade * (0.75 + rnd() * 0.25), 3 * u, 1.1 * u);
+      if (rnd() < 0.6) strokeBolt(jagged(part, 3.4 * u, 3.6 * u, rnd), fade * 0.45, 1.6 * u, 0.6 * u);
+      ctx.restore();
+      if (travel < 1) {
+        const s = 5 * u;
+        ctx.globalAlpha = 1;
+        ctx.drawImage(sprite("#bff0ff"), hx - s, hy - s, s * 2, s * 2);
+        if (Math.random() < 0.9) add({ x: hx, y: hy, vx: rand(-30, 30) * u, vy: rand(-30, 30) * u, drag: 0.86, life: 0.3, max: 0.3, size: rand(1, 2) * u, color: Math.random() < 0.5 ? "#ffffff" : "#9fe4ff", shape: "spark" });
+      } else if (!r.arrived) {
+        r.arrived = true;
+        r.done();
+      }
+      return r.t < r.dur + r.hold;
+    };
+
     const onEvent = (e: FxEvent) => {
       if (e.t === "rite") {
         if (!reduced) {
           rite(px(e.x), py(e.y), e.kind);
           wake();
         }
+        return;
+      }
+      if (e.t === "zap" || e.t === "clash") {
+        if (reduced) return;
+        if (e.t === "zap") zapHit(px(e.x), py(e.y), e.dir, e.path);
+        else clashHit(px(e.x), py(e.y));
+        wake();
         return;
       }
       if (reduced || fxStyle() !== "new") return;
@@ -561,7 +774,7 @@ export function ArenaFx() {
       }
     };
 
-    const busy = () => ps.length || rings.length || sigils.length || pillars.length || marks.length || orbs.length || flashes.length || auras.length || shakeAmt > 0.01;
+    const busy = () => ps.length || rings.length || sigils.length || pillars.length || marks.length || orbs.length || flashes.length || auras.length || domes.length || runners.length || shakeAmt > 0.01;
 
     const frame = (now: number) => {
       const dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
@@ -638,6 +851,17 @@ export function ArenaFx() {
         ctx.drawImage(sprite(o.pal.mid), x - s, y - s, s * 2, s * 2);
         if (Math.random() < 0.9) add({ x, y, vx: rand(-6, 6) * unit(), vy: rand(-6, 6) * unit(), life: 0.4, max: 0.4, size: unit() * 2.2, color: o.pal.core, shape: o.pal.bit === "glyph" ? "glyph" : "dot" });
         if (k >= 1) { orbs.splice(i, 1); o.done(); }
+      }
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = domes.length - 1; i >= 0; i--) {
+        const d = domes[i];
+        d.life -= dt;
+        if (d.life <= 0) { domes.splice(i, 1); continue; }
+        drawDome(d, d.life / d.max);
+      }
+      for (let i = runners.length - 1; i >= 0; i--) {
+        ctx.globalCompositeOperation = "lighter";
+        if (!drawRunner(runners[i], dt)) runners.splice(i, 1);
       }
       for (let i = marks.length - 1; i >= 0; i--) {
         const m = marks[i];

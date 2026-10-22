@@ -700,6 +700,98 @@ export function playLine(cue: LineCue, delay = 0) {
 }
 
 /**
+ * The end of a match (chủ game 22/10, after LoR, made here): a bright flash, a whirlwind rising with a rumble, glass
+ * bursting with a boom, the rush of the red rays drawn in, then a bright chord for a win or a low dark one for a loss.
+ */
+export type EndCue = "flash" | "vortex" | "shatter" | "suck" | "win" | "lose";
+
+export function playEnd(cue: EndCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = Math.min(1.5, fxLoud() * 1.2);
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "flash") {
+      noiseBurst(audio, t, 0.5, 600, 7000, 0.16 * vol);
+      bell(audio, t + 0.02, 2637, 0.7, 0.05 * vol);
+      bell(audio, t + 0.06, 3520, 0.6, 0.035 * vol);
+    } else if (cue === "vortex") {
+      noiseBurst(audio, t, 1.25, 180, 2600, 0.22 * vol);
+      const low = audio.createOscillator();
+      const amp = audio.createGain();
+      low.type = "sine";
+      low.frequency.setValueAtTime(48, t);
+      low.frequency.exponentialRampToValueAtTime(96, t + 1.15);
+      amp.gain.setValueAtTime(0.0001, t);
+      amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, 0.22 * vol), t + 1.05);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + 1.22);
+      low.connect(amp);
+      amp.connect(audio.destination);
+      low.start(t);
+      low.stop(t + 1.25);
+    } else if (cue === "shatter") {
+      thump(audio, t, 1.1 * vol);
+      noiseBurst(audio, t, 0.6, 3200, 9000, 0.3 * vol);
+      noiseBurst(audio, t + 0.02, 1.2, 900, 120, 0.25 * vol);
+      for (let i = 0; i < 12; i++) bell(audio, t + 0.02 + Math.random() * 0.35, 2200 + Math.random() * 3800, 0.18 + Math.random() * 0.25, (0.02 + Math.random() * 0.025) * vol);
+    } else if (cue === "suck") {
+      noiseBurst(audio, t, 0.75, 300, 5200, 0.2 * vol);
+      shimmer(audio, t + 0.3, 0.5, 0.03 * vol);
+    } else if (cue === "win") {
+      thump(audio, t, 0.7 * vol);
+      for (const freq of [261.6, 329.6, 392, 523.3, 659.3]) pad(audio, t, freq, 2.4, 0.045 * vol);
+      for (const [freq, at] of [[1046.5, 0.05], [1318.5, 0.13], [1568, 0.21], [2093, 0.29], [2637, 0.37]] as const) bell(audio, t + at, freq, 1.4, 0.05 * vol);
+      shimmer(audio, t + 0.1, 2, 0.045 * vol);
+    } else {
+      thump(audio, t, 0.9 * vol);
+      for (const freq of [130.8, 155.6, 196, 261.6]) pad(audio, t, freq, 2.6, 0.05 * vol);
+      noiseBurst(audio, t, 1.4, 600, 90, 0.12 * vol);
+      bell(audio, t + 0.1, 622.3, 1.6, 0.035 * vol);
+    }
+  });
+}
+
+/**
+ * Attacks landing (chủ game 22/10, after LoR, made here): on a player, an electric crack where the blow hits, a zip as
+ * the lightning runs along the edge, and a burst as it reaches the HP; two monsters colliding ring like steel.
+ */
+export type HitCue = "zap" | "clash";
+
+export function playHit(cue: HitCue, delay = 0) {
+  whenReady(() => {
+    const audio = ctx;
+    if (!audio) return;
+    const vol = fxLoud();
+    if (vol <= 0) return;
+    const t = audio.currentTime + delay;
+    if (cue === "zap") {
+      crack(audio, t, 0.55 * vol, false);
+      noiseBurst(audio, t + 0.09, 0.3, 1600, 7000, 0.09 * vol);
+      const zip = audio.createOscillator();
+      const amp = audio.createGain();
+      zip.type = "square";
+      zip.frequency.setValueAtTime(420, t + 0.09);
+      zip.frequency.exponentialRampToValueAtTime(1900, t + 0.38);
+      amp.gain.setValueAtTime(0.0001, t + 0.09);
+      amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, 0.018 * vol), t + 0.12);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + 0.39);
+      zip.connect(amp);
+      amp.connect(audio.destination);
+      zip.start(t + 0.09);
+      zip.stop(t + 0.41);
+      crack(audio, t + 0.39, 0.5 * vol, true);
+      bell(audio, t + 0.4, 1975.5, 0.5, 0.03 * vol);
+    } else {
+      noiseBurst(audio, t, 0.12, 6000, 2200, 0.22 * vol);
+      thump(audio, t, 0.5 * vol);
+      for (const [freq, level] of [[1180, 0.05], [1760, 0.04], [2650, 0.028]] as const) bell(audio, t + 0.005, freq, 0.42, level * vol);
+      noiseBurst(audio, t + 0.03, 0.18, 4200, 900, 0.08 * vol);
+    }
+  });
+}
+
+/**
  * Nhiệm vụ after a match (chủ game 22/10), made here like the other sounds: a soft rising run as a bar fills, a bright
  * chord when a mission is done, a whoosh with sparkle as the gold streak flies, and a coin as it lands in the total.
  */
