@@ -1,6 +1,6 @@
 import type { Ref } from "react";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
-import { rarityOf, type Album } from "@/lib/collection";
+import { rarityOf, rarityTag, type Album } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
 
 /** A card in an album: its art in the gold frame of Đổi hình nền, no figures, no name; grey while not owned. */
@@ -34,8 +34,8 @@ export function CardsIcon() {
 
 /** A card's rarity on the top right corner of its picture on the sheet, in the collection (owner, 21/10). */
 export function RarityBadge({ id }: { id: string }) {
-  const tier = rarityOf(id);
-  return <b className={`al-rarity msheet-rarity is-${tier}`}>{tier}</b>;
+  const tag = rarityTag(id, rarityOf(id));
+  return <b className={`al-rarity msheet-rarity ${tag.cls}`}>{tag.text}</b>;
 }
 
 /**

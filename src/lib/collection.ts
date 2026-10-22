@@ -1,5 +1,6 @@
 import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
+import { fakeIds } from "./owned-cards.ts";
 import { addOwned, addStars, loadRates, naturalTier, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { spellKindRank } from "./spell-kinds.ts";
 import { EVOLUTIONS } from "./strategies.ts";
@@ -156,6 +157,18 @@ export function formatNo(no: number): string {
  *  The starter deck's cards are fakes (chủ game 22/10): they show in the collection and play, but are not owned. */
 export function collectionOwned(owned: Set<string>): Set<string> {
   return new Set(owned);
+}
+
+/**
+ * The rarity label a card shows (chủ game 22/10): a fake card has FK in red-orange where its tier is SR, and F in red
+ * where it is N; every other card shows its tier.
+ */
+export function rarityTag(id: string, tier: Tier): { text: string; cls: string } {
+  if (fakeIds([id]).length > 0) {
+    if (tier === "N") return { text: "F", cls: "is-FN" };
+    if (tier === "SR") return { text: "FK", cls: "is-FK" };
+  }
+  return { text: tier, cls: `is-${tier}` };
 }
 
 /** An album page: 4 cards a row, 4 rows. */

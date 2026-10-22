@@ -4,7 +4,7 @@ import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
-import { awaitsAppraisal, collectionOwned, rarityOf } from "@/lib/collection";
+import { awaitsAppraisal, collectionOwned, rarityOf, rarityTag } from "@/lib/collection";
 import { ENV_FILTERS, MONSTER_TYPES, passesFilter, plainName, STAR_FILTERS } from "@/lib/deck-filters";
 import { spellOfEnvs } from "@/lib/env-kinds";
 import { tr } from "@/lib/i18n";
@@ -222,7 +222,7 @@ export function CardVault() {
           {shown.map((row) => (
             <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
               <AlbumPic id={row.id} missing={!row.owned} />
-              <b className={`cv-tag is-${row.tier}`}>{RARITY_NAME[row.tier]}</b>
+              <b className={`cv-tag ${rarityTag(row.id, row.tier).cls}`}>{rarityTag(row.id, row.tier).text}</b>
             </button>
           ))}
         </div>
