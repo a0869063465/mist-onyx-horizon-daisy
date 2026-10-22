@@ -651,6 +651,9 @@ export const PENDING_NOTES: string[] = [
   "Lá fake: chỉ số bị giảm in đỏ. Chiến binh rồng giảm 1 công, 1 thủ, 1 thủ phép. Hiệp sĩ của vua giảm 1 công, 1 thủ, 2 máu. Kazura giảm 2 công, 1 máu. Kizuran giảm 3 máu. Rồng canh pháo đài giảm 2 công, 1 thủ, 2 máu. Khủng long vãy kiếm giảm 1 thủ, 2 máu. Khổng lồ 1 mắt giảm 1 công, 1 thủ. Phù thuỷ tí hơn giảm 1 máu và 1 sát thương Cầu sấm. Rồng con giảm 1 máu, 1 thủ phép. Quái thú thiên sứ giảm 2 máu. Thỏ đen tinh nghịch giảm 1 công, 1 máu. Hoa ăn thịt người giảm 1 thủ, 1 máu. Máy chém giảm 1 công, 1 thủ phép, 2 máu. Mọi phép fake tốn thêm 1 mana: Vòng xoáy bảo hộ, Sợi xích địa ngục, Hoán đổi, Phục kích, Thu hồi quái thú, Thanh gươm ánh sáng, Hấp thụ ma pháp.",
   "Lá fake dùng được và hiện trong Bộ sưu tập, nhưng vẫn có ổ khoá và chưa sở hữu. Có được lá xịn (mở gói, được tặng, đổi bằng sao) thì lá đó thành lá mới và bộ bài dùng bản xịn.",
   "Nhãn độ hiếm của lá fake: FK màu đỏ cam thay cho SR, F màu đỏ thay cho N, ở Kho bài và bảng mô tả lá trong Bộ sưu tập.",
+  "Nút Rút quái trong trận đổi icon thành đầu sói, giống icon quái thú trong Chỉnh sửa bộ bài.",
+  "Hướng dẫn: khi người giữ khoá nói, bảng thông báo ẩn đi, nên không còn hai khung chồng lên nhau (ví dụ lúc Hãy rút 1 lá bài).",
+  "Hướng dẫn chơi không còn màn tải trận, vào thẳng trận hướng dẫn.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -311,6 +311,19 @@ export function Tutorial({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [at, anim]);
 
+  // One frame at a time (chủ game 22/10): while the guide speaks, the notice board stays hidden, so two frames never
+  // sit on each other. A step that points at the board keeps it.
+  useLayoutEffect(() => {
+    const board = document.querySelector<HTMLElement>(".stage .banner");
+    if (!board || !step?.text || aside) return;
+    if (step.focus?.some((spot) => [...document.querySelectorAll(spot.sel)].some((el) => el === board || board.contains(el) || el.contains(board)))) return;
+    board.style.visibility = "hidden";
+    return () => {
+      board.style.visibility = "";
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at, aside]);
+
   // Steps that wait on the player (or the scripted opponent) move on when the match shows it happened.
   useEffect(() => {
     if (!step) return;

@@ -1773,6 +1773,10 @@ function PlayPage() {
 
   // A new match whose opening hands are not chosen yet (Đấu lại too) plays the VS screen again; after it, the opening
   // hand opens.
+  // The tutorial needs no match loading (chủ game 22/10).
+  useEffect(() => {
+    if (tutorial) setLoaded(true);
+  }, [tutorial]);
   const openerLive = Boolean(duel?.opener);
   useEffect(() => {
     if (openerLive && !wasOpener.current) setIntroSeen(false);
@@ -3575,7 +3579,7 @@ function PlayPage() {
   return (
     <main className="stage">
       <GlyphDefs />
-      {loaded ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
+      {loaded || tutorial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroSeen(true)} /> : null}
       {openerOpen ? (
         <OpenerPanel
@@ -4825,7 +4829,7 @@ function PlayPage() {
         >
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.monsterDeck.length > 0 ? (
             <button type="button" className="act medal-act is-draw-mon press" aria-label={tr("Rút quái")} onClick={() => apply(draw(duel, "monster"))}>
-              <Medal tone="orange" icon="claw-card" />
+              <Medal tone="orange" icon="wolf-head" />
             </button>
           ) : null}
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.spellDeck.length > 0 ? (
