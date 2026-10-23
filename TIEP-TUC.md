@@ -25,6 +25,7 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
   - Tuỳ chỉnh bỏ ô Thanh phản ứng (`board.reaction` vẫn lưu, không dùng). Hướng dẫn: 2 bước sáng `.rx-icon.is-spell`, chữ "Icon phản ứng sẽ hiện ra" (chủ game duyệt).
   - Thử (scratchpad 23/10): `rx/mkscenes.mjs <thư mục>` (3 trận Test: face, skill, chain), `rx/shoot.mjs` (chụp 2x; chụp chậm hơn 1 giây nên dùng video để xem chuyển động), `rx/film.mjs` (quay video 1x rồi `ffmpeg -vf fps=10`). Chạy từ thư mục repo; script nạp vite/playwright bằng `createRequire(process.cwd())`.
 - Chủ game 23/10 thử ý "dải sáng chảy về giữa bàn rồi mới về mục tiêu" rồi bảo không cần, giữ đường cong chữ S như hiện tại.
+- Chủ game 23/10: lá lao vào thì dải sáng hiện như hiện nay, icon tấn công hiện dần SAU dải sáng; skill cũng vậy. Làm bằng `IconSpot.appear` (tấn công có lao 1,3 giây, không lao và skill 0,5 giây; chặn và phép 0) + lớp `.rx-icon.is-dawn` (`rx-dawn` mờ dần vào). Bỏ việc icon "cưỡi" theo lá đang lao (`ride`, `rx-ride`).
 - Chưa sửa (luật: không tự sửa chữ lá, chờ chủ game): mô tả Cỗ máy thời gian và Giáp cơ khí trong catalog.ts vẫn ghi "Thanh phản ứng hiện ra thì bấm Use".
 
 ## AI của máy (Vs Máy), 23/10: đợt 1 ĐÃ LÀM, đợt 2 và 3 CHƯA LÀM

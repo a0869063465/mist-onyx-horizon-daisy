@@ -3810,9 +3810,10 @@ function PlayPage() {
           // Clear of the card, just in front of its edge (chủ game 23/10).
           y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6,
           face: card.top ? 1 : -1,
-          // An attacker's icon rides out with its card; its smoke starts as the card arrives.
-          ride: orb.kind === "attack" && lunging ? { x: -card.dx, y: -card.dy } : null,
+          // An attacker's light starts as its card arrives; an attacker's or a caster's icon fades in only after its
+          // light has reached out (chủ game 23/10).
           delay: orb.kind === "attack" && lunging ? 0.75 : 0,
+          appear: orb.kind === "attack" || orb.kind === "skill" ? (lunging ? 1.3 : 0.5) : 0,
         };
       } else if (!orb.near) {
         const mine = orb.side === viewer;
@@ -3830,7 +3831,7 @@ function PlayPage() {
         for (let step = 1; step <= 8 && !clear(x, y); step += 1) {
           x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, from + (step % 2 ? 1 : -1) * Math.ceil(step / 2) * ICON * 1.15));
         }
-        spot = { x, y, face: 0, ride: null, delay: 0 };
+        spot = { x, y, face: 0, delay: 0, appear: 0 };
       }
       if (!spot) spot = kept ?? null;
       if (!spot) continue;

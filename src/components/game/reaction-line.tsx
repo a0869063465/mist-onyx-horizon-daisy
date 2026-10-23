@@ -5,10 +5,10 @@ import { FlowCanvas, type BoxPt, type FlowSpec } from "@/components/game/flow-ca
 import type { ChainOrb, FlowEnd, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
-/** Where an icon stands, in % of the board: by the edge of its card that faces the middle (`face` +1 hangs under a
- *  card of the top row, -1 sits on one of the bottom row, 0 a spell on its side's half). `ride`: where it starts
- *  (an offset in %) to ride with its lunging card; `delay`: seconds before its smoke starts. */
-export type IconSpot = { x: number; y: number; face: 1 | -1 | 0; ride: { x: number; y: number } | null; delay: number };
+/** Where an icon stands, in % of the board: just clear of the edge of its card that faces the middle (`face` +1 under
+ *  a card of the top row, -1 over one of the bottom row, 0 a spell on its side's half). `delay`: seconds before its
+ *  light starts (an attacker still lunging); `appear`: seconds before the icon itself fades in, after its light. */
+export type IconSpot = { x: number; y: number; face: 1 | -1 | 0; delay: number; appear: number };
 
 /** Where a flow lands on a card or a player, in % of the board, and the way it arrives there. */
 export type EndSpot = { x: number; y: number; into: BoxPt };
@@ -203,7 +203,7 @@ export function ReactionLine({
           <button
             key={orb.id}
             type="button"
-            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.ride ? " is-riding" : ""}${tip === orb.id ? " is-tipped" : ""}`}
+            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.appear > 0 ? " is-dawn" : ""}${tip === orb.id ? " is-tipped" : ""}`}
             data-react={react}
             style={
               {
@@ -213,7 +213,7 @@ export function ReactionLine({
                 height: `${ICON}cqw`,
                 "--late": `${lateOf(orb).toFixed(2)}s`,
                 "--ring": `var(--flow-${orb.tone})`,
-                ...(spot.ride ? { "--ride-x": `${spot.ride.x}cqw`, "--ride-y": `${spot.ride.y}cqh` } : {}),
+                "--appear": `${spot.appear.toFixed(2)}s`,
               } as CSSProperties
             }
             onPointerDown={(event) => event.stopPropagation()}

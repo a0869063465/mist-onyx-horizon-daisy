@@ -10204,11 +10204,10 @@ button.watch-back {
   animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
 .rx-icon.is-live { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-live 1.6s ease-in-out 0.5s infinite; }
-/* An attacker's icon rides out with its lunging card: the card's own time and curve. */
-.rx-icon.is-live.is-riding {
-  animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-ride 1.15s cubic-bezier(0.18, 0.7, 0.2, 1) both, rx-live 1.6s ease-in-out 1.15s infinite;
-}
-@keyframes rx-ride { from { translate: var(--ride-x, 0) var(--ride-y, 0); } }
+/* An attacker's or a caster's icon shows after its light has reached out (chủ game 23/10): it fades in gently. */
+.rx-icon.is-dawn { animation: rx-dawn 0.5s ease-out var(--appear, 0s) both; }
+.rx-icon.is-dawn.is-live { animation: rx-dawn 0.5s ease-out var(--appear, 0s) both, rx-live 1.6s ease-in-out calc(var(--appear, 0s) + 0.5s) infinite; }
+@keyframes rx-dawn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); filter: brightness(1.6); } }
 .rx-icon.is-done > * { animation: rx-settle 1.5s ease both; }
 .rx-icon.is-tipped { z-index: 3; }
 @keyframes rx-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.2); } }

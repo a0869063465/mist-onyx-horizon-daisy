@@ -685,6 +685,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm icon 1 lần: hiện chữ thông báo của icon đó ngay cạnh, in màu như bảng thông báo. Nhấp 2 lần liên tục: mở bảng lá, icon skill thì mở sẵn đúng skill đang dùng.",
   "Khi icon phản ứng đang hiện, bảng thông báo ẩn. Lời nhắc khi thao tác (ví dụ quái không chặn được) hiện chữ nhỏ giữa sân vài giây.",
   "Lá quái lao lên khi tấn công vẫn lao như cũ, chỉ lùi lại một chút để chừa chỗ cho icon tấn công nằm ngay phía trước lá.",
+  "Khi lá lao vào hoặc dùng skill, dải sáng hiện ra trước, icon tấn công hoặc icon skill hiện dần ra sau.",
   "Giáp cơ khí: dải sáng xanh lá đi vào quái được tăng chỉ số. Nếu skill bị phản, dải sáng xanh của skill đi vào icon Giáp cơ khí rồi quay về quái ra đòn.",
   "Tuỳ chỉnh bỏ ô Thanh phản ứng. Hướng dẫn cơ bản: bước nói về phản ứng giờ chỉ vào icon phép Sợi xích địa ngục.",
 ];
