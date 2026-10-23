@@ -695,6 +695,7 @@ export const PENDING_NOTES: string[] = [
   "Tên skill trên nút, thông báo và lá to theo đúng mô tả lá: Hoả cầu (Rồng canh pháo đài), Quả cầu bóng đêm (Gã hề đáng sợ), Nguyền rủa (Mộ voi ma mút), Hấp thụ (Hoa ăn thịt người), Đại hồng thuỷ huỷ diệt (Trái tim hải long), Cầu sấm ánh sáng (Mắt xanh huỷ diệt), Truy cùng diệt tận (Kiếm sĩ lửa thiêng).",
   "Lá to của skill hoặc phép hiện ở giữa sân, phía đối diện icon của nó (quái ô 1 thì lá hiện bên phải), không còn che icon, rồi bay vào icon.",
   "Bấm icon skill hoặc phép 1 lần: hiện tên rồi kết quả, mỗi kết quả 1 dòng, số đúng như lúc đó (ví dụ Hoả cầu: Giảm 1 thủ phép. Gây 3 sát thương phép.). Phần trả giá như mana, máu không ghi. Skill ngẫu nhiên (Cò quay, Súng phóng lựu) ghi phần đã biết, nổ xong ghi kết quả. Giáp cơ khí ghi thêm Phản đòn trở về khi phản được.",
+  "Hình nền menu chính thay bằng bản mới.",
 ];
 
 function remarkOf(notes: string[]) {
