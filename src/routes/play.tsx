@@ -1555,6 +1555,8 @@ function PlayPage() {
   const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
   // Where each reaction icon stood: an icon that has done its work stays put while the others fade.
   const keptSpots = useRef(new Map<string, IconSpot>());
+  /** The last results each skill icon showed while its caster stood. */
+  const briefSeen = useRef(new Map<string, string>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
@@ -3879,7 +3881,13 @@ function PlayPage() {
       : book.find((row) => row.kind === "active" || row.kind === "risk");
     const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
     const name = hit?.name ?? label;
-    return { name, icon: hit?.icon ?? "sparkles", kind, brief: name ? skillBrief(cardId, name, hit?.text ?? "", card?.skill ?? "") : "" };
+    // Its results as it stands now; once the caster has gone (Mộ voi ma mút gives itself), what it said last.
+    const pending = duel.pending;
+    const extra = pending?.kind === "beam" && orb.source && pending.caster === orb.source ? pending.extra ?? null : null;
+    const fresh = name && mon ? skillBrief({ duel, cardId, name, mon, target: orb.aim ? fieldMon(duel, orb.aim) : null, result: orb.result, extra }) : "";
+    if (fresh) briefSeen.current.set(orb.id, fresh);
+    const brief = fresh || briefSeen.current.get(orb.id) || (name ? skillBrief({ duel, cardId, name, mon: null, target: null, result: orb.result }) : "");
+    return { name, icon: hit?.icon ?? "sparkles", kind, brief };
   };
   const iconLook = (orb: ChainOrb): IconLook => {
     if (orb.kind === "block") return { type: "medal", tone: "gold", icon: "crossed-swords" };
@@ -3895,7 +3903,7 @@ function PlayPage() {
   const iconNote = (orb: ChainOrb): ReactNode => {
     const brief =
       orb.kind === "spell" && orb.spell
-        ? spellBrief(orb.spell)
+        ? spellBrief(duel, orb.spell, orb.side, chain.some((other) => other.to.some((link) => link.from && "orb" in link.from && link.from.orb === orb.id)))
         : (orb.kind === "skill" || orb.strike === "gaze") && !hiddenMon(orb)
           ? iconSkill(orb)?.brief ?? ""
           : "";

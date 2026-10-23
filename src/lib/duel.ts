@@ -1161,7 +1161,7 @@ function markRaised(mon: FieldMon, part: { atk?: number; def?: number; mdef?: nu
   };
 }
 
-function ageMon(mon: FieldMon): FieldMon {
+export function ageMon(mon: FieldMon): FieldMon {
   const cut = (n: number) => Math.max(0, n - pct35(n));
   const atk = cut(mon.atk);
   const def = cut(mon.def);
@@ -1203,7 +1203,7 @@ function breakWitch(state: Duel, side: Side, owner: Player, uid: string, beforeS
   return note(next, `Vòng quay trượt. ${monsterCard("phu-thuy-thoi-gian")?.name ?? "Phù thuỷ thời gian"} tự huỷ.`, "spell");
 }
 
-function buffMon(mon: FieldMon): FieldMon {
+export function buffMon(mon: FieldMon): FieldMon {
   const atk = pct35(mon.atk);
   if (mon.cage) return { ...mon, atk: mon.atk + atk, raised: markRaised(mon, { atk }) };
   const def = pct35(mon.def);
@@ -1819,7 +1819,7 @@ function rawAtk(mon: FieldMon) {
   return atk;
 }
 
-function liveAtk(mon: FieldMon) {
+export function liveAtk(mon: FieldMon) {
   const atk = rawAtk(mon);
   if (!mon.hex || mon.hex.left <= 0) return atk;
   return Math.max(0, atk - 3);
@@ -3121,7 +3121,7 @@ export function checkWinner(state: Duel): Duel {
   return traced(state, next, { kind: "win", actor: winner, ok: true, cardId: null, target: null, end: "damage" });
 }
 
-function skillText(id: string) {
+export function skillText(id: string) {
   return plainCopy(monsterCard(id)?.skill ?? "");
 }
 
@@ -3139,7 +3139,7 @@ function grabNums(text: string, pattern: RegExp): number[] {
   return found;
 }
 
-function bulletRamp(text: string): number[] {
+export function bulletRamp(text: string): number[] {
   const hit = text.match(/từ\s+(\d+)\s+rồi\s+(\d+)\s+và loạt cuối là\s+(\d+)/i);
   if (!hit) return [1, 2, 4];
   return [Number(hit[1]), Number(hit[2]), Number(hit[3])];
@@ -3165,7 +3165,7 @@ export function skillFigure(id: string, kind: "atk" | "def" | "guard" | "mdef" |
   return grabNums(text, pattern)[index] ?? fallback;
 }
 
-function favorShots<T extends { kind: "spell" | "phys" | "tru"; n: number }>(mon: FieldMon, shots: T[]): T[] {
+export function favorShots<T extends { kind: "spell" | "phys" | "tru"; n: number }>(mon: FieldMon, shots: T[]): T[] {
   const plus = mon.skillUp ?? 0;
   if (plus <= 0 || shots.length === 0) return shots;
   const rank = (kind: T["kind"]) => (kind === "spell" ? 0 : kind === "phys" ? 1 : 2);
@@ -3201,7 +3201,7 @@ function skillThreat(cardId: string, index: number): number {
   return plain * count;
 }
 
-function skillLoss(id: string, kind: "def" | "mdef", fallback: number) {
+export function skillLoss(id: string, kind: "def" | "mdef", fallback: number) {
   const text = skillText(id);
   const pattern = kind === "def" ? /giảm\s*(\d+)\s*thủ(?!\s*phép)/gi : /(?:giảm\s*(\d+)\s*thủ\s*phép|và\s*(\d+)\s*thủ\s*phép)/gi;
   return grabNums(text, pattern)[0] ?? fallback;
@@ -3904,7 +3904,7 @@ function hellCount(text: string, word: string, fallback: number) {
   return brief ? Number(brief[1]) : fallback;
 }
 
-function hellFigures(id: string) {
+export function hellFigures(id: string) {
   const text = skillText(id);
   const spill = /từ\s*(\d+)\s*trở lên/i.exec(text);
   return {
@@ -3915,7 +3915,7 @@ function hellFigures(id: string) {
   };
 }
 
-type HellPack = { phys: number; spell: number; tru: number };
+export type HellPack = { phys: number; spell: number; tru: number };
 
 function hellSplit(pack: HellPack, hp: number): { left: HellPack; killed: boolean } {
   const total = pack.phys + pack.spell + pack.tru;
@@ -6706,7 +6706,7 @@ function dropAid(state: Duel, uid: string): Duel {
   return state;
 }
 
-function queenSwing(mon: FieldMon): { n: 1 | 2; cost: number; pack: HellPack } {
+export function queenSwing(mon: FieldMon): { n: 1 | 2; cost: number; pack: HellPack } {
   const n: 1 | 2 = mon.beat === 1 ? 2 : 1;
   const line = skillText(QUEEN_KNIGHT)
     .split("\n")

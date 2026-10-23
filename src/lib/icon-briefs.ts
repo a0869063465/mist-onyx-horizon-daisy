@@ -1,127 +1,276 @@
-import { spellCard } from "@/lib/catalog";
+import { monsterCard, spellCard } from "@/lib/catalog";
+import { plainCopy } from "@/lib/copy-mark";
+import {
+  ageMon,
+  bulletRamp,
+  buffMon,
+  favorShots,
+  hellFigures,
+  liveAtk,
+  queenSwing,
+  skillLoss,
+  type Duel,
+  type FieldMon,
+  type Side,
+} from "@/lib/duel";
 
 /**
- * Tác dụng ngắn của icon phản ứng (chủ game 23/10, T3): a tap on a skill's or a spell's icon shows its name and a short
- * effect. The effect is the part of the card text these patterns pick (several parts are joined with commas), so the
- * numbers follow the card text when it changes. A skill or a spell with no pattern, or whose text no longer matches,
- * shows its whole text.
+ * Kết quả của icon phản ứng (chủ game 23/10, T3): a tap on a skill's or a spell's icon shows its name, then what it
+ * does, one result a line, with the numbers it carries now (the blow before the target's defence: Núi's bonus, the
+ * curse of Phù thuỷ rừng đen and Vòng nguyền rủa ác ma counted). What is paid for it (mana, HP) is left out. What is not
+ * known yet (which barrels fire, where the bombs fall) shows what is sure, and what came of it once it has fired.
  */
-const SKILL_BRIEFS: Record<string, Record<string, RegExp[]>> = {
-  "rong-phun-hoa-cau": { "Hoả cầu": [/giảm \d+ thủ phép và gây \d+ sát thương phép/] },
-  "rong-con": { "Hơi thở rồng": [/gây \d+ sát thương chuẩn và \d+ sát thương phép/] },
-  "rong-ngan-tuoi": { "Hơi thở rồng": [/gây \d+ sát thương chuẩn và \d+ sát thương phép/] },
-  "kiem-si-lua-thieng": {
-    "Vệt lửa": [/gây \d+ sát thương phép/],
-    "Truy cùng diệt tận": [/tiêu thêm \d+ máu để gây thêm \d+ sát thương phép một lần nữa/],
-    "Hoả thần long": [/gây \d+ sát thương phép và \d+ sát thương chuẩn/],
-  },
-  "trieu-hoi-ac-ma": { "Sấm địa ngục": [/Gây \d+ sát thương phép/] },
-  "ong-khong-lo": { "Kim châm tê liệt": [/gây tê liệt 1 quái thú trong \d+ lượt/] },
-  "mo-voi-ma-mut": {
-    "Nguyền rủa": [/hy sinh và sử dụng lượng máu hiện tại tấn công vào 1 quái thú đối phương/, /bào mòn chúng qua từng lượt với \d+ sát thương chuẩn/],
-  },
-  "ga-he-dang-so": { "Quả cầu bóng đêm": [/gây \d+ sát thương, cứ thêm \d+ lần gây thêm \d+ sát thương/] },
-  "cuc-bong-ma-quai": { "Phát nổ": [/Tự huỷ, gây sát thương phép lên kẻ địch bằng với công/] },
-  "phu-thuy-ti-hon": { "Cầu sấm": [/gây sát thương phép bằng \d+ cộng với số sao hiện có/] },
-  "trai-tim-hai-long": {
-    "Triều lên": [/gây \d+ sát thương phép lên 1 \S+ địch/],
-    "Con nước lớn tàn phá": [/gây \d+ sát thương phép và thêm 1 kẻ địch ngẫu nhiên/],
-    "Đại hồng thuỷ huỷ diệt": [/gây \d+ sát thương phép lên tất cả kẻ địch/],
-  },
-  "sua-hut-ma-phap": { "Tích luỹ ma pháp": [/gây \d+ cộng với số sát thương đã tích tụ/] },
-  "con-thinh-no-cua-hai-vuong": { "Cơn thịnh nộ của hải thần": [/Gây \d+ \+ \d+ × số lần bị đè nén/] },
-  "phu-thuy-thoi-gian": {
-    "Lão hoá": [/Đồng minh \([^)]*\) tăng \d+% chỉ số/, /Đối thủ giảm \d+% chỉ số/],
-    "Dòng chảy thời gian": [/Ảnh hưởng của ma pháp cường hoá của lão hoá lên tất cả các bài quân trên sân/],
-  },
-  "yeu-tinh-chuc-phuc": { "Hỗ công": [/Đòn kế tiếp của đồng minh tăng \d+ công, \+\d+ thủ và \d+ sát thương phép/] },
-  "mat-xanh-huy-diet": { "Cầu sấm ánh sáng": [/Đòn tấn công tiếp theo thành tia sáng huỷ diệt, sát thương chuẩn bằng đúng công/] },
-  "mat-do-tan-pha": { "Cầu lửa địa ngục": [/gây sát thương hỗn hơp \([^)]*\)/] },
-  "rong-ac-ma": { "Hoả cầu địa ngục": [/gây sát thương hỗn hơp \([^)]*\)/] },
-  "hoa-an-thit-nguoi": { "Hấp thụ": [/Chịu đòn từ 1 quái thú, để cướp \d+ máu tối đa của nó/] },
-  "thuong-quan-long": { "Cò quay": [/Ba nòng, mỗi nòng có tỉ lệ \d+% được bắn/] },
-  "may-nem-bom-hinh-nhen": { "Súng phóng lựu": [/Tạo cơn mưa bom \d+ quả, mỗi quả \d+ sát thương chuẩn/] },
-  "may-quay-thuong": { "Con bạc nổi giận": [/gây sát thương phép bằng số lần quay trượt cộng thêm \d+/] },
-  "ma-dao-si": { "Ma đạn": [/bắn \d+ phát liên tục, sát thương tăng dần theo từng loại ma đạn, từ \d+ rồi \d+ và loạt cuối là \d+/] },
-  "loi-nguyen-cua-rong": { "Địa ngục lửa": [/Gây \d+ sát thương chuẩn lên mọi quái địch/] },
-  "thien-than-be-nho": { "Thiên thần hộ mệnh": [/Tạo 1 khiên vật lý hoặc 1 khiên phép cho 1 đồng minh/] },
-  "phu-thuy-rung-den": { "Nguyền rủa": [/-\d+ công -\d+ sát thương kỹ năng/, /-\d+ thủ -\d+ thủ phép/, /duy trì trong \d+ lượt/] },
-  "hiep-si-cua-hau": { "Kiếm phép": [/Lần 1: [^.]*\. Gây [^.]*?(?= lên)/, /Lần 2: [^.]*\. Gây [^.]*?(?= lên)/] },
-  "my-dieu-nhan": {
-    "Thổi bay": [/Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ/],
-    "Mê hoặc": [/Kích động 1 quái địch đánh thường vào ta/, /Quái đó không thể hành động ở lượt sau/],
-    "Roi điện": [/né/, /Tăng vĩnh viễn \d+ công và trả \d+ sát thương phép/],
-  },
-  "nu-chua-dieu-nhan": {
-    "Thổi bay": [/Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ/],
-    "Mê hoặc": [/Kích động 1 quái địch đánh thường vào ta/, /Quái đó không thể hành động ở lượt sau/],
-    "Dụ dỗ": [/Dụ 1 quái địch đánh thường vào 1 quái của ta/],
-    "Roi điện": [/né/, /Tăng vĩnh viễn \d+ công và trả \d+ sát thương phép/],
-  },
-  "nu-chua-dieu-nhan-hoan-my": {
-    "Gió xoáy": [/Thổi bay 1 phép ngẫu nhiên của địch/, /Lượt sau không được rút bài/],
-    "Dụ dỗ": [/Dụ 1 quái địch đánh thường vào 1 quái của ta/],
-    "Roi sấm": [/Đòn đánh kế tiếp thành sát thương phép, gồm công và mọi sát thương đã tích/],
-  },
-  "chien-si-gam-nham": { "Khiên thú sĩ": [/tăng gấp đôi phòng ngự và thêm \d+ máu tối đa/] },
-  "ngai-khong-lo": { "Thổi độc": [/gây \d+ sát thương phép lên tất cả quái thú kẻ địch/, /dính độc chịu \d+ sát thương chuẩn đầu mỗi lượt, kéo dài \d+ lượt/] },
-  "ngai-nu-hoang": { "Thổi độc": [/gây \d+ sát thương phép lên tất cả quái thú kẻ địch/, /độc trong \d+ lượt/] },
-  "ngai-hoan-my": { "Thổi độc": [/gây \d+ sát thương phép lên tất cả quái thú kẻ địch/, /độc vĩnh viễn/] },
+export type SkillAt = {
+  duel: Duel;
+  cardId: string;
+  /** The skill's name on the sheet. */
+  name: string;
+  /** The caster as it stands now (null once it has gone). */
+  mon: FieldMon | null;
+  /** The monster aimed at, if one. */
+  target: FieldMon | null;
+  /** The notice as it fired, once it has. */
+  result?: string;
+  /** The part picked as it was cast (Thiên thần hộ mệnh's kind of shield). */
+  extra?: string | null;
 };
 
-const SPELL_BRIEFS: Record<string, RegExp[]> = {
-  "soi-xich-dia-nguc": [/Khống chế 1 quái thú trong \d+ lượt và làm phòng ngự về 0/],
-  "thanh-guom-anh-sang": [/Ngăn tất cả quái thú đối phương tấn công trong \d+ lượt/],
-  "sam-set-tan-the": [/Gây \d+ \+ \(số sao hiện có của bạn\) thành sát thương chuẩn lên tất cả quái thú kẻ địch/],
-  "mu-ma-phap": [/Tạo mũ che sân của bạn/, /Đối phương chỉ thấy mũ/],
-  "phan-nguyen": [/Chuyển trạng thái xấu đó sang quái đối thủ/],
-  "guong-phong-ho": [/Tạo rào chắn ngăn đòn tấn công giáp lá cà, cướp 1\/2 mọi chỉ số quái thú đang tấn công/],
-  "la-chan-phan-don": [/Phản đòn kỹ năng đang nhắm mình sang 1 kẻ địch bất kỳ/],
-  "vong-nguyen-rua-ac-ma": [/Chặn đòn tấn công hoặc skill gây sát thương/, /Sát thương nó gây ra còn một nửa, vĩnh viễn/],
-  "hap-thu-ma-phap": [/Hấp thu lá phép đang thi triển/],
-  "phuc-kich": [/chặn đòn trước/, /Quái đó tăng \d+ công trong đòn này và gây sát thương giáp lá cà lên quái đang tấn công/],
-  "hoan-doi": [/Hoán đổi vị trí của nó với quái thú đó/],
-  "vong-xoay-bao-ho": [/Ngăn chặn đòn tấn công, và buộc đối thủ kết thúc ngay lượt/],
-  "ngan-chan-phong-ngu": [/Chỉ định 1 đối thú không thể tham gia phòng ngự trong lượt này/],
-  "virus-an-mon": [/ăn mòn 1 quái từ \d+ sao trở lên của đối thủ/, /Gây \d+ sát thương chuẩn, gấp đôi nếu từ \d+ sao/],
-  "co-may-thoi-gian": [/Đưa quái đó về trạng thái ở đầu \d+ lượt chung trước/],
-  "giap-co-khi": [/Tăng \d+ công và \d+ thủ phép vĩnh viễn, trước khi đòn rơi/, /Nếu công sau khi tăng cao hơn sát thương của đòn, phản nguyên đòn về quái ra đòn/],
+type Pack = { phys: number; spell: number; tru: number };
+
+const text = (cardId: string) => plainCopy(monsterCard(cardId)?.skill ?? "");
+const num = (source: string, pattern: RegExp, fallback: number, at = 0) => {
+  const found = [...source.matchAll(new RegExp(pattern.source, "gi"))].map((hit) => Number(hit[1]));
+  return found[at] ?? fallback;
 };
 
-const plain = (text: string) => text.replace(/\*\*|__/g, "").replace(/\s+/g, " ").trim();
-
-/** The parts the patterns pick, joined; null when a pattern no longer matches. */
-function pick(text: string, patterns: RegExp[] | undefined): string | null {
-  if (!patterns) return null;
-  const flat = plain(text);
-  const parts: string[] = [];
-  for (const pattern of patterns) {
-    const hit = flat.match(pattern);
-    if (!hit) return null;
-    parts.push(hit[0]);
+/** The blow as it leaves the caster: +Núi on its spell part, less the black witch's curse (3, spell first), halved
+ *  under Vòng nguyền rủa ác ma. */
+function blow(mon: FieldMon | null, pack: Pack, plus = true): Pack {
+  if (!mon) return pack;
+  const out = { ...pack, spell: pack.spell + (plus ? mon.skillUp ?? 0 : 0) };
+  let hex = mon.hex && mon.hex.left > 0 ? 3 : 0;
+  for (const key of ["spell", "phys", "tru"] as const) {
+    const cut = Math.min(Math.max(0, out[key]), hex);
+    hex -= cut;
+    out[key] -= cut;
   }
-  const joined = parts.map((part, i) => (i === 0 ? part : part.charAt(0).toLowerCase() + part.slice(1))).join(", ");
-  return joined.charAt(0).toUpperCase() + joined.slice(1);
+  const half = (n: number) => Math.max(0, mon.curse ? Math.floor(n / 2) : n);
+  return { phys: half(out.phys), spell: half(out.spell), tru: half(out.tru) };
 }
 
-/**
- * A skill's name and short effect: "Hoả cầu: Giảm 1 thủ phép và gây 3 sát thương phép." `text` is the skill's own
- * slice of the card text; a small skill that shares its set's lines (Con nước lớn tàn phá) is found in the whole card.
- */
-export function skillBrief(cardId: string, name: string, text: string, card = ""): string {
-  const patterns = SKILL_BRIEFS[cardId]?.[name];
-  const effect = pick(text, patterns) ?? pick(card, patterns) ?? plain(text);
-  return effect ? `${name}: ${effect.replace(/[.\s]+$/, "")}.` : name;
+/** "Gây 2 sát thương chuẩn và 1 sát thương phép". */
+function deal(pack: Pack, tail = ""): string {
+  const parts = [
+    pack.phys > 0 ? `${pack.phys} sát thương vật lý` : "",
+    pack.spell > 0 ? `${pack.spell} sát thương phép` : "",
+    pack.tru > 0 ? `${pack.tru} sát thương chuẩn` : "",
+  ].filter(Boolean);
+  if (parts.length === 0) return `Gây 0 sát thương${tail}`;
+  const said = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} và ${parts[parts.length - 1]}`;
+  return `Gây ${said}${tail}`;
 }
 
-/** A spell's name and short effect. */
-export function spellBrief(spellId: string): string {
+const spellOnly = (n: number): Pack => ({ phys: 0, spell: n, tru: 0 });
+
+/** What came of a skill whose outcome is random: its notice as it fired. */
+function came(result: string | undefined): string[] {
+  return result ? [result.replace(/^\d+\.\s*/, "").replace(/[.\s]+$/, "").trim()] : [];
+}
+
+/** A stat change as the sheet reads it: "-4 công, -1 thủ, -2 máu". */
+function change(before: FieldMon, after: FieldMon): string {
+  const rows: Array<[number, string]> = [
+    [after.atk - before.atk, "công"],
+    [after.def - before.def, "thủ"],
+    [after.mdef - before.mdef, "thủ phép"],
+    [after.hp - before.hp, "máu"],
+  ];
+  return rows
+    .filter(([n]) => n !== 0)
+    .map(([n, what]) => `${n > 0 ? "+" : ""}${n} ${what}`)
+    .join(", ");
+}
+
+function harpy(name: string, t: string, target: FieldMon | null): string[] {
+  const who = target ? monsterCard(target.cardId)?.name ?? "1 quái địch" : "1 quái địch";
+  switch (name) {
+    case "Thổi bay":
+      return ["Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ"];
+    case "Mê hoặc":
+      return [`${who} đánh thường vào ta`, "Quái đó không thể hành động ở lượt sau"];
+    case "Dụ dỗ":
+      return [`${who} đánh thường vào 1 quái của ta`];
+    case "Gió xoáy":
+      return ["Thổi bay 1 phép ngẫu nhiên của địch", "Lượt sau đối thủ không được rút bài"];
+    case "Roi sấm":
+      return ["Đòn đánh kế tiếp thành sát thương phép"];
+    case "Roi điện": {
+      const lash = t.slice(Math.max(0, t.indexOf("Roi điện")));
+      return ["Né đòn", `+${num(lash, /tăng vĩnh viễn\s*(\d+)\s*công/, 3)} công vĩnh viễn`, `Trả ${num(lash, /trả\s*(\d+)\s*sát thương phép/, 5)} sát thương phép`];
+    }
+  }
+  return [];
+}
+
+function lines(at: SkillAt): string[] {
+  const { duel, cardId, name, mon, target } = at;
+  const t = text(cardId);
+  const side: Side | null = mon ? (duel.players[0].field.some((unit) => unit?.uid === mon.uid) ? 0 : 1) : null;
+  switch (cardId) {
+    case "rong-phun-hoa-cau":
+      if (name !== "Hoả cầu") return [];
+      return [...(target ? [`Giảm ${skillLoss(cardId, "mdef", 1)} thủ phép`] : []), deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, 3))))];
+    case "rong-con":
+    case "rong-ngan-tuoi":
+      return [deal(blow(mon, { phys: 0, spell: num(t, /(\d+)\s*sát thương phép/, 1), tru: num(t, /(\d+)\s*sát thương chuẩn/, 2) }))];
+    case "kiem-si-lua-thieng":
+      if (name === "Truy cùng diệt tận") return [deal(blow(mon, spellOnly(num(t, /gây thêm\s*(\d+)\s*sát thương phép/, 4)))).replace("Gây", "Gây thêm")];
+      if (name === "Hoả thần long") return [deal(blow(mon, { phys: 0, spell: num(t, /gây\s*(\d+)\s*sát thương phép và/, 4), tru: num(t, /và\s*(\d+)\s*sát thương chuẩn/, 2) }))];
+      return [deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, 4))))];
+    case "trieu-hoi-ac-ma": {
+      const wet = (target?.wet ?? 0) > 0;
+      const base = num(t, /gây\s*(\d+)\s*sát thương phép/, 5) + (wet ? num(t, /nhận thêm\s*(\d+)/, 2) : 0);
+      return [deal(blow(mon, spellOnly(base))), ...(wet ? ["Lan sang kẻ địch khác đang ẩm ướt"] : [])];
+    }
+    case "ong-khong-lo":
+      return [`Tê liệt ${num(t, /(\d+)\s*lượt/, 5)} lượt`];
+    case "mo-voi-ma-mut":
+      return [`Hy sinh và ${deal(blow(mon, spellOnly(mon?.hp ?? 0), false)).replace("Gây", "gây")}`, `Bào mòn ${num(t, /với\s*(\d+)\s*sát thương chuẩn/, 1)} sát thương chuẩn mỗi lượt`];
+    case "ga-he-dang-so": {
+      const charge = mon?.charge ?? 2;
+      const amount = num(t, /gây\s*(\d+)\s*sát thương/, 6) + num(t, /gây thêm\s*(\d+)\s*sát thương/, 4) * Math.floor(Math.max(0, charge - 2) / 2);
+      return [deal(blow(mon, spellOnly(amount)))];
+    }
+    case "cuc-bong-ma-quai":
+      return name === "Phát nổ" && mon ? ["Tự huỷ", deal(blow(mon, spellOnly(liveAtk(mon)), false))] : [];
+    case "phu-thuy-ti-hon":
+      return [deal(blow(mon, spellOnly(Math.max(0, 3 + (side === null ? 0 : duel.players[side].stars) - (mon?.fake ? 1 : 0)))))];
+    case "trai-tim-hai-long": {
+      const step = name === "Đại hồng thuỷ huỷ diệt" ? 2 : name === "Con nước lớn tàn phá" ? 1 : 0;
+      const pack = blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, [4, 5, 6][step], step)));
+      return step === 2 ? [deal(pack, " lên tất cả kẻ địch")] : step === 1 ? [deal(pack), "Thêm 1 kẻ địch ngẫu nhiên"] : [deal(pack)];
+    }
+    case "sua-hut-ma-phap":
+      return [deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*cộng/, 3) + (mon?.stored ?? 0))))];
+    case "con-thinh-no-cua-hai-vuong":
+      return [deal(blow(mon, spellOnly(2 + 3 * (mon?.stored ?? 0))))];
+    case "phu-thuy-thoi-gian": {
+      if (name === "Dòng chảy thời gian") return ["Lão hoá lên tất cả quái trên sân"];
+      if (!target) return [];
+      const ally = side !== null && duel.players[side].field.some((unit) => unit?.uid === target.uid);
+      const shift = change(target, ally ? buffMon(target) : ageMon(target));
+      return shift ? [shift] : [];
+    }
+    case "yeu-tinh-chuc-phuc":
+      if (name !== "Hỗ công") return [];
+      return [`Đòn kế tiếp +${num(t, /tăng\s*(\d+)\s*công/, 3)} công, +${num(t, /\+(\d+)\s*thủ/, 1)} thủ và ${num(t, /(\d+)\s*sát thương phép/, 3)} sát thương phép`];
+    case "mat-xanh-huy-diet":
+      return mon ? [deal({ phys: 0, spell: 0, tru: liveAtk(mon) })] : [];
+    case "mat-do-tan-pha":
+    case "rong-ac-ma": {
+      const figures = hellFigures(cardId);
+      return [deal(blow(mon, { phys: figures.phys, spell: figures.spell, tru: figures.tru }))];
+    }
+    case "hoa-an-thit-nguoi": {
+      const bite = num(t, /cướp\s*(\d+)\s*máu tối đa/, 2);
+      return [`Cướp ${target ? Math.min(bite, target.hp) : bite} máu tối đa`];
+    }
+    case "thuong-quan-long":
+      return at.result ? came(at.result) : [`3 nòng, mỗi nòng ${num(t, /(\d+)%/, 45)}% nổ`];
+    case "may-nem-bom-hinh-nhen":
+      return at.result ? came(at.result) : [`${num(t, /mưa bom\s*(\d+)\s*quả/, 5)} quả bom, mỗi quả ${num(t, /mỗi quả\s*(\d+)/, 1) + (mon?.skillUp ?? 0)} sát thương chuẩn`];
+    case "may-quay-thuong":
+      return name === "Con bạc nổi giận" ? [deal(blow(mon, spellOnly((mon?.misses ?? 0) + 3)))] : [];
+    case "ma-dao-si": {
+      const shots = mon ? favorShots(mon, bulletRamp(t).map((n) => ({ kind: "spell" as const, n }))).map((shot) => blow(mon, spellOnly(shot.n), false).spell) : bulletRamp(t);
+      return [`Bắn ${shots.length} phát: ${shots.join(", ")} sát thương phép`];
+    }
+    case "loi-nguyen-cua-rong": {
+      const each = blow(mon, { phys: 0, spell: 0, tru: num(t, /(\d+)\s*sát thương chuẩn/, 2) }, false).tru;
+      const plus = mon?.skillUp ?? 0;
+      return [`Gây ${each} sát thương chuẩn lên mọi quái địch`, ...(plus > 0 ? [`Mục tiêu chọn chịu thêm ${plus}`] : [])];
+    }
+    case "thien-than-be-nho":
+      if (name !== "Thiên thần hộ mệnh") return ["Quái đồng minh đỡ đòn hộ"];
+      return [at.extra === "spell" ? "Tạo 1 khiên phép" : at.extra === "phys" ? "Tạo 1 khiên vật lý" : "Tạo 1 khiên vật lý hoặc 1 khiên phép"];
+    case "phu-thuy-rung-den":
+      return [
+        `-${num(t, /-(\d+)\s*công/, 3)} công, -${num(t, /-(\d+)\s*sát thương kỹ năng/, 3)} sát thương kỹ năng`,
+        `-${num(t, /-(\d+)\s*thủ(?!\s*phép)/, 2)} thủ, -${num(t, /-(\d+)\s*thủ phép/, 2)} thủ phép`,
+        `Trong ${num(t, /trong\s*(\d+)\s*lượt/, 6)} lượt`,
+      ];
+    case "hiep-si-cua-hau":
+      return name === "Kiếm phép" && mon ? [deal(blow(mon, queenSwing(mon).pack))] : [];
+    case "my-dieu-nhan":
+    case "nu-chua-dieu-nhan":
+    case "nu-chua-dieu-nhan-hoan-my":
+      return harpy(name, t, target);
+    case "chien-si-gam-nham":
+      return ["Gấp đôi phòng ngự", `+${num(t, /thêm\s*(\d+)\s*máu tối đa/, 2)} máu tối đa`];
+    case "ngai-khong-lo":
+    case "ngai-nu-hoang":
+    case "ngai-hoan-my": {
+      const pack = blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, 4)));
+      const poison =
+        cardId === "ngai-khong-lo"
+          ? `Độc ${num(t, /chịu\s*(\d+)\s*sát thương chuẩn/, 1)} sát thương chuẩn mỗi lượt, ${num(t, /kéo dài\s*(\d+)\s*lượt/, 3)} lượt`
+          : cardId === "ngai-nu-hoang"
+            ? `Độc ${num(t, /độc trong\s*(\d+)\s*lượt/, 5)} lượt`
+            : "Độc vĩnh viễn";
+      return [deal(pack, " lên tất cả quái địch"), poison];
+    }
+  }
+  return [];
+}
+
+const sentence = (row: string) => `${row.charAt(0).toUpperCase()}${row.slice(1)}${/[.!?]$/.test(row) ? "" : "."}`;
+
+/** A skill's icon: its name, then its results a line each. */
+export function skillBrief(at: SkillAt): string {
+  return [at.name, ...lines(at).map(sentence)].join("\n");
+}
+
+/** A spell's icon: its name, then its results. `rebound`: Giáp cơ khí threw the skill back. */
+export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = false): string {
   const card = spellCard(spellId);
   if (!card) return "";
-  const effect = pick(card.effect, SPELL_BRIEFS[spellId]) ?? plain(card.effect);
-  return `${card.name}: ${effect.replace(/[.\s]+$/, "")}.`;
+  const e = plainCopy(card.effect);
+  const rows = ((): string[] => {
+    switch (spellId) {
+      case "soi-xich-dia-nguc":
+        return [`Khống chế ${num(e, /trong\s*(\d+)\s*lượt/, 2)} lượt`, "Phòng ngự về 0"];
+      case "thanh-guom-anh-sang":
+        return [`Quái đối phương không tấn công được ${num(e, /trong\s*(\d+)\s*lượt/, 5)} lượt`, "Quái ẩn mình hiện hình"];
+      case "sam-set-tan-the":
+        return [`Gây ${num(e, /Gây\s*(\d+)/, 2) + duel.players[owner].stars} sát thương chuẩn lên tất cả quái địch`];
+      case "mu-ma-phap":
+        return ["Mũ che sân, đối phương chỉ thấy mũ"];
+      case "phan-nguyen":
+        return ["Chuyển trạng thái xấu sang quái đối thủ"];
+      case "guong-phong-ho":
+        return ["Chặn đòn giáp lá cà", "Cướp 1/2 mọi chỉ số quái đang tấn công"];
+      case "la-chan-phan-don":
+        return ["Phản kỹ năng sang 1 kẻ địch"];
+      case "vong-nguyen-rua-ac-ma":
+        return ["Chặn đòn", "Sát thương của quái đó còn một nửa, vĩnh viễn"];
+      case "hap-thu-ma-phap":
+        return ["Hấp thu lá phép đang thi triển"];
+      case "phuc-kich":
+        return ["Chặn đòn", `Quái được chọn +${num(e, /tăng\s*(\d+)\s*công/, 2)} công, đánh quái đang tấn công, không bị phản đòn`];
+      case "hoan-doi":
+        return ["Đổi chỗ quái bị nhắm với quái khác"];
+      case "vong-xoay-bao-ho":
+        return ["Chặn đòn", "Đối thủ kết thúc lượt ngay"];
+      case "ngan-chan-phong-ngu":
+        return ["1 quái đối thủ không thể phòng ngự lượt này"];
+      case "virus-an-mon":
+        return [`Mỗi lượt ăn mòn 1 quái từ ${num(e, /từ\s*(\d+)\s*sao/, 3)} sao của đối thủ`, `Gây ${num(e, /Gây\s*(\d+)\s*sát thương chuẩn/, 1)} sát thương chuẩn, gấp đôi nếu từ ${num(e, /nếu từ\s*(\d+)\s*sao/, 4)} sao`];
+      case "co-may-thoi-gian":
+        return [`Quái về trạng thái ${num(e, /đầu\s*(\d+)\s*lượt/, 3)} lượt trước`];
+      case "giap-co-khi":
+        return [`+${num(e, /Tăng\s*(\d+)\s*công/, 2)} công, +${num(e, /và\s*(\d+)\s*thủ phép/, 2)} thủ phép vĩnh viễn`, ...(rebound ? ["Phản đòn trở về"] : [])];
+    }
+    return [e.split("\n")[0]];
+  })();
+  return [card.name, ...rows.map(sentence)].join("\n");
 }
-
-/** Every brief, for the owner to read over. */
-export const BRIEF_SKILLS = SKILL_BRIEFS;
-export const BRIEF_SPELLS = Object.keys(SPELL_BRIEFS);

@@ -49,6 +49,8 @@ export type ChainOrb = {
   done: boolean;
   /** How it ended: it fired at what it acts on, or an answer stopped it. Answers fire as they are played. */
   end: "fire" | "fizzle" | null;
+  /** The notice as it fired: what a random skill came to. */
+  result?: string;
 };
 
 let orbSeq = 1;
@@ -399,7 +401,8 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[]): Cha
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     const end = orb.end ?? (passed ? "fire" : "fizzle");
     if (orb.base) ended.set(`block:${orb.base}`, end);
-    return { ...orb, done, end };
+    // What came of it (the notice as it lands): a random skill's outcome shows on its icon afterwards.
+    return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };
   });
   return list.map((orb) => {
     if (orb.kind !== "block" || orb.done) return orb;
