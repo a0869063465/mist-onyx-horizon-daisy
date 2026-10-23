@@ -538,10 +538,17 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
   return { uid: self.uid, room: knightRoom(self, other, duel.players[viewer].field, foeAllies) };
 }
 
-/** How far an attacker lunges toward what it hits while the other side may answer: about a quarter of the way, so the
- *  reaction icons have room (chủ game 23/10). */
-const LUNGE_FACE = 0.24;
-const LUNGE_MELEE = 0.3;
+/** How far an attacker lunges toward what it hits while the other side may answer: as far as it always did, less the
+ *  room its reaction icon takes in front of it (chủ game 23/10). */
+const LUNGE_FACE = 0.42;
+const LUNGE_MELEE = 0.56;
+/** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
+const ICON_ROOM = (ICON * (9 / 16) + 1.2) * 1.6;
+
+function lungeTravel(base: number, dx: number, dy: number): number {
+  const dist = Math.hypot(dx * 0.9, dy * 1.6) || 1;
+  return Math.max(0.05, base - ICON_ROOM / dist);
+}
 
 function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
   const pending = duel.pending;
@@ -567,9 +574,9 @@ function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: num
     : -1;
   const to = pending.kind === "face" ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
   if (!to) return null;
-  const travel = pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE;
   const dx = to.x + to.w / 2 - (from.x + from.w / 2);
   const dy = to.y + to.h / 2 - (from.y + from.h / 2);
+  const travel = lungeTravel(pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE, dx, dy);
   return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
 }
 
@@ -588,11 +595,10 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
   if (fromIndex < 0) return null;
   const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
   const face = HP_BOX[screenSide((1 - fromSide) as Side, viewer)];
-  const travel = LUNGE_FACE;
-  return {
-    x: from.x + from.w / 2 + (face.x + face.w / 2 - (from.x + from.w / 2)) * travel,
-    y: from.y + from.h / 2 + (face.y + face.h / 2 - (from.y + from.h / 2)) * travel,
-  };
+  const dx = face.x + face.w / 2 - (from.x + from.w / 2);
+  const dy = face.y + face.h / 2 - (from.y + from.h / 2);
+  const travel = lungeTravel(LUNGE_FACE, dx, dy);
+  return { x: from.x + from.w / 2 + dx * travel, y: from.y + from.h / 2 + dy * travel };
 }
 
 /**
@@ -3801,7 +3807,8 @@ function PlayPage() {
         const lunging = card.dx !== 0 || card.dy !== 0;
         spot = {
           x: card.x,
-          y: card.top ? card.y + card.h / 2 + tall * 0.15 : card.y - card.h / 2 - tall * 0.15,
+          // Clear of the card, just in front of its edge (chủ game 23/10).
+          y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6,
           face: card.top ? 1 : -1,
           // An attacker's icon rides out with its card; its smoke starts as the card arrives.
           ride: orb.kind === "attack" && lunging ? { x: -card.dx, y: -card.dy } : null,
