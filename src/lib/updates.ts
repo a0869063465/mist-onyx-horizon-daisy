@@ -697,6 +697,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm icon skill hoặc phép 1 lần: hiện tên rồi kết quả, mỗi kết quả 1 dòng, số đúng như lúc đó (ví dụ Hoả cầu: Giảm 1 thủ phép. Gây 3 sát thương phép.). Phần trả giá như mana, máu không ghi. Skill ngẫu nhiên (Cò quay, Súng phóng lựu) ghi phần đã biết, nổ xong ghi kết quả. Giáp cơ khí ghi thêm Phản đòn trở về khi phản được.",
   "Hình nền menu chính thay bằng bản mới.",
   "Game chạy toàn màn hình khi cài như app: hình nền phủ lên tận mép trên, ẩn thanh trạng thái (đồng hồ, pin). Vuốt từ mép trên xuống để hiện lại. Cần xoá app đã cài rồi cài lại để có hiệu lực.",
+  "App đã cài tự vào toàn màn hình ngay lần chạm đầu tiên, và mỗi lần quay lại app, không cần vuốt nữa.",
 ];
 
 function remarkOf(notes: string[]) {
