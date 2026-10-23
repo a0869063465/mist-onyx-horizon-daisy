@@ -12,7 +12,11 @@ const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   size: `${3 + (i % 3)}px`,
 }));
 
-export const Route = createFileRoute("/")({ component: Home });
+// The status bar takes the sky blue of the menu picture's top, so the picture seems to run up to the edge (chủ game 23/10).
+export const Route = createFileRoute("/")({
+  head: () => ({ meta: [{ name: "theme-color", content: "#5b93e6" }] }),
+  component: Home,
+});
 
 function Home() {
   const [wins, setWins] = useState(0);
