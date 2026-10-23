@@ -696,7 +696,7 @@ export const PENDING_NOTES: string[] = [
   "Lá to của skill hoặc phép hiện ở giữa sân, phía đối diện icon của nó (quái ô 1 thì lá hiện bên phải), không còn che icon, rồi bay vào icon.",
   "Bấm icon skill hoặc phép 1 lần: hiện tên rồi kết quả, mỗi kết quả 1 dòng, số đúng như lúc đó (ví dụ Hoả cầu: Giảm 1 thủ phép. Gây 3 sát thương phép.). Phần trả giá như mana, máu không ghi. Skill ngẫu nhiên (Cò quay, Súng phóng lựu) ghi phần đã biết, nổ xong ghi kết quả. Giáp cơ khí ghi thêm Phản đòn trở về khi phản được.",
   "Hình nền menu chính thay bằng bản mới.",
-  "Menu chính: thanh trạng thái phía trên (đồng hồ, pin) đổi sang màu xanh trời của hình nền, nhìn liền mạch với hình.",
+  "Game chạy toàn màn hình khi cài như app: hình nền phủ lên tận mép trên, ẩn thanh trạng thái (đồng hồ, pin). Vuốt từ mép trên xuống để hiện lại. Cần xoá app đã cài rồi cài lại để có hiệu lực.",
 ];
 
 function remarkOf(notes: string[]) {
