@@ -8511,6 +8511,19 @@ button.watch-back {
   box-shadow: 0 0 18px 4px rgba(200, 120, 255, 0.75);
   animation: po-hue 2.2s linear infinite;
 }
+/* A pack whose best card is SR (10 packs): the gold glowing rim of the SR card back, quieter than the rainbow. */
+.po-pack.is-gold::before,
+.po-ten-pack.is-gold::before {
+  content: "";
+  position: absolute;
+  inset: -2.5% -4%;
+  z-index: -1;
+  border-radius: 6% / 4%;
+  background: linear-gradient(160deg, #fff4c2 0%, #f7c64a 28%, #b8780f 52%, #f9d86e 74%, #8f5a08 100%);
+  box-shadow: 0 0 12px 3px rgba(255, 196, 70, 0.7), 0 0 26px 6px rgba(255, 170, 40, 0.3);
+  animation: po-gold 2.4s ease-in-out infinite;
+}
+@keyframes po-gold { 50% { box-shadow: 0 0 18px 5px rgba(255, 210, 90, 0.9), 0 0 34px 9px rgba(255, 170, 40, 0.42); filter: brightness(1.12); } }
 .po-pack.is-cut { animation: po-pack-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both, po-pack-out 420ms 1480ms ease-in forwards; }
 .po-pack.is-cut .po-pack-top { animation: po-strip 760ms 120ms cubic-bezier(0.25, 0.7, 0.3, 1) forwards; }
 .po-pack-light {

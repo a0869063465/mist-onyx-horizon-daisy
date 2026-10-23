@@ -7,7 +7,7 @@ import { DEFAULT_ROW, PACK, rowStyle, tierRank, type OpenedPack, type Pull, type
 
 /**
  * Opening packs (owner's reference video, 19/10; the look is rebuilt here, nothing is taken from the video).
- * 10 packs first stand in two rows (a pack holding a UR has a rainbow frame); MỞ opens them one by one.
+ * 10 packs first stand in two rows (a pack holding a UR has a rainbow frame, one whose best card is SR a gold one); MỞ opens them one by one.
  * Each pack: it lands on the stage and lightning strikes beside it; a pack holding a UR also gets a red bolt, a
  * white flash and turns rainbow. Tap: a beam of light falls on it, its top is torn off and the stage bursts into
  * vertical light (blue = all Normal, gold = best is SR, rainbow = a UR). The 3 cards fly in face down (an SR back
@@ -104,7 +104,7 @@ function Overview({ packs, onOpen }: { packs: OpenedPack[]; onOpen: () => void }
     <div className="po-ten" onClick={onOpen}>
       <div className="po-ten-grid">
         {packs.map((pack, index) => (
-          <span key={index} className={`po-ten-pack${pack.best === "UR" ? " is-rainbow" : ""}`} style={{ "--i": index } as CSSProperties}>
+          <span key={index} className={`po-ten-pack${pack.best === "UR" ? " is-rainbow" : pack.best === "SR" ? " is-gold" : ""}`} style={{ "--i": index } as CSSProperties}>
             <img src={PACK.art} alt="" draggable={false} />
           </span>
         ))}
@@ -117,7 +117,8 @@ function Overview({ packs, onOpen }: { packs: OpenedPack[]; onOpen: () => void }
 }
 
 /**
- * One pack on the stage. `known`: the pack was already shown rainbow in the 10 pack overview, so it lands rainbow.
+ * One pack on the stage. `known`: the pack was already shown in the 10 pack overview, so a UR pack lands rainbow and
+ * an SR pack keeps its gold frame.
  */
 function PackStage({ pack, count, last, known, onNext }: { pack: OpenedPack; count: string; last: boolean; known: boolean; onNext: () => void }) {
   const ur = pack.best === "UR";
@@ -222,7 +223,7 @@ function PackStage({ pack, count, last, known, onNext }: { pack: OpenedPack; cou
       ))}
       {step === "cut" ? <span className="po-cone" aria-hidden="true" /> : null}
       {!packOut ? (
-        <div className={`po-pack${rainbow ? " is-rainbow" : ""}${flash ? " is-white" : ""}${step === "cut" ? " is-cut" : ""}${step === "ready" ? " is-ready" : ""}`}>
+        <div className={`po-pack${rainbow ? " is-rainbow" : known && pack.best === "SR" ? " is-gold" : ""}${flash ? " is-white" : ""}${step === "cut" ? " is-cut" : ""}${step === "ready" ? " is-ready" : ""}`}>
           <img className="po-pack-body" src={PACK.art} alt="" draggable={false} />
           <img className="po-pack-top" src={PACK.art} alt="" draggable={false} />
           {step === "cut" ? <span className="po-pack-light" aria-hidden="true" /> : null}
