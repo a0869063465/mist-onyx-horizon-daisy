@@ -672,6 +672,8 @@ export const PENDING_NOTES: string[] = [
   "Màn Tổng kết chỉ còn 2 nút: Tiếp tục về màn Chọn bộ bài, và Chơi lại. Bỏ Sửa bộ bài và Về menu chính.",
   "Chơi lại: Vs Máy đấu lại với máy, Đánh thường vào hàng chờ tìm trận mới với bộ bài đó, Tuỳ chọn mời đúng đối thủ cũ đấu lại trong cùng phòng. Bên kia thấy Đối thủ muốn chơi lại, hoặc Đối thủ đã rời phòng khi họ bấm Tiếp tục.",
   "Sửa lỗi: bấm Đấu lại thì bảng Bài khởi đầu hiện cùng lúc với màn VS. Giờ màn VS chạy xong mới tới Bài khởi đầu.",
+  "Vs Máy: máy có bộ não mới. Máy tính trước cả lượt (rút, triệu hồi, hiến tế, dung hợp, mọi phép và kỹ năng, đánh bằng nhiều quái), đoán bạn chặn đòn, rồi chọn đường tốt nhất. Máy không còn nhìn trộm bài trên tay bạn.",
+  "Vs Máy: máy suy nghĩ ở luồng riêng trong 2 giây chờ trước mỗi việc, nên trận không bị khựng lúc máy nghĩ.",
 ];
 
 function remarkOf(notes: string[]) {

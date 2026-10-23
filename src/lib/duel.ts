@@ -8903,8 +8903,10 @@ function offerLearnedDraw(state: Duel, style: ReturnType<typeof readStyle>, lean
   return draw(state, kind);
 }
 
-export function aiStep(state: Duel): Duel {
-  if (state.mode !== "ai" || state.winner !== null || state.reel) return state;
+/** The machine's answer to a question the match asks it (side 1): Đàm phán picks, tiến hoá, hộp ma lực, thu hồi…;
+ *  null when nothing asks it. */
+export function aiAnswerAsk(state: Duel): Duel | null {
+  if (state.mode !== "ai" || state.winner !== null || state.reel) return null;
   if (state.parley && state.step === "main") {
     const picker = parleyPicker(state);
     if (picker !== 1) return state;
@@ -8928,6 +8930,13 @@ export function aiStep(state: Duel): Duel {
   if (state.gemCap === 1 && state.turn === 1 && state.step === "main") return withLive(answerGemCap(state, true));
   if (state.upkeep && state.turn === 1 && state.step === "main") return withLive(answerUpkeep(state, state.players[1].orb >= 1));
   if (state.preyAsk && state.turn === 1 && state.step === "main") return withLive(answerPrey(state, true));
+  return null;
+}
+
+export function aiStep(state: Duel): Duel {
+  if (state.mode !== "ai" || state.winner !== null || state.reel) return state;
+  const answered = aiAnswerAsk(state);
+  if (answered) return answered;
   if (state.step === "respond" && state.hold?.priority === 1) {
     const plume = harpyOffer(state, 1);
     if (plume === "armor") return withLive(harpyWard(state));

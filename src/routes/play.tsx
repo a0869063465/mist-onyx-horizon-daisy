@@ -33,9 +33,10 @@ import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type Openin
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
+import { brainStep, runAct } from "@/lib/brain";
+import { think } from "@/lib/brain-client";
 import { ownFace, roomFace } from "@/lib/match-faces";
 import {
-  aiStep,
   assignBlock,
   attackFace,
   attackMonster,
@@ -601,6 +602,9 @@ type Landing =
 
 const HELL_IDS = new Set(["mat-do-tan-pha", "rong-ac-ma"]);
 const BOARD_EDGE = 4;
+/** Máy chờ 2 giây trước mỗi việc (chủ game: giữ nhịp này); nó nghĩ trong lúc chờ, tối đa THINK_MS. */
+const AI_WAIT = 2000;
+const THINK_MS = 1300;
 
 function seatOf(duel: Duel, uid: string): { side: Side; index: number } | null {
   for (const side of [0, 1] as const) {
@@ -1850,25 +1854,36 @@ function PlayPage() {
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     if (!aiResponds && !aiMain && !aiParley) return;
-    const wait = 2000;
-    const timer = window.setTimeout(() => {
-      setDuel((current) => {
-        if (!current) return current;
-        let next = aiStep(current);
-        if (next === current) return current;
-        const stuck = next.live === current.live && next.step === current.step && next.turn === current.turn && next.pending === current.pending;
-        if (stuck) {
-          stall.current = { live: next.live, n: stall.current.live === next.live ? stall.current.n + 1 : 1 };
-          if (stall.current.n >= 2) {
-            next = next.step === "respond" ? passResponse(next) : endTurn(next.step === "main" ? next : { ...next, step: "main" });
-            stall.current = { live: "", n: 0 };
-          }
-        } else stall.current = { live: "", n: 0 };
-        holdNotice(next.live, false, next.clock);
-        return next;
-      });
-    }, wait);
-    return () => window.clearTimeout(timer);
+    // Bộ não mới (đợt 1): máy nghĩ ở luồng riêng trong 2 giây chờ, rồi trang chạy lại nước nó chọn bằng luật thật.
+    const asked = duel;
+    const started = Date.now();
+    let timer = 0;
+    let gone = false;
+    void think(asked, THINK_MS).then((act) => {
+      if (gone) return;
+      timer = window.setTimeout(() => {
+        setDuel((current) => {
+          if (!current) return current;
+          let next = current === asked && act ? runAct(current, act) : brainStep(current, 300);
+          if (next === current) next = brainStep(current, 300);
+          if (next === current) return current;
+          const stuck = next.live === current.live && next.step === current.step && next.turn === current.turn && next.pending === current.pending;
+          if (stuck) {
+            stall.current = { live: next.live, n: stall.current.live === next.live ? stall.current.n + 1 : 1 };
+            if (stall.current.n >= 2) {
+              next = next.step === "respond" ? passResponse(next) : endTurn(next.step === "main" ? next : { ...next, step: "main" });
+              stall.current = { live: "", n: 0 };
+            }
+          } else stall.current = { live: "", n: 0 };
+          holdNotice(next.live, false, next.clock);
+          return next;
+        });
+      }, Math.max(0, AI_WAIT - (Date.now() - started)));
+    });
+    return () => {
+      gone = true;
+      window.clearTimeout(timer);
+    };
   }, [duel, busy, loaded, tutorial, trial]);
 
   // Thực chiến: the opponent follows its script, and the match is judged after every move.
