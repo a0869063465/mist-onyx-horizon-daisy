@@ -8504,9 +8504,9 @@ button.watch-back {
 .po-ten-pack.is-rainbow::before {
   content: "";
   position: absolute;
-  inset: -4.4% -7%;
+  inset: -3% -5%;
   z-index: -1;
-  border-radius: 7% / 5%;
+  border-radius: 6% / 4%;
   background: linear-gradient(135deg, #ff3fa8, #a35bff, #3fa8ff, #3fffc8, #ffef4f, #ff9f3f, #ff3fa8);
   box-shadow: 0 0 26px 8px rgba(200, 120, 255, 0.9);
   animation: po-hue 2.2s linear infinite, po-ur-pulse 1.8s ease-in-out infinite;
