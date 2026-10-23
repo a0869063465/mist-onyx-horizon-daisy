@@ -20,6 +20,7 @@ import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, ty
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
 import { bookSkill, skillsOf } from "@/lib/skill-book";
+import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { settleWin, type MatchReward } from "@/lib/missions";
@@ -3861,7 +3862,7 @@ function PlayPage() {
     return Boolean(orb.source && seaVeiled(duel, viewer, orb.source)) || (orb.side !== viewer && duel.players[orb.side].hats && (mon?.cardId ?? orb.cardId) !== "mu");
   };
   /** The skill an icon stands for, as on the monster sheet: its name, glyph and kind. */
-  const iconSkill = (orb: ChainOrb): { name: string; icon: string; kind: string } | null => {
+  const iconSkill = (orb: ChainOrb): { name: string; icon: string; kind: string; brief: string } | null => {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
     const cardId = mon ? formOf(mon) : orb.cardId;
     if (!cardId) return null;
@@ -3877,7 +3878,8 @@ function PlayPage() {
       ? bookSkill(cardId, label, card?.skill ?? "") ?? (label.trim().toLowerCase() === card?.name.trim().toLowerCase() ? sole() : undefined)
       : book.find((row) => row.kind === "active" || row.kind === "risk");
     const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
-    return { name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind };
+    const name = hit?.name ?? label;
+    return { name, icon: hit?.icon ?? "sparkles", kind, brief: name ? skillBrief(cardId, name, hit?.text ?? "", card?.skill ?? "") : "" };
   };
   const iconLook = (orb: ChainOrb): IconLook => {
     if (orb.kind === "block") return { type: "medal", tone: "gold", icon: "crossed-swords" };
@@ -3888,7 +3890,16 @@ function PlayPage() {
     const skill = iconSkill(orb);
     return { type: "gem", icon: skill?.icon ?? "sparkles", kind: skill?.kind ?? "active" };
   };
+  // A tap on a skill's or a spell's icon: its name and short effect (chủ game 23/10, T3). An attack, a block, Sừng lôi
+  // phá's strike and a hidden monster keep the notice they came with.
   const iconNote = (orb: ChainOrb): ReactNode => {
+    const brief =
+      orb.kind === "spell" && orb.spell
+        ? spellBrief(orb.spell)
+        : (orb.kind === "skill" || orb.strike === "gaze") && !hiddenMon(orb)
+          ? iconSkill(orb)?.brief ?? ""
+          : "";
+    if (brief) return <NoticeText text={brief} />;
     const text = orb.notice || (orb.spell ? spellCard(orb.spell)?.name ?? "" : "");
     return text ? <NoticeText text={veilNotice(spoken(text, viewer), duel, viewer)} /> : null;
   };
