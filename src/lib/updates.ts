@@ -692,6 +692,8 @@ export const PENDING_NOTES: string[] = [
   "Nhấp 2 lần vào icon skill mở bảng quái ở đúng ô skill đang dùng (trước đây Hoả cầu mở nhầm ô Lộ diện).",
   "Skill bắn vào người chơi (Hơi thở rồng, Hoả cầu, Cầu lửa địa ngục…) hiện icon của skill đó và dải sáng xanh, không còn là icon kiếm đỏ.",
   "Dải sáng phản ứng luôn uốn cong chữ S, không còn lúc gần như thẳng.",
+  "Tên skill trên nút, thông báo và lá to theo đúng mô tả lá: Hoả cầu (Rồng canh pháo đài), Quả cầu bóng đêm (Gã hề đáng sợ), Nguyền rủa (Mộ voi ma mút), Hấp thụ (Hoa ăn thịt người), Đại hồng thuỷ huỷ diệt (Trái tim hải long), Cầu sấm ánh sáng (Mắt xanh huỷ diệt), Truy cùng diệt tận (Kiếm sĩ lửa thiêng).",
+  "Lá to của skill hoặc phép hiện ở giữa sân, phía đối diện icon của nó (quái ô 1 thì lá hiện bên phải), không còn che icon, rồi bay vào icon.",
 ];
 
 function remarkOf(notes: string[]) {

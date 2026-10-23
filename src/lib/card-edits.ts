@@ -10,7 +10,7 @@ export type AskDef = { key: string; title: string; label: string };
 export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ga-he-dang-so": [
     { key: "charge", label: "Tích luỹ", tone: "y" },
-    { key: "cast", label: "Quả cầu bóng tối", tone: "z" },
+    { key: "cast", label: "Quả cầu bóng đêm", tone: "z" },
   ],
   "cuc-bong-ma-quai": [
     { key: "boom", label: "Phát nổ", tone: "y" },
@@ -20,7 +20,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
   "rong-phun-hoa-cau": [
     { key: "peek", label: "Lộ diện", tone: "y" },
-    { key: "fire", label: "Cầu lửa", tone: "y" },
+    { key: "fire", label: "Hoả cầu", tone: "y" },
   ],
   "phu-thuy-thoi-gian": [
     { key: "age", label: "Lão hoá", tone: "y" },
@@ -30,7 +30,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "fire", label: "Vệt Lửa", tone: "y" },
   ],
   "ong-khong-lo": [{ key: "stun", label: "Kim châm tê liệt", tone: "y" }],
-  "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rửa", tone: "y" }],
+  "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rủa", tone: "y" }],
   "rong-boc-trung": [
     { key: "stanceGuard", label: "Thế thủ", tone: "y" },
     { key: "stanceAttack", label: "Thế công", tone: "y" },
@@ -60,7 +60,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "kizuran": [{ key: "cover", label: "Vì Anh Em", tone: "z" }],
   "mat-do-tan-pha": [{ key: "ball", label: "Cầu lửa địa ngục", tone: "y" }],
   "ky-si-bong-toi": [{ key: "vow", label: "Hiến Tế", tone: "y" }],
-  "hoa-an-thit-nguoi": [{ key: "bite", label: "Ăn thịt", tone: "y" }],
+  "hoa-an-thit-nguoi": [{ key: "bite", label: "Hấp thụ", tone: "y" }],
   "thuong-quan-long": [{ key: "spin", label: "Cò quay", tone: "y" }],
   "may-nem-bom-hinh-nhen": [{ key: "bomb", label: "Súng phóng lựu", tone: "y" }],
   "may-quay-thuong": [
@@ -120,7 +120,7 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
   "trai-tim-hai-long": [
     { key: "tide", title: "Hỏi triều lên", label: "Sóng lớn hơn" },
     { key: "surge", title: "Con nước lớn", label: "Con nước lớn tàn phá" },
-    { key: "doom", title: "Đại thuỷ triều", label: "Đại thuỷ triều huỷ diệt" },
+    { key: "doom", title: "Đại hồng thuỷ", label: "Đại hồng thuỷ huỷ diệt" },
   ],
   "cuc-bong-ma-quai": [{ key: "soft", title: "Bông mềm", label: "Triệu hồi bản thân ra chặn. Tốn 1 mana, các bản sao lấp đầy sân." }],
 };

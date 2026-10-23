@@ -26,14 +26,14 @@ const EXTRA: Record<string, SkillSlot[]> = {
   "trai-tim-hai-long": [
     { key: "tide", name: "Triều lên", index: 0 },
     { key: "surge", name: "Con nước lớn tàn phá", index: 1 },
-    { key: "doom", name: "Đại thuỷ triều huỷ diệt", index: 2 },
+    { key: "doom", name: "Đại hồng thuỷ huỷ diệt", index: 2 },
   ],
   "kiem-si-lua-thieng": [
     { key: "fire", name: "Vệt Lửa", index: 0 },
-    { key: "echo", name: "Đòn thêm", index: 8 },
+    { key: "echo", name: "Truy cùng diệt tận", index: 8 },
     { key: "last", name: "Hoả thần long", index: 9 },
   ],
-  "mat-xanh-huy-diet": [{ key: "gaze", name: "Tia sáng huỷ diệt", index: 0 }],
+  "mat-xanh-huy-diet": [{ key: "gaze", name: "Cầu sấm ánh sáng", index: 0 }],
   "mat-do-tan-pha": [{ key: "ball", name: "Cầu lửa địa ngục", index: 0 }],
 };
 

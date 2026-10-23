@@ -5155,7 +5155,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
 
 export function castName(cardId: string, index: number): string {
   if (cardId === "kiem-si-lua-thieng") {
-    if (index === 8) return "Đòn thêm";
+    if (index === 8) return "Truy cùng diệt tận";
     if (index === 9) return "Hoả thần long";
     return chipLabel(cardId, "fire");
   }
@@ -5173,11 +5173,11 @@ export function castName(cardId: string, index: number): string {
   if (cardId === TIDE) return chipLabel(cardId, "rage");
   if (cardId === SHADE) return chipLabel(cardId, "hide");
   if (cardId === "trai-tim-hai-long") {
-    if (index >= 2) return "Đại thuỷ triều huỷ diệt";
+    if (index >= 2) return "Đại hồng thuỷ huỷ diệt";
     if (index === 1) return "Con nước lớn tàn phá";
     return chipLabel(cardId, "tide");
   }
-  if (cardId === "mat-xanh-huy-diet") return "Tia sáng huỷ diệt";
+  if (cardId === "mat-xanh-huy-diet") return "Cầu sấm ánh sáng";
   if (cardId === "mat-do-tan-pha") return "Cầu lửa địa ngục";
   if (cardId === "hoa-an-thit-nguoi") return chipLabel(cardId, "bite");
   if (cardId === PERFECT) {
@@ -5204,7 +5204,7 @@ export function castName(cardId: string, index: number): string {
 
 function strikeName(mon: FieldMon): string {
   if (isHell(mon.cardId)) return castName(mon.cardId, 0);
-  if (mon.gaze && !mon.horn) return "Tia sáng huỷ diệt";
+  if (mon.gaze && !mon.horn) return "Cầu sấm ánh sáng";
   if (mon.horn) return "Sấm lôi phá";
   return castName(mon.cardId, 0);
 }
@@ -6836,7 +6836,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
   if (!mon || held(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
   if (mon.cardId === "mat-xanh-huy-diet") {
-    if (mon.gaze) return note(state, "Tia sáng huỷ diệt đã nạp cho đòn tiếp theo.");
+    if (mon.gaze) return note(state, "Cầu sấm ánh sáng đã nạp cho đòn tiếp theo.");
     const before = you.stars;
     const paid = pay(you, 1);
     if (!paid) return note(state, "Cần 1 gem.");
@@ -7654,7 +7654,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
       if (unit && unit.hp > 0 && (!now || now.hp <= 0)) foePlayer = lockIndex(foePlayer, index);
     });
     next = patch(next, foe, foePlayer);
-    const title = all ? "Đại thuỷ triều huỷ diệt" : base ? "Triều lên" : "Con nước lớn tàn phá";
+    const title = all ? "Đại hồng thuỷ huỷ diệt" : base ? "Triều lên" : "Con nước lớn tàn phá";
     const tideAims = victims.map((id) => them.field.find((unit) => unit?.uid === (shuntUid(them.field, redirectCover(them.field, id) ?? id) ?? id))).filter((unit): unit is FieldMon => Boolean(unit));
     const tideRows = tideAims.map((unit) => ({ name: cardOf(unit).name, bits: `${spellLanded(unit, amount, them.field, mon)} sát thương phép` }));
     return note(next, aimNotice(title, tideRows) ?? `${title} gây ${spellPhrase(tideAims, amount, them.field, mon)}`, "spell");
@@ -7768,7 +7768,7 @@ export function swordFollow(state: Duel, targetUid: string | null, committed = f
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon) return { ...state, echo: null };
   const bite = followBite(mon.cardId);
-  if (mon.hp <= bite) return note({ ...state, echo: null }, `Không đủ máu. Đòn thêm sẽ khiến ${cardOf(mon).name} mất mạng.`);
+  if (mon.hp <= bite) return note({ ...state, echo: null }, `Không đủ máu. Truy cùng diệt tận sẽ khiến ${cardOf(mon).name} mất mạng.`);
   const them = state.players[foe];
   const aimed = shuntUid(them.field, redirectCover(them.field, targetUid));
   const target = them.field.find((unit) => unit?.uid === aimed) ?? null;

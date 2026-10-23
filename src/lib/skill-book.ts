@@ -234,13 +234,6 @@ export function skillsOf(cardId: string, text: string): SkillShown[] {
  * otherwise. A shield of Nàng tiên giữ khoá (the rules name it after her) is her Thiên thần hộ mệnh.
  */
 const CAST_NAMES: Record<string, Record<string, string>> = {
-  "rong-phun-hoa-cau": { "cầu lửa": "Hoả cầu" },
-  "kiem-si-lua-thieng": { "đòn thêm": "Truy cùng diệt tận" },
-  "mo-voi-ma-mut": { "nguyền rửa": "Nguyền rủa" },
-  "ga-he-dang-so": { "quả cầu bóng tối": "Quả cầu bóng đêm" },
-  "trai-tim-hai-long": { "đại thuỷ triều huỷ diệt": "Đại hồng thuỷ huỷ diệt" },
-  "mat-xanh-huy-diet": { "tia sáng huỷ diệt": "Cầu sấm ánh sáng" },
-  "hoa-an-thit-nguoi": { "ăn thịt": "Hấp thụ" },
   "thien-than-be-nho": { "nàng tiên giữ khoá": "Thiên thần hộ mệnh", "khiên vật lý": "Thiên thần hộ mệnh", "khiên phép": "Thiên thần hộ mệnh", "đỡ hộ": "Tinh linh bé nhỏ" },
   "the-than-cua-shien": { "thế thân": "Thế thân trên sân" },
   kizuran: { "vì anh em": "Chịu đòn vì bạn" },

@@ -2117,7 +2117,7 @@ function PlayPage() {
     const beamWasSwordsman = cameFromBeam && prev.pending?.kind === "beam" && fieldMon(prev, prev.pending.caster)?.cardId === "kiem-si-lua-thieng";
     const hellBoom = /Cầu lửa địa ngục/.test(said) && /sát thương|vật lý|phép|chuẩn/.test(said);
     const demonBoom = /Hoả cầu địa ngục/.test(said) && /sát thương chuẩn/.test(said);
-    const swordBoom = /sát thương phép/.test(said) && (/Vệt Lửa|Lửa rồng thiêng|Đòn thêm|Hoả thần long|Cầu lửa/.test(said) || (cameFromBeam && beamWasSwordsman));
+    const swordBoom = /sát thương phép/.test(said) && (/Vệt Lửa|Lửa rồng thiêng|Đòn thêm|Truy cùng diệt tận|Hoả thần long|Cầu lửa|Hoả cầu(?! địa ngục)/.test(said) || (cameFromBeam && beamWasSwordsman));
     const curseIndex =
       duel.skill?.id === "loi-nguyen-cua-rong"
         ? duel.skill.index
@@ -5407,7 +5407,7 @@ function PlayPage() {
                     apply(strike.face || !strike.foeUid ? attackFace(armed, strike.uid) : attackMonster(armed, strike.uid, strike.foeUid));
                   }}
                 >
-                  Tia sáng huỷ diệt
+                  Cầu sấm ánh sáng
                 </button>
               ) : (
                 skillChoices(selectedCard.skill).map((line, index) => (
@@ -5807,7 +5807,7 @@ function UnitChips({
     y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0) });
   }
   if (attackable && !noSkill && card.id === "mat-xanh-huy-diet" && !mon.gaze && you.orb >= 1) {
-    y.push({ key: "gaze", label: "Tia sáng", go: () => apply(useSkill(duel, uid, null, 0)) });
+    y.push({ key: "gaze", label: "Cầu sấm ánh sáng", go: () => apply(useSkill(duel, uid, null, 0)) });
   }
   if (attackable && !noSkill && card.id === "ky-si-bong-toi" && afford(skillManaCost(card.id))) {
     y.push({ key: "vow", label: chipLabel(card.id, "vow"), go: () => apply(offerVow(duel, uid)) });

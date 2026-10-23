@@ -21,10 +21,14 @@ export type IconLook =
 
 /** Icon size in % of the board's width. */
 export const ICON = 10;
-/** The big card shown as a spell or a skill lands: left edge, width and height of its middle, in % of the board. */
+/** The big card shown as a spell or a skill lands, in % of the board: its left edge on either side, its width and the
+ *  height of its middle. It stands in the middle band on the side away from its icon (chủ game 23/10), so it covers
+ *  neither the icon nor its card and is seen flying in: an icon on the left half sends it right, else left. */
 const SHOW_LEFT = 3;
+const SHOW_RIGHT = 52;
 const SHOW_W = 30;
-const SHOW_Y = 48;
+const SHOW_Y = 46;
+const showLeft = (iconX: number) => (iconX < 45 ? SHOW_RIGHT : SHOW_LEFT);
 /** The big card has flown into its icon this long after it shows (seconds). What ends meanwhile waits for it: an icon
  *  fires then, and what an answer stopped fizzles a moment later, as the answer lands on it. */
 const SHOW_LAND = 1.82;
@@ -50,7 +54,8 @@ function endKey(end: FlowEnd): string {
  * Icon phản ứng (chủ game 23/10, in place of the fixed reaction line): each action of the wait shows as an icon by
  * the card that makes it (a spell on its side's half, by what it answers), with smoke flowing to what it acts on. A
  * tap shows the icon's notice beside it, coloured as on the notice board; two quick taps open its card (a skill's
- * sheet opens on that skill). A spell or a skill landing shows big at the left for a moment, then flies into its icon.
+ * sheet opens on that skill). A spell or a skill landing shows big on the side away from its icon for a moment, then
+ * flies into it.
  */
 export function ReactionLine({
   orbs,
@@ -247,10 +252,11 @@ export function ReactionLine({
           className="rx-show"
           style={
             {
-              left: `${SHOW_LEFT}%`,
+              left: `${showLeft(showAt.x)}%`,
               top: `${SHOW_Y}%`,
               width: `${SHOW_W}cqw`,
-              "--dx": showAt.x - (SHOW_LEFT + SHOW_W / 2),
+              "--from": showLeft(showAt.x) === SHOW_LEFT ? "-30%" : "30%",
+              "--dx": showAt.x - (showLeft(showAt.x) + SHOW_W / 2),
               "--dy": showAt.y - SHOW_Y,
               "--shrink": ICON / SHOW_W,
             } as CSSProperties

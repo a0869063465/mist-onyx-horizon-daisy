@@ -10294,7 +10294,7 @@ button.watch-back {
 
 /* As the wait ends, the icon of what waited fires (a flash; its smoke surges to where it lands and blooms there) or
    fizzles (shakes, greys and shrinks; its smoke thins away) when an answer stopped it. Answers fire as they land. A
-   spell or a skill landing first shows big at the left, then flies into its icon. */
+   spell or a skill landing first shows big on the side away from its icon, then flies into it. */
 .rx-icon.is-fire { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fire 0.5s ease-out calc(0.08s + var(--late, 0s)) forwards; }
 .rx-icon.is-fire > * { animation: rx-settle 1.2s ease calc(0.6s + var(--late, 0s)) both; }
 .rx-icon.is-fizzle { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fizzle 0.7s ease-in calc(0.1s + var(--late, 0s)) forwards; }
@@ -10320,7 +10320,7 @@ button.watch-back {
   animation: rx-show 1.9s cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
 }
 @keyframes rx-show {
-  0% { opacity: 0; transform: translate(-30%, -50%) scale(0.6); }
+  0% { opacity: 0; transform: translate(var(--from, -30%), -50%) scale(0.6); }
   14% { opacity: 1; transform: translate(0, -50%) scale(1); }
   72% { opacity: 1; transform: translate(0, -50%) scale(1); }
   100% { opacity: 0.2; transform: translate(calc(var(--dx) * 1cqw), calc(-50% + var(--dy) * 1cqh)) scale(var(--shrink)); }
