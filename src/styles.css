@@ -8504,27 +8504,27 @@ button.watch-back {
 .po-ten-pack.is-rainbow::before {
   content: "";
   position: absolute;
-  inset: -3% -5%;
+  inset: -4.4% -7%;
   z-index: -1;
-  border-radius: 6% / 4%;
+  border-radius: 7% / 5%;
   background: linear-gradient(135deg, #ff3fa8, #a35bff, #3fa8ff, #3fffc8, #ffef4f, #ff9f3f, #ff3fa8);
-  box-shadow: 0 0 18px 4px rgba(200, 120, 255, 0.75);
-  animation: po-hue 2.2s linear infinite;
+  box-shadow: 0 0 26px 8px rgba(200, 120, 255, 0.9), 0 0 52px 14px rgba(120, 170, 255, 0.45);
+  animation: po-hue 2.2s linear infinite, po-ur-pulse 1.8s ease-in-out infinite;
 }
-/* A pack whose best card is SR (10 packs): the gold rim of the SR card back at 72% of the first version (chủ game
-   23/10: between the strong first one and the quiet second), still below the rainbow of a UR pack. */
+/* A pack whose best card is SR (10 packs): the gold rim of the SR card back, 90% of the first version (chủ game
+   23/10: back to this one); the UR rainbow rim is made stronger instead. */
 .po-pack.is-gold::before,
 .po-ten-pack.is-gold::before {
   content: "";
   position: absolute;
-  inset: -1.8% -2.9%;
+  inset: -2.25% -3.6%;
   z-index: -1;
   border-radius: 6% / 4%;
   background: linear-gradient(160deg, #fff4c2 0%, #f7c64a 28%, #b8780f 52%, #f9d86e 74%, #8f5a08 100%);
-  box-shadow: 0 0 8.6px 2.2px rgba(255, 196, 70, 0.5), 0 0 18.7px 4.3px rgba(255, 170, 40, 0.22);
+  box-shadow: 0 0 11px 2.7px rgba(255, 196, 70, 0.63), 0 0 23px 5.4px rgba(255, 170, 40, 0.27);
   animation: po-gold 2.4s ease-in-out infinite;
 }
-@keyframes po-gold { 50% { box-shadow: 0 0 13px 3.6px rgba(255, 210, 90, 0.65), 0 0 24.5px 6.5px rgba(255, 170, 40, 0.3); filter: brightness(1.08); } }
+@keyframes po-gold { 50% { box-shadow: 0 0 16px 4.5px rgba(255, 210, 90, 0.81), 0 0 31px 8px rgba(255, 170, 40, 0.38); filter: brightness(1.1); } }
 .po-pack.is-cut { animation: po-pack-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both, po-pack-out 420ms 1480ms ease-in forwards; }
 .po-pack.is-cut .po-pack-top { animation: po-strip 760ms 120ms cubic-bezier(0.25, 0.7, 0.3, 1) forwards; }
 .po-pack-light {
@@ -8801,6 +8801,7 @@ button.watch-back {
 .po-ok { min-width: 12rem; padding: 0.7rem 2rem; border-radius: 999px; border: 2px solid #e4ff5a; background: #0b0f1c; color: #fff; font-family: var(--po-cond); font-size: 1.15rem; font-weight: 800; letter-spacing: 0.16em; }
 @keyframes po-fade { from { opacity: 0; } }
 @keyframes po-breathe { 50% { opacity: 0.35; } }
+@keyframes po-ur-pulse { 50% { transform: scale(1.035); } }
 @keyframes po-hue { to { filter: hue-rotate(360deg); } }
 @keyframes po-hue-blur { from { filter: blur(16px) hue-rotate(0deg); } to { filter: blur(16px) hue-rotate(360deg); } }
 @keyframes po-pack-in { from { opacity: 0; transform: translate(-50%, -26%) scale(0.86); } to { opacity: 1; transform: translateX(-50%); } }

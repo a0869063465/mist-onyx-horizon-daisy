@@ -675,6 +675,7 @@ export const PENDING_NOTES: string[] = [
   "Vs Máy: máy có bộ não mới. Máy tính trước cả lượt (rút, triệu hồi, hiến tế, dung hợp, mọi phép và kỹ năng, đánh bằng nhiều quái), đoán bạn chặn đòn, rồi chọn đường tốt nhất. Máy không còn nhìn trộm bài trên tay bạn.",
   "Vs Máy: máy suy nghĩ ở luồng riêng trong 2 giây chờ trước mỗi việc, nên trận không bị khựng lúc máy nghĩ.",
   "Mở 10 gói: gói có lá SR (không có UR) có viền vàng sáng như mặt sau lá SR, và giữ viền đó khi lên sân để mở.",
+  "Mở gói: viền cầu vồng của gói có UR dày hơn, quầng sáng rộng và đậm hơn, có nhịp thở, để luôn nổi hơn viền vàng của gói SR.",
 ];
 
 function remarkOf(notes: string[]) {
