@@ -10174,7 +10174,7 @@ button.watch-back {
    flows from the acting monster into its orb and from the orb to what it acts on, and a blue veil over the board.
    The notice board hides while the line is up; the notice of the moment shows as a small line by the newest orb. */
 .banner.is-quiet { visibility: hidden; }
-.rx { position: absolute; inset: 0; z-index: 9; pointer-events: none; }
+.rx { position: absolute; inset: 0; z-index: 13; pointer-events: none; }
 .rx.is-closing { animation: rx-out 0.5s ease var(--close, 1.15s) forwards; }
 @keyframes rx-out { to { opacity: 0; } }
 @keyframes rx-in { from { opacity: 0; } }

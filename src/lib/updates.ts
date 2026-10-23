@@ -677,6 +677,7 @@ export const PENDING_NOTES: string[] = [
   "Mở 10 gói: gói có lá SR (không có UR) có viền vàng sáng như mặt sau lá SR, và giữ viền đó khi lên sân để mở.",
   "Mở gói: viền cầu vồng của gói có UR giữ độ dày cũ, quầng sáng cầu vồng toả ra từ chính viền và đổi màu cùng viền, có nhịp thở, để luôn nổi hơn viền vàng của gói SR.",
   "Mở gói có lá SR (không có UR): tia sét bên phải màu vàng thay cho tia sét xanh.",
+  "Dòng chảy của đòn tấn công vào người chơi không còn bị lá quái thú trên sân che khuất.",
 ];
 
 function remarkOf(notes: string[]) {
