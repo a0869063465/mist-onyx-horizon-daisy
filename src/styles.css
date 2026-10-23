@@ -8508,11 +8508,25 @@ button.watch-back {
   z-index: -1;
   border-radius: 6% / 4%;
   background: linear-gradient(135deg, #ff3fa8, #a35bff, #3fa8ff, #3fffc8, #ffef4f, #ff9f3f, #ff3fa8);
-  box-shadow: 0 0 26px 8px rgba(200, 120, 255, 0.9);
   animation: po-hue 2.2s linear infinite, po-ur-pulse 1.8s ease-in-out infinite;
 }
+/* Its halo is the rim's own rainbow, blurred out around the pack and turning with it (chủ game 23/10, đề xuất A: a
+   purple halo sank into the blue stage, so the UR pack looked plainer than the gold SR one). */
+.po-pack.is-rainbow::after,
+.po-ten-pack.is-rainbow::after {
+  content: "";
+  position: absolute;
+  inset: -13% -21%;
+  z-index: -2;
+  border-radius: 22% / 14%;
+  background: linear-gradient(135deg, #ff3fa8, #a35bff, #3fa8ff, #3fffc8, #ffef4f, #ff9f3f, #ff3fa8);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: po-ur-halo 2.2s linear infinite, po-ur-pulse 1.8s ease-in-out infinite;
+}
+@keyframes po-ur-halo { from { filter: blur(12px) saturate(1.3) hue-rotate(0deg); } to { filter: blur(12px) saturate(1.3) hue-rotate(360deg); } }
 /* A pack whose best card is SR (10 packs): the gold rim of the SR card back, 85% of the first version (chủ game
-   23/10: 90%, then 5% less); the UR rainbow rim is made stronger instead. */
+   23/10: 90%, then 5% less). */
 .po-pack.is-gold::before,
 .po-ten-pack.is-gold::before {
   content: "";
