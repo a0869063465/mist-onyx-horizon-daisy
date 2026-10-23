@@ -221,8 +221,14 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const nx = -(by - ay) / len;
       const ny = (bx - ax) / len;
       const reach = len * 0.42;
-      const p1 = { x: ax + spec.out.x * reach + nx * bow * len * 0.26, y: ay + spec.out.y * reach + ny * bow * len * 0.26 };
-      const p2 = { x: bx - spec.into.x * reach - nx * bow * len * 0.16, y: by - spec.into.y * reach - ny * bow * len * 0.16 };
+      // The bend goes the way the ribbon already leaves its icon, never against it: against it, the two cancel and a
+      // ribbon to a card off to the side ran almost straight (chủ game 23/10). Leaving square to the line, it bends
+      // either way.
+      const lean = spec.out.x * nx + spec.out.y * ny;
+      const turn = Math.abs(lean) > 0.12 ? Math.sign(lean) : Math.sign(bow) || 1;
+      const bend = turn * Math.abs(bow) * (1 - 0.6 * Math.min(1, Math.abs(lean)));
+      const p1 = { x: ax + spec.out.x * reach + nx * bend * len * 0.26, y: ay + spec.out.y * reach + ny * bend * len * 0.26 };
+      const p2 = { x: bx - spec.into.x * reach - nx * bend * len * 0.16, y: by - spec.into.y * reach - ny * bend * len * 0.16 };
       const at = (t: number) => {
         const u = 1 - t;
         return {

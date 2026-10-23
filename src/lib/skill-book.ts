@@ -1,3 +1,5 @@
+import { chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
+
 /**
  * Skills shown as icons on the monster sheet, coloured by kind (the owner's scheme):
  * - active (blue): pressed on the board;
@@ -225,4 +227,36 @@ export function skillsOf(cardId: string, text: string): SkillShown[] {
     const body = tidy(keep(dropHead(text.slice(at, end), entry.head ?? "")));
     return { ...entry, text: lead ? `${lead}\n\n${body}` : body };
   });
+}
+
+/**
+ * Names the duel gives a skill (its notices, the buttons on the field) where the card text, and so the sheet, calls it
+ * otherwise. A shield of Nàng tiên giữ khoá (the rules name it after her) is her Thiên thần hộ mệnh.
+ */
+const CAST_NAMES: Record<string, Record<string, string>> = {
+  "rong-phun-hoa-cau": { "cầu lửa": "Hoả cầu" },
+  "kiem-si-lua-thieng": { "đòn thêm": "Truy cùng diệt tận" },
+  "mo-voi-ma-mut": { "nguyền rửa": "Nguyền rủa" },
+  "ga-he-dang-so": { "quả cầu bóng tối": "Quả cầu bóng đêm" },
+  "trai-tim-hai-long": { "đại thuỷ triều huỷ diệt": "Đại hồng thuỷ huỷ diệt" },
+  "mat-xanh-huy-diet": { "tia sáng huỷ diệt": "Cầu sấm ánh sáng" },
+  "hoa-an-thit-nguoi": { "ăn thịt": "Hấp thụ" },
+  "thien-than-be-nho": { "nàng tiên giữ khoá": "Thiên thần hộ mệnh", "khiên vật lý": "Thiên thần hộ mệnh", "khiên phép": "Thiên thần hộ mệnh", "đỡ hộ": "Tinh linh bé nhỏ" },
+  "the-than-cua-shien": { "thế thân": "Thế thân trên sân" },
+  kizuran: { "vì anh em": "Chịu đòn vì bạn" },
+};
+
+/**
+ * The sheet's skill that a name from the duel stands for: by its name (or a numbered step of it, Thổi độc 2), else by
+ * the name the card text gives it. A button renamed in the card editor is found by the name it had.
+ */
+export function bookSkill(cardId: string, label: string, text: string): SkillShown | undefined {
+  const list = skillsOf(cardId, text);
+  const find = (name: string) => {
+    const want = name.trim().toLowerCase();
+    const known = (CAST_NAMES[cardId]?.[want] ?? want).toLowerCase();
+    return list.find((row) => row.name.toLowerCase() === known) ?? list.find((row) => known.startsWith(row.name.toLowerCase()));
+  };
+  const chip = MONSTER_CHIPS[cardId]?.find((item) => chipLabel(cardId, item.key).trim().toLowerCase() === label.trim().toLowerCase());
+  return find(label) ?? (chip ? find(chip.label) : undefined);
 }

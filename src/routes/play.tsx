@@ -19,7 +19,7 @@ import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
-import { skillsOf } from "@/lib/skill-book";
+import { bookSkill, skillsOf } from "@/lib/skill-book";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { settleWin, type MatchReward } from "@/lib/missions";
@@ -3225,11 +3225,13 @@ function PlayPage() {
             ? aimedUid(duel)
             : kind === "block"
               ? duel.hold?.blocker ?? null
-              : kind === "skill" && pending && "caster" in pending
-                ? pending.caster
-                : kind === "attack" && pending && "attacker" in pending
-                  ? pending.attacker
-                  : null;
+              : (kind === "skill" || kind === "attack") && pending
+                ? "caster" in pending
+                  ? pending.caster
+                  : "attacker" in pending
+                    ? pending.attacker
+                    : null
+                : null;
         apply(castSpell(duel, payload.index, uid));
         return;
       }
@@ -3810,9 +3812,9 @@ function PlayPage() {
           // Clear of the card, just in front of its edge (chủ game 23/10).
           y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6,
           face: card.top ? 1 : -1,
-          // An attacker's light starts as its card arrives; an attacker's or a caster's icon fades in only after its
-          // light has reached out (chủ game 23/10).
-          delay: orb.kind === "attack" && lunging ? 0.75 : 0,
+          // A lunging card's light starts as it arrives (an attack, or a skill at a player); an attacker's or a
+          // caster's icon fades in only after its light has reached out (chủ game 23/10).
+          delay: lunging ? 0.75 : 0,
           appear: orb.kind === "attack" || orb.kind === "skill" ? (lunging ? 1.3 : 0.5) : 0,
         };
       } else if (!orb.near) {
@@ -3863,11 +3865,16 @@ function PlayPage() {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
     const cardId = mon ? formOf(mon) : orb.cardId;
     if (!cardId) return null;
-    const book = skillsOf(cardId, monsterCard(cardId)?.skill ?? "");
+    const card = monsterCard(cardId);
+    const book = skillsOf(cardId, card?.skill ?? "");
     const label = orb.skill === "lash" ? chipLabel(cardId, "lash") : orb.skill !== null ? castName(cardId, orb.skill) : "";
-    const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+    // A skill the rules name after its monster is the only one it can use.
+    const sole = () => {
+      const usable = book.filter((row) => row.kind !== "passive" && row.kind !== "note");
+      return usable.length === 1 ? usable[0] : undefined;
+    };
     const hit = label
-      ? book.find((row) => same(row.name, label)) ?? book.find((row) => label.toLowerCase().startsWith(row.name.toLowerCase()))
+      ? bookSkill(cardId, label, card?.skill ?? "") ?? (label.trim().toLowerCase() === card?.name.trim().toLowerCase() ? sole() : undefined)
       : book.find((row) => row.kind === "active" || row.kind === "risk");
     const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
     return { name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind };
@@ -5913,10 +5920,8 @@ function UnitChips({
 
   // Each button shows the skill's emblem and name as on the monster sheet: the colour of its kind there, or blue
   // for a skill and red for a reaction when the sheet has no such skill. Attack is orange.
-  const book = skillsOf(card.id, card.skill ?? "");
-  const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
   const lookOf = (label: string, tone: "y" | "z"): { icon: string; kind: UnitActKind } => {
-    const hit = book.find((row) => same(row.name, label)) ?? book.find((row) => label.toLowerCase().startsWith(row.name.toLowerCase()));
+    const hit = bookSkill(card.id, label, card.skill ?? "");
     const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : tone === "z" ? "risk" : "active";
     return { icon: hit?.icon ?? (tone === "z" ? "magic-swirl" : "sparkles"), kind };
   };

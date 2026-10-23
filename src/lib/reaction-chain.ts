@@ -118,9 +118,20 @@ function strikeOf(duel: Duel, pending: Pending): "horn" | "gaze" | null {
   return null;
 }
 
+/** A skill aimed at a player (Hơi thở rồng, Hoả cầu, Cầu lửa địa ngục…): the rules hold it as a blow at the face. */
+function faceSkill(pending: Pending): boolean {
+  return pending?.kind === "face" && Boolean(pending.skill);
+}
+
+/** The skill a skill at a player casts: Hoả cầu is Rồng canh pháo đài's second, Con bạc nổi giận Máy quay thưởng's. */
+function faceSkillIndex(cardId: string | null): number {
+  return cardId === "rong-phun-hoa-cau" || cardId === "may-quay-thuong" ? 1 : 0;
+}
+
 function pendingTone(duel: Duel, pending: Pending): FlowTone {
   if (!pending) return "red";
   if (pending.kind === "spell") return spellTone(pending.cardId);
+  if (faceSkill(pending)) return "blue";
   if (pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw") return strikeOf(duel, pending) ? "blue" : "red";
   return "blue";
 }
@@ -196,20 +207,22 @@ function pendingOrb(duel: Duel, by: string | null = null): ChainOrb | null {
     return { id, kind: "spell", side: pending.owner, source: pending.source ?? null, cardId: monOf(duel, pending.source)?.cardId ?? null, spell: pending.cardId, near: null, by, to, tone, skill: null, strike: null, base, aim, notice: duel.live, done: false, end: null };
   }
   const source = pending.kind === "lash" ? pending.bird : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : pending.attacker;
-  const swing = pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw";
+  const cardId = monOf(duel, source)?.cardId ?? null;
+  // A skill at a player is a skill (its own icon, blue), though the rules hold it as a blow at the face.
+  const swing = (pending.kind === "face" && !faceSkill(pending)) || pending.kind === "melee" || pending.kind === "gnaw";
   return {
     id,
     kind: swing ? "attack" : "skill",
     side: pending.kind === "lash" ? pending.owner : (sideOf(duel, source) ?? duel.turn),
     source,
-    cardId: monOf(duel, source)?.cardId ?? null,
+    cardId,
     spell: null,
     near: source,
     by,
     to,
     tone,
-    skill: pending.kind === "lash" ? "lash" : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.index : null,
-    strike: strikeOf(duel, pending),
+    skill: pending.kind === "lash" ? "lash" : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.index : faceSkill(pending) ? faceSkillIndex(cardId) : null,
+    strike: swing ? strikeOf(duel, pending) : null,
     base,
     aim,
     notice: duel.live,
@@ -376,7 +389,7 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[]): Cha
     // Giáp cơ khí throwing the skill back: the spell's icon is where the skill turns.
     const reflect = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell === "giap-co-khi")?.id ?? null : null;
     const to = selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
-    list = list.map((orb) => (orb === live ? { ...orb, to, tone: pendingTone(next, next.pending), strike: strikeOf(next, next.pending) ?? orb.strike } : orb));
+    list = list.map((orb) => (orb === live ? { ...orb, to, tone: pendingTone(next, next.pending), strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null } : orb));
   }
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();
