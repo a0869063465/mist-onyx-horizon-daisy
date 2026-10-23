@@ -676,6 +676,7 @@ export const PENDING_NOTES: string[] = [
   "Vs Máy: máy suy nghĩ ở luồng riêng trong 2 giây chờ trước mỗi việc, nên trận không bị khựng lúc máy nghĩ.",
   "Mở 10 gói: gói có lá SR (không có UR) có viền vàng sáng như mặt sau lá SR, và giữ viền đó khi lên sân để mở.",
   "Mở gói: viền cầu vồng của gói có UR giữ độ dày cũ, quầng sáng tím rộng và đậm hơn, có nhịp thở, để luôn nổi hơn viền vàng của gói SR (không có quầng xanh).",
+  "Mở gói có lá SR (không có UR): tia sét bên phải màu vàng thay cho tia sét xanh.",
 ];
 
 function remarkOf(notes: string[]) {

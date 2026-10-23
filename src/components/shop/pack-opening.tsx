@@ -15,7 +15,7 @@ import { DEFAULT_ROW, PACK, rowStyle, tierRank, type OpenedPack, type Pull, type
  * light until the next tap. Then Tiếp, and after the last pack the results: every card drawn, tap one to read it.
  */
 type Step = "enter" | "omen" | "ready" | "cut" | "deal" | "flip";
-type Bolt = { key: number; x: number; tone: "blue" | "red"; path: string; branches: string[]; sparks: Spark[] };
+type Bolt = { key: number; x: number; tone: "blue" | "red" | "gold"; path: string; branches: string[]; sparks: Spark[] };
 type Spark = { dx: number; dy: number; size: number; delay: number };
 
 const BEAM: Record<Tier, PackCue> = { N: "beamN", SR: "beamSR", UR: "beamUR" };
@@ -35,7 +35,7 @@ function line(points: Array<[number, number]>) {
 }
 
 /** A jagged bolt from the sky to the floor in a 60 × 200 box, with a few short forks. */
-function makeBolt(key: number, x: number, tone: "blue" | "red"): Bolt {
+function makeBolt(key: number, x: number, tone: "blue" | "red" | "gold"): Bolt {
   const points: Array<[number, number]> = [[30 + rand(-6, 6), 0]];
   const steps = 11;
   for (let i = 1; i < steps; i += 1) points.push([30 + rand(-11, 11), (i / steps) * 200 + rand(-5, 5)]);
@@ -140,7 +140,7 @@ function PackStage({ pack, count, last, known, onNext }: { pack: OpenedPack; cou
     timers.current = [];
   };
 
-  function strike(tone: "blue" | "red", x: number) {
+  function strike(tone: "blue" | "red" | "gold", x: number) {
     boltKey.current += 1;
     const bolt = makeBolt(boltKey.current, x, tone);
     setBolts((now) => [...now, bolt]);
@@ -148,11 +148,12 @@ function PackStage({ pack, count, last, known, onNext }: { pack: OpenedPack; cou
     window.setTimeout(() => setBolts((now) => now.filter((item) => item.key !== bolt.key)), 760);
   }
 
-  // The omen: blue bolts for every pack; a pack holding a UR also gets a red bolt, a flash, and turns rainbow.
+  // The omen: a blue bolt on the left for every pack, and one on the right that is blue, or gold when the best card is an
+  // SR (chủ game 23/10); a pack holding a UR also gets a red bolt, a flash, and turns rainbow.
   useEffect(() => {
     later(380, () => setStep("omen"));
     later(560, () => strike("blue", 26));
-    later(960, () => strike("blue", 74));
+    later(960, () => strike(pack.best === "SR" ? "gold" : "blue", 74));
     if (ur) {
       later(1400, () => strike("red", 20));
       later(1880, () => {

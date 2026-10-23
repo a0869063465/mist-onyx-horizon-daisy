@@ -8587,6 +8587,7 @@ button.watch-back {
   pointer-events: none;
 }
 .po-bolt.is-blue { --tone: #4fb0ff; filter: drop-shadow(0 0 6px #4fb0ff) drop-shadow(0 0 18px #2a7dff); }
+.po-bolt.is-gold { --tone: #ffc83a; filter: drop-shadow(0 0 6px #ffc83a) drop-shadow(0 0 18px #ff9f1a); }
 .po-bolt.is-red { --tone: #ff2a6a; width: 26vw; filter: drop-shadow(0 0 7px #ff2a6a) drop-shadow(0 0 22px #ff1450); }
 .po-bolt path { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .po-bolt-glow { stroke: var(--tone); stroke-width: 9; opacity: 0.9; }
@@ -8597,6 +8598,7 @@ button.watch-back {
 .po-bolt .is-fork .po-bolt-core { stroke-width: 1.5; }
 .po-spark { position: absolute; top: var(--floor); z-index: 5; width: 0; height: 0; pointer-events: none; }
 .po-spark.is-blue { --tone: #4fb0ff; }
+.po-spark.is-gold { --tone: #ffc83a; }
 .po-spark.is-red { --tone: #ff2a6a; }
 .po-spark::before {
   content: "";
