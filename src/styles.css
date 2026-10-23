@@ -8511,21 +8511,20 @@ button.watch-back {
   box-shadow: 0 0 18px 4px rgba(200, 120, 255, 0.75);
   animation: po-hue 2.2s linear infinite;
 }
-/* A pack whose best card is SR (10 packs): a thin gold rim like the SR card back, kept well under the rainbow of a
-   UR pack (chủ game 23/10: no stronger than UR). */
+/* A pack whose best card is SR (10 packs): the gold rim of the SR card back, 10% under the first version (chủ game
+   23/10), still below the rainbow of a UR pack. */
 .po-pack.is-gold::before,
 .po-ten-pack.is-gold::before {
   content: "";
   position: absolute;
-  inset: -1.4% -2.3%;
+  inset: -2.25% -3.6%;
   z-index: -1;
-  border-radius: 5% / 3.5%;
-  background: linear-gradient(160deg, #f3dc95 0%, #c9952e 35%, #8a5d14 60%, #d7ae55 100%);
-  box-shadow: 0 0 6px 1px rgba(240, 180, 60, 0.38);
-  opacity: 0.85;
-  animation: po-gold 2.8s ease-in-out infinite;
+  border-radius: 6% / 4%;
+  background: linear-gradient(160deg, #fff4c2 0%, #f7c64a 28%, #b8780f 52%, #f9d86e 74%, #8f5a08 100%);
+  box-shadow: 0 0 11px 2.7px rgba(255, 196, 70, 0.63), 0 0 23px 5.4px rgba(255, 170, 40, 0.27);
+  animation: po-gold 2.4s ease-in-out infinite;
 }
-@keyframes po-gold { 50% { box-shadow: 0 0 8px 2px rgba(250, 196, 80, 0.5); } }
+@keyframes po-gold { 50% { box-shadow: 0 0 16px 4.5px rgba(255, 210, 90, 0.81), 0 0 31px 8px rgba(255, 170, 40, 0.38); filter: brightness(1.1); } }
 .po-pack.is-cut { animation: po-pack-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both, po-pack-out 420ms 1480ms ease-in forwards; }
 .po-pack.is-cut .po-pack-top { animation: po-strip 760ms 120ms cubic-bezier(0.25, 0.7, 0.3, 1) forwards; }
 .po-pack-light {
