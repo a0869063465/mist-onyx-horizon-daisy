@@ -43,7 +43,7 @@ import { ENV_BOARDS } from "@/lib/env-boards";
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
 type Screen = "menu" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
-type BoardPick = HudKey | "notice" | "trail" | "reaction" | "stack" | "env" | "envFoe" | "actions";
+type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | "actions";
 type SpotPick = "stack" | "env" | "envFoe" | "actions";
 const isSpotPick = (key: BoardPick): key is SpotPick => key === "stack" || key === "env" || key === "envFoe" || key === "actions";
 
@@ -387,7 +387,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     setLayout((current) => {
       if (key === "notice") return { ...current, notice: { ...current.notice, x: clamp(x, 0, 80), y: clamp(y, 0, 90) } };
       if (key === "trail") return { ...current, trail: { ...current.trail, x: clamp(x, 0, 92), y: clamp(y, 0, 90) } };
-      if (key === "reaction") return { ...current, reaction: { ...current.reaction, x: clamp(x, 0, 80), y: clamp(y, 0, 90) } };
       if (isSpotPick(key)) {
         const spot = current[key];
         return { ...current, [key]: { ...spot, x: clamp(x, 2, 98), y: clamp(y, 2, 98) } };
@@ -400,7 +399,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   function nudge(dx: number, dy: number) {
     if (picked === "notice") place("notice", layout.notice.x + dx, layout.notice.y + dy);
     else if (picked === "trail") place("trail", layout.trail.x + dx, layout.trail.y + dy);
-    else if (picked === "reaction") place("reaction", layout.reaction.x + dx, layout.reaction.y + dy);
     else if (isSpotPick(picked)) place(picked, layout[picked].x + dx, layout[picked].y + dy);
     else place(picked, layout.marks[picked].x + dx, layout.marks[picked].y + dy);
   }
@@ -410,7 +408,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     setLayout((current) => {
       if (picked === "notice") return { ...current, notice: { ...current.notice, font: clamp(current.notice.font + delta, 1.6, 8) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, dot: clamp(current.trail.dot + delta, 0.8, 8) } };
-      if (picked === "reaction") return { ...current, reaction: { ...current.reaction, font: clamp(current.reaction.font + delta, 1.6, 8) } };
       if (picked === "actions") return { ...current, actions: { ...current.actions, size: clamp(current.actions.size + (delta > 0 ? 0.1 : -0.1), 0.6, 1.6) } };
       if (isSpotPick(picked)) {
         const spot = current[picked];
@@ -426,7 +423,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     setLayout((current) => {
       if (picked === "notice") return { ...current, notice: { ...current.notice, w: clamp(current.notice.w + delta, 20, 90) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, w: clamp(current.trail.w + delta, 3, 30) } };
-      if (picked === "reaction") return { ...current, reaction: { ...current.reaction, w: clamp(current.reaction.w + delta, 20, 90) } };
       if (isSpotPick(picked)) {
         const spot = current[picked];
         return { ...current, [picked]: { ...spot, width: clamp(spot.width + delta, 6, 48) } };
@@ -440,7 +436,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     setLayout((current) => {
       if (picked === "notice") return { ...current, notice: { ...current.notice, h: clamp(current.notice.h + delta, 4, 24) } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, h: clamp(current.trail.h + delta, 4, 40) } };
-      if (picked === "reaction") return { ...current, reaction: { ...current.reaction, h: clamp(current.reaction.h + delta, 4, 24) } };
       if (isSpotPick(picked)) {
         const spot = current[picked];
         return { ...current, [picked]: { ...spot, height: clamp(spot.height + delta, 4, 28) } };
@@ -450,15 +445,13 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   }
 
   const label =
-    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "reaction" ? "Thanh phản ứng" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : picked === "actions" ? "Nút Rút quái, Rút phép, Hết lượt" : HUD_MARKS.find((mark) => mark.key === picked)?.label;
-  const boxy = picked === "notice" || picked === "trail" || picked === "reaction" || isSpotPick(picked);
+    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : picked === "actions" ? "Nút Rút quái, Rút phép, Hết lượt" : HUD_MARKS.find((mark) => mark.key === picked)?.label;
+  const boxy = picked === "notice" || picked === "trail" || isSpotPick(picked);
   const hidden =
     picked === "notice"
       ? layout.notice.hidden === true
       : picked === "trail"
         ? layout.trail.hidden === true
-        : picked === "reaction"
-        ? layout.reaction.hidden === true
         : isSpotPick(picked)
           ? layout[picked].hidden === true
           : layout.marks[picked].hidden === true;
@@ -468,7 +461,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
     setLayout((current) => {
       if (picked === "notice") return { ...current, notice: { ...current.notice, hidden: !current.notice.hidden } };
       if (picked === "trail") return { ...current, trail: { ...current.trail, hidden: !current.trail.hidden } };
-      if (picked === "reaction") return { ...current, reaction: { ...current.reaction, hidden: !current.reaction.hidden } };
       if (picked === "actions") return current;
       if (isSpotPick(picked)) return { ...current, [picked]: { ...current[picked], hidden: !current[picked].hidden } };
       const point = current.marks[picked];
@@ -563,33 +555,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
               />
             </span>
           ))}
-        </button>
-        {/* The reaction line runs across the notice board's width; its middle sits at the middle of this box. */}
-        <button
-          type="button"
-          className={`tune-notice${picked === "reaction" ? " on" : ""}${layout.reaction.hidden ? " is-hidden" : ""}`}
-          style={{
-            left: `${layout.notice.x}%`,
-            top: `${layout.reaction.y}%`,
-            width: `${layout.notice.w}%`,
-            height: `${layout.reaction.h}%`,
-            fontSize: `${layout.reaction.font}cqw`,
-          }}
-          onPointerDown={(event) => {
-            drag.current = "reaction";
-            setPicked("reaction");
-            event.currentTarget.setPointerCapture(event.pointerId);
-          }}
-          onPointerMove={(event) => {
-            if (drag.current !== "reaction") return;
-            const spot = at(event);
-            if (spot) place("reaction", spot.x, spot.y);
-          }}
-          onPointerUp={() => {
-            drag.current = null;
-          }}
-        >
-          Phản ứng
         </button>
         <button
           type="button"
@@ -749,9 +714,6 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         </button>
         <button type="button" className={`tuner-item${picked === "trail" ? " on" : ""}`} onClick={() => setPicked("trail")}>
           Lịch sử thông báo{layout.trail.hidden ? " · ẩn" : ""} · rộng {layout.trail.w} · cao {layout.trail.h} · chấm {layout.trail.dot} · glow {layout.trail.glow}
-        </button>
-        <button type="button" className={`tuner-item${picked === "reaction" ? " on" : ""}`} onClick={() => setPicked("reaction")}>
-          Thanh phản ứng{layout.reaction.hidden ? " · ẩn" : ""} · rộng {layout.reaction.w} · cao {layout.reaction.h} · chữ {layout.reaction.font}
         </button>
         <button type="button" className={`tuner-item${picked === "stack" ? " on" : ""}`} onClick={() => setPicked("stack")}>
           Xấp bài úp{layout.stack.hidden ? " · ẩn" : ""} · rộng {layout.stack.width} · cao {layout.stack.height} · chữ {layout.stack.size}

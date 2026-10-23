@@ -1,189 +1,101 @@
-import { useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Glyph } from "@/components/game/monster-sheet";
-import { Medal } from "@/components/game/medal";
-import type { ChainOrb, FlowEnd } from "@/lib/reaction-chain";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Glyph, Rim } from "@/components/game/monster-sheet";
+import { Medal, type MedalTone } from "@/components/game/medal";
+import { FlowCanvas, type BoxPt, type FlowSpec } from "@/components/game/flow-canvas";
+import type { ChainOrb, FlowEnd, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
-/** A point on the board in % of its width and height; a card also gives its size, so a stream can meet its edge. */
-export type BoardSpot = { x: number; y: number; w?: number; h?: number };
+/** Where an icon stands, in % of the board: by the edge of its card that faces the middle (`face` +1 hangs under a
+ *  card of the top row, -1 sits on one of the bottom row, 0 a spell on its side's half). `ride`: where it starts
+ *  (an offset in %) to ride with its lunging card; `delay`: seconds before its smoke starts. */
+export type IconSpot = { x: number; y: number; face: 1 | -1 | 0; ride: { x: number; y: number } | null; delay: number };
 
-export type OrbLook = { src: string | null; dark: boolean; attack: boolean; tone: string };
+/** Where a flow lands on a card or a player, in % of the board, and the way it arrives there. */
+export type EndSpot = { x: number; y: number; into: BoxPt };
 
-/** The board is 9:16, so the flows are drawn in a 90 × 160 box and stay round on every phone. */
-const VX = 0.9;
-const VY = 1.6;
-/** Orb size in % of the board's width. */
-const ORB = 11.5;
-const GAP = 17;
-/** The big card shown at the left as a spell or a skill lands on the line: left edge and width, in % of the width. */
+/** How an icon looks: a 3D medal (attack, block), a skill's gem with its rim, or a card's picture in a rim. */
+export type IconLook =
+  | { type: "medal"; tone: MedalTone; icon: string }
+  | { type: "gem"; icon: string; kind: string }
+  | { type: "art"; src: string | null; ring: FlowTone };
+
+/** Icon size in % of the board's width. */
+export const ICON = 10;
+/** The big card shown as a spell or a skill lands: left edge, width and height of its middle, in % of the board. */
 const SHOW_LEFT = 3;
 const SHOW_W = 30;
-/** The big card has flown into its orb this long after it shows (seconds). What ends meanwhile waits for it: an orb
- *  fires then, and what an answer stopped fizzles a moment later, as the answer's bolt lands on it. */
+const SHOW_Y = 48;
+/** The big card has flown into its icon this long after it shows (seconds). What ends meanwhile waits for it: an icon
+ *  fires then, and what an answer stopped fizzles a moment later, as the answer lands on it. */
 const SHOW_LAND = 1.82;
 const FIZZLE_AFTER = 0.35;
-/** The line fades out this long after the last orb fired or fizzled. */
+/** The icons fade out this long after the last one fired or fizzled. */
 const FIRE_TAIL = 1.15;
 const FIZZLE_TAIL = 0.8;
+/** Two taps closer than this open the card. */
+const DOUBLE_TAP = 380;
 
-type Pt = { x: number; y: number };
-type Bezier = [Pt, Pt, Pt, Pt];
+const toBox = (x: number, y: number): BoxPt => ({ x: x * 0.9, y: y * 1.6 });
 
-/** The flow's centre line in the 90 × 160 box: an S curve between two points, or an arch under the line from the
- *  foot of one orb to the foot of another (clear of both and of the notice above the line). */
-function bezierOf(a: BoardSpot, b: BoardSpot, arch: boolean): Bezier {
-  const p0 = { x: a.x * VX, y: a.y * VY };
-  const p3 = { x: b.x * VX, y: b.y * VY };
-  if (arch) {
-    const foot = 4.2;
-    const drop = Math.min(26, 14 + Math.abs(p3.x - p0.x) * 0.2);
-    const s = { x: p0.x, y: p0.y + foot };
-    const e = { x: p3.x, y: p3.y + foot };
-    const q = { x: (s.x + e.x) / 2, y: s.y + drop };
-    return [s, { x: s.x + ((q.x - s.x) * 2) / 3, y: s.y + ((q.y - s.y) * 2) / 3 }, { x: e.x + ((q.x - e.x) * 2) / 3, y: e.y + ((q.y - e.y) * 2) / 3 }, e];
-  }
-  const dy = p3.y - p0.y;
-  return [p0, { x: p0.x, y: p0.y + dy * 0.5 }, { x: p3.x, y: p3.y - dy * 0.45 }, p3];
+function unitDir(dx: number, dy: number): BoxPt {
+  const len = Math.hypot(dx, dy) || 1;
+  return { x: dx / len, y: dy / len };
 }
 
-function pointAt(c: Bezier, t: number): Pt {
-  const u = 1 - t;
-  return {
-    x: u * u * u * c[0].x + 3 * u * u * t * c[1].x + 3 * u * t * t * c[2].x + t * t * t * c[3].x,
-    y: u * u * u * c[0].y + 3 * u * u * t * c[1].y + 3 * u * t * t * c[2].y + t * t * t * c[3].y,
-  };
-}
-
-function slopeAt(c: Bezier, t: number): Pt {
-  const u = 1 - t;
-  return {
-    x: 3 * u * u * (c[1].x - c[0].x) + 6 * u * t * (c[2].x - c[1].x) + 3 * t * t * (c[3].x - c[2].x),
-    y: 3 * u * u * (c[1].y - c[0].y) + 6 * u * t * (c[2].y - c[1].y) + 3 * t * t * (c[3].y - c[2].y),
-  };
-}
-
-/** A ribbon around the centre line: thin where it leaves, fuller in the middle, thin again where it lands, with a
- *  slight sway so it reads as a stream rather than a ruled line. */
-function ribbon(c: Bezier, width: number, sway: number, phase = 0): string {
-  const steps = 32;
-  const left: string[] = [];
-  const right: string[] = [];
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    const p = pointAt(c, t);
-    const d = slopeAt(c, t);
-    const len = Math.hypot(d.x, d.y) || 1;
-    const nx = -d.y / len;
-    const ny = d.x / len;
-    const half = (width * (0.28 + 0.72 * Math.pow(Math.sin(Math.PI * t), 0.85))) / 2;
-    const off = sway * Math.sin(t * Math.PI * 3 + phase) * Math.sin(Math.PI * t);
-    left.push(`${(p.x + nx * (half + off)).toFixed(2)} ${(p.y + ny * (half + off)).toFixed(2)}`);
-    right.push(`${(p.x - nx * (half - off)).toFixed(2)} ${(p.y - ny * (half - off)).toFixed(2)}`);
-  }
-  return `M${left.join("L")}L${right.reverse().join("L")}Z`;
-}
-
-/** The middle of a card's lower edge (or upper edge); points that are not cards stay as they are. */
-function edgeOf(spot: BoardSpot, lower: boolean): BoardSpot {
-  if (!spot.h) return spot;
-  return { x: spot.x, y: spot.y + (lower ? spot.h : -spot.h) * 0.46 };
-}
-
-function centre(c: Bezier): string {
-  const f = (p: Pt) => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
-  return `M${f(c[0])}C${f(c[1])} ${f(c[2])} ${f(c[3])}`;
-}
-
-/** One soft flowing stream in the reaction line's light blue, as in Runeterra: a blurred halo, a fuller body that
- *  brightens toward where it lands, a bright thread, lights running along it and a glow where it lands. When its
- *  orb fires, a bolt of light runs down it and bursts where it lands; when its orb fizzles, it fades out. */
-type StreamFx = { soft: string; mid: string; run: string; land: string };
-
-function Stream({ id, c, done, end, late, fx, strike = false }: { id: string; c: Bezier; done: boolean; end: ChainOrb["end"]; late: string; fx: StreamFx; strike?: boolean }) {
-  const line = centre(c);
-  return (
-    <g className={`rx-stream${done ? " is-done" : ""}${end ? ` is-${end}` : ""}${strike ? " is-strike" : ""}`} style={{ "--late": late } as CSSProperties}>
-      <defs>
-        <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1={c[0].x} y1={c[0].y} x2={c[3].x} y2={c[3].y}>
-          <stop offset="0" stopColor="#1f9bff" stopOpacity="0.9" />
-          <stop offset="0.5" stopColor="#5ccaff" stopOpacity="0.95" />
-          <stop offset="1" stopColor="#c9f3ff" stopOpacity="1" />
-        </linearGradient>
-      </defs>
-      <path className="rx-halo" d={ribbon(c, 7, 0.8)} filter={fx.soft} />
-      <path className="rx-edge" d={ribbon(c, 4, 0.9)} filter={fx.mid} />
-      <path className="rx-body" d={ribbon(c, 3.2, 0.9)} fill={`url(#${id}-body)`} filter={fx.mid} />
-      <path className="rx-body is-twin" d={ribbon(c, 2.4, 0.9, Math.PI)} fill={`url(#${id}-body)`} filter={fx.mid} />
-      <path className="rx-thread" d={line} />
-      <path className="rx-run" d={line} pathLength={100} filter={fx.run} />
-      <path className="rx-run is-late" d={line} pathLength={100} filter={fx.run} />
-      <circle className="rx-rise" cx={c[0].x.toFixed(2)} cy={c[0].y.toFixed(2)} r="2" fill={fx.land} />
-      <circle className="rx-land" cx={c[3].x.toFixed(2)} cy={c[3].y.toFixed(2)} r="4" fill={fx.land} />
-      {end === "fire" && !strike ? (
-        <>
-          <path className="rx-bolt" d={line} pathLength={100} filter={fx.soft} />
-          <path className="rx-bolt is-core" d={line} pathLength={100} filter={fx.run} />
-          <circle className="rx-hit" cx={c[3].x.toFixed(2)} cy={c[3].y.toFixed(2)} r="7" fill={fx.land} />
-        </>
-      ) : null}
-    </g>
-  );
+function endKey(end: FlowEnd): string {
+  return "uid" in end ? `u:${end.uid}` : "face" in end ? `f:${end.face}` : `o:${end.orb}`;
 }
 
 /**
- * Thanh phản ứng kiểu Runeterra (chủ game 21/10): a glowing line across the board between the two fields with one
- * orb per action on it, newest on the left. A skill or a spell flows from its orb to what it acts on; an attack
- * flows from the attacking monster to the one it hits (chủ game 21/10). The lit orb is what is still waiting; the
- * others have done their work and stay dim. Tapping an orb opens its card. The notices of the moment show as a
- * small line by the newest orb while the notice board is hidden.
+ * Icon phản ứng (chủ game 23/10, in place of the fixed reaction line): each action of the wait shows as an icon by
+ * the card that makes it (a spell on its side's half, by what it answers), with smoke flowing to what it acts on. A
+ * tap shows the icon's notice beside it, coloured as on the notice board; two quick taps open its card (a skill's
+ * sheet opens on that skill). A spell or a skill landing shows big at the left for a moment, then flies into its icon.
  */
 export function ReactionLine({
   orbs,
   closing,
-  lineY,
-  x0,
-  x1,
-  spotOf,
+  spots,
+  endOf,
   lookOf,
-  note,
-  noteKey,
-  notePinned = false,
+  noteOf,
+  hint,
+  hintKey,
+  hintPinned = false,
   cardOf,
-  onOrb,
+  onSheet,
   onClosed,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
-  lineY: number;
-  x0: number;
-  x1: number;
-  spotOf: (end: FlowEnd) => BoardSpot | null;
-  lookOf: (orb: ChainOrb) => OrbLook;
-  note: ReactNode;
-  noteKey: string;
-  /** A notice picked from the history stays; the others fade. */
-  notePinned?: boolean;
-  /** The big card for an orb (a spell, or a monster with its skill's name); null shows none (an attack, a hidden
-   *  monster). */
+  spots: ReadonlyMap<string, IconSpot>;
+  /** Where a flow lands on a card or a player, coming from a point (in % of the board). */
+  endOf: (end: FlowEnd, from: { x: number; y: number }) => EndSpot | null;
+  lookOf: (orb: ChainOrb) => IconLook;
+  /** The icon's notice, coloured as on the notice board. */
+  noteOf: (orb: ChainOrb) => ReactNode;
+  /** A prompt to the player (a wrong move, a pick to make): a small line in the middle for a few seconds. */
+  hint: ReactNode;
+  hintKey: string;
+  /** A notice picked from the history stays. */
+  hintPinned?: boolean;
+  /** The big card for an icon (a spell, or a monster with its skill's name); null shows none. */
   cardOf: (orb: ChainOrb) => ReactNode;
-  onOrb: (orb: ChainOrb) => void;
-  /** The line has faded out after the wait ended. */
+  /** Two quick taps: the icon's card. */
+  onSheet: (orb: ChainOrb) => void;
+  /** The icons have faded out after the wait ended. */
   onClosed: () => void;
 }) {
-  const uid = `rx${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
-  const span = x1 - x0 - ORB * 1.2;
-  const gap = orbs.length > 1 ? Math.min(GAP, span / (orbs.length - 1)) : GAP;
-  const at = new Map(orbs.map((orb, index) => [orb.id, { x: x1 - ORB * 0.6 - index * gap, y: lineY }]));
-  const endOf = (end: FlowEnd): BoardSpot | null => ("orb" in end ? at.get(end.orb) ?? null : spotOf(end));
-  const newest = orbs.length ? at.get(orbs[orbs.length - 1].id)! : { x: x1 - ORB * 0.6, y: lineY };
-  const noteLeft = Math.min(Math.max(newest.x, x0 + 18), x1 - 18);
-  const fx: StreamFx = { soft: `url(#${uid}-soft)`, mid: `url(#${uid}-mid)`, run: `url(#${uid}-run)`, land: `url(#${uid}-land)` };
-  // A spell or a skill landing on the line shows big at the left for a moment (chủ game 21/10, câu 5), then flies
-  // into its orb; what ends meanwhile waits for it (`late`). Each orb sounds once as it lands, and once as it fires
-  // or fizzles. Worked out before the screen paints, so nothing flashes without its delay first.
+  const [tip, setTip] = useState<string | null>(null);
+  const lastTap = useRef<{ id: string; at: number } | null>(null);
+  // A spell or a skill landing shows big at the left for a moment (chủ game 21/10, câu 5), then flies into its icon;
+  // what ends meanwhile waits for it (`late`). Each icon sounds once as it shows, and once as it fires or fizzles.
+  // Worked out before the screen paints, so nothing flashes without its delay first.
   const [show, setShow] = useState<string | null>(null);
   const [late, setLate] = useState<ReadonlyMap<string, number>>(() => new Map());
   const heard = useRef(new Map<string, ChainOrb["end"]>());
+  /** When each icon showed (seconds): a flow that turns later (into a blocker) does not wait for the lunge again. */
+  const born = useRef(new Map<string, number>());
   const showing = useRef<{ id: string; at: number } | null>(null);
   useLayoutEffect(() => {
     const now = performance.now() / 1000;
@@ -195,6 +107,7 @@ export function ReactionLine({
       heard.current.set(orb.id, orb.end);
       if (!known) {
         landed = orb;
+        born.current.set(orb.id, now);
         if (orb.kind !== "attack") playLine("orb");
       }
       if (orb.end && orb.end !== was) ended.push(orb);
@@ -209,10 +122,68 @@ export function ReactionLine({
     for (const [index, orb] of ended.entries()) playLine(orb.end!, delays[index][1] + (orb.end === "fire" ? 0.1 : 0.08));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orbs]);
+  const lateOf = (orb: ChainOrb) => late.get(orb.id) ?? 0;
+  const close = Math.max(FIRE_TAIL, ...orbs.map((orb) => lateOf(orb) + (orb.end === "fizzle" ? FIZZLE_TAIL : FIRE_TAIL)));
+
+  // The smoke: every flow of every icon, from its icon (or where it says it leaves from) to where it lands.
+  const pointOf = (end: FlowEnd, from: { x: number; y: number }): { x: number; y: number; into: BoxPt } | null => {
+    if ("orb" in end) {
+      const spot = spots.get(end.orb);
+      if (!spot) return null;
+      // It lands on the rim of the icon facing it (in box units the icon's radius is ICON × 0.45), so the glow is not
+      // hidden under the icon.
+      const dir = unitDir((spot.x - from.x) * 0.9, (spot.y - from.y) * 1.6);
+      const rim = ICON * 0.45 * 0.8;
+      return { x: spot.x - (dir.x * rim) / 0.9, y: spot.y - (dir.y * rim) / 1.6, into: dir };
+    }
+    return endOf(end, from);
+  };
+  const flows: FlowSpec[] = [];
+  const now = performance.now() / 1000;
+  for (const orb of orbs) {
+    const here = spots.get(orb.id);
+    if (!here) continue;
+    const since = born.current.has(orb.id) ? now - born.current.get(orb.id)! : 0;
+    for (const link of orb.to) {
+      const start = link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
+      if (!start) continue;
+      const land = pointOf(link.end, start);
+      if (!land) continue;
+      const faceOut = !link.from && here.face !== 0 ? { x: 0, y: here.face } : unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
+      flows.push({
+        key: `${orb.id}|${link.from ? endKey(link.from) : "-"}|${endKey(link.end)}`,
+        a: toBox(start.x, start.y),
+        b: toBox(land.x, land.y),
+        out: faceOut,
+        into: land.into,
+        tone: link.tone,
+        done: orb.done,
+        end: orb.end,
+        late: lateOf(orb),
+        // An attack's blow is drawn on the board; only a blow into a blocker's icon surges into it (giao chiến).
+        strike: orb.kind === "attack" && !("orb" in link.end),
+        delay: link.from ? 0 : Math.max(0, here.delay - since),
+      });
+    }
+  }
+
+  const tapped = (orb: ChainOrb) => {
+    const now = performance.now();
+    const last = lastTap.current;
+    if (last && last.id === orb.id && now - last.at < DOUBLE_TAP) {
+      lastTap.current = null;
+      setTip(null);
+      onSheet(orb);
+      return;
+    }
+    lastTap.current = { id: orb.id, at: now };
+    setTip((current) => (current === orb.id ? null : orb.id));
+  };
+
   const shown = show ? orbs.find((orb) => orb.id === show) ?? null : null;
-  const showAt = shown ? at.get(shown.id) : null;
-  const lateOf = (orb: ChainOrb) => `${(late.get(orb.id) ?? 0).toFixed(2)}s`;
-  const close = Math.max(FIRE_TAIL, ...orbs.map((orb) => (late.get(orb.id) ?? 0) + (orb.end === "fizzle" ? FIZZLE_TAIL : FIRE_TAIL)));
+  const showAt = shown ? spots.get(shown.id) : null;
+  const tipOrb = tip ? orbs.find((orb) => orb.id === tip) ?? null : null;
+  const tipAt = tipOrb ? spots.get(tipOrb.id) : null;
 
   return (
     <div
@@ -222,81 +193,68 @@ export function ReactionLine({
         if (event.target === event.currentTarget && event.animationName === "rx-out") onClosed();
       }}
     >
-      <div className="rx-veil" style={{ "--rx-y": `${lineY}%` } as CSSProperties} />
-      <div className="rx-line" style={{ left: `${x0}%`, width: `${x1 - x0}%`, top: `${lineY}%` }} />
-      <svg className="rx-flows" viewBox="0 0 90 160" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <filter id={`${uid}-soft`} filterUnits="userSpaceOnUse" x="-20" y="-20" width="130" height="200">
-            <feGaussianBlur stdDeviation="1.8" />
-          </filter>
-          <filter id={`${uid}-mid`} filterUnits="userSpaceOnUse" x="-20" y="-20" width="130" height="200">
-            <feGaussianBlur stdDeviation="0.45" />
-          </filter>
-          <filter id={`${uid}-run`} filterUnits="userSpaceOnUse" x="-20" y="-20" width="130" height="200">
-            <feGaussianBlur stdDeviation="0.8" />
-          </filter>
-          <radialGradient id={`${uid}-land`}>
-            <stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
-            <stop offset="0.35" stopColor="#a6e8ff" stopOpacity="0.7" />
-            <stop offset="1" stopColor="#4fbaff" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <g>
-          {orbs.flatMap((orb) => {
-            const here = at.get(orb.id)!;
-            const outs = orb.to.map((end) => ({ end, spot: endOf(end) })).filter((row): row is { end: FlowEnd; spot: BoardSpot } => Boolean(row.spot));
-            // An attack flows from the attacker to what it hits; anything else from its orb.
-            const starts = orb.kind === "attack" ? orb.from.map((end) => endOf(end)).filter((spot): spot is BoardSpot => Boolean(spot)) : [here];
-            return starts.flatMap((start, s) =>
-              outs.map(({ end, spot }, index) => {
-                const arch = "orb" in end;
-                // A stream leaves a card from the edge that faces its target and lands on the edge that faces it.
-                const down = spot.y > start.y;
-                const from = arch ? start : edgeOf(start, down);
-                const to = arch ? spot : edgeOf(spot, !down);
-                // An attack's own hit is shown on the board (chủ game 22/10), so its stream just fades as it lands.
-                return <Stream key={`${orb.id}-${s}-${index}`} id={`${uid}-${orb.id}-${s}-${index}`} c={bezierOf(from, to, arch)} done={orb.done} end={orb.end} late={lateOf(orb)} fx={fx} strike={orb.kind === "attack"} />;
-              }),
-            );
-          })}
-        </g>
-      </svg>
+      <FlowCanvas flows={flows} />
       {orbs.map((orb) => {
+        const spot = spots.get(orb.id);
+        if (!spot) return null;
         const look = lookOf(orb);
-        const here = at.get(orb.id)!;
+        const react = orb.kind === "attack" ? "attack" : orb.kind === "skill" ? "skill" : orb.kind === "block" ? "block" : undefined;
         return (
           <button
             key={orb.id}
             type="button"
-            className={`rx-orb is-${look.attack ? "attack" : orb.kind}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}`}
-            style={{ left: `${here.x}%`, top: `${here.y}%`, width: `${ORB}cqw`, height: `${ORB}cqw`, "--tone": look.tone, "--late": lateOf(orb) } as CSSProperties}
+            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.ride ? " is-riding" : ""}${tip === orb.id ? " is-tipped" : ""}`}
+            data-react={react}
+            style={
+              {
+                left: `${spot.x}%`,
+                top: `${spot.y}%`,
+                width: `${ICON}cqw`,
+                height: `${ICON}cqw`,
+                "--late": `${lateOf(orb).toFixed(2)}s`,
+                "--ring": `var(--flow-${orb.tone})`,
+                ...(spot.ride ? { "--ride-x": `${spot.ride.x}cqw`, "--ride-y": `${spot.ride.y}cqh` } : {}),
+              } as CSSProperties
+            }
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation();
-              onOrb(orb);
+              tapped(orb);
             }}
           >
-            {look.attack ? (
-              <Medal tone="orange" icon="sword-brandish" />
-            ) : (
-              <span className="rx-face">
-                {look.src ? <img src={look.src} alt="" draggable={false} style={look.dark ? { filter: "brightness(0)" } : undefined} /> : null}
-                {look.dark ? <i className="rx-hidden">?</i> : null}
-                {orb.kind === "skill" && !look.dark ? (
-                  <i className="rx-badge">
-                    <Glyph name="sparkles" />
-                  </i>
-                ) : null}
-              </span>
-            )}
+            <IconFace look={look} />
           </button>
         );
       })}
+      {tipOrb && tipAt ? (
+        <p
+          key={tipOrb.id}
+          className={`rx-tip${tipAt.y > 48 ? " is-above" : " is-below"}`}
+          style={{ left: `${Math.min(Math.max(tipAt.x, 22), 78)}%`, top: `${tipAt.y}%` }}
+          onClick={() => setTip(null)}
+        >
+          {noteOf(tipOrb)}
+        </p>
+      ) : null}
+      {hint ? (
+        <p key={hintKey} className={`rx-hint${hintPinned ? " is-pinned" : ""}`}>
+          {hint}
+        </p>
+      ) : null}
       {shown && showAt ? (
         <div
           key={shown.id}
           className="rx-show"
-          style={{ left: `${SHOW_LEFT}%`, top: `${lineY}%`, width: `${SHOW_W}cqw`, "--dx": showAt.x - (SHOW_LEFT + SHOW_W / 2), "--shrink": ORB / SHOW_W } as CSSProperties}
+          style={
+            {
+              left: `${SHOW_LEFT}%`,
+              top: `${SHOW_Y}%`,
+              width: `${SHOW_W}cqw`,
+              "--dx": showAt.x - (SHOW_LEFT + SHOW_W / 2),
+              "--dy": showAt.y - SHOW_Y,
+              "--shrink": ICON / SHOW_W,
+            } as CSSProperties
+          }
           onAnimationEnd={(event) => {
             if (event.target !== event.currentTarget) return;
             showing.current = null;
@@ -306,11 +264,27 @@ export function ReactionLine({
           {cardOf(shown)}
         </div>
       ) : null}
-      {note ? (
-        <p key={noteKey} className={`rx-note${notePinned ? " is-pinned" : ""}`} style={{ left: `${noteLeft}%`, top: `${lineY}%` }}>
-          {note}
-        </p>
-      ) : null}
     </div>
+  );
+}
+
+/** The face of an icon: a medal, a skill's gem in its kind's rim, or a picture in a rim of its smoke's colour. */
+function IconFace({ look }: { look: IconLook }) {
+  if (look.type === "medal") return <Medal tone={look.tone} icon={look.icon} />;
+  if (look.type === "gem") {
+    return (
+      <span className={`rx-gem is-${look.kind}`}>
+        <span className="rx-gem-core">
+          <Glyph name={look.icon} />
+        </span>
+        <Rim kind={look.kind} />
+      </span>
+    );
+  }
+  return (
+    <span className="rx-art">
+      <span className="rx-art-pic">{look.src ? <img src={look.src} alt="" draggable={false} /> : null}</span>
+      <Rim kind={`flow-${look.ring}`} />
+    </span>
   );
 }

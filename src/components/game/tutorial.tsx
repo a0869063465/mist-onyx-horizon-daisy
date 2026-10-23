@@ -115,11 +115,11 @@ function steps(viewer: Side): Step[] {
     { focus: [], wait: "auto", ms: 1900, ribbon: "Lượt đối thủ" },
     { focus: [], wait: "foe-cast", clear: true },
     {
-      text: "Khi người chơi dùng ma pháp hoặc dùng quái thú **Tấn Công** vào đối phương. **Thanh phản ứng** sẽ hiện ra, cho phép người chơi còn lại ứng phó với nước đi đó.",
-      focus: [{ sel: ".rx-line" }],
+      text: "Khi người chơi dùng ma pháp hoặc dùng quái thú **Tấn Công** vào đối phương. **Icon phản ứng** sẽ hiện ra, cho phép người chơi còn lại ứng phó với nước đi đó.",
+      focus: [{ sel: ".rx-icon.is-spell" }],
       wait: "ok",
     },
-    { text: "Đối phương đang sử dụng **Sợi xích địa ngục** nhắm vào quái thú của bạn.", focus: [ownMon, { sel: ".rx-line" }], wait: "ok" },
+    { text: "Đối phương đang sử dụng **Sợi xích địa ngục** nhắm vào quái thú của bạn.", focus: [ownMon, { sel: ".rx-icon.is-spell" }], wait: "ok" },
     {
       text: "Những phép có thể sử dụng để ứng phó nhấp nháy, có nút **Use** là có thể sử dụng được. Hãy thử bấm.",
       focus: [{ sel: ".hand .hand-spell.is-use" }],

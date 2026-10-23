@@ -10170,107 +10170,98 @@ button.watch-back {
 }
 .stage .actions .act.medal-act:active { transform: translateY(1px) scale(0.95); filter: brightness(1.12); }
 
-/* Thanh phản ứng kiểu Runeterra (chủ game 21/10): a glowing line between the two fields with one orb per action,
-   flows from the acting monster into its orb and from the orb to what it acts on, and a blue veil over the board.
-   The notice board hides while the line is up; the notice of the moment shows as a small line by the newest orb. */
+/* Icon phản ứng (chủ game 23/10, in place of the fixed reaction line of 21/10): an icon by each card that acts (a
+   spell on its side's half), smoke from each icon to what it acts on, all above the cards. The notice board hides
+   while they show; a tap on an icon shows its notice beside it; a prompt to the player shows as a small line in the
+   middle for a few seconds. */
 .banner.is-quiet { visibility: hidden; }
-.rx { position: absolute; inset: 0; z-index: 13; pointer-events: none; }
+.rx {
+  --flow-red: #ff4b30;
+  --flow-blue: #3cb4ff;
+  --flow-pink: #ff4fa6;
+  --flow-white: #e9f3ff;
+  --flow-green: #3fe07c;
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+}
 .rx.is-closing { animation: rx-out 0.5s ease var(--close, 1.15s) forwards; }
 @keyframes rx-out { to { opacity: 0; } }
 @keyframes rx-in { from { opacity: 0; } }
-.rx-veil {
+.rx-smoke { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rx-icon {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgb(40 120 255 / 0.1) calc(var(--rx-y) - 24%),
-    rgb(70 160 255 / 0.24) var(--rx-y),
-    rgb(40 120 255 / 0.1) calc(var(--rx-y) + 24%),
-    transparent 100%
-  );
-  animation: rx-in 0.35s ease both;
-}
-.rx-line {
-  position: absolute;
-  height: 12cqw;
-  transform: translateY(-50%);
-  animation: rx-in 0.35s ease both;
-}
-.rx-line::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 0.7cqw;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #7fd0ff 10%, #e8f7ff 50%, #7fd0ff 90%, transparent);
-  box-shadow: 0 0 2cqw 0.4cqw rgb(80 170 255 / 0.8), 0 0 5cqw 1cqw rgb(40 120 255 / 0.45);
-}
-.rx-line::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1.6cqw;
-  transform: translateY(-50%);
-  background: radial-gradient(circle, #fff 0 0.32cqw, transparent 0.6cqw) 0 50% / 9cqw 100% repeat-x;
-  opacity: 0.75;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
-  animation: rx-sparks 2.4s linear infinite;
-}
-@keyframes rx-sparks { to { background-position: 9cqw 50%; } }
-.rx-flows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-/* The streams, as in Runeterra: soft light blue, a blurred halo that breathes, a body that brightens toward where it
-   lands, a fine bright thread, two lights running along it, and a glow where it lands. No dashes. */
-.rx-stream .rx-halo { fill: #1e8fff; opacity: 0.5; animation: rx-breathe 1.8s ease-in-out infinite; }
-.rx-stream .rx-edge { fill: #0b5fc4; opacity: 0.32; }
-.rx-stream .rx-body { opacity: 0.85; animation: rx-sway 1.4s ease-in-out infinite; }
-.rx-stream .rx-body.is-twin { animation-delay: -0.7s; }
-.rx-stream .rx-thread { fill: none; stroke: #f2fdff; stroke-width: 0.45; stroke-linecap: round; opacity: 0.85; }
-.rx-stream .rx-run { fill: none; stroke: #ffffff; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 10 90; opacity: 0.7; animation: rx-run 1.5s linear infinite; }
-.rx-stream .rx-run.is-late { animation-delay: -0.75s; }
-.rx-stream .rx-rise { opacity: 0.6; }
-.rx-stream .rx-land { transform-box: fill-box; transform-origin: center; animation: rx-land 1.3s ease-in-out infinite; }
-.rx-stream.is-done { animation: rx-flow-settle 1.5s ease both; }
-.rx-stream.is-done .rx-run,
-.rx-stream.is-done .rx-rise,
-.rx-stream.is-done .rx-land { display: none; }
-@keyframes rx-run { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
-@keyframes rx-breathe { 50% { opacity: 0.32; } }
-@keyframes rx-sway { 50% { opacity: 0.55; } }
-@keyframes rx-land { 50% { opacity: 0.6; transform: scale(1.3); } }
-@keyframes rx-flow-settle { 0%, 40% { opacity: 1; } 100% { opacity: 0.22; } }
-.rx-orb {
-  position: absolute;
-  z-index: 3;
+  z-index: 2;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: none;
   transform: translate(-50%, -50%);
   pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
-.rx-orb.is-live { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-live 1.6s ease-in-out 0.5s infinite; }
-.rx-orb.is-done > * { animation: rx-settle 1.5s ease both; }
+.rx-icon.is-live { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-live 1.6s ease-in-out 0.5s infinite; }
+/* An attacker's icon rides out with its lunging card: the card's own time and curve. */
+.rx-icon.is-live.is-riding {
+  animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-ride 1.15s cubic-bezier(0.18, 0.7, 0.2, 1) both, rx-live 1.6s ease-in-out 1.15s infinite;
+}
+@keyframes rx-ride { from { translate: var(--ride-x, 0) var(--ride-y, 0); } }
+.rx-icon.is-done > * { animation: rx-settle 1.5s ease both; }
+.rx-icon.is-tipped { z-index: 3; }
 @keyframes rx-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.2); } }
-@keyframes rx-live { 50% { filter: brightness(1.2) drop-shadow(0 0 1.6cqw var(--tone)); } }
-@keyframes rx-settle { 0%, 40% { opacity: 1; filter: none; } 100% { opacity: 0.5; filter: saturate(0.45) brightness(0.8); } }
-.rx-orb .medal { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.6)); }
-.rx-face {
+@keyframes rx-live { 50% { filter: brightness(1.2) drop-shadow(0 0 1.6cqw var(--ring)); } }
+@keyframes rx-settle { 0%, 40% { opacity: 1; filter: none; } 100% { opacity: 0.55; filter: saturate(0.5) brightness(0.85); } }
+.rx-icon .medal { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.65)); }
+/* A skill's gem, as on the monster sheet: its glyph on a glossy face under a rim, both in its kind's colour. */
+.rx-gem {
+  --ring: #3ec6ff;
+  --deep: #0b2a4a;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: 0 0 2.2cqw 0.4cqw color-mix(in srgb, var(--ring) 70%, transparent), 0 0.8cqw 1.2cqw rgb(0 0 0 / 0.65);
+}
+.rx-gem.is-passive { --ring: #b45cff; --deep: #2a0d4a; }
+.rx-gem.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.rx-gem.is-spell { --ring: #ff4f93; --deep: #4a0622; }
+.rx-gem-core {
+  position: absolute;
+  inset: 10%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--ring) 35%, #ffffff) 0%, var(--ring) 34%, var(--deep) 82%);
+  box-shadow: inset 0 -1.2cqw 1.5cqw rgb(0 0 0 / 0.6), inset 0 0.7cqw 1cqw rgb(255 255 255 / 0.4);
+}
+.rx-gem-core::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 6%;
+  height: 40%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0));
+  pointer-events: none;
+}
+.rx-gem-core .glyph3d { width: 62%; height: 62%; }
+.rx-gem .rim3d, .rx-art .rim3d { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* A card's picture (a spell, Sừng lôi phá's strike) under a rim of its smoke's colour. */
+.rx-art {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #10131c;
-  box-shadow: 0 0 0 0.55cqw #f1d48a, 0 0 0 1cqw rgb(20 16 10 / 0.85), 0 0 2.6cqw 0.6cqw var(--tone), 0 2px 4px rgb(0 0 0 / 0.6);
+  box-shadow: 0 0 2.2cqw 0.4cqw color-mix(in srgb, var(--ring) 65%, transparent), 0 0.8cqw 1.2cqw rgb(0 0 0 / 0.65);
 }
-.rx-face img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 28%; }
-.rx-face::after {
+.rx-art-pic { position: absolute; inset: 9%; border-radius: 50%; overflow: hidden; background: #10131c; }
+.rx-art-pic img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
+.rx-art-pic::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -10278,31 +10269,9 @@ button.watch-back {
   background: radial-gradient(circle at 35% 25%, rgb(255 255 255 / 0.35), transparent 45%), radial-gradient(circle, transparent 55%, rgb(0 0 0 / 0.45));
   pointer-events: none;
 }
-.rx-badge {
-  position: absolute;
-  right: -6%;
-  bottom: -6%;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 44%;
-  height: 44%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #bfe6ff, #1f84e8 60%, #0a2c66);
-  box-shadow: 0 0 0 0.35cqw #f1d48a, 0 1px 2px rgb(0 0 0 / 0.6);
-}
-.rx-badge .glyph3d { width: 70%; height: 70%; }
-.rx-hidden {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: #cfe3ff;
-  font: 800 6cqw/1 "Barlow Condensed", system-ui, sans-serif;
-  font-style: normal;
-  text-shadow: 0 0 1.5cqw #4aa8ff;
-}
-.rx-note {
+/* A tap: the icon's notice beside it. A prompt: a small line in the middle that fades. */
+.rx-tip,
+.rx-hint {
   position: absolute;
   z-index: 4;
   max-width: 66%;
@@ -10310,33 +10279,30 @@ button.watch-back {
   padding: 1cqw 2.4cqw;
   border: 1px solid rgb(120 190 255 / 0.55);
   border-radius: 2cqw;
-  background: rgb(8 14 28 / 0.88);
+  background: rgb(8 14 28 / 0.9);
   box-shadow: 0 0 2cqw rgb(60 150 255 / 0.35);
   color: #eef6ff;
   font: 600 3.6cqw/1.25 "Barlow Condensed", system-ui, sans-serif;
   text-align: center;
   white-space: pre-line;
-  transform: translate(-50%, calc(-100% - 7.5cqw));
-  pointer-events: none;
-  animation: rx-note 3.6s ease both;
 }
-.rx-note.is-pinned { animation: rx-in 0.25s ease both; }
-@keyframes rx-note {
-  0% { opacity: 0; transform: translate(-50%, calc(-100% - 6cqw)); }
-  10%, 80% { opacity: 1; transform: translate(-50%, calc(-100% - 7.5cqw)); }
-  100% { opacity: 0; transform: translate(-50%, calc(-100% - 7.5cqw)); }
-}
+.rx-tip { width: max-content; pointer-events: auto; animation: rx-in 0.18s ease both; }
+.rx-tip.is-above { transform: translate(-50%, calc(-100% - 6.4cqw)); }
+.rx-tip.is-below { transform: translate(-50%, 6.4cqw); }
+.rx-hint { left: 50%; top: 48%; width: max-content; transform: translate(-50%, -50%); pointer-events: none; animation: rx-hint 3.4s ease both; }
+.rx-hint.is-pinned { animation: rx-in 0.25s ease both; }
+@keyframes rx-hint { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
 
-/* Thanh phản ứng, bước 2: as the wait ends its orb fires (a flash, a bolt of light down each stream, a burst where it
-   lands) or fizzles (shakes, greys and shrinks, its streams fade) when an answer stopped it. Answers fire as they
-   land. A spell or a skill landing on the line first shows big at the left, then flies into its orb. */
-.rx-orb.is-fire { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fire 0.5s ease-out calc(0.08s + var(--late, 0s)) forwards; }
-.rx-orb.is-fire > * { animation: rx-settle 1.2s ease calc(0.6s + var(--late, 0s)) both; }
-.rx-orb.is-fizzle { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fizzle 0.7s ease-in calc(0.1s + var(--late, 0s)) forwards; }
-.rx-orb.is-fizzle > * { animation: none; }
+/* As the wait ends, the icon of what waited fires (a flash; its smoke surges to where it lands and blooms there) or
+   fizzles (shakes, greys and shrinks; its smoke thins away) when an answer stopped it. Answers fire as they land. A
+   spell or a skill landing first shows big at the left, then flies into its icon. */
+.rx-icon.is-fire { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fire 0.5s ease-out calc(0.08s + var(--late, 0s)) forwards; }
+.rx-icon.is-fire > * { animation: rx-settle 1.2s ease calc(0.6s + var(--late, 0s)) both; }
+.rx-icon.is-fizzle { animation: rx-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both, rx-fizzle 0.7s ease-in calc(0.1s + var(--late, 0s)) forwards; }
+.rx-icon.is-fizzle > * { animation: none; }
 @keyframes rx-fire {
   0% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
-  30% { filter: brightness(2.2) drop-shadow(0 0 3cqw #9fe9ff); transform: translate(-50%, -50%) scale(1.3); }
+  30% { filter: brightness(2.2) drop-shadow(0 0 3cqw var(--ring)); transform: translate(-50%, -50%) scale(1.3); }
   100% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes rx-fizzle {
@@ -10345,33 +10311,6 @@ button.watch-back {
   30% { transform: translate(calc(-50% + 1.2cqw), -50%) rotate(8deg); }
   45% { opacity: 1; filter: none; transform: translate(-50%, -50%); }
   100% { opacity: 0.45; filter: grayscale(1) brightness(0.55); transform: translate(-50%, -50%) scale(0.72); }
-}
-.rx-stream.is-fire { animation: rx-flow-settle 1.5s ease calc(0.6s + var(--late, 0s)) both; }
-.rx-stream.is-fizzle { animation: rx-fizzle-flow 0.6s ease var(--late, 0s) both; }
-.rx-stream.is-fire.is-strike { animation: rx-strike-out 0.3s ease-out calc(0.1s + var(--late, 0s)) both; }
-@keyframes rx-strike-out { to { opacity: 0; } }
-@keyframes rx-fizzle-flow { to { opacity: 0.08; } }
-.rx-stream .rx-bolt {
-  fill: none;
-  stroke: #bff0ff;
-  stroke-width: 6.5;
-  stroke-linecap: round;
-  /* One dash with a gap longer than the stream (pathLength 100), so no second bolt follows it in; it starts and ends
-     just off the stream, where its round caps cannot leave a dot. */
-  stroke-dasharray: 24 176;
-  stroke-dashoffset: 25;
-  opacity: 0;
-  animation: rx-bolt 0.4s ease-in calc(0.1s + var(--late, 0s)) forwards;
-}
-.rx-stream .rx-bolt.is-core { stroke: #ffffff; stroke-width: 2.6; }
-@keyframes rx-bolt {
-  0% { opacity: 1; stroke-dashoffset: 25; }
-  100% { opacity: 1; stroke-dashoffset: -101; }
-}
-.rx-stream .rx-hit { opacity: 0; transform-box: fill-box; transform-origin: center; animation: rx-hit 0.55s ease-out calc(0.44s + var(--late, 0s)) forwards; }
-@keyframes rx-hit {
-  0% { opacity: 1; transform: scale(0.2); }
-  100% { opacity: 0; transform: scale(1.6); }
 }
 .rx-show {
   position: absolute;
@@ -10385,7 +10324,7 @@ button.watch-back {
   0% { opacity: 0; transform: translate(-30%, -50%) scale(0.6); }
   14% { opacity: 1; transform: translate(0, -50%) scale(1); }
   72% { opacity: 1; transform: translate(0, -50%) scale(1); }
-  100% { opacity: 0.2; transform: translate(calc(var(--dx) * 1cqw), -50%) scale(var(--shrink)); }
+  100% { opacity: 0.2; transform: translate(calc(var(--dx) * 1cqw), calc(-50% + var(--dy) * 1cqh)) scale(var(--shrink)); }
 }
 .rx-show-name {
   display: block;

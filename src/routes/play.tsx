@@ -135,9 +135,8 @@ import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
-import { ReactionLine, type BoardSpot as LineSpot, type OrbLook } from "@/components/game/reaction-line";
+import { ICON, ReactionLine, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd } from "@/lib/reaction-chain";
-import { spellKind } from "@/lib/spell-kinds";
 import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
@@ -539,6 +538,11 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
   return { uid: self.uid, room: knightRoom(self, other, duel.players[viewer].field, foeAllies) };
 }
 
+/** How far an attacker lunges toward what it hits while the other side may answer: about a quarter of the way, so the
+ *  reaction icons have room (chủ game 23/10). */
+const LUNGE_FACE = 0.24;
+const LUNGE_MELEE = 0.3;
+
 function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
   const pending = duel.pending;
   if (duel.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee") || pending.attacker !== uid) return null;
@@ -563,7 +567,7 @@ function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: num
     : -1;
   const to = pending.kind === "face" ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
   if (!to) return null;
-  const travel = pending.kind === "face" ? 0.42 : 0.56;
+  const travel = pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE;
   const dx = to.x + to.w / 2 - (from.x + from.w / 2);
   const dy = to.y + to.h / 2 - (from.y + from.h / 2);
   return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
@@ -584,7 +588,7 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
   if (fromIndex < 0) return null;
   const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
   const face = HP_BOX[screenSide((1 - fromSide) as Side, viewer)];
-  const travel = 0.42;
+  const travel = LUNGE_FACE;
   return {
     x: from.x + from.w / 2 + (face.x + face.w / 2 - (from.x + from.w / 2)) * travel,
     y: from.y + from.h / 2 + (face.y + face.h / 2 - (from.y + from.h / 2)) * travel,
@@ -1494,7 +1498,7 @@ function PlayPage() {
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
   const [inspect, setInspect] = useState<Inspect | null>(null);
   const [strike, setStrike] = useState<Strike | null>(null);
-  const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string } | null>(null);
+  const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string } | null>(null);
   const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
@@ -1542,6 +1546,8 @@ function PlayPage() {
   const openerWant = useRef<{ side: Side; pick: OpenerPick } | null>(null);
   /** The slot of each monster the reaction line points at, so a stream still lands where one fell as its orb fired. */
   const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
+  // Where each reaction icon stood: an icon that has done its work stays put while the others fade.
+  const keptSpots = useRef(new Map<string, IconSpot>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
@@ -1997,10 +2003,13 @@ function PlayPage() {
     if (loaded && introSeen && openerLive) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
 
-  // The reaction line fades out a moment after the wait is over and then reports it (onClosed); this is the backstop
-  // in case the fade never runs (the line hidden in Tuỳ chỉnh).
+  // The reaction icons fade out a moment after the wait is over and then report it (onClosed); this is the backstop
+  // in case the fade never runs.
   useEffect(() => {
-    if (chain.length === 0) lineSeats.current.clear();
+    if (chain.length === 0) {
+      lineSeats.current.clear();
+      keptSpots.current.clear();
+    }
     if (duel?.step === "respond" || chain.length === 0) return;
     const timer = window.setTimeout(() => setChain((list) => (list.every((orb) => orb.done) ? [] : list)), 5000);
     return () => window.clearTimeout(timer);
@@ -2036,6 +2045,7 @@ function PlayPage() {
     const viewerNow: Side = viewerSide(duel, boardActor(duel), netRef.current?.seat ?? null);
     if (seenViewer.current !== viewerNow) {
       seenViewer.current = viewerNow;
+      keptSpots.current.clear();
       setFloaters([]);
       setMotion({ pops: [], lunges: [], hits: [] });
       setBurst(null);
@@ -2779,15 +2789,9 @@ function PlayPage() {
   const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
   const beam = duel.pending?.kind === "beam" ? duel.pending : null;
-  const horning = hornPending(duel);
-  const gazePending = Boolean(
-    duel.pending &&
-      (duel.pending.kind === "face" || duel.pending.kind === "melee") &&
-      fieldMon(duel, duel.pending.attacker)?.gaze &&
-      !fieldMon(duel, duel.pending.attacker)?.horn,
-  );
   const groupedShot = shotLook(duel, duel.pending);
-  const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : horning ? you.field.some((unit) => unit?.uid === (duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending.attacker : "")) : false;
+  // Sừng lôi phá's strike has its attack icon now (chủ game 23/10); the bar stays for skills until đợt 2.
+  const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : false;
   const board = matchBoard(foe.env, you.env);
   // Before the transition effect has run, a blow about to land still shows the HP it hits at its old value.
   const lastDuel = prevDuel.current;
@@ -3729,7 +3733,7 @@ function PlayPage() {
   const formOf = (mon: FieldMon) =>
     mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
-  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string) => (
+  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string) => (
     <RelatedFlow
       id={formOf(mon)}
       onClose={onClose}
@@ -3743,6 +3747,7 @@ function PlayPage() {
           note={note}
           onClose={onClose}
           onArt={onArt}
+          startSkill={startSkill}
         />
       )}
     />
@@ -3751,51 +3756,146 @@ function PlayPage() {
   const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null)) : null;
   const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
   const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
-  const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined) : null;
+  const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined, look?.skill) : null;
 
-  // Thanh phản ứng: where each flow ends and how each orb looks from the viewer's seat. A striker hidden by Biển
-  // sâu shows as a plain attack and the hats of Mũ ma pháp stay hats, as on the board and in the notices.
-  const lineOn = chain.length > 0 && !board.reaction.hidden;
-  const orbSpot = (end: FlowEnd): LineSpot | null => {
+  // Icon phản ứng (chủ game 23/10): where each icon stands and where its smoke lands, from the viewer's seat. An icon
+  // stands at the middle of its card's edge that faces the middle (under a card of the top row, over one of the
+  // bottom row); a spell stands on its side's half, by the icon it answers, or in the middle of that half. A monster
+  // hidden by Biển sâu or under a hat does not show its skill, as on the board and in the notices.
+  const lineOn = chain.length > 0;
+  const seatOfUid = (uid: string): { side: Side; index: number } | null => {
+    let seat: { side: Side; index: number } | null = null;
+    for (const side of [0, 1] as const) {
+      const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
+      if (index >= 0) seat = { side, index };
+    }
+    if (seat) lineSeats.current.set(uid, seat);
+    else seat = lineSeats.current.get(uid) ?? null;
+    return seat;
+  };
+  /** A card on the board in % of the board: its middle where it stands now (an attacker lunges), its size and row. */
+  const cardSpot = (uid: string) => {
+    const seat = seatOfUid(uid);
+    if (!seat) return null;
+    const row = screenSide(seat.side, viewer);
+    const box = SLOT_BOX[row][seat.index];
+    const lunge = attackShift(duel, uid, viewer);
+    const dx = lunge ? (lunge.x * box.w) / 100 : 0;
+    const dy = lunge ? (lunge.y * box.h) / 100 : 0;
+    return { x: box.x + box.w / 2 + dx, y: box.y + box.h / 2 + dy, h: box.h, top: row === 1, dx, dy };
+  };
+  const iconSpots = new Map<string, IconSpot>();
+  {
+    const tall = ICON * (9 / 16);
+    const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, ((y - other.y) * 16) / 9) >= ICON * 1.08);
+    for (const orb of chain) {
+      const kept = keptSpots.current.get(orb.id);
+      // Once the wait is over an icon stays where it stood (the attacker leaves its lunge before its icon fires).
+      if (kept && (orb.done || !responding)) {
+        iconSpots.set(orb.id, kept);
+        continue;
+      }
+      let spot: IconSpot | null = null;
+      const card = orb.near ? cardSpot(orb.near) : null;
+      if (card) {
+        const lunging = card.dx !== 0 || card.dy !== 0;
+        spot = {
+          x: card.x,
+          y: card.top ? card.y + card.h / 2 + tall * 0.15 : card.y - card.h / 2 - tall * 0.15,
+          face: card.top ? 1 : -1,
+          // An attacker's icon rides out with its card; its smoke starts as the card arrives.
+          ride: orb.kind === "attack" && lunging ? { x: -card.dx, y: -card.dy } : null,
+          delay: orb.kind === "attack" && lunging ? 0.75 : 0,
+        };
+      } else if (!orb.near) {
+        const mine = orb.side === viewer;
+        const halfY = mine ? 56 : 40;
+        const anchor = orb.by ? iconSpots.get(orb.by) ?? null : null;
+        let x = 44;
+        let y = halfY;
+        if (anchor && anchor.y > 48 === mine) {
+          x = anchor.x + (anchor.x < 50 ? ICON * 1.8 : -ICON * 1.8);
+          y = anchor.y;
+        } else if (anchor) {
+          x = anchor.x;
+        }
+        const from = x;
+        for (let step = 1; step <= 8 && !clear(x, y); step += 1) {
+          x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, from + (step % 2 ? 1 : -1) * Math.ceil(step / 2) * ICON * 1.15));
+        }
+        spot = { x, y, face: 0, ride: null, delay: 0 };
+      }
+      if (!spot) spot = kept ?? null;
+      if (!spot) continue;
+      iconSpots.set(orb.id, spot);
+      keptSpots.current.set(orb.id, spot);
+    }
+  }
+  /** Where a flow lands on a card (the middle of its edge facing the flow) or on a player's HP. */
+  const flowEnd = (end: FlowEnd, from: { x: number; y: number }): EndSpot | null => {
     if ("orb" in end) return null;
     if ("face" in end) {
       const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
-      return { x: mark.x, y: mark.y };
+      const dx = (mark.x - from.x) * 0.9;
+      const dy = (mark.y - from.y) * 1.6;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len } };
     }
-    let seat: { side: Side; index: number } | null = null;
-    for (const side of [0, 1] as const) {
-      const index = duel.players[side].field.findIndex((mon) => mon?.uid === end.uid);
-      if (index >= 0) seat = { side, index };
-    }
-    if (seat) lineSeats.current.set(end.uid, seat);
-    else seat = lineSeats.current.get(end.uid) ?? null;
-    if (!seat) return null;
-    const box = SLOT_BOX[screenSide(seat.side, viewer)][seat.index];
-    // The attacker stands where it lunged to, so its stream leaves from the card itself.
-    const lunge = attackShift(duel, end.uid, viewer);
-    return { x: box.x + box.w / 2 + (lunge ? (lunge.x * box.w) / 100 : 0), y: box.y + box.h / 2 + (lunge ? (lunge.y * box.h) / 100 : 0), w: box.w, h: box.h };
+    const card = cardSpot(end.uid);
+    if (!card) return null;
+    const below = from.y > card.y;
+    return { x: card.x, y: below ? card.y + card.h * 0.46 : card.y - card.h * 0.46, into: { x: 0, y: below ? -1 : 1 } };
   };
-  const orbLook = (orb: ChainOrb): OrbLook => {
-    if (orb.kind === "spell") return { src: orb.spell ? spellSrc(orb.spell) : null, dark: false, attack: false, tone: spellKind(orb.spell ?? "").tone };
+  const hiddenMon = (orb: ChainOrb) => {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
-    if (orb.kind === "attack" || (orb.source && seaVeiled(duel, viewer, orb.source))) return { src: null, dark: false, attack: true, tone: "#ff9a3c" };
-    const hat = orb.side !== viewer && duel.players[orb.side].hats && (mon?.cardId ?? orb.cardId) !== "mu";
-    const cardId = hat ? "mu" : mon?.cardId ?? orb.cardId;
-    return { src: cardId ? artSrc(cardId, hat ? 1 : mon?.level ?? 1) : null, dark: false, attack: false, tone: "#5cc8ff" };
+    return Boolean(orb.source && seaVeiled(duel, viewer, orb.source)) || (orb.side !== viewer && duel.players[orb.side].hats && (mon?.cardId ?? orb.cardId) !== "mu");
   };
-  const openOrb = (orb: ChainOrb) => {
+  /** The skill an icon stands for, as on the monster sheet: its name, glyph and kind. */
+  const iconSkill = (orb: ChainOrb): { name: string; icon: string; kind: string } | null => {
+    const mon = orb.source ? fieldMon(duel, orb.source) : null;
+    const cardId = mon ? formOf(mon) : orb.cardId;
+    if (!cardId) return null;
+    const book = skillsOf(cardId, monsterCard(cardId)?.skill ?? "");
+    const label = orb.skill === "lash" ? chipLabel(cardId, "lash") : orb.skill !== null ? castName(cardId, orb.skill) : "";
+    const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+    const hit = label
+      ? book.find((row) => same(row.name, label)) ?? book.find((row) => label.toLowerCase().startsWith(row.name.toLowerCase()))
+      : book.find((row) => row.kind === "active" || row.kind === "risk");
+    const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
+    return { name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind };
+  };
+  const iconLook = (orb: ChainOrb): IconLook => {
+    if (orb.kind === "block") return { type: "medal", tone: "gold", icon: "crossed-swords" };
+    if (orb.kind === "spell") return { type: "art", src: orb.spell ? spellSrc(orb.spell) : null, ring: orb.tone };
+    if (orb.kind === "attack" && orb.strike === "horn") return { type: "art", src: spellSrc("sung-loi-pha"), ring: "blue" };
+    if (orb.kind === "attack" && orb.strike !== "gaze") return { type: "medal", tone: "red", icon: "sword-brandish" };
+    if (hiddenMon(orb)) return { type: "gem", icon: "sparkles", kind: "active" };
+    const skill = iconSkill(orb);
+    return { type: "gem", icon: skill?.icon ?? "sparkles", kind: skill?.kind ?? "active" };
+  };
+  const iconNote = (orb: ChainOrb): ReactNode => {
+    const text = orb.notice || (orb.spell ? spellCard(orb.spell)?.name ?? "" : "");
+    return text ? <NoticeText text={veilNotice(spoken(text, viewer), duel, viewer)} /> : null;
+  };
+  // Two quick taps on an icon: its card. A skill's sheet opens on that skill (chủ game 23/10).
+  const openIcon = (orb: ChainOrb) => {
     if (orb.kind === "spell" && orb.spell) {
       setInspect({ pile: "env", id: orb.spell });
+      return;
+    }
+    if (orb.strike === "horn") {
+      setInspect({ pile: "env", id: "sung-loi-pha" });
       return;
     }
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
     if (!mon) return;
     const side: Side = duel.players[0].field.some((unit) => unit?.uid === mon.uid) ? 0 : 1;
-    if (seaVeiled(duel, viewer, mon.uid) || (side !== viewer && duel.players[side].hats && mon.cardId !== "mu")) {
+    if (hiddenMon(orb)) {
       setLook({ name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." });
       return;
     }
-    setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid });
+    const skill = orb.kind === "skill" || orb.strike === "gaze" ? iconSkill(orb)?.name : undefined;
+    setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid, skill });
   };
   // The big card as a spell or a skill lands on the line: the spell, or the monster with its skill's name. A monster
   // hidden by Biển sâu or under a hat shows none.
@@ -3864,7 +3964,9 @@ function PlayPage() {
     ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: you.spellDeck.length > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
-  const lineText = pinnedLine ?? toast;
+  // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
+  // player (a wrong move, a pick to make) and shows by itself for a few seconds (chủ game 23/10).
+  const lineText = pinnedLine ?? (toast && !chain.some((orb) => orb.notice === toast) ? toast : "");
   const fuseHeld = fuseShow ? you.reserve[fuseShow.index] : undefined;
   const fusePartner = fuseShow ? you.field.find((mon) => mon?.uid === fuseShow.uid) ?? null : null;
   const fuseThird = fuseShow?.third ? you.field.find((mon) => mon?.uid === fuseShow.third) ?? null : null;
@@ -4140,16 +4242,15 @@ function PlayPage() {
           <ReactionLine
             orbs={chain}
             closing={!responding}
-            lineY={board.reaction.y + board.reaction.h / 2}
-            x0={board.notice.x}
-            x1={board.notice.x + board.notice.w}
-            spotOf={orbSpot}
-            lookOf={orbLook}
-            note={lineText ? <NoticeText text={veilNotice(spoken(lineText, viewer), duel, viewer)} /> : null}
-            noteKey={`${pinnedId ?? ""}:${lineText}`}
-            notePinned={pinnedLine !== null}
+            spots={iconSpots}
+            endOf={flowEnd}
+            lookOf={iconLook}
+            noteOf={iconNote}
+            hint={responding && lineText ? <NoticeText text={veilNotice(spoken(lineText, viewer), duel, viewer)} /> : null}
+            hintKey={`${pinnedId ?? ""}:${lineText}`}
+            hintPinned={pinnedLine !== null}
             cardOf={orbCard}
-            onOrb={openOrb}
+            onSheet={openIcon}
             onClosed={() => setChain((list) => (list.every((orb) => orb.done) ? [] : list))}
           />
         ) : null}
@@ -4934,7 +5035,7 @@ function PlayPage() {
           );
         })}
         <div className={`lane${drag?.kind === "unit" || aim?.kind === "attack" ? " is-hot" : ""}`} />
-        {(beam && !groupedShot && !seaVeiled(duel, viewer, beam.caster)) || (horning && !groupedShot && !gazePending) ? <div className={`attack-beam${beamFromBottom ? " from-bottom" : " from-top"}`} data-beam="1" /> : null}
+        {beam && !groupedShot && !seaVeiled(duel, viewer, beam.caster) ? <div className={`attack-beam${beamFromBottom ? " from-bottom" : " from-top"}`} data-beam="1" /> : null}
         <div className="floaters">
           {floaters.filter((item) => !item.heal).map((item) => (
             <span key={item.id} className="floater" style={floaterStyle(item)}>

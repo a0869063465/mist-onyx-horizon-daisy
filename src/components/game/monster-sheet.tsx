@@ -25,6 +25,9 @@ function mixHex(hex: string, to: string, t: number) {
 }
 
 /** Rim gradient stops in the skills' pattern (light, colour, pale, dark, light colour) for one colour. */
+/** Rim colours of the reaction icons, by the colour of their smoke. */
+const FLOW_RIMS: Record<string, string> = { red: "#e8352c", blue: "#2f9cf0", pink: "#ff4fa6", white: "#c9d6ea", green: "#2fc56a" };
+
 function rimStops(tone: string): string[] {
   return [mixHex(tone, "#ffffff", 0.85), tone, mixHex(tone, "#ffffff", 0.7), mixHex(tone, "#000000", 0.65), mixHex(tone, "#ffffff", 0.3)];
 }
@@ -112,6 +115,14 @@ export function GlyphDefs() {
           <linearGradient key={kind.key} id={`rim3d-sp-${kind.key}`} x1="0" y1="0" x2="1" y2="1">
             {rimStops(kind.tone).map((color, at) => (
               <stop key={at} offset={[0, 0.3, 0.5, 0.75, 1][at]} stopColor={color} />
+            ))}
+          </linearGradient>
+        ))}
+        {/* Rims of the reaction icons in their smoke's colour (chủ game 23/10). */}
+        {Object.entries(FLOW_RIMS).map(([tone, color]) => (
+          <linearGradient key={tone} id={`rim3d-flow-${tone}`} x1="0" y1="0" x2="1" y2="1">
+            {rimStops(color).map((stop, at) => (
+              <stop key={at} offset={[0, 0.3, 0.5, 0.75, 1][at]} stopColor={stop} />
             ))}
           </linearGradient>
         ))}
@@ -243,6 +254,7 @@ export function MonsterSheet({
   onClose,
   onArt,
   onBack,
+  startSkill,
 }: {
   name: string;
   card: ReactNode;
@@ -263,10 +275,14 @@ export function MonsterSheet({
   onArt?: () => void;
   /** A sheet opened from the fan: "<<" (and a tap outside the sheet) goes back to the fan. */
   onBack?: () => void;
+  /** A sheet opened from a reaction icon opens on the skill being used (chủ game 23/10): its name or button label. */
+  startSkill?: string;
 }) {
-  const first = skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
+  const wanted = startSkill?.trim().toLowerCase() ?? "";
+  const startAt = wanted ? skills.findIndex((skill) => skill.name.toLowerCase() === wanted || wanted.startsWith(skill.name.toLowerCase())) : -1;
+  const first = startAt >= 0 ? `s${startAt}` : skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
   const [picked, setPicked] = useState(first);
-  useEffect(() => setPicked(first), [name]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setPicked(first), [name, startSkill]); // eslint-disable-line react-hooks/exhaustive-deps
   // Skills that come together stay in one group, in the row of the first of them.
   const groups: Array<Array<{ skill: SkillShown; index: number }>> = [];
   skills.forEach((skill, index) => {
