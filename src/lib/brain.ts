@@ -65,7 +65,7 @@ export type Act =
   | ["ask"]
   | ["old"]
   | ["pass"]
-  | ["draw", "monster" | "spell"]
+  | ["draw"]
   | ["summon", number, 0 | 1 | 2]
   | ["vow", number, 0 | 1 | 2, string]
   | ["fuse", number, string, 0 | 1 | 2]
@@ -96,7 +96,7 @@ export function runAct(state: Duel, act: Act): Duel {
     case "pass":
       return passResponse(state);
     case "draw":
-      return draw(state, act[1]);
+      return draw(state);
     case "summon":
       return summon(state, act[1], act[2]);
     case "vow":
@@ -405,8 +405,7 @@ export function mainMoves(state: Duel): Move[] {
   const list: Move[] = [];
   const me = state.players[ME];
   if (me.draws < 1 && !me.drawLock) {
-    tryMove(list, state, ["draw", "monster"], true);
-    tryMove(list, state, ["draw", "spell"], true);
+    tryMove(list, state, ["draw"], true);
   }
   const free = me.field.findIndex((mon, at) => !mon && (me.locked?.[at] ?? 0) === 0);
   const own = live(me.field);

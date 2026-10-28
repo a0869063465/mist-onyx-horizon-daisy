@@ -4,7 +4,7 @@ import { DeckRow } from "@/components/deck-row";
 import { CardFace } from "@/components/game/card-face";
 import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
-import { artSrc, DEFAULT_DECK, DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
+import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
 import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
@@ -192,8 +192,8 @@ function DeckPage() {
   const issue = deckIssues(deck);
   const balance = deckBalance(deck);
   const total = deck.monsters.length + deck.spells.length;
-  // At least 13 monsters and 7 spells; 24 cards at most (chủ game 22/10).
-  const short = Math.max(0, 13 - deck.monsters.length) + Math.max(0, 7 - deck.spells.length);
+  // 16 to 24 cards, at least 13 monsters, spells not required (chủ game 28/10).
+  const short = Math.max(Math.max(0, MIN_MONSTERS - deck.monsters.length), DECK_MIN - total);
   const canSave = short === 0 && !issue;
   const inDeck = new Set([...deck.monsters, ...deck.spells]);
   // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.

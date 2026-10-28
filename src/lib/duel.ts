@@ -128,6 +128,8 @@ export type FieldMon = {
   waitCounter?: boolean;
 };
 
+export type PileKind = "monster" | "spell";
+
 export type PileMon = { id: string; hp: number; maxHp: number; saved?: Omit<FieldMon, "uid">; toll?: boolean; freeAt?: number; fake?: boolean };
 
 export type Player = {
@@ -142,6 +144,11 @@ export type Player = {
   monsterDeck: PileMon[];
   spellDeck: string[];
   spellTax?: boolean[];
+  /**
+   * Xấp chung (chủ game 28/10): quái và phép trộn chung một xấp. Đây là loại lá theo thứ tự trên xấp, từ trên xuống;
+   * lá cụ thể là lá đầu của xấp quái hoặc xấp phép (đã xáo sẵn). Luôn khớp số lá hai xấp (`syncOrder`).
+   */
+  order?: PileKind[];
   spent?: string[];
   field: Array<FieldMon | null>;
   draws: number;
@@ -318,28 +325,74 @@ function woundPile(card: PileMon, dmg: number): PileMon | null {
 
 const LIFE = 16;
 
+/** Số lá trên tay đầu trận: 3 lá đầu xấp chung, quái hay phép tuỳ xấp (chủ game 28/10). */
+export const OPENING_CARDS = 3;
+
+function mixOrder(monsters: number, spells: number): PileKind[] {
+  return shuffle([...Array<PileKind>(monsters).fill("monster"), ...Array<PileKind>(spells).fill("spell")]);
+}
+
+/**
+ * Giữ thứ tự xấp chung khớp hai xấp: lá bị lấy thẳng khỏi một xấp (kỹ năng, phép) thì bỏ một dấu cùng loại ở chỗ
+ * ngẫu nhiên; lá được trả về xấp thì chèn dấu vào chỗ ngẫu nhiên. Xấp vẫn như được xáo đều.
+ */
+function syncOrder(player: Player): Player {
+  const monsters = player.monsterDeck.length;
+  const spells = player.spellDeck.length;
+  if (!player.order) return { ...player, order: mixOrder(monsters, spells) };
+  let haveMonsters = 0;
+  for (const kind of player.order) if (kind === "monster") haveMonsters += 1;
+  const haveSpells = player.order.length - haveMonsters;
+  if (haveMonsters === monsters && haveSpells === spells) return player;
+  const order = [...player.order];
+  const fit = (kind: PileKind, have: number, want: number) => {
+    for (let n = have; n > want; n -= 1) {
+      const spots = order.flatMap((item, index) => (item === kind ? [index] : []));
+      order.splice(spots[Math.floor(Math.random() * spots.length)]!, 1);
+    }
+    for (let n = have; n < want; n += 1) order.splice(Math.floor(Math.random() * (order.length + 1)), 0, kind);
+  };
+  fit("monster", haveMonsters, monsters);
+  fit("spell", haveSpells, spells);
+  return { ...player, order };
+}
+
+/** Lấy lá đầu xấp chung lên tay. Không còn lá thì trả null. */
+function takeTop(player: Player): { player: Player; kind: PileKind } | null {
+  const synced = syncOrder(player);
+  const [kind, ...order] = synced.order ?? [];
+  if (!kind) return null;
+  if (kind === "monster") {
+    const [held, ...monsterDeck] = synced.monsterDeck;
+    if (!held) return null;
+    return { kind, player: { ...synced, order, monsterDeck, reserve: [...synced.reserve, held] } };
+  }
+  const [cardId, ...spellDeck] = synced.spellDeck;
+  if (cardId === undefined) return null;
+  const tax = synced.spellTax ?? [];
+  return { kind, player: { ...synced, order, spellDeck, spellTax: tax.slice(1), hand: [...synced.hand, cardId], tolls: [...handTolls(synced), Boolean(tax[0])] } };
+}
+
 function emptyPlayer(monsters: string[], spells: string[], fake: string[] = []): Player {
   const fakes = new Set(fake);
   const env = spells.find((id) => spellCard(id)?.env);
   const monsterDeck = shuffle(monsters).map((id) => asPile(id, undefined, undefined, fakes.has(id)));
-  const reserve = monsterDeck.splice(0, 2);
   const spellDeck = shuffle(spells.filter((id) => id !== env));
   // A fake spell costs 1 mana more: the same +1 a "toll" card has.
   const spellTax = spellDeck.map((id) => fakes.has(id) && FAKE_SPELLS.has(id));
-  const openingSpell = spellDeck.shift();
-  const openingToll = openingSpell ? Boolean(spellTax.shift()) : false;
-  return {
+  let player: Player = {
     hp: LIFE,
     stars: 0,
     starGems: 0,
     orb: 1,
     flask: 0,
-    reserve,
-    hand: openingSpell ? [openingSpell] : [],
-    tolls: openingSpell ? [openingToll] : [],
+    reserve: [],
+    hand: [],
+    tolls: [],
     monsterDeck,
     spellDeck,
     spellTax,
+    order: mixOrder(monsterDeck.length, spellDeck.length),
     spent: [],
     field: [null, null, null, null, null, null],
     draws: 0,
@@ -352,6 +405,8 @@ function emptyPlayer(monsters: string[], spells: string[], fake: string[] = []):
     sea: env === "bien-sau",
     roster: [...monsters],
   };
+  for (let n = 0; n < OPENING_CARDS; n += 1) player = takeTop(player)?.player ?? player;
+  return player;
 }
 
 function pour(orb: number, flask: number, gain: number): { orb: number; flask: number } {
@@ -432,37 +487,28 @@ export function createDuel(
 export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
   const opener = state.opener;
   if (!opener || opener.done[side]) return state;
-  const player = state.players[side];
-  const reserve = [...player.reserve];
-  const monsterDeck = [...player.monsterDeck];
-  const backMonsters: PileMon[] = [];
-  for (const index of new Set(pick.reserve)) {
-    const next = index >= 0 && index < reserve.length ? monsterDeck.shift() : undefined;
-    if (!next) continue;
-    backMonsters.push(reserve[index]);
-    reserve[index] = next;
-  }
-  const hand = [...player.hand];
-  const tolls = hand.map((_, index) => player.tolls?.[index] ?? false);
-  const spellDeck = [...player.spellDeck];
-  const spellTax = spellDeck.map((_, index) => player.spellTax?.[index] ?? false);
-  const backSpells: Array<[string, boolean]> = [];
-  for (const index of new Set(pick.hand)) {
-    const next = index >= 0 && index < hand.length ? spellDeck.shift() : undefined;
-    if (next === undefined) continue;
-    backSpells.push([hand[index], tolls[index]]);
-    hand[index] = next;
-    tolls[index] = spellTax.shift() ?? false;
-  }
-  const spellPile = shuffle([...spellDeck.map((id, index): [string, boolean] => [id, spellTax[index]]), ...backSpells]);
-  const swapped: Player = {
+  const player = syncOrder(state.players[side]);
+  const outMonsters = new Set(pick.reserve.filter((index) => index >= 0 && index < player.reserve.length));
+  const outSpells = new Set(pick.hand.filter((index) => index >= 0 && index < player.hand.length));
+  const tolls = handTolls(player);
+  const backMonsters = player.reserve.filter((_, index) => outMonsters.has(index));
+  const backSpells = player.hand.flatMap((id, index): Array<[string, boolean]> => (outSpells.has(index) ? [[id, tolls[index]]] : []));
+  // Lá mới lấy từ đầu xấp chung trước (câu 2), quái hay phép tuỳ xấp; xong mới trả lá bị đổi về xấp rồi xáo.
+  let kept: Player = {
     ...player,
-    reserve,
-    monsterDeck: shuffle([...monsterDeck, ...backMonsters]),
-    hand,
-    tolls,
+    reserve: player.reserve.filter((_, index) => !outMonsters.has(index)),
+    hand: player.hand.filter((_, index) => !outSpells.has(index)),
+    tolls: tolls.filter((_, index) => !outSpells.has(index)),
+  };
+  for (let n = 0; n < backMonsters.length + backSpells.length; n += 1) kept = takeTop(kept)?.player ?? kept;
+  const spellPile = shuffle([...kept.spellDeck.map((id, index): [string, boolean] => [id, kept.spellTax?.[index] ?? false]), ...backSpells]);
+  const monsterDeck = shuffle([...kept.monsterDeck, ...backMonsters]);
+  const swapped: Player = {
+    ...kept,
+    monsterDeck,
     spellDeck: spellPile.map(([id]) => id),
     spellTax: spellPile.map(([, tax]) => tax),
+    order: mixOrder(monsterDeck.length, spellPile.length),
   };
   const done: [boolean, boolean] = side === 0 ? [true, opener.done[1]] : [opener.done[0], true];
   const players: [Player, Player] = side === 0 ? [swapped, state.players[1]] : [state.players[0], swapped];
@@ -632,11 +678,9 @@ function listChoices(state: Duel): LookOption[] {
   const foes = foe.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0));
   const allies = you.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0));
   if (state.step === "main" && state.turn === 0 && !state.winner) {
-    for (const pile of ["monster", "spell"] as const) {
-      const tried = lookProbe(state, (copy) => draw(copy, pile));
-      if (!tried || tried.next.players[0].draws <= tried.copy.players[0].draws) continue;
-      const cardId = pile === "monster" ? tried.next.players[0].reserve.at(-1)?.id ?? null : tried.next.players[0].hand.at(-1) ?? null;
-      add({ id: `draw:${pile}`, kind: "draw", cardId, target: null, cost: choiceCost(tried.copy, tried.next, 0) });
+    const tried = lookProbe(state, (copy) => draw(copy));
+    if (tried && tried.next.players[0].draws > tried.copy.players[0].draws) {
+      add({ id: "draw", kind: "draw", cardId: null, target: null, cost: choiceCost(tried.copy, tried.next, 0) });
     }
     for (let index = 0; index < you.reserve.length; index += 1) {
       const cardId = you.reserve[index]?.id ?? null;
@@ -1076,7 +1120,7 @@ function withRows(player: Player): Player {
 }
 
 function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
-  const player = envBoost(withRows(rawPlayer));
+  const player = envBoost(syncOrder(withRows(rawPlayer)));
   const prev = state.players[side];
   const gone = [
     ...departed(prev.field, player.field),
@@ -2602,17 +2646,24 @@ function needUpkeep(state: Duel): Duel | null {
   return next === state ? null : next;
 }
 
-export function draw(state: Duel, pile: "monster" | "spell"): Duel {
-  const next = drawCore(state, pile);
+/** Rút bài (chủ game 28/10): một nút, lấy lá đầu xấp chung, quái hay phép tuỳ xấp. Không nhường quyền. */
+export function draw(state: Duel): Duel {
+  const next = drawCore(state);
   if (next === state) return next;
   const side = state.turn;
   const ok = next.players[side].draws > state.players[side].draws;
   if (!ok && next.upkeep && !state.upkeep && next.players === state.players) return next;
-  const cardId = ok ? (pile === "monster" ? next.players[side].reserve.at(-1)?.id ?? null : next.players[side].hand.at(-1) ?? null) : null;
+  const gotMonster = next.players[side].reserve.length > state.players[side].reserve.length;
+  const cardId = ok ? (gotMonster ? next.players[side].reserve.at(-1)?.id ?? null : next.players[side].hand.at(-1) ?? null) : null;
   return traced(state, next, { kind: "draw", actor: side, ok, cardId, target: null, end: null });
 }
 
-function drawCore(state: Duel, pile: "monster" | "spell"): Duel {
+/** Số lá còn trong xấp chung. */
+export function pileLeft(player: Player): number {
+  return player.monsterDeck.length + player.spellDeck.length;
+}
+
+function drawCore(state: Duel): Duel {
   const locked = talkLock(state);
   if (locked) return locked;
   if (state.step !== "main" || state.winner) return state;
@@ -2622,27 +2673,14 @@ function drawCore(state: Duel, pile: "monster" | "spell"): Duel {
   let player = state.players[side];
   if (player.drawLock) return note(state, "Lượt này không được rút bài.");
   if (player.draws >= 1) return note(state, "Mỗi vòng chỉ rút 1 lá.");
+  if (pileLeft(player) === 0) return note(state, "Hết bài để rút.");
   const before = player.stars;
   const paid = pay(player, 1);
   if (!paid) return note(state, "Rút bài cần 1 gem trên quả cầu.");
-  player = paid;
-  if (pile === "monster") {
-    if (player.monsterDeck.length === 0) return note(state, "Hết quái để rút.");
-    const [held, ...rest] = player.monsterDeck;
-    player = { ...player, monsterDeck: rest, reserve: [...player.reserve, held], draws: player.draws + 1 };
-  } else {
-    if (player.spellDeck.length === 0) return note(state, "Hết phép để rút.");
-    const [cardId, ...rest] = player.spellDeck;
-    const tax = player.spellTax ?? [];
-    player = {
-      ...player,
-      spellDeck: rest,
-      spellTax: tax.slice(1),
-      hand: [...player.hand, cardId],
-      tolls: [...handTolls(player), Boolean(tax[0])],
-      draws: player.draws + 1,
-    };
-  }
+  const top = takeTop(paid);
+  if (!top) return note(state, "Hết bài để rút.");
+  player = { ...top.player, draws: top.player.draws + 1 };
+  const pile = top.kind;
   const kind = pile === "monster" ? "1 quái" : "1 phép";
   const cardName = pile === "monster" ? monsterCard(player.reserve.at(-1)?.id ?? "")?.name : spellCard(player.hand.at(-1) ?? "")?.name;
   const shown = cardName ?? kind;
@@ -8918,7 +8956,7 @@ function develop(state: Duel): Duel | null {
   const eager = lean.ready && lean.spend !== 0 ? lean.spend > 0 : style.spendAll;
   if (canDraw && (opening ? eager || me.stars < 2 : me.stars < 2)) {
     const kind = learnedDraw(me, board, style, lean);
-    if (kind) return draw(state, kind);
+    if (kind) return draw(state);
   }
   if (me.summons < 1 && board < 3) return summonPick(state, bias);
   if (board < 3) return summonAside(state);
@@ -9198,7 +9236,7 @@ function offerLearnedDraw(state: Duel, style: ReturnType<typeof readStyle>, lean
   if (me.drawLock || me.draws >= 1 || me.orb < 1) return null;
   const kind = learnedDraw(me, me.field.filter(Boolean).length, style, lean);
   if (!kind) return null;
-  return draw(state, kind);
+  return draw(state);
 }
 
 /** The machine's answer to a question the match asks it (side 1): Đàm phán picks, tiến hoá, hộp ma lực, thu hồi…;
@@ -9450,7 +9488,7 @@ export function aiStep(state: Duel): Duel {
     const opening = (me.turns ?? 0) < 3;
     if (opening ? eager || me.stars < 2 : me.stars < 2) {
       const kind = learnedDraw(me, me.field.filter(Boolean).length, styleNow, leanNow);
-      if (kind) return draw(state, kind);
+      if (kind) return draw(state);
     }
   }
   if (!deferSummon && threats.length === 0 && room && canSummon && me.summons < 1) {

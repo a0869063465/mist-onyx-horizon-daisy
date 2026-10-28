@@ -62,6 +62,7 @@ import {
   declareSkill,
   dismissGlimpse,
   draw,
+  pileLeft,
   endTurn,
   fieldName,
   harmShift,
@@ -3992,10 +3993,10 @@ function PlayPage() {
       return {
         key: `m${index}:${held.id}`,
         face: card ? <CardFace monster={card} level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null,
-        can: you.monsterDeck.length > 0,
+        can: pileLeft(you) > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: you.spellDeck.length > 0 })),
+    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
@@ -5309,14 +5310,9 @@ function PlayPage() {
               : undefined
           }
         >
-          {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.monsterDeck.length > 0 ? (
-            <button type="button" className="act medal-act is-draw-mon press" aria-label={tr("Rút quái")} onClick={() => apply(draw(duel, "monster"))}>
+          {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0 ? (
+            <button type="button" className="act medal-act is-draw-mon press" aria-label={tr("Rút bài")} onClick={() => apply(draw(duel))}>
               <Medal tone="orange" icon="wolf-head" />
-            </button>
-          ) : null}
-          {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !you.drawLock && you.draws < 1 && you.spellDeck.length > 0 ? (
-            <button type="button" className="act medal-act is-draw-spell press" aria-label={tr("Rút phép")} onClick={() => apply(draw(duel, "spell"))}>
-              <Medal tone="purple" icon="spell-book" />
             </button>
           ) : null}
           {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (

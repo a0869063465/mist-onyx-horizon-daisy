@@ -22,7 +22,7 @@ function last(state: Duel, kind: MatchEvent["kind"]) {
 test("player choices record the board, the legal moves, and the move taken", () => {
   const deck = { monsters: ["khong-lo-mot-mat", "sau-non"], spells: ["mua-ma-thuat", "mua-ma-thuat"] };
   let state = createDuel(deck, "test", deck);
-  state = draw(state, "monster");
+  state = draw(state);
   state = summon(state, 0, 0);
   const summoned = last(state, "summon");
   assert.ok(summoned?.look);

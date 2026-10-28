@@ -279,7 +279,7 @@ export function Tutorial({
     if (step.wait === "auto" || (step.wait === "summon" && step.ms)) later(step.ms ?? 1500, next);
     if (step.wait === "foe-cast") {
       // Đối thủ rút bài, triệu hồi quái 1 sao, rồi dùng Sợi xích địa ngục lên quái của bạn.
-      later(900, () => drive((d) => (d.turn === foe && d.step === "main" ? draw(d, "monster") : d)));
+      later(900, () => drive((d) => (d.turn === foe && d.step === "main" ? draw(d) : d)));
       later(2300, () =>
         drive((d) => {
           const them = d.players[foe];

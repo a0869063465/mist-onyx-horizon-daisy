@@ -7,6 +7,7 @@ const require = createRequire(`${process.cwd()}/package.json`);
 const { createServer } = await import(pathToFileURL(require.resolve("vite")).href);
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const D = await server.ssrLoadModule("/src/lib/duel.ts");
+const C = await server.ssrLoadModule("/src/lib/catalog.ts");
 
 const DECK = { monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "khong-lo-mot-mat", "may-chem"], spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho"] };
 
@@ -210,6 +211,69 @@ test("kỹ năng nhắm quái hàng sau: hàng trước chặn thay", () => {
   const done = D.passResponse(blocked);
   assert.equal(at(done, 1, 3).hp, 9);
   assert.ok(at(done, 1, 0).hp < 20);
+});
+
+const BIG = {
+  monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "kazura", "kizuran", "ma-dao-si", "chien-binh-rong", "hiep-si-ho-ve", "hiep-si-cua-vua", "hiep-si-cua-hau", "my-dieu-nhan", "phu-thuy-ti-hon", "rong-boc-trung"],
+  spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho", "phuc-kich", "guong-phong-ho", "hoan-doi", "virus-an-mon", "mua-ma-thuat"],
+};
+const cards = (p) => p.reserve.length + p.hand.length;
+
+test("xấp chung: đầu trận 3 lá bất kỳ, thứ tự xấp khớp số lá", () => {
+  let monstersSeen = 0;
+  for (let n = 0; n < 400; n += 1) {
+    const s = D.createDuel(BIG, "net");
+    for (const p of s.players) {
+      assert.equal(cards(p), 3);
+      assert.equal(p.order.length, p.monsterDeck.length + p.spellDeck.length);
+      assert.equal(p.order.filter((k) => k === "monster").length, p.monsterDeck.length);
+      monstersSeen += p.reserve.length;
+    }
+  }
+  const share = monstersSeen / (400 * 2 * 3);
+  assert.ok(Math.abs(share - 13 / 20) < 0.05, `tỉ lệ quái trên tay đầu trận ${share.toFixed(3)} (mong 0.65)`);
+});
+
+test("rút bài: một nút, lấy đúng loại lá đầu xấp, không nhường quyền", () => {
+  let s = D.createDuel(BIG, "test");
+  s = { ...s, opening: false };
+  for (let n = 0; n < 6; n += 1) {
+    const me = s.players[0];
+    const kind = me.order[0];
+    const next = D.draw({ ...s, players: [{ ...me, draws: 0, orb: 3 }, s.players[1]] });
+    const after = next.players[0];
+    assert.equal(cards(after), cards(me) + 1);
+    if (kind === "monster") assert.equal(after.reserve.length, me.reserve.length + 1);
+    else assert.equal(after.hand.length, me.hand.length + 1);
+    assert.equal(after.order.length, D.pileLeft(after));
+    assert.equal(next.turn, 0);
+    s = next;
+  }
+});
+
+test("đổi bài đầu trận: lá mới lấy từ đầu xấp chung, vẫn 3 lá, lá bị đổi về xấp", () => {
+  for (let n = 0; n < 200; n += 1) {
+    const s = D.createDuel(BIG, "net");
+    const p = s.players[0];
+    const total = cards(p) + D.pileLeft(p);
+    const pick = { reserve: p.reserve.map((_, i) => i), hand: p.hand.map((_, i) => i) };
+    const swapped = D.openerSwap(s, 0, pick).players[0];
+    assert.equal(cards(swapped), 3);
+    assert.equal(cards(swapped) + D.pileLeft(swapped), total);
+    assert.equal(swapped.order.length, D.pileLeft(swapped));
+    const old = [...p.reserve.map((m) => m.id), ...p.hand];
+    const now = [...swapped.reserve.map((m) => m.id), ...swapped.hand];
+    assert.ok(now.every((id) => !old.includes(id)), "không rút lại đúng lá vừa đổi");
+  }
+});
+
+test("luật bộ bài: 16–24 lá, ít nhất 13 quái, phép không bắt buộc", () => {
+  assert.equal(C.deckLegal(13, 3), true);
+  assert.equal(C.deckLegal(16, 0), true);
+  assert.equal(C.deckLegal(24, 0), true);
+  assert.equal(C.deckLegal(13, 2), false, "15 lá");
+  assert.equal(C.deckLegal(12, 8), false, "12 quái");
+  assert.equal(C.deckLegal(20, 5), false, "25 lá");
 });
 
 let failed = 0;

@@ -703,6 +703,8 @@ export const PENDING_NOTES: string[] = [
   "Sân mỗi bên 6 ô: hàng trước sát giữa sân, hàng sau sát tay. Quái hàng sau đánh chớp nhoáng, không bị trả đòn, không chặn được. Quái hàng trước chặn được đòn đánh và skill nhắm vào người chơi hoặc quái hàng sau; đánh vào quái hàng trước thì không ai chặn hộ.",
   "Trả đòn: quái hàng trước giáp lá cà với quái hàng trước, bên bị đánh không trừ máu kẻ đánh ngay mà còn sống thì được Trả đòn riêng, bằng đòn đánh thường hoặc skill. Quái chặn cũng vậy.",
   "Vòng xoáy bảo hộ chặn đòn và kết thúc vòng của đối thủ.",
+  "Quái và phép trộn chung một xấp, chỉ còn một nút Rút bài: rút lá đầu xấp, ra quái hay phép tuỳ xấp. Đầu trận rút 3 lá bất kỳ, vẫn đổi được 0 đến 3 lá.",
+  "Bộ bài từ 16 đến 24 lá, ít nhất 13 quái, phép không bắt buộc.",
 ];
 
 function remarkOf(notes: string[]) {

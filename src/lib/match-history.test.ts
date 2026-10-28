@@ -38,7 +38,7 @@ function finish(state: Duel, side: 0 | 1) {
 test("a player win stays over, is stored, and reloads from either store", async () => {
   const deck = { monsters: ["khong-lo-mot-mat", "khong-lo-mot-mat", "khong-lo-mot-mat"], spells: ["mua-ma-thuat"] };
   const open = createDuel(deck, "ai");
-  let ready = endTurn(endTurn(summon(draw(open, "monster"), 0, 0)));
+  let ready = endTurn(endTurn(summon(draw(open), 0, 0)));
   const attacker = ready.players[0].field.find((mon) => mon);
   assert.ok(attacker);
   ready = { ...ready, players: [ready.players[0], { ...ready.players[1], hp: 1 }] };
@@ -328,12 +328,12 @@ test("events stay across turns, name the actor, and do not treat a refusal as su
   const refused = summon(duel, 0, 0);
   assert.equal(refused.events?.some((event) => event.kind === "summon" && event.ok), false);
   assert.equal(refused.events?.find((event) => event.kind === "summon")?.ok, false);
-  duel = draw(duel, "monster");
+  duel = draw(duel);
   const drawn = duel.events?.find((event) => event.kind === "draw");
   assert.equal(drawn?.ok, true);
   assert.equal(drawn?.actor, 0);
   assert.equal(drawn?.cardId, "khong-lo-mot-mat");
-  const blocked = draw(duel, "monster");
+  const blocked = draw(duel);
   assert.equal(blocked.events?.filter((event) => event.kind === "draw" && !event.ok).length, 1);
   duel = endTurn(blocked);
   duel = endTurn(duel);
@@ -344,7 +344,7 @@ test("events stay across turns, name the actor, and do not treat a refusal as su
   assert.equal(duel.log.some((line) => line.includes("Khổng lồ")), false);
   assert.equal(duel.events?.[0]?.hp[0], 16);
   assert.equal(duel.events?.[0]?.orb.length, 2);
-  const ready = endTurn(endTurn(summon(draw(createDuel(deck, "ai"), "monster"), 0, 0)));
+  const ready = endTurn(endTurn(summon(draw(createDuel(deck, "ai")), 0, 0)));
   const attacker = ready.players[0].field.find((mon) => mon);
   assert.ok(attacker);
   const swung = attackFace(ready, attacker.uid);
@@ -363,7 +363,7 @@ test("concede and a rules win are different endings, and an AI match stores even
   const store = new Memory();
   const deck = { monsters: ["khong-lo-mot-mat", "khong-lo-mot-mat", "khong-lo-mot-mat"], spells: ["mua-ma-thuat"] };
   let duel = createDuel(deck, "ai");
-  duel = draw(duel, "monster");
+  duel = draw(duel);
   duel = endTurn(duel);
   const quit = concede(duel, 0);
   const giveUp = quit.events?.find((event) => event.kind === "concede");

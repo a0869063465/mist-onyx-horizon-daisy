@@ -1120,10 +1120,14 @@ export function artSrc(id: string, level = 1): string {
 }
 
 export const DECK_SIZE = 24;
+/** Luật bộ bài (chủ game 28/10): 16 đến 24 lá, ít nhất 13 quái, phép không bắt buộc. */
+export const DECK_MIN = 16;
+export const MIN_MONSTERS = 13;
+export const MIN_SPELLS = 0;
 
 export function deckLegal(monsterCount: number, spellCount: number): boolean {
-  // Chủ game 22/10: at least 13 monsters and 7 spells, 24 cards at most (not exactly 24), so a new player builds sooner.
-  return monsterCount >= 13 && spellCount >= 7 && monsterCount + spellCount <= DECK_SIZE;
+  const total = monsterCount + spellCount;
+  return monsterCount >= MIN_MONSTERS && spellCount >= MIN_SPELLS && total >= DECK_MIN && total <= DECK_SIZE;
 }
 
 /** Bộ bài Khởi đầu (chủ game 22/10): the only deck a new player has, made of FAKE cards (see FAKE_MONSTERS). */

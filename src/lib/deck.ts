@@ -1,4 +1,4 @@
-import { DEFAULT_DECK, deckLegal, FORMS, monsterCard, spellCard, STARTER_NAME, type MonsterCard, type SpellCard } from "./catalog.ts";
+import { DECK_MIN, DECK_SIZE, DEFAULT_DECK, deckLegal, FORMS, MIN_MONSTERS, MIN_SPELLS, monsterCard, spellCard, STARTER_NAME, type MonsterCard, type SpellCard } from "./catalog.ts";
 import { canUseCard, fakeIds } from "./owned-cards.ts";
 
 const KEY = "clash-beasts-deck";
@@ -31,7 +31,7 @@ export function deckIssues(deck: BeastDeck): string | null {
   const spells = deck.spells.filter((id) => spellCard(id));
   if (new Set(monsters).size !== monsters.length || new Set(spells).size !== spells.length) return "Mỗi lá chỉ được một bản.";
   if (spells.filter((id) => spellCard(id)?.env).length > 1) return "Chỉ được một lá môi trường.";
-  if (!deckLegal(monsters.length, spells.length)) return "Cần ít nhất 13 quái và 7 phép, tối đa 24 lá.";
+  if (!deckLegal(monsters.length, spells.length)) return `Cần ${DECK_MIN} đến ${DECK_SIZE} lá, ít nhất ${MIN_MONSTERS} quái.`;
   return null;
 }
 
@@ -43,7 +43,7 @@ export function deckBalance(deck: BeastDeck): { monster: DeckSide; spell: DeckSi
     if (count > max) return { sign: "+", n: count - max, bad: true };
     return { sign: "+", n: count - min, bad: false };
   };
-  return { monster: side(deck.monsters.length, 13, 17), spell: side(deck.spells.length, 7, 11) };
+  return { monster: side(deck.monsters.length, MIN_MONSTERS, DECK_SIZE - MIN_SPELLS), spell: side(deck.spells.length, MIN_SPELLS, DECK_SIZE - MIN_MONSTERS) };
 }
 
 function clean(deck: Partial<BeastDeck> | undefined): BeastDeck {

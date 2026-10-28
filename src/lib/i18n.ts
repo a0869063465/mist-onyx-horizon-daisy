@@ -215,6 +215,8 @@ const PAIRS: Array<[string, string]> = [
   ["Đầu hàng", "Surrender"],
   ["Đóng", "Close"],
   ["Hết lượt", "End turn"],
+  ["Rút bài", "Draw"],
+  ["Hãy Trả đòn trước.", "Strike back first."],
   ["Hết phép", "No spells"],
   ["Hết quái dự bị", "No reserve monsters"],
   ["Quái thú", "Monsters"],
