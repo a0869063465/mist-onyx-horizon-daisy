@@ -615,6 +615,7 @@ const PAIRS: Array<[string, string]> = [
   ["VÒNG", "ROUND"],
   ["TỚI LƯỢT", "YOUR"],
   ["CỦA BẠN", "TURN"],
+  ["lá trên tay", "cards in hand"],
 ];
 
 const EXACT = new Map(PAIRS);

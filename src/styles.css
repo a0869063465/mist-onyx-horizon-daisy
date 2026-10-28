@@ -11508,3 +11508,43 @@ button.watch-back {
 @media (prefers-reduced-motion: reduce) {
   .turn-sword img, .turn-sword::after { animation: none; }
 }
+
+/* Tay đối thủ: lá úp xoè, số lá trên tay ở giữa. */
+.foe-fan {
+  position: absolute;
+  z-index: 5;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.foe-fan img {
+  position: absolute;
+  max-width: none;
+  left: -2.6cqw;
+  top: -3.7cqw;
+  width: 5.2cqw;
+  height: 7.9cqw;
+  border-radius: 0.35cqw;
+  box-shadow: 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 140%;
+}
+.foe-fan b {
+  position: absolute;
+  left: 0;
+  top: 1.8cqw;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  min-width: 4.6cqw;
+  height: 4.6cqw;
+  padding: 0 0.7cqw;
+  border-radius: 1.2cqw;
+  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
+  border: 0.35cqw solid #f4d27a;
+  box-shadow: 0 0.4cqw 0 #6b430c, 0 0.7cqw 1.2cqw rgba(0, 0, 0, 0.65), inset 0 0.3cqw 0.2cqw rgba(255, 255, 255, 0.35);
+  color: #ffe9a6;
+  font-weight: 800;
+  font-size: 3.1cqw;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+}

@@ -3700,8 +3700,8 @@ function PlayPage() {
     ["foeFlask", Math.min(1, foe.flask), "bình"],
     ["foeStars", foe.stars, "sao"],
     ["foeGems", foe.starGems, "thừa"],
-    ["foeHand", foe.hand.length, "phép"],
-    ["foeReserve", foe.reserve.length, "dự bị"],
+    // Xấp bài úp bên đỏ ghi số lá còn trong xấp của đối thủ (chủ game 28/10); số lá trên tay ở dải lá xoè, băng rôn trống.
+    ["foeHand", pileLeft(foe), "bài"],
     ["youHp", laserHp[`face:${viewer}`] ?? hpHold[`face:${viewer}`] ?? heldHp(viewer) ?? you.hp, ""],
     ["youOrb", tutView?.youOrb ?? you.orb, ""],
     ["youFlask", Math.min(1, you.flask), "bình"],
@@ -4222,6 +4222,22 @@ function PlayPage() {
         <div className="diorama">
         <BoardArt src={artTop} cut={cut} />
         <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
+        {(() => {
+          // Tay đối thủ (chủ game 28/10): lá úp xoè ra phía trên xấp bài đỏ, nhìn là thấy bao nhiêu lá, kèm số lá trên tay.
+          const count = foe.reserve.length + foe.hand.length;
+          if (count === 0) return null;
+          const shown = Math.min(FOE_FAN.most, count);
+          const spread = Math.min(FOE_FAN.turn, (FOE_FAN.turn * 2) / Math.max(1, shown - 1));
+          return (
+            <div className="foe-fan" data-tut="foeReserve" aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${FOE_FAN.x}%`, top: `${ry(FOE_FAN.y)}%` }}>
+              {Array.from({ length: shown }, (_, i) => {
+                const k = i - (shown - 1) / 2;
+                return <img key={i} src="/ui/card-back.webp" alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) rotate(${k * spread}deg)` }} />;
+              })}
+              <b style={{ left: `${((shown - 1) / 2) * FOE_FAN.gap + 3.6}cqw` }}>{count}</b>
+            </div>
+          );
+        })()}
         {(() => {
           // Kiếm có cánh (ảnh chủ game mua, 28/10): chỉ ở bên đang giữ token tấn công của vòng, xanh là mình, tím là đối
           // thủ; đổi bên thì kiếm bay vào lại.
@@ -6234,6 +6250,9 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
   if (count !== "" && count !== 0) return String(count);
   return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
 }
+
+/** The opponent's hand fan, on the full board picture: between their mana flask and their stars row, over the red pile. */
+const FOE_FAN = { x: 84.4, y: 17, most: 7, turn: 9, gap: 2.6 } as const;
 
 /** The turn light's tanks on the full board picture (board-cut.ts maps them onto a cut board): the walls at the edges of
  *  the stone field, each bottom where that side's area meets the field, both open toward the middle. */
