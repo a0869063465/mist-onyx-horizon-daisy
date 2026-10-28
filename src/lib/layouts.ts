@@ -55,7 +55,10 @@ export const DEFAULT_BOARD: Record<HudKey, Mark> = {
 export type Spot = { x: number; y: number; size: number; width: number; height: number; hidden?: boolean };
 export type Notice = { x: number; y: number; w: number; h: number; font: number; hidden?: boolean };
 export type Trail = { x: number; y: number; w: number; h: number; dot: number; glow: number; hidden?: boolean };
-export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot };
+export type ActKey = "drawMon" | "drawSpell" | "endTurn";
+export type FaceKey = "foeFace" | "youFace" | "foeAtk" | "youAtk" | "foeDef" | "youDef";
+/** Bố cục bàn Grok (chủ game 28/10): mỗi nút, chân dung, kiếm, khiên có ghim riêng; `actions` cũ giữ để đọc bố cục đã lưu. */
+export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot } & Record<ActKey | FaceKey, Spot>;
 
 // Bàn mới 841 x 1870 (chủ game 28/10): số mặc định theo bố cục của bàn Grok.
 export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, hidden: false };
@@ -67,7 +70,34 @@ export const DEFAULT_ENV_FOE: Spot = { x: 12.9, y: 43.3, size: 2.2, width: 16, h
 /** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
 export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
 
+// Thông số chủ game chỉnh trên bàn Grok (28/10). Chỗ hai nút rút cũ giờ là nút X đỏ (drawMon) và con mắt (drawSpell).
+export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = {
+  drawMon: { x: 78.6, y: 79.7, size: 1, width: 8.4, height: 4.7, hidden: false },
+  drawSpell: { x: 78.4, y: 84.8, size: 1, width: 8.4, height: 4.7, hidden: false },
+  endTurn: { x: 91.2, y: 83, size: 1, width: 14.4, height: 7.7, hidden: false },
+  foeFace: { x: 88.3, y: 43.9, size: 1, width: 11.5, height: 5.2, hidden: false },
+  youFace: { x: 11.5, y: 58.8, size: 1, width: 11.5, height: 5.2, hidden: false },
+  foeAtk: { x: 88.4, y: 43.7, size: 1, width: 10.2, height: 4.6, hidden: false },
+  youAtk: { x: 11.6, y: 58.8, size: 1, width: 10.2, height: 4.6, hidden: false },
+  foeDef: { x: 88.6, y: 43.9, size: 1, width: 10.2, height: 4.6, hidden: false },
+  youDef: { x: 11.7, y: 59, size: 1, width: 10.2, height: 4.6, hidden: false },
+};
+export const BOARD_ACTS: Array<{ key: ActKey; label: string }> = [
+  { key: "drawMon", label: "Nút X (huỷ)" },
+  { key: "drawSpell", label: "Nút con mắt" },
+  { key: "endTurn", label: "Nút OK" },
+];
+export const BOARD_FACES: Array<{ key: FaceKey; label: string; kind: "face" | "atk" | "def" }> = [
+  { key: "foeFace", label: "Hồ sơ địch", kind: "face" },
+  { key: "youFace", label: "Hồ sơ bạn", kind: "face" },
+  { key: "foeAtk", label: "Tấn công địch", kind: "atk" },
+  { key: "youAtk", label: "Tấn công bạn", kind: "atk" },
+  { key: "foeDef", label: "Phòng thủ địch", kind: "def" },
+  { key: "youDef", label: "Phòng thủ bạn", kind: "def" },
+];
+
 export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
+  ...DEFAULT_SPOTS,
   marks: DEFAULT_BOARD,
   notice: DEFAULT_NOTICE,
   trail: DEFAULT_TRAIL,
@@ -267,7 +297,17 @@ export function loadBoard(env?: string): BoardLayout {
     env: asEnv(raw?.env),
     envFoe: raw?.envFoe ? asStack(raw.envFoe) : { ...DEFAULT_ENV_FOE },
     actions: asActions(raw?.actions),
+    ...spotsOf(raw as Partial<Record<ActKey | FaceKey, Spot>> | null),
   };
+}
+
+function spotsOf(raw: Partial<Record<ActKey | FaceKey, Spot>> | null): Record<ActKey | FaceKey, Spot> {
+  const out = {} as Record<ActKey | FaceKey, Spot>;
+  for (const key of Object.keys(DEFAULT_SPOTS) as Array<ActKey | FaceKey>) {
+    const value = raw?.[key];
+    out[key] = value && typeof value.x === "number" ? { ...asSpot(value, DEFAULT_SPOTS[key]), hidden: value.hidden === true } : { ...DEFAULT_SPOTS[key] };
+  }
+  return out;
 }
 
 export function saveBoard(layout: BoardLayout, env?: string) {
@@ -303,6 +343,15 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
     env: bottom.env,
     stack: bottom.stack,
     actions: bottom.actions,
+    drawMon: bottom.drawMon,
+    drawSpell: bottom.drawSpell,
+    endTurn: bottom.endTurn,
+    youFace: bottom.youFace,
+    youAtk: bottom.youAtk,
+    youDef: bottom.youDef,
+    foeFace: top.foeFace,
+    foeAtk: top.foeAtk,
+    foeDef: top.foeDef,
   });
 }
 
@@ -325,6 +374,15 @@ function cutLayout(layout: BoardLayout): BoardLayout {
     env: corner(layout.env),
     envFoe: corner(layout.envFoe),
     actions: spot(layout.actions),
+    drawMon: spot(layout.drawMon),
+    drawSpell: spot(layout.drawSpell),
+    endTurn: spot(layout.endTurn),
+    foeFace: spot(layout.foeFace),
+    youFace: spot(layout.youFace),
+    foeAtk: spot(layout.foeAtk),
+    youAtk: spot(layout.youAtk),
+    foeDef: spot(layout.foeDef),
+    youDef: spot(layout.youDef),
   };
 }
 

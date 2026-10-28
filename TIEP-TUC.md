@@ -128,6 +128,7 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
 
 ## Quy tắc làm việc với chủ game
 
+- CÁCH LÀM GIAO DIỆN (chủ game 28/10, nhắc gắt, KHÔNG được lặp lại): chủ game KHÔNG thử từng bước, nên KHÔNG làm bản tạm "cho chạy để thử" rồi sửa dần. Trước khi làm: đọc kỹ toàn bộ tài nguyên gốc (video, ảnh, code Grok) và chốt BỨC TRANH CHUNG với chủ game (bố cục trên xuống dưới, từng phần cuối cùng trông ra sao), rồi phác hoạ từng phần, rồi mới làm một lượt cho đúng bản cuối; xong phiên thì chạy được là đủ. Ví dụ đã sai: chân dung chớp xanh (cuối cùng là dòng sáng xanh/đỏ kiểu bể cá), icon tấn công, icon chuyển lượt (Grok có 3 mặt), làm rồi lại phải bỏ.
 - Luật ở `AGENTS.project.md` (CLAUDE.md tự nạp). Đọc hết, chưa rõ 100% thì hỏi trước khi làm.
 - Chủ game chỉ dùng điện thoại Android, không có máy tính. Mọi hướng dẫn phải làm được trên điện thoại.
 - Đổi chỉ số đơn giản thì tự xếp Tăng/Giảm/Thay đổi lối chơi, tự sửa con số trong mô tả, ghi `BALANCE_LOG` (src/lib/power-balance.ts) và chạy `scripts/stamp-cards.ts` qua Vite để cập nhật `card-clock.ts`.

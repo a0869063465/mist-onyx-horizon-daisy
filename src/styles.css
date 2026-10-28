@@ -2317,17 +2317,7 @@ button.trail-dot.is-on {
   pointer-events: auto;
 }
 .stage .actions.is-spread > .act.is-idle { pointer-events: none; }
-.who-pin {
-  position: absolute;
-  z-index: 6;
-  width: 11cqw;
-  height: 11cqw;
-  margin: -5.5cqw 0 0 -5.5cqw;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.who-pin .medal { width: 100%; height: 100%; }
-.who-pin.is-turn { filter: drop-shadow(0 0 0.5rem #ffe27a); }
+
 .act {
   min-height: 2.75rem;
   border: 0;
@@ -11429,3 +11419,130 @@ button.watch-back {
   height: 100%;
   aspect-ratio: auto;
 }
+
+/* Bàn Grok (chủ game 28/10): hồ sơ hai bên, kiếm của bên giữ lượt tấn công, chữ "Chớp" trên ô hàng sau trống, ghim trong Tuỳ chỉnh. */
+.who-avatar {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.who-avatar.is-foe { background: radial-gradient(circle at 40% 30%, #c45a4a, #2a1010 72%); }
+.who-avatar.is-you { background: radial-gradient(circle at 40% 30%, #4f86c8, #102033 72%); }
+.who-avatar.is-turn {
+  box-shadow:
+    0 0 8px #3dff72,
+    0 0 18px #14e85a,
+    0 0 32px #067a2c;
+  animation: avatar-glow 1.2s ease-in-out infinite;
+}
+@keyframes avatar-glow {
+  50% {
+    box-shadow:
+      0 0 12px #eafff0,
+      0 0 26px #5dff8a,
+      0 0 44px #0aa83c;
+  }
+}
+.board-pin {
+  position: absolute;
+  z-index: 7;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.who-mark {
+  flex: none;
+  width: 2.45rem;
+  height: 2.45rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
+}
+.sword-rise {
+  width: 2.45rem;
+  height: 2.45rem;
+}
+.sword-rise .who-mark {
+  animation: sword-in 0.62s cubic-bezier(0.14, 0.82, 0.22, 1) both;
+}
+.sword-flash {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 2.8rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fff8dc 18%, #fff 50%, #ffe08a 82%, transparent);
+  box-shadow: 0 0 12px #ffe7a2, 0 0 22px rgba(255, 196, 64, 0.85);
+  transform: translate(-50%, -50%) rotate(-48deg) scaleX(0.2);
+  animation: sword-slash 0.5s ease-out both;
+  pointer-events: none;
+}
+@keyframes sword-in {
+  0% {
+    transform: scale(0.12) rotate(-78deg);
+    filter: brightness(3) drop-shadow(0 0 10px #fff4c4);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.22) rotate(10deg);
+    filter: brightness(1.7) drop-shadow(0 0 14px #ffd56a);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
+    opacity: 1;
+  }
+}
+@keyframes sword-slash {
+  0% {
+    opacity: 0;
+    transform: translate(-70%, -50%) rotate(-48deg) scaleX(0.15);
+  }
+  35% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-48deg) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-28%, -50%) rotate(-48deg) scaleX(1.15);
+  }
+}
+
+.slot-f3:not(:has(.field-unit))::after,
+.slot-f4:not(:has(.field-unit))::after,
+.slot-f5:not(:has(.field-unit))::after,
+.slot-y3:not(:has(.field-unit))::after,
+.slot-y4:not(:has(.field-unit))::after,
+.slot-y5:not(:has(.field-unit))::after {
+  content: "Chớp";
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  color: rgba(244, 236, 220, 0.82);
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-shadow: 0 1px 2px #000;
+}
+.tune-pin.is-face {
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+}
+.tune-pin.is-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.tune-pin.is-face i {
+  display: block;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+}
+.tune-pin.is-face.is-foe i { background: radial-gradient(circle at 40% 30%, #c45a4a, #2a1010 72%); }
+.tune-pin.is-face.is-you i { background: radial-gradient(circle at 40% 30%, #4f86c8, #102033 72%); }

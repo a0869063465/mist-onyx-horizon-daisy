@@ -70,6 +70,7 @@ import {
   fieldName,
   harmShift,
   harmSkill,
+  attackRound,
   hornFit,
   skillLook,
   cottonCover,
@@ -2844,7 +2845,13 @@ function PlayPage() {
     card.name.toLocaleLowerCase("vi").includes(testFind.trim().toLocaleLowerCase("vi")),
   );
   const otherSide = (viewer === 0 ? 1 : 0) as Side;
-  const canIntercept = responding && duel.hold?.priority === viewer && duel.pending?.kind === "face";
+  // Luật 6 ô (Grok, chủ game 28/10 C3): quái hàng trước chặn đòn đánh / kỹ năng vào người chơi hoặc vào quái hàng sau.
+  const coverBack = (() => {
+    const pending = duel.pending;
+    const aimed = pending?.kind === "melee" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.target : null;
+    return Boolean(aimed && you.field.some((unit) => unit?.uid === aimed && unit.row === "back"));
+  })();
+  const canIntercept = responding && duel.hold?.priority === viewer && (duel.pending?.kind === "face" || coverBack);
   const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
   const beam = duel.pending?.kind === "beam" ? duel.pending : null;
@@ -3161,8 +3168,8 @@ function PlayPage() {
   function offerBlock(uid: string) {
     if (!duel) return;
     const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
-    if (!mon || mon.dim || mon.stun > 0 || mon.noBlock || (mon.path ?? 0) > 0) {
-      holdNotice("Quái này không chặn được");
+    if (!mon || mon.dim || mon.stun > 0 || mon.noBlock || mon.row === "back" || (mon.path ?? 0) > 0) {
+      holdNotice(mon?.row === "back" ? "Hàng sau không phòng được." : "Quái này không chặn được");
       return;
     }
     if (mon.cardId === "ky-si-bong-toi" && !mon.clash) {
@@ -3351,19 +3358,31 @@ function PlayPage() {
         return;
       }
     }
+    const frontHit = Boolean(
+      responding &&
+        duel.hold?.priority === viewer &&
+        !coverBack &&
+        (pending?.kind === "melee" || pending?.kind === "beam" || pending?.kind === "gnaw-skill") &&
+        you.field.some((unit) => unit?.uid === (pending.kind === "melee" ? pending.defender : pending.target)),
+    );
     if (reactEl && payload.kind === "unit" && duel.hold?.priority === viewer) {
-      if (pending?.kind === "face") offerBlock(payload.uid);
+      if (pending?.kind === "face" || coverBack) offerBlock(payload.uid);
+      else if (frontHit) holdNotice("Hàng trước tự chịu, không ai chặn hộ.");
       return;
     }
-    const intercept = responding && duel.hold?.priority === viewer && pending?.kind === "face";
+    if (frontHit && payload.kind === "unit") {
+      holdNotice("Hàng trước tự chịu, không ai chặn hộ.");
+      return;
+    }
+    const intercept = responding && duel.hold?.priority === viewer && (pending?.kind === "face" || coverBack);
     if (intercept && pending) {
-      const attackerUid = pending.attacker;
-      const onShot = Boolean(hit?.closest("[data-beam]")) || (foeUid !== "" && foeUid === attackerUid);
+      const attackerUid = "attacker" in pending ? pending.attacker : "caster" in pending ? pending.caster : "";
+      const onShot = coverBack || Boolean(hit?.closest("[data-beam], [data-react]")) || (foeUid !== "" && foeUid === attackerUid);
       if (onShot) {
         offerBlock(payload.uid);
         return;
       }
-      holdNotice("Chỉ chặn được đòn đánh vào người");
+      holdNotice("Kéo hàng trước lên đòn để chặn.");
       return;
     }
     if (!canPlay) return;
@@ -4271,7 +4290,7 @@ function PlayPage() {
                     }}
                     onPointerDown={(event) => {
                       event.stopPropagation();
-                      setPinnedId(dot.id);
+                      setPinnedId((current) => (current === dot.id ? null : dot.id));
                     }}
                   />
                 </span>
@@ -4279,7 +4298,7 @@ function PlayPage() {
             })}
           </div>
         )}
-        {board.notice.hidden || (compact && pinnedId === null) ? null : (
+        {board.notice.hidden || pinnedId === null ? null : (
           <p
             className={`banner${lineOn ? " is-quiet" : ""}`}
             ref={noticeRef}
@@ -5064,7 +5083,7 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || canIntercept)));
+          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || (canIntercept && mon.row !== "back"))));
           return (
             <BoardSlot
               key={`y${index}`}
@@ -5344,18 +5363,22 @@ function PlayPage() {
         </div>
         {/* Bố cục chung (chủ game 28/10, theo bàn Grok): OK / chuyển lượt to trên cầu mana; X đỏ (huỷ) và con mắt (xem trước)
             ở chỗ hai nút rút cũ, chưa bấm được (hàng chờ hành động làm sau). Rút bài = bấm xấp bài úp. */}
-        <div className="actions is-spread" style={{ "--act-scale": board.actions.size } as CSSProperties}>
-          <span className="act medal-act is-idle" aria-hidden="true" style={{ left: "78.6%", top: `${ry(79.7)}%`, "--medal": "8.4cqw" } as CSSProperties}>
-            <Medal tone="red" icon="cross-mark" />
-          </span>
-          <span className="act medal-act is-idle" aria-hidden="true" style={{ left: "78.4%", top: `${ry(84.8)}%`, "--medal": "8.4cqw" } as CSSProperties}>
-            <Medal tone="purple" icon="all-seeing-eye" />
-          </span>
-          {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
+        <div className="actions is-spread">
+          {board.drawMon.hidden ? null : (
+            <span className="act medal-act is-idle" aria-hidden="true" style={pinMedal(board.drawMon)}>
+              <Medal tone="red" icon="cross-mark" />
+            </span>
+          )}
+          {board.drawSpell.hidden ? null : (
+            <span className="act medal-act is-idle" aria-hidden="true" style={pinMedal(board.drawSpell)}>
+              <Medal tone="purple" icon="all-seeing-eye" />
+            </span>
+          )}
+          {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
               className={`act medal-act press ${responding ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
-              style={{ left: "91.2%", top: `${ry(83)}%`, "--medal": "14.4cqw" } as CSSProperties}
+              style={pinMedal(board.endTurn)}
               aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
@@ -5363,15 +5386,6 @@ function PlayPage() {
             </button>
           ) : null}
         </div>
-        {/* Chân dung hai bên ở giữa sân, kiếm trên người giữ lượt tấn công, khiên trên người kia (chưa có hình riêng). */}
-        {([
-          { side: viewer, x: 11.5, y: 58.8, mine: true },
-          { side: (1 - viewer) as Side, x: 88.3, y: 43.9, mine: false },
-        ] as const).map((who) => (
-          <span key={who.mine ? "you" : "foe"} className={`who-pin${who.mine ? " is-you" : " is-foe"}${duel.turn === who.side ? " is-turn" : ""}`} aria-hidden="true" style={{ left: `${who.x}%`, top: `${ry(who.y)}%` }}>
-            <Medal tone={who.mine ? "blue" : "red"} icon={(duel.round ?? duel.turn) === who.side ? "sword-brandish" : "round-shield"} />
-          </span>
-        ))}
         {counterSeat >= 0 && duel.counterAsk ? (
           <UnitChips
             duel={duel}
@@ -5387,7 +5401,7 @@ function PlayPage() {
             apply={apply}
           />
         ) : null}
-        {aim?.kind === "menu" ? (
+        {aim?.kind === "menu" && !duel.counterAsk ? (
           <UnitChips
             duel={duel}
             uid={aim.uid}
@@ -5858,6 +5872,8 @@ function UnitChips({
   const z: Array<{ key: string; label: string; go: () => void }> = [];
   const afford = (cost: number) => Boolean(duel.parley && duel.step === "respond") || you.orb >= cost;
   const aimSkill = (skillIndex: number) => setAim({ kind: "skill", uid, index: skillIndex });
+  // Chỉ bên giữ kiếm (token tấn công của vòng) được đánh và dùng kỹ năng gây sát thương; Trả đòn thì luôn được.
+  const sword = riposte || attackRound(duel) === side;
   if (attackable && !noSkill) {
     for (const chip of fieldBindsFor(card.id, {
       cardId: card.id,
@@ -5874,13 +5890,14 @@ function UnitChips({
       spent: mon.shed ?? [],
       room: empty,
     })) {
+      if (!sword && harmSkill(card.id, chip.skill)) continue;
       y.push({ key: chip.key, label: chip.label, go: chip.go });
     }
   }
 
   if (attackable && !noSkill && !mon.copy && card.id === "ga-he-dang-so") {
     if (you.orb >= 1) y.push({ key: "charge", label: chipLabel(card.id, "charge"), go: () => apply(useSkill(duel, uid, null, 0)) });
-    if (mon.charge >= 2) z.push({ key: "cast", label: chipLabel(card.id, "cast"), go: () => aimSkill(1) });
+    if (mon.charge >= 2 && sword) z.push({ key: "cast", label: chipLabel(card.id, "cast"), go: () => aimSkill(1) });
   }
   if (attackable && !mon.copy && card.id === "sat-nhan-bat-giu" && !mon.seized && mon.stun === 0 && (mon.chain ?? 0) === 0 && (mon.path ?? 0) === 0 && !mon.cage) {
     y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0) });
@@ -5919,7 +5936,7 @@ function UnitChips({
   if (attackable && !noSkill && card.id === "hiep-si-huyen-bi" && !duel.parley && you.orb >= 2) {
     z.push({ key: "talk", label: tr("Đàm phán"), go: () => apply(startParley(duel, uid)) });
   }
-  if (attackable && !noSkill && card.id === "phu-thuy-thoi-gian" && you.orb >= 2) y.push({ key: "all", label: chipLabel(card.id, "all"), go: () => onChronoFlow(uid) });
+  if (attackable && !noSkill && card.id === "phu-thuy-thoi-gian" && you.orb >= 2 && sword) y.push({ key: "all", label: chipLabel(card.id, "all"), go: () => onChronoFlow(uid) });
   if (attackable && !noSkill && card.id === "rong-boc-trung") {
     y.push({
       key: "stance",
@@ -5940,8 +5957,8 @@ function UnitChips({
       },
     });
   }
-  if (attackable && !noSkill && card.id === "may-quay-thuong" && you.orb >= 1) y.push({ key: "rage", label: chipLabel(card.id, "rage"), go: () => aimSkill(1) });
-  if (attackable && !noSkill && card.id === "trai-tim-hai-long") {
+  if (attackable && !noSkill && card.id === "may-quay-thuong" && you.orb >= 1 && sword) y.push({ key: "rage", label: chipLabel(card.id, "rage"), go: () => aimSkill(1) });
+  if (attackable && !noSkill && card.id === "trai-tim-hai-long" && sword) {
     y.push({ key: "tide", label: chipLabel(card.id, "tide"), go: () => setAim({ kind: "tide", uid }) });
   }
   if (mon.cardId === "yeu-tinh-chuc-phuc" && monsterAlert(duel, mon, side) && afford(skillManaCost(mon.cardId, 1))) {
@@ -5994,7 +6011,7 @@ function UnitChips({
       });
     }
   }
-  const strikeShown = attackable && !noAttack && visibleStats(mon, you.field).atk > 0;
+  const strikeShown = attackable && sword && !noAttack && visibleStats(mon, you.field).atk > 0;
   if (!strikeShown && y.length === 0 && z.length === 0) return null;
 
   // Each button shows the skill's emblem and name as on the monster sheet: the colour of its kind there, or blue
@@ -6165,6 +6182,17 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
   const count = fieldCount(mon, allies);
   if (count !== "" && count !== 0) return String(count);
   return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
+}
+
+/** A board pin (Grok layout): centred on its spot, sized by width × size of the board. */
+function pinBox(spot: { x: number; y: number; width: number; height: number; size: number }): CSSProperties {
+  const scale = spot.size || 1;
+  return { left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.width * scale}%`, height: `${spot.height * scale}%` };
+}
+
+/** A round 3D button on a board pin: as wide as the pin. */
+function pinMedal(spot: { x: number; y: number; width: number; size: number }): CSSProperties {
+  return { left: `${spot.x}%`, top: `${spot.y}%`, "--medal": `${spot.width * (spot.size || 1)}cqw` } as CSSProperties;
 }
 
 /** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */

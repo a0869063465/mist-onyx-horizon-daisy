@@ -19,7 +19,7 @@ export type FieldBindCtx = {
   room: number;
 };
 
-export type FieldBindChip = { key: string; label: string; go: () => void };
+export type FieldBindChip = { key: string; label: string; go: () => void; skill: number };
 
 type Gate = (ctx: FieldBindCtx) => boolean;
 
@@ -78,7 +78,7 @@ export function fieldBindsFor(cardId: string, ctx: FieldBindCtx): FieldBindChip[
     if (!row.ids.includes(cardId)) continue;
     if (row.gate && !row.gate(ctx)) continue;
     const go = () => (row.cast === "aim" ? ctx.aim(row.skill) : row.cast === "declare" ? ctx.declare(row.skill) : ctx.cast(row.skill));
-    chips.push({ key: row.key, label: row.label?.(ctx) ?? chipLabel(cardId, row.key), go });
+    chips.push({ key: row.key, label: row.label?.(ctx) ?? chipLabel(cardId, row.key), go, skill: row.skill });
   }
   return chips;
 }
