@@ -712,6 +712,7 @@ export const PENDING_NOTES: string[] = [
   "Bàn đấu mới: phủ hết chiều ngang màn hình, 6 ô mỗi bên khớp hình bàn (hàng trước sát giữa sân, hàng sau sát tay). Màn thiếu chiều dọc thì xén bớt phần trên bên đỏ. Bố cục nút, thông báo, chấm lịch sử đặt lại về mặc định mới.",
   "Mọi môi trường tạm dùng chung một hình bàn đấu. Hình bàn riêng của từng môi trường sẽ làm lại sau.",
   "Màn ngắn thì bàn đấu được cắt bớt: cắt phía trên tới sát cầu máu và cầu mana của đối thủ, còn thiếu thì hai nửa đỏ và xanh xích lại gần nhau trên nền sân không có đĩa. Lúc đó bảng thông báo chỉ hiện khi bấm một trong 3 chấm lịch sử.",
+  "Nút Rút bài và Hết lượt (OK) dời xuống bảng xanh bên phải, gần cầu mana của bạn. Nút OK to hơn.",
 ];
 
 function remarkOf(notes: string[]) {

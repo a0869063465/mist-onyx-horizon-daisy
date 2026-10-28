@@ -137,7 +137,7 @@ import {
   type Side,
 } from "@/lib/duel";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
-import { COUNT_MARKS, DEFAULT_ACTIONS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
@@ -2862,7 +2862,6 @@ function PlayPage() {
   const marks = board.marks;
   const artTop = topArt(foe.env);
   const artBottom = bottomArt(you.env);
-  const actionsMoved = JSON.stringify(board.actions) !== JSON.stringify(DEFAULT_ACTIONS);
   const fieldLayout = loadField();
   const selected = you.field.find((mon) => mon && aim && "uid" in aim && aim.uid === mon.uid) ?? null;
   const selectedCard = selected ? monsterCard(selected.cardId) : undefined;
@@ -4088,7 +4087,7 @@ function PlayPage() {
       : null;
 
   return (
-    <main className="stage is-play">
+    <main className="stage is-play" data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroMid(duel.mid ?? "")} /> : null}
@@ -5341,23 +5340,9 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
-        <div
-          className="actions"
-          style={
-            actionsMoved
-              ? ({
-                  left: `${board.actions.x - board.actions.width / 2}%`,
-                  top: `${board.actions.y - board.actions.height / 2}%`,
-                  right: "auto",
-                  width: `${board.actions.width}%`,
-                  minHeight: `${board.actions.height}%`,
-                  "--act-scale": board.actions.size,
-                } as CSSProperties)
-              : undefined
-          }
-        >
+        <div className="actions is-spread" style={{ "--act-scale": board.actions.size } as CSSProperties}>
           {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0 ? (
-            <button type="button" className="act medal-act is-draw-mon press" aria-label={tr("Rút bài")} onClick={() => apply(draw(duel))}>
+            <button type="button" className="act medal-act is-draw-mon press" style={{ left: "78.6%", top: `${ry(82.2)}%` }} aria-label={tr("Rút bài")} onClick={() => apply(draw(duel))}>
               <Medal tone="orange" icon="wolf-head" />
             </button>
           ) : null}
@@ -5365,6 +5350,7 @@ function PlayPage() {
             <button
               type="button"
               className={`act medal-act press ${responding ? "is-pass" : "is-end"}`}
+              style={{ left: "91.2%", top: `${ry(83)}%`, "--act-scale": board.actions.size * 1.3 } as CSSProperties}
               aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >

@@ -2305,6 +2305,17 @@ button.trail-dot.is-on {
   gap: 0.35rem;
   z-index: 14;
 }
+.actions.is-spread {
+  inset: 0;
+  width: auto;
+  min-height: 0;
+  pointer-events: none;
+}
+.actions.is-spread > .act {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
 .act {
   min-height: 2.75rem;
   border: 0;
@@ -2390,6 +2401,17 @@ button.trail-dot.is-on {
 .help-btn {
   right: 0.4rem;
 }
+/* Màn ngắn: phần trên bàn bị cắt sát cầu máu/mana, hai nút góc thu nhỏ để khỏi che chúng. */
+.stage.is-play[data-cut] .back-link,
+.stage.is-play[data-cut] .help-btn {
+  top: 0.1rem;
+  min-height: 1.35rem;
+  padding: 0 0.4rem;
+  font-size: 0.55rem;
+  opacity: 0.72;
+}
+.stage.is-play[data-cut] .back-link { left: 0.1rem; }
+.stage.is-play[data-cut] .help-btn { right: 0.1rem; }
 .test-tools {
   position: absolute;
   z-index: 14;
