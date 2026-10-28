@@ -56,7 +56,8 @@ export type Notice = { x: number; y: number; w: number; h: number; font: number;
 export type Trail = { x: number; y: number; w: number; h: number; dot: number; glow: number; hidden?: boolean };
 export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot };
 
-export const DEFAULT_NOTICE: Notice = { x: 8.7, y: 36.8, w: 70, h: 21, font: 4.8, hidden: false };
+// 6 ô mỗi bên (28/10): hàng trước của hai bên chiếm khoảng giữa sân, bảng thông báo thu về khe giữa hai hàng trước.
+export const DEFAULT_NOTICE: Notice = { x: 8.7, y: 42.6, w: 70, h: 8.4, font: 3.6, hidden: false };
 export const DEFAULT_TRAIL: Trail = { x: 1.2, y: 36.8, w: 7.2, h: 21, dot: 1.6, glow: 3, hidden: false };
 export const DEFAULT_REACTION: Notice = { x: 74, y: 34, w: 20, h: 28, font: 4.2, hidden: false };
 export const DEFAULT_STACK: Spot = { x: 83.4, y: 72.6, size: 3.1, width: 16, height: 10, hidden: false };

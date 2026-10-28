@@ -706,6 +706,9 @@ export const PENDING_NOTES: string[] = [
   "Quái hàng sau bị đánh không phản đòn, giống như khi nó đánh thì không bị phản đòn.",
   "Quái và phép trộn chung một xấp, chỉ còn một nút Rút bài: rút lá đầu xấp, ra quái hay phép tuỳ xấp. Đầu trận rút 3 lá bất kỳ, vẫn đổi được 0 đến 3 lá.",
   "Bộ bài từ 16 đến 24 lá, ít nhất 13 quái, phép không bắt buộc.",
+  "Sân mỗi bên hiện đủ 6 ô: hàng trước sát giữa sân, hàng sau sát tay. Bảng thông báo thu gọn vào khe giữa hai hàng trước.",
+  "Tay bài gộp chung quái và phép trong một hàng. Xấp bài bên phải hiện số lá còn lại, bấm vào để rút bài.",
+  "Khi quái của bạn được Trả đòn, nút Trả đòn hiện ngay trên quái đó. Bấm để đánh trả, chưa Trả đòn thì chưa làm gì khác được.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -63,6 +63,7 @@ import {
   dismissGlimpse,
   draw,
   pileLeft,
+  pickCounter,
   endTurn,
   fieldName,
   harmShift,
@@ -334,16 +335,26 @@ type Linger = { id: number; side: Side; index: number; mon: FieldMon; fading?: b
 type Motion = { pops: string[]; lunges: string[]; hits: string[] };
 type Burst = { id: number; tone: "spell" | "heal"; text: string };
 
+/**
+ * 6 ô mỗi bên (luật mới, chủ game 28/10): ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
+ * Dùng tạm bàn cũ: hàng trước nằm trong khoảng trống giữa sân, hàng sau ở chỗ ô cũ.
+ */
 const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
   0: [
-    { x: 15, y: 70 },
-    { x: 36, y: 70 },
-    { x: 57, y: 70 },
+    { x: 14.2, y: 57.0 },
+    { x: 33.7, y: 57.0 },
+    { x: 53.2, y: 57.0 },
+    { x: 14.2, y: 69.7 },
+    { x: 33.7, y: 69.7 },
+    { x: 53.2, y: 69.7 },
   ],
   1: [
-    { x: 21, y: 26 },
-    { x: 40, y: 26 },
-    { x: 59, y: 26 },
+    { x: 20.2, y: 36.8 },
+    { x: 39.2, y: 36.8 },
+    { x: 58.2, y: 36.8 },
+    { x: 20.2, y: 24.9 },
+    { x: 39.2, y: 24.9 },
+    { x: 58.2, y: 24.9 },
   ],
 };
 
@@ -351,14 +362,20 @@ let floaterSeq = 1;
 
 const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
   0: [
-    { x: 6, y: 63.5, w: 18, h: 13.5 },
-    { x: 27, y: 63.5, w: 18, h: 13.5 },
-    { x: 48, y: 63.5, w: 18, h: 13.5 },
+    { x: 6.5, y: 51.2, w: 15.4, h: 11.55 },
+    { x: 26.0, y: 51.2, w: 15.4, h: 11.55 },
+    { x: 45.5, y: 51.2, w: 15.4, h: 11.55 },
+    { x: 6.5, y: 63.9, w: 15.4, h: 11.55 },
+    { x: 26.0, y: 63.9, w: 15.4, h: 11.55 },
+    { x: 45.5, y: 63.9, w: 15.4, h: 11.55 },
   ],
   1: [
-    { x: 13, y: 19.5, w: 16.5, h: 13 },
-    { x: 32, y: 19.5, w: 16.5, h: 13 },
-    { x: 51, y: 19.5, w: 16.5, h: 13 },
+    { x: 13.0, y: 31.4, w: 14.4, h: 10.8 },
+    { x: 32.0, y: 31.4, w: 14.4, h: 10.8 },
+    { x: 51.0, y: 31.4, w: 14.4, h: 10.8 },
+    { x: 13.0, y: 19.5, w: 14.4, h: 10.8 },
+    { x: 32.0, y: 19.5, w: 14.4, h: 10.8 },
+    { x: 51.0, y: 19.5, w: 14.4, h: 10.8 },
   ],
 };
 
@@ -2782,7 +2799,7 @@ function PlayPage() {
   const foe = duel.players[viewer === 0 ? 1 : 0];
   const mine = !busy && duel.winner === null && (duel.mode === "hotseat" || duel.mode === "test" || actor === (duel.mode === "ai" ? 0 : viewer));
   const gemHold = duel.gemCap === viewer || duel.gemWarn === viewer;
-  const canPlay = mine && duel.step === "main" && duel.turn === viewer && !duel.upkeep && !gemHold;
+  const canPlay = mine && duel.step === "main" && duel.turn === viewer && !duel.upkeep && !gemHold && !duel.counterAsk;
   const dueKnight = mine ? knightDue(duel, viewer) : null;
   const upkeepUnit =
     mine && duel.upkeep && duel.turn === viewer
@@ -3606,7 +3623,8 @@ function PlayPage() {
   const spellToll = inspect?.pile === "spell" ? Boolean(you.tolls?.[inspect.index]) : false;
   const shownMonster = reserveHeld ? monsterCard(reserveHeld.id) : undefined;
   const shownSpell = inspect?.pile === "spell" ? spellCard(you.hand[inspect.index] ?? "") : inspect?.pile === "env" ? spellCard(inspect.id) : undefined;
-  const otherCount = hand === "reserve" ? you.hand.length : you.reserve.length;
+  // Trả đòn (luật mới): quái của mình vừa chịu đòn mà còn sống phải trả đòn trước khi làm gì khác.
+  const counterSeat = mine && duel.counterAsk ? you.field.findIndex((mon) => mon?.uid === duel.counterAsk?.uid) : -1;
   const graspAsk = (event: ReactPointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
     if (target.closest("button, a, input")) return;
@@ -4953,7 +4971,7 @@ function PlayPage() {
             }}
           />
         ) : null}
-        {([0, 1, 2] as const).map((index) => {
+        {([0, 1, 2, 3, 4, 5] as const).map((index) => {
           const side = (viewer === 0 ? 1 : 0) as Side;
           const mon = foe.field[index] ?? null;
           const held = linger.find((item) => item.side === side && item.index === index);
@@ -4998,7 +5016,7 @@ function PlayPage() {
             />
           );
         })}
-        {([0, 1, 2] as const).map((index) => {
+        {([0, 1, 2, 3, 4, 5] as const).map((index) => {
           const mon = you.field[index] ?? null;
           const held = linger.find((item) => item.side === viewer && item.index === index);
           const shown = mon ?? held?.mon ?? fallenMon(prevDuel.current, duel, viewer, index);
@@ -5107,19 +5125,19 @@ function PlayPage() {
             height: `${board.stack.height}%`,
             fontSize: `${board.stack.size}cqmin`,
           }}
-          aria-label={hand === "reserve" ? "Đổi sang bài phép" : "Đổi sang quái thú"}
+          aria-label={tr("Rút bài")}
           onClick={() => {
-            setHand((current) => (current === "reserve" ? "spell" : "reserve"));
             setInspect(null);
             setAim((current) => (current?.kind === "summon" ? null : current));
+            if (mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0) apply(draw(duel));
           }}
         >
-          {otherCount > 0 ? <b>{otherCount}</b> : null}
-          <small>{hand === "reserve" ? tr("Phép") : tr("Quái")}</small>
+          {pileLeft(you) > 0 ? <b>{pileLeft(you)}</b> : null}
+          <small>{tr("Bài")}</small>
         </button>
         )}
         <div
-          className={`hand is-strip${(hand === "reserve" ? you.reserve.length : you.hand.length) > 3 ? " is-paged" : ""}${riteHand !== null ? " is-rite" : ""}`}
+          className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onPointerDown={(event) => {
             if ((event.target as HTMLElement).closest("button")) return;
@@ -5142,8 +5160,8 @@ function PlayPage() {
             if (event.target === event.currentTarget) setInspect(null);
           }}
         >
-          {hand === "reserve"
-            ? you.reserve.map((held, index) => {
+          {[
+            ...you.reserve.map((held, index) => {
                 const id = held.id;
                 const card = monsterCard(id);
                 if (!card) return null;
@@ -5186,8 +5204,8 @@ function PlayPage() {
                     </button>
                   </div>
                 );
-              })
-            : you.hand.map((id, index) => {
+              }),
+            ...you.hand.map((id, index) => {
                 const open = inspect?.pile === "spell" && inspect.index === index;
                 const tolled = Boolean(you.tolls?.[index]);
                 const payable = tollOk(spellCard(id)?.gems ?? 0, tolled, you.orb, you.flask);
@@ -5290,10 +5308,9 @@ function PlayPage() {
                     </button>
                   </div>
                 );
-              })}
-          {(hand === "reserve" ? you.reserve.length : you.hand.length) === 0 ? (
-            <p className="hand-empty">{hand === "reserve" ? tr("Hết quái dự bị") : tr("Hết phép")}</p>
-          ) : null}
+              }),
+          ]}
+          {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
         <div
           className="actions"
@@ -5315,7 +5332,7 @@ function PlayPage() {
               <Medal tone="orange" icon="wolf-head" />
             </button>
           ) : null}
-          {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
+          {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
               className={`act medal-act press ${responding ? "is-pass" : "is-end"}`}
@@ -5326,6 +5343,16 @@ function PlayPage() {
             </button>
           ) : null}
         </div>
+        {counterSeat >= 0 ? (
+          <button
+            type="button"
+            className="counter-btn press"
+            style={{ left: `${SLOT_BOX[viewer][counterSeat].x}%`, top: `${SLOT_BOX[viewer][counterSeat].y - 5.2}%`, width: `${SLOT_BOX[viewer][counterSeat].w}%` }}
+            onClick={() => apply(pickCounter(duel, "phys"))}
+          >
+            {tr("Trả đòn")}
+          </button>
+        ) : null}
         {aim?.kind === "menu" ? (
           <UnitChips
             duel={duel}
