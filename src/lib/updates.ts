@@ -715,6 +715,7 @@ export const PENDING_NOTES: string[] = [
   "Bố cục mới: nút OK / chuyển lượt to nằm trên cầu mana của bạn, bên cạnh là nút X đỏ và con mắt (chưa dùng được). Rút bài bằng cách bấm xấp bài úp. Giữa sân có huy hiệu hai bên: kiếm là bên đang giữ lượt tấn công, khiên là bên kia.",
   "Nút OK có 3 mặt: mũi tên xanh nhấp nháy là chuyển quyền cho đối thủ (vòng chưa hết), đồng hồ cát đỏ là kết thúc vòng (đối thủ đã bỏ lượt), dấu tick là không phản ứng.",
   "Giữa sân có dòng sáng của bên đang giữ quyền: đỏ ở phía đối thủ, xanh ở phía bạn, chảy sang bên kia khi đổi quyền. Khi quyền về bạn hiện chữ TỚI LƯỢT CỦA BẠN, khi sang vòng mới hiện VÒNG N.",
+  "Kiếm có cánh hiện ở bên đang giữ lượt tấn công của vòng: kiếm xanh bên bạn, kiếm tím bên đối thủ, bay vào khi đổi bên.",
 ];
 
 function remarkOf(notes: string[]) {

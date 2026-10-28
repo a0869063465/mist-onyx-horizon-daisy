@@ -4222,6 +4222,20 @@ function PlayPage() {
         <div className="diorama">
         <BoardArt src={artTop} cut={cut} />
         <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
+        {(() => {
+          // Kiếm có cánh (ảnh chủ game mua, 28/10): chỉ ở bên đang giữ token tấn công của vòng, xanh là mình, tím là đối
+          // thủ; đổi bên thì kiếm bay vào lại.
+          const holder = duel.round ?? duel.turn;
+          const ours = holder === viewer;
+          const spot = ours ? board.youAtk : board.foeAtk;
+          if (spot.hidden || duel.winner !== null) return null;
+          const src = ours ? "/ui/sword-you.webp" : "/ui/sword-foe.webp";
+          return (
+            <span key={`sword-${holder}`} className={`turn-sword${ours ? " is-you" : " is-foe"}`} aria-hidden="true" style={{ ...pinBox(spot), ["--sword" as string]: `url(${src})` } as CSSProperties}>
+              <img src={src} alt="" draggable={false} />
+            </span>
+          );
+        })()}
         {[
           { id: you.env, spot: board.env, key: "you-env" },
           { id: foe.env, spot: board.envFoe, key: "foe-env" },

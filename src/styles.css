@@ -11420,97 +11420,7 @@ button.watch-back {
   aspect-ratio: auto;
 }
 
-/* Bàn Grok (chủ game 28/10): hồ sơ hai bên, kiếm của bên giữ lượt tấn công, chữ "Chớp" trên ô hàng sau trống, ghim trong Tuỳ chỉnh. */
-.who-avatar {
-  flex: none;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  border: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
-}
-.who-avatar.is-foe { background: radial-gradient(circle at 40% 30%, #c45a4a, #2a1010 72%); }
-.who-avatar.is-you { background: radial-gradient(circle at 40% 30%, #4f86c8, #102033 72%); }
-.who-avatar.is-turn {
-  box-shadow:
-    0 0 8px #3dff72,
-    0 0 18px #14e85a,
-    0 0 32px #067a2c;
-  animation: avatar-glow 1.2s ease-in-out infinite;
-}
-@keyframes avatar-glow {
-  50% {
-    box-shadow:
-      0 0 12px #eafff0,
-      0 0 26px #5dff8a,
-      0 0 44px #0aa83c;
-  }
-}
-.board-pin {
-  position: absolute;
-  z-index: 7;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.who-mark {
-  flex: none;
-  width: 2.45rem;
-  height: 2.45rem;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
-}
-.sword-rise {
-  width: 2.45rem;
-  height: 2.45rem;
-}
-.sword-rise .who-mark {
-  animation: sword-in 0.62s cubic-bezier(0.14, 0.82, 0.22, 1) both;
-}
-.sword-flash {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 2.8rem;
-  height: 0.28rem;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #fff8dc 18%, #fff 50%, #ffe08a 82%, transparent);
-  box-shadow: 0 0 12px #ffe7a2, 0 0 22px rgba(255, 196, 64, 0.85);
-  transform: translate(-50%, -50%) rotate(-48deg) scaleX(0.2);
-  animation: sword-slash 0.5s ease-out both;
-  pointer-events: none;
-}
-@keyframes sword-in {
-  0% {
-    transform: scale(0.12) rotate(-78deg);
-    filter: brightness(3) drop-shadow(0 0 10px #fff4c4);
-    opacity: 0;
-  }
-  55% {
-    transform: scale(1.22) rotate(10deg);
-    filter: brightness(1.7) drop-shadow(0 0 14px #ffd56a);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65));
-    opacity: 1;
-  }
-}
-@keyframes sword-slash {
-  0% {
-    opacity: 0;
-    transform: translate(-70%, -50%) rotate(-48deg) scaleX(0.15);
-  }
-  35% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(-48deg) scaleX(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-28%, -50%) rotate(-48deg) scaleX(1.15);
-  }
-}
-
+/* Bàn Grok (chủ game 28/10): chữ "Chớp" trên ô hàng sau trống, ghim hồ sơ trong Tuỳ chỉnh. */
 .slot-f3:not(:has(.field-unit))::after,
 .slot-f4:not(:has(.field-unit))::after,
 .slot-f5:not(:has(.field-unit))::after,
@@ -11558,3 +11468,43 @@ button.watch-back {
 }
 .turn-light { z-index: 2; }
 .turn-title { z-index: 12; }
+
+/* Kiếm có cánh của bên giữ token tấn công: bay vào (phóng to, loé, vệt sáng quét qua) rồi lơ lửng nhẹ. */
+.turn-sword {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.turn-sword img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0.15rem 0.25rem rgba(0, 0, 0, 0.6));
+  animation: sword-arrive 0.72s cubic-bezier(0.14, 0.82, 0.22, 1) both, sword-float 2.8s ease-in-out 0.72s infinite;
+}
+.turn-sword::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.95) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%;
+  -webkit-mask: var(--sword) center / contain no-repeat;
+  mask: var(--sword) center / contain no-repeat;
+  animation: sword-shine 0.8s ease-out 0.32s both;
+}
+@keyframes sword-arrive {
+  0% { transform: scale(0.15) translateY(40%); opacity: 0; filter: brightness(3) drop-shadow(0 0 0.6rem #fff4c4); }
+  55% { transform: scale(1.2); opacity: 1; filter: brightness(1.6) drop-shadow(0 0 0.7rem #ffe08a); }
+  100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0.15rem 0.25rem rgba(0, 0, 0, 0.6)); }
+}
+@keyframes sword-float {
+  50% { transform: translateY(-5%); filter: brightness(1.1) drop-shadow(0 0.3rem 0.35rem rgba(0, 0, 0, 0.5)); }
+}
+@keyframes sword-shine {
+  0% { background-position: 120% 0; opacity: 1; }
+  100% { background-position: -20% 0; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turn-sword img, .turn-sword::after { animation: none; }
+}

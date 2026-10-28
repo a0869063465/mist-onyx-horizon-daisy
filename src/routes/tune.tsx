@@ -686,7 +686,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
               drag.current = null;
             }}
           >
-            {item.kind === "atk" ? <img src="/ui/turn-sword.png" alt="" /> : <i />}
+            {item.kind === "atk" ? <img src={item.key === "youAtk" ? "/ui/sword-you.webp" : "/ui/sword-foe.webp"} alt="" /> : <i />}
           </button>
         ))}
         {HUD_MARKS.map((mark) => (
