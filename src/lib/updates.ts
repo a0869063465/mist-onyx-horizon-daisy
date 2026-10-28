@@ -698,6 +698,11 @@ export const PENDING_NOTES: string[] = [
   "Hình nền menu chính thay bằng bản mới.",
   "Game chạy toàn màn hình khi cài như app: hình nền phủ lên tận mép trên, ẩn thanh trạng thái (đồng hồ, pin). Vuốt từ mép trên xuống để hiện lại. Cần xoá app đã cài rồi cài lại để có hiệu lực.",
   "App đã cài tự vào toàn màn hình ngay lần chạm đầu tiên, và mỗi lần quay lại app, không cần vuốt nữa.",
+  "Luật vòng đấu mới: mỗi vòng một người giữ token tấn công, chỉ người đó được đánh và dùng skill gây sát thương. Mỗi hành động (triệu hồi, đánh, phép, skill) xong thì quyền sang đối thủ; rút bài và skill phép tự do thì không. Cả hai cùng bỏ lượt thì hết vòng, token sang người kia, cả hai +1 mana. Lượt đầu được tấn công.",
+  "Mỗi quái chỉ đánh hoặc dùng skill 1 lần mỗi vòng. Mỗi người triệu hồi 1 lần và rút 1 lá mỗi vòng, kể cả trong vòng của đối thủ.",
+  "Sân mỗi bên 6 ô: hàng trước sát giữa sân, hàng sau sát tay. Quái hàng sau đánh chớp nhoáng, không bị trả đòn, không chặn được. Quái hàng trước chặn được đòn đánh và skill nhắm vào người chơi hoặc quái hàng sau; đánh vào quái hàng trước thì không ai chặn hộ.",
+  "Trả đòn: quái hàng trước giáp lá cà với quái hàng trước, bên bị đánh không trừ máu kẻ đánh ngay mà còn sống thì được Trả đòn riêng, bằng đòn đánh thường hoặc skill. Quái chặn cũng vậy.",
+  "Vòng xoáy bảo hộ chặn đòn và kết thúc vòng của đối thủ.",
 ];
 
 function remarkOf(notes: string[]) {
