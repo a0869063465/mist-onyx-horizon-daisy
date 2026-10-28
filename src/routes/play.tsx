@@ -8,7 +8,7 @@ import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } f
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
-import { boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
+import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
@@ -361,6 +361,7 @@ const RAW_SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
 };
 
 /** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
+const FLOOR_ART = "/board-floor.jpg";
 const SLOT_POS = cutView(RAW_SLOT_POS, (raw, cut) => ({
   0: raw[0].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
   1: raw[1].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
@@ -6166,21 +6167,34 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
   return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
 }
 
-/** The board picture: whole, or two slices joined where the middle band was cut out (board-cut.ts). */
+/** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
 function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
   if (cut.v === 1) return <img className="board-art" src={src} alt="" />;
   const size = `100% ${100 / cut.v}cqh`;
-  const image = `url(${src})`;
-  const seam = (cut.from - cut.top) / cut.v;
+  const at = (imageY: number) => `0 ${-imageY / cut.v}cqh`;
+  const redEnd = (RED_END - cut.top) / cut.v;
   if (cut.to - cut.from < 0.01) {
-    return <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.top / cut.v}cqh` }} />;
+    return <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />;
   }
-  // The lower slice starts a hair above the seam so no thin line shows between the two.
-  const lap = 0.12;
+  // Floor layer under the gap between the halves; its middle sits where the middle of the original floor was.
+  const gap = (BLUE_START - cut.to) / cut.v;
+  const gapMiddle = redEnd + gap / 2;
+  const floorMiddle = (RED_END + BLUE_START) / 2;
+  const reach = 3;
+  const floorTop = redEnd - reach;
+  const floorY = floorMiddle + (floorTop - gapMiddle) * cut.v;
+  const feather = 1.6;
   return (
     <>
-      <div className="board-art-slice" style={{ top: 0, height: `${seam}cqh`, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.top / cut.v}cqh` }} />
-      <div className="board-art-slice" style={{ top: `${seam - lap}cqh`, bottom: 0, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.to / cut.v + lap}cqh` }} />
+      <div className="board-art-slice" style={{ top: `${floorTop}cqh`, height: `${gap + reach * 2}cqh`, backgroundImage: `url(${FLOOR_ART})`, backgroundSize: size, backgroundPosition: at(floorY) }} />
+      <div
+        className="board-art-slice"
+        style={{ top: 0, height: `${redEnd}cqh`, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top), maskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)` }}
+      />
+      <div
+        className="board-art-slice"
+        style={{ top: `${redEnd + gap}cqh`, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(BLUE_START), maskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)` }}
+      />
     </>
   );
 }
