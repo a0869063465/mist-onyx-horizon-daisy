@@ -8,6 +8,7 @@ import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } f
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
+import { boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
@@ -340,7 +341,7 @@ type Burst = { id: number; tone: "spell" | "heal"; text: string };
  * 6 ô mỗi bên trên bàn mới (ảnh board-full.jpg của Grok, chủ game chọn 28/10): số theo phần trăm của chính ảnh bàn.
  * Ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
  */
-const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
+const RAW_SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
   0: [
     { x: 16.4, y: 69.46 },
     { x: 38.75, y: 69.46 },
@@ -359,12 +360,15 @@ const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
   ],
 };
 
-/** Bàn là ảnh 841 x 1870, dài hơn 9:16: bề ngang bằng 0,4497 bề dọc. */
-const BOARD_ASPECT = 841 / 1870;
+/** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
+const SLOT_POS = cutView(RAW_SLOT_POS, (raw, cut) => ({
+  0: raw[0].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
+  1: raw[1].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
+}));
 
 let floaterSeq = 1;
 
-const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
+const RAW_SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
   0: [
     { x: 7.5, y: 63.9, w: 17.8, h: 11.12 },
     { x: 29.85, y: 63.9, w: 17.8, h: 11.12 },
@@ -383,10 +387,16 @@ const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number 
   ],
 };
 
-const HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = {
+const RAW_HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = {
   0: { x: 5, y: 87.7, w: 12, h: 7 },
   1: { x: 5, y: 5.3, w: 12, h: 7 },
 };
+
+const SLOT_BOX = cutView(RAW_SLOT_BOX, (raw, cut) => ({
+  0: raw[0].map((box) => cutBox(box, cut)),
+  1: raw[1].map((box) => cutBox(box, cut)),
+}));
+const HP_BOX = cutView(RAW_HP_BOX, (raw, cut) => ({ 0: cutBox(raw[0], cut), 1: cutBox(raw[1], cut) }));
 
 const TRAIL_INK = {
   atk: "#ff3b3b",
@@ -566,10 +576,10 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 const LUNGE_FACE = 0.42;
 const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
-const ICON_ROOM = (ICON * BOARD_ASPECT + 1.2) * 1.6;
+const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
 
 function lungeTravel(base: number, dx: number, dy: number): number {
-  const dist = Math.hypot(dx * 0.9, dy * 1.6) || 1;
+  const dist = Math.hypot(dx * 0.9, dy * 1.6 * boardCut().v) || 1;
   return Math.max(0.05, base - ICON_ROOM / dist);
 }
 
@@ -1504,6 +1514,23 @@ function TimeWheel({
 function PlayPage() {
   const language = useLang();
   const navigate = useNavigate();
+  // Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts); mọi bảng toạ độ đọc vết cắt này.
+  const [cut, setCut] = useState<BoardCut>(NO_CUT);
+  setBoardCut(cut);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const high = window.innerHeight;
+      const next = planCut(Math.min(window.innerWidth, (high * 9) / 16), high);
+      setCut((prev) => (sameCut(prev, next) ? prev : next));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, []);
   /** Back to the screen the tutorial was opened from. */
   const leaveTutorial = () => {
     setTutorial(false);
@@ -3820,8 +3847,9 @@ function PlayPage() {
   };
   const iconSpots = new Map<string, IconSpot>();
   {
-    const tall = ICON * BOARD_ASPECT;
-    const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, ((y - other.y) * 16) / 9) >= ICON * 1.08);
+    const tall = ICON * boardAspect();
+    const rows = 16 / 9 / boardCut().v;
+    const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, (y - other.y) * rows) >= ICON * 1.08);
     for (const orb of chain) {
       const kept = keptSpots.current.get(orb.id);
       // Once the wait is over an icon stays where it stood (the attacker leaves its lunge before its icon fires).
@@ -3845,11 +3873,11 @@ function PlayPage() {
         };
       } else if (!orb.near) {
         const mine = orb.side === viewer;
-        const halfY = mine ? 56 : 40;
+        const halfY = ry(mine ? 56 : 40);
         const anchor = orb.by ? iconSpots.get(orb.by) ?? null : null;
         let x = 44;
         let y = halfY;
-        if (anchor && anchor.y > 48 === mine) {
+        if (anchor && anchor.y > ry(51) === mine) {
           x = anchor.x + (anchor.x < 50 ? ICON * 1.8 : -ICON * 1.8);
           y = anchor.y;
         } else if (anchor) {
@@ -3873,7 +3901,7 @@ function PlayPage() {
     if ("face" in end) {
       const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
       const dx = (mark.x - from.x) * 0.9;
-      const dy = (mark.y - from.y) * 1.6;
+      const dy = (mark.y - from.y) * 1.6 * boardCut().v;
       const len = Math.hypot(dx, dy) || 1;
       return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len } };
     }
@@ -4121,7 +4149,7 @@ function PlayPage() {
       <section
         className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
-        style={{ "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
+        style={{ "--board-v": cut.v, "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={() => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
@@ -4132,7 +4160,7 @@ function PlayPage() {
         onPointerCancel={dropAsk}
       >
         <div className="diorama">
-        <img className="board-art" src={artTop} alt="" />
+        <BoardArt src={artTop} cut={cut} />
         {[
           { id: you.env, spot: board.env, key: "you-env" },
           { id: foe.env, spot: board.envFoe, key: "foe-env" },
@@ -6134,6 +6162,25 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
   return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
 }
 
+/** The board picture: whole, or two slices joined where the middle band was cut out (board-cut.ts). */
+function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
+  if (cut.v === 1) return <img className="board-art" src={src} alt="" />;
+  const size = `100% ${100 / cut.v}cqh`;
+  const image = `url(${src})`;
+  const seam = (cut.from - cut.top) / cut.v;
+  if (cut.to - cut.from < 0.01) {
+    return <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.top / cut.v}cqh` }} />;
+  }
+  // The lower slice starts a hair above the seam so no thin line shows between the two.
+  const lap = 0.12;
+  return (
+    <>
+      <div className="board-art-slice" style={{ top: 0, height: `${seam}cqh`, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.top / cut.v}cqh` }} />
+      <div className="board-art-slice" style={{ top: `${seam - lap}cqh`, bottom: 0, backgroundImage: image, backgroundSize: size, backgroundPosition: `0 ${-cut.to / cut.v + lap}cqh` }} />
+    </>
+  );
+}
+
 function BoardSlot({
   mon,
   side,
@@ -6199,6 +6246,9 @@ function BoardSlot({
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
   const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}`;
+  // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
+  const seat = SLOT_BOX[near ? 0 : 1][index];
+  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%` };
   const slotProps = {
     "data-slot": `${side}-${index}`,
     "data-owner": side,
@@ -6207,7 +6257,7 @@ function BoardSlot({
     "data-uid": frozen ? "" : mon?.uid ?? "",
   };
   if (!mon) {
-    return <button type="button" className={cls} aria-label={`Ô ${index + 1}`} {...slotProps} onClick={() => onSlot(side, index)} />;
+    return <button type="button" className={cls} style={place} aria-label={`Ô ${index + 1}`} {...slotProps} onClick={() => onSlot(side, index)} />;
   }
   const tokenName = (monsterCard(mon.cardId)?.stars ?? 1) <= 0;
   const stats = visibleStats(mon, allies);
@@ -6248,7 +6298,7 @@ function BoardSlot({
     <button
       type="button"
       className={`${cls}${lunging ? " is-lunging" : ""}`}
-      style={shift ? { transform: `translate(${shift.x}%, ${shift.y}%)` } : undefined}
+      style={shift ? { ...place, transform: `translate(${shift.x}%, ${shift.y}%)` } : place}
       {...slotProps}
       onClick={frozen ? undefined : () => onUnit(side, mon)}
       onPointerDown={frozen ? undefined : onPointerDown}

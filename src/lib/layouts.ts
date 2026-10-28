@@ -1,3 +1,4 @@
+import { boardCut, NO_CUT, rh, ry } from "./board-cut.ts";
 import { boardEnv, ENV_BOARDS } from "./env-boards.ts";
 export type HudKey =
   | "foeHp"
@@ -37,18 +38,18 @@ export function markScale(key: HudKey): number {
 }
 
 export const DEFAULT_BOARD: Record<HudKey, Mark> = {
-  foeHp: { x: 11, y: 8.8, size: 5.6 },
-  foeOrb: { x: 83.5, y: 8.4, size: 6.2 },
-  foeFlask: { x: 87.2, y: 15.2, size: 3.2 },
-  foeStars: { x: 77.2, y: 20.6, size: 3.6 },
-  foeGems: { x: 87.4, y: 20.5, size: 3.2 },
-  foeHand: { x: 86, y: 33, size: 3.2 },
-  foeReserve: { x: 76, y: 32, size: 3.2 },
-  youHp: { x: 11, y: 91.2, size: 5.6 },
-  youOrb: { x: 83.5, y: 91.2, size: 6.2 },
-  youFlask: { x: 88.2, y: 96.4, size: 3.2 },
-  youStars: { x: 78, y: 80.2, size: 3.6 },
-  youGems: { x: 86.5, y: 80.2, size: 3.2 },
+  foeHp: { x: 13.5, y: 10, size: 5.6 },
+  foeOrb: { x: 84.7, y: 9.6, size: 6.2 },
+  foeFlask: { x: 91.7, y: 13.4, size: 3.2 },
+  foeStars: { x: 81.4, y: 20.5, size: 3.6 },
+  foeGems: { x: 91.7, y: 20.7, size: 3.2 },
+  foeHand: { x: 86.1, y: 26.4, size: 3.2 },
+  foeReserve: { x: 51.6, y: 7.2, size: 3.2 },
+  youHp: { x: 9.6, y: 91.4, size: 5.6 },
+  youOrb: { x: 89.3, y: 91.1, size: 6.2 },
+  youFlask: { x: 93.3, y: 95.5, size: 3.2 },
+  youStars: { x: 85.3, y: 75.6, size: 3.6 },
+  youGems: { x: 96.2, y: 75.5, size: 3.2 },
 };
 
 export type Spot = { x: number; y: number; size: number; width: number; height: number; hidden?: boolean };
@@ -58,11 +59,11 @@ export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reactio
 
 // Bàn mới 841 x 1870 (chủ game 28/10): số mặc định theo bố cục của bàn Grok.
 export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, hidden: false };
-export const DEFAULT_TRAIL: Trail = { x: 4, y: 42, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false };
+export const DEFAULT_TRAIL: Trail = { x: 6.6, y: 46.3, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false };
 export const DEFAULT_REACTION: Notice = { x: 64, y: 44, w: 22, h: 12, font: 3.2, hidden: false };
-export const DEFAULT_STACK: Spot = { x: 80, y: 70.5, size: 2.6, width: 15, height: 7.2, hidden: false };
-export const DEFAULT_ENV: Spot = { x: 72, y: 64.2, size: 2.2, width: 16, height: 10, hidden: false };
-export const DEFAULT_ENV_FOE: Spot = { x: 72, y: 27.6, size: 2.2, width: 16, height: 10.5, hidden: false };
+export const DEFAULT_STACK: Spot = { x: 85, y: 69.1, size: 2.6, width: 15, height: 7.2, hidden: false };
+export const DEFAULT_ENV: Spot = { x: 84.3, y: 59.6, size: 2.2, width: 16, height: 4, hidden: false };
+export const DEFAULT_ENV_FOE: Spot = { x: 12.9, y: 43.3, size: 2.2, width: 16, height: 4, hidden: false };
 /** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
 export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
 
@@ -137,7 +138,7 @@ export const DEFAULT_FIELD: Record<FieldKey, FieldSpot> = {
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 
-const BOARD_KEY = "clash-board-layout-v9";
+const BOARD_KEY = "clash-board-layout-v10";
 const ALERT_KEY = "clash-alert-size";
 
 export type AlertLook = { glow: number; border: number };
@@ -293,7 +294,7 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
   const bottom = loadBoard(boardEnv(bottomEnv));
   const marks = { ...bottom.marks };
   for (const key of TOP_MARKS) marks[key] = top.marks[key];
-  return {
+  return cutLayout({
     marks,
     notice: top.notice,
     trail: top.trail,
@@ -302,6 +303,28 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
     env: bottom.env,
     stack: bottom.stack,
     actions: bottom.actions,
+  });
+}
+
+/** Bàn bị cắt bớt (board-cut.ts): đổi mọi vị trí sang phần trăm của bàn đã cắt. Tâm của vị trí quyết định nó nằm ở đâu. */
+function cutLayout(layout: BoardLayout): BoardLayout {
+  const cut = boardCut();
+  if (cut === NO_CUT || cut.v === 1) return layout;
+  const marks = {} as BoardLayout["marks"];
+  for (const key of Object.keys(layout.marks) as HudKey[]) marks[key] = { ...layout.marks[key], y: ry(layout.marks[key].y, cut) };
+  const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
+  // Nút và xấp bài tính theo tâm; ô môi trường tính theo góc trên trái.
+  const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });
+  const corner = (value: Spot): Spot => ({ ...value, y: ry(value.y + value.height / 2, cut) - rh(value.height, cut) / 2, height: rh(value.height, cut) });
+  return {
+    marks,
+    notice: box(layout.notice),
+    trail: box(layout.trail),
+    reaction: box(layout.reaction),
+    stack: spot(layout.stack),
+    env: corner(layout.env),
+    envFoe: corner(layout.envFoe),
+    actions: spot(layout.actions),
   };
 }
 
