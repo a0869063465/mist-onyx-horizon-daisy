@@ -2851,6 +2851,9 @@ function PlayPage() {
   // Sừng lôi phá's strike has its attack icon now (chủ game 23/10); the bar stays for skills until đợt 2.
   const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : false;
   const board = matchBoard(foe.env, you.env);
+  // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
+  const compact = cut.to - cut.from > 1;
+  const trailSlots = compact ? 3 : TRAIL_SLOTS;
   // Before the transition effect has run, a blow about to land still shows the HP it hits at its old value.
   const lastDuel = prevDuel.current;
   const landingNow = lastDuel && lastDuel !== duel ? attackLanding(lastDuel, duel, viewer, board.marks) : null;
@@ -4248,11 +4251,11 @@ function PlayPage() {
               ["--dot" as string]: board.trail.dot / 1.6,
             } as CSSProperties}
           >
-            {Array.from({ length: TRAIL_SLOTS }, (_, slot) => {
-              const history = trailDots.slice(-TRAIL_SLOTS);
-              const dot = history[slot - (TRAIL_SLOTS - history.length)];
+            {Array.from({ length: trailSlots }, (_, slot) => {
+              const history = trailDots.slice(-trailSlots);
+              const dot = history[slot - (trailSlots - history.length)];
               if (!dot) return <span key={`empty-${slot}`} className="trail-slot" />;
-              const prev = history[slot - (TRAIL_SLOTS - history.length) - 1];
+              const prev = history[slot - (trailSlots - history.length) - 1];
               return (
                 <span key={dot.id} className="trail-slot">
                   {prev && prev.clock !== dot.clock ? <i className="trail-gap" /> : null}
@@ -4274,7 +4277,7 @@ function PlayPage() {
             })}
           </div>
         )}
-        {board.notice.hidden ? null : (
+        {board.notice.hidden || (compact && pinnedId === null) ? null : (
           <p
             className={`banner${lineOn ? " is-quiet" : ""}`}
             ref={noticeRef}
@@ -5161,6 +5164,7 @@ function PlayPage() {
         </button>
         )}
         <div
+          style={{ top: `${ry(88.6)}%`, height: `${rh(11.4)}%` }}
           className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onPointerDown={(event) => {

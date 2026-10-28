@@ -711,6 +711,7 @@ export const PENDING_NOTES: string[] = [
   "Khi quái của bạn được Trả đòn, các nút Tấn công và kỹ năng hiện ngay trên quái đó với tiêu đề Trả đòn. Chưa Trả đòn thì chưa làm gì khác được.",
   "Bàn đấu mới: phủ hết chiều ngang màn hình, 6 ô mỗi bên khớp hình bàn (hàng trước sát giữa sân, hàng sau sát tay). Màn thiếu chiều dọc thì xén bớt phần trên bên đỏ. Bố cục nút, thông báo, chấm lịch sử đặt lại về mặc định mới.",
   "Mọi môi trường tạm dùng chung một hình bàn đấu. Hình bàn riêng của từng môi trường sẽ làm lại sau.",
+  "Màn ngắn thì bàn đấu được cắt bớt: cắt phía trên tới sát băng rôn đỏ, còn thiếu thì cắt dải giữa sân quanh vòng tròn. Lúc đó bảng thông báo chỉ hiện khi bấm một trong 3 chấm lịch sử.",
 ];
 
 function remarkOf(notes: string[]) {
