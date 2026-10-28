@@ -718,6 +718,11 @@ export const PENDING_NOTES: string[] = [
   "Kiếm có cánh hiện ở bên đang giữ lượt tấn công của vòng: kiếm xanh bên bạn, kiếm tím bên đối thủ, bay vào khi đổi bên.",
   "Tay đối thủ hiện thành các lá úp xoè ra phía trên xấp bài đỏ, kèm số lá trên tay. Số trên xấp bài úp là số lá còn trong xấp. Băng rôn đỏ để trống.",
   "Con mắt và nút huỷ cạnh nút OK là viên cầu trong khung vàng: con mắt khép như viên đồng, nút huỷ đỏ có dấu X; khi có hành động đang chờ thì mở ra sáng lên (làm cùng hàng chờ hành động). Mũi tên chuyển lượt to hơn.",
+  "Tay đối thủ nằm trong khay để bài (băng rôn đỏ ở giữa trên cùng): các lá úp xoè ra, số lá trên tay ở chính giữa khay.",
+  "Xấp bài hai bên là tấm in 3 lá úp có sẵn trên bàn, số lá còn trong xấp ở chính giữa tấm. Bấm tấm của bạn để rút bài.",
+  "Bấm 1 lần lá quái trên tay: 2 mũi tên vàng hiện cạnh nhau ngay trên lá, ↑ triệu hồi vào hàng trước, ↓ vào hàng sau, vào ô trống đầu tiên từ trái sang; hàng đầy thì mũi tên tối. Bấm đôi lá để mở bảng mô tả. Kéo thả lá lên ô vẫn dùng được.",
+  "Trong bảng mô tả, bấm Triệu hồi thì nút đổi thành 2 mũi tên ↑↓ để chọn hàng. Hiến tế: chọn quân tế, bấm Triệu hồi rồi chọn hàng. Dung hợp xong phải triệu hồi quái mới, không thoát ra được.",
+  "Bấm 1 lần lá phép trên tay: hiện icon dùng phép trên lá khi phép dùng được, bấm icon để dùng. Bấm đôi để mở bảng mô tả. Kỹ năng dùng từ trên tay (Bông mềm, Thế thân trên tay) cũng vậy: bấm lá rồi bấm icon kỹ năng.",
 ];
 
 function remarkOf(notes: string[]) {

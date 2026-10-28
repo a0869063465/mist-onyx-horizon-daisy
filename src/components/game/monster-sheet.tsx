@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
+import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
@@ -8,7 +9,12 @@ import { tr } from "@/lib/i18n";
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
 export type SheetTone = "gold" | "red" | "purple" | "fuse";
 /** `swirl`: a round emblem holding the owner's whirlpool picture (Dung hợp), like Hiến tế's round emblem. */
-export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress: () => void };
+export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress?: () => void; rows?: SheetRows };
+/**
+ * A summon button (chủ game 28/10): pressing it hides it, and ↑ (hàng trước) and ↓ (hàng sau) show side by side where it
+ * stood; the arrow summons into that row. `front`/`back` false: the row takes no monster, its arrow is dark.
+ */
+export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow) => void };
 
 /**
  * An icon on a sheet that is not one of the card's skills: Cân bằng (the deck builder) or a spell's kind (the
@@ -217,9 +223,11 @@ export function Crystal({ tone }: { tone: SheetTone }) {
  * and its mana gem is red.
  */
 export function ActionButton({ action, mini = false }: { action: SheetAction; mini?: boolean }) {
+  const [rowsOpen, setRowsOpen] = useState(false);
   const crystal = action.tone !== "red" && !action.emblem;
-  return (
-    <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={action.onPress}>
+  const rows = action.rows;
+  const tile = (
+    <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={rows ? () => setRowsOpen(true) : action.onPress}>
       <span className={`act3d-ico${crystal ? " is-crystal" : ""}${action.emblem ? ` is-${action.emblem}` : ""}`}>
         {action.emblem === "swirl" ? <i className="act3d-swirl" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
       </span>
@@ -233,6 +241,13 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
         ) : null}
       </span>
     </button>
+  );
+  if (!rows || !rowsOpen) return tile;
+  return (
+    <span className={`act3d-rows${mini ? " is-mini" : ""}`}>
+      <RowArrow row="front" off={!rows.front} onPick={() => rows.onRow("front")} />
+      <RowArrow row="back" off={!rows.back} onPick={() => rows.onRow("back")} />
+    </span>
   );
 }
 
@@ -255,6 +270,7 @@ export function MonsterSheet({
   onArt,
   onBack,
   startSkill,
+  stay = false,
 }: {
   name: string;
   card: ReactNode;
@@ -277,6 +293,8 @@ export function MonsterSheet({
   onBack?: () => void;
   /** A sheet opened from a reaction icon opens on the skill being used (chủ game 23/10): its name or button label. */
   startSkill?: string;
+  /** No ✕ and no tap outside to close (chủ game 28/10: a fused monster must be summoned, the fusion cannot be undone). */
+  stay?: boolean;
 }) {
   const wanted = startSkill?.trim().toLowerCase() ?? "";
   const startAt = wanted ? skills.findIndex((skill) => skill.name.toLowerCase() === wanted || wanted.startsWith(skill.name.toLowerCase())) : -1;
@@ -349,7 +367,7 @@ export function MonsterSheet({
   // The extra icons sit at the right end of the first row of icons.
   const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
   return (
-    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? onClose)()}>
+    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()}>
       <GlyphDefs />
       <div className="msheet" role="dialog" aria-label={name}>
         {onBack ? (
@@ -357,9 +375,11 @@ export function MonsterSheet({
             {"<<"}
           </button>
         ) : null}
-        <button type="button" className="msheet-x" aria-label="Đóng" onClick={onClose}>
-          ✕
-        </button>
+        {stay ? null : (
+          <button type="button" className="msheet-x" aria-label="Đóng" onClick={onClose}>
+            ✕
+          </button>
+        )}
         {skills.length || extras.length ? (
           <div className="msheet-skills">
             {row(actives, extrasOnActives)}

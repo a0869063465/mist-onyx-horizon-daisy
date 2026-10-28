@@ -1921,17 +1921,11 @@
 .hand.is-strip.is-paged {
   justify-content: flex-start;
 }
-.hand.is-strip.is-paged .hand-card,
-.hand.is-strip.is-paged .hand-spell {
+.hand.is-strip.is-paged .hand-card {
   flex: 0 0 calc((100% - 4.4%) / 3);
   width: calc((100% - 4.4%) / 3);
   height: auto;
   max-height: 96%;
-}
-.hand.is-strip.is-paged .hand-spell .hand-card {
-  flex-basis: auto;
-  width: 100%;
-  height: calc(100% - 1.35rem);
 }
 .hand-card {
   position: relative;
@@ -1955,43 +1949,6 @@
 }
 .hand-card.press:active {
   transform: none;
-}
-.hand-spell {
-  position: relative;
-  z-index: 4;
-  height: 96%;
-  width: max-content;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  flex: 0 0 auto;
-}
-.hand-spell .hand-card {
-  height: calc(100% - 1.35rem);
-  width: auto;
-  aspect-ratio: 2 / 3.05;
-  flex: 0 0 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-.spell-use {
-  position: relative;
-  z-index: 6;
-  align-self: stretch;
-  flex: 0 0 auto;
-  width: 100%;
-  height: 1.45rem;
-  margin-top: 0.12rem;
-  border: 0;
-  border-radius: 0.2rem;
-  background: #e10600;
-  color: #fff;
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 800;
-  pointer-events: auto;
-  touch-action: manipulation;
 }
 .hand-empty {
   margin: 0 auto 1.2rem;
@@ -3165,6 +3122,8 @@ button.trail-dot.is-on {
 .card.is-tier-black::after {
   background: #f4efe2;
 }
+/* Xấp bài của mình = tấm in 3 lá úp có sẵn trên bàn (chủ game 28/10): không vẽ thêm xấp, số lá còn trong xấp ở chính
+   giữa tấm, bấm vào tấm là rút. */
 .face-pile {
   position: absolute;
   z-index: 9;
@@ -3174,15 +3133,11 @@ button.trail-dot.is-on {
   color: var(--color-gold);
   background: transparent;
   border-radius: 0.45rem;
-  box-shadow: inset 0 0 0 2px var(--color-gold);
   display: grid;
-  place-items: end center;
+  place-items: center;
   line-height: 1;
 }
 .face-pile b {
-  position: absolute;
-  top: -0.35rem;
-  right: -0.35rem;
   min-width: 1.15rem;
   height: 1.15rem;
   padding: 0 0.2rem;
@@ -3191,12 +3146,6 @@ button.trail-dot.is-on {
   color: var(--color-gold-ink);
   display: grid;
   place-items: center;
-}
-.face-pile small {
-  font-size: 0.72em;
-  font-weight: 800;
-  text-shadow: 0 1px 2px #000;
-  margin-bottom: 0.15rem;
 }
 .inspect-dismiss {
   position: absolute;
@@ -6182,8 +6131,6 @@ button.watch-back {
   font-size: 2em;
   min-width: 1.3em;
   height: 1.3em;
-  top: -0.55em;
-  right: -0.55em;
   padding: 0 0.18em;
   border-radius: 0.32em;
   background: linear-gradient(180deg, #ffe9a6 0%, #e8b84a 45%, #b07a1c 100%);
@@ -11397,23 +11344,97 @@ button.watch-back {
   pointer-events: none;
 }
 
-/* Tay bài trên bàn mới (28/10): lá cùng cỡ ô sân (17,8% bề ngang bàn x 11,1% bề dọc bàn), không giãn theo số lá. */
-.stage .hand.is-strip .hand-card,
-.stage .hand.is-strip .hand-spell,
-.stage .hand.is-strip.is-paged .hand-card,
-.stage .hand.is-strip.is-paged .hand-spell {
+/* Tay bài trên bàn mới (28/10): lá cùng cỡ ô sân (17,8% bề ngang bàn x 11,1% bề dọc bàn), không giãn theo số lá.
+   Mỗi lá nằm trong `.hand-pick`, nơi icon dùng phép hiện ra khi bấm lá một lần. */
+.stage .hand.is-strip .hand-pick,
+.stage .hand.is-strip.is-paged .hand-pick {
+  position: relative;
   flex: 0 0 auto;
   width: 17.8cqw;
+  height: 100%;
+}
+.stage .hand.is-strip .hand-pick > .hand-card,
+.stage .hand.is-strip.is-paged .hand-pick > .hand-card {
+  flex: none;
+  width: 100%;
   height: 100%;
   max-height: none;
   aspect-ratio: auto;
 }
-.stage .hand.is-strip .hand-spell .hand-card,
-.stage .hand.is-strip.is-paged .hand-spell .hand-card {
-  width: 100%;
-  height: calc(100% - 1.35rem);
-  aspect-ratio: auto;
+/* Mũi tên vàng chọn hàng (chủ game 28/10): ↑ hàng trước, ↓ hàng sau, nằm cạnh nhau. Trên tay: ngoài lá, ngay trên mép
+   trên lá vừa bấm. Trong bảng: đúng chỗ nút Triệu hồi vừa biến mất. */
+.row-arrows.is-hand {
+  position: absolute;
+  z-index: 14;
+  display: flex;
+  gap: 0.8cqw;
+  transform: translate(-50%, calc(-100% - 0.6cqw));
+  pointer-events: none;
 }
+.row-arrows.is-hand .row-arrow { width: 8.6cqw; height: 9.6cqw; }
+.row-arrow {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: row-arrow-in 200ms cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
+}
+.row-arrow svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 0.32rem rgba(255, 196, 40, 0.95)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8));
+  animation: row-arrow-up 1s ease-in-out infinite;
+}
+.row-arrow.is-back svg { animation-name: row-arrow-down; }
+.row-arrow:active svg { transform: scale(0.88); filter: brightness(1.25) drop-shadow(0 0 0.5rem rgba(255, 210, 60, 1)); }
+.row-arrow.is-off { cursor: default; }
+.row-arrow.is-off svg { animation: none; filter: grayscale(1) brightness(0.48) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); opacity: 0.7; }
+@keyframes row-arrow-in { from { opacity: 0; transform: scale(0.55); } }
+@keyframes row-arrow-up { 50% { transform: translateY(-7%); filter: drop-shadow(0 0 0.55rem rgba(255, 214, 70, 1)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); } }
+@keyframes row-arrow-down { 50% { transform: translateY(7%); filter: drop-shadow(0 0 0.55rem rgba(255, 214, 70, 1)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); } }
+/* Same box as the summon tile it replaces, so nothing around it moves. */
+.act3d-rows { display: inline-flex; justify-content: center; align-items: center; gap: 0.3rem; min-width: 4.9rem; min-height: 5.1rem; }
+.act3d-rows .row-arrow { width: 2.3rem; height: 2.8rem; }
+.act3d-rows.is-mini { min-width: 4.1rem; min-height: 4.3rem; }
+.act3d-rows.is-mini .row-arrow { width: 1.9rem; height: 2.3rem; }
+/* Icon dùng phép (hoặc kỹ năng dùng từ trên tay) giữa lá vừa bấm một lần. */
+.hand-use {
+  --ring: #ff4f93;
+  --deep: #4a0622;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  width: 64%;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -50%);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: hand-use-in 200ms cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
+}
+.hand-use.is-active { --ring: #3ec6ff; --deep: #0b2a4a; }
+.hand-use.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.hand-use .unit-act-ico {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 0.4rem color-mix(in srgb, var(--ring) 85%, transparent)) drop-shadow(0 0.15rem 0.2rem rgba(0, 0, 0, 0.8));
+  animation: hand-use-glow 1.3s ease-in-out infinite;
+}
+.hand-use:active .unit-act-ico { transform: scale(0.9); }
+@keyframes hand-use-in { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } }
+@keyframes hand-use-glow { 50% { filter: drop-shadow(0 0 0.7rem var(--ring)) drop-shadow(0 0.15rem 0.2rem rgba(0, 0, 0, 0.8)); } }
 .stage .hand.is-strip .hand-card > .card {
   width: 100%;
   height: 100%;
@@ -11509,10 +11530,10 @@ button.watch-back {
   .turn-sword img, .turn-sword::after { animation: none; }
 }
 
-/* Tay đối thủ: lá úp xoè, số lá trên tay ở giữa. */
+/* Tay đối thủ: lá úp xoè trong khay để bài (băng rôn đỏ), dưới ô số lá trên tay (.mark, z 4). */
 .foe-fan {
   position: absolute;
-  z-index: 5;
+  z-index: 3;
   width: 0;
   height: 0;
   pointer-events: none;
@@ -11520,33 +11541,12 @@ button.watch-back {
 .foe-fan img {
   position: absolute;
   max-width: none;
-  left: -2.6cqw;
+  left: -2.45cqw;
   top: -3.7cqw;
-  width: 5.2cqw;
-  height: 7.9cqw;
+  width: 4.9cqw;
+  height: 7.4cqw;
   border-radius: 0.35cqw;
   box-shadow: 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.55);
-  transform-origin: 50% 140%;
-}
-.foe-fan b {
-  position: absolute;
-  left: 0;
-  top: 1.8cqw;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  min-width: 4.6cqw;
-  height: 4.6cqw;
-  padding: 0 0.7cqw;
-  border-radius: 1.2cqw;
-  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
-  border: 0.35cqw solid #f4d27a;
-  box-shadow: 0 0.4cqw 0 #6b430c, 0 0.7cqw 1.2cqw rgba(0, 0, 0, 0.65), inset 0 0.3cqw 0.2cqw rgba(255, 255, 255, 0.35);
-  color: #ffe9a6;
-  font-weight: 800;
-  font-size: 3.1cqw;
-  line-height: 1;
-  text-shadow: 0 1px 2px #000;
 }
 
 /* Con mắt và nút huỷ (oracle-orb.tsx): viên cầu trong khung vàng; mí mở ra khi có hành động chờ. */

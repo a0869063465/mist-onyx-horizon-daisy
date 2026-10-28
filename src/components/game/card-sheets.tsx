@@ -119,15 +119,21 @@ export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id:
 export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor, badgeFor }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
   const family = relatedCards(id);
   const [view, setView] = useState<{ fan: string } | { open: string } | null>(null);
+  // ✕ on a sheet opened from the fan closes the whole flow; when the first sheet cannot close (a fused monster waiting
+  // to be summoned), it comes back to that sheet.
+  const shut = () => {
+    setView(null);
+    onClose();
+  };
   return (
     <>
       {sheet(family.length > 1 ? () => setView({ fan: id }) : undefined)}
       {view && "fan" in view ? <CardCarousel ids={family} focus={view.fan} onOpen={(next) => setView({ open: next })} onClose={() => setView(null)} /> : null}
       {view && "open" in view ? (
         monsterCard(view.open) ? (
-          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={shut} />
         ) : (
-          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={onClose} />
+          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={shut} />
         )
       ) : null}
     </>

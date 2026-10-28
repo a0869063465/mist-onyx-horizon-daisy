@@ -122,7 +122,7 @@ function steps(viewer: Side): Step[] {
     { text: "Đối phương đang sử dụng **Sợi xích địa ngục** nhắm vào quái thú của bạn.", focus: [ownMon, { sel: ".rx-icon.is-spell" }], wait: "ok" },
     {
       text: "Những phép có thể sử dụng để ứng phó nhấp nháy, có nút **Use** là có thể sử dụng được. Hãy thử bấm.",
-      focus: [{ sel: ".hand .hand-spell.is-use" }],
+      focus: [{ sel: ".hand .hand-pick:has(> .hand-card.is-spell.is-alert)" }],
       wait: "absorb",
       hand: "spell",
     },
@@ -131,7 +131,7 @@ function steps(viewer: Side): Step[] {
     { text: "Hãy rút 1 lá bài **Phép**.", focus: [{ sel: ".actions .act.is-draw-spell" }], wait: "draw", stack: true },
     {
       text: "Bạn đã rút được **Sợi xích địa ngục**. Hãy thử dùng nó.",
-      focus: [{ sel: ".hand .hand-card.is-spell, .hand .hand-spell" }, foeMon],
+      focus: [{ sel: ".hand .hand-card.is-spell" }, foeMon],
       wait: "chain",
       allow: [".hand", ".inspect-card", ".inspect-dismiss", ".msheet-back", ".overlay", ".ask-card", "[data-slot]"],
       hand: "spell",
