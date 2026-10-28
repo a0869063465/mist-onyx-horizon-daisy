@@ -10256,6 +10256,7 @@ button.watch-back {
   height: 100%;
   filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.6));
 }
+.stage .actions .act.medal-act.is-arrow .medal,
 .stage .actions .act.medal-act.is-pass .medal { animation: medal-call 1.6s ease-in-out infinite; }
 @keyframes medal-call {
   50% { filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.6)) drop-shadow(0 0 10px #4aa8ff); }

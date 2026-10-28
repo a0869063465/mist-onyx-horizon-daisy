@@ -2854,6 +2854,8 @@ function PlayPage() {
   const board = matchBoard(foe.env, you.env);
   // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
   const compact = cut.to - cut.from > 1;
+  // Nút OK: bên kia đã bỏ lượt thì lần bấm này kết thúc vòng (đồng hồ cát), chưa thì chỉ chuyển quyền (mũi tên).
+  const closesRound = Boolean(duel.skipped?.[1 - viewer]);
   const trailSlots = compact ? 3 : TRAIL_SLOTS;
   // Before the transition effect has run, a blow about to land still shows the HP it hits at its old value.
   const lastDuel = prevDuel.current;
@@ -5352,12 +5354,12 @@ function PlayPage() {
           {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
-              className={`act medal-act press ${responding ? "is-pass" : "is-end"}`}
+              className={`act medal-act press ${responding ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
               style={{ left: "91.2%", top: `${ry(83)}%`, "--medal": "14.4cqw" } as CSSProperties}
               aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
-              <Medal tone={responding ? "blue" : "red"} icon={responding ? "check-mark" : "hourglass"} />
+              <Medal tone={responding ? "blue" : closesRound ? "red" : "blue"} icon={responding ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} />
             </button>
           ) : null}
         </div>

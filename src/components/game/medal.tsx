@@ -14,6 +14,8 @@ const TONES: Record<MedalTone, { hi: string; mid: string; lo: string; gemHi: str
 
 /** Glyphs drawn for the medals in the same 512 space as the game-icons set. */
 const MEDAL_ICONS: Record<string, string> = {
+  // A thick up arrow: chuyển quyền sang bên kia (vòng chưa hết).
+  "up-arrow": '<path fill="currentColor" d="M256 70l150 160h-92v212H198V230h-92z"/>',
   // A thick X: huỷ hành động đang chờ.
   "cross-mark": '<path fill="currentColor" d="M118 160l42-42 96 96 96-96 42 42-96 96 96 96-42 42-96-96-96 96-42-42 96-96z"/>',
   // A playing card with three claw slashes across it: Rút quái.
