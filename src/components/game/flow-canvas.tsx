@@ -78,8 +78,7 @@ function settle(since: number): number {
   return 1 - 0.78 * smooth(0.4, 1, k);
 }
 
-/** Shared with the turn light (turn-light.tsx), so its water is the same light as these flows. */
-export const VERTEX = `
+const VERTEX = `
 attribute vec2 aPos;
 attribute vec2 aUv;
 attribute float aFold;
@@ -95,7 +94,7 @@ void main() {
 
 // Caustics: a field warped over and over, bright where it folds into thin lines, as light under rippling water. The
 // pattern is stretched along the ribbon and runs down it toward the target.
-export const RIBBON = `
+const RIBBON = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -107,7 +106,6 @@ uniform float uTime;
 uniform float uLen;
 uniform float uFade;
 uniform float uGrow;
-uniform float uTail;
 uniform float uHead;
 uniform float uSeed;
 uniform vec3 uCore;
@@ -140,8 +138,6 @@ void main() {
   float fray = 1.0 - smoothstep(0.55, 1.0, av) + smoothstep(0.55, 1.0, av) * shimmer * 0.9;
   float ends = smoothstep(0.0, 0.06, u) * (0.7 + 0.3 * u);
   float reach = 1.0 - smoothstep(uGrow - 0.05, uGrow + 0.015, u);
-  // Going out from its start to its end (the turn light leaving a tank): gone up to uTail.
-  float tail = uTail < 0.0 ? 1.0 : smoothstep(uTail - 0.015, uTail + 0.05, u);
   float surge = uHead < 0.0 ? 0.0 : exp(-pow((u - uHead) * 8.0, 2.0)) * 2.4;
   // A luminous body in the flow's colour, brighter lines over it, white where the lines crowd in the middle; a slight
   // shade under the ribbon so its colour reads on a light floor too.
@@ -150,7 +146,7 @@ void main() {
   col += uCore * (shimmer * shimmer * core * 0.75 + core * 0.12);
   col *= vFold;
   col += uCore * surge * body;
-  float k = uFade * ends * reach * tail;
+  float k = uFade * ends * reach;
   col *= k;
   gl_FragColor = vec4(col, clamp(max(col.r, max(col.g, col.b)) * 0.45 + body * 0.14 * k, 0.0, 1.0));
 }`;
@@ -405,37 +401,6 @@ function flareQuad(geo: Geo, w: number, h: number): Float32Array {
   return quad;
 }
 
-/** A WebGL program from the shared vertex shader and `fragment`, or null when it will not build. */
-export function linkProgram(g: WebGLRenderingContext, fragment: string): WebGLProgram | null {
-  const compile = (type: number, source: string) => {
-    const shader = g.createShader(type)!;
-    g.shaderSource(shader, source);
-    g.compileShader(shader);
-    return shader;
-  };
-  const program = g.createProgram()!;
-  g.attachShader(program, compile(g.VERTEX_SHADER, VERTEX));
-  g.attachShader(program, compile(g.FRAGMENT_SHADER, fragment));
-  g.linkProgram(program);
-  return g.getProgramParameter(program, g.LINK_STATUS) ? program : null;
-}
-
-/** Points the mesh vertices to the shared attributes: position, (u, v), fold. */
-export function bindRibbon(g: WebGLRenderingContext, program: WebGLProgram) {
-  const stride = 5 * 4;
-  const pos = g.getAttribLocation(program, "aPos");
-  const uv = g.getAttribLocation(program, "aUv");
-  const fold = g.getAttribLocation(program, "aFold");
-  g.enableVertexAttribArray(pos);
-  g.vertexAttribPointer(pos, 2, g.FLOAT, false, stride, 0);
-  g.enableVertexAttribArray(uv);
-  g.vertexAttribPointer(uv, 2, g.FLOAT, false, stride, 8);
-  if (fold >= 0) {
-    g.enableVertexAttribArray(fold);
-    g.vertexAttribPointer(fold, 1, g.FLOAT, false, stride, 16);
-  }
-}
-
 function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timing): Painter | null {
   let gl: WebGLRenderingContext | null = null;
   try {
@@ -445,12 +410,38 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
   }
   if (!gl) return null;
   const g = gl;
-  const ribbon = linkProgram(g, RIBBON);
-  const flare = linkProgram(g, FLARE);
+  const compile = (type: number, source: string) => {
+    const shader = g.createShader(type)!;
+    g.shaderSource(shader, source);
+    g.compileShader(shader);
+    return shader;
+  };
+  const link = (fragment: string) => {
+    const program = g.createProgram()!;
+    g.attachShader(program, compile(g.VERTEX_SHADER, VERTEX));
+    g.attachShader(program, compile(g.FRAGMENT_SHADER, fragment));
+    g.linkProgram(program);
+    return g.getProgramParameter(program, g.LINK_STATUS) ? program : null;
+  };
+  const ribbon = link(RIBBON);
+  const flare = link(FLARE);
   if (!ribbon || !flare) return null;
   const spot = (program: WebGLProgram, name: string) => g.getUniformLocation(program, name);
   const quadBuffer = g.createBuffer();
-  const bind = (program: WebGLProgram) => bindRibbon(g, program);
+  const bind = (program: WebGLProgram) => {
+    const stride = 5 * 4;
+    const pos = g.getAttribLocation(program, "aPos");
+    const uv = g.getAttribLocation(program, "aUv");
+    const fold = g.getAttribLocation(program, "aFold");
+    g.enableVertexAttribArray(pos);
+    g.vertexAttribPointer(pos, 2, g.FLOAT, false, stride, 0);
+    g.enableVertexAttribArray(uv);
+    g.vertexAttribPointer(uv, 2, g.FLOAT, false, stride, 8);
+    if (fold >= 0) {
+      g.enableVertexAttribArray(fold);
+      g.vertexAttribPointer(fold, 1, g.FLOAT, false, stride, 16);
+    }
+  };
   // A lost context (the GPU reset) would show as a blank sheet: hide the light rather than that.
   let lost = g.isContextLost();
   const onLost = (event: Event) => {
@@ -488,7 +479,6 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
         g.uniform1f(spot(ribbon, "uLen"), geo.len / unit);
         g.uniform1f(spot(ribbon, "uFade"), fade);
         g.uniform1f(spot(ribbon, "uGrow"), timing.growOf(track, now) * 1.08);
-        g.uniform1f(spot(ribbon, "uTail"), -1);
         g.uniform1f(spot(ribbon, "uHead"), timing.headOf(track, now));
         g.uniform1f(spot(ribbon, "uSeed"), track.seed);
         g.uniform3fv(spot(ribbon, "uCore"), pal.core);

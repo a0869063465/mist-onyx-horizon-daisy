@@ -714,6 +714,7 @@ export const PENDING_NOTES: string[] = [
   "Màn ngắn thì bàn đấu được cắt bớt: cắt phía trên tới sát cầu máu và cầu mana của đối thủ, còn thiếu thì hai nửa đỏ và xanh xích lại gần nhau trên nền sân không có đĩa. Lúc đó bảng thông báo chỉ hiện khi bấm một trong 3 chấm lịch sử.",
   "Bố cục mới: nút OK / chuyển lượt to nằm trên cầu mana của bạn, bên cạnh là nút X đỏ và con mắt (chưa dùng được). Rút bài bằng cách bấm xấp bài úp. Giữa sân có huy hiệu hai bên: kiếm là bên đang giữ lượt tấn công, khiên là bên kia.",
   "Nút OK có 3 mặt: mũi tên xanh nhấp nháy là chuyển quyền cho đối thủ (vòng chưa hết), đồng hồ cát đỏ là kết thúc vòng (đối thủ đã bỏ lượt), dấu tick là không phản ứng.",
+  "Giữa sân có dòng sáng của bên đang giữ quyền: đỏ ở phía đối thủ, xanh ở phía bạn, chảy sang bên kia khi đổi quyền. Khi quyền về bạn hiện chữ TỚI LƯỢT CỦA BẠN, khi sang vòng mới hiện VÒNG N.",
 ];
 
 function remarkOf(notes: string[]) {

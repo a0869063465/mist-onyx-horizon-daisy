@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
@@ -20,6 +20,7 @@ import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
+import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { bookSkill, skillsOf } from "@/lib/skill-book";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
@@ -2814,6 +2815,41 @@ function PlayPage() {
     return () => window.clearTimeout(timer);
   }, [fuseShow?.n, fuseShow?.phase]);
 
+  // Dòng sáng chuyển lượt (turn-light.tsx, chủ game 28/10): bể của bên đang giữ quyền ở giữa sân, sát khu của bên đó;
+  // chữ "TỚI LƯỢT CỦA BẠN" khi quyền về mình, "VÒNG N" khi sang vòng mới. Bể đi theo vết cắt của bàn.
+  const tankGeo = useMemo<Record<TankSide, TankGeo>>(
+    () => ({
+      foe: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: ry(TANK_BASE.foe, cut), open: ry(TANK_OPEN, cut) },
+      you: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: ry(TANK_BASE.you, cut), open: ry(TANK_OPEN, cut) },
+    }),
+    [cut],
+  );
+  const [turnCue, setTurnCue] = useState<TitleCue | null>(null);
+  const lightSeen = useRef<{ actor: Side; clock: number } | null>(null);
+  const cueTimer = useRef(0);
+  useEffect(() => {
+    if (!duel) return;
+    const actorNow = boardActor(duel);
+    const viewerNow = viewerSide(duel, actorNow, net?.seat ?? null);
+    const clock = duel.clock ?? 1;
+    const seen = lightSeen.current;
+    lightSeen.current = { actor: actorNow, clock };
+    // The first look at a match, a finished match, a lesson or the test table: no titles.
+    if (!seen || duel.winner !== null || tutorial || duel.mode === "test" || duel.mode === "hotseat") return;
+    let wait = 0;
+    if (clock > seen.clock) {
+      setTurnCue({ id: Date.now(), kind: "round", lines: [`${tr("VÒNG")} ${clock}`] });
+      wait = 1700;
+    }
+    if (actorNow === viewerNow && seen.actor !== viewerNow && duel.step === "main") {
+      const cue: TitleCue = { id: Date.now() + 1, kind: "turn", lines: [tr("TỚI LƯỢT"), tr("CỦA BẠN")] };
+      window.clearTimeout(cueTimer.current);
+      if (wait) cueTimer.current = window.setTimeout(() => setTurnCue(cue), wait);
+      else setTurnCue(cue);
+    }
+  }, [duel]);
+  useEffect(() => () => window.clearTimeout(cueTimer.current), []);
+
   if (duel) turnClock.current = duel.clock ?? 1;
 
   if (!duel) {
@@ -4185,6 +4221,7 @@ function PlayPage() {
       >
         <div className="diorama">
         <BoardArt src={artTop} cut={cut} />
+        <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
         {[
           { id: you.env, spot: board.env, key: "you-env" },
           { id: foe.env, spot: board.envFoe, key: "foe-env" },
@@ -6183,6 +6220,12 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
   if (count !== "" && count !== 0) return String(count);
   return (mon.shown ?? 0) > 0 ? String(mon.shown) : "";
 }
+
+/** The turn light's tanks on the full board picture (board-cut.ts maps them onto a cut board): the walls at the edges of
+ *  the stone field, each bottom where that side's area meets the field, both open toward the middle. */
+const TANK_WALLS = [5, 91.6] as const;
+const TANK_BASE = { foe: 41.4, you: 61.4 } as const;
+const TANK_OPEN = 51;
 
 /** A board pin (Grok layout): centred on its spot, sized by width × size of the board. */
 function pinBox(spot: { x: number; y: number; width: number; height: number; size: number }): CSSProperties {

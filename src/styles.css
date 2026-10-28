@@ -11546,3 +11546,15 @@ button.watch-back {
 }
 .tune-pin.is-face.is-foe i { background: radial-gradient(circle at 40% 30%, #c45a4a, #2a1010 72%); }
 .tune-pin.is-face.is-you i { background: radial-gradient(circle at 40% 30%, #4f86c8, #102033 72%); }
+
+/* Dòng sáng chuyển lượt (turn-light.tsx): nước sáng dưới lá quái, chữ giữa sân phía trên. */
+.turn-light,
+.turn-title {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.turn-light { z-index: 2; }
+.turn-title { z-index: 12; }
