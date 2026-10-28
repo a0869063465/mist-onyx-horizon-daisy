@@ -717,6 +717,7 @@ export const PENDING_NOTES: string[] = [
   "Giữa sân có dòng sáng của bên đang giữ quyền: đỏ ở phía đối thủ, xanh ở phía bạn, chảy sang bên kia khi đổi quyền. Khi quyền về bạn hiện chữ TỚI LƯỢT CỦA BẠN, khi sang vòng mới hiện VÒNG N.",
   "Kiếm có cánh hiện ở bên đang giữ lượt tấn công của vòng: kiếm xanh bên bạn, kiếm tím bên đối thủ, bay vào khi đổi bên.",
   "Tay đối thủ hiện thành các lá úp xoè ra phía trên xấp bài đỏ, kèm số lá trên tay. Số trên xấp bài úp là số lá còn trong xấp. Băng rôn đỏ để trống.",
+  "Con mắt và nút huỷ cạnh nút OK là viên cầu trong khung vàng: con mắt khép như viên đồng, nút huỷ đỏ có dấu X; khi có hành động đang chờ thì mở ra sáng lên (làm cùng hàng chờ hành động). Mũi tên chuyển lượt to hơn.",
 ];
 
 function remarkOf(notes: string[]) {

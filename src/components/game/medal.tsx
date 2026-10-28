@@ -31,11 +31,12 @@ function iconBody(icon: string): string {
 }
 
 /** A stone-rimmed round button face: four gems on the rim, a glossy coloured face and a raised cream glyph. */
-export function Medal({ tone, icon, className }: { tone: MedalTone; icon: string; className?: string }) {
+export function Medal({ tone, icon, className, glyph = 1 }: { tone: MedalTone; icon: string; className?: string; glyph?: number }) {
   const id = `md${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const t = TONES[tone];
   const body = iconBody(icon);
-  const box = 48;
+  // `glyph` enlarges the raised glyph (the OK button's arrow, chủ game 28/10: "mũi tên to lên").
+  const box = 48 * glyph;
   const gems = [0, 90, 180, 270].map((angle) => {
     const x = 43.6 * Math.sin((angle * Math.PI) / 180);
     const y = -43.6 * Math.cos((angle * Math.PI) / 180);

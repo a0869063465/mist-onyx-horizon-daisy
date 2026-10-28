@@ -11548,3 +11548,47 @@ button.watch-back {
   line-height: 1;
   text-shadow: 0 1px 2px #000;
 }
+
+/* Con mắt và nút huỷ (oracle-orb.tsx): viên cầu trong khung vàng; mí mở ra khi có hành động chờ. */
+.stage .actions.is-spread > .oracle-act {
+  position: absolute;
+  width: calc(var(--medal) * 1.2);
+  height: var(--medal);
+  margin: calc(var(--medal) / -2) 0 0 calc(var(--medal) * -0.6);
+  pointer-events: none;
+  filter: drop-shadow(0 0.15rem 0.25rem rgba(0, 0, 0, 0.55));
+}
+.oracle {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.oracle .oracle-lid,
+.oracle .oracle-pearl,
+.oracle .oracle-mark,
+.oracle .oracle-carve {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transition: transform 0.38s cubic-bezier(0.3, 1.35, 0.5, 1), opacity 0.3s ease;
+}
+.oracle.is-open .oracle-lid.is-top,
+.oracle.is-look .oracle-lid.is-top { transform: translateY(-40px); }
+.oracle.is-open .oracle-lid.is-bottom,
+.oracle.is-look .oracle-lid.is-bottom { transform: translateY(40px); }
+.oracle.is-open .oracle-carve,
+.oracle.is-look .oracle-carve { opacity: 0; }
+.oracle .oracle-mark { opacity: 0.25; }
+.oracle.is-open .oracle-mark { opacity: 1; animation: oracle-pulse 1.6s ease-in-out infinite; }
+.oracle.is-look .oracle-mark { opacity: 0.45; }
+.oracle .oracle-pearl { opacity: 0; transform: scale(0.55); }
+.oracle.is-look .oracle-pearl { opacity: 1; transform: scale(1); animation: oracle-wander 2.4s ease-in-out infinite; }
+@keyframes oracle-pulse {
+  50% { opacity: 0.72; }
+}
+@keyframes oracle-wander {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, 4px); }
+  50% { transform: translate(3px, 6px); }
+  75% { transform: translate(5px, -3px); }
+}

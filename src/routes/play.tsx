@@ -20,6 +20,7 @@ import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
+import { OracleOrb } from "@/components/game/oracle-orb";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { bookSkill, skillsOf } from "@/lib/skill-book";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
@@ -5431,14 +5432,15 @@ function PlayPage() {
         {/* Bố cục chung (chủ game 28/10, theo bàn Grok): OK / chuyển lượt to trên cầu mana; X đỏ (huỷ) và con mắt (xem trước)
             ở chỗ hai nút rút cũ, chưa bấm được (hàng chờ hành động làm sau). Rút bài = bấm xấp bài úp. */}
         <div className="actions is-spread">
+          {/* Huỷ và con mắt: còn khép cho tới khi có hàng chờ hành động (Phần 3). */}
           {board.drawMon.hidden ? null : (
-            <span className="act medal-act is-idle" aria-hidden="true" style={pinMedal(board.drawMon)}>
-              <Medal tone="red" icon="cross-mark" />
+            <span className="oracle-act" aria-hidden="true" style={pinMedal(board.drawMon)}>
+              <OracleOrb kind="cancel" state="shut" />
             </span>
           )}
           {board.drawSpell.hidden ? null : (
-            <span className="act medal-act is-idle" aria-hidden="true" style={pinMedal(board.drawSpell)}>
-              <Medal tone="purple" icon="all-seeing-eye" />
+            <span className="oracle-act" aria-hidden="true" style={pinMedal(board.drawSpell)}>
+              <OracleOrb kind="eye" state="shut" />
             </span>
           )}
           {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
@@ -5449,7 +5451,7 @@ function PlayPage() {
               aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
-              <Medal tone={responding ? "blue" : closesRound ? "red" : "blue"} icon={responding ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} />
+              <Medal tone={responding ? "blue" : closesRound ? "red" : "blue"} icon={responding ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} glyph={!responding && !closesRound ? 1.42 : 1} />
             </button>
           ) : null}
         </div>
