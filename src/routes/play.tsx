@@ -63,6 +63,7 @@ import {
   dismissGlimpse,
   draw,
   pileLeft,
+  FIELD_SLOTS,
   pickCounter,
   endTurn,
   fieldName,
@@ -283,7 +284,7 @@ type BoardSpot = { x: number; y: number; w: number };
  */
 type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "land";
 /** `third` and `c`: the third knight of a three-knight fusion and where it stands, so all three cards fly in. */
-type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
+type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
 
 /** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
 const FUSE_RAYS = [
@@ -336,52 +337,55 @@ type Motion = { pops: string[]; lunges: string[]; hits: string[] };
 type Burst = { id: number; tone: "spell" | "heal"; text: string };
 
 /**
- * 6 ô mỗi bên (luật mới, chủ game 28/10): ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
- * Dùng tạm bàn cũ: hàng trước nằm trong khoảng trống giữa sân, hàng sau ở chỗ ô cũ.
+ * 6 ô mỗi bên trên bàn mới (ảnh board-full.jpg của Grok, chủ game chọn 28/10): số theo phần trăm của chính ảnh bàn.
+ * Ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
  */
 const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
   0: [
-    { x: 14.2, y: 57.0 },
-    { x: 33.7, y: 57.0 },
-    { x: 53.2, y: 57.0 },
-    { x: 14.2, y: 69.7 },
-    { x: 33.7, y: 69.7 },
-    { x: 53.2, y: 69.7 },
+    { x: 16.4, y: 69.46 },
+    { x: 38.75, y: 69.46 },
+    { x: 60.9, y: 69.46 },
+    { x: 16.4, y: 81.81 },
+    { x: 38.75, y: 81.81 },
+    { x: 60.9, y: 81.81 },
   ],
   1: [
-    { x: 20.2, y: 36.8 },
-    { x: 39.2, y: 36.8 },
-    { x: 58.2, y: 36.8 },
-    { x: 20.2, y: 24.9 },
-    { x: 39.2, y: 24.9 },
-    { x: 58.2, y: 24.9 },
+    { x: 19.15, y: 33.08 },
+    { x: 40.85, y: 33.08 },
+    { x: 62.35, y: 33.08 },
+    { x: 19.6, y: 20.91 },
+    { x: 41.3, y: 20.91 },
+    { x: 61.8, y: 20.91 },
   ],
 };
+
+/** Bàn là ảnh 841 x 1870, dài hơn 9:16: bề ngang bằng 0,4497 bề dọc. */
+const BOARD_ASPECT = 841 / 1870;
 
 let floaterSeq = 1;
 
 const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
   0: [
-    { x: 6.5, y: 51.2, w: 15.4, h: 11.55 },
-    { x: 26.0, y: 51.2, w: 15.4, h: 11.55 },
-    { x: 45.5, y: 51.2, w: 15.4, h: 11.55 },
-    { x: 6.5, y: 63.9, w: 15.4, h: 11.55 },
-    { x: 26.0, y: 63.9, w: 15.4, h: 11.55 },
-    { x: 45.5, y: 63.9, w: 15.4, h: 11.55 },
+    { x: 7.5, y: 63.9, w: 17.8, h: 11.12 },
+    { x: 29.85, y: 63.9, w: 17.8, h: 11.12 },
+    { x: 52, y: 63.9, w: 17.8, h: 11.12 },
+    { x: 7.5, y: 76.2, w: 17.8, h: 11.23 },
+    { x: 29.85, y: 76.2, w: 17.8, h: 11.23 },
+    { x: 52, y: 76.2, w: 17.8, h: 11.23 },
   ],
   1: [
-    { x: 13.0, y: 31.4, w: 14.4, h: 10.8 },
-    { x: 32.0, y: 31.4, w: 14.4, h: 10.8 },
-    { x: 51.0, y: 31.4, w: 14.4, h: 10.8 },
-    { x: 13.0, y: 19.5, w: 14.4, h: 10.8 },
-    { x: 32.0, y: 19.5, w: 14.4, h: 10.8 },
-    { x: 51.0, y: 19.5, w: 14.4, h: 10.8 },
+    { x: 10.3, y: 27.49, w: 17.7, h: 11.18 },
+    { x: 32.1, y: 27.49, w: 17.5, h: 11.18 },
+    { x: 53.5, y: 27.49, w: 17.7, h: 11.18 },
+    { x: 10.8, y: 15.35, w: 17.6, h: 11.12 },
+    { x: 32.5, y: 15.35, w: 17.6, h: 11.12 },
+    { x: 53, y: 15.35, w: 17.6, h: 11.12 },
   ],
 };
 
 const HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = {
-  0: { x: 5, y: 82, w: 12, h: 7 },
-  1: { x: 8, y: 5.5, w: 12, h: 7 },
+  0: { x: 5, y: 87.7, w: 12, h: 7 },
+  1: { x: 5, y: 5.3, w: 12, h: 7 },
 };
 
 const TRAIL_INK = {
@@ -562,7 +566,7 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 const LUNGE_FACE = 0.42;
 const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
-const ICON_ROOM = (ICON * (9 / 16) + 1.2) * 1.6;
+const ICON_ROOM = (ICON * BOARD_ASPECT + 1.2) * 1.6;
 
 function lungeTravel(base: number, dx: number, dy: number): number {
   const dist = Math.hypot(dx * 0.9, dy * 1.6) || 1;
@@ -1133,7 +1137,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
         floaters.push({ id: floaterSeq++, x: mark.x, y: mark.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where });
       }
     }
-    for (let index = 0; index < 3; index += 1) {
+    for (let index = 0; index < FIELD_SLOTS; index += 1) {
       const was = before.field[index];
       const now = after.field[index];
       const spot = SLOT_POS[screenSide(side, viewer)][index];
@@ -3192,7 +3196,7 @@ function PlayPage() {
       const partner = foeUid ? you.field.find((unit) => unit?.uid === foeUid) : null;
       const ids = you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId);
       const recipe = partner ? findFusion(payload.card.id, partner.cardId) ?? findKnightFusion(payload.card.id, partner.cardId, ids) : null;
-      if (canPlay && recipe && partner && slotEl && owner === viewer && index >= 0 && index <= 2) {
+      if (canPlay && recipe && partner && slotEl && owner === viewer && index >= 0 && index < FIELD_SLOTS) {
         // Dropping a card on its fusion partner plays the same fusion scene as the Dung hợp button.
         const slotSpot = boardSpot(slotEl, { x: 50, y: 62, w: 18 });
         setFuseShow({
@@ -3212,11 +3216,11 @@ function PlayPage() {
       const cap = vowCap(payload.card.id, you.reserve[payload.index]?.saved?.level ?? 1);
       const full = you.field.every((mon) => mon);
       const armed = riteHand === payload.index;
-      if (canPlay && cap > 0 && slotEl && owner === viewer && index >= 0 && index <= 2 && (armed || full)) {
+      if (canPlay && cap > 0 && slotEl && owner === viewer && index >= 0 && index < FIELD_SLOTS && (armed || full)) {
         setVowAsk({ index: payload.index, slot: index as 0 | 1 | 2, picks: [] });
         return;
       }
-      if (!canPlay || !slotEl || owner !== viewer || slotEl.dataset.empty !== "1" || index < 0 || index > 2) {
+      if (!canPlay || !slotEl || owner !== viewer || slotEl.dataset.empty !== "1" || index < 0 || index >= FIELD_SLOTS) {
         holdNotice("Thả quái vào ô trống của bạn.");
         return;
       }
@@ -3653,7 +3657,7 @@ function PlayPage() {
     if (askDrag.current?.pointer === event.pointerId) askDrag.current = null;
   };
 
-  function placeFuse(slot: 0 | 1 | 2) {
+  function placeFuse(slot: 0 | 1 | 2 | 3 | 4 | 5) {
     if (!duel || !fuseAsk || fuseAsk.phase !== "preview") return;
     const next = fuse(duel, fuseAsk.reserveIndex, fuseAsk.fieldUid, slot);
     if (next.players[viewer].field[slot]?.cardId !== fuseAsk.resultId) {
@@ -3670,11 +3674,11 @@ function PlayPage() {
     const slotEl = node?.closest("[data-slot]") as HTMLElement | null;
     const owner = slotEl ? Number(slotEl.dataset.owner) : NaN;
     const index = slotEl ? Number(slotEl.dataset.index) : NaN;
-    if (!slotEl || owner !== viewer || index < 0 || index > 2) {
+    if (!slotEl || owner !== viewer || index < 0 || index >= FIELD_SLOTS) {
       holdNotice("Kéo lá vào ô của bạn.");
       return;
     }
-    placeFuse(index as 0 | 1 | 2);
+    placeFuse(index as 0 | 1 | 2 | 3 | 4 | 5);
   }
 
   /** For three knights, the third one on the field and where it stands, so all three fly into the fusion scene. */
@@ -3816,7 +3820,7 @@ function PlayPage() {
   };
   const iconSpots = new Map<string, IconSpot>();
   {
-    const tall = ICON * (9 / 16);
+    const tall = ICON * BOARD_ASPECT;
     const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, ((y - other.y) * 16) / 9) >= ICON * 1.08);
     for (const orb of chain) {
       const kept = keptSpots.current.get(orb.id);
@@ -4052,7 +4056,7 @@ function PlayPage() {
       : null;
 
   return (
-    <main className="stage">
+    <main className="stage is-play">
       <GlyphDefs />
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroMid(duel.mid ?? "")} /> : null}
@@ -4114,7 +4118,6 @@ function PlayPage() {
           }}
         />
       ) : null}
-      <img className="board-bleed" src="/board-bleed.jpg" alt="" aria-hidden="true" draggable={false} decoding="async" />
       <section
         className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
@@ -4129,14 +4132,7 @@ function PlayPage() {
         onPointerCancel={dropAsk}
       >
         <div className="diorama">
-        {artTop === artBottom ? (
-          <img className="board-art" src={artTop} alt="" />
-        ) : (
-          <>
-            <img className="board-art" src={artBottom} alt="" />
-            <img className="board-art is-top" src={artTop} alt="" />
-          </>
-        )}
+        <img className="board-art" src={artTop} alt="" />
         {[
           { id: you.env, spot: board.env, key: "you-env" },
           { id: foe.env, spot: board.envFoe, key: "foe-env" },
@@ -5343,15 +5339,20 @@ function PlayPage() {
             </button>
           ) : null}
         </div>
-        {counterSeat >= 0 ? (
-          <button
-            type="button"
-            className="counter-btn press"
-            style={{ left: `${SLOT_BOX[viewer][counterSeat].x}%`, top: `${SLOT_BOX[viewer][counterSeat].y - 5.2}%`, width: `${SLOT_BOX[viewer][counterSeat].w}%` }}
-            onClick={() => apply(pickCounter(duel, "phys"))}
-          >
-            {tr("Trả đòn")}
-          </button>
+        {counterSeat >= 0 && duel.counterAsk ? (
+          <UnitChips
+            duel={duel}
+            uid={duel.counterAsk.uid}
+            viewer={viewer}
+            attackable
+            riposte
+            blessOn={false}
+            onBless={() => undefined}
+            onChronoFlow={() => undefined}
+            onLure={() => undefined}
+            setAim={setAim}
+            apply={apply}
+          />
         ) : null}
         {aim?.kind === "menu" ? (
           <UnitChips
@@ -5789,6 +5790,7 @@ function UnitChips({
   uid,
   viewer,
   attackable,
+  riposte = false,
   blessOn,
   onBless,
   onChronoFlow,
@@ -5800,6 +5802,8 @@ function UnitChips({
   uid: string;
   viewer: Side;
   attackable: boolean;
+  /** Trả đòn (luật 6 ô): quái vừa chịu đòn chọn đánh thường hoặc kỹ năng để đánh trả, dù đang mệt. */
+  riposte?: boolean;
   blessOn: boolean;
   onBless: () => void;
   onChronoFlow: (uid: string) => void;
@@ -5814,7 +5818,7 @@ function UnitChips({
   if (!mon || !card || index < 0) return null;
   const box = SLOT_BOX[screenSide(side, viewer)][index];
   const you = duel.players[side];
-  const noSkill = mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
+  const noSkill = (mon.dim && !riposte) || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
   const noAttack = noSkill || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
   const empty = you.field.filter((unit) => !unit).length;
   const y: Array<{ key: string; label: string; go: () => void }> = [];
@@ -5968,7 +5972,7 @@ function UnitChips({
     return { icon: hit?.icon ?? (tone === "z" ? "magic-swirl" : "sparkles"), kind };
   };
   const rows: Array<{ key: string; label: string; go: () => void; icon: string; kind: UnitActKind }> = [
-    ...(strikeShown ? [{ key: "attack", label: attackLabel(), go: () => setAim({ kind: "attack", uid }), icon: "broadsword", kind: "attack" as const }] : []),
+    ...(strikeShown ? [{ key: "attack", label: attackLabel(), go: () => (riposte ? apply(pickCounter(duel, "phys")) : setAim({ kind: "attack", uid })), icon: "broadsword", kind: "attack" as const }] : []),
     ...y.map((item) => ({ ...item, ...lookOf(item.label, "y") })),
     ...z.map((item) => ({ ...item, ...lookOf(item.label, "z") })),
   ];
@@ -5976,7 +5980,8 @@ function UnitChips({
   const wide = Math.max(box.w + 8, 31);
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
-    <div className="unit-acts" style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
+    <div className={`unit-acts${riposte ? " is-riposte" : ""}`} style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
+      {riposte ? <p className="riposte-title">{tr("Trả đòn")}</p> : null}
       {rows.map((row) => (
         <button key={row.key} type="button" className={`unit-act is-${row.kind} press`} onClick={row.go}>
           <span className="unit-act-ico">

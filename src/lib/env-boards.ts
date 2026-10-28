@@ -10,19 +10,18 @@ export const ENV_BOARDS: Record<string, { top: string; bottom: string }> = {
   "nui-dung-nham": { top: "/env/nui-dung-nham.jpg", bottom: "/env/nui-dung-nham.jpg" },
 };
 
-export const DEFAULT_BOARD_ART = "/board.png";
+export const DEFAULT_BOARD_ART = "/board-full.jpg";
 
 /** The environment id whose board art and layout apply, or undefined for the default board. */
 export function boardEnv(env: string | null | undefined): string | undefined {
   return env && ENV_BOARDS[env] ? env : undefined;
 }
 
-export function topArt(env: string | null | undefined): string {
-  const id = boardEnv(env);
-  return id ? ENV_BOARDS[id].top : DEFAULT_BOARD_ART;
+/** Tạm thời (chủ game 28/10, "khoan làm môi trường"): mọi môi trường dùng chung bàn board-full.jpg; ảnh riêng giữ trong ENV_BOARDS để làm sau. */
+export function topArt(_env: string | null | undefined): string {
+  return DEFAULT_BOARD_ART;
 }
 
-export function bottomArt(env: string | null | undefined): string {
-  const id = boardEnv(env);
-  return id ? ENV_BOARDS[id].bottom : DEFAULT_BOARD_ART;
+export function bottomArt(_env: string | null | undefined): string {
+  return DEFAULT_BOARD_ART;
 }

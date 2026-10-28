@@ -708,7 +708,9 @@ export const PENDING_NOTES: string[] = [
   "Bộ bài từ 16 đến 24 lá, ít nhất 13 quái, phép không bắt buộc.",
   "Sân mỗi bên hiện đủ 6 ô: hàng trước sát giữa sân, hàng sau sát tay. Bảng thông báo thu gọn vào khe giữa hai hàng trước.",
   "Tay bài gộp chung quái và phép trong một hàng. Xấp bài bên phải hiện số lá còn lại, bấm vào để rút bài.",
-  "Khi quái của bạn được Trả đòn, nút Trả đòn hiện ngay trên quái đó. Bấm để đánh trả, chưa Trả đòn thì chưa làm gì khác được.",
+  "Khi quái của bạn được Trả đòn, các nút Tấn công và kỹ năng hiện ngay trên quái đó với tiêu đề Trả đòn. Chưa Trả đòn thì chưa làm gì khác được.",
+  "Bàn đấu mới: phủ hết chiều ngang màn hình, 6 ô mỗi bên khớp hình bàn (hàng trước sát giữa sân, hàng sau sát tay). Màn thiếu chiều dọc thì xén bớt phần trên bên đỏ. Bố cục nút, thông báo, chấm lịch sử đặt lại về mặc định mới.",
+  "Mọi môi trường tạm dùng chung một hình bàn đấu. Hình bàn riêng của từng môi trường sẽ làm lại sau.",
 ];
 
 function remarkOf(notes: string[]) {

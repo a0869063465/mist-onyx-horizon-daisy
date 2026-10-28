@@ -37,18 +37,18 @@ export function markScale(key: HudKey): number {
 }
 
 export const DEFAULT_BOARD: Record<HudKey, Mark> = {
-  foeHp: { x: 13.7, y: 11.3, size: 6.2 },
-  foeOrb: { x: 84.2, y: 10.4, size: 9.6 },
-  foeFlask: { x: 90.8, y: 15.4, size: 5.2 },
-  foeStars: { x: 76.5, y: 21.5, size: 5.4 },
-  foeGems: { x: 87, y: 21.6, size: 4.6 },
-  foeHand: { x: 56.5, y: 6.8, size: 3.4 },
-  foeReserve: { x: 79.5, y: 28.3, size: 4.2 },
-  youHp: { x: 9, y: 88.5, size: 6.6 },
-  youOrb: { x: 91.1, y: 88.1, size: 9.6 },
-  youFlask: { x: 94.8, y: 94, size: 5.2 },
-  youStars: { x: 85.1, y: 81, size: 5.4 },
-  youGems: { x: 97.4, y: 80.7, size: 4.6 },
+  foeHp: { x: 11, y: 8.8, size: 5.6 },
+  foeOrb: { x: 83.5, y: 8.4, size: 6.2 },
+  foeFlask: { x: 87.2, y: 15.2, size: 3.2 },
+  foeStars: { x: 77.2, y: 20.6, size: 3.6 },
+  foeGems: { x: 87.4, y: 20.5, size: 3.2 },
+  foeHand: { x: 86, y: 33, size: 3.2 },
+  foeReserve: { x: 76, y: 32, size: 3.2 },
+  youHp: { x: 11, y: 91.2, size: 5.6 },
+  youOrb: { x: 83.5, y: 91.2, size: 6.2 },
+  youFlask: { x: 88.2, y: 96.4, size: 3.2 },
+  youStars: { x: 78, y: 80.2, size: 3.6 },
+  youGems: { x: 86.5, y: 80.2, size: 3.2 },
 };
 
 export type Spot = { x: number; y: number; size: number; width: number; height: number; hidden?: boolean };
@@ -56,15 +56,15 @@ export type Notice = { x: number; y: number; w: number; h: number; font: number;
 export type Trail = { x: number; y: number; w: number; h: number; dot: number; glow: number; hidden?: boolean };
 export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot };
 
-// 6 ô mỗi bên (28/10): hàng trước của hai bên chiếm khoảng giữa sân, bảng thông báo thu về khe giữa hai hàng trước.
-export const DEFAULT_NOTICE: Notice = { x: 8.7, y: 42.6, w: 70, h: 8.4, font: 3.6, hidden: false };
-export const DEFAULT_TRAIL: Trail = { x: 1.2, y: 36.8, w: 7.2, h: 21, dot: 1.6, glow: 3, hidden: false };
-export const DEFAULT_REACTION: Notice = { x: 74, y: 34, w: 20, h: 28, font: 4.2, hidden: false };
-export const DEFAULT_STACK: Spot = { x: 83.4, y: 72.6, size: 3.1, width: 16, height: 10, hidden: false };
-export const DEFAULT_ENV: Spot = { x: 7.6, y: 58.4, size: 3.6, width: 22, height: 5, hidden: false };
-export const DEFAULT_ENV_FOE: Spot = { x: 76.4, y: 36.1, size: 3.6, width: 22, height: 5, hidden: false };
-/** Rút quái / Rút phép / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
-export const DEFAULT_ACTIONS: Spot = { x: 89.5, y: 52, size: 1, width: 18, height: 20, hidden: false };
+// Bàn mới 841 x 1870 (chủ game 28/10): số mặc định theo bố cục của bàn Grok.
+export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, hidden: false };
+export const DEFAULT_TRAIL: Trail = { x: 4, y: 42, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false };
+export const DEFAULT_REACTION: Notice = { x: 64, y: 44, w: 22, h: 12, font: 3.2, hidden: false };
+export const DEFAULT_STACK: Spot = { x: 80, y: 70.5, size: 2.6, width: 15, height: 7.2, hidden: false };
+export const DEFAULT_ENV: Spot = { x: 72, y: 64.2, size: 2.2, width: 16, height: 10, hidden: false };
+export const DEFAULT_ENV_FOE: Spot = { x: 72, y: 27.6, size: 2.2, width: 16, height: 10.5, hidden: false };
+/** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
+export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
 
 export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
   marks: DEFAULT_BOARD,
@@ -137,7 +137,7 @@ export const DEFAULT_FIELD: Record<FieldKey, FieldSpot> = {
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 
-const BOARD_KEY = "clash-board-layout";
+const BOARD_KEY = "clash-board-layout-v9";
 const ALERT_KEY = "clash-alert-size";
 
 export type AlertLook = { glow: number; border: number };

@@ -1695,10 +1695,22 @@
   pointer-events: none;
   user-select: none;
 }
+/* Bàn mới (chủ game 28/10): ảnh board-full.jpg 841 x 1870. Bàn phủ hết bề ngang màn hình (tối đa bề rộng của bàn 9:16 cũ trên màn
+   rộng); màn thiếu chiều dọc thì xén bớt phần trên, bên đỏ, vì bàn neo vào đáy. */
+.stage.is-play {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
 .board {
+  --board-w: min(100vw, calc(100dvh * 9 / 16));
   position: relative;
-  width: min(100vw, calc(100dvh * 9 / 16));
-  height: min(100dvh, calc(100vw * 16 / 9));
+  flex: none;
+  width: var(--board-w);
+  height: calc(var(--board-w) * 1870 / 841);
   overflow: hidden;
   touch-action: none;
   user-select: none;
@@ -1759,76 +1771,76 @@
   border-radius: 0.6rem;
 }
 .slot-f0 {
-  left: 13.0%;
-  top: 31.4%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 10.3%;
+  top: 27.49%;
+  width: 17.7%;
+  height: 11.18%;
 }
 .slot-f1 {
-  left: 32.0%;
-  top: 31.4%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 32.1%;
+  top: 27.49%;
+  width: 17.5%;
+  height: 11.18%;
 }
 .slot-f2 {
-  left: 51.0%;
-  top: 31.4%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 53.5%;
+  top: 27.49%;
+  width: 17.7%;
+  height: 11.18%;
 }
 .slot-f3 {
-  left: 13.0%;
-  top: 19.5%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 10.8%;
+  top: 15.35%;
+  width: 17.6%;
+  height: 11.12%;
 }
 .slot-f4 {
-  left: 32.0%;
-  top: 19.5%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 32.5%;
+  top: 15.35%;
+  width: 17.6%;
+  height: 11.12%;
 }
 .slot-f5 {
-  left: 51.0%;
-  top: 19.5%;
-  width: 14.4%;
-  height: 10.8%;
+  left: 53%;
+  top: 15.35%;
+  width: 17.6%;
+  height: 11.12%;
 }
 .slot-y0 {
-  left: 6.5%;
-  top: 51.2%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 7.5%;
+  top: 63.9%;
+  width: 17.8%;
+  height: 11.12%;
 }
 .slot-y1 {
-  left: 26.0%;
-  top: 51.2%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 29.85%;
+  top: 63.9%;
+  width: 17.8%;
+  height: 11.12%;
 }
 .slot-y2 {
-  left: 45.5%;
-  top: 51.2%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 52%;
+  top: 63.9%;
+  width: 17.8%;
+  height: 11.12%;
 }
 .slot-y3 {
-  left: 6.5%;
-  top: 63.9%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 7.5%;
+  top: 76.2%;
+  width: 17.8%;
+  height: 11.23%;
 }
 .slot-y4 {
-  left: 26.0%;
-  top: 63.9%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 29.85%;
+  top: 76.2%;
+  width: 17.8%;
+  height: 11.23%;
 }
 .slot-y5 {
-  left: 45.5%;
-  top: 63.9%;
-  width: 15.4%;
-  height: 11.55%;
+  left: 52%;
+  top: 76.2%;
+  width: 17.8%;
+  height: 11.23%;
 }
 .env-card {
   position: absolute;
@@ -1875,10 +1887,12 @@
   outline: 2px solid #ff4f93;
 }
 .hand {
-  left: 1%;
-  right: 16%;
-  bottom: 0;
-  height: 18.5%;
+  left: 21%;
+  width: 58%;
+  top: 88.6%;
+  height: 11.4%;
+  right: auto;
+  bottom: auto;
   display: flex;
   justify-content: safe center;
   align-items: flex-end;
@@ -1888,8 +1902,9 @@
   padding-bottom: 0.4%;
 }
 .hand.is-strip {
-  left: 18%;
-  right: 18%;
+  left: 21%;
+  right: auto;
+  width: 58%;
   overflow-y: hidden;
   scrollbar-width: none;
 }
@@ -2273,9 +2288,9 @@ button.trail-dot.is-on {
   color: #b44dff;
 }
 .actions {
-  right: 1.5%;
-  top: 42%;
-  width: 18%;
+  right: 0.6%;
+  top: 40%;
+  width: 11%;
   min-height: 9.2rem;
   display: flex;
   flex-direction: column;
@@ -11330,26 +11345,45 @@ button.watch-back {
   .ms-motes { display: none; }
 }
 
-/* Trả đòn (luật mới 28/10): nút nổi ngay trên quái được trả đòn. */
-.counter-btn {
-  position: absolute;
-  z-index: 40;
-  min-height: 4.2%;
-  padding: 0.25rem 0.4rem;
-  border-radius: 0.6rem;
-  border: 2px solid #ffd34d;
+/* Trả đòn (luật mới 28/10): các nút đánh thường và kỹ năng hiện ngay trên quái được Trả đòn, có tiêu đề. */
+.unit-acts.is-riposte {
+  filter: drop-shadow(0 0 0.5rem rgba(255, 120, 70, 0.75));
+}
+.riposte-title {
+  align-self: center;
+  margin: 0;
+  padding: 0.12rem 0.7rem;
+  border-radius: 999px;
+  border: 1.5px solid #ffd34d;
   background: linear-gradient(#e03b32, #9d1b17);
   color: #fff;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 800;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
-  box-shadow: 0 0 0.8rem rgba(255, 90, 60, 0.7);
-  animation: counter-pulse 0.9s ease-in-out infinite;
+  pointer-events: none;
 }
-@keyframes counter-pulse {
-  50% {
-    box-shadow: 0 0 1.3rem rgba(255, 150, 60, 0.95);
-  }
+
+/* Tay bài trên bàn mới (28/10): lá cùng cỡ ô sân (17,8% bề ngang bàn x 11,1% bề dọc bàn), không giãn theo số lá. */
+.stage .hand.is-strip .hand-card,
+.stage .hand.is-strip .hand-spell,
+.stage .hand.is-strip.is-paged .hand-card,
+.stage .hand.is-strip.is-paged .hand-spell {
+  flex: 0 0 auto;
+  width: 17.8cqw;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+}
+.stage .hand.is-strip .hand-spell .hand-card,
+.stage .hand.is-strip.is-paged .hand-spell .hand-card {
+  width: 100%;
+  height: calc(100% - 1.35rem);
+  aspect-ratio: auto;
+}
+.stage .hand.is-strip .hand-card > .card {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
 }
