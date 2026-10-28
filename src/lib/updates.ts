@@ -723,6 +723,12 @@ export const PENDING_NOTES: string[] = [
   "Bấm 1 lần lá quái trên tay: 2 mũi tên vàng hiện cạnh nhau ngay trên lá, ↑ triệu hồi vào hàng trước, ↓ vào hàng sau, vào ô trống đầu tiên từ trái sang; hàng đầy thì mũi tên tối. Bấm đôi lá để mở bảng mô tả. Kéo thả lá lên ô vẫn dùng được.",
   "Trong bảng mô tả, bấm Triệu hồi thì nút đổi thành 2 mũi tên ↑↓ để chọn hàng. Hiến tế: chọn quân tế, bấm Triệu hồi rồi chọn hàng. Dung hợp xong phải triệu hồi quái mới, không thoát ra được.",
   "Bấm 1 lần lá phép trên tay: hiện icon dùng phép trên lá khi phép dùng được, bấm icon để dùng. Bấm đôi để mở bảng mô tả. Kỹ năng dùng từ trên tay (Bông mềm, Thế thân trên tay) cũng vậy: bấm lá rồi bấm icon kỹ năng.",
+  "Hàng chờ: tấn công, dùng skill hay phép nhắm vào đối thủ thì hành động nằm chờ. Lá lao ra, icon và dải sáng hiện, lá phép rời tay, mana đã trừ, nhưng chưa nổ, chưa tính sát thương và đối thủ chưa thấy. Bấm tick để xác nhận, bấm X để huỷ hết (lá về tay, hoàn mana). Mỗi lần chỉ xếp 1 hành động.",
+  "Khi đang có hàng chờ thì không triệu hồi, rút bài hay làm việc khác được, game nhắc \"Hãy huỷ hàng chờ trước.\"",
+  "Khi đối thủ tấn công, phản ứng của bạn (chặn, phép, skill) cũng vào hàng chờ: xếp bao nhiêu cũng được rồi bấm tick một lần. Đối thủ được đáp lại; bên nào bấm OK mà không làm gì thì chuỗi xong và đòn chạy.",
+  "Con mắt: bấm để xem trước bàn sau khi xác nhận (tính như đối thủ không phản ứng), bấm lại để tắt. Quái sẽ chết thành bóng xanh, chỉ số và máu hiện số sau (giảm màu đỏ, tăng màu xanh lá), icon trong hàng chờ thành vết nứt. Đang xem thì khói xanh bay quanh con mắt.",
+  "Hành động ngẫu nhiên (như Súng phóng lựu của Máy ném bom hình nhện) quay lúc bấm tick. Con mắt chỉ hiện phần chắc chắn, icon chưa có mục tiêu; xác nhận xong thì cả hai bên thấy dải sáng tới đúng những mục tiêu sẽ trúng.",
+  "Icon phản ứng xếp dần về giữa bàn: quái bên phải thì icon chạy sang trái, quái bên trái thì chạy sang phải; phản ứng càng sớm càng gần icon gốc.",
 ];
 
 function remarkOf(notes: string[]) {

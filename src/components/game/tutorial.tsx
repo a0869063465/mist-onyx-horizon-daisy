@@ -347,7 +347,7 @@ export function Tutorial({
     if (step.wait === "foe-end" && duel.turn === viewer && duel.step === "main") soon(next, 600);
     if (step.wait === "chain") {
       // The opponent lets the chain through.
-      if (duel.step === "respond" && duel.hold?.priority === foe) soon(() => drive((d) => (d.step === "respond" && d.hold?.priority === foe ? passResponse(d) : d)), 900);
+      if (duel.step === "respond" && duel.hold?.priority === foe && !duel.hold.stage) soon(() => drive((d) => (d.step === "respond" && d.hold?.priority === foe ? passResponse(d) : d)), 900);
       else if (duel.players[foe].field.some((mon) => mon && (mon.chain ?? 0) > 0)) soon(next, 2000);
     }
     return () => window.clearTimeout(timer);

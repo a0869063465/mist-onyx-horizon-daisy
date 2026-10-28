@@ -70,6 +70,8 @@ export function ReactionLine({
   cardOf,
   onSheet,
   onClosed,
+  cracked,
+  aimless,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
@@ -90,6 +92,10 @@ export function ReactionLine({
   onSheet: (orb: ChainOrb) => void;
   /** The icons have faded out after the wait ended. */
   onClosed: () => void;
+  /** Con mắt (hàng chờ, chủ game 28/10): queued icons that have gone through in the preview show as cracks. */
+  cracked?: ReadonlySet<string>;
+  /** In the preview, a queued icon whose roll is still to come keeps its face but has no target yet. */
+  aimless?: ReadonlySet<string>;
 }) {
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
@@ -147,7 +153,7 @@ export function ReactionLine({
   const now = performance.now() / 1000;
   for (const orb of orbs) {
     const here = spots.get(orb.id);
-    if (!here) continue;
+    if (!here || cracked?.has(orb.id) || aimless?.has(orb.id)) continue;
     const since = born.current.has(orb.id) ? now - born.current.get(orb.id)! : 0;
     for (const link of orb.to) {
       const start = link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
@@ -208,7 +214,7 @@ export function ReactionLine({
           <button
             key={orb.id}
             type="button"
-            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.appear > 0 ? " is-dawn" : ""}${tip === orb.id ? " is-tipped" : ""}`}
+            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.appear > 0 ? " is-dawn" : ""}${tip === orb.id ? " is-tipped" : ""}${cracked?.has(orb.id) ? " is-cracked" : ""}`}
             data-react={react}
             style={
               {
@@ -227,7 +233,7 @@ export function ReactionLine({
               tapped(orb);
             }}
           >
-            <IconFace look={look} />
+            {cracked?.has(orb.id) ? <CrackFace /> : <IconFace look={look} />}
           </button>
         );
       })}
@@ -271,6 +277,29 @@ export function ReactionLine({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** A queued icon that has gone through in the eye's preview: a dark hole with cracks running out of it. */
+function CrackFace() {
+  const rays = [
+    "M50 50L50 6L46 18L53 26",
+    "M50 50L88 24L76 30L80 40",
+    "M50 50L93 60L82 58L86 70",
+    "M50 50L66 94L62 82L54 88",
+    "M50 50L20 90L28 80L18 76",
+    "M50 50L6 56L18 52L12 42",
+    "M50 50L16 14L26 22L30 12",
+  ];
+  return (
+    <svg className="rx-crack" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="30" fill="rgba(4, 8, 18, 0.88)" />
+      <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(120, 190, 255, 0.55)" strokeWidth="1.4" />
+      {rays.map((d) => (
+        <path key={d} d={d} fill="none" stroke="rgba(150, 210, 255, 0.85)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+      ))}
+      <circle cx="50" cy="50" r="13" fill="#02040b" />
+    </svg>
   );
 }
 

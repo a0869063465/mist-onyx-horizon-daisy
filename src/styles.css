@@ -11592,3 +11592,81 @@ button.watch-back {
   50% { transform: translate(3px, 6px); }
   75% { transform: translate(5px, -3px); }
 }
+
+/* Hàng chờ (chủ game 28/10): X huỷ hết, con mắt bật/tắt xem trước; chỉ bấm được khi có hành động chờ. */
+.stage .actions.is-spread > .oracle-act {
+  padding: 0;
+  border: 0;
+  background: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.stage .actions.is-spread > .oracle-act.is-live { pointer-events: auto; cursor: pointer; }
+.stage .actions.is-spread > .oracle-act.is-live:active { transform: scale(0.93); }
+/* While it looks, blue smoke drifts around the eye only (chủ game 28/10); the shadow goes on the orb, not the smoke. */
+.stage .actions.is-spread > .oracle-act.is-peek { filter: none; }
+.oracle-act.is-peek .oracle { filter: drop-shadow(0 0.15rem 0.25rem rgba(0, 0, 0, 0.55)) drop-shadow(0 0 0.5rem rgba(90, 190, 255, 0.7)); }
+.oracle-smoke {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.oracle-smoke i {
+  position: absolute;
+  left: calc(var(--medal) * -0.5);
+  top: calc(var(--medal) * -0.38);
+  width: calc(var(--medal) * 1);
+  height: calc(var(--medal) * 0.76);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(235, 252, 255, 1), rgba(140, 220, 255, 0.85) 45%, rgba(60, 160, 255, 0) 100%);
+  filter: blur(0.16rem);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: oracle-smoke 3.4s ease-in-out infinite;
+}
+.oracle-smoke i:nth-child(2) { animation-delay: -0.68s; animation-duration: 3.9s; }
+.oracle-smoke i:nth-child(3) { animation-delay: -1.36s; animation-direction: reverse; }
+.oracle-smoke i:nth-child(4) { animation-delay: -2.04s; animation-duration: 4.2s; }
+.oracle-smoke i:nth-child(5) { animation-delay: -2.72s; animation-direction: reverse; animation-duration: 3.7s; }
+@keyframes oracle-smoke {
+  0% { opacity: 0; transform: rotate(0deg) translateX(calc(var(--medal) * 0.4)) scale(0.6); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(300deg) translateX(calc(var(--medal) * 0.62)) scale(1.25); }
+}
+/* Con mắt: numbers as they will be after the queue goes through, red when they fall, green when they rise. */
+.fstat.is-loss {
+  color: #ff4141;
+  text-shadow: 0 1px 0 #2a0000, 0 0 0.35em rgba(255, 40, 40, 0.85);
+  animation: peek-number 1.4s ease-in-out infinite;
+}
+.fstat.is-gain {
+  color: #57ff86;
+  text-shadow: 0 1px 0 #00240c, 0 0 0.35em rgba(40, 255, 110, 0.85);
+  animation: peek-number 1.4s ease-in-out infinite;
+}
+.mark.is-loss,
+.mark.is-loss b { color: #ff4141; }
+.mark.is-gain,
+.mark.is-gain b { color: #57ff86; }
+.mark.is-loss b,
+.mark.is-gain b { animation: peek-number 1.4s ease-in-out infinite; }
+@keyframes peek-number { 50% { filter: brightness(1.35); } }
+/* A monster the queue would bring down shows as a blue ghost. */
+.slot.is-doomed .field-unit {
+  filter: grayscale(0.7) sepia(0.5) hue-rotate(170deg) saturate(2.6) brightness(1.05) drop-shadow(0 0 1.2cqw rgba(90, 190, 255, 0.9));
+  opacity: 0.55;
+  animation: peek-ghost 1.8s ease-in-out infinite;
+}
+@keyframes peek-ghost { 50% { opacity: 0.36; } }
+/* A queued icon that has gone through in the preview: a crack in the board where it was. */
+.rx-icon.is-cracked { animation: rx-pop 0.35s ease-out both; }
+.rx-crack {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 1.2cqw rgba(80, 170, 255, 0.8));
+}

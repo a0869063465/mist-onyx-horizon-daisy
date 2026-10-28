@@ -183,6 +183,13 @@ export type Hold = {
   blocker: string | null;
   blockerSkill: boolean;
   armed: string | null;
+  /**
+   * Hàng chờ (chủ game 28/10): hành động vừa xếp, chưa xác nhận. Lá đã rời tay, mana đã trừ, lá đang lao, nhưng đối
+   * thủ chưa thấy và chưa được phản ứng; bên xếp bấm tick (`confirmStage`) hoặc X (trang trận quay về lúc chưa xếp).
+   */
+  stage?: boolean;
+  /** Hành động ngẫu nhiên quay đúng lúc xác nhận: số mầm của lần quay, nên hai máy và lúc giải quyết ra cùng kết quả. */
+  seed?: number;
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3477,7 +3484,7 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
     ...noted,
     step: "respond",
     pending,
-    hold: { priority: (1 - state.turn) as Side, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+    hold: { priority: (1 - state.turn) as Side, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
@@ -3498,8 +3505,51 @@ function askKnight(state: Duel, priority: Side): Duel {
   return note(aimed, "Kỵ sĩ hãy chọn trạng thái trước khi giáp lá cà");
 }
 
+/** A fresh seed for the random rolls of an action (`Hold.seed`). */
+function freshSeed(): number {
+  return Math.floor(Math.random() * 2147483647) + 1;
+}
+
+/** mulberry32: a small seeded random, so an action's rolls come out the same wherever it is resolved. */
+function seededRandom(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Runs `run` with Math.random drawn from `seed` (nothing changes without a seed). */
+export function withSeed<T>(seed: number | undefined, run: () => T): T {
+  if (!seed) return run();
+  const real = Math.random;
+  Math.random = seededRandom(seed);
+  try {
+    return run();
+  } finally {
+    Math.random = real;
+  }
+}
+
+/** Hàng chờ: the action just declared waits unseen by the opponent (`Hold.stage`), until its side confirms it. */
+export function stageHold(state: Duel): Duel {
+  if (state.step !== "respond" || !state.hold || state.hold.stage) return state;
+  return { ...state, hold: { ...state.hold, stage: true } };
+}
+
+/** The action waiting in the queue is confirmed: its random rolls are made now, and the opponent may answer it. */
+export function confirmStage(state: Duel, seed?: number): Duel {
+  if (!state.hold?.stage) return state;
+  const { stage: _stage, ...hold } = state.hold;
+  return { ...state, hold: { ...hold, passed: [false, false], seed: seed ?? freshSeed() } };
+}
+
 export function passResponse(state: Duel): Duel {
-  const next = passResponseCore(state);
+  if (state.hold?.stage) return state;
+  const next = withSeed(state.hold?.seed, () => passResponseCore(state));
   if (next === state || !state.hold) return next;
   const resolved = next.pending !== state.pending || next.step !== state.step || next.winner !== state.winner || next.hold === null;
   if (!resolved) return next;
@@ -3861,6 +3911,7 @@ export function assignBlock(state: Duel, blockerUid: string, withSkill = false):
 }
 
 function assignBlockCore(state: Duel, blockerUid: string, withSkill = false): Duel {
+  if (state.hold?.stage) return state;
   const defender = (1 - state.turn) as Side;
   const pending = state.pending;
   if (state.step !== "respond" || !state.hold || state.hold.priority !== defender) {
@@ -3924,7 +3975,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false): Du
     ...noted,
     step: "respond",
     pending: state.pending,
-    hold: { priority: state.turn, passed: [false, false], blocker: blockerUid, blockerSkill: skill, armed: null },
+    hold: { priority: state.turn, passed: [false, false], blocker: blockerUid, blockerSkill: skill, armed: null, seed: state.hold.seed },
   };
   const ids = [blockerUid];
   if (pending?.kind === "face") ids.push(pending.attacker);
@@ -5510,7 +5561,7 @@ function rebound(state: Duel, victimUid: string): Duel {
     ...note(state, `${name} bị phản vào ${cardOf(victim).name}.`),
     step: "respond",
     pending: { kind: "beam", caster: caster!.uid, target: victim.uid, index, back: true },
-    hold: { priority: foeSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+    hold: { priority: foeSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
   };
 }
 
@@ -5705,6 +5756,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   const locked = talkLock(state);
   if (locked) return locked;
   if (state.winner || (state.step !== "main" && state.step !== "respond")) return state;
+  if (state.step === "respond" && state.hold?.stage) return state;
   if (!replay && state.step === "main") {
     const waiting = needUpkeep(state);
     if (waiting) return waiting;
@@ -5853,7 +5905,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
         ...note(next, `${card.name} đang thi triển.`),
         step: "respond",
         pending: { kind: "spell", owner: side, cardId: card.id, target: null, source: uid },
-        hold: { priority: (1 - side) as Side, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+        hold: { priority: (1 - side) as Side, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
       };
     }
     if (state.step === "main" && !response.has(card.id) && card.id !== "sung-loi-pha" && !burst.has(card.id)) {
@@ -6016,7 +6068,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       ...note(plated, `${base} ${castName(caster.cardId, pending.index)} bị phản vào ${cardOf(caster).name}.`, "spell"),
       step: "respond",
       pending: { kind: "beam", caster: caster.uid, target: caster.uid, index: pending.index, back: true },
-      hold: { priority: casterSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+      hold: { priority: casterSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
     };
   }
   if (card.id === "hap-thu-ma-phap") {
@@ -6764,7 +6816,7 @@ function openLash(state: Duel, owner: Side, bird: string, foe: string, stun: boo
     ...noted,
     step: "respond",
     pending: { kind: "lash", owner, bird, foe, stun },
-    hold: { priority: foeSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+    hold: { priority: foeSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
   };
 }
 
@@ -7182,7 +7234,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
         ...asked,
         step: "respond",
         pending: { kind: "gnaw-skill", caster: uid, target: targetUid, index: skillIndex },
-        hold: { priority: foe, passed: [false, false], blocker: null, blockerSkill: false, armed: null },
+        hold: { priority: foe, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
       };
     }
   }

@@ -140,7 +140,10 @@ import {
   type ReelFace,
   type Side,
   type Slot,
+  confirmStage,
+  stageHold,
 } from "@/lib/duel";
+import { queueRuns, rolledAims } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
@@ -543,10 +546,61 @@ function loadTestDuel(): Duel | null {
   }
 }
 
+/** Con mắt (chủ game 28/10): a monster after the queue goes through; `gain` is the certain change of each number. */
+type Forecast = { dead: boolean; gain: Record<"atk" | "def" | "mdef" | "hp", number> };
+type Sight = { mons: Map<string, Forecast>; hp: [number, number]; random: boolean };
+
+/**
+ * What the eye shows from the outcomes of the queue under several rolls: only the part every roll agrees on (a fall
+ * as small as the smallest fall, a rise as small as the smallest rise), and a monster is gone only if it falls in all.
+ */
+function foresee(now: Duel, runs: Duel[]): Sight {
+  const keys = ["atk", "def", "mdef", "hp"] as const;
+  const certain = (deltas: number[]) => (deltas.every((d) => d > 0) ? Math.min(...deltas) : deltas.every((d) => d < 0) ? Math.max(...deltas) : 0);
+  const mons = new Map<string, Forecast>();
+  let random = false;
+  const find = (duel: Duel, uid: string) => {
+    for (const player of duel.players) {
+      const mon = player.field.find((unit) => unit?.uid === uid);
+      if (mon) return { mon, field: player.field };
+    }
+    return null;
+  };
+  for (const side of [0, 1] as const) {
+    for (const mon of now.players[side].field) {
+      if (!mon) continue;
+      const shown = visibleStats(mon, now.players[side].field);
+      const base = { atk: shown.atk, def: shown.def, mdef: shown.mdef, hp: mon.hp };
+      const outs = runs.map((run) => {
+        const after = find(run, mon.uid);
+        if (!after || after.mon.hp <= 0) return null;
+        const stats = visibleStats(after.mon, after.field);
+        return { atk: stats.atk, def: stats.def, mdef: stats.mdef, hp: after.mon.hp };
+      });
+      const dead = outs.every((out) => out === null);
+      if (!dead && outs.some((out) => out === null)) random = true;
+      const gain = { atk: 0, def: 0, mdef: 0, hp: 0 };
+      for (const key of keys) {
+        const deltas = outs.map((out) => (out ? out[key] - base[key] : key === "hp" ? -base.hp : 0));
+        if (new Set(deltas).size > 1) random = true;
+        gain[key] = dead ? 0 : certain(deltas);
+      }
+      if (dead || keys.some((key) => gain[key] !== 0)) mons.set(mon.uid, { dead, gain });
+    }
+  }
+  const hp = ([0, 1] as const).map((side) => {
+    const deltas = runs.map((run) => run.players[side].hp - now.players[side].hp);
+    if (new Set(deltas).size > 1) random = true;
+    return now.players[side].hp + certain(deltas);
+  }) as [number, number];
+  return { mons, hp, random };
+}
+
 function boardActor(duel: Duel): Side {
   const picker = parleyPicker(duel);
   if (picker !== null) return picker;
-  return (duel.step === "respond" && duel.hold ? duel.hold.priority : duel.turn) as Side;
+  // A queued action not yet confirmed (hàng chờ) still belongs to the side that queued it.
+  return (duel.step === "respond" && duel.hold && !duel.hold.stage ? duel.hold.priority : duel.turn) as Side;
 }
 
 function viewerSide(duel: Duel, actorSide: Side, seat: "host" | "guest" | null): Side {
@@ -1608,6 +1662,13 @@ function PlayPage() {
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
   const [burst, setBurst] = useState<Burst | null>(null);
   const [chain, setChain] = useState<ChainOrb[]>([]);
+  // Hàng chờ (chủ game 28/10): what this screen's player has queued and not confirmed yet, kept on this screen only
+  // until the tick. `act`: one action at the opponent; `answer`: answers to the opponent's action. `base` is the
+  // match as it stood before (X goes back to it, with the icons of `chain` as they were). `peek`: the eye's preview.
+  const [queue, setQueue] = useState<{ kind: "act" | "answer"; base: Duel; chain: ChainOrb[] } | null>(null);
+  const [peek, setPeek] = useState(false);
+  const sightMemo = useRef<{ duel: Duel | null; kind: string | null; sight: Sight | null }>({ duel: null, kind: null, sight: null });
+  const aimMemo = useRef<{ duel: Duel | null; aims: Array<string | "face"> | null }>({ duel: null, aims: null });
   // Màn VS (T1) and Bài khởi đầu (T2), chủ game 22/10: the VS screen plays once per match before the opening hand, and
   // the opening hand stays open until its cards have flown, even once both sides are done.
   // introMid: the match whose VS screen has played, so a new match (Đấu lại, Chơi lại) plays it again first.
@@ -1879,6 +1940,8 @@ function PlayPage() {
         } else if (want) openerWant.current = null;
         setWait("");
         holdNotice(next.live ?? "", false, next.clock);
+        setQueue(null);
+        setPeek(false);
         setDuel(next);
         liveDuel.current = next;
       }
@@ -1929,8 +1992,8 @@ function PlayPage() {
   }, [duel?.recall]);
 
   useEffect(() => {
-    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial || trial) return;
-    const aiResponds = duel.step === "respond" && duel.hold?.priority === 1;
+    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial || trial || queue) return;
+    const aiResponds = duel.step === "respond" && duel.hold?.priority === 1 && !duel.hold.stage;
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     if (!aiResponds && !aiMain && !aiParley) return;
@@ -1964,12 +2027,12 @@ function PlayPage() {
       gone = true;
       window.clearTimeout(timer);
     };
-  }, [duel, busy, loaded, tutorial, trial]);
+  }, [duel, busy, loaded, tutorial, trial, queue]);
 
   // Thực chiến: the opponent follows its script, and the match is judged after every move.
   const verdict = trial && duel ? trialVerdict(duel, trial.level) : null;
   useEffect(() => {
-    if (!trial || !duel || !loaded || busy || verdict) return;
+    if (!trial || !duel || !loaded || busy || verdict || queue) return;
     const timer = window.setTimeout(() => {
       setDuel((current) => {
         if (!current) return current;
@@ -1980,7 +2043,7 @@ function PlayPage() {
       });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [duel, trial, loaded, busy, verdict]);
+  }, [duel, trial, loaded, busy, verdict, queue]);
   useEffect(() => {
     if (trial && verdict === "pass") setTrialPaid(markTrial(trial.id, trial.level));
   }, [trial, verdict]);
@@ -2141,7 +2204,10 @@ function PlayPage() {
       const answerReady = (id: string, state: Duel) => state.players[viewerNow].hand.some((held, index) => held === id && answerUsable(id, state, viewerNow, index));
       if ([...ANSWER_SPELLS].some((id) => answerReady(id, duel) && !answerReady(id, prev))) setHand("spell");
     }
-    setChain((list) => stepChain(prev, duel, list));
+    // Hàng chờ: once confirmed, a random action shows whom its roll hits (chủ game 28/10).
+    if (aimMemo.current.duel !== duel) aimMemo.current = { duel, aims: duel.step === "respond" && duel.hold && !duel.hold.stage ? rolledAims(duel) : null };
+    const aims = aimMemo.current.aims;
+    setChain((list) => stepChain(prev, duel, list, aims));
     if (prev.mode === "ai" && duel.mode === "ai") {
       try {
         const learned = absorb(loadHabits(), watchSnap(prev), watchSnap(duel), scratch.current);
@@ -2830,6 +2896,14 @@ function PlayPage() {
 
   // The picked card in hand goes back when the priority, the step or the round changes.
   useEffect(() => setHandPick(null), [duel?.turn, duel?.step, duel?.round]);
+  // A queue left from another match, or an action the match no longer holds waiting, goes.
+  useEffect(() => {
+    if (!queue || !duel) return;
+    if (duel.mid !== queue.base.mid || duel.winner !== null || (queue.kind === "act" && !duel.hold?.stage)) {
+      setQueue(null);
+      setPeek(false);
+    }
+  }, [duel, queue]);
   // The row arrows stand outside the picked card, over its top edge: where that card is on the board, in % of the board.
   const [pickSpot, setPickSpot] = useState<{ x: number; top: number } | null>(null);
   useLayoutEffect(() => {
@@ -2896,7 +2970,31 @@ function PlayPage() {
   const foe = duel.players[viewer === 0 ? 1 : 0];
   const mine = !busy && duel.winner === null && (duel.mode === "hotseat" || duel.mode === "test" || actor === (duel.mode === "ai" ? 0 : viewer));
   const gemHold = duel.gemCap === viewer || duel.gemWarn === viewer;
-  const canPlay = mine && duel.step === "main" && duel.turn === viewer && !duel.upkeep && !gemHold && !duel.counterAsk;
+  const canPlay = mine && duel.step === "main" && duel.turn === viewer && !duel.upkeep && !gemHold && !duel.counterAsk && !queue;
+  // The OK button is a tick while something waits for an answer or for this side's confirmation.
+  const ticking = responding || Boolean(queue);
+  // Con mắt (chủ game 28/10): the match after the tick, as if the opponent does not answer; only what is certain.
+  let sight: Sight | null = null;
+  if (peek && queue) {
+    const memo = sightMemo.current;
+    if (memo.duel === duel && memo.kind === queue.kind) sight = memo.sight;
+    else {
+      try {
+        sight = foresee(duel, queueRuns(duel, queue.kind, viewer));
+      } catch {
+        sight = null;
+      }
+      sightMemo.current = { duel, kind: queue.kind, sight };
+    }
+  }
+  // In the preview the queued icons have gone through, so they show as cracks; one whose roll is still to come keeps
+  // its icon, with no target yet (chủ game 28/10).
+  const peekIcons = sight && queue
+    ? (() => {
+        const fresh = new Set(chain.filter((orb) => !queue.chain.some((old) => old.id === orb.id)).map((orb) => orb.id));
+        return sight.random && queue.kind === "act" ? { cracked: new Set<string>(), aimless: fresh } : { cracked: fresh, aimless: new Set<string>() };
+      })()
+    : null;
   const dueKnight = mine ? knightDue(duel, viewer) : null;
   const upkeepUnit =
     mine && duel.upkeep && duel.turn === viewer
@@ -2989,7 +3087,89 @@ function PlayPage() {
     void navigate({ to: "/modes" });
   }
 
+  /**
+   * Hàng chờ (chủ game 28/10): one action of this screen's player at the opponent waits here, unseen by them, until
+   * the tick confirms it; answers to the opponent's action wait the same way, and the reply stays with this side so it
+   * can add more answers before the tick. Nothing that waits leaves this screen.
+   */
+  function queueStep(prev: Duel, next: Duel): { next: Duel; kind: "act" | "answer" } | null {
+    if (!mine || tutorial || next.winner !== null || next.mid !== prev.mid) return null;
+    // A choice the rules ask for while an action resolves (Kỵ sĩ bóng tối's stance, a pick of cards…) is made at once.
+    if (prev.parley || next.parley || prev.soulAsk || prev.plumeAsk || prev.birdAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
+    const declared =
+      !queue &&
+      prev.step === "main" &&
+      prev.turn === viewer &&
+      prev.countering == null &&
+      next.countering == null &&
+      next.step === "respond" &&
+      Boolean(next.hold && !next.hold.stage && next.hold.priority !== viewer) &&
+      // Mũ ma pháp only covers this side's own field, so it is not an action at the opponent.
+      !(next.pending?.kind === "spell" && next.pending.cardId === "mu-ma-phap");
+    if (declared) return { next: stageHold(next), kind: "act" };
+    const replying = prev.step === "respond" && Boolean(prev.hold && !prev.hold.stage && prev.hold.priority === viewer);
+    if ((replying && queue?.kind !== "act") || queue?.kind === "answer") {
+      const kept =
+        next.step === "respond" && next.hold && !next.hold.stage && next.hold.priority !== viewer
+          ? { ...next, hold: { ...next.hold, priority: viewer, passed: [false, false] as [boolean, boolean] } }
+          : next;
+      return { next: kept, kind: "answer" };
+    }
+    return null;
+  }
+
   function apply(next: Duel) {
+    if (!duel || next === duel) return;
+    const held = queueStep(duel, next);
+    if (held) {
+      const base = duel;
+      const icons = chain;
+      setQueue((current) => current ?? { kind: held.kind, base, chain: icons });
+    } else if (queue) {
+      // A move made at once while answers waited takes them along to the other side.
+      setQueue(null);
+      setPeek(false);
+    }
+    land(held ? held.next : next, Boolean(held));
+  }
+
+  /** The tick: the queued action goes to the opponent, or the answers go and the reply passes to the other side. */
+  function confirmQueue() {
+    if (!duel || !queue) return;
+    const kind = queue.kind;
+    setQueue(null);
+    setPeek(false);
+    if (kind === "act") {
+      land(confirmStage(duel));
+      return;
+    }
+    const open = duel.step === "respond" && duel.hold && !duel.hold.stage && duel.hold.priority === viewer;
+    land(open && duel.hold ? { ...duel, hold: { ...duel.hold, priority: otherSide, passed: [false, false] } } : { ...duel });
+  }
+
+  /** X: everything queued goes back (cards to the hand, mana back); the opponent never saw any of it. */
+  function cancelQueue() {
+    if (!duel || !queue) return;
+    const { base, chain: icons } = queue;
+    setQueue(null);
+    setPeek(false);
+    setAim(null);
+    setInspect(null);
+    prevDuel.current = base;
+    setChain(icons);
+    holdNotice("");
+    setDuel(base);
+  }
+
+  /** A move this screen's player cannot make while something waits in the queue. */
+  function queueBlocked(): boolean {
+    if (!queue) return false;
+    holdNotice("Hãy huỷ hàng chờ trước.");
+    return true;
+  }
+
+  /** Puts a new state of the match on this screen and, unless it only waits here (`local`), sends it online. */
+  function land(next: Duel, local = false) {
     if (!duel || next === duel) return;
     seal(duel, next);
     if (duel.mode === "test") setTestPast((list) => [...list, structuredClone(duel)].slice(-40));
@@ -3007,7 +3187,7 @@ function PlayPage() {
     window.setTimeout(() => setBusy(false), 180);
     setDuel(next);
     const seat = netRef.current;
-    if (duel.mode !== "net" || !seat) return;
+    if (local || duel.mode !== "net" || !seat) return;
     void pushDuel({ data: { code: seat.code, seat: seat.seat, duel: JSON.stringify({ ...next, glimpse: null }) } }).then((pushed) => {
       if (ticket !== pushGen.current) return;
       if (!pushed.ok) {
@@ -3082,6 +3262,8 @@ function PlayPage() {
   function undoTest() {
     const prev = testPast.at(-1);
     if (!prev) return;
+    setQueue(null);
+    setPeek(false);
     prevDuel.current = prev;
     seenViewer.current = viewerSide(prev, boardActor(prev), netRef.current?.seat ?? null);
     trailLog.current = [];
@@ -3297,6 +3479,8 @@ function PlayPage() {
 
   function finishDrop(hit: Element | null, payload: Grab) {
     if (!duel) return;
+    // While something waits, only answers to the opponent's action can still be added.
+    if (queue && (queue.kind === "act" || duel.step !== "respond") && queueBlocked()) return;
     const slotEl = hit?.closest("[data-slot]") as HTMLElement | null;
     const owner = slotEl ? Number(slotEl.dataset.owner) : NaN;
     const index = slotEl ? Number(slotEl.dataset.index) : NaN;
@@ -4017,15 +4201,20 @@ function PlayPage() {
         const anchor = orb.by ? iconSpots.get(orb.by) ?? null : null;
         let x = 44;
         let y = halfY;
+        // Icons of a chain line up toward the middle of the board, the earlier an answer the nearer the icon it
+        // answers (chủ game 28/10): a monster on the right sends them left, one on the left sends them right.
+        const dir = anchor ? (anchor.x < 50 ? 1 : -1) : 1;
         if (anchor && anchor.y > ry(51) === mine) {
-          x = anchor.x + (anchor.x < 50 ? ICON * 1.8 : -ICON * 1.8);
+          x = anchor.x + dir * ICON * 1.8;
           y = anchor.y;
         } else if (anchor) {
           x = anchor.x;
         }
         const from = x;
-        for (let step = 1; step <= 8 && !clear(x, y); step += 1) {
-          x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, from + (step % 2 ? 1 : -1) * Math.ceil(step / 2) * ICON * 1.15));
+        const lane = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((step) => [from + dir * step * ICON * 1.15]).concat([1, 2, 3, 4].map((step) => from - dir * step * ICON * 1.15));
+        for (const next of lane) {
+          if (clear(x, y)) break;
+          x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, next));
         }
         spot = { x, y, face: 0, delay: 0, appear: 0 };
       }
@@ -4422,9 +4611,13 @@ function PlayPage() {
               : starLit
                 ? "#ff8a00"
                 : undefined;
+          // Con mắt: a player's health after the queue goes through, red when it falls, green when it rises.
+          const hpSide = key === "youHp" ? viewer : key === "foeHp" ? otherSide : null;
+          const seen = hpSide !== null && sight ? sight.hp[hpSide] : null;
+          const shift = seen !== null && hpSide !== null ? seen - duel.players[hpSide].hp : 0;
           return (
-            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color }}>
-              <b>{value}</b>
+            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color: shift ? undefined : color }}>
+              <b>{shift ? seen : value}</b>
             </div>
           );
         })}
@@ -4520,6 +4713,8 @@ function PlayPage() {
             cardOf={orbCard}
             onSheet={openIcon}
             onClosed={() => setChain((list) => (list.every((orb) => orb.done) ? [] : list))}
+            cracked={peekIcons?.cracked}
+            aimless={peekIcons?.aimless}
           />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (
@@ -5244,6 +5439,7 @@ function PlayPage() {
               allies={duel.players[side].field}
               prime={!!mon && isPrime(duel, mon, side)}
               lockFlash={!!mon && lockFlash === mon.uid}
+              forecast={mon && !(duel.players[side].sea && !mon.cage && !mon.shown && SEA_KINDS.includes(mon.cardId)) && !(duel.players[side].hats && mon.cardId !== "mu") ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
               onUnit={onUnit}
             />
@@ -5294,6 +5490,7 @@ function PlayPage() {
               prime={!!mon && isPrime(duel, mon, viewer)}
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer))}
+              forecast={mon ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
               onUnit={onUnit}
               onPointerDown={
@@ -5362,6 +5559,7 @@ function PlayPage() {
           onClick={() => {
             setInspect(null);
             setAim((current) => (current?.kind === "summon" ? null : current));
+            if (queueBlocked()) return;
             if (mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0) apply(draw(duel));
           }}
         >
@@ -5557,26 +5755,40 @@ function PlayPage() {
         {/* Bố cục chung (chủ game 28/10, theo bàn Grok): OK / chuyển lượt to trên cầu mana; X đỏ (huỷ) và con mắt (xem trước)
             ở chỗ hai nút rút cũ, chưa bấm được (hàng chờ hành động làm sau). Rút bài = bấm xấp bài úp. */}
         <div className="actions is-spread">
-          {/* Huỷ và con mắt: còn khép cho tới khi có hàng chờ hành động (Phần 3). */}
+          {/* Hàng chờ (chủ game 28/10): X huỷ hết hàng chờ, con mắt bật/tắt xem trước; cả hai khép khi không có gì chờ. */}
           {board.drawMon.hidden ? null : (
-            <span className="oracle-act" aria-hidden="true" style={pinMedal(board.drawMon)}>
-              <OracleOrb kind="cancel" state="shut" />
-            </span>
+            <button type="button" className={`oracle-act${queue ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue} style={pinMedal(board.drawMon)} onClick={cancelQueue}>
+              <OracleOrb kind="cancel" state={queue ? "open" : "shut"} />
+            </button>
           )}
           {board.drawSpell.hidden ? null : (
-            <span className="oracle-act" aria-hidden="true" style={pinMedal(board.drawSpell)}>
-              <OracleOrb kind="eye" state="shut" />
-            </span>
+            <button type="button" className={`oracle-act${queue ? " is-live" : ""}${peek && queue ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!queue} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
+              {peek && queue ? (
+                <span className="oracle-smoke" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              ) : null}
+              <OracleOrb kind="eye" state={queue ? (peek ? "look" : "open") : "shut"} />
+            </button>
           )}
-          {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
+          {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
             <button
               type="button"
-              className={`act medal-act press ${responding ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
+              className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
               style={pinMedal(board.endTurn)}
-              aria-label={responding ? "OK" : tr("Hết lượt")}
-              onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
+              aria-label={ticking ? "OK" : tr("Hết lượt")}
+              onClick={() => {
+                if (queue) confirmQueue();
+                else if (duel.hold?.stage) land(confirmStage(duel));
+                else if (responding) land(passResponse(duel));
+                else apply(endTurn(duel));
+              }}
             >
-              <Medal tone={responding ? "blue" : closesRound ? "red" : "blue"} icon={responding ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} glyph={!responding && !closesRound ? 1.42 : 1} />
+              <Medal tone={ticking ? "blue" : closesRound ? "red" : "blue"} icon={ticking ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} glyph={!ticking && !closesRound ? 1.42 : 1} />
             </button>
           ) : null}
         </div>
@@ -5722,7 +5934,7 @@ function PlayPage() {
               id={shownSpell.id}
               gems={spellToll ? `${shownSpell.gems}+1` : undefined}
               actions={
-                mine && inspect.pile === "spell" && (duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
+                mine && inspect.pile === "spell" && !(queue && (queue.kind === "act" || duel.step !== "respond")) && (duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
                   ? [
                       {
                         key: "cast",
@@ -6482,6 +6694,7 @@ function BoardSlot({
   decoy = false,
   lockFlash = false,
   allies = [],
+  forecast,
   onSlot,
   onUnit,
   onPointerDown,
@@ -6514,13 +6727,15 @@ function BoardSlot({
   decoy?: boolean;
   lockFlash?: boolean;
   allies?: Array<FieldMon | null>;
+  /** Con mắt: this monster after the queue goes through (its numbers then, or `dead`), only what is certain. */
+  forecast?: Forecast;
   onSlot: (side: Side, index: number) => void;
   onUnit: (side: Side, mon: FieldMon) => void;
   onPointerDown?: (event: ReactPointerEvent) => void;
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%` };
@@ -6537,11 +6752,14 @@ function BoardSlot({
   const tokenName = (monsterCard(mon.cardId)?.stars ?? 1) <= 0;
   const stats = visibleStats(mon, allies);
   const spot = (key: FieldKey, value: string | number, blue = false, hold = false, cut = false) => {
-    if (typeof value === "number" && value === 0) return null;
-    const red = (typeof value === "number" && value < 0) || cut;
+    // Con mắt: a number the queue changes shows as it will be, red when it falls, green when it rises (0 included).
+    const shift = forecast && !veil && !mask && !decoy && (key === "atk" || key === "def" || key === "mdef" || key === "hp") ? forecast.gain[key] : 0;
+    if (shift && typeof value === "number") value += shift;
+    if (typeof value === "number" && value === 0 && !shift) return null;
+    const red = !shift && ((typeof value === "number" && value < 0) || cut);
     return (
     <span
-      className={`fstat${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && blue ? " is-blue" : ""}`}
+      className={`fstat${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && !shift && blue ? " is-blue" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`}
       style={{
         left: `${layout[key].x}%`,
         top: `${layout[key].y}%`,

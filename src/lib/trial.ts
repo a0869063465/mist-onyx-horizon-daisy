@@ -77,7 +77,7 @@ export function createTrialDuel(cardId: string, level: number): Duel {
  */
 export function trialFoe(state: Duel, level: number): Duel | null {
   if (state.winner !== null || state.step === "over") return null;
-  if (state.step === "respond") return state.hold?.priority === 1 ? passResponse(state) : null;
+  if (state.step === "respond") return state.hold?.priority === 1 && !state.hold.stage ? passResponse(state) : null;
   if (state.step !== "main" || state.turn !== 1 || state.upkeep) return null;
   if (state.gemWarn === 1) return answerGemWarn(state);
   if (state.gemCap === 1) return answerGemCap(state, false);

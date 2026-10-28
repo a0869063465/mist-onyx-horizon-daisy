@@ -221,6 +221,33 @@ test("kỹ năng nhắm quái hàng sau: hàng trước chặn thay", () => {
   assert.ok(at(done, 1, 0).hp < 20);
 });
 
+test("hàng chờ: đòn đang xếp chờ xác nhận, đối thủ chưa chặn được; tick xong mới chặn và giải quyết", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 9 }] });
+  const staged = D.stageHold(D.attackFace(s, uid(s, 0, 0)));
+  assert.equal(staged.hold?.stage, true);
+  assert.equal(D.passResponse(staged), staged, "chưa xác nhận thì chưa giải quyết");
+  assert.equal(D.assignBlock(staged, uid(s, 1, 0)), staged, "chưa xác nhận thì đối thủ chưa chặn");
+  const sure = D.confirmStage(staged);
+  assert.equal(sure.hold?.stage, undefined);
+  const blocked = D.assignBlock(sure, uid(s, 1, 0));
+  assert.equal(blocked.hold?.blocker, uid(s, 1, 0));
+  assert.equal(blocked.hold?.seed, sure.hold?.seed, "chặn giữ nguyên mầm quay");
+  assert.equal(D.passResponse(blocked).players[1].hp, s.players[1].hp);
+});
+
+test("hàng chờ: hành động ngẫu nhiên quay lúc xác nhận, cùng mầm thì cùng kết quả", () => {
+  let s = board({ 0: ["may-nem-bom-hinh-nhen"] }, { 0: ["khong-lo-mot-mat", { hp: 30, maxHp: 30, def: 0, mdef: 0 }], 1: ["khong-lo-mot-mat", { hp: 30, maxHp: 30, def: 0, mdef: 0 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0));
+  assert.equal(staged.step, "respond");
+  const outcome = (seed) => {
+    const done = D.passResponse(D.confirmStage(staged, seed));
+    return `${done.players[1].field.map((m) => m?.hp ?? 0).join(",")}|${done.players[1].hp}`;
+  };
+  assert.equal(outcome(5), outcome(5));
+  assert.ok(new Set([1, 2, 3, 4, 5, 6, 7, 8].map(outcome)).size > 1, "mầm khác thì có lúc khác");
+});
+
 const BIG = {
   monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "kazura", "kizuran", "ma-dao-si", "chien-binh-rong", "hiep-si-ho-ve", "hiep-si-cua-vua", "hiep-si-cua-hau", "my-dieu-nhan", "phu-thuy-ti-hon", "rong-boc-trung"],
   spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho", "phuc-kich", "guong-phong-ho", "hoan-doi", "virus-an-mon", "mua-ma-thuat"],

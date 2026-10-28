@@ -341,7 +341,11 @@ function blockOrb(next: Duel, guard: string, base: string, tone: FlowTone): Chai
 }
 
 /** The chain after one change of the duel. */
-export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[]): ChainOrb[] {
+/**
+ * `aims`: whom the roll of the waiting action hits, when its roll decides it (hàng chờ, chủ game 28/10: the opponent
+ * sees whom it shoots once it is confirmed); its light then runs to each of them.
+ */
+export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], aims: Array<string | "face"> | null = null): ChainOrb[] {
   const open = next.step === "respond";
   let list: ChainOrb[];
   let passed = false;
@@ -390,7 +394,11 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[]): Cha
     }
     // Giáp cơ khí throwing the skill back: the spell's icon is where the skill turns.
     const reflect = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell === "giap-co-khi")?.id ?? null : null;
-    const to = selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
+    const tone = pendingTone(next, next.pending);
+    const to =
+      aims && aims.length && !shield && !reflect
+        ? aims.map((aim): FlowLink => ({ end: aim === "face" ? { face: (1 - next.turn) as Side } : { uid: aim }, tone }))
+        : selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
     list = list.map((orb) => (orb === live ? { ...orb, to, tone: pendingTone(next, next.pending), strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null } : orb));
   }
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
