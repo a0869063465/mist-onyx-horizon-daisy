@@ -132,6 +132,14 @@ test("hàng sau đánh chớp nhoáng: không bị trả đòn", () => {
   assert.ok(at(done, 1, 0).hp < 20);
 });
 
+test("quái hàng sau bị đánh thẳng thì không phản đòn", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10 }] }, { 3: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 20 }] });
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
+  assert.equal(at(done, 0, 0).hp, 10);
+  assert.ok(at(done, 1, 3).hp < 20);
+  assert.equal(done.counterAsk ?? null, null);
+});
+
 test("chặn: hàng trước chặn cho hàng sau; đánh hàng trước thì không ai chặn hộ; hàng sau không chặn", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 9 }], 1: ["may-chem", { hp: 9 }], 3: ["may-chem", { hp: 9 }], 4: ["may-chem", { hp: 9 }] });
   s = D.endTurn(D.endTurn(s));

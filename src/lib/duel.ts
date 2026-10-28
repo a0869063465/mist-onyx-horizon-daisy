@@ -3100,7 +3100,8 @@ function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | 
 function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
   let atk = liveAtk(attacker) + rockA;
   let counter = liveAtk(defender) + rockB;
-  const noAnswer = defender.riposte || defender.waitCounter || attacker.row === "back";
+  // Hàng sau đánh thì không bị phản đòn; bị đánh thì cũng không phản đòn (chủ game 28/10, C2).
+  const noAnswer = defender.riposte || defender.waitCounter || attacker.row === "back" || defender.row === "back";
   if (noAnswer) counter = 0;
   const defA = liveDef(attacker, alliesA);
   const defB = liveDef(defender, alliesB);
@@ -3115,7 +3116,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   if (shadeHidden(attacker) || (shadeHidden(defender) && !beam) || defender.cage) counter = 0;
   const hiddenTrue = shadeHidden(attacker) && !beam;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt) || hiddenTrue;
-  const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) && !defender.waitCounter && attacker.row !== "back" ? riderPackets(defender, attacker, alliesA) : null;
+  const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) && !defender.waitCounter && attacker.row !== "back" && defender.row !== "back" ? riderPackets(defender, attacker, alliesA) : null;
   const blockSpell = !attackerDodged && !beam && !counterBlow && defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell" && counter > 0;
   const counterRaw = outgoing(defender, counter);
   const struck = attackerDodged || beam
