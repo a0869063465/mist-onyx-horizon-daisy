@@ -5340,17 +5340,20 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
+        {/* Bố cục chung (chủ game 28/10, theo bàn Grok): OK / chuyển lượt to trên cầu mana; X đỏ (huỷ) và con mắt (xem trước)
+            ở chỗ hai nút rút cũ, chưa bấm được (hàng chờ hành động làm sau). Rút bài = bấm xấp bài úp. */}
         <div className="actions is-spread" style={{ "--act-scale": board.actions.size } as CSSProperties}>
-          {mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0 ? (
-            <button type="button" className="act medal-act is-draw-mon press" style={{ left: "78.6%", top: `${ry(82.2)}%` }} aria-label={tr("Rút bài")} onClick={() => apply(draw(duel))}>
-              <Medal tone="orange" icon="wolf-head" />
-            </button>
-          ) : null}
+          <span className="act medal-act is-idle" aria-hidden="true" style={{ left: "78.6%", top: `${ry(79.7)}%`, "--medal": "8.4cqw" } as CSSProperties}>
+            <Medal tone="red" icon="cross-mark" />
+          </span>
+          <span className="act medal-act is-idle" aria-hidden="true" style={{ left: "78.4%", top: `${ry(84.8)}%`, "--medal": "8.4cqw" } as CSSProperties}>
+            <Medal tone="purple" icon="all-seeing-eye" />
+          </span>
           {mine && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold)) ? (
             <button
               type="button"
               className={`act medal-act press ${responding ? "is-pass" : "is-end"}`}
-              style={{ left: "91.2%", top: `${ry(83)}%`, "--act-scale": board.actions.size * 1.3 } as CSSProperties}
+              style={{ left: "91.2%", top: `${ry(83)}%`, "--medal": "14.4cqw" } as CSSProperties}
               aria-label={responding ? "OK" : tr("Hết lượt")}
               onClick={() => apply(responding ? passResponse(duel) : endTurn(duel))}
             >
@@ -5358,6 +5361,15 @@ function PlayPage() {
             </button>
           ) : null}
         </div>
+        {/* Chân dung hai bên ở giữa sân, kiếm trên người giữ lượt tấn công, khiên trên người kia (chưa có hình riêng). */}
+        {([
+          { side: viewer, x: 11.5, y: 58.8, mine: true },
+          { side: (1 - viewer) as Side, x: 88.3, y: 43.9, mine: false },
+        ] as const).map((who) => (
+          <span key={who.mine ? "you" : "foe"} className={`who-pin${who.mine ? " is-you" : " is-foe"}${duel.turn === who.side ? " is-turn" : ""}`} aria-hidden="true" style={{ left: `${who.x}%`, top: `${ry(who.y)}%` }}>
+            <Medal tone={who.mine ? "blue" : "red"} icon={(duel.round ?? duel.turn) === who.side ? "sword-brandish" : "round-shield"} />
+          </span>
+        ))}
         {counterSeat >= 0 && duel.counterAsk ? (
           <UnitChips
             duel={duel}

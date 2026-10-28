@@ -14,6 +14,8 @@ const TONES: Record<MedalTone, { hi: string; mid: string; lo: string; gemHi: str
 
 /** Glyphs drawn for the medals in the same 512 space as the game-icons set. */
 const MEDAL_ICONS: Record<string, string> = {
+  // A thick X: huỷ hành động đang chờ.
+  "cross-mark": '<path fill="currentColor" d="M118 160l42-42 96 96 96-96 42 42-96 96 96 96-42 42-96-96-96 96-42-42 96-96z"/>',
   // A playing card with three claw slashes across it: Rút quái.
   "claw-card":
     '<path fill="currentColor" fill-rule="evenodd" d="M150 34h212a40 40 0 0 1 40 40v364a40 40 0 0 1-40 40H150a40 40 0 0 1-40-40V74a40 40 0 0 1 40-40zm16 58v328h180V92z"/>' +

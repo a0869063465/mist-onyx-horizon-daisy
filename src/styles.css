@@ -2311,11 +2311,23 @@ button.trail-dot.is-on {
   min-height: 0;
   pointer-events: none;
 }
-.actions.is-spread > .act {
+.stage .actions.is-spread > .act.medal-act {
   position: absolute;
-  transform: translate(-50%, -50%);
+  margin: calc(var(--medal) / -2) 0 0 calc(var(--medal) / -2);
   pointer-events: auto;
 }
+.stage .actions.is-spread > .act.is-idle { pointer-events: none; }
+.who-pin {
+  position: absolute;
+  z-index: 6;
+  width: 11cqw;
+  height: 11cqw;
+  margin: -5.5cqw 0 0 -5.5cqw;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.who-pin .medal { width: 100%; height: 100%; }
+.who-pin.is-turn { filter: drop-shadow(0 0 0.5rem #ffe27a); }
 .act {
   min-height: 2.75rem;
   border: 0;
