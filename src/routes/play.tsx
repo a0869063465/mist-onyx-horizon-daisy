@@ -6183,7 +6183,7 @@ function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
   const reach = 3;
   const floorTop = redEnd - reach;
   const floorY = floorMiddle + (floorTop - gapMiddle) * cut.v;
-  const feather = 1.6;
+  const feather = 0.8;
   return (
     <>
       <div className="board-art-slice" style={{ top: `${floorTop}cqh`, height: `${gap + reach * 2}cqh`, backgroundImage: `url(${FLOOR_ART})`, backgroundSize: size, backgroundPosition: at(floorY) }} />
