@@ -23,6 +23,7 @@ Dòng một mục tiêu (vào giữa mép lá), dòng phản về, dòng hồng 
 - Lá hàng trước chạm chéo góc mép gần (bản A).
 - Nét vẽ tay của chủ game cho lá giữa hàng sau (DRAWN).
 - 2 quái hàng dọc (chuẩn).
+- Chuẩn cùng cột (`columnPair`) chỉ dùng cho 2–3 lá. Từ 4 lá trở lên dùng nhánh cũ (`fanRoutes` chung), chủ game chốt 29/10.
 
 ## Cách làm với chủ game
 - Mỗi lần 1 trường hợp, gửi đúng 1 ảnh, chờ xem. Chưa rõ thì đưa 2–3 cách (A/B/C).
