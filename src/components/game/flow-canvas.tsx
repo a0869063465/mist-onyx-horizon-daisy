@@ -50,6 +50,11 @@ export type FlowSpec = {
   after?: string;
   /** Its width (1: a main flow). */
   width?: number;
+  /** How much it widens toward its end (1: as a flow at one target; 0.5: half as much). */
+  tail?: number;
+  /** A branch out of a fork (hình 2 của chủ game, 29/10): it runs out to `side` (a unit direction), sags back a little
+   *  and rises into its target as a U; `min` the least it runs out, in box units. */
+  fan?: { side: BoxPt; min: number };
 };
 
 type Rgb = [number, number, number];
@@ -453,7 +458,7 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
     // S on the way, the way a river never runs straight. Its width breathes along it, and it folds now and then (where
     // it narrows it burns brighter, as a ribbon of light seen edge on).
     const sigOf = (spec: FlowSpec) =>
-      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.land ?? ""},${spec.width ?? 1},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
+      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.land ?? ""},${spec.width ?? 1},${spec.tail ?? 1},${spec.fan ? `${spec.fan.side.x},${spec.fan.side.y},${spec.fan.min}` : ""},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
     const build = (track: Track) => {
       const spec = track.spec;
       const unit = sx();
@@ -477,35 +482,66 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const bend = spec.arc ?? spec.bend ?? turn * Math.abs(track.bow) * (1 - 0.6 * Math.min(1, Math.abs(lean)));
       const k1 = arcs ? 0.3 : 0.26;
       const k2 = arcs ? 0.3 : -0.16;
-      const p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
-      const p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
-      // It also winds side to side along its way, as a river does (chủ game 29/10): waves that die away at both ends,
-      // so it still leaves and lands square; 2 on a short way, 3 on a long one, about 7.5% of its length (at most 5.5
-      // box units), less into a dam.
-      const waves = len > unit * 34 ? 3 : 2;
-      const wind = Math.min(len * 0.075, unit * 5.5) * (track.seed < 0.5 ? -1 : 1) * (spec.land === "dam" ? 0.6 : 1);
-      const at = (t: number) => {
+      let p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
+      let p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
+      if (spec.fan) {
+        // A branch out of a fork, as the owner drew it (29/10): out sideways toward its target, sagging back a little,
+        // then up and in to it, a U; a farther target, sideways or ahead, takes a wider U round the nearer ones.
+        const fx = spec.into.x;
+        const fy = spec.into.y;
+        const lx = spec.fan.side.x;
+        const ly = spec.fan.side.y;
+        const dx = bx - ax;
+        const dy = by - ay;
+        const v = Math.max(unit * 2, dx * fx + dy * fy);
+        const wide = Math.max(Math.abs(dx * lx + dy * ly), spec.fan.min * unit) + v * 0.15;
+        const sag = wide * 0.12;
+        p1 = { x: ax + lx * wide * 0.75 - fx * sag, y: ay + ly * wide * 0.75 - fy * sag };
+        p2 = { x: bx - fx * (v * 0.5 + sag) + lx * wide * 0.25, y: by - fy * (v * 0.5 + sag) + ly * wide * 0.25 };
+      }
+      const base = (t: number) => {
         const u = 1 - t;
-        const off = wind * Math.sin(Math.PI * t) * Math.sin(waves * Math.PI * t);
         return {
-          x: u * u * u * ax + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * bx + nx * off,
-          y: u * u * u * ay + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * by + ny * off,
+          x: u * u * u * ax + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * bx,
+          y: u * u * u * ay + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * by,
         };
+      };
+      // A long way that runs almost straight takes one soft bend, and only a very long one (over half the board) an
+      // S, the bends dying away at both ends so it still leaves and lands square. A short way, one already curving,
+      // a way thrown back, one into a dam and a branch keep their own line (chủ game 29/10).
+      let bends = 0;
+      if (!arcs && spec.land !== "dam" && !spec.fan && len > H * 0.2) {
+        let stray = 0;
+        for (let i = 1; i < 16; i += 1) {
+          const pt = base(i / 16);
+          stray = Math.max(stray, Math.abs((pt.x - ax) * nx + (pt.y - ay) * ny));
+        }
+        if (stray < len * 0.06) bends = len > H * 0.5 ? 2 : 1;
+      }
+      const wind = (bends === 2 ? Math.min(len * 0.05, unit * 5) : Math.min(len * 0.07, unit * 5)) * (track.seed < 0.5 ? -1 : 1);
+      const at = (t: number) => {
+        const pt = base(t);
+        const s = Math.sin(Math.PI * t);
+        const off = bends === 1 ? wind * s * s : bends === 2 ? wind * s * Math.sin(2 * Math.PI * t) : 0;
+        return { x: pt.x + nx * off, y: pt.y + ny * off };
       };
       const { rows, total } = rowsAlong(Array.from({ length: 161 }, (_, i) => at(i / 160)), ROWS);
       const lenBox = total / unit;
       const width = spec.width ?? 1;
+      const tail = spec.tail ?? 1;
       const dam = spec.land === "dam";
       const seed = track.seed;
       const foldAt = (u: number) => 0.45 + 0.55 * Math.abs(Math.cos(Math.PI * (0.35 + seed * 0.5 + (u * lenBox) / 34)));
       const mesh = meshOf(
         rows,
         (u) => {
-          // Thin at its icon, wide at its end, as a dragon's flame (chủ game 29/10).
-          const breathe = 0.6 + 1.9 * Math.pow(u, 0.9) + 0.25 * Math.sin(u * 9 + seed * 6);
-          // Against a dam the water piles up and spreads along the wall.
-          const pile = dam ? 1 + 0.95 * smooth(0.7, 1, u) : 1;
-          return breathe * foldAt(u) * unit * 1.5 * width * pile;
+          // Into a dam it keeps its old shape, the water piling up and spreading along the wall (chủ game 29/10: so
+          // the icon that stops it looks natural). Else its head as wide as it always was and its tail wider, as a
+          // dragon's flame; a spread's trunk widens half as much.
+          const breathe = dam
+            ? (1.5 + 0.85 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.05)), 0.8) - 0.55 * u) * (1 + 0.95 * smooth(0.7, 1, u))
+            : 1.5 + tail * Math.pow(u, 0.9) + 0.25 * Math.sin(u * 9 + seed * 6);
+          return breathe * foldAt(u) * unit * 1.5 * width;
         },
         (u) => 1 / (0.62 + 0.38 * foldAt(u)),
       );

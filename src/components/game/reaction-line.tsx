@@ -46,6 +46,10 @@ const FIZZLE_TAIL = 0.8;
 const DOUBLE_TAP = 380;
 /** Seconds a spell that stops a flow takes to fly in from the hand. */
 const THROW = 0.5;
+/** A target less than this far to the side of a fork (in % of the board's width) is straight ahead of it; a branch
+ *  runs out at least `FAN_MIN` box units before it rises. */
+const FAN_AHEAD = 6;
+const FAN_MIN = 6;
 
 const toBox = (x: number, y: number): BoxPt => ({ x: x * 0.9, y: y * 1.6 });
 
@@ -257,7 +261,25 @@ export function ReactionLine({
         strike: false,
         delay: wait,
         land: "none",
+        // The trunk of a spread widens half as much as a flow at one target (chủ game 29/10).
+        tail: 0.5,
       });
+    }
+    // Which way each branch runs out of the fork: toward its target's side; targets straight ahead of the fork take
+    // the sides in turn, so no two branches lie on each other.
+    const fanSide = new Map<FlowLink, number>();
+    if (fork) {
+      let turn = -1;
+      for (const link of orb.to) {
+        if (!link.fork) continue;
+        const land = pointOf(link, fork);
+        if (!land) continue;
+        const lateral = land.x - fork.x;
+        if (Math.abs(lateral) < FAN_AHEAD) {
+          fanSide.set(link, turn);
+          turn = -turn;
+        } else fanSide.set(link, Math.sign(lateral));
+      }
     }
     for (const link of orb.to) {
       if (link.fork && !fork) continue;
@@ -281,19 +303,11 @@ export function ReactionLine({
             : { ...land, x: box.x, y: box.y + (Math.sign(ny) * box.h) / 2, into: { x: 0, y: -Math.sign(ny) } };
       }
       const toward = unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
-      const trunkDir = fork ? unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6) : toward;
-      let faceOut = link.fork ? unitDir(trunkDir.x + toward.x, trunkDir.y + toward.y) : !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
-      // A branch leaves the fork like a fountain: up and out a little against the flow, then gravity bends it round
-      // into its target. Targets straight ahead fan out left and right in turn, so none lie on another.
-      let fan: number | undefined;
-      if (link.fork) {
-        const forks = orb.to.filter((other) => other.fork);
-        const side = { x: -trunkDir.y, y: trunkDir.x };
-        const lean = toward.x * side.x + toward.y * side.y;
-        const turn = Math.abs(lean) > 0.18 ? Math.sign(lean) : forks.indexOf(link) % 2 ? 1 : -1;
-        faceOut = unitDir(-trunkDir.x * 0.55 + side.x * turn, -trunkDir.y * 0.55 + side.y * turn);
-        fan = 0.12 * turn;
-      }
+      const faceOut = !link.fork && !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
+      // A branch out of the fork (hình 2 của chủ game, 29/10): out sideways, a little sag, then up into its target.
+      const side = link.fork ? fanSide.get(link) : undefined;
+      const fan = side !== undefined ? { side: { x: side, y: 0 }, min: FAN_MIN } : undefined;
+      const into = fan ? { x: 0, y: Math.sign(land.y - start.y) || 1 } : land.into;
       if (link.dam && "orb" in link.end && !done) walls.add(link.end.orb);
       // A flow into what stops it waits for the spell to fly in from the hand.
       const stopper = link.dam && "orb" in link.end ? orbs.find((other) => other.id === (link.end as { orb: string }).orb && other.stops) : undefined;
@@ -303,7 +317,7 @@ export function ReactionLine({
         a: toBox(start.x, start.y),
         b: toBox(land.x, land.y),
         out: faceOut,
-        into: land.into,
+        into,
         tone: link.tone,
         done,
         end,
@@ -313,11 +327,12 @@ export function ReactionLine({
         delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
         land: link.dam ? "dam" : "flare",
         moat: moatOf(land),
-        bend: fan,
-        // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other.
-        arc: way ? way.swing * (way.wide ? 1.1 : 0.5) : arcs.get(key),
+        fan,
+        // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other. A
+        // curse's or a mirror's way back to the attacker (no damage) takes a third of the arc and half the tail.
+        arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key),
         after: link.fork ? trunk : way?.after,
-        width: link.fork ? 0.8 : 1,
+        tail: way && !way.wide ? 0.5 : 1,
       });
     }
   }

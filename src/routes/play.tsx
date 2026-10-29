@@ -639,9 +639,10 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 /** How far an attacker lunges toward what it hits while the other side may answer: as far as it always did, less the
  *  room its reaction icon takes in front of it (chủ game 23/10). */
 const LUNGE_FACE = 0.42;
-/** Dòng chảy đợt 2: how far in front of a row a spread splits, in % of the board's height, and the ring round a
- *  player's health its light runs into, in % of the board's width. */
-const FORK_SHARE = 0.42;
+/** Dòng chảy đợt 2: how far in front of the row it is aimed at a spread splits, as a share of the gap between the two
+ *  front rows (chủ game 29/10: a quarter, so a spell that stops its trunk stands just before it on that side's half),
+ *  and the ring round a player's health its light runs into, in % of the board's width. */
+const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
 const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
