@@ -124,8 +124,9 @@ export function reachOf(state: Duel): Reach | null {
   if (state.step !== "respond" || !state.hold || !state.pending) return null;
   const aimed = aimOf(state);
   if (!aimed) return null;
-  // Whom it lands on with nobody in front of it: a blocker takes the branch it stands in front of.
-  const open: Duel = { ...state, hold: { ...state.hold, blocker: null, blockerSkill: false } };
+  // Whom it lands on with nobody in front of it: a blocker takes the branch it stands in front of (a monster covering
+  // one branch takes that branch, chủ game 29/10).
+  const open: Duel = { ...state, hold: { ...state.hold, blocker: null, blockerSkill: false, covers: undefined } };
   const run = (seed: number) => {
     try {
       return struck(open, passResponse(confirmStage({ ...open, hold: { ...open.hold!, stage: true } }, seed)), aimed.side);

@@ -1,5 +1,5 @@
 // node run.mjs <duel.json> <out-prefix> steps...
-// steps: wait|ms  shot|name  until|sel  eval|js  tap|sel  drag|fromSel|toSel  state
+// steps: wait|ms  shot|name  until|sel  eval|js  tap|sel  drag|fromSel|toSel  dragjs|fromSel|js (js gives {x,y} on screen)  state
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { readFileSync } from "node:fs";
@@ -51,9 +51,10 @@ for (const step of steps) {
     if (!box) { console.log("no tap target", rest[0]); continue; }
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     console.log("tap", rest[0]);
-  } else if (kind === "drag") {
+  } else if (kind === "drag" || kind === "dragjs") {
     const a = await page.locator(rest[0]).first().boundingBox({ timeout: 3000 }).catch(() => null);
-    const b = await page.locator(rest[1]).first().boundingBox({ timeout: 3000 }).catch(() => null);
+    const pt = kind === "dragjs" ? await page.evaluate(rest.slice(1).join("|")) : null;
+    const b = kind === "dragjs" ? (pt ? { x: pt.x, y: pt.y, width: 0, height: 0 } : null) : await page.locator(rest[1]).first().boundingBox({ timeout: 3000 }).catch(() => null);
     if (!a || !b) { console.log("no drag target", rest[0], rest[1]); continue; }
     await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
     await page.mouse.down();

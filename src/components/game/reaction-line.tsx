@@ -3,7 +3,7 @@ import { Glyph, Rim } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
 import type { Side } from "@/lib/duel";
-import { fanRoutes, type FanAim, type FanCard } from "@/lib/fan-plan";
+import { fanRoutes, type FanAim, type FanCard, type FanRoute } from "@/lib/fan-plan";
 import type { ChainOrb, FlowEnd, FlowLink, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
@@ -74,8 +74,97 @@ function endKey(end: FlowEnd): string {
 }
 
 /** A flow's key: its icon, where it leaves from (a fork, another place, or the icon) and where it lands. */
-function keyOf(orb: ChainOrb, link: FlowLink): string {
+export function keyOf(orb: ChainOrb, link: FlowLink): string {
   return `${orb.id}|${link.fork ? "fork" : link.from ? endKey(link.from) : "-"}|${endKey(link.end)}`;
+}
+
+/**
+ * How each branch of a spread runs from its fork (hình vẽ vòi nước của chủ game, 29/10): out past its target, sagging
+ * back, then up beside it and back in to it. A branch a monster blocks runs as it would to what it was on its way to
+ * (chặn từng nhánh), so the blocker's icon stands on that way. `pointOf`: where a flow lands, coming from a point.
+ */
+export function branchRoutes(orb: ChainOrb, fork: ForkSpot, pointOf: (link: FlowLink, from: BoardPt) => EndSpot | null): Map<string, FanRoute> {
+  const aims: FanAim[] = [];
+  for (const link of orb.to) {
+    if (!link.fork) continue;
+    const land = pointOf(link.cover ? { ...link, end: link.cover } : link, fork);
+    if (!land) continue;
+    const moat = land.moat;
+    aims.push({
+      key: keyOf(orb, link),
+      card: moat?.kind === "box" ? { x: moat.x, y: moat.y, w: moat.w, h: moat.h } : undefined,
+      ring: moat?.kind === "ring" ? { x: moat.x, y: moat.y, r: moat.r } : undefined,
+      point: moat ? undefined : { x: land.x, y: land.y },
+    });
+  }
+  return fanRoutes(fork, aims, fork.front);
+}
+
+function bezier(a: BoxPt, b: BoxPt, c: BoxPt, d: BoxPt, t: number): BoxPt {
+  const u = 1 - t;
+  return { x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x, y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y };
+}
+
+/** The first point along a branch's way (box units) that meets a test, as the piece it is on and where on it. */
+function firstAlong(path: BoxPt[], meets: (pt: BoxPt) => boolean): { piece: number; t: number; pt: BoxPt } | null {
+  for (let j = 0; j + 3 < path.length; j += 3) {
+    for (let i = 1; i <= 48; i += 1) {
+      const t = i / 48;
+      const pt = bezier(path[j], path[j + 1], path[j + 2], path[j + 3], t);
+      if (meets(pt)) return { piece: j, t, pt };
+    }
+  }
+  return null;
+}
+
+/**
+ * Where a monster covering a branch stands its icon (chặn từng nhánh, chủ game 29/10): on the branch in front of the
+ * front row (before it crosses `line`, the height of the row's icons in % of the board; `top` the row at the top), at
+ * least an icon's width past the fork, at the point nearest where the blocker's icon stands (`near`), so it flies out
+ * as little as it can. In % of the board.
+ */
+export function coverPoint(route: FanRoute, line: number, top: boolean, near: BoardPt): BoardPt {
+  const start = route.path[0];
+  // A short board may leave the fork past that line already: then up to a little past the fork.
+  const ly = top ? Math.min(line * 1.6, start.y - ICON * 0.6) : Math.max(line * 1.6, start.y + ICON * 0.6);
+  const want = toBox(near.x, near.y);
+  let best: BoxPt | null = null;
+  let gap = Infinity;
+  let last: BoxPt = start;
+  firstAlong(route.path, (pt) => {
+    last = pt;
+    if (top ? pt.y <= ly : pt.y >= ly) return true;
+    if (Math.hypot(pt.x - start.x, pt.y - start.y) < ICON * 0.9) return false;
+    const d = Math.hypot(pt.x - want.x, pt.y - want.y);
+    if (d < gap) {
+      gap = d;
+      best = pt;
+    }
+    return false;
+  });
+  const pt: BoxPt = best ?? last;
+  return { x: pt.x / 0.9, y: pt.y / 1.6 };
+}
+
+/** A branch's way cut where it reaches a blocker's icon (box units round `at`, in % of the board): it ends there as a
+ *  flood against a dam. */
+function cutAt(route: FanRoute, at: BoardPt, rim: number): FanRoute | null {
+  const c = toBox(at.x, at.y);
+  const hit = firstAlong(route.path, (pt) => Math.hypot(pt.x - c.x, pt.y - c.y) <= rim);
+  if (!hit) return null;
+  const [a, b, cc, d] = route.path.slice(hit.piece, hit.piece + 4);
+  // de Casteljau: the piece up to t.
+  const t = hit.t;
+  const lerp = (p: BoxPt, q: BoxPt) => ({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t });
+  const ab = lerp(a, b);
+  const bc = lerp(b, cc);
+  const cd = lerp(cc, d);
+  const abc = lerp(ab, bc);
+  const bcd = lerp(bc, cd);
+  const tip = lerp(abc, bcd);
+  const path = [...route.path.slice(0, hit.piece + 1), ab, abc, tip];
+  const len = Math.hypot(tip.x - abc.x, tip.y - abc.y) || 1;
+  return { entry: { x: tip.x / 0.9, y: tip.y / 1.6 }, into: { x: (tip.x - abc.x) / len, y: (tip.y - abc.y) / len }, path };
 }
 
 /** Which way a flow back from one place to another swings round (+1 to its left-hand side): toward the middle of the
@@ -265,24 +354,8 @@ export function ReactionLine({
         tail: 0.5,
       });
     }
-    // How each branch runs from the fork (hình vẽ vòi nước của chủ game, 29/10): out past its target, sagging back,
-    // then up beside it and back in to it, on whichever edge suits.
-    const aims: FanAim[] = [];
-    if (fork) {
-      for (const link of orb.to) {
-        if (!link.fork) continue;
-        const land = pointOf(link, fork);
-        if (!land) continue;
-        const moat = land.moat;
-        aims.push({
-          key: keyOf(orb, link),
-          card: moat?.kind === "box" ? { x: moat.x, y: moat.y, w: moat.w, h: moat.h } : undefined,
-          ring: moat?.kind === "ring" ? { x: moat.x, y: moat.y, r: moat.r } : undefined,
-          point: moat ? undefined : { x: land.x, y: land.y },
-        });
-      }
-    }
-    const routes = fork ? fanRoutes(fork, aims, fork.front) : null;
+    // How each branch runs from the fork; a branch a monster blocks stops at its icon on the way.
+    const routes = fork ? branchRoutes(orb, fork, pointOf) : null;
     for (const link of orb.to) {
       if (link.fork && !fork) continue;
       const start = link.fork ? fork : link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
@@ -291,7 +364,11 @@ export function ReactionLine({
       if (!land) continue;
       const key = keyOf(orb, link);
       const way = backs.get(key);
-      const route = link.fork ? routes?.get(key) : undefined;
+      let route = link.fork ? routes?.get(key) : undefined;
+      if (route && link.cover && "orb" in link.end) {
+        const wall = spots.get(link.end.orb);
+        route = (wall && cutAt(route, wall, ICON * 0.45 * 0.95)) || undefined;
+      }
       if (route) land = { ...land, x: route.entry.x, y: route.entry.y, into: route.into };
       // The way back lands on the side of its target it swings round to, not under the icon it left from.
       if (way && land.moat?.kind === "box") {

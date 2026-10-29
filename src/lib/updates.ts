@@ -756,6 +756,7 @@ export const PENDING_NOTES: string[] = [
   "Kỹ năng trúng nhiều quái hàng trước: mọi nhánh trúng xong, các quái hàng trước bị trúng lần lượt Trả đòn từ trái sang phải; kẻ ra đòn gục thì các lượt còn lại huỷ.",
   "Sừng lôi phá chỉ dùng được trong vòng tấn công của mình.",
   "Kiếm chỉ bên giữ quyền tấn công to hơn gần một phần ba, nổi lên hơn: viền sáng vàng nhẹ và lơ lửng cao hơn.",
+  "Chặn từng nhánh: kỹ năng trúng nhiều mục tiêu thì kéo quái hàng trước thả lên đường flow của nhánh vào người chơi hoặc quái hàng sau để chặn nhánh đó. Icon chặn nằm trên nhánh, phần nhánh sau icon tắt, quái chặn lao ra đứng đó; các nhánh khác giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

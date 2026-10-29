@@ -43,6 +43,7 @@ import { think } from "@/lib/brain-client";
 import { ownFace, roomFace } from "@/lib/match-faces";
 import {
   assignBlock,
+  assignCover,
   attackFace,
   attackMonster,
   boostGnawOnChain,
@@ -149,8 +150,8 @@ import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
-import { ICON, ReactionLine, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
-import { stepChain, type ChainOrb, type FlowEnd } from "@/lib/reaction-chain";
+import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
+import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
 import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
@@ -704,6 +705,8 @@ function blockRoom(): number {
  * away from what it covers (a monster behind it, or the player). In % of its own box, as `attackShift`.
  */
 const LUNGE_BLOCK = 0.2;
+/** How near the way of a branch (box units) a monster must be dropped to stand in front of it. */
+const LANE_REACH = 7;
 /** How far an attacker lunges toward a monster that blocks it. */
 const LUNGE_BLOCKED = 0.3;
 function blockShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
@@ -1724,6 +1727,8 @@ function PlayPage() {
   const lineSeats = useRef(new Map<string, { side: Side; index: number }>());
   // Where each reaction icon stood: an icon that has done its work stays put while the others fade.
   const keptSpots = useRef(new Map<string, IconSpot>());
+  /** The branches of the spread on the board that a monster can stand in front of (worked out as the icons are). */
+  const branchLanes = useRef<Array<{ hit: string; pts: Array<{ x: number; y: number }> }>>([]);
   /** The last results each skill icon showed while its caster stood. */
   const briefSeen = useRef(new Map<string, string>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
@@ -3516,7 +3521,7 @@ function PlayPage() {
     setDigPick({ index, id: null });
   }
 
-  function finishDrop(hit: Element | null, payload: Grab) {
+  function finishDrop(hit: Element | null, payload: Grab, at?: { x: number; y: number }) {
     if (!duel) return;
     // While something waits, only answers to the opponent's action can still be added.
     if (queue && (queue.kind === "act" || duel.step !== "respond") && queueBlocked()) return;
@@ -3654,6 +3659,26 @@ function PlayPage() {
         apply(setCover(duel, guard.uid, true));
         return;
       }
+      // Chặn từng nhánh (chủ game 29/10): a front-row monster dropped onto the way of one branch of a spread stands in
+      // front of it.
+      const lanes = branchLanes.current;
+      if (guard && guard.row !== "back" && lanes.length && !reactEl && at) {
+        const rect = document.querySelector(".board")?.getBoundingClientRect();
+        if (rect) {
+          const x = ((at.x - rect.left) / rect.width) * 100;
+          const y = ((at.y - rect.top) / rect.height) * 100;
+          let best: { hit: string; gap: number } | null = null;
+          for (const lane of lanes) {
+            for (const pt of lane.pts) {
+              const gap = Math.hypot((pt.x - x) * 0.9, (pt.y - y) * 1.6 * boardCut().v);
+              if (!best || gap < best.gap) best = { hit: lane.hit, gap };
+            }
+          }
+          if (best && best.gap <= LANE_REACH) apply(assignCover(duel, guard.uid, best.hit));
+          else holdNotice("Kéo quái lên đường flow để chặn.");
+          return;
+        }
+      }
     }
     const frontHit = Boolean(
       responding &&
@@ -3783,7 +3808,7 @@ function PlayPage() {
     }
     if (!moved) return;
     suppressClick.current = true;
-    finishDrop(under(event.clientX, event.clientY), payload);
+    finishDrop(under(event.clientX, event.clientY), payload, { x: event.clientX, y: event.clientY });
   }
 
   function onSlot(side: Side, index: number) {
@@ -4229,15 +4254,17 @@ function PlayPage() {
     let cards = true;
     for (const link of orb.to) {
       if (!link.fork) continue;
-      if ("uid" in link.end) {
-        const card = cardSpot(link.end.uid);
+      // A branch a monster blocks still counts as the one it was on its way to.
+      const end = link.cover ?? link.end;
+      if ("uid" in end) {
+        const card = cardSpot(end.uid);
         if (card) {
           xs.push(card.x);
           spots.push(card);
         }
       } else {
         cards = false;
-        if ("face" in link.end) xs.push((link.end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
+        if ("face" in end) xs.push((end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
       }
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
@@ -4287,9 +4314,63 @@ function PlayPage() {
     const x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, from.x + (goal.x - from.x) * t));
     return { x, y: from.y + span * t, face: 0, delay: 0.5, appear: 0 };
   };
+  /** Where a flow lands on a card (the middle of its edge facing the flow) or on a player's HP. */
+  const flowEnd = (end: FlowEnd, from: { x: number; y: number }): EndSpot | null => {
+    if ("orb" in end) return null;
+    // Dòng chảy đợt 2 (chủ game 29/10): it runs into a thin moat round what it reaches, as a canal into the moat of a
+    // walled city: a ring round a player's health, the card's box round a monster.
+    if ("face" in end) {
+      const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
+      const dx = (mark.x - from.x) * 0.9;
+      const dy = (mark.y - from.y) * 1.6 * boardCut().v;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
+    }
+    const card = cardSpot(end.uid);
+    if (!card) return null;
+    const below = from.y > card.y;
+    return { x: card.x, y: below ? card.y + card.h * 0.5 : card.y - card.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: card.x, y: card.y, w: card.w, h: card.h } };
+  };
   const iconSpots = new Map<string, IconSpot>();
+  /** Chặn từng nhánh (chủ game 29/10): how far each monster covering a branch has flown out, in % of its own box, so
+   *  its icon stands on that branch. */
+  const coverShifts = new Map<string, { x: number; y: number }>();
+  /** Where a flow lands, as the icons layer works it out: on a card or a player, or the rim of the icon facing it. */
+  const flowPoint = (one: FlowLink, from: { x: number; y: number }): EndSpot | null => {
+    if (!("orb" in one.end)) return flowEnd(one.end, from);
+    const spot = iconSpots.get(one.end.orb);
+    if (!spot) return null;
+    const dx = (spot.x - from.x) * 0.9;
+    const dy = (spot.y - from.y) * 1.6;
+    const len = Math.hypot(dx, dy) || 1;
+    const rim = ICON * 0.45 * (one.dam ? 0.95 : 0.8);
+    return { x: spot.x - (dx / len) * (rim / 0.9), y: spot.y - (dy / len) * (rim / 1.6), into: { x: dx / len, y: dy / len } };
+  };
   {
     const tall = ICON * boardAspect();
+    /** A block icon on one branch of a spread: on that branch where it crosses in front of the blocker's row; the
+     *  blocker flies out so its icon stands there. */
+    const coverSpot = (orb: ChainOrb): IconSpot | null => {
+      if (!orb.cover || !orb.source || orb.done) return null;
+      const live = chain.find((other) => other.to.some((link) => link.cover && "orb" in link.end && link.end.orb === orb.id));
+      const link = live?.to.find((one) => one.cover && "orb" in one.end && one.end.orb === orb.id);
+      const here = live ? iconSpots.get(live.id) : undefined;
+      const card = cardSpot(orb.source);
+      if (!live || !link || !here || !card || live.spread === undefined || live.spread === null) return null;
+      const fork = forkFor(live, here);
+      const route = branchRoutes(live, fork, flowPoint).get(keyOf(live, link));
+      if (!route) return null;
+      // It flies out of its row toward the middle as a plain blocker does, and to the branch's way.
+      const lift = Math.min(LUNGE_BLOCK * card.h, Math.max(0, blockRoom() / 2));
+      const rest = card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6;
+      const line = rest + (card.top ? lift : -lift);
+      const at = coverPoint(route, line, card.top, { x: card.x, y: line });
+      const x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, at.x));
+      const seat = seatOfUid(orb.source);
+      const box = seat ? SLOT_BOX[screenSide(seat.side, viewer)][seat.index] : null;
+      if (box) coverShifts.set(orb.source, { x: ((x - card.x) * 100) / box.w, y: ((at.y - rest) * 100) / box.h });
+      return { x, y: at.y, face: card.top ? 1 : -1, delay: 0, appear: 0 };
+    };
     const rows = 16 / 9 / boardCut().v;
     const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, (y - other.y) * rows) >= ICON * 1.08);
     for (const orb of chain) {
@@ -4299,9 +4380,11 @@ function PlayPage() {
         iconSpots.set(orb.id, kept);
         continue;
       }
-      let spot: IconSpot | null = null;
-      const card = orb.near ? cardSpot(orb.near) : null;
-      if (card) {
+      let spot: IconSpot | null = orb.cover ? coverSpot(orb) : null;
+      const card = orb.near && !spot ? cardSpot(orb.near) : null;
+      if (spot) {
+        // Placed on its branch.
+      } else if (card) {
         const lunging = card.dx !== 0 || card.dy !== 0;
         // A blow and its blocker on a cut board: their icons close in on their cards to leave the flow between them.
         const squeeze = duel.hold?.blocker && orb.kind !== "spell" ? Math.min(tall * 0.5, Math.max(0, -blockRoom() / 2)) : 0;
@@ -4346,23 +4429,33 @@ function PlayPage() {
       keptSpots.current.set(orb.id, spot);
     }
   }
-  /** Where a flow lands on a card (the middle of its edge facing the flow) or on a player's HP. */
-  const flowEnd = (end: FlowEnd, from: { x: number; y: number }): EndSpot | null => {
-    if ("orb" in end) return null;
-    // Dòng chảy đợt 2 (chủ game 29/10): it runs into a thin moat round what it reaches, as a canal into the moat of a
-    // walled city: a ring round a player's health, the card's box round a monster.
-    if ("face" in end) {
-      const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
-      const dx = (mark.x - from.x) * 0.9;
-      const dy = (mark.y - from.y) * 1.6 * boardCut().v;
-      const len = Math.hypot(dx, dy) || 1;
-      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
+  // Chặn từng nhánh (chủ game 29/10): the branches of a spread a monster can still stand in front of, as points along
+  // their way (in % of the board), for a monster dropped onto one.
+  {
+    const lanes: Array<{ hit: string; pts: Array<{ x: number; y: number }> }> = [];
+    const live = responding ? chain.find((orb) => !orb.done && orb.spread !== undefined && orb.spread !== null && orb.to.filter((link) => link.fork).length >= 2) : undefined;
+    const here = live ? iconSpots.get(live.id) : undefined;
+    if (live && here) {
+      const fork = forkFor(live, here);
+      const routes = branchRoutes(live, fork, flowPoint);
+      for (const link of live.to) {
+        if (!link.fork || link.cover || "orb" in link.end) continue;
+        const path = routes.get(keyOf(live, link))?.path;
+        if (!path) continue;
+        const pts: Array<{ x: number; y: number }> = [];
+        for (let j = 0; j + 3 < path.length; j += 3) {
+          for (let i = 0; i <= 24; i += 1) {
+            const t = i / 24;
+            const u = 1 - t;
+            const [a, b, c, d] = [path[j], path[j + 1], path[j + 2], path[j + 3]];
+            pts.push({ x: (u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x) / 0.9, y: (u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y) / 1.6 });
+          }
+        }
+        lanes.push({ hit: "uid" in link.end ? link.end.uid : `face:${(link.end as { face: Side }).face}`, pts });
+      }
     }
-    const card = cardSpot(end.uid);
-    if (!card) return null;
-    const below = from.y > card.y;
-    return { x: card.x, y: below ? card.y + card.h * 0.5 : card.y - card.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: card.x, y: card.y, w: card.w, h: card.h } };
-  };
+    branchLanes.current = lanes;
+  }
   const hiddenMon = (orb: ChainOrb) => {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
     return Boolean(orb.source && seaVeiled(duel, viewer, orb.source)) || (orb.side !== viewer && duel.players[orb.side].hats && (mon?.cardId ?? orb.cardId) !== "mu");
@@ -5560,7 +5653,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={Boolean(duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken"))}
@@ -5612,7 +5705,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               attack={false}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={false}

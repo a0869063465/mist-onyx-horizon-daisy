@@ -19,8 +19,10 @@ export type FlowTone = "red" | "blue" | "pink" | "white" | "green";
  *  ally; a skill that Giáp cơ khí throws back runs on from the spell's icon to its caster).
  *  Dòng chảy đợt 2 (chủ game 29/10): `fork` a branch of a spread, from the fork in front of the row it splits at;
  *  `dam` it runs into an icon that stops it and surges against it as a flood against a dam; `wrap` it wraps the icon
- *  it reaches (Hấp thụ ma pháp round the spell it takes); `back` it is thrown back and goes round its way in. */
-export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: boolean; dam?: boolean; wrap?: boolean; back?: boolean };
+ *  it reaches (Hấp thụ ma pháp round the spell it takes); `back` it is thrown back and goes round its way in.
+ *  Chặn từng nhánh (chủ game 29/10): `cover` a branch a monster blocks, the one it was on its way to: it runs as it
+ *  would to it and stops at the blocker's icon on its way. */
+export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: boolean; dam?: boolean; wrap?: boolean; back?: boolean; cover?: FlowEnd };
 
 export type ChainOrb = {
   id: string;
@@ -62,6 +64,8 @@ export type ChainOrb = {
   stops?: string | null;
   /** Its roll hit nobody: it fades now, though the wait goes on (chủ game 29/10). */
   miss?: boolean;
+  /** A block icon on one branch of a spread: what that branch was on its way to (a uid, or "face:N"). */
+  cover?: string;
 };
 
 let orbSeq = 1;
@@ -437,6 +441,21 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
       shield = blockOrb(next, guard, base!, pendingTone(next, next.pending));
       list.push(shield);
     }
+    // Chặn từng nhánh (chủ game 29/10): an icon for each monster in front of one branch of a spread.
+    const coverShields = new Map<string, ChainOrb>();
+    for (const cover of next.hold?.covers ?? []) {
+      const key = `block:${base}:${cover.target}`;
+      let orb = list.find((other) => other.kind === "block" && other.base === key && !other.done) ?? null;
+      if (orb && orb.source !== cover.blocker) {
+        list = list.map((other) => (other === orb ? { ...other, done: true, end: "fizzle" as const } : other));
+        orb = null;
+      }
+      if (!orb) {
+        orb = { ...blockOrb(next, cover.blocker, `${base}:${cover.target}`, pendingTone(next, next.pending)), cover: cover.target };
+        list.push(orb);
+      }
+      coverShields.set(cover.target, orb);
+    }
     // Giáp cơ khí or Lá chắn phản đòn throwing the skill back: the spell's icon is where the skill turns.
     const turner = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell && REFLECT_SPELLS.has(orb.spell)) ?? null : null;
     const reflect = turner ? { id: turner.id, dam: DAM_SPELLS.has(turner.spell!) } : null;
@@ -451,9 +470,14 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
     if (spreads && reach) {
       spread = reach.side;
       const guarded = guard ? aimedAt(next.pending) ?? (next.pending?.kind === "face" ? `face:${reach.side}` : null) : null;
-      to = hits.map((hit): FlowLink => (shield && hit === guarded ? { end: { orb: shield.id }, tone, fork: true, dam: true } : { end: hitEnd(hit), tone, fork: true }));
+      to = hits.map((hit): FlowLink => {
+        if (shield && hit === guarded) return { end: { orb: shield.id }, tone, fork: true, dam: true };
+        const cover = coverShields.get(hit);
+        if (cover) return { end: { orb: cover.id }, tone, fork: true, dam: true, cover: hitEnd(hit) };
+        return { end: hitEnd(hit), tone, fork: true };
+      });
       if (shield && !to.some((link) => link.dam)) to.push({ end: { orb: shield.id }, tone, fork: true, dam: true });
-      miss = reach.random && reach.known && hits.length === 0 && !shield;
+      miss = reach.random && reach.known && hits.length === 0 && !shield && coverShields.size === 0;
     } else {
       to = selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
       // A spell on a whole side (Sấm sét tận thế, Mũ ma pháp) splits the same way.
@@ -483,7 +507,9 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   });
   return list.map((orb) => {
     if (orb.kind !== "block" || orb.done) return orb;
-    if (orb.base && ended.has(orb.base)) return { ...orb, done: true, end: ended.get(orb.base) ?? "fizzle" };
+    // A block icon on one branch goes with the spread it blocks ("block:<base>:<target>").
+    const key = orb.base && orb.cover ? orb.base.slice(0, -(orb.cover.length + 1)) : orb.base;
+    if (key && ended.has(key)) return { ...orb, done: true, end: ended.get(key) ?? "fizzle" };
     if (!open) return { ...orb, done: true, end: passed ? "fire" : "fizzle" };
     return orb;
   });
