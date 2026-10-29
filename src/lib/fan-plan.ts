@@ -166,6 +166,9 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
   const laneBeside = (col: number, side: number) => (side < 0 ? (col === 0 ? outerLeft : gaps[col - 1]) : col === 2 ? outerRight : gaps[col]);
   const column = (x: number) => [0, 1, 2].reduce((best, i) => (Math.abs(front[i].x - x) < Math.abs(front[best].x - x) ? i : best), 0);
 
+  const lined = columnPair(fork, aims, front, toward);
+  if (lined) return lined;
+
   type Plan = { aim: FanAim; side: number; ahead: boolean; inFront: boolean; col: number };
   const plans: Plan[] = aims.map((aim) => {
     const at = aim.card ?? aim.ring ?? aim.point ?? fork;
@@ -291,6 +294,53 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
     if ((plan.col === 0 && plan.side < 0) || (plan.col === 2 && plan.side > 0)) continue;
     routes.set(plan.aim.key, drawnRoute(plan.side > 0, card, fork));
   }
+  return routes;
+}
+
+/** How far outside the front card's side (in % of the board's width) the branch into the one behind it bows. */
+const PAIR_OUT = 3;
+
+/**
+ * Two cards one behind the other, the fork right under the front one (chủ game 29/10): the flow goes on into the front
+ * one's near edge, a little off its middle; the one behind shares it as far as the fork, then sweeps out to the side
+ * away from that, up past the front card and in across the corner of its own near edge.
+ */
+function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number): Map<string, FanRoute> | null {
+  if (aims.length !== 2 || !aims[0].card || !aims[1].card) return null;
+  const [a, b] = aims.map((aim) => aim.card!);
+  if (Math.abs(a.x - b.x) > a.w * 0.3) return null;
+  const nearOf = (card: FanCard) => (card.y - fork.y) * toward;
+  const [first, second] = nearOf(a) < nearOf(b) ? [aims[0], aims[1]] : [aims[1], aims[0]];
+  const ahead = first.card!;
+  const behind = second.card!;
+  if (Math.abs(ahead.y - front[0].y) > ahead.h * 0.5) return null;
+  // Out the side with more room on the board.
+  const side = ahead.x < 50 ? -1 : 1;
+  const f = { x: fork.x * 0.9, y: fork.y * 1.6 };
+  const routes = new Map<string, FanRoute>();
+
+  const nearEdge = (card: FanCard) => card.y - (toward * card.h) / 2;
+  const inAt = { x: ahead.x - side * ahead.w * 0.2, y: nearEdge(ahead) };
+  const e1 = { x: inAt.x * 0.9, y: inAt.y * 1.6 };
+  const reach = Math.abs(e1.y - f.y);
+  routes.set(first.key, {
+    entry: inAt,
+    into: { x: 0, y: toward },
+    path: [f, { x: f.x + side * reach * 0.35, y: f.y + toward * reach * 0.4 }, { x: e1.x, y: e1.y - toward * reach * 0.45 }, e1],
+  });
+
+  // One soft bow, no straight run (chủ game 29/10): out of the fork sideways, round outside the front card and back in
+  // across the corner.
+  const corner = { x: behind.x + (side * behind.w) / 2, y: nearEdge(behind) };
+  const into = unit(-side, toward);
+  const e2 = { x: corner.x * 0.9, y: corner.y * 1.6 };
+  const rise = Math.abs(e2.y - f.y);
+  const bow = (Math.abs(ahead.x + (side * ahead.w) / 2 - fork.x) + PAIR_OUT) * 0.9;
+  routes.set(second.key, {
+    entry: corner,
+    into,
+    path: [f, { x: f.x + side * bow * 1.6, y: f.y + toward * rise * 0.2 }, { x: e2.x + side * bow * 1.5, y: e2.y - toward * rise * 0.45 }, e2],
+  });
   return routes;
 }
 

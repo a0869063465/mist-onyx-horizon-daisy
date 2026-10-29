@@ -749,6 +749,7 @@ export const PENDING_NOTES: string[] = [
   "Skill và phép nhiều mục tiêu: nhánh vào quái ở hai đầu hàng sau vòng rộng ra ngoài hơn, không đè lên nhánh vào quái đầu hàng trước, và chạm xiên vào giữa cạnh ngoài của lá.",
   "Skill và phép nhiều mục tiêu: nhánh vào quái hai đầu hàng sau đi chung một dây với nhánh vào quái đầu hàng trước tới đáy chỗ võng, rồi mới tách ra vòng rộng.",
   "Skill và phép nhiều mục tiêu: nhánh vào quái hàng trước vòng lên chạm chéo vào góc dưới của lá, phía nhánh đi tới, không còn đi thẳng lên hay đâm ngang vào cạnh.",
+  "Skill và phép nhiều mục tiêu vào 2 quái cùng cột: điểm tách nằm ngay dưới quái hàng trước, dòng vào quái hàng trước đi tiếp lên, dòng vào quái hàng sau dùng chung nửa đầu rồi vòng cung mềm ra ngoài lá hàng trước, vào chéo góc lá hàng sau.",
   "Kiếm chỉ bên giữ quyền tấn công to hơn gần một phần ba, nổi lên hơn: viền sáng vàng nhẹ và lơ lửng cao hơn.",
 ];
 
