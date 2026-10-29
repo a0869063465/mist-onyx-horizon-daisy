@@ -32,11 +32,14 @@ const AHEAD = 0.6;
  *  of a card straight ahead it meets its near edge (in card widths). */
 const ENTRY_UP = 1 / 3;
 const NEAR_SIDE = 0.35;
-/** A front-row card is met on its near edge, toward the side its branch comes from (`NEAR_SIDE` of its width off its
+/** A front-row card is met on its near edge, toward the side its branch comes from (`UNDER` of its width off its
  *  middle), slanting in (`SLANT` along the edge for each step in, about 55°) after turning back in from outside it
  *  (chủ game 29/10, cách B); the one ahead of the fork rises this far (in % of the board's width) out from there. */
 const SLANT = 0.7;
 const NEAR_OUT = 4;
+/** How far off its middle (in card widths) a branch meets a front-row card's near edge: well in from the corner, so it
+ *  hooks back in under the card. */
+const UNDER = 0.12;
 /** How much farther out than the front row's outer branch a back-row end card's branch rises (in % of the board's
  *  width), so the two don't run on top of each other (chủ game 29/10: bung rộng); it meets that card at its outer
  *  side halfway up. It goes as one with the branch into the front row's card there as far as the bottom of their sag,
@@ -201,8 +204,8 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
       if (plan.ahead && plan.inFront) {
         // Out under the card, then up square into its near edge, off to that side.
         kind = "near";
-        entry = { x: card.x + side * card.w * NEAR_SIDE, y: near };
-        lane = entry.x + side * NEAR_OUT;
+        entry = { x: card.x + side * card.w * UNDER, y: near };
+        lane = edgeOf(card, side) + side * NEAR_OUT;
         into = unit(-side * SLANT, toward);
       } else if (!plan.inFront && ((plan.col === 0 && side < 0) || (plan.col === 2 && side > 0))) {
         // A back-row card at the end of its row: up wider round the outside, in at its outer side halfway up, slanting.
@@ -216,7 +219,7 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
         // from a gap too narrow to turn in, on along its side into the moat there.
         kind = lane === outerLeft || lane === outerRight ? "side" : "gap";
         const under = kind === "side" && plan.inFront;
-        entry = under ? { x: card.x + side * card.w * NEAR_SIDE, y: near } : { x: edgeOf(card, side), y: near + toward * card.h * ENTRY_UP };
+        entry = under ? { x: card.x + side * card.w * UNDER, y: near } : { x: edgeOf(card, side), y: near + toward * card.h * ENTRY_UP };
         into = under ? unit(-side * SLANT, toward) : kind === "side" ? { x: -side, y: 0 } : { x: 0, y: toward };
       }
     } else if (aim.ring) {
