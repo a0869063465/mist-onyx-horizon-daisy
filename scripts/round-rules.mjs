@@ -330,6 +330,16 @@ test("skill chậm: kỹ năng diện rộng không dùng để Trả đòn", ()
   assert.notEqual(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0).step, "main", "kỹ năng một mục tiêu vẫn trả đòn được");
 });
 
+test("Sừng lôi phá chỉ dùng trong vòng tấn công của mình", () => {
+  let s = board({ 0: ["khong-lo-mot-mat"] }, { 0: ["khong-lo-mot-mat"] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, hand: ["sung-loi-pha"], tolls: [false] })) };
+  const off = D.castSpell({ ...s, round: 1 }, 0, uid(s, 0, 0));
+  assert.match(off.live, /vòng tấn công/);
+  assert.equal(at(off, 0, 0).horn ?? null, null);
+  const on = D.castSpell(s, 0, uid(s, 0, 0));
+  assert.ok(at(on, 0, 0).horn, on.live);
+});
+
 const BIG = {
   monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "kazura", "kizuran", "ma-dao-si", "chien-binh-rong", "hiep-si-ho-ve", "hiep-si-cua-vua", "hiep-si-cua-hau", "my-dieu-nhan", "phu-thuy-ti-hon", "rong-boc-trung"],
   spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho", "phuc-kich", "guong-phong-ho", "hoan-doi", "virus-an-mon", "mua-ma-thuat"],

@@ -6005,6 +6005,8 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
   if (card.id === "sung-loi-pha") {
+    // Only in its owner's attack round (chủ game 29/10: không thể buff nếu không phải lượt công của mình).
+    if (!replay && attackRound(state) !== side) return note(state, `${card.name} chỉ dùng trong vòng tấn công của bạn.`);
     const picked = targetUid
       ? player.field.find((mon) => mon?.uid === targetUid) ?? null
       : player.field.find((mon) => mon && hornFit(mon.cardId)) ?? null;

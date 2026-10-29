@@ -1059,7 +1059,8 @@ function tollOk(gems: number, tolled: boolean, orb: number, flask: number) {
 function slowUsable(id: string, duel: Duel, viewer: Side) {
   const you = duel.players[viewer];
   if (you.orb < (spellCard(id)?.gems ?? 0)) return false;
-  if (id === "sung-loi-pha") return you.field.some((mon) => mon && hornFit(mon.cardId));
+  // Sừng lôi phá only in the round its side holds the sword (chủ game 29/10).
+  if (id === "sung-loi-pha") return attackRound(duel) === viewer && you.field.some((mon) => mon && hornFit(mon.cardId));
   if (id === "ke-dao-mo") return canTargetFoe(duel) && digChoices(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
