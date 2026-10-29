@@ -729,6 +729,14 @@ export const PENDING_NOTES: string[] = [
   "Con mắt: bấm để xem trước bàn sau khi xác nhận (tính như đối thủ không phản ứng), bấm lại để tắt. Quái sẽ chết thành bóng xanh, chỉ số và máu hiện số sau (giảm màu đỏ, tăng màu xanh lá), icon trong hàng chờ thành vết nứt. Đang xem thì khói xanh bay quanh con mắt.",
   "Hành động ngẫu nhiên (như Súng phóng lựu của Máy ném bom hình nhện) quay lúc bấm tick. Con mắt chỉ hiện phần chắc chắn, icon chưa có mục tiêu; xác nhận xong thì cả hai bên thấy dải sáng tới đúng những mục tiêu sẽ trúng.",
   "Icon phản ứng xếp dần về giữa bàn: quái bên phải thì icon chạy sang trái, quái bên trái thì chạy sang phải; phản ứng càng sớm càng gần icon gốc.",
+  "Skill và phép trúng nhiều mục tiêu (Địa ngục lửa của Lời nguyền của rồng, Súng phóng lựu của Máy ném bom hình nhện, Sấm sét tận thế…): dải sáng chạy tới ngay trước hàng quái của bên bị nhắm rồi tách nhánh cùng lúc, mỗi mục tiêu một nhánh, xuyên qua hàng trước vào hàng sau, có cả nhánh vào viên máu người chơi.",
+  "Skill ngẫu nhiên khi chưa xác nhận chỉ chạy tới điểm tách; bấm tick là quay, có mục tiêu thì nhánh tới đúng mục tiêu. Cò quay của Thương quản long quay trượt hết thì icon và dải sáng mờ dần ngay sau tick, đối thủ vẫn được phản ứng.",
+  "Dải sáng tới lá quái chảy vào con hào mỏng quanh lá: 2 nhánh từ chỗ vào chạy sát viền hai bên, gặp nhau phía đối diện. Dải sáng tới người chơi chảy vòng quanh viên máu.",
+  "Lá chắn phản đòn (chặn skill), Gương phòng hộ (chặn đòn đánh), Vòng nguyền rủa ác ma (chặn cả hai) bay ra từ tay, đứng chắn ngay trên đường dải sáng trước hàng quái của bên chặn (skill trúng nhiều mục tiêu thì trước điểm tách). Dải sáng dội vào liên tục như nước lũ vào đập: bọt trắng, nước bắn, sóng dội ngược; phần sau vách không còn. Có ngay lúc xếp vào hàng chờ.",
+  "Quái chặn đòn bay ra khỏi hàng, icon 2 kiếm ở giữa mép lá làm vách, dải sáng của đòn dội vào đó. Kẻ đánh bị chặn chỉ lao ra một chút để chừa chỗ cho dải sáng; màn ngắn thì không lao.",
+  "Dải sáng bị phản về (Lá chắn phản đòn, Giáp cơ khí) và dải sáng của Gương phòng hộ, Vòng nguyền rủa ác ma đánh về kẻ ra đòn không đi trùng đường tới nữa: vòng sang bên rộng hơn rồi vào cạnh lá.",
+  "Hấp thụ ma pháp: dải sáng trắng chảy vòng quanh icon phép bị hoá giải.",
+  "Bỏ vạch sáng vàng chạy giữa sân khi dùng skill, đã có dải sáng thay.",
 ];
 
 function remarkOf(notes: string[]) {

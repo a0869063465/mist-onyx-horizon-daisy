@@ -16,8 +16,11 @@ export type FlowEnd = { uid: string } | { face: Side } | { orb: string };
 export type FlowTone = "red" | "blue" | "pink" | "white" | "green";
 
 /** One flow of smoke. It leaves its icon unless it says where it leaves from (Phản nguyền takes the curse from an
- *  ally; a skill that Giáp cơ khí throws back runs on from the spell's icon to its caster). */
-export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone };
+ *  ally; a skill that Giáp cơ khí throws back runs on from the spell's icon to its caster).
+ *  Dòng chảy đợt 2 (chủ game 29/10): `fork` a branch of a spread, from the fork in front of the row it splits at;
+ *  `dam` it runs into an icon that stops it and surges against it as a flood against a dam; `wrap` it wraps the icon
+ *  it reaches (Hấp thụ ma pháp round the spell it takes); `back` it is thrown back and goes round its way in. */
+export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: boolean; dam?: boolean; wrap?: boolean; back?: boolean };
 
 export type ChainOrb = {
   id: string;
@@ -51,11 +54,24 @@ export type ChainOrb = {
   end: "fire" | "fizzle" | null;
   /** The notice as it fired: what a random skill came to. */
   result?: string;
+  /** Dòng chảy đợt 2: a skill landing on more than one runs to a fork in front of this side's row, then splits. */
+  spread?: Side | null;
+  /** The one thing a single action is aimed at, kept for where an icon that stops it stands. */
+  goal?: FlowEnd | null;
+  /** The icon this spell stops (Lá chắn phản đòn, Gương phòng hộ, Vòng nguyền rủa ác ma): it stands on that flow. */
+  stops?: string | null;
+  /** Its roll hit nobody: it fades now, though the wait goes on (chủ game 29/10). */
+  miss?: boolean;
 };
 
 let orbSeq = 1;
 
 const WHITE_SPELLS = new Set(["hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat"]);
+/** Spells that stand in the way of what they answer, as a dam (chủ game 29/10): Lá chắn phản đòn a skill, Gương
+ *  phòng hộ an attack, Vòng nguyền rủa ác ma both. */
+const DAM_SPELLS = new Set(["la-chan-phan-don", "guong-phong-ho", "vong-nguyen-rua-ac-ma"]);
+/** Spells that throw a skill back from their icon. */
+const REFLECT_SPELLS = new Set(["giap-co-khi", "la-chan-phan-don"]);
 const GREEN_SPELLS = new Set(["co-may-thoi-gian", "mu-ma-phap", "hoan-doi", "giap-co-khi"]);
 
 /** The smoke of a spell: white when it breaks a spell, green when it helps an ally, pink when it harms. */
@@ -156,13 +172,14 @@ function guardOf(duel: Duel, firstAim: string | null): string | null {
   return null;
 }
 
-/** Where the waiting action goes: the monster or the player it hits, or the icon of what stands in front of it. */
-function pendingLinks(duel: Duel, guardIcon: string | null, reflect: string | null): FlowLink[] {
+/** Where the waiting action goes: the monster or the player it hits, or the icon of what stands in front of it.
+ *  `reflect`: the icon of the spell throwing a skill back, and whether it stands in the skill's way as a dam. */
+function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: string; dam: boolean } | null): FlowLink[] {
   const pending = duel.pending;
   if (!pending) return [];
   const tone = pendingTone(duel, pending);
   const link = (end: FlowEnd): FlowLink => ({ end, tone });
-  if (guardIcon) return [link({ orb: guardIcon })];
+  if (guardIcon) return [{ end: { orb: guardIcon }, tone, dam: true }];
   switch (pending.kind) {
     case "face":
       return [link({ face: (1 - duel.turn) as Side })];
@@ -171,9 +188,11 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: string | nu
       return [link({ uid: pending.defender })];
     case "beam":
     case "gnaw-skill": {
-      // Thrown back by Giáp cơ khí (chủ game 23/10): the skill runs into the spell's icon, and on from it to its caster.
+      // Thrown back by Giáp cơ khí or Lá chắn phản đòn (chủ game 23/10, 29/10): the skill runs into the spell's icon
+      // (Lá chắn phản đòn's a dam it surges against), then runs on from it to the one it is thrown at, round its way in.
       if ("back" in pending && pending.back) {
-        return reflect ? [link({ orb: reflect }), { from: { orb: reflect }, end: { uid: pending.caster }, tone }] : [link({ uid: pending.caster })];
+        const victim = pending.target ?? pending.caster;
+        return reflect ? [{ end: { orb: reflect.id }, tone, dam: reflect.dam }, { from: { orb: reflect.id }, end: { uid: victim }, tone, back: true }] : [link({ uid: victim })];
       }
       return pending.target ? [link({ uid: pending.target })] : [];
     }
@@ -205,8 +224,9 @@ function pendingOrb(duel: Duel, by: string | null = null): ChainOrb | null {
   const tone = pendingTone(duel, pending);
   const to = selfLinks(pendingLinks(duel, null, null), id);
   const aim = aimedAt(pending);
+  const goal = to.length === 1 && !to[0].from ? to[0].end : null;
   if (pending.kind === "spell") {
-    return { id, kind: "spell", side: pending.owner, source: pending.source ?? null, cardId: monOf(duel, pending.source)?.cardId ?? null, spell: pending.cardId, near: null, by, to, tone, skill: null, strike: null, base, aim, notice: duel.live, done: false, end: null };
+    return { id, kind: "spell", side: pending.owner, source: pending.source ?? null, cardId: monOf(duel, pending.source)?.cardId ?? null, spell: pending.cardId, near: null, by, to, tone, skill: null, strike: null, base, aim, notice: duel.live, done: false, end: null, goal };
   }
   const source = pending.kind === "lash" ? pending.bird : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : pending.attacker;
   const cardId = monOf(duel, source)?.cardId ?? null;
@@ -230,6 +250,7 @@ function pendingOrb(duel: Duel, by: string | null = null): ChainOrb | null {
     notice: duel.live,
     done: false,
     end: null,
+    goal,
   };
 }
 
@@ -251,15 +272,20 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
   let to: FlowLink[];
   switch (spell) {
     case "hap-thu-ma-phap":
+      // It takes the spell: its white light wraps that spell's icon (chủ game 29/10).
+      to = into.map((link) => ({ ...link, wrap: true }));
+      break;
     case "vong-xoay-bao-ho":
       to = into;
       break;
     case "la-chan-phan-don":
-      to = [...into, ...(target && "uid" in target ? [{ end: target, tone }] : [])];
+      // Its icon stands in the skill's way; the skill runs on from it to the one it is thrown at (the waiting action's
+      // own flows draw that).
+      to = [];
       break;
     case "guong-phong-ho":
-      // Today Gương phòng hộ blocks and takes half the attacker's stats at once.
-      to = [...into, ...(attacker ? [{ end: { uid: attacker }, tone }] : [])];
+      // Today Gương phòng hộ blocks and takes half the attacker's stats at once: it stands in the attack's way.
+      to = attacker ? [{ end: { uid: attacker }, tone }] : [];
       break;
     case "phuc-kich":
       to = attacker ? [{ end: { uid: attacker }, tone }] : into;
@@ -292,6 +318,7 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     notice: next.live,
     done: true,
     end: "fire",
+    stops: answered && DAM_SPELLS.has(spell) ? answered.id : null,
   };
 }
 
@@ -340,12 +367,21 @@ function blockOrb(next: Duel, guard: string, base: string, tone: FlowTone): Chai
   };
 }
 
-/** The chain after one change of the duel. */
+/** Where one of a spread's hits lands: a monster, or a player ("face:N"). */
+function hitEnd(hit: string): FlowEnd {
+  return hit.startsWith("face:") ? { face: Number(hit.slice(5)) as Side } : { uid: hit };
+}
+
+/** Whom the waiting action lands on, as the page works it out (preview.ts `reachOf`). */
+export type ChainReach = { side: Side; hits: string[]; random: boolean; known: boolean };
+
 /**
- * `aims`: whom the roll of the waiting action hits, when its roll decides it (hàng chờ, chủ game 28/10: the opponent
- * sees whom it shoots once it is confirmed); its light then runs to each of them.
+ * The chain after one change of the duel. `reach`: whom the waiting action lands on, for a skill that can land on more
+ * than one (dòng chảy đợt 2, chủ game 29/10): its light runs to a fork in front of their row and splits there, one
+ * branch each; while its roll is still to come only to the fork (hàng chờ: the opponent sees whom it shoots once it
+ * is confirmed); a roll that hits nobody fades with its icon at once.
  */
-export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], aims: Array<string | "face"> | null = null): ChainOrb[] {
+export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: ChainReach | null = null): ChainOrb[] {
   const open = next.step === "respond";
   let list: ChainOrb[];
   let passed = false;
@@ -363,11 +399,17 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], aims
       // An answer that waits in its turn (Vòng nguyền rủa ác ma) is the new waiting action, by the icon it answered.
       if (open && next.pending?.kind === "spell" && next.pending.cardId === play.id && next.pending.owner === play.side && base !== pendingBase(prev.pending)) {
         const orb = pendingOrb(next, answered?.id ?? null);
-        if (orb) list.push(orb);
+        if (orb) list.push({ ...orb, stops: answered && DAM_SPELLS.has(play.id) ? answered.id : null });
         placed = true;
         continue;
       }
       list.push(answerOrb(prev, next, play.id, play.side, play.target, answered));
+    }
+    // What a spell stops runs into its icon now, surging against it (Gương phòng hộ ends the wait at once, so this
+    // shows as the attack fades; Vòng nguyền rủa ác ma holds it while the curse waits).
+    for (const stopper of list) {
+      if (!stopper.stops || stopper.kind !== "spell") continue;
+      list = list.map((orb) => (orb.id === stopper.stops && !orb.to.some((link) => "orb" in link.end && link.end.orb === stopper.id) ? { ...orb, to: [{ end: { orb: stopper.id }, tone: orb.tone, dam: true }] } : orb));
     }
     if (open && base && !placed && !list.some((orb) => orb.kind !== "block" && orb.base === base)) {
       const orb = pendingOrb(next);
@@ -379,6 +421,9 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], aims
   }
   const base = open ? pendingBase(next.pending) : null;
   const live = open && base ? list.find((orb) => orb.kind !== "block" && orb.base === base && !orb.done) ?? null : null;
+  // An attack held by the curse that stops it (Vòng nguyền rủa ác ma) waits with it.
+  const heldBy = new Map<string, string>();
+  if (live?.stops && live.kind === "spell") heldBy.set(live.stops, live.id);
   if (live) {
     // Who stands in front of it: its block icon (made once per blocker), into which its smoke is drawn.
     const guard = guardOf(next, live.aim);
@@ -392,22 +437,46 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], aims
       shield = blockOrb(next, guard, base!, pendingTone(next, next.pending));
       list.push(shield);
     }
-    // Giáp cơ khí throwing the skill back: the spell's icon is where the skill turns.
-    const reflect = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell === "giap-co-khi")?.id ?? null : null;
+    // Giáp cơ khí or Lá chắn phản đòn throwing the skill back: the spell's icon is where the skill turns.
+    const turner = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell && REFLECT_SPELLS.has(orb.spell)) ?? null : null;
+    const reflect = turner ? { id: turner.id, dam: DAM_SPELLS.has(turner.spell!) } : null;
     const tone = pendingTone(next, next.pending);
-    const to =
-      aims && aims.length && !shield && !reflect
-        ? aims.map((aim): FlowLink => ({ end: aim === "face" ? { face: (1 - next.turn) as Side } : { uid: aim }, tone }))
-        : selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
-    list = list.map((orb) => (orb === live ? { ...orb, to, tone: pendingTone(next, next.pending), strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null } : orb));
+    // A skill landing on more than one, or whose roll decides whom (dòng chảy đợt 2): to a fork, then a branch each;
+    // the branch to what a blocker stands in front of runs into the blocker's icon instead.
+    const hits = reach && !reflect ? reach.hits.filter((hit) => hit !== guard) : [];
+    const spreads = Boolean(reach && !reflect && (reach.random || hits.length >= 2));
+    let to: FlowLink[];
+    let spread: Side | null = null;
+    let miss = false;
+    if (spreads && reach) {
+      spread = reach.side;
+      const guarded = guard ? aimedAt(next.pending) ?? (next.pending?.kind === "face" ? `face:${reach.side}` : null) : null;
+      to = hits.map((hit): FlowLink => (shield && hit === guarded ? { end: { orb: shield.id }, tone, fork: true, dam: true } : { end: hitEnd(hit), tone, fork: true }));
+      if (shield && !to.some((link) => link.dam)) to.push({ end: { orb: shield.id }, tone, fork: true, dam: true });
+      miss = reach.random && reach.known && hits.length === 0 && !shield;
+    } else {
+      to = selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
+      // A spell on a whole side (Sấm sét tận thế, Mũ ma pháp) splits the same way.
+      if (next.pending?.kind === "spell" && !shield && to.length >= 2 && to.every((link) => !link.from && "uid" in link.end)) {
+        spread = sideOf(next, "uid" in to[0].end ? to[0].end.uid : null);
+        if (spread !== null) to = to.map((link) => ({ ...link, fork: true }));
+      }
+    }
+    list = list.map((orb) =>
+      orb === live
+        ? { ...orb, to, tone: pendingTone(next, next.pending), strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null, spread: spread ?? (reflect ? orb.spread ?? null : null), miss }
+        : orb,
+    );
   }
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
-    const done = !open || orb.base === null || orb.base !== base;
+    const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
-    const end = orb.end ?? (passed ? "fire" : "fizzle");
+    // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.
+    const stopped = !orb.to.some((link) => link.back) && orb.to.some((link) => link.dam && "orb" in link.end && list.some((other) => other.id === (link.end as { orb: string }).orb && other.kind === "spell"));
+    const end = orb.end ?? (passed && !stopped ? "fire" : "fizzle");
     if (orb.base) ended.set(`block:${orb.base}`, end);
     // What came of it (the notice as it lands): a random skill's outcome shows on its icon afterwards.
     return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };

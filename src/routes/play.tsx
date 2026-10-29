@@ -143,7 +143,7 @@ import {
   confirmStage,
   stageHold,
 } from "@/lib/duel";
-import { queueRuns, rolledAims } from "@/lib/preview";
+import { queueRuns, reachOf, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
@@ -639,6 +639,10 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 /** How far an attacker lunges toward what it hits while the other side may answer: as far as it always did, less the
  *  room its reaction icon takes in front of it (chủ game 23/10). */
 const LUNGE_FACE = 0.42;
+/** Dòng chảy đợt 2: how far in front of a row a spread splits, in % of the board's height, and the ring round a
+ *  player's health its light runs into, in % of the board's width. */
+const FORK_GAP = 2.4;
+const HP_RING = 7.4;
 const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
 const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
@@ -667,15 +671,49 @@ function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: num
   const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
   const foe = (1 - fromSide) as Side;
   const visualFoe = screenSide(foe, viewer);
-  const foeIndex = pending.kind === "melee"
-    ? duel.players[foe].field.findIndex((mon) => mon?.uid === (duel.hold?.blocker ?? pending.defender))
+  // Blocked, it lunges toward the blocker, and only a little: the blocker flies out to meet it, and the blow surges
+  // against the blocker's icon in the gap between them (dòng chảy đợt 2).
+  const blocker = duel.hold?.blocker ?? null;
+  const foeIndex = pending.kind === "melee" || blocker
+    ? duel.players[foe].field.findIndex((mon) => mon?.uid === (blocker ?? (pending.kind === "melee" ? pending.defender : "")))
     : -1;
-  const to = pending.kind === "face" ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
+  const to = pending.kind === "face" && !blocker ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
   if (!to) return null;
   const dx = to.x + to.w / 2 - (from.x + from.w / 2);
   const dy = to.y + to.h / 2 - (from.y + from.h / 2);
-  const travel = lungeTravel(pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE, dx, dy);
+  let travel = lungeTravel(blocker ? LUNGE_BLOCKED : pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE, dx, dy);
+  if (blocker) travel = Math.min(travel, Math.max(0, blockRoom() / 2) / (Math.abs(dy) || 1));
   return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
+}
+
+/** What is left of the middle band between the two front rows (in % of the board's height) once a blow's icon and
+ *  its blocker's icon stand in it with a short stretch of flow between them. A cut board (a short screen) may leave
+ *  none: then neither card lunges and the two icons close in on their cards. */
+function blockRoom(): number {
+  const top = Math.max(...SLOT_BOX[1].slice(0, 3).map((box) => box.y + box.h));
+  const bottom = Math.min(...SLOT_BOX[0].slice(0, 3).map((box) => box.y));
+  const tall = ICON * boardAspect();
+  return bottom - top - 2 * (tall + 0.6) - tall * 0.5;
+}
+
+/**
+ * Dòng chảy đợt 2 (chủ game 29/10): a monster that blocks flies out of its row toward the middle of the board, its
+ * crossed swords in front of it as the wall the blow surges against. A blocker stands in the front row, so it moves
+ * away from what it covers (a monster behind it, or the player). In % of its own box, as `attackShift`.
+ */
+const LUNGE_BLOCK = 0.2;
+/** How far an attacker lunges toward a monster that blocks it. */
+const LUNGE_BLOCKED = 0.3;
+function blockShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
+  if (duel.step !== "respond" || !duel.hold || duel.hold.blocker !== uid || !duel.pending) return null;
+  if (seaVeiled(duel, viewer, uid)) return null;
+  const side = duel.players[0].field.some((mon) => mon?.uid === uid) ? 0 : duel.players[1].field.some((mon) => mon?.uid === uid) ? 1 : null;
+  if (side === null) return null;
+  const row = screenSide(side, viewer);
+  const box = SLOT_BOX[row][duel.players[side].field.findIndex((mon) => mon?.uid === uid)];
+  if (!box) return null;
+  const lift = Math.min(LUNGE_BLOCK * box.h, Math.max(0, blockRoom() / 2));
+  return { x: 0, y: (row === 1 ? 1 : -1) * (lift / box.h) * 100 };
 }
 
 function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number } | null {
@@ -692,11 +730,8 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
   }
   if (fromIndex < 0) return null;
   const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
-  const face = HP_BOX[screenSide((1 - fromSide) as Side, viewer)];
-  const dx = face.x + face.w / 2 - (from.x + from.w / 2);
-  const dy = face.y + face.h / 2 - (from.y + from.h / 2);
-  const travel = lungeTravel(LUNGE_FACE, dx, dy);
-  return { x: from.x + from.w / 2 + dx * travel, y: from.y + from.h / 2 + dy * travel };
+  const shift = attackShift(duel, pending.attacker, viewer);
+  return { x: from.x + from.w / 2 + ((shift?.x ?? 0) * from.w) / 100, y: from.y + from.h / 2 + ((shift?.y ?? 0) * from.h) / 100 };
 }
 
 /**
@@ -1668,7 +1703,12 @@ function PlayPage() {
   const [queue, setQueue] = useState<{ kind: "act" | "answer"; base: Duel; chain: ChainOrb[] } | null>(null);
   const [peek, setPeek] = useState(false);
   const sightMemo = useRef<{ duel: Duel | null; kind: string | null; sight: Sight | null }>({ duel: null, kind: null, sight: null });
-  const aimMemo = useRef<{ duel: Duel | null; aims: Array<string | "face"> | null }>({ duel: null, aims: null });
+  // Whom the waiting action lands on (dòng chảy đợt 2), worked out once per state of the match.
+  const reachMemo = useRef<{ duel: Duel | null; reach: Reach | null }>({ duel: null, reach: null });
+  const reachFor = (state: Duel): Reach | null => {
+    if (reachMemo.current.duel !== state) reachMemo.current = { duel: state, reach: reachOf(state) };
+    return reachMemo.current.reach;
+  };
   // Màn VS (T1) and Bài khởi đầu (T2), chủ game 22/10: the VS screen plays once per match before the opening hand, and
   // the opening hand stays open until its cards have flown, even once both sides are done.
   // introMid: the match whose VS screen has played, so a new match (Đấu lại, Chơi lại) plays it again first.
@@ -2161,7 +2201,8 @@ function PlayPage() {
     laserTimers.current = [];
     if (!prev) {
       // A match opened while something waits (a reload in an online match): the line shows what waits.
-      setChain((list) => stepChain(null, duel, list));
+      const reach = reachFor(duel);
+      setChain((list) => stepChain(null, duel, list, reach));
       return;
     }
     // A new match (Đấu lại, Chơi lại) starts clean: nothing of the last one plays out on it.
@@ -2204,10 +2245,9 @@ function PlayPage() {
       const answerReady = (id: string, state: Duel) => state.players[viewerNow].hand.some((held, index) => held === id && answerUsable(id, state, viewerNow, index));
       if ([...ANSWER_SPELLS].some((id) => answerReady(id, duel) && !answerReady(id, prev))) setHand("spell");
     }
-    // Hàng chờ: once confirmed, a random action shows whom its roll hits (chủ game 28/10).
-    if (aimMemo.current.duel !== duel) aimMemo.current = { duel, aims: duel.step === "respond" && duel.hold && !duel.hold.stage ? rolledAims(duel) : null };
-    const aims = aimMemo.current.aims;
-    setChain((list) => stepChain(prev, duel, list, aims));
+    // Dòng chảy đợt 2: whom it lands on; a random one shows whom its roll hits once confirmed (chủ game 28/10, 29/10).
+    const reach = reachFor(duel);
+    setChain((list) => stepChain(prev, duel, list, reach));
     if (prev.mode === "ai" && duel.mode === "ai") {
       try {
         const learned = absorb(loadHabits(), watchSnap(prev), watchSnap(duel), scratch.current);
@@ -3016,10 +3056,6 @@ function PlayPage() {
   const canIntercept = responding && duel.hold?.priority === viewer && (duel.pending?.kind === "face" || coverBack);
   const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
-  const beam = duel.pending?.kind === "beam" ? duel.pending : null;
-  const groupedShot = shotLook(duel, duel.pending);
-  // Sừng lôi phá's strike has its attack icon now (chủ game 23/10); the bar stays for skills until đợt 2.
-  const beamFromBottom = beam ? you.field.some((unit) => unit?.uid === beam.caster) : false;
   const board = matchBoard(foe.env, you.env);
   // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
   const compact = cut.to - cut.from > 1;
@@ -4164,10 +4200,55 @@ function PlayPage() {
     if (!seat) return null;
     const row = screenSide(seat.side, viewer);
     const box = SLOT_BOX[row][seat.index];
-    const lunge = attackShift(duel, uid, viewer);
+    const lunge = attackShift(duel, uid, viewer) ?? blockShift(duel, uid, viewer);
     const dx = lunge ? (lunge.x * box.w) / 100 : 0;
     const dy = lunge ? (lunge.y * box.h) / 100 : 0;
-    return { x: box.x + box.w / 2 + dx, y: box.y + box.h / 2 + dy, h: box.h, top: row === 1, dx, dy };
+    return { x: box.x + box.w / 2 + dx, y: box.y + box.h / 2 + dy, w: box.w, h: box.h, top: row === 1, dx, dy };
+  };
+  /** Dòng chảy đợt 2: a side's front row, in % of the board: the edge facing the middle and where a spread splits. */
+  const frontOf = (side: Side) => {
+    const row = screenSide(side, viewer);
+    const front = SLOT_BOX[row].slice(0, 3);
+    const top = row === 1;
+    const edge = top ? Math.max(...front.map((box) => box.y + box.h)) : Math.min(...front.map((box) => box.y));
+    const mid = front[1];
+    return { top, edge, x: mid.x + mid.w / 2 };
+  };
+  const forkOf = (side: Side) => {
+    const front = frontOf(side);
+    return { x: front.x, y: front.edge + (front.top ? 1 : -1) * FORK_GAP };
+  };
+  /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */
+  const throwFrom = (side: Side) => (side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) });
+  /**
+   * Dòng chảy đợt 2 (chủ game 29/10): a spell that stops a flow (Lá chắn phản đòn, Gương phòng hộ, Vòng nguyền rủa ác
+   * ma) stands in its way as a dam: just before the fork of a spread, else just in front of the row of the side it
+   * guards, on the way from the icon it stops to what that was aimed at.
+   */
+  const stopSpot = (orb: ChainOrb, placed: ReadonlyMap<string, IconSpot>): IconSpot | null => {
+    const stopped = chain.find((other) => other.id === orb.stops) ?? null;
+    const from = stopped ? placed.get(stopped.id) ?? null : null;
+    if (!stopped || !from) return null;
+    const tall = ICON * boardAspect();
+    let goal: { x: number; y: number; side: Side; fork: boolean } | null = null;
+    if (stopped.spread !== undefined && stopped.spread !== null) goal = { ...forkOf(stopped.spread), side: stopped.spread, fork: true };
+    else if (stopped.goal && "uid" in stopped.goal) {
+      const card = cardSpot(stopped.goal.uid);
+      const seat = seatOfUid(stopped.goal.uid);
+      if (card && seat) goal = { x: card.x, y: card.y, side: seat.side, fork: false };
+    } else if (stopped.goal && "face" in stopped.goal) {
+      const mark = stopped.goal.face === viewer ? board.marks.youHp : board.marks.foeHp;
+      goal = { x: mark.x, y: mark.y, side: stopped.goal.face, fork: false };
+    }
+    if (!goal) return null;
+    const front = frontOf(goal.side);
+    const wantY = (goal.fork ? goal.y : front.edge) + (front.top ? 1 : -1) * (tall / 2 + 0.8);
+    const span = goal.y - from.y;
+    // At least a short stretch of the flow shows before the wall: an attacker that lunged far leaves little room.
+    const least = (ICON * 1.9) / (Math.hypot(goal.x - from.x, span / boardAspect()) || 1);
+    const t = Math.min(0.9, Math.max(0.2, least, Math.abs(span) < 0.5 ? 0.6 : (wantY - from.y) / span));
+    const x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, from.x + (goal.x - from.x) * t));
+    return { x, y: from.y + span * t, face: 0, delay: 0.5, appear: 0 };
   };
   const iconSpots = new Map<string, IconSpot>();
   {
@@ -4185,16 +4266,20 @@ function PlayPage() {
       const card = orb.near ? cardSpot(orb.near) : null;
       if (card) {
         const lunging = card.dx !== 0 || card.dy !== 0;
+        // A blow and its blocker on a cut board: their icons close in on their cards to leave the flow between them.
+        const squeeze = duel.hold?.blocker && orb.kind !== "spell" ? Math.min(tall * 0.5, Math.max(0, -blockRoom() / 2)) : 0;
         spot = {
           x: card.x,
           // Clear of the card, just in front of its edge (chủ game 23/10).
-          y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6,
+          y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 - squeeze : card.y - card.h / 2 - tall / 2 - 0.6 + squeeze,
           face: card.top ? 1 : -1,
           // A lunging card's light starts as it arrives (an attack, or a skill at a player); an attacker's or a
           // caster's icon fades in only after its light has reached out (chủ game 23/10).
           delay: lunging ? 0.75 : 0,
           appear: orb.kind === "attack" || orb.kind === "skill" ? (lunging ? 1.3 : 0.5) : 0,
         };
+      } else if (!orb.near && orb.stops && stopSpot(orb, iconSpots)) {
+        spot = stopSpot(orb, iconSpots);
       } else if (!orb.near) {
         const mine = orb.side === viewer;
         const halfY = ry(mine ? 56 : 40);
@@ -4227,17 +4312,19 @@ function PlayPage() {
   /** Where a flow lands on a card (the middle of its edge facing the flow) or on a player's HP. */
   const flowEnd = (end: FlowEnd, from: { x: number; y: number }): EndSpot | null => {
     if ("orb" in end) return null;
+    // Dòng chảy đợt 2 (chủ game 29/10): it runs into a thin moat round what it reaches, as a canal into the moat of a
+    // walled city: a ring round a player's health, the card's box round a monster.
     if ("face" in end) {
       const mark = end.face === viewer ? board.marks.youHp : board.marks.foeHp;
       const dx = (mark.x - from.x) * 0.9;
       const dy = (mark.y - from.y) * 1.6 * boardCut().v;
       const len = Math.hypot(dx, dy) || 1;
-      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len } };
+      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
     }
     const card = cardSpot(end.uid);
     if (!card) return null;
     const below = from.y > card.y;
-    return { x: card.x, y: below ? card.y + card.h * 0.46 : card.y - card.h * 0.46, into: { x: 0, y: below ? -1 : 1 } };
+    return { x: card.x, y: below ? card.y + card.h * 0.5 : card.y - card.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: card.x, y: card.y, w: card.w, h: card.h } };
   };
   const hiddenMon = (orb: ChainOrb) => {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
@@ -4715,6 +4802,8 @@ function PlayPage() {
             onClosed={() => setChain((list) => (list.every((orb) => orb.done) ? [] : list))}
             cracked={peekIcons?.cracked}
             aimless={peekIcons?.aimless}
+            forkOf={forkOf}
+            throwFrom={throwFrom}
           />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (
@@ -5430,7 +5519,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={Boolean(duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken"))}
@@ -5482,7 +5571,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               attack={false}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={false}
@@ -5518,7 +5607,6 @@ function PlayPage() {
           );
         })}
         <div className={`lane${drag?.kind === "unit" || aim?.kind === "attack" ? " is-hot" : ""}`} />
-        {beam && !groupedShot && !seaVeiled(duel, viewer, beam.caster) ? <div className={`attack-beam${beamFromBottom ? " from-bottom" : " from-top"}`} data-beam="1" /> : null}
         <div className="floaters">
           {floaters.filter((item) => !item.heal).map((item) => (
             <span key={item.id} className="floater" style={floaterStyle(item)}>

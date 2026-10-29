@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Glyph, Rim } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
-import { FlowCanvas, type BoxPt, type FlowSpec } from "@/components/game/flow-canvas";
-import type { ChainOrb, FlowEnd, FlowTone } from "@/lib/reaction-chain";
+import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
+import type { Side } from "@/lib/duel";
+import type { ChainOrb, FlowEnd, FlowLink, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
 /** Where an icon stands, in % of the board: just clear of the edge of its card that faces the middle (`face` +1 under
@@ -10,8 +11,13 @@ import { playLine } from "@/lib/sfx";
  *  light starts (an attacker still lunging); `appear`: seconds before the icon itself fades in, after its light. */
 export type IconSpot = { x: number; y: number; face: 1 | -1 | 0; delay: number; appear: number };
 
-/** Where a flow lands on a card or a player, in % of the board, and the way it arrives there. */
-export type EndSpot = { x: number; y: number; into: BoxPt };
+/** Where a flow lands on a card or a player, in % of the board, and the way it arrives there; `moat` what it runs
+ *  round there (dòng chảy đợt 2): the card's box (its middle and size) or a ring round a player (radius in % of the
+ *  board's width). */
+export type EndSpot = { x: number; y: number; into: BoxPt; moat?: { kind: "box"; x: number; y: number; w: number; h: number } | { kind: "ring"; x: number; y: number; r: number } };
+
+/** A point on the board in % of it. */
+export type BoardPt = { x: number; y: number };
 
 /** How an icon looks: a 3D medal (attack, block), a skill's gem with its rim, or a card's picture in a rim. */
 export type IconLook =
@@ -38,8 +44,21 @@ const FIRE_TAIL = 1.15;
 const FIZZLE_TAIL = 0.8;
 /** Two taps closer than this open the card. */
 const DOUBLE_TAP = 380;
+/** Seconds a spell that stops a flow takes to fly in from the hand. */
+const THROW = 0.5;
 
 const toBox = (x: number, y: number): BoxPt => ({ x: x * 0.9, y: y * 1.6 });
+
+/** The moat of a landing spot, in box units. */
+function moatOf(spot: EndSpot): Moat | null {
+  const moat = spot.moat;
+  if (!moat) return null;
+  if (moat.kind === "ring") return { kind: "ring", c: toBox(moat.x, moat.y), r: moat.r * 0.9 };
+  return { kind: "box", c: toBox(moat.x, moat.y), half: { x: (moat.w / 2) * 0.9, y: (moat.h / 2) * 1.6 } };
+}
+
+/** The ring round an icon a flow wraps (Hấp thụ ma pháp round the spell it takes). */
+const ICON_RING = ICON * 0.45 * 0.9;
 
 function unitDir(dx: number, dy: number): BoxPt {
   const len = Math.hypot(dx, dy) || 1;
@@ -48,6 +67,22 @@ function unitDir(dx: number, dy: number): BoxPt {
 
 function endKey(end: FlowEnd): string {
   return "uid" in end ? `u:${end.uid}` : "face" in end ? `f:${end.face}` : `o:${end.orb}`;
+}
+
+/** A flow's key: its icon, where it leaves from (a fork, another place, or the icon) and where it lands. */
+function keyOf(orb: ChainOrb, link: FlowLink): string {
+  return `${orb.id}|${link.fork ? "fork" : link.from ? endKey(link.from) : "-"}|${endKey(link.end)}`;
+}
+
+/** Which way a flow back from one place to another swings round (+1 to its left-hand side): toward the middle of the
+ *  board, where there is room. */
+function swingOf(from: BoardPt, to: BoardPt): number {
+  const dx = (to.x - from.x) * 0.9;
+  const dy = (to.y - from.y) * 1.6;
+  const len = Math.hypot(dx, dy) || 1;
+  const mx = ((from.x + to.x) / 2) * 0.9;
+  const my = ((from.y + to.y) / 2) * 1.6;
+  return Math.sign((-dy / len) * (45 - mx) + (dx / len) * (80 - my)) || 1;
 }
 
 /**
@@ -72,6 +107,8 @@ export function ReactionLine({
   onClosed,
   cracked,
   aimless,
+  forkOf,
+  throwFrom,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
@@ -96,6 +133,10 @@ export function ReactionLine({
   cracked?: ReadonlySet<string>;
   /** In the preview, a queued icon whose roll is still to come keeps its face but has no target yet. */
   aimless?: ReadonlySet<string>;
+  /** Dòng chảy đợt 2: where a spread aimed at a side splits, just in front of that side's row. */
+  forkOf: (side: Side) => BoardPt | null;
+  /** Where a spell that stops a flow flies in from: its owner's hand. */
+  throwFrom: (side: Side) => BoardPt;
 }) {
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
@@ -137,43 +178,135 @@ export function ReactionLine({
   const close = Math.max(FIRE_TAIL, ...orbs.map((orb) => lateOf(orb) + (orb.end === "fizzle" ? FIZZLE_TAIL : FIRE_TAIL)));
 
   // The smoke: every flow of every icon, from its icon (or where it says it leaves from) to where it lands.
-  const pointOf = (end: FlowEnd, from: { x: number; y: number }): { x: number; y: number; into: BoxPt } | null => {
+  const pointOf = (link: FlowLink, from: { x: number; y: number }): EndSpot | null => {
+    const end = link.end;
     if ("orb" in end) {
       const spot = spots.get(end.orb);
       if (!spot) return null;
-      // It lands on the rim of the icon facing it (in box units the icon's radius is ICON × 0.45), so the glow is not
-      // hidden under the icon.
       const dir = unitDir((spot.x - from.x) * 0.9, (spot.y - from.y) * 1.6);
-      const rim = ICON * 0.45 * 0.8;
+      // Wrapping an icon, it runs into a ring round it (Hấp thụ ma pháp round the spell it takes).
+      if (link.wrap) return { x: spot.x, y: spot.y, into: dir, moat: { kind: "ring", x: spot.x, y: spot.y, r: ICON_RING / 0.9 } };
+      // It lands on the rim of the icon facing it (in box units the icon's radius is ICON × 0.45), so the glow is not
+      // hidden under the icon; a dam a little further out, on the wall the icon makes.
+      const rim = ICON * 0.45 * (link.dam ? 0.95 : 0.8);
       return { x: spot.x - (dir.x * rim) / 0.9, y: spot.y - (dir.y * rim) / 1.6, into: dir };
     }
     return endOf(end, from);
   };
   const flows: FlowSpec[] = [];
   const now = performance.now() / 1000;
+  /** An icon that a live flow surges against: it stands as a wall, bright, while that flow waits. */
+  const walls = new Set<string>();
+  // Two flows running opposite ways between the same places (chủ game 29/10): a skill thrown back (Giáp cơ khí, Lá
+  // chắn phản đòn), or a spell that stops an attack striking back at the attacker (Gương phòng hộ, Vòng nguyền rủa ác
+  // ma). The way back swings round the side with more room, toward the middle of the board, and lands on that side of
+  // its card; the way in bows a little the other way. A thrown skill's way back runs on once its way in has reached
+  // the icon.
+  const backs = new Map<string, { swing: number; after?: string }>();
+  const arcs = new Map<string, number>();
+  for (const orb of orbs) {
+    const thrown = orb.to.find((link) => link.back && link.from && "orb" in link.from);
+    if (thrown?.from && "orb" in thrown.from) {
+      const turn = thrown.from.orb;
+      const from = spots.get(turn);
+      const to = from ? endOf(thrown.end, from) : null;
+      const wayIn = orb.to.find((link) => !link.from && "orb" in link.end && link.end.orb === turn);
+      if (from && to) {
+        const swing = swingOf(from, to);
+        backs.set(keyOf(orb, thrown), { swing, after: wayIn ? keyOf(orb, wayIn) : undefined });
+        if (wayIn) arcs.set(keyOf(orb, wayIn), swing * 0.35);
+      }
+    }
+    const stopped = orb.stops ? orbs.find((other) => other.id === orb.stops) ?? null : null;
+    const struck = stopped?.source ?? null;
+    const back = struck ? orb.to.find((link) => !link.from && "uid" in link.end && link.end.uid === struck) : undefined;
+    const from = back ? spots.get(orb.id) : undefined;
+    const to = back && from ? endOf(back.end, from) : null;
+    if (stopped && back && from && to) {
+      const swing = swingOf(from, to);
+      backs.set(keyOf(orb, back), { swing });
+      const wayIn = stopped.to.find((link) => link.dam && "orb" in link.end && link.end.orb === orb.id);
+      if (wayIn) arcs.set(keyOf(stopped, wayIn), swing * 0.35);
+    }
+  }
   for (const orb of orbs) {
     const here = spots.get(orb.id);
-    if (!here || cracked?.has(orb.id) || aimless?.has(orb.id)) continue;
+    if (!here || cracked?.has(orb.id)) continue;
     const since = born.current.has(orb.id) ? now - born.current.get(orb.id)! : 0;
-    for (const link of orb.to) {
-      const start = link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
-      if (!start) continue;
-      const land = pointOf(link.end, start);
-      if (!land) continue;
-      const faceOut = !link.from && here.face !== 0 ? { x: 0, y: here.face } : unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
+    const wait = Math.max(0, here.delay - since);
+    // A spell that stops a flow sends its own light once it has flown in from the hand.
+    const thrownIn = orb.stops ? Math.max(0, THROW - since) : 0;
+    const late = lateOf(orb);
+    // A roll that hit nobody fades with its icon at once (chủ game 29/10).
+    const done = orb.done || Boolean(orb.miss);
+    const end = orb.miss && !orb.end ? ("fizzle" as const) : orb.end;
+    // A spread runs to the fork in front of the row it splits at, then a branch to each it lands on.
+    const fork = orb.spread !== undefined && orb.spread !== null ? forkOf(orb.spread) : null;
+    const trunk = fork ? `${orb.id}|fork` : "";
+    if (fork) {
       flows.push({
-        key: `${orb.id}|${link.from ? endKey(link.from) : "-"}|${endKey(link.end)}`,
+        key: trunk,
+        a: toBox(here.x, here.y),
+        b: toBox(fork.x, fork.y),
+        out: here.face !== 0 ? { x: 0, y: here.face } : unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
+        into: unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
+        tone: orb.tone,
+        done,
+        end,
+        late,
+        strike: false,
+        delay: wait,
+        land: "none",
+      });
+    }
+    for (const link of orb.to) {
+      if (link.fork && !fork) continue;
+      const start = link.fork ? fork : link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
+      if (!start) continue;
+      let land = pointOf(link, start);
+      if (!land) continue;
+      const key = keyOf(orb, link);
+      const way = backs.get(key);
+      // The way back lands on the side of its target it swings round to, not under the icon it left from.
+      if (way && land.moat?.kind === "box") {
+        const dx = (land.x - start.x) * 0.9;
+        const dy = (land.y - start.y) * 1.6;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = (-dy / len) * way.swing;
+        const ny = (dx / len) * way.swing;
+        const box = land.moat;
+        land =
+          Math.abs(nx) >= Math.abs(ny)
+            ? { ...land, x: box.x + (Math.sign(nx) * box.w) / 2, y: box.y, into: { x: -Math.sign(nx), y: 0 } }
+            : { ...land, x: box.x, y: box.y + (Math.sign(ny) * box.h) / 2, into: { x: 0, y: -Math.sign(ny) } };
+      }
+      const toward = unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
+      const trunkDir = fork ? unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6) : toward;
+      const faceOut = link.fork ? unitDir(trunkDir.x + toward.x, trunkDir.y + toward.y) : !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
+      if (link.dam && "orb" in link.end && !done) walls.add(link.end.orb);
+      // A flow into what stops it waits for the spell to fly in from the hand.
+      const stopper = link.dam && "orb" in link.end ? orbs.find((other) => other.id === (link.end as { orb: string }).orb && other.stops) : undefined;
+      const flyWait = stopper && born.current.has(stopper.id) ? Math.max(0, THROW - (now - born.current.get(stopper.id)!)) : 0;
+      flows.push({
+        key,
         a: toBox(start.x, start.y),
         b: toBox(land.x, land.y),
         out: faceOut,
         into: land.into,
         tone: link.tone,
-        done: orb.done,
-        end: orb.end,
-        late: lateOf(orb),
+        done,
+        end,
+        late,
         // An attack's blow is drawn on the board; only a blow into a blocker's icon surges into it (giao chiến).
         strike: orb.kind === "attack" && !("orb" in link.end),
-        delay: link.from ? 0 : Math.max(0, here.delay - since),
+        delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
+        land: link.dam ? "dam" : "flare",
+        moat: moatOf(land),
+        bend: link.fork ? 0.22 * Math.sign(toward.x || 1) : undefined,
+        // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other.
+        arc: way ? way.swing * 1.1 : arcs.get(key),
+        after: link.fork ? trunk : way?.after,
+        width: link.fork ? 0.8 : 1,
       });
     }
   }
@@ -210,11 +343,13 @@ export function ReactionLine({
         if (!spot) return null;
         const look = lookOf(orb);
         const react = orb.kind === "attack" ? "attack" : orb.kind === "skill" ? "skill" : orb.kind === "block" ? "block" : undefined;
+        // A spell that stops a flow flies in from its owner's hand to stand in that flow's way (chủ game 29/10).
+        const hand = orb.stops ? throwFrom(orb.side) : null;
         return (
           <button
             key={orb.id}
             type="button"
-            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.appear > 0 ? " is-dawn" : ""}${tip === orb.id ? " is-tipped" : ""}${cracked?.has(orb.id) ? " is-cracked" : ""}`}
+            className={`rx-icon is-${orb.kind} is-${look.type}${orb.done && !walls.has(orb.id) ? " is-done" : " is-live"}${orb.end ? ` is-${orb.end}` : ""}${spot.appear > 0 ? " is-dawn" : ""}${tip === orb.id ? " is-tipped" : ""}${cracked?.has(orb.id) ? " is-cracked" : ""}${hand ? " is-thrown" : ""}${walls.has(orb.id) ? " is-wall" : ""}${orb.miss ? " is-miss" : ""}`}
             data-react={react}
             style={
               {
@@ -225,6 +360,7 @@ export function ReactionLine({
                 "--late": `${lateOf(orb).toFixed(2)}s`,
                 "--ring": `var(--flow-${orb.tone})`,
                 "--appear": `${spot.appear.toFixed(2)}s`,
+                ...(hand ? { "--hx": `${(hand.x - spot.x).toFixed(2)}cqw`, "--hy": `${(hand.y - spot.y).toFixed(2)}cqh` } : {}),
               } as CSSProperties
             }
             onPointerDown={(event) => event.stopPropagation()}

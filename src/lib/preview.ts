@@ -31,35 +31,127 @@ export function queueRuns(state: Duel, kind: "act" | "answer", viewer: Side): Du
   return [settle(handed)];
 }
 
-function fieldOf(state: Duel): Array<{ side: Side; mon: FieldMon }> {
-  return ([0, 1] as const).flatMap((side) => state.players[side].field.flatMap((mon) => (mon ? [{ side, mon }] : [])));
+/** What a monster shows of itself, to tell whether an action touched it (a blow, a curse, poison, wetness…). */
+function touch(mon: FieldMon | null | undefined): string {
+  if (!mon || mon.hp <= 0) return "x";
+  return [
+    mon.hp,
+    mon.maxHp,
+    mon.atk,
+    mon.def,
+    mon.mdef,
+    mon.stun,
+    mon.chain ?? 0,
+    mon.curse ? 1 : 0,
+    mon.wet ?? 0,
+    mon.poison ? `${mon.poison.stacks}/${mon.poison.left}` : "",
+    mon.hex ? mon.hex.left : 0,
+    mon.noBlock ? 1 : 0,
+    mon.vulnerable ?? 0,
+  ].join(",");
 }
 
-/** What an outcome shows of a monster, to tell two outcomes apart. */
-function mark(mon: FieldMon | undefined): string {
-  if (!mon || mon.hp <= 0) return "x";
-  return [mon.hp, mon.maxHp, mon.atk, mon.def, mon.mdef, mon.stun, mon.chain ?? 0, mon.curse ? 1 : 0, mon.dim ? 1 : 0].join(",");
+function findMon(state: Duel, uid: string): FieldMon | null {
+  for (const player of state.players) {
+    const mon = player.field.find((unit) => unit?.uid === uid);
+    if (mon) return mon;
+  }
+  return null;
+}
+
+function sideOfUid(state: Duel, uid: string): Side | null {
+  if (state.players[0].field.some((mon) => mon?.uid === uid)) return 0;
+  if (state.players[1].field.some((mon) => mon?.uid === uid)) return 1;
+  return null;
 }
 
 /**
- * A confirmed action whose roll decides what it hits (Máy ném bom hình nhện, Thỏ đen tinh nghịch né…): the opponent
- * sees whom this roll hits ("đối thủ thấy mình bắn ai", chủ game 28/10). Null when the roll changes nothing.
+ * The side a skill is aimed at and what it is aimed at ("face:N" a player), for a waiting action that can land on
+ * more than one: a skill, a skill at a player, Sừng lôi phá's strike that spreads. Null for anything else.
  */
-export function rolledAims(state: Duel): Array<string | "face"> | null {
-  if (state.step !== "respond" || !state.hold || state.hold.stage || !state.pending) return null;
-  const seed = state.hold.seed;
-  if (!seed) return null;
-  const handed = (roll: number) => settle({ ...state, hold: { ...state.hold!, seed: roll, priority: (1 - state.turn) as Side, passed: [false, false] } });
-  const real = handed(seed);
-  const other = handed(seed === 11 ? 23 : 11);
-  const foe = (1 - state.turn) as Side;
-  const after = (duel: Duel) => new Map(fieldOf(duel).filter((row) => row.side === foe).map((row) => [row.mon.uid, mark(row.mon)]));
-  const realMarks = after(real);
-  const otherMarks = after(other);
-  const before = fieldOf(state).filter((row) => row.side === foe);
-  const differs = before.some((row) => realMarks.get(row.mon.uid) !== otherMarks.get(row.mon.uid)) || real.players[foe].hp !== other.players[foe].hp;
-  if (!differs) return null;
-  const hit: Array<string | "face"> = before.filter((row) => (realMarks.get(row.mon.uid) ?? "x") !== mark(row.mon)).map((row) => row.mon.uid);
-  if (real.players[foe].hp !== state.players[foe].hp) hit.push("face");
-  return hit;
+function aimOf(state: Duel): { side: Side; aim: string | null } | null {
+  const pending = state.pending;
+  if (!pending) return null;
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
+    if ("back" in pending && pending.back) return null;
+    const caster = sideOfUid(state, pending.caster);
+    if (caster === null) return null;
+    const side = (1 - caster) as Side;
+    return { side, aim: pending.target ?? null };
+  }
+  if (pending.kind === "face" && pending.skill) {
+    const side = (1 - state.turn) as Side;
+    return { side, aim: `face:${side}` };
+  }
+  if (pending.kind === "melee" && findMon(state, pending.attacker)?.horn === "splash") return { side: (1 - state.turn) as Side, aim: pending.defender };
+  return null;
+}
+
+/**
+ * Whom an action landed on, from the match before and after it (what it touched; a chosen target it did not touch is
+ * not counted, so a roll that may miss it does not show a branch to it). "spin": whom it hits is drawn later (Thương
+ * quản long's reel); null: it has not landed (nothing to tell).
+ */
+function struck(before: Duel, after: Duel, side: Side): string[] | "spin" | null {
+  if (after.reel && !before.reel) {
+    // Cò quay: its barrels are rolled as the wait ends and whom they hit is drawn as they land; barrels that all come
+    // up empty hit nobody.
+    const faces: ReadonlyArray<string> | null = after.reel.kind === "gun" ? after.reel.faces : null;
+    return faces && faces.every((face) => face === "blank") ? [] : "spin";
+  }
+  if (after === before || (after.step === "respond" && after.pending === before.pending)) return null;
+  const hits = new Set<string>();
+  const record = after.skill && after.skill !== before.skill ? after.skill.hits : undefined;
+  for (const hit of record ?? []) hits.add(hit);
+  for (const mon of before.players[side].field) {
+    if (mon && mon.hp > 0 && touch(mon) !== touch(findMon(after, mon.uid))) hits.add(mon.uid);
+  }
+  if (after.players[side].hp !== before.players[side].hp) hits.add(`face:${side}`);
+  return [...hits].sort();
+}
+
+/**
+ * Dòng chảy đợt 2 (chủ game 29/10): whom a skill that can land on more than one lands on, so its light runs to a fork
+ * in front of their row and splits there. `hits`: monsters (uid) and players ("face:N") as far as they are known;
+ * `random`: its roll decides whom; `known`: the roll is made (confirmed and landed in the rules), else only what
+ * every roll hits is in `hits`; `side`: the side it is aimed at.
+ */
+export type Reach = { side: Side; hits: string[]; random: boolean; known: boolean };
+
+const ROLLS = [11, 23, 37, 53];
+
+export function reachOf(state: Duel): Reach | null {
+  if (state.step !== "respond" || !state.hold || !state.pending) return null;
+  const aimed = aimOf(state);
+  if (!aimed) return null;
+  // Whom it lands on with nobody in front of it: a blocker takes the branch it stands in front of.
+  const open: Duel = { ...state, hold: { ...state.hold, blocker: null, blockerSkill: false } };
+  const run = (seed: number) => {
+    try {
+      return struck(open, passResponse(confirmStage({ ...open, hold: { ...open.hold!, stage: true } }, seed)), aimed.side);
+    } catch {
+      return null;
+    }
+  };
+  const spinning: Reach = { side: aimed.side, hits: [], random: true, known: false };
+  if (state.hold.stage) {
+    const rolls = ROLLS.map(run);
+    if (rolls.some((roll) => roll === "spin")) return spinning;
+    const sets = rolls.filter((roll): roll is string[] => Array.isArray(roll));
+    if (sets.length < rolls.length) return null;
+    const same = sets.every((roll) => roll.join("|") === sets[0].join("|"));
+    if (same) return { side: aimed.side, hits: sets[0], random: false, known: true };
+    // Before its roll only what every roll hits is sure.
+    return { side: aimed.side, hits: sets[0].filter((hit) => sets.every((roll) => roll.includes(hit))), random: true, known: false };
+  }
+  const seed = state.hold.seed ?? 0;
+  const real = run(seed);
+  if (real === "spin") return spinning;
+  if (!real) return null;
+  // Random when another roll would land elsewhere.
+  const random = ROLLS.filter((roll) => roll !== seed).some((roll) => {
+    const other = run(roll);
+    return !Array.isArray(other) || other.join("|") !== real.join("|");
+  });
+  return { side: aimed.side, hits: real, random, known: true };
 }

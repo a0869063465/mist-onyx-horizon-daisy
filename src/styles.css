@@ -10341,6 +10341,22 @@ button.watch-back {
   45% { opacity: 1; filter: none; transform: translate(-50%, -50%); }
   100% { opacity: 0.45; filter: grayscale(1) brightness(0.55); transform: translate(-50%, -50%) scale(0.72); }
 }
+/* Dòng chảy đợt 2 (chủ game 29/10): a spell that stops a flow flies in from its owner's hand (--hx, --hy) to stand in
+   that flow's way, and stays bright, as the wall the flow surges against, while the flow waits. A roll that hit nobody
+   fades with its icon at once. */
+.rx-icon.is-thrown { animation: rx-throw 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+.rx-icon.is-thrown.is-wall { animation: rx-throw 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both, rx-live 1.6s ease-in-out 0.5s infinite; }
+.rx-icon.is-thrown.is-fire { animation: rx-throw 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both, rx-fire 0.5s ease-out calc(0.5s + var(--late, 0s)) forwards; }
+.rx-icon.is-thrown.is-fire.is-wall { animation: rx-throw 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both, rx-fire 0.5s ease-out calc(0.5s + var(--late, 0s)) forwards, rx-live 1.6s ease-in-out calc(1s + var(--late, 0s)) infinite; }
+.rx-icon.is-thrown.is-fizzle { animation: rx-throw 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both, rx-fizzle 0.7s ease-in calc(0.5s + var(--late, 0s)) forwards; }
+.rx-icon.is-wall > * { animation: none; }
+@keyframes rx-throw {
+  0% { opacity: 0; transform: translate(calc(-50% + var(--hx, 0cqw)), calc(-50% + var(--hy, 0cqh))) scale(0.5) rotate(-160deg); }
+  25% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+.rx .rx-icon.is-miss { animation: rx-miss 0.8s ease-in forwards; }
+@keyframes rx-miss { to { opacity: 0; filter: grayscale(0.7) brightness(0.7); transform: translate(-50%, -50%) scale(0.75); } }
 .rx-show {
   position: absolute;
   z-index: 6;
