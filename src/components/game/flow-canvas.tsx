@@ -479,11 +479,17 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const k2 = arcs ? 0.3 : -0.16;
       const p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
       const p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
+      // It also winds side to side along its way, as a river does (chủ game 29/10): waves that die away at both ends,
+      // so it still leaves and lands square; 2 on a short way, 3 on a long one, about 7.5% of its length (at most 5.5
+      // box units), less into a dam.
+      const waves = len > unit * 34 ? 3 : 2;
+      const wind = Math.min(len * 0.075, unit * 5.5) * (track.seed < 0.5 ? -1 : 1) * (spec.land === "dam" ? 0.6 : 1);
       const at = (t: number) => {
         const u = 1 - t;
+        const off = wind * Math.sin(Math.PI * t) * Math.sin(waves * Math.PI * t);
         return {
-          x: u * u * u * ax + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * bx,
-          y: u * u * u * ay + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * by,
+          x: u * u * u * ax + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * bx + nx * off,
+          y: u * u * u * ay + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * by + ny * off,
         };
       };
       const { rows, total } = rowsAlong(Array.from({ length: 161 }, (_, i) => at(i / 160)), ROWS);
