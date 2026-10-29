@@ -3,6 +3,7 @@ import {
   aiAnswerAsk,
   aiStep,
   assignBlock,
+  assignCover,
   attackFace,
   attackMonster,
   canGuardCover,
@@ -24,6 +25,7 @@ import {
   passResponse,
   pullReel,
   settleReel,
+  spreadHits,
   spiritCover,
   canSpirit,
   standFor,
@@ -77,6 +79,7 @@ export type Act =
   | ["face", string]
   | ["hit", string, string]
   | ["block", string, boolean]
+  | ["cover", string, string]
   | ["ward"]
   | ["lash"]
   | ["wall", string]
@@ -121,6 +124,8 @@ export function runAct(state: Duel, act: Act): Duel {
       return attackMonster(state, act[1], act[2]);
     case "block":
       return assignBlock(state, act[1], act[2]);
+    case "cover":
+      return assignCover(state, act[1], act[2]);
     case "ward":
       return harpyWard(state);
     case "lash":
@@ -452,6 +457,19 @@ function answerMoves(state: Duel): Move[] {
     for (const mon of own) {
       tryMove(list, state, ["block", mon.uid, false]);
       if (mon.cardId === "chien-si-gam-nham") tryMove(list, state, ["block", mon.uid, true]);
+    }
+  }
+  // Chặn từng nhánh (chủ game 29/10): against a skill landing on several, a front-row monster it does not land on
+  // stands in front of the branch to a back-row monster or to the machine. For now the machine covers one branch at
+  // most ("máy tạm chặn tối đa 1 nhánh").
+  if (state.turn === FOE && state.hold && !state.hold.covers?.length) {
+    const hits = spreadHits(state);
+    if (hits && hits.length >= 2) {
+      const branches = hits.filter((hit) => hit === `face:${ME}` || own.some((mon) => mon.uid === hit && mon.row === "back"));
+      for (const mon of own) {
+        if (mon.row === "back" || hits.includes(mon.uid)) continue;
+        for (const branch of branches) tryMove(list, state, ["cover", mon.uid, branch]);
+      }
     }
   }
   for (const mon of own) {

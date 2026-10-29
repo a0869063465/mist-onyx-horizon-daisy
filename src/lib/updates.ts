@@ -759,6 +759,7 @@ export const PENDING_NOTES: string[] = [
   "Chặn từng nhánh: kỹ năng trúng nhiều mục tiêu thì kéo quái hàng trước thả lên đường flow của nhánh vào người chơi hoặc quái hàng sau để chặn nhánh đó. Icon chặn nằm trên nhánh, phần nhánh sau icon tắt, quái chặn lao ra đứng đó; các nhánh khác giữ nguyên.",
   "Skill và phép trúng 2–3 mục tiêu luôn dùng kiểu nhánh mới (điểm tách dưới quái hàng trước thẳng với kẻ ra đòn, nhánh còn lại vòng cung mềm); từ 4 mục tiêu trở lên mới dùng kiểu cũ. Icon chặn đứng ở khoảng 62% đường nhánh tính từ điểm tách.",
   "Chặn từng nhánh: icon chặn đứng ở 70% đường nhánh. Nhánh vào quái hàng sau đi một vòng cung xuyên qua lá hàng trước, không len qua khe; các nhánh không còn gối lên nhau.",
+  "Máy biết chặn từng nhánh: khi bị kỹ năng trúng nhiều mục tiêu, máy cho quái hàng trước không bị trúng chặn nhánh vào quái hàng sau hoặc vào máy (tạm thời tối đa 1 nhánh). Con mắt xem trước tính cả quái chặn.",
 ];
 
 function remarkOf(notes: string[]) {

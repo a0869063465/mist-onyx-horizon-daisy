@@ -8,6 +8,8 @@ const { createServer } = await import(pathToFileURL(require.resolve("vite")).hre
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const D = await server.ssrLoadModule("/src/lib/duel.ts");
 const C = await server.ssrLoadModule("/src/lib/catalog.ts");
+const B = await server.ssrLoadModule("/src/lib/brain.ts");
+const P = await server.ssrLoadModule("/src/lib/preview.ts");
 
 const DECK = { monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "khong-lo-mot-mat", "may-chem"], spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho"] };
 
@@ -291,6 +293,24 @@ test("chặn nhiều nhánh: Con nước lớn tàn phá, quái chặn chịu c�
   assert.equal(at(done, 1, 3).hp, 40, "Kazura không mất máu");
   assert.ok(at(done, 1, 1).hp < 40 && (at(done, 1, 1).wet ?? 0) > 0, "Máy chém chịu đòn và bị ướt");
   assert.ok(at(done, 1, 0).hp < 40, "nhánh kia vẫn trúng");
+});
+
+test("chặn nhiều nhánh: máy cho quái hàng trước không bị trúng chặn nhánh vào quái hàng sau sắp chết; con mắt tính cả quái chặn", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
+  let s = board({ 1: ["trai-tim-hai-long"] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", { hp: 2, maxHp: 2, def: 0, mdef: 0 }] }, { mode: "ai" });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, hand: [], reserve: [], tolls: [] })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 3), 1));
+  const { sure } = spreadWith(staged, (row) => row.includes(uid(s, 1, 3)) && row.includes(uid(s, 1, 0)) && !row.includes(uid(s, 1, 1)));
+  assert.equal(sure.hold?.priority, 1, sure.live);
+  const act = B.brainChoose(sure);
+  assert.deepEqual(act, ["cover", uid(s, 1, 1), uid(s, 1, 3)], JSON.stringify(act));
+  const covered = B.runAct(sure, act);
+  assert.equal(covered.hold?.covers?.length, 1, covered.live);
+  const [seen] = P.queueRuns(covered, "answer", 1);
+  assert.equal(at(seen, 1, 3)?.hp, 2, "xem trước: Kazura không mất máu");
+  assert.ok(at(seen, 1, 1).hp < 40, "xem trước: Máy chém chịu đòn thay");
+  // Máy chặn tối đa 1 nhánh.
+  assert.notEqual(B.brainChoose({ ...covered, hold: { ...covered.hold, priority: 1 } })?.[0], "cover");
 });
 
 test("trả đòn kỹ năng nhiều mục tiêu: lần lượt từ trái sang phải, mỗi lần một quái", () => {
