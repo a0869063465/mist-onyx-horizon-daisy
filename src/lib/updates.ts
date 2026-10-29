@@ -746,6 +746,7 @@ export const PENDING_NOTES: string[] = [
   "Dòng hồng của Vòng nguyền rủa ác ma và Gương phòng hộ đánh về kẻ ra đòn: vòng cung hẹp còn một phần ba của Lá chắn phản đòn, đuôi loe một nửa.",
   "Skill và phép nhiều mục tiêu: mỗi nhánh từ điểm tách chảy ra ngoài, võng ngược lại rồi vòng lên, ôm vào lá từ cạnh tự nhiên nhất: cạnh ngoài của lá ở đầu hàng, cạnh bên của lá hàng sau qua khe giữa hai lá, hoặc cạnh gần lệch một bên với lá ngay trước điểm tách.",  "Dải sáng chạm lá đúng trên mép lá, đường hào quanh lá chạy ngay trên mép lá. Dòng chạm vuông góc rồi tách đôi, bo tròn, chảy liền vào hai nhánh hào (lúc đầu to bằng nửa dòng rồi thon dần); dòng đi lên khe hẹp giữa hai lá thì chạy dọc mép lá rồi nhập thẳng vào hào. Vòng quanh viên máu người chơi giữ như cũ.",
   "Skill và phép nhiều mục tiêu: nhánh vào quái ở giữa hàng sau thành một đường cong mềm: vòng ra rồi đi chéo qua góc lá hàng trước, vào giữa mép lá.",
+  "Skill và phép nhiều mục tiêu: nhánh vào quái ở hai đầu hàng sau vòng rộng ra ngoài hơn, không đè lên nhánh vào quái đầu hàng trước, và chạm vào góc lá.",
   "Kiếm chỉ bên giữ quyền tấn công to hơn gần một phần ba, nổi lên hơn: viền sáng vàng nhẹ và lơ lửng cao hơn.",
 ];
 

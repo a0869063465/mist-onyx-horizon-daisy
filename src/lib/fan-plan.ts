@@ -32,6 +32,10 @@ const AHEAD = 0.6;
  *  of a card straight ahead it meets its near edge (in card widths). */
 const ENTRY_UP = 1 / 3;
 const NEAR_SIDE = 0.35;
+/** How much farther out than the front row's outer branch a back-row end card's branch rises (in % of the board's
+ *  width), so the two don't run on top of each other (chủ game 29/10: bung rộng); it meets that card at the outer
+ *  corner of its near edge. */
+const CORNER_OUT = 3;
 /** Box units an inner branch's sag keeps clear of the next one out. */
 const NEST = 1.2;
 
@@ -195,6 +199,12 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
         lane = card.x + side * card.w * NEAR_SIDE;
         entry = { x: lane, y: near };
         into = { x: 0, y: toward };
+      } else if (!plan.inFront && ((plan.col === 0 && side < 0) || (plan.col === 2 && side > 0))) {
+        // A back-row card at the end of its row: up wider round the outside, in at the outer corner of its near edge.
+        kind = "side";
+        lane = laneBeside(plan.col, side) + side * CORNER_OUT;
+        entry = { x: edgeOf(card, side), y: near };
+        into = unit(-side, toward);
       } else {
         // Up beside it and in at its side, a third of the way up from its near edge: in square from outside the row;
         // from a gap too narrow to turn in, on along its side into the moat there.
