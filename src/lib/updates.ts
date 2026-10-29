@@ -739,6 +739,7 @@ export const PENDING_NOTES: string[] = [
   "Bỏ vạch sáng vàng chạy giữa sân khi dùng skill, đã có dải sáng thay.",
   "Dải sáng nhỏ ở đầu, to dần về đích như đuôi lửa rồng. Skill nhiều mục tiêu: điểm tách nằm giữa khoảng trống giữa hai hàng, theo vị trí các mục tiêu; các nhánh bung lên và ra hai bên như vòi nước rồi uốn vòng cung vào từng mục tiêu, mục tiêu cùng cột thì nhánh bung trái phải xen kẽ nên không gối nhau.",
   "Vòng cung của Vòng nguyền rủa ác ma và Gương phòng hộ hẹp hơn Lá chắn phản đòn.",
+  "Cò quay của Thương quản long: bấm tick là quay luôn, đối thủ thấy ngay các nòng bắn trúng quái nào và có nhánh dải sáng tới đúng những quái đó để phản ứng; quay trượt hết thì icon và dải sáng mờ dần. Trước khi bấm tick (xem bằng con mắt) dải sáng chỉ tới điểm tách.",
 ];
 
 function remarkOf(notes: string[]) {

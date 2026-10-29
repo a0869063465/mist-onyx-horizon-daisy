@@ -1,4 +1,4 @@
-import { confirmStage, passResponse, pickCounter, type Duel, type FieldMon, type Side } from "@/lib/duel";
+import { confirmStage, passResponse, pickCounter, settleReel, type Duel, type FieldMon, type Side } from "@/lib/duel";
 
 /**
  * Con mắt của hàng chờ (chủ game 28/10): bàn sau khi xác nhận, tính như đối thủ không phản ứng. Một hành động còn
@@ -94,10 +94,10 @@ function aimOf(state: Duel): { side: Side; aim: string | null } | null {
  */
 function struck(before: Duel, after: Duel, side: Side): string[] | "spin" | null {
   if (after.reel && !before.reel) {
-    // Cò quay: its barrels are rolled as the wait ends and whom they hit is drawn as they land; barrels that all come
-    // up empty hit nobody.
-    const faces: ReadonlyArray<string> | null = after.reel.kind === "gun" ? after.reel.faces : null;
-    return faces && faces.every((face) => face === "blank") ? [] : "spin";
+    // Cò quay: its barrels and whom they hit are rolled with the action's seed, so they are known once it is
+    // confirmed; the reel is run to its end to see them.
+    const done = after.reel.kind === "gun" && after.reel.phase === "spin" ? settleReel(after) : null;
+    return done && !done.reel ? struck(before, done, side) : "spin";
   }
   if (after === before || (after.step === "respond" && after.pending === before.pending)) return null;
   const hits = new Set<string>();

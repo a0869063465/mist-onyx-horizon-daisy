@@ -291,6 +291,9 @@ export type Duel = {
     order?: Array<"phys" | "spell" | "tru">;
     faces: Array<"seven" | "atk" | "def" | "hp" | "six" | "phys" | "spell" | "tru" | "blank"> | null;
     phase: "wait" | "spin";
+    /** Cò quay: the seed of the roll that picks who each barrel hits, made when the action was confirmed, so the
+     *  opponent answering sees whom it hits (chủ game 29/10). */
+    seed?: number;
   } | null;
 };
 
@@ -6465,7 +6468,7 @@ function gunHits(extra: string | null): GunBarrel[] | null {
 function openGunReel(state: Duel, uid: string): Duel {
   const opened: Duel = {
     ...state,
-    reel: { id: state.seq + 1, uid, kind: "gun", order: shuffle(["phys", "spell", "tru"]), faces: null, phase: "wait" },
+    reel: { id: state.seq + 1, uid, kind: "gun", order: shuffle(["phys", "spell", "tru"]), faces: null, phase: "wait", seed: state.hold?.seed ?? freshSeed() },
   };
   return pullReel(opened);
 }
@@ -6621,7 +6624,7 @@ function pullReelCore(state: Duel): Duel {
 }
 
 export function settleReel(state: Duel): Duel {
-  const next = settleReelCore(state);
+  const next = withSeed(state.reel?.kind === "gun" ? state.reel.seed : undefined, () => settleReelCore(state));
   if (next === state) return next;
   return withResults(state, next, { blocked: false, reflect: false, turn: false });
 }
