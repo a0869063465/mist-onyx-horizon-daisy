@@ -4238,9 +4238,10 @@ function PlayPage() {
     // The front row it is aimed at, for the branches to find their way round its cards.
     const front = SLOT_BOX[screenSide(side, viewer)].slice(0, 3).map((box) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w, h: box.h }));
     const y = near.edge + (near.top ? 1 : -1) * band * FORK_SHARE;
-    // Cards one behind the other only: it splits on the way into the front one, right under it (chủ game 29/10: điểm
-    // tách nằm trên một trong hai dòng, nửa đầu dòng kia dùng chung).
-    if (cards && xs.length > 1 && Math.max(...xs) - Math.min(...xs) < front[1].w * 0.3) return { x: xs[0], y, front };
+    // Up to three cards, two of them one behind the other: it splits on the way into the front one of those, right
+    // under it (chủ game 29/10: điểm tách nằm trên một trong các dòng, nửa đầu dòng kia dùng chung).
+    const stacked = cards && xs.length > 1 && xs.length <= 3 ? xs.find((x, i) => xs.some((other, j) => j !== i && Math.abs(other - x) < front[1].w * 0.3)) : undefined;
+    if (stacked !== undefined) return { x: stacked, y, front };
     return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y, front };
   };
   /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */

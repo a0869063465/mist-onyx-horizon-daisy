@@ -301,21 +301,27 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
 const PAIR_OUT = 3;
 
 /**
- * Two cards one behind the other, the fork right under the front one (chủ game 29/10): the flow goes on into the front
- * one's near edge, a little off its middle; the one behind shares it as far as the fork, then sweeps out to the side
- * away from that, up past the front card and in across the corner of its own near edge.
+ * Up to three cards, two of them one behind the other, the fork right under the front one of those two (chủ game
+ * 29/10: điểm tách nằm trên một trong các dòng, nửa đầu dòng kia dùng chung, nửa sau tách ra): the flow goes on into
+ * the front one's near edge, a little off its middle; the one behind shares it as far as the fork, then sweeps out to
+ * the side with more room, up past the front card and in across the corner of its own near edge; any other card
+ * splits off there too, in one soft bow out to it and across the corner of its near edge on the fork's side.
  */
 function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number): Map<string, FanRoute> | null {
-  if (aims.length !== 2 || !aims[0].card || !aims[1].card) return null;
-  const [a, b] = aims.map((aim) => aim.card!);
-  if (Math.abs(a.x - b.x) > a.w * 0.3) return null;
+  if (aims.length < 2 || aims.length > 3 || aims.some((aim) => !aim.card)) return null;
   const nearOf = (card: FanCard) => (card.y - fork.y) * toward;
-  const [first, second] = nearOf(a) < nearOf(b) ? [aims[0], aims[1]] : [aims[1], aims[0]];
+  let pair: [FanAim, FanAim] | null = null;
+  for (const one of aims)
+    for (const other of aims)
+      if (one !== other && Math.abs(one.card!.x - other.card!.x) < one.card!.w * 0.3 && nearOf(one.card!) < nearOf(other.card!)) pair = [one, other];
+  if (!pair) return null;
+  const [first, second] = pair;
   const ahead = first.card!;
   const behind = second.card!;
-  if (Math.abs(ahead.y - front[0].y) > ahead.h * 0.5) return null;
-  // Out the side with more room on the board.
-  const side = ahead.x < 50 ? -1 : 1;
+  if (Math.abs(ahead.y - front[0].y) > ahead.h * 0.5 || Math.abs(ahead.x - fork.x) > ahead.w * 0.3) return null;
+  const rest = aims.filter((aim) => aim !== first && aim !== second);
+  // Out the side with more room on the board, away from any other card.
+  const side = rest.length ? -Math.sign(rest[0].card!.x - ahead.x) || -1 : ahead.x < 50 ? -1 : 1;
   const f = { x: fork.x * 0.9, y: fork.y * 1.6 };
   const routes = new Map<string, FanRoute>();
 
@@ -341,6 +347,21 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
     into,
     path: [f, { x: f.x + side * bow * 1.6, y: f.y + toward * rise * 0.2 }, { x: e2.x + side * bow * 1.5, y: e2.y - toward * rise * 0.45 }, e2],
   });
+
+  for (const aim of rest) {
+    const card = aim.card!;
+    const out = Math.sign(card.x - fork.x) || -side;
+    const at = { x: card.x - (out * card.w) / 2, y: nearEdge(card) };
+    const way = unit(out, toward);
+    const e = { x: at.x * 0.9, y: at.y * 1.6 };
+    const dx = Math.abs(e.x - f.x);
+    const len = Math.hypot(dx, e.y - f.y);
+    routes.set(aim.key, {
+      entry: at,
+      into: way,
+      path: [f, { x: f.x + out * dx * 0.7, y: f.y }, { x: e.x - way.x * len * 0.4, y: e.y - way.y * len * 0.4 }, e],
+    });
+  }
   return routes;
 }
 
