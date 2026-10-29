@@ -309,30 +309,32 @@ const PAIR_OUT = 3;
  * of that one; any other card bows out to it and in across the corner of its near edge on the fork's side.
  */
 function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number): Map<string, FanRoute> | null {
-  if (aims.length < 2 || aims.length > 3 || aims.some((aim) => !aim.card)) return null;
+  // Two or three targets always take this way (chủ game 29/10: chỉ từ 4 quái trở lên mới dùng kiểu cũ).
+  if (aims.length < 2 || aims.length > 3) return null;
   const inRow = (card: FanCard) => Math.abs(card.y - front[0].y) < card.h * 0.5;
   const sameColumn = (a: FanCard, b: FanCard) => Math.abs(a.x - b.x) < a.w * 0.3;
-  if (!aims.some((one) => aims.some((other) => one !== other && sameColumn(one.card!, other.card!)))) return null;
-  const first = aims.find((aim) => inRow(aim.card!) && Math.abs(aim.card!.x - fork.x) < aim.card!.w * 0.3);
-  if (!first) return null;
-  const ahead = first.card!;
-  const second = aims.find((aim) => aim !== first && !inRow(aim.card!) && sameColumn(aim.card!, ahead));
+  const first = aims.find((aim) => aim.card && inRow(aim.card) && Math.abs(aim.card.x - fork.x) < aim.card.w * 0.3) ?? null;
+  const ahead = first?.card ?? null;
+  const second = ahead ? aims.find((aim) => aim !== first && aim.card && !inRow(aim.card) && sameColumn(aim.card, ahead)) ?? null : null;
   const rest = aims.filter((aim) => aim !== first && aim !== second);
-  // Out the side with more room on the board, away from any other card.
-  const side = rest.length ? -Math.sign(rest[0].card!.x - ahead.x) || -1 : ahead.x < 50 ? -1 : 1;
+  const placeOf = (aim: FanAim) => aim.card ?? aim.ring ?? aim.point ?? fork;
+  // Out the side with more room on the board, away from any other target.
+  const side = ahead ? (rest.length ? -Math.sign(placeOf(rest[0]).x - ahead.x) || -1 : ahead.x < 50 ? -1 : 1) : -1;
   const f = { x: fork.x * 0.9, y: fork.y * 1.6 };
   const routes = new Map<string, FanRoute>();
   const nearEdge = (card: FanCard) => card.y - (toward * card.h) / 2;
   const onBoard = (pt: BoxPt): BoxPt => ({ x: Math.min(89, Math.max(1, pt.x)), y: pt.y });
 
-  const inAt = { x: ahead.x - side * ahead.w * 0.2, y: nearEdge(ahead) };
-  const e1 = { x: inAt.x * 0.9, y: inAt.y * 1.6 };
-  const reach = Math.abs(e1.y - f.y);
-  routes.set(first.key, {
-    entry: inAt,
-    into: { x: 0, y: toward },
-    path: [f, { x: f.x + side * reach * 0.35, y: f.y + toward * reach * 0.4 }, { x: e1.x, y: e1.y - toward * reach * 0.45 }, e1],
-  });
+  if (first && ahead) {
+    const inAt = { x: ahead.x - side * ahead.w * 0.2, y: nearEdge(ahead) };
+    const e1 = { x: inAt.x * 0.9, y: inAt.y * 1.6 };
+    const reach = Math.abs(e1.y - f.y);
+    routes.set(first.key, {
+      entry: inAt,
+      into: { x: 0, y: toward },
+      path: [f, { x: f.x + side * reach * 0.35, y: f.y + toward * reach * 0.4 }, { x: e1.x, y: e1.y - toward * reach * 0.45 }, e1],
+    });
+  }
 
   // One soft bow, no straight run (chủ game 29/10): out of the fork sideways, round outside the front card `past` and
   // back in across the corner of `behind` on that side.
@@ -348,18 +350,31 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
       path: [f, onBoard({ x: f.x + out * bow * 1.6, y: f.y + toward * rise * 0.2 }), onBoard({ x: e2.x + out * bow * 1.5, y: e2.y - toward * rise * 0.45 }), e2],
     });
   };
-  if (second) bowRound(second.key, second.card!, ahead, side);
+  if (second && ahead) bowRound(second.key, second.card!, ahead, side);
 
   for (const aim of rest) {
-    const card = aim.card!;
-    const out = Math.sign(card.x - fork.x) || -side;
-    const before = rest.find((other) => other !== aim && inRow(other.card!) && !inRow(card) && sameColumn(other.card!, card));
-    if (before) {
+    const at0 = placeOf(aim);
+    const out = Math.sign(at0.x - fork.x) || -side;
+    const card = aim.card;
+    const before = card ? rest.find((other) => other !== aim && other.card && inRow(other.card) && !inRow(card) && sameColumn(other.card, card)) : undefined;
+    if (card && before) {
       bowRound(aim.key, card, before.card!, out);
       continue;
     }
-    const at = { x: card.x - (out * card.w) / 2, y: nearEdge(card) };
-    const way = unit(out, toward);
+    let at: { x: number; y: number };
+    let way: BoxPt;
+    if (card) {
+      at = { x: card.x - (out * card.w) / 2, y: nearEdge(card) };
+      way = unit(out, toward);
+    } else if (aim.ring) {
+      // A player's health: in to the ring round it, coming from the fork's side.
+      const dir = unit((aim.ring.x - fork.x) * 0.9, (aim.ring.y - fork.y) * 1.6);
+      at = { x: aim.ring.x - dir.x * aim.ring.r, y: aim.ring.y - (dir.y * aim.ring.r * 0.9) / 1.6 };
+      way = dir;
+    } else {
+      at = at0;
+      way = unit((at0.x - fork.x) * 0.9, (at0.y - fork.y) * 1.6);
+    }
     const e = { x: at.x * 0.9, y: at.y * 1.6 };
     const dx = Math.abs(e.x - f.x);
     const len = Math.hypot(dx, e.y - f.y);

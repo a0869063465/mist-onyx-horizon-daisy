@@ -707,6 +707,8 @@ function blockRoom(): number {
 const LUNGE_BLOCK = 0.2;
 /** How near the way of a branch (box units) a monster must be dropped to stand in front of it. */
 const LANE_REACH = 7;
+/** How far along a branch, from its fork to what it lands on, the icon of a monster covering it stands. */
+const COVER_ALONG = 0.62;
 /** How far an attacker lunges toward a monster that blocks it. */
 const LUNGE_BLOCKED = 0.3;
 function blockShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
@@ -4251,7 +4253,6 @@ function PlayPage() {
     const band = Math.abs(far.edge - near.edge);
     const xs: number[] = [];
     const spots: Array<{ x: number; y: number }> = [];
-    let cards = true;
     for (const link of orb.to) {
       if (!link.fork) continue;
       // A branch a monster blocks still counts as the one it was on its way to.
@@ -4262,9 +4263,8 @@ function PlayPage() {
           xs.push(card.x);
           spots.push(card);
         }
-      } else {
-        cards = false;
-        if ("face" in end) xs.push((end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
+      } else if ("face" in end) {
+        xs.push((end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
       }
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
@@ -4274,7 +4274,8 @@ function PlayPage() {
     // Up to three cards, two of them one behind the other: it splits on the way into one of the front-row cards, right
     // under it, the one most in line with where it comes from (chủ game 29/10: điểm tách nằm trên một trong các dòng,
     // nửa đầu dòng kia dùng chung; as the standard of two in a column).
-    const stacked = cards && xs.length > 1 && xs.length <= 3 && xs.some((x, i) => xs.some((other, j) => j !== i && Math.abs(other - x) < front[1].w * 0.3));
+    // Two or three targets always (chủ game 29/10: chỉ từ 4 quái trở lên mới dùng kiểu cũ).
+    const stacked = xs.length > 1 && xs.length <= 3;
     const ahead = spots.filter((spot) => Math.abs(spot.y - front[0].y) < front[0].h * 0.5).sort((a, b) => Math.abs(a.x - from.x) - Math.abs(b.x - from.x))[0];
     if (stacked && ahead) return { x: ahead.x, y, front };
     return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y, front };
@@ -4360,15 +4361,17 @@ function PlayPage() {
       const fork = forkFor(live, here);
       const route = branchRoutes(live, fork, flowPoint).get(keyOf(live, link));
       if (!route) return null;
-      // It flies out of its row toward the middle as a plain blocker does, and to the branch's way.
-      const lift = Math.min(LUNGE_BLOCK * card.h, Math.max(0, blockRoom() / 2));
+      // It flies out to the branch's way, 62% of the way from the fork to what it covers (chủ game 29/10: 60–65%).
       const rest = card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6;
-      const line = rest + (card.top ? lift : -lift);
-      const at = coverPoint(route, line, card.top, { x: card.x, y: line });
+      const at = coverPoint(route, COVER_ALONG);
       const x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, at.x));
       const seat = seatOfUid(orb.source);
       const box = seat ? SLOT_BOX[screenSide(seat.side, viewer)][seat.index] : null;
-      if (box) coverShifts.set(orb.source, { x: ((x - card.x) * 100) / box.w, y: ((at.y - rest) * 100) / box.h });
+      // The card lifts toward the middle as a plain blocker does, never back into its own row, and over to the icon.
+      const lift = Math.min(LUNGE_BLOCK * card.h, Math.max(0, blockRoom() / 2));
+      const toward = card.top ? 1 : -1;
+      const dy = toward * Math.min(lift, Math.max(0, (at.y - rest) * toward));
+      if (box) coverShifts.set(orb.source, { x: ((x - card.x) * 100) / box.w, y: (dy * 100) / box.h });
       return { x, y: at.y, face: card.top ? 1 : -1, delay: 0, appear: 0 };
     };
     const rows = 16 / 9 / boardCut().v;

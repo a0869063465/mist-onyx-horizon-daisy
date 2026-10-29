@@ -118,32 +118,24 @@ function firstAlong(path: BoxPt[], meets: (pt: BoxPt) => boolean): { piece: numb
 }
 
 /**
- * Where a monster covering a branch stands its icon (chặn từng nhánh, chủ game 29/10): on the branch in front of the
- * front row (before it crosses `line`, the height of the row's icons in % of the board; `top` the row at the top), at
- * least an icon's width past the fork, at the point nearest where the blocker's icon stands (`near`), so it flies out
- * as little as it can. In % of the board.
+ * Where a monster covering a branch stands its icon (chặn từng nhánh, chủ game 29/10): on the branch, `share` of its
+ * length from the fork (0) to where it reaches what it covers (1). In % of the board.
  */
-export function coverPoint(route: FanRoute, line: number, top: boolean, near: BoardPt): BoardPt {
-  const start = route.path[0];
-  // A short board may leave the fork past that line already: then up to a little past the fork.
-  const ly = top ? Math.min(line * 1.6, start.y - ICON * 0.6) : Math.max(line * 1.6, start.y + ICON * 0.6);
-  const want = toBox(near.x, near.y);
-  let best: BoxPt | null = null;
-  let gap = Infinity;
-  let last: BoxPt = start;
+export function coverPoint(route: FanRoute, share: number): BoardPt {
+  const pts: BoxPt[] = [route.path[0]];
   firstAlong(route.path, (pt) => {
-    last = pt;
-    if (top ? pt.y <= ly : pt.y >= ly) return true;
-    if (Math.hypot(pt.x - start.x, pt.y - start.y) < ICON * 0.9) return false;
-    const d = Math.hypot(pt.x - want.x, pt.y - want.y);
-    if (d < gap) {
-      gap = d;
-      best = pt;
-    }
+    pts.push(pt);
     return false;
   });
-  const pt: BoxPt = best ?? last;
-  return { x: pt.x / 0.9, y: pt.y / 1.6 };
+  let total = 0;
+  for (let i = 1; i < pts.length; i += 1) total += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  let run = 0;
+  for (let i = 1; i < pts.length; i += 1) {
+    run += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+    if (run >= total * share) return { x: pts[i].x / 0.9, y: pts[i].y / 1.6 };
+  }
+  const last = pts[pts.length - 1];
+  return { x: last.x / 0.9, y: last.y / 1.6 };
 }
 
 /** A branch's way cut where it reaches a blocker's icon (box units round `at`, in % of the board): it ends there as a
