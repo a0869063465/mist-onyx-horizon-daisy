@@ -6276,11 +6276,11 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
             ? pending.attacker
             : null
         : null;
-    if (!skillAt) return note(next, "Phục kích chỉ chặn kỹ năng gây sát thương nhắm vào bạn.");
+    if (!skillAt) return note(state, "Phục kích chỉ chặn kỹ năng gây sát thương nhắm vào bạn.");
     const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
     const attacker = next.players[foe].field.find((mon) => mon?.uid === skillAt) ?? null;
-    if (!fighter || !attacker) return note(next, "Chọn quái để phục kích.");
+    if (!fighter || !attacker) return note(state, "Chọn quái để phục kích.");
     // It waits in the chain (chủ game 30/10): the other side may answer; once it lands the skill is stopped.
     if (!next.hold) return ambushStrike(next, fighter.uid, attacker.uid);
     return keep(note({ ...next, hold: { ...next.hold, ambush: { ally: fighter.uid, foe: attacker.uid } } }, `Phục kích: ${cardOf(fighter).name} chờ đánh trả ${cardOf(attacker).name}.`, "spell"));

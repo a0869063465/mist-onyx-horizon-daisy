@@ -620,6 +620,7 @@ const PAIRS: Array<[string, string]> = [
   ["Hàng sau", "Back row"],
   ["Hãy huỷ hàng chờ trước.", "Cancel the queue first."],
   ["Huỷ hàng chờ", "Cancel the queue"],
+  ["Chọn mục tiêu", "Choose a target"],
   ["Xem trước", "Preview"],
 ];
 

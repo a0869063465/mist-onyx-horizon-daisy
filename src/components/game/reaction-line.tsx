@@ -538,7 +538,7 @@ function CrackFace() {
 }
 
 /** The face of an icon: a medal, a skill's gem in its kind's rim, or a picture in a rim of its smoke's colour. */
-function IconFace({ look }: { look: IconLook }) {
+export function IconFace({ look }: { look: IconLook }) {
   if (look.type === "medal") return <Medal tone={look.tone} icon={look.icon} />;
   if (look.type === "gem") {
     return (
