@@ -196,6 +196,11 @@ export type Hold = {
   stage?: boolean;
   /** Hành động ngẫu nhiên quay đúng lúc xác nhận: số mầm của lần quay, nên hai máy và lúc giải quyết ra cùng kết quả. */
   seed?: number;
+  /**
+   * Gương phòng hộ (tường thành, chủ game 29/10): the defender's mirror stands up against this attack. "up": it rose,
+   * an action of its owner, so the attacker answers; "set": the attacker let it through, its owner's OK lets it land.
+   */
+  mirror?: "up" | "set";
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3486,7 +3491,6 @@ function afterBlow(before: Duel, resolved: Duel, victimUid: string | null, attac
   const atkSide = ownerSide(before, attackerUid);
   const vicSide = ownerSide(resolved, victimUid);
   if (atkSide === null || vicSide === null || atkSide === vicSide) return resolved;
-  if (before.players[vicSide].mirror > 0) return resolved;
   const attacker = resolved.players[atkSide].field.find((mon) => mon?.uid === attackerUid) ?? null;
   const victim = resolved.players[vicSide].field.find((mon) => mon?.uid === victimUid) ?? null;
   if (!frontCounter(victim, attacker)) return resolved;
@@ -3517,8 +3521,6 @@ function afterSpread(before: Duel, resolved: Duel, attackerUid: string, struck: 
   if (before.countering != null || !settled(resolved) || struck.length === 0) return resolved;
   const atkSide = ownerSide(before, attackerUid);
   if (atkSide === null) return resolved;
-  const vicSide = (1 - atkSide) as Side;
-  if (before.players[vicSide].mirror > 0) return resolved;
   return nextCounter({ ...resolved, counterQueue: { from: attackerUid, uids: struck } });
 }
 
@@ -3567,14 +3569,45 @@ export function pickCounter(state: Duel, mode: "phys"): Duel {
 
 function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): Duel {
   const noted = note(state, line);
+  // A standing Gương phòng hộ rises by itself against an attack on its owner: that is its owner's action, so the
+  // attacker answers first (chủ game 29/10).
+  const mirror = mirrorStands(state, pending);
   const opened: Duel = {
     ...noted,
     step: "respond",
     pending,
-    hold: { priority: (1 - state.turn) as Side, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
+    hold: { priority: mirror ? state.turn : ((1 - state.turn) as Side), passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed(), ...(mirror ? { mirror: "up" as const } : {}) },
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
+}
+
+/** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
+function mirrorStands(state: Duel, pending: Exclude<Pending, null>): boolean {
+  if (pending.kind !== "melee" && !(pending.kind === "face" && !pending.skill)) return false;
+  return state.players[(1 - state.turn) as Side].mirror > 0;
+}
+
+/** Gương phòng hộ lands: the attack is stopped and the attacker loses half of every stat. */
+function mirrorBlock(state: Duel, attackerUid: string): Duel {
+  const side = state.turn;
+  const foe = (1 - side) as Side;
+  const you = state.players[side];
+  const attacker = you.field.find((mon) => mon?.uid === attackerUid) ?? null;
+  const open = { ...state, step: "main" as const, pending: null, hold: null };
+  if (!attacker) return releaseLegend(open);
+  const plain = dropClash(openShade(attacker));
+  const robbed = {
+    ...plain,
+    atk: Math.floor(plain.atk / 2),
+    def: Math.floor(plain.def / 2),
+    mdef: Math.floor(plain.mdef / 2),
+    hp: Math.max(1, Math.floor(plain.hp / 2)),
+    dim: true,
+    glass: true,
+  };
+  const next = patch(open, side, { ...you, field: you.field.map((mon) => (mon?.uid === attacker.uid ? robbed : mon)) });
+  return tideSwing(releaseLegend(note(next, "Gương phòng hộ chặn đòn và cướp một nửa chỉ số.", "spell")), foe, attacker.uid);
 }
 
 function keep(state: Duel): Duel {
@@ -3636,6 +3669,11 @@ export function confirmStage(state: Duel, seed?: number): Duel {
 
 export function passResponse(state: Duel): Duel {
   if (state.hold?.stage) return state;
+  // The attacker lets the risen mirror through: it is set, and its owner's OK lets it land (chủ game 29/10).
+  if (state.step === "respond" && state.hold?.mirror === "up" && state.hold.priority === state.turn) {
+    const set = { ...state, hold: { ...state.hold, mirror: "set" as const, priority: (1 - state.turn) as Side, passed: [false, false] as [boolean, boolean] } };
+    return note(set, "Gương phòng hộ phát động.", "spell");
+  }
   const next = withSeed(state.hold?.seed, () => passResponseCore(state));
   if (next === state || !state.hold) return next;
   const resolved = next.pending !== state.pending || next.step !== state.step || next.winner !== state.winner || next.hold === null;
@@ -3671,6 +3709,7 @@ function passResponseCore(state: Duel): Duel {
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
+  if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
     const ownerSide = pending.owner;
     const open = { ...state, step: "main" as const, pending: null, hold: null, turn: ownerSide };
@@ -4097,7 +4136,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     ...noted,
     step: "respond",
     pending: state.pending,
-    hold: { priority: state.turn, passed: [false, false], blocker: blockerUid, blockerSkill: skill, armed: null, seed: state.hold.seed },
+    hold: { priority: state.turn, passed: [false, false], blocker: blockerUid, blockerSkill: skill, armed: null, seed: state.hold.seed, ...(state.hold.mirror ? { mirror: state.hold.mirror } : {}) },
   };
   const ids = [blockerUid];
   if (pending?.kind === "face") ids.push(pending.attacker);
@@ -4950,28 +4989,6 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   const attacker = you.field.find((mon) => mon?.uid === attackerUid) ?? null;
   const defender = them.field.find((mon) => mon?.uid === defenderUid) ?? null;
   if (!attacker || !defender) return releaseLegend({ ...state, step: "main", pending: null, hold: null });
-  if (them.mirror > 0) {
-    const plain = dropClash(openShade(attacker));
-    const robbed = {
-      ...plain,
-      atk: Math.floor(plain.atk / 2),
-      def: Math.floor(plain.def / 2),
-      mdef: Math.floor(plain.mdef / 2),
-      hp: Math.max(1, Math.floor(plain.hp / 2)),
-      dim: true,
-      glass: true,
-    };
-    return tideSwing(releaseLegend({
-      ...note(
-        patch(state, side, { ...you, field: you.field.map((mon) => (mon?.uid === attacker.uid ? robbed : mon)) }),
-        "Gương phòng hộ chặn giáp lá cà và cướp một nửa chỉ số.",
-        "spell",
-      ),
-      step: "main",
-      pending: null,
-      hold: null,
-    }), foe, attacker.uid);
-  }
   const meleeBlow = !attacker.horn && !attacker.gaze && !attacker.bolt;
   const shot = openGuardShot(attacker, defender, meleeBlow, you.field, them.roster);
   const defPool = phantomPool(defender, them.field);
@@ -5387,23 +5404,6 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     const blocker = them.field.find((mon) => mon?.uid === blockerUid) ?? null;
     if (!canIntercept(blocker, true)) {
       return { ...resolveFace(state, null, false), hold: null };
-    }
-    if (them.mirror > 0) {
-      const plain = dropClash(openShade(attacker));
-      const robbed = {
-        ...plain,
-        atk: Math.floor(plain.atk / 2),
-        def: Math.floor(plain.def / 2),
-        mdef: Math.floor(plain.mdef / 2),
-        hp: Math.max(1, Math.floor(plain.hp / 2)),
-        dim: true,
-        glass: true,
-      };
-      const next = patch(state, side, {
-        ...you,
-        field: you.field.map((mon) => (mon?.uid === attacker.uid ? robbed : mon)),
-      });
-      return tideSwing(releaseLegend({ ...note(next, "Gương phòng hộ chặn đòn và cướp một nửa chỉ số.", "spell"), step: "main", pending: null }), foe, attacker.uid);
     }
     if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, blocker);
     if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {
@@ -6135,37 +6135,13 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return note(marked, `Thanh gươm ánh sáng cấm các quái đang có mặt tấn công ${turns} lượt và hiện mọi quái ẩn.`, "spell");
   }
   if (card.id === "guong-phong-ho") {
+    // Tường thành (chủ game 29/10): it lies by the environment card for 3 turns. Played against an attack, it rises at
+    // once, as its owner's action: the attacker answers, then the owner's OK lets it land (blocks, takes half).
     const armed = patch(next, side, { ...next.players[side], mirror: 3 });
     const pending = state.pending;
-    const swing = state.step === "respond" && pending && (pending.kind === "melee" || pending.kind === "face");
-    const attackerUid = swing && "attacker" in pending ? pending.attacker : "";
-    const attackerSide = state.turn;
-    const you = armed.players[attackerSide];
-    const attacker = attackerUid && attackerSide !== side ? you.field.find((mon) => mon?.uid === attackerUid) ?? null : null;
-    if (!attacker) return note(armed, "Gương phòng hộ dựng lên trong 3 lượt.", "spell");
-    const plain = dropClash(openShade(attacker));
-    const robbed = {
-      ...plain,
-      atk: Math.floor(plain.atk / 2),
-      def: Math.floor(plain.def / 2),
-      mdef: Math.floor(plain.mdef / 2),
-      hp: Math.max(1, Math.floor(plain.hp / 2)),
-      dim: true,
-      glass: true,
-    };
-    const robbedState = patch(armed, attackerSide, {
-      ...you,
-      field: you.field.map((mon) => (mon?.uid === attacker.uid ? robbed : mon)),
-    });
-    const line = pending?.kind === "melee"
-      ? "Gương phòng hộ chặn giáp lá cà và cướp một nửa chỉ số."
-      : "Gương phòng hộ chặn đòn và cướp một nửa chỉ số.";
-    return tideSwing(releaseLegend({
-      ...note(robbedState, line, "spell"),
-      step: "main",
-      pending: null,
-      hold: null,
-    }), side, attacker.uid);
+    const swing = state.step === "respond" && pending && state.turn !== side && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill));
+    if (!swing || !armed.hold) return note(armed, "Gương phòng hộ dựng lên trong 3 lượt.", "spell");
+    return keep(note({ ...armed, hold: { ...armed.hold, mirror: "up" } }, "Gương phòng hộ dựng lên chặn đòn.", "spell"));
   }
   if (card.id === "soi-xich-dia-nguc") {
     if (!foeMon) return note(next, "Không có quái để xiềng.");
@@ -6262,11 +6238,21 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return note(shifted, `Phản nguyền chuyển trạng thái xấu từ ${cardOf(ally).name} sang ${cardOf(foeMon).name}.`, "spell");
   }
   if (card.id === "phuc-kich") {
+    // Chủ game 29/10: it stops a damaging skill aimed at its side (not a plain attack); the ally picked strikes the
+    // one who used it.
     const pending = state.pending;
-    if (state.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee")) return note(next, "Phục kích chỉ dùng khi bị tấn công.");
+    const skillAt =
+      state.step === "respond" && pending
+        ? pending.kind === "beam" || pending.kind === "gnaw-skill"
+          ? !("back" in pending && pending.back) && harmSkill(ownerCard(state, pending.caster), pending.index) ? pending.caster : null
+          : (pending.kind === "face" && pending.skill) || (pending.kind === "melee" && Boolean(state.players[foe].field.find((mon) => mon?.uid === pending.attacker)?.horn))
+            ? pending.attacker
+            : null
+        : null;
+    if (!skillAt) return note(next, "Phục kích chỉ chặn kỹ năng gây sát thương nhắm vào bạn.");
     const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
-    const attacker = next.players[foe].field.find((mon) => mon?.uid === pending.attacker) ?? null;
+    const attacker = next.players[foe].field.find((mon) => mon?.uid === skillAt) ?? null;
     if (!fighter || !attacker) return note(next, "Chọn quái để phục kích.");
     const bonus = spellFigure("phuc-kich", "atk", 2);
     const raw = fighter.atk + bonus;
@@ -6284,7 +6270,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return releaseLegend({
       ...note(
         hit,
-        actNotice("Phục kích", ["chặn đòn tấn công", `đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]),
+        actNotice("Phục kích", ["chặn kỹ năng", `đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]),
         "hit",
       ),
       step: "main",

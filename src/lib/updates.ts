@@ -760,6 +760,8 @@ export const PENDING_NOTES: string[] = [
   "Skill và phép trúng 2–3 mục tiêu luôn dùng kiểu nhánh mới (điểm tách dưới quái hàng trước thẳng với kẻ ra đòn, nhánh còn lại vòng cung mềm); từ 4 mục tiêu trở lên mới dùng kiểu cũ. Icon chặn đứng ở khoảng 62% đường nhánh tính từ điểm tách.",
   "Chặn từng nhánh: icon chặn đứng ở 70% đường nhánh. Nhánh vào quái hàng sau đi một vòng cung xuyên qua lá hàng trước, không len qua khe; các nhánh không còn gối lên nhau.",
   "Máy biết chặn từng nhánh: khi bị kỹ năng trúng nhiều mục tiêu, máy cho quái hàng trước không bị trúng chặn nhánh vào quái hàng sau hoặc vào máy (tạm thời tối đa 1 nhánh). Con mắt xem trước tính cả quái chặn.",
+  "Gương phòng hộ thành lá tường thành: dùng xong nằm ngang cạnh lá môi trường, số giữa lá là số lượt còn lại (3). Bị đánh thường (vào quái hoặc người chơi) thì Gương tự dựng lên chặn, dòng hồng về kẻ đánh; bên đánh bấm OK rồi chủ gương bấm OK thì Gương mới chặn và cướp một nửa chỉ số. Chặn không tốn lượt.",
+  "Phục kích giờ chặn kỹ năng gây sát thương nhắm vào bạn (không còn chặn đòn đánh thường): dòng hồng tới quái đồng minh bạn chọn, quái đó hiện icon tấn công và dòng đỏ đánh trả kẻ dùng kỹ năng (+2 công, không bị phản đòn).",
 ];
 
 function remarkOf(notes: string[]) {

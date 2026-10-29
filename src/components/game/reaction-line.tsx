@@ -221,7 +221,7 @@ export function ReactionLine({
   /** Dòng chảy đợt 2: where a spread aimed at a side splits, just in front of that side's row. */
   forkOf: (orb: ChainOrb, from: BoardPt) => ForkSpot | null;
   /** Where a spell that stops a flow flies in from: its owner's hand. */
-  throwFrom: (side: Side) => BoardPt;
+  throwFrom: (side: Side, wall?: string | null) => BoardPt;
 }) {
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
@@ -392,7 +392,7 @@ export function ReactionLine({
         end,
         late,
         // An attack's blow is drawn on the board; only a blow into a blocker's icon surges into it (giao chiến).
-        strike: orb.kind === "attack" && !("orb" in link.end),
+        strike: orb.kind === "attack" && !orb.sent && !("orb" in link.end),
         delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
         land: link.dam ? "dam" : "flare",
         moat: moatOf(land),
@@ -439,7 +439,7 @@ export function ReactionLine({
         const look = lookOf(orb);
         const react = orb.kind === "attack" ? "attack" : orb.kind === "skill" ? "skill" : orb.kind === "block" ? "block" : undefined;
         // A spell that stops a flow flies in from its owner's hand to stand in that flow's way (chủ game 29/10).
-        const hand = orb.stops ? throwFrom(orb.side) : null;
+        const hand = orb.stops ? throwFrom(orb.side, orb.wall ? orb.spell : null) : null;
         return (
           <button
             key={orb.id}

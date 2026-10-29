@@ -189,6 +189,56 @@ test("Vòng xoáy bảo hộ chặn đòn và kết thúc vòng", () => {
   assert.equal(cast.players[1].hp, s.players[1].hp);
 });
 
+test("Gương phòng hộ nằm ngang tự dựng khi bị đánh: đối thủ OK rồi chủ gương OK mới chặn, cướp nửa chỉ số, không tốn lượt", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 2, mdef: 2, hp: 10, maxHp: 10 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, mirror: 2 } : p)) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(swung.hold?.mirror, "up", swung.live);
+  assert.equal(swung.hold?.priority, 0, "gương dựng là hành động của chủ gương, quyền sang bên đánh");
+  const set = D.passResponse(swung);
+  assert.equal(set.step, "respond", "chưa nổ");
+  assert.equal(set.hold?.mirror, "set");
+  assert.equal(set.hold?.priority, 1);
+  const done = D.passResponse(set);
+  assert.equal(done.step, "main");
+  assert.equal(at(done, 1, 0).hp, 20, "quái bị đánh không mất máu");
+  assert.equal(at(done, 0, 0).atk, 2, "kẻ đánh còn nửa công");
+  assert.equal(done.players[1].mirror, 2, "chặn không tốn lượt");
+  // Đánh vào người chơi cũng bị chặn; kỹ năng thì không.
+  const face = D.passResponse(D.passResponse(D.attackFace(s, uid(s, 0, 0))));
+  assert.equal(face.players[1].hp, s.players[1].hp);
+});
+
+test("Gương phòng hộ dùng từ tay lúc bị đánh: dựng lên, đặt 3 lượt, chuỗi qua 2 lần OK", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 2, mdef: 2, hp: 10, maxHp: 10 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 1, "guong-phong-ho", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(swung.hold?.priority, 1);
+  const cast = D.castSpell(swung, swung.players[1].hand.indexOf("guong-phong-ho"));
+  assert.equal(cast.players[1].mirror, 3, cast.live);
+  assert.equal(cast.hold?.mirror, "up");
+  assert.equal(cast.hold?.priority, 0);
+  const done = D.passResponse(D.passResponse(cast));
+  assert.equal(at(done, 1, 0).hp, 20);
+  assert.equal(at(done, 0, 0).atk, 2);
+});
+
+test("Phục kích chặn kỹ năng gây sát thương, quái chọn đánh trả kẻ dùng; không dùng được với đòn đánh thường", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }], 1: ["khong-lo-mot-mat", { atk: 3 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, def: 0, mdef: 0, atk: 3 }] });
+  s = D.testGrant(s, 1, "phuc-kich", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  assert.equal(breath.step, "respond", breath.live);
+  const cast = D.castSpell(breath, breath.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
+  assert.equal(cast.pending ?? null, null, cast.live);
+  assert.equal(at(cast, 1, 0).hp, 20, "kỹ năng bị chặn");
+  assert.ok(at(cast, 0, 0).hp < 20, "kẻ dùng kỹ năng bị đánh trả");
+  const swung = D.attackMonster(s, uid(s, 0, 1), uid(s, 1, 0));
+  const refused = D.castSpell(swung, swung.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
+  assert.equal(refused.pending?.kind, "melee", "đòn đánh thường không bị Phục kích chặn");
+});
+
 test("Vs Máy: máy được Trả đòn thì tự trả", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 20 }] }, { mode: "ai" });
   const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));

@@ -707,6 +707,8 @@ function blockRoom(): number {
 const LUNGE_BLOCK = 0.2;
 /** How near the way of a branch (box units) a monster must be dropped to stand in front of it. */
 const LANE_REACH = 7;
+/** The gap between a wall card and the card beside it, in % of the board's width. */
+const WALL_GAP = 0.8;
 /** How far along a branch, from its fork to what it lands on, the icon of a monster covering it stands. */
 const COVER_ALONG = 0.7;
 /** How far an attacker lunges toward a monster that blocks it. */
@@ -1018,7 +1020,14 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
     }
     return false;
   }
-  if (id === "phuc-kich") return attacked || pending?.kind === "face";
+  // Chủ game 29/10: Phục kích stops a damaging skill aimed at you, not a plain attack.
+  if (id === "phuc-kich") {
+    if (pending?.kind === "beam" || pending?.kind === "gnaw-skill") {
+      const caster = fieldMon(duel, pending.caster);
+      return !("back" in pending && pending.back) && Boolean(caster && harmSkill(caster.cardId, pending.index));
+    }
+    return (pending?.kind === "face" && Boolean(pending.skill)) || (pending?.kind === "melee" && Boolean(fieldMon(duel, pending.attacker)?.horn));
+  }
   if (id === "hoan-doi") return attacked || skilled || pending?.kind === "face";
   if (id === "co-may-thoi-gian") {
     const side = duel.hold?.priority;
@@ -3067,6 +3076,19 @@ function PlayPage() {
   const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
   const board = matchBoard(foe.env, you.env);
+  /**
+   * Tường thành (chủ game 29/10): cards lying across by a side's environment card, the same size, in a row toward the
+   * middle of the board (the opponent's to the right of theirs, yours to the left of yours). Gương phòng hộ shows the
+   * turns it has left. In % of the board: the top-left corner and the size.
+   */
+  const wallCards = (side: Side) => {
+    const spot = side === viewer ? board.env : board.envFoe;
+    const toward = side === viewer ? -1 : 1;
+    const walls = duel.players[side].mirror > 0 ? [{ id: "guong-phong-ho", left: duel.players[side].mirror }] : [];
+    // Without an environment card the first one takes its place.
+    const from = duel.players[side].env && !spot.hidden ? 1 : 0;
+    return walls.map((wall, index) => ({ ...wall, x: spot.x + toward * (index + from) * (spot.width + WALL_GAP), y: spot.y, w: spot.width, h: spot.height }));
+  };
   // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
   const compact = cut.to - cut.from > 1;
   // Nút OK: bên kia đã bỏ lượt thì lần bấm này kết thúc vòng (đồng hồ cát), chưa thì chỉ chuyển quyền (mũi tên).
@@ -4280,8 +4302,12 @@ function PlayPage() {
     if (stacked && ahead) return { x: ahead.x, y, front };
     return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y, front };
   };
-  /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */
-  const throwFrom = (side: Side) => (side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) });
+  /** Where a spell that stops a flow flies in from: the player's hand, or the wall card it lies as (Gương phòng hộ). */
+  const throwFrom = (side: Side, wall?: string | null) => {
+    const lying = wall ? wallCards(side).find((card) => card.id === wall) : undefined;
+    if (lying) return { x: lying.x + lying.w / 2, y: lying.y + lying.h / 2 };
+    return side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) };
+  };
   /**
    * Dòng chảy đợt 2 (chủ game 29/10): a spell that stops a flow (Lá chắn phản đòn, Gương phòng hộ, Vòng nguyền rủa ác
    * ma) stands in its way as a dam: just before the fork of a spread, else just in front of the row of the side it
@@ -4781,6 +4807,21 @@ function PlayPage() {
             </button>
           );
         })}
+        {([viewer, otherSide] as Side[]).flatMap((side) =>
+          wallCards(side).map((wall) => (
+            <button
+              key={`wall-${side}-${wall.id}`}
+              type="button"
+              className="wall-card"
+              style={{ left: `${wall.x}%`, top: `${wall.y}%`, width: `${wall.w}%`, height: `${wall.h}%` }}
+              onClick={() => setInspect({ pile: "env", id: wall.id })}
+              aria-label={`${spellCard(wall.id)?.name ?? ""}: còn ${wall.left} lượt`}
+            >
+              <img src={spellSrc(wall.id)} alt="" draggable={false} />
+              <b>{wall.left}</b>
+            </button>
+          )),
+        )}
         <Link to="/" className="back-link">
           Menu
         </Link>
