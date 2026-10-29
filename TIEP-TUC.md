@@ -16,6 +16,8 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Khi bấm một loại triệu hồi trong mô tả (Triệu hồi / Hiến tế / Dung hợp), các loại còn lại biến mất. Chưa rõ: "các loại còn lại" là các nút nào, và có muốn giữ hay ẩn đi.
 - Kích thước lá trong tay bài: cần chủ game nói kích thước mong muốn (hiện: strip 17,8cqw × 100%).
 
+- Chủ game (29/10) làm rõ: 6 ghi chú (bể cá, kiếm, icon triệu hồi, triệu hồi còn lại, kích thước lá) là KẾ HOẠCH SAU, không phải việc kế tiếp. Việc kế tiếp là kế hoạch 7 mục tuần này, sau khi xong flow skill nhiều mục tiêu. CHƯA rõ: (a) flow skill nhiều mục tiêu đã được chủ game chấp nhận là xong chưa; (b) "Luật chơi mới" trong 7 mục là phần nào (Phần 5 AI brain/hướng dẫn/trial/chain/net, Phần 4 giao diện, hay Mũ ma pháp, Gương phòng hộ G1–G3). Kiếm đã đổi (mục 2 ghi chú) làm trước khi chủ game nói rõ thứ tự: CHỜ chủ game quyết giữ hay hoàn lại.
+
 ## Luật mới (28/10): Phần 2 (luật Grok) và Phần 1 (xấp chung) ĐÃ LÀM ở engine, giao diện CHƯA
 
 - Chủ game duyệt plan (28/10, "ok, quyền sang đối thủ, bắt đầu phần 2 rồi phần 1"), làm bằng Opus. Thứ tự còn lại: Phần 5 (AI brain.ts, hướng dẫn, trial, reaction-chain, net-room) → Phần 3 (hàng chờ + mắt + X) → Phần 4 (giao diện, chờ sàn đấu mới).
