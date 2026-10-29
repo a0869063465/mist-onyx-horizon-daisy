@@ -4231,7 +4231,9 @@ function PlayPage() {
       } else if ("face" in link.end) xs.push((link.end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
-    return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y: near.edge + (near.top ? 1 : -1) * band * FORK_SHARE };
+    // The front row it is aimed at, for the branches to find their way round its cards.
+    const front = SLOT_BOX[screenSide(side, viewer)].slice(0, 3).map((box) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w, h: box.h }));
+    return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y: near.edge + (near.top ? 1 : -1) * band * FORK_SHARE, front };
   };
   /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */
   const throwFrom = (side: Side) => (side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) });
@@ -4246,7 +4248,10 @@ function PlayPage() {
     if (!stopped || !from) return null;
     const tall = ICON * boardAspect();
     let goal: { x: number; y: number; side: Side; fork: boolean } | null = null;
-    if (stopped.spread !== undefined && stopped.spread !== null) goal = { ...forkFor(stopped, from), side: stopped.spread, fork: true };
+    if (stopped.spread !== undefined && stopped.spread !== null) {
+      const fork = forkFor(stopped, from);
+      goal = { x: fork.x, y: fork.y, side: stopped.spread, fork: true };
+    }
     else if (stopped.goal && "uid" in stopped.goal) {
       const card = cardSpot(stopped.goal.uid);
       const seat = seatOfUid(stopped.goal.uid);

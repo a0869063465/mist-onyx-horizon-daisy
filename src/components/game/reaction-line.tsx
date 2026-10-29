@@ -3,6 +3,7 @@ import { Glyph, Rim } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
 import type { Side } from "@/lib/duel";
+import { fanRoutes, type FanAim, type FanCard } from "@/lib/fan-plan";
 import type { ChainOrb, FlowEnd, FlowLink, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
@@ -18,6 +19,9 @@ export type EndSpot = { x: number; y: number; into: BoxPt; moat?: { kind: "box";
 
 /** A point on the board in % of it. */
 export type BoardPt = { x: number; y: number };
+
+/** Where a spread splits, and the three cards' places of the front row it is aimed at (middles and sizes). */
+export type ForkSpot = BoardPt & { front: FanCard[] };
 
 /** How an icon looks: a 3D medal (attack, block), a skill's gem with its rim, or a card's picture in a rim. */
 export type IconLook =
@@ -46,10 +50,6 @@ const FIZZLE_TAIL = 0.8;
 const DOUBLE_TAP = 380;
 /** Seconds a spell that stops a flow takes to fly in from the hand. */
 const THROW = 0.5;
-/** A target less than this far to the side of a fork (in % of the board's width) is straight ahead of it; a branch
- *  runs out at least `FAN_MIN` box units before it rises. */
-const FAN_AHEAD = 6;
-const FAN_MIN = 6;
 
 const toBox = (x: number, y: number): BoxPt => ({ x: x * 0.9, y: y * 1.6 });
 
@@ -138,7 +138,7 @@ export function ReactionLine({
   /** In the preview, a queued icon whose roll is still to come keeps its face but has no target yet. */
   aimless?: ReadonlySet<string>;
   /** Dòng chảy đợt 2: where a spread aimed at a side splits, just in front of that side's row. */
-  forkOf: (orb: ChainOrb, from: BoardPt) => BoardPt | null;
+  forkOf: (orb: ChainOrb, from: BoardPt) => ForkSpot | null;
   /** Where a spell that stops a flow flies in from: its owner's hand. */
   throwFrom: (side: Side) => BoardPt;
 }) {
@@ -265,22 +265,24 @@ export function ReactionLine({
         tail: 0.5,
       });
     }
-    // Which way each branch runs out of the fork: toward its target's side; targets straight ahead of the fork take
-    // the sides in turn, so no two branches lie on each other.
-    const fanSide = new Map<FlowLink, number>();
+    // How each branch runs from the fork (hình vẽ vòi nước của chủ game, 29/10): out past its target, sagging back,
+    // then up beside it and back in to it, on whichever edge suits.
+    const aims: FanAim[] = [];
     if (fork) {
-      let turn = -1;
       for (const link of orb.to) {
         if (!link.fork) continue;
         const land = pointOf(link, fork);
         if (!land) continue;
-        const lateral = land.x - fork.x;
-        if (Math.abs(lateral) < FAN_AHEAD) {
-          fanSide.set(link, turn);
-          turn = -turn;
-        } else fanSide.set(link, Math.sign(lateral));
+        const moat = land.moat;
+        aims.push({
+          key: keyOf(orb, link),
+          card: moat?.kind === "box" ? { x: moat.x, y: moat.y, w: moat.w, h: moat.h } : undefined,
+          ring: moat?.kind === "ring" ? { x: moat.x, y: moat.y, r: moat.r } : undefined,
+          point: moat ? undefined : { x: land.x, y: land.y },
+        });
       }
     }
+    const routes = fork ? fanRoutes(fork, aims, fork.front) : null;
     for (const link of orb.to) {
       if (link.fork && !fork) continue;
       const start = link.fork ? fork : link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
@@ -289,6 +291,8 @@ export function ReactionLine({
       if (!land) continue;
       const key = keyOf(orb, link);
       const way = backs.get(key);
+      const route = link.fork ? routes?.get(key) : undefined;
+      if (route) land = { ...land, x: route.entry.x, y: route.entry.y, into: route.into };
       // The way back lands on the side of its target it swings round to, not under the icon it left from.
       if (way && land.moat?.kind === "box") {
         const dx = (land.x - start.x) * 0.9;
@@ -304,10 +308,6 @@ export function ReactionLine({
       }
       const toward = unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
       const faceOut = !link.fork && !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
-      // A branch out of the fork (hình 2 của chủ game, 29/10): out sideways, a little sag, then up into its target.
-      const side = link.fork ? fanSide.get(link) : undefined;
-      const fan = side !== undefined ? { side: { x: side, y: 0 }, min: FAN_MIN } : undefined;
-      const into = fan ? { x: 0, y: Math.sign(land.y - start.y) || 1 } : land.into;
       if (link.dam && "orb" in link.end && !done) walls.add(link.end.orb);
       // A flow into what stops it waits for the spell to fly in from the hand.
       const stopper = link.dam && "orb" in link.end ? orbs.find((other) => other.id === (link.end as { orb: string }).orb && other.stops) : undefined;
@@ -317,7 +317,7 @@ export function ReactionLine({
         a: toBox(start.x, start.y),
         b: toBox(land.x, land.y),
         out: faceOut,
-        into,
+        into: land.into,
         tone: link.tone,
         done,
         end,
@@ -327,7 +327,7 @@ export function ReactionLine({
         delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
         land: link.dam ? "dam" : "flare",
         moat: moatOf(land),
-        fan,
+        path: route?.path,
         // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other. A
         // curse's or a mirror's way back to the attacker (no damage) takes a third of the arc and half the tail.
         arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key),

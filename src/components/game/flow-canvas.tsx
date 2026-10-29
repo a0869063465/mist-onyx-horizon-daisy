@@ -52,9 +52,9 @@ export type FlowSpec = {
   width?: number;
   /** How much it widens toward its end (1: as a flow at one target; 0.5: half as much). */
   tail?: number;
-  /** A branch out of a fork (hình 2 của chủ game, 29/10): it runs out to `side` (a unit direction), sags back a little
-   *  and rises into its target as a U; `min` the least it runs out, in box units. */
-  fan?: { side: BoxPt; min: number };
+  /** A branch out of a fork (hình vẽ vòi nước của chủ game, 29/10): its whole way, cubic Bézier pieces end to end
+   *  (its start, two controls and an end, two controls and an end…); it ends where it meets its moat. */
+  path?: BoxPt[];
 };
 
 type Rgb = [number, number, number];
@@ -141,6 +141,28 @@ function rowsAlong(pts: Array<{ x: number; y: number }>, count: number): { rows:
     rows.push({ x: pts[j].x + dx * k, y: pts[j].y + dy * k, nx: -dy / d, ny: dx / d });
   }
   return { rows, total };
+}
+
+/** Points (in px) along a branch's own way (cubic Bézier pieces in box units), its end moved onto its moat; its last
+ *  control moves with it, so it still arrives the way it was going. */
+function wayAlong(path: BoxPt[], sx: number, sy: number, tip: { x: number; y: number }): Array<{ x: number; y: number }> {
+  const way = path.map((pt) => ({ x: pt.x * sx, y: pt.y * sy }));
+  const last = way.length - 1;
+  way[last - 1] = { x: way[last - 1].x + tip.x - way[last].x, y: way[last - 1].y + tip.y - way[last].y };
+  way[last] = { x: tip.x, y: tip.y };
+  const pts = [way[0]];
+  for (let j = 0; j + 3 < way.length; j += 3) {
+    const [a, b, c, d] = [way[j], way[j + 1], way[j + 2], way[j + 3]];
+    for (let i = 1; i <= 48; i += 1) {
+      const t = i / 48;
+      const u = 1 - t;
+      pts.push({
+        x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+        y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+      });
+    }
+  }
+  return pts;
 }
 
 /** Two vertices a row (one each side): position, (u, v), and how bright a fold makes it. */
@@ -458,7 +480,7 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
     // S on the way, the way a river never runs straight. Its width breathes along it, and it folds now and then (where
     // it narrows it burns brighter, as a ribbon of light seen edge on).
     const sigOf = (spec: FlowSpec) =>
-      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.land ?? ""},${spec.width ?? 1},${spec.tail ?? 1},${spec.fan ? `${spec.fan.side.x},${spec.fan.side.y},${spec.fan.min}` : ""},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
+      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.land ?? ""},${spec.width ?? 1},${spec.tail ?? 1},${spec.path ? spec.path.map((pt) => `${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`).join(";") : ""},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
     const build = (track: Track) => {
       const spec = track.spec;
       const unit = sx();
@@ -482,23 +504,8 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const bend = spec.arc ?? spec.bend ?? turn * Math.abs(track.bow) * (1 - 0.6 * Math.min(1, Math.abs(lean)));
       const k1 = arcs ? 0.3 : 0.26;
       const k2 = arcs ? 0.3 : -0.16;
-      let p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
-      let p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
-      if (spec.fan) {
-        // A branch out of a fork, as the owner drew it (29/10): out sideways toward its target, sagging back a little,
-        // then up and in to it, a U; a farther target, sideways or ahead, takes a wider U round the nearer ones.
-        const fx = spec.into.x;
-        const fy = spec.into.y;
-        const lx = spec.fan.side.x;
-        const ly = spec.fan.side.y;
-        const dx = bx - ax;
-        const dy = by - ay;
-        const v = Math.max(unit * 2, dx * fx + dy * fy);
-        const wide = Math.max(Math.abs(dx * lx + dy * ly), spec.fan.min * unit) + v * 0.15;
-        const sag = wide * 0.12;
-        p1 = { x: ax + lx * wide * 0.75 - fx * sag, y: ay + ly * wide * 0.75 - fy * sag };
-        p2 = { x: bx - fx * (v * 0.5 + sag) + lx * wide * 0.25, y: by - fy * (v * 0.5 + sag) + ly * wide * 0.25 };
-      }
+      const p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
+      const p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
       const base = (t: number) => {
         const u = 1 - t;
         return {
@@ -510,7 +517,7 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       // S, the bends dying away at both ends so it still leaves and lands square. A short way, one already curving,
       // a way thrown back, one into a dam and a branch keep their own line (chủ game 29/10).
       let bends = 0;
-      if (!arcs && spec.land !== "dam" && !spec.fan && len > H * 0.2) {
+      if (!arcs && spec.land !== "dam" && !spec.path && len > H * 0.2) {
         let stray = 0;
         for (let i = 1; i < 16; i += 1) {
           const pt = base(i / 16);
@@ -525,7 +532,7 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
         const off = bends === 1 ? wind * s * s : bends === 2 ? wind * s * Math.sin(2 * Math.PI * t) : 0;
         return { x: pt.x + nx * off, y: pt.y + ny * off };
       };
-      const { rows, total } = rowsAlong(Array.from({ length: 161 }, (_, i) => at(i / 160)), ROWS);
+      const { rows, total } = rowsAlong(spec.path ? wayAlong(spec.path, sx(), sy(), tip) : Array.from({ length: 161 }, (_, i) => at(i / 160)), ROWS);
       const lenBox = total / unit;
       const width = spec.width ?? 1;
       const tail = spec.tail ?? 1;

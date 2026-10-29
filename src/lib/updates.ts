@@ -744,6 +744,7 @@ export const PENDING_NOTES: string[] = [
   "Chỉnh dải sáng: đầu rộng bình thường, chỉ đuôi to ra; tia tổng của skill và phép nhiều mục tiêu loe một nửa. Chỉ đường dài trông thẳng mới uốn một khúc mềm (rất dài mới uốn chữ S); đường ngắn, đường phản về, dòng dội vào chỗ chặn không uốn. Dòng dội vào icon chặn về lại hình cũ, phình ở chỗ đập nước.",
   "Skill và phép nhiều mục tiêu: điểm tách gần hàng quái bị nhắm hơn (một phần tư khoảng trống giữa hai hàng); các nhánh như vòi nước: toả ngang hai bên, võng nhẹ rồi vòng lên vào từng mục tiêu thành hình chữ U, nhánh ngoài ôm nhánh trong, không cắt nhau.",
   "Dòng hồng của Vòng nguyền rủa ác ma và Gương phòng hộ đánh về kẻ ra đòn: vòng cung hẹp còn một phần ba của Lá chắn phản đòn, đuôi loe một nửa.",
+  "Skill và phép nhiều mục tiêu: mỗi nhánh từ điểm tách chảy ra ngoài, võng ngược lại rồi vòng lên, ôm vào lá từ cạnh tự nhiên nhất: cạnh ngoài của lá ở đầu hàng, cạnh bên của lá hàng sau qua khe giữa hai lá, hoặc cạnh gần lệch một bên với lá ngay trước điểm tách.",
 ];
 
 function remarkOf(notes: string[]) {
