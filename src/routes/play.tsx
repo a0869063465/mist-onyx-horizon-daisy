@@ -708,7 +708,7 @@ const LUNGE_BLOCK = 0.2;
 /** How near the way of a branch (box units) a monster must be dropped to stand in front of it. */
 const LANE_REACH = 7;
 /** How far along a branch, from its fork to what it lands on, the icon of a monster covering it stands. */
-const COVER_ALONG = 0.62;
+const COVER_ALONG = 0.7;
 /** How far an attacker lunges toward a monster that blocks it. */
 const LUNGE_BLOCKED = 0.3;
 function blockShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
@@ -4361,7 +4361,7 @@ function PlayPage() {
       const fork = forkFor(live, here);
       const route = branchRoutes(live, fork, flowPoint).get(keyOf(live, link));
       if (!route) return null;
-      // It flies out to the branch's way, 62% of the way from the fork to what it covers (chủ game 29/10: 60–65%).
+      // It flies out to the branch's way, 70% of the way from the fork to what it covers (chủ game 29/10).
       const rest = card.top ? card.y + card.h / 2 + tall / 2 + 0.6 : card.y - card.h / 2 - tall / 2 - 0.6;
       const at = coverPoint(route, COVER_ALONG);
       const x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, at.x));

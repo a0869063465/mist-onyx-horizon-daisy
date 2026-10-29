@@ -758,6 +758,7 @@ export const PENDING_NOTES: string[] = [
   "Kiếm chỉ bên giữ quyền tấn công to hơn gần một phần ba, nổi lên hơn: viền sáng vàng nhẹ và lơ lửng cao hơn.",
   "Chặn từng nhánh: kỹ năng trúng nhiều mục tiêu thì kéo quái hàng trước thả lên đường flow của nhánh vào người chơi hoặc quái hàng sau để chặn nhánh đó. Icon chặn nằm trên nhánh, phần nhánh sau icon tắt, quái chặn lao ra đứng đó; các nhánh khác giữ nguyên.",
   "Skill và phép trúng 2–3 mục tiêu luôn dùng kiểu nhánh mới (điểm tách dưới quái hàng trước thẳng với kẻ ra đòn, nhánh còn lại vòng cung mềm); từ 4 mục tiêu trở lên mới dùng kiểu cũ. Icon chặn đứng ở khoảng 62% đường nhánh tính từ điểm tách.",
+  "Chặn từng nhánh: icon chặn đứng ở 70% đường nhánh. Nhánh vào quái hàng sau đi một vòng cung xuyên qua lá hàng trước, không len qua khe; các nhánh không còn gối lên nhau.",
 ];
 
 function remarkOf(notes: string[]) {

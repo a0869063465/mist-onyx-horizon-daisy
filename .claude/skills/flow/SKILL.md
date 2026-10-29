@@ -23,7 +23,10 @@ Dòng một mục tiêu (vào giữa mép lá), dòng phản về, dòng hồng 
 - Lá hàng trước chạm chéo góc mép gần (bản A).
 - Nét vẽ tay của chủ game cho lá giữa hàng sau (DRAWN).
 - 2 quái hàng dọc (chuẩn).
-- Chuẩn cùng cột (`columnPair`) chỉ dùng cho 2–3 lá. Từ 4 lá trở lên dùng nhánh cũ (`fanRoutes` chung), chủ game chốt 29/10.
+- Kiểu mới (`columnPair`) dùng cho MỌI skill/phép trúng 2–3 mục tiêu, có hay không có 2 lá cùng cột (chủ game 29/10: "chỉ khi skill bắn vào từ 4 quái trở lên mới dùng kiểu cũ"). Từ 4 trở lên dùng nhánh cũ (`fanRoutes` chung).
+- Nhánh được đi xuyên qua lá. Không len qua khe giữa 2 lá (chủ game 29/10: "đừng làm cái kiểu lòn đường kẻ đó nữa"). Nhánh vào quái hàng sau không có lá mục tiêu đứng trước: một vòng cung mềm đè qua hàng trước, vào mép gần lệch giữa 0,15 bề ngang về phía điểm tách, xiên ~55°.
+- Các nhánh không gối lên nhau: nhánh vào lá ngay trên điểm tách nghiêng về phía không có nhánh khác.
+- Icon chặn từng nhánh đứng ở 70% đường nhánh tính từ điểm tách (`COVER_ALONG`); quái chặn trượt tới đó, được đè lá khác (chủ game chọn B 29/10).
 
 ## Cách làm với chủ game
 - Mỗi lần 1 trường hợp, gửi đúng 1 ảnh, chờ xem. Chưa rõ thì đưa 2–3 cách (A/B/C).

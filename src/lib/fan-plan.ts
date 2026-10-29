@@ -326,7 +326,10 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
   const onBoard = (pt: BoxPt): BoxPt => ({ x: Math.min(89, Math.max(1, pt.x)), y: pt.y });
 
   if (first && ahead) {
-    const inAt = { x: ahead.x - side * ahead.w * 0.2, y: nearEdge(ahead) };
+    // It leans away from the other branches, so none runs on top of it: off the side the card behind bows to (the
+    // standard of two in a column), else off the side the others are on.
+    const lean = second ? -side : side;
+    const inAt = { x: ahead.x + lean * ahead.w * 0.2, y: nearEdge(ahead) };
     const e1 = { x: inAt.x * 0.9, y: inAt.y * 1.6 };
     const reach = Math.abs(e1.y - f.y);
     routes.set(first.key, {
@@ -363,7 +366,21 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
     }
     let at: { x: number; y: number };
     let way: BoxPt;
-    if (card) {
+    if (card && !inRow(card)) {
+      // A back-row card: one soft bow straight across the front row, over the cards (chủ game 29/10: cứ cho đi xuyên
+      // lá, không len qua khe), into its near edge a little off its middle on the fork's side, slanting in.
+      const e = { x: (card.x - out * card.w * 0.15) * 0.9, y: nearEdge(card) * 1.6 };
+      const into = unit(out * 0.7, toward);
+      const dx = Math.abs(e.x - f.x);
+      const rise = Math.abs(e.y - f.y);
+      const len = Math.hypot(dx, rise);
+      routes.set(aim.key, {
+        entry: { x: e.x / 0.9, y: e.y / 1.6 },
+        into,
+        path: [f, onBoard({ x: f.x + out * dx * 0.5, y: f.y - toward * rise * 0.12 }), onBoard({ x: e.x - into.x * len * 0.45, y: e.y - into.y * len * 0.45 }), e],
+      });
+      continue;
+    } else if (card) {
       at = { x: card.x - (out * card.w) / 2, y: nearEdge(card) };
       way = unit(out, toward);
     } else if (aim.ring) {
