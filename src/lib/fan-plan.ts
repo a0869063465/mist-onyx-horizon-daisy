@@ -32,6 +32,9 @@ const AHEAD = 0.6;
  *  of a card straight ahead it meets its near edge (in card widths). */
 const ENTRY_UP = 1 / 3;
 const NEAR_SIDE = 0.35;
+/** A front-row card is met at the corner of its near edge on the side its branch comes from, slanting in across the
+ *  corner (chủ game 29/10); the one ahead of the fork rises this far (in % of the board's width) outside that corner. */
+const NEAR_OUT = 4;
 /** How much farther out than the front row's outer branch a back-row end card's branch rises (in % of the board's
  *  width), so the two don't run on top of each other (chủ game 29/10: bung rộng); it meets that card at its outer
  *  side halfway up. It goes as one with the branch into the front row's card there as far as the bottom of their sag,
@@ -196,9 +199,9 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
       if (plan.ahead && plan.inFront) {
         // Out under the card, then up square into its near edge, off to that side.
         kind = "near";
-        lane = card.x + side * card.w * NEAR_SIDE;
-        entry = { x: lane, y: near };
-        into = { x: 0, y: toward };
+        entry = { x: edgeOf(card, side), y: near };
+        lane = entry.x + side * NEAR_OUT;
+        into = unit(-side, toward);
       } else if (!plan.inFront && ((plan.col === 0 && side < 0) || (plan.col === 2 && side > 0))) {
         // A back-row card at the end of its row: up wider round the outside, in at its outer side halfway up, slanting.
         kind = "side";
@@ -210,8 +213,9 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
         // Up beside it and in at its side, a third of the way up from its near edge: in square from outside the row;
         // from a gap too narrow to turn in, on along its side into the moat there.
         kind = lane === outerLeft || lane === outerRight ? "side" : "gap";
-        entry = { x: edgeOf(card, side), y: near + toward * card.h * ENTRY_UP };
-        into = kind === "side" ? { x: -side, y: 0 } : { x: 0, y: toward };
+        const corner = kind === "side" && plan.inFront;
+        entry = { x: edgeOf(card, side), y: corner ? near : near + toward * card.h * ENTRY_UP };
+        into = corner ? unit(-side, toward) : kind === "side" ? { x: -side, y: 0 } : { x: 0, y: toward };
       }
     } else if (aim.ring) {
       // A player: up round the outside of the rows into the ring round its health, from below.
