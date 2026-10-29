@@ -248,6 +248,88 @@ test("hàng chờ: hành động ngẫu nhiên quay lúc xác nhận, cùng mầ
   assert.ok(new Set([1, 2, 3, 4, 5, 6, 7, 8].map(outcome)).size > 1, "mầm khác thì có lúc khác");
 });
 
+/** A skill that lands on several, waiting to resolve, confirmed with the first seed where `want(hits)` holds. */
+function spreadWith(staged, want) {
+  for (let seed = 1; seed < 400; seed += 1) {
+    const sure = D.confirmStage(staged, seed);
+    const hits = D.spreadHits(sure);
+    if (hits && want(hits)) return { sure, hits };
+  }
+  throw new Error("không tìm được mầm phù hợp");
+}
+
+test("chặn nhiều nhánh: Súng phóng lựu vào người chơi, quái hàng trước không bị trúng chặn nhánh vào người chơi", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
+  let s = board({ 0: ["may-nem-bom-hinh-nhen"] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, hp: 30 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 0), null, 0));
+  const guard = uid(s, 1, 1);
+  const { sure } = spreadWith(staged, (hits) => hits.includes("face:1") && !hits.includes(guard) && !hits.includes(uid(s, 1, 3)) && hits.length >= 2);
+  assert.match(D.assignCover(sure, guard, uid(s, 1, 3)).live, /Nhánh này không trúng ai|Quái/, "nhánh không trúng thì không chặn");
+  const covered = D.assignCover(sure, guard, "face:1");
+  assert.deepEqual(covered.hold?.covers, [{ blocker: guard, target: "face:1" }], covered.live);
+  assert.match(D.assignCover({ ...covered, hold: { ...covered.hold, priority: 1 } }, guard, "face:1").live, /một nhánh|đã có/);
+  const open = D.passResponse(D.passResponse({ ...covered, hold: { ...covered.hold, priority: 0 } }));
+  const done = open.counterAsk ? D.pickCounter(open, "phys") : open;
+  assert.equal(done.players[1].hp, 30, "người chơi không mất máu");
+  assert.ok(at(done, 1, 1).hp < 40, "quái chặn chịu đòn thay");
+});
+
+test("chặn nhiều nhánh: Con nước lớn tàn phá, quái chặn chịu cả sát thương lẫn ướt; quái đang bị nhắm không chặn hộ", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
+  let s = board({ 1: ["trai-tim-hai-long"] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 3), 1));
+  assert.equal(staged.pending?.kind, "beam", staged.live);
+  const { sure, hits } = spreadWith(staged, (row) => row.includes(uid(s, 1, 3)) && row.includes(uid(s, 1, 0)));
+  assert.equal(hits.length, 2);
+  assert.match(D.assignCover(sure, uid(s, 1, 0), uid(s, 1, 3)).live, /đang bị nhắm/);
+  const covered = D.assignCover(sure, uid(s, 1, 1), uid(s, 1, 3));
+  assert.equal(covered.hold?.covers?.length, 1, covered.live);
+  let done = D.passResponse(covered);
+  while (done.counterAsk) done = D.pickCounter(done, "phys");
+  assert.equal(at(done, 1, 3).hp, 40, "Kazura không mất máu");
+  assert.ok(at(done, 1, 1).hp < 40 && (at(done, 1, 1).wet ?? 0) > 0, "Máy chém chịu đòn và bị ướt");
+  assert.ok(at(done, 1, 0).hp < 40, "nhánh kia vẫn trúng");
+});
+
+test("trả đòn kỹ năng nhiều mục tiêu: lần lượt từ trái sang phải, mỗi lần một quái", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0, atk: 1 };
+  let s = board({ 1: ["trai-tim-hai-long", { hp: 30, maxHp: 30, def: 0 }] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 1), 1));
+  const { sure } = spreadWith(staged, (hits) => hits.length === 2);
+  const first = D.passResponse(sure);
+  assert.equal(first.counterAsk?.uid, uid(s, 1, 0), "quái bên trái trả đòn trước");
+  const second = D.pickCounter(first, "phys");
+  assert.equal(second.counterAsk?.uid, uid(s, 1, 1), "rồi tới quái bên phải");
+  const done = D.pickCounter(second, "phys");
+  assert.equal(done.counterAsk ?? null, null);
+  assert.equal(at(done, 0, 1).hp, 28, "trúng 2 lần trả đòn");
+});
+
+test("trả đòn kỹ năng nhiều mục tiêu: kẻ phát động chết thì các lượt trả đòn còn lại huỷ", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0, atk: 30 };
+  let s = board({ 1: ["trai-tim-hai-long", { hp: 10, maxHp: 10, def: 0 }] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 1), 1));
+  const { sure } = spreadWith(staged, (hits) => hits.length === 2);
+  const first = D.passResponse(sure);
+  const done = D.pickCounter(first, "phys");
+  assert.equal(done.counterAsk ?? null, null, "không còn ai để trả đòn");
+});
+
+test("skill chậm: kỹ năng diện rộng không dùng để Trả đòn", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 20, maxHp: 20 }] }, { 0: ["trai-tim-hai-long", { hp: 20, maxHp: 20, def: 0 }], 1: ["may-chem"] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const open = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(open.counterAsk?.uid, uid(s, 1, 0));
+  assert.equal(D.slowSkill(open, uid(s, 1, 0), 1), true);
+  assert.equal(D.slowSkill(open, uid(s, 1, 0), 0), false);
+  assert.match(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 1).live, /diện rộng/);
+  assert.notEqual(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0).step, "main", "kỹ năng một mục tiêu vẫn trả đòn được");
+});
+
 const BIG = {
   monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "kazura", "kizuran", "ma-dao-si", "chien-binh-rong", "hiep-si-ho-ve", "hiep-si-cua-vua", "hiep-si-cua-hau", "my-dieu-nhan", "phu-thuy-ti-hon", "rong-boc-trung"],
   spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho", "phuc-kich", "guong-phong-ho", "hoan-doi", "virus-an-mon", "mua-ma-thuat"],

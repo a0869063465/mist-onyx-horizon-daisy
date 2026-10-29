@@ -177,12 +177,18 @@ export type Pending =
   | { kind: "lash"; owner: Side; bird: string; foe: string; stun: boolean }
   | null;
 
+/** Chặn nhiều nhánh (chủ game 29/10): a front-row monster standing in front of one branch of a skill that lands on
+ *  several; `target` is the monster (uid) or player ("face:N") it covers. */
+export type Cover = { blocker: string; target: string };
+
 export type Hold = {
   priority: Side;
   passed: [boolean, boolean];
   blocker: string | null;
   blockerSkill: boolean;
   armed: string | null;
+  /** The branches blocked one by one, for a skill that lands on more than one. */
+  covers?: Cover[];
   /**
    * Hàng chờ (chủ game 28/10): hành động vừa xếp, chưa xác nhận. Lá đã rời tay, mana đã trừ, lá đang lao, nhưng đối
    * thủ chưa thấy và chưa được phản ứng; bên xếp bấm tick (`confirmStage`) hoặc X (trang trận quay về lúc chưa xếp).
@@ -215,6 +221,9 @@ export type Duel = {
   counterAsk?: { uid: string; from: string } | null;
   /** Bên đang Trả đòn bằng kỹ năng: xong thì quyền ở lại bên đó, như sau đòn của đối thủ. */
   countering?: Side | null;
+  /** Trả đòn after a skill that landed on several (chủ game 29/10): the front-row monsters still to strike back at
+   *  `from`, left to right, one at a time once the one before is done. */
+  counterQueue?: { from: string; uids: string[] } | null;
   opening: boolean;
   /** This match's own id: the rewards of a match are paid once (missions.ts). */
   mid?: string;
@@ -294,6 +303,8 @@ export type Duel = {
     /** Cò quay: the seed of the roll that picks who each barrel hits, made when the action was confirmed, so the
      *  opponent answering sees whom it hits (chủ game 29/10). */
     seed?: number;
+    /** The branches its opponent blocked, for when its barrels land. */
+    covers?: Cover[];
   } | null;
 };
 
@@ -1956,8 +1967,31 @@ function livingLegs(field: Array<FieldMon | null>, host: string) {
   return field.filter((unit): unit is FieldMon => Boolean(unit && unit.cardId === "chan-ken" && unit.host === host && unit.hp > 0));
 }
 
+/** The branches blocked while a skill that lands on several resolves (`withCovers`). */
+let activeCovers: Cover[] | null = null;
+
+function withCovers<T>(covers: Cover[] | null | undefined, run: () => T): T {
+  if (!covers?.length) return run();
+  const before = activeCovers;
+  activeCovers = covers;
+  try {
+    return run();
+  } finally {
+    activeCovers = before;
+  }
+}
+
+/** The blocker standing in front of the branch to `target` (a uid, or "face:N"), if it is still on `field`. */
+function coverOf(field: Array<FieldMon | null>, target: string | null): string | null {
+  if (!target || !activeCovers) return null;
+  const cover = activeCovers.find((row) => row.target === target);
+  return cover && field.some((mon) => mon?.uid === cover.blocker && mon.hp > 0) ? cover.blocker : null;
+}
+
 function shuntUid(field: Array<FieldMon | null>, uid: string | null): string | null {
   if (!uid) return uid;
+  const covered = coverOf(field, uid);
+  if (covered) return covered;
   const mon = field.find((unit) => unit?.uid === uid);
   if (!mon || mon.cardId !== "ken-ngai") return uid;
   const legs = livingLegs(field, mon.uid);
@@ -3460,13 +3494,63 @@ function afterBlow(before: Duel, resolved: Duel, victimUid: string | null, attac
   return asked.mode === "ai" && vicSide === 1 ? pickCounter(asked, "phys") : asked;
 }
 
+/**
+ * The monsters of `side` a skill that lands on several just struck, in slot order (front row left to right first):
+ * those it touched and those that stood in front of a branch.
+ */
+function struckFront(before: Duel, after: Duel, side: Side, covers?: Cover[]): string[] {
+  const mark = (mon: FieldMon | null | undefined) =>
+    !mon || mon.hp <= 0
+      ? "x"
+      : [mon.hp, mon.maxHp, mon.atk, mon.def, mon.mdef, mon.stun, mon.chain ?? 0, mon.curse ? 1 : 0, mon.wet ?? 0, mon.poison ? `${mon.poison.stacks}/${mon.poison.left}` : "", mon.vulnerable ?? 0].join(",");
+  const record = after.skill && after.skill !== before.skill ? after.skill.hits ?? [] : [];
+  const guards = new Set((covers ?? []).map((row) => row.blocker));
+  return before.players[side].field
+    .filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0))
+    .filter((mon) => guards.has(mon.uid) || record.includes(mon.uid) || mark(mon) !== mark(after.players[side].field.find((unit) => unit?.uid === mon.uid)))
+    .map((mon) => mon.uid);
+}
+
+/** Trả đòn after a skill that landed on several (chủ game 29/10): every branch lands first, then the front-row monsters
+ *  it struck that may strike back do, one at a time, left to right; it stops once the one who cast it falls. */
+function afterSpread(before: Duel, resolved: Duel, attackerUid: string, struck: string[]): Duel {
+  if (before.countering != null || !settled(resolved) || struck.length === 0) return resolved;
+  const atkSide = ownerSide(before, attackerUid);
+  if (atkSide === null) return resolved;
+  const vicSide = (1 - atkSide) as Side;
+  if (before.players[vicSide].mirror > 0) return resolved;
+  return nextCounter({ ...resolved, counterQueue: { from: attackerUid, uids: struck } });
+}
+
+/** The next monster waiting to strike back, if the one it strikes at still stands. */
+function nextCounter(state: Duel): Duel {
+  const queue = state.counterQueue;
+  if (!queue || state.counterAsk) return state;
+  const atkSide = ownerSide(state, queue.from);
+  const attacker = atkSide === null ? null : state.players[atkSide].field.find((mon) => mon?.uid === queue.from) ?? null;
+  for (let index = 0; index < queue.uids.length; index += 1) {
+    const uid = queue.uids[index];
+    const side = ownerSide(state, uid);
+    if (side === null || side === atkSide) continue;
+    const victim = state.players[side].field.find((mon) => mon?.uid === uid) ?? null;
+    if (!frontCounter(victim, attacker)) continue;
+    const asked = note(
+      { ...state, counterAsk: { uid, from: queue.from }, counterQueue: { from: queue.from, uids: queue.uids.slice(index + 1) }, turn: side },
+      `${cardOf(victim).name} được Trả đòn.`,
+      "info",
+    );
+    return asked.mode === "ai" && side === 1 ? pickCounter(asked, "phys") : asked;
+  }
+  return { ...state, counterQueue: null };
+}
+
 /** Trả đòn bằng đòn đánh thường: gây sát thương vật lý bằng công của quái lên kẻ vừa ra đòn. */
 export function pickCounter(state: Duel, mode: "phys"): Duel {
   const ask = state.counterAsk;
   if (!ask || mode !== "phys") return state;
   const side = ownerSide(state, ask.uid);
   const fromSide = ownerSide(state, ask.from);
-  const done = (next: Duel) => ({ ...next, counterAsk: null, skipped: [false, false] as [boolean, boolean] });
+  const done = (next: Duel) => nextCounter({ ...next, counterAsk: null, skipped: [false, false] as [boolean, boolean] });
   if (side === null || fromSide === null) return done(state);
   const mon = state.players[side].field.find((unit) => unit?.uid === ask.uid) ?? null;
   const foe = state.players[fromSide];
@@ -3633,8 +3717,10 @@ function passResponseCore(state: Duel): Duel {
     const open = commitGuardShot({ ...state, step: "main" as const, pending: null, hold: null }, pending.caster, target ?? "", false);
     if (pending.index === 8 && open.echo === pending.caster) return swordFollow(open, target, true);
     if (pending.index === 9 && open.last === pending.caster) return swordLast(open, target, true);
-    const resolved = releaseGuardMark(useSkill(open, pending.caster, target, pending.index, true, pending.extra ?? null, true), target);
-    return harmSkill(ownerCard(state, pending.caster), pending.index) ? afterBlow(state, resolved, target, pending.caster) : resolved;
+    const resolved = releaseGuardMark(withCovers(hold.covers, () => useSkill(open, pending.caster, target, pending.index, true, pending.extra ?? null, true)), target);
+    if (!harmSkill(ownerCard(state, pending.caster), pending.index)) return resolved;
+    const landed = struckFront(state, resolved, foe, hold.covers);
+    return landed.length > 1 || hold.covers?.length ? afterSpread(state, resolved, pending.caster, landed) : afterBlow(state, resolved, target, pending.caster);
   }
   if (pending.kind === "gnaw" || pending.kind === "gnaw-skill") return { ...answerGnaw(state, false), hold: null };
   if (pending.kind === "lash") return finishLash(state);
@@ -3901,29 +3987,49 @@ function spiritCoverCore(state: Duel, uid: string): Duel {
   };
 }
 
-export function assignBlock(state: Duel, blockerUid: string, withSkill = false): Duel {
-  if (state.parley && state.step === "respond") return freeTalk(state, (next) => assignBlock(next, blockerUid, withSkill));
-  const next = assignBlockCore(state, blockerUid, withSkill);
+/**
+ * Chặn nhiều nhánh (chủ game 29/10): against a skill that lands on several, a front-row monster it does not land on
+ * stands in front of the branch to a back-row monster or to its player (`branch`: the uid, or "face:N"); one branch
+ * each, and the skill lands on it instead.
+ */
+export function assignCover(state: Duel, blockerUid: string, branch: string): Duel {
+  return assignBlock(state, blockerUid, false, branch);
+}
+
+export function assignBlock(state: Duel, blockerUid: string, withSkill = false, branch?: string): Duel {
+  if (state.parley && state.step === "respond") return freeTalk(state, (next) => assignBlock(next, blockerUid, withSkill, branch));
+  const next = assignBlockCore(state, blockerUid, withSkill, branch);
   if (next === state) return next;
   const mon = state.players.flatMap((player) => player.field).find((unit) => unit?.uid === blockerUid) ?? null;
   const actor = (state.players[0].field.some((unit) => unit?.uid === blockerUid) ? 0 : 1) as Side;
-  const ok = next.hold?.blocker === blockerUid;
+  const ok = branch ? Boolean(next.hold?.covers?.some((row) => row.blocker === blockerUid)) : next.hold?.blocker === blockerUid;
   if (!ok && next.upkeep && !state.upkeep && next.players === state.players) return next;
   const attacker = state.pending && (state.pending.kind === "face" || state.pending.kind === "melee") ? state.pending.attacker : state.pending && (state.pending.kind === "beam" || state.pending.kind === "gnaw-skill") ? state.pending.caster : null;
   return traced(state, next, { kind: "block", actor, ok, cardId: mon?.cardId ?? null, target: monsterTarget(state, attacker), end: null });
 }
 
-function assignBlockCore(state: Duel, blockerUid: string, withSkill = false): Duel {
+function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, branch?: string): Duel {
   if (state.hold?.stage) return state;
   const defender = (1 - state.turn) as Side;
   const pending = state.pending;
   if (state.step !== "respond" || !state.hold || state.hold.priority !== defender) {
     return note(state, "Chưa tới lượt chặn");
   }
+  if (branch) {
+    const hits = spreadHits(state);
+    if (!hits || hits.length < 2) return note(state, "Chỉ chặn từng nhánh khi kỹ năng trúng nhiều mục tiêu.");
+    if (!hits.includes(branch)) return note(state, "Nhánh này không trúng ai.");
+    const covered = branch === `face:${defender}` || state.players[defender].field.some((mon) => mon?.uid === branch && mon.row === "back");
+    if (!covered) return note(state, "Quái chỉ chặn đòn vào người chơi hoặc vào hàng sau.");
+    if (hits.includes(blockerUid)) return note(state, "Quái đang bị nhắm không chặn hộ được.");
+    const covers = state.hold.covers ?? [];
+    if (covers.some((row) => row.blocker === blockerUid)) return note(state, "Mỗi quái chỉ chặn một nhánh.");
+    if (covers.some((row) => row.target === branch)) return note(state, "Nhánh này đã có quái chặn.");
+  }
   // Luật 6 ô (chủ game 28/10): quái hàng trước chặn thay cho người chơi và cho quái hàng sau, cả đòn đánh lẫn kỹ năng.
   // Đánh vào quái hàng trước thì không ai chặn hộ.
   const aim = pending?.kind === "melee" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.target : null;
-  if (pending?.kind !== "face") {
+  if (!branch && pending?.kind !== "face") {
     const victim = aim ? state.players[defender].field.find((mon) => mon?.uid === aim) ?? null : null;
     if (!victim) return note(state, "Quái chỉ chặn đòn đánh vào người hoặc vào hàng sau.");
     if (victim.row !== "back") return note(state, "Đánh vào hàng trước thì không ai chặn hộ được.");
@@ -3973,6 +4079,19 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false): Du
     });
   }
   const acted = markQueenAct(next, defender, blocker.uid);
+  if (branch) {
+    const shielded = state.players[defender].field.find((mon) => mon?.uid === branch) ?? null;
+    const covering = note(acted.state, `${cardOf(blocker).name} sẽ chặn cho ${shielded ? cardOf(shielded).name : "người chơi"}.${acted.extra}`, "info");
+    return stampLegend(
+      {
+        ...covering,
+        step: "respond",
+        pending: state.pending,
+        hold: { ...state.hold, priority: state.turn, passed: [false, false], covers: [...(state.hold.covers ?? []), { blocker: blockerUid, target: branch }] },
+      },
+      [blockerUid],
+    );
+  }
   const noted = note(acted.state, blocker.cardId === GUARD_KNIGHT ? `${cardOf(blocker).name} dùng Kiếm phòng ngự.${acted.extra}` : `${cardOf(blocker).name} sẽ chặn.${acted.extra}`, "info");
   const blocked: Duel = {
     ...noted,
@@ -3983,6 +4102,47 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false): Du
   const ids = [blockerUid];
   if (pending?.kind === "face") ids.push(pending.attacker);
   return stampLegend(blocked, ids);
+}
+
+/**
+ * Whom the skill waiting to resolve lands on with nobody in front of it (uids, and "face:N" for a player), from a run
+ * of it with its own seed; null when nothing waits or it is not a skill.
+ */
+export function spreadHits(state: Duel): string[] | null {
+  const pending = state.pending;
+  const hold = state.hold;
+  if (state.step !== "respond" || !hold || !pending || pending.kind !== "beam" || pending.back) return null;
+  const casterSide = ownerSide(state, pending.caster);
+  if (casterSide === null) return null;
+  const side = (1 - casterSide) as Side;
+  const open: Duel = { ...state, hold: { ...hold, blocker: null, blockerSkill: false, covers: undefined, stage: undefined } };
+  let after = withSeed(hold.seed, () => passResponseCore(open));
+  if (after.reel?.kind === "gun" && after.reel.phase === "spin" && !state.reel) after = settleReel(after);
+  if (after === open || (after.step === "respond" && after.pending === open.pending)) return null;
+  const hits = new Set<string>(struckFront(open, after, side));
+  if (after.players[side].hp !== open.players[side].hp) hits.add(`face:${side}`);
+  return [...hits];
+}
+
+/**
+ * Skill chậm (chủ game 29/10): a skill that lands on several is used only while its monster stands in its slot, on
+ * its own turn; never to strike back (Trả đòn). Sấm địa ngục only lands on several when more than one foe is wet.
+ */
+export function slowSkill(state: Duel, uid: string, index: number, targetUid: string | null = null): boolean {
+  const side = ownerSide(state, uid);
+  if (side === null) return false;
+  const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon) return false;
+  const id = mon.cardId;
+  if (id === "loi-nguyen-cua-rong" || isHell(id) || id === "ngai-khong-lo" || id === "ngai-nu-hoang" || id === "ngai-hoan-my" || id === "may-nem-bom-hinh-nhen" || id === "thuong-quan-long") return index === 0;
+  if (id === "trai-tim-hai-long") return index >= 1;
+  if (id === "trieu-hoi-ac-ma" && index === 0) {
+    const foes = state.players[(1 - side) as Side].field;
+    const wet = foes.filter((unit) => unit && unit.hp > 0 && (unit.wet ?? 0) > 0);
+    const aimed = targetUid ? foes.find((unit) => unit?.uid === targetUid) ?? null : null;
+    return wet.length >= 2 && (!aimed || (aimed.wet ?? 0) > 0);
+  }
+  return false;
 }
 
 export function canGuardCover(state: Duel, uid: string): boolean {
@@ -5381,6 +5541,7 @@ export function answerGnaw(state: Duel, useSkillNow: boolean): Duel {
 
 export function declareSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, extra: string | null = null): Duel {
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
+  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng diện rộng không dùng để Trả đòn được.");
   const counter = counterStart(state, uid);
   if (counter) {
     const next = declareSkillCore(counter.state, uid, targetUid, skillIndex, extra);
@@ -5425,7 +5586,7 @@ function counterEnd(state: Duel): Duel {
   if (!settled(state) || state.countering == null) return state;
   const side = state.countering;
   const player = state.players[side];
-  return { ...patch(state, side, player), countering: null, turn: side, skipped: [false, false] };
+  return nextCounter({ ...patch(state, side, player), countering: null, turn: side, skipped: [false, false] });
 }
 
 function declareSkillCore(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, extra: string | null = null): Duel {
@@ -6404,7 +6565,8 @@ function rainBombs(state: Duel, side: Side, mon: FieldMon, primaryUid: string | 
     else tally.set(key, { name, n });
   };
   const shotN = (shot: number) => each + (shot === count - 1 ? bombPlus : 0);
-  const strikeMon = (field: Array<FieldMon | null>, uid: string, shot: number) => {
+  const strikeMon = (field: Array<FieldMon | null>, aimed: string, shot: number) => {
+    const uid = coverOf(field, aimed) ?? aimed;
     const target = field.find((unit) => unit?.uid === uid && unit.hp > 0);
     if (!target) return field;
     const beforeHp = target.hp;
@@ -6418,7 +6580,9 @@ function rainBombs(state: Duel, side: Side, mon: FieldMon, primaryUid: string | 
   };
   for (let shot = 0; shot < count; shot += 1) {
     if (Math.random() < chance) {
-      if (!primaryUid) {
+      const guard = !primaryUid ? coverOf(foeField, `face:${foe}`) : null;
+      if (guard) foeField = strikeMon(foeField, guard, shot);
+      else if (!primaryUid) {
         const n = outgoing(mon, shotN(shot)) + charmDamage;
         foeHp -= n;
         total += n;
@@ -6436,7 +6600,9 @@ function rainBombs(state: Duel, side: Side, mon: FieldMon, primaryUid: string | 
     if (primaryUid) options.push({ face: true });
     if (options.length === 0) continue;
     const pick = options[Math.floor(Math.random() * options.length)];
-    if ("face" in pick) {
+    const guard = "face" in pick ? coverOf(foeField, `face:${foe}`) : null;
+    if (guard) foeField = strikeMon(foeField, guard, shot);
+    else if ("face" in pick) {
       const n = outgoing(mon, shotN(shot)) + charmDamage;
       foeHp -= n;
       total += n;
@@ -6468,7 +6634,7 @@ function gunHits(extra: string | null): GunBarrel[] | null {
 function openGunReel(state: Duel, uid: string): Duel {
   const opened: Duel = {
     ...state,
-    reel: { id: state.seq + 1, uid, kind: "gun", order: shuffle(["phys", "spell", "tru"]), faces: null, phase: "wait", seed: state.hold?.seed ?? freshSeed() },
+    reel: { id: state.seq + 1, uid, kind: "gun", order: shuffle(["phys", "spell", "tru"]), faces: null, phase: "wait", seed: state.hold?.seed ?? freshSeed(), ...(activeCovers ? { covers: activeCovers } : {}) },
   };
   return pullReel(opened);
 }
@@ -6624,7 +6790,11 @@ function pullReelCore(state: Duel): Duel {
 }
 
 export function settleReel(state: Duel): Duel {
-  const next = withSeed(state.reel?.kind === "gun" ? state.reel.seed : undefined, () => settleReelCore(state));
+  const gun = state.reel?.kind === "gun" ? state.reel : null;
+  const landed = withSeed(gun ? gun.seed : undefined, () => settleReelCore(state));
+  const foe = gun ? ownerSide(state, gun.uid) : null;
+  const struck = gun && foe !== null ? struckFront(state, landed, (1 - foe) as Side, gun.covers) : [];
+  const next = gun && struck.length ? afterSpread(state, landed, gun.uid, struck) : landed;
   if (next === state) return next;
   return withResults(state, next, { blocked: false, reflect: false, turn: false });
 }
@@ -6658,7 +6828,7 @@ function settleGun(state: Duel): Duel {
   if (!reel?.faces) return { ...state, reel: null };
   const hits = reel.faces.filter((face): face is GunBarrel => face === "phys" || face === "spell" || face === "tru");
   const uid = reel.uid;
-  return useSkill({ ...state, reel: null }, uid, null, 0, true, hits.length ? hits.join(",") : "none", true);
+  return withCovers(reel.covers, () => useSkill({ ...state, reel: null }, uid, null, 0, true, hits.length ? hits.join(",") : "none", true));
 }
 
 export function scoreReel(state: Duel, uid: string, faces: ReelFace[]): Duel {
@@ -7115,6 +7285,7 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   const run = (from: Duel) => lavaSkill(from, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
   if (silent) return run(state);
+  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng diện rộng không dùng để Trả đòn được.");
   const counter = counterStart(state, uid);
   if (counter) {
     const next = run(counter.state);

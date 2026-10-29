@@ -752,6 +752,8 @@ export const PENDING_NOTES: string[] = [
   "Skill và phép nhiều mục tiêu vào 2 quái cùng cột: điểm tách nằm ngay dưới quái hàng trước, dòng vào quái hàng trước đi tiếp lên, dòng vào quái hàng sau dùng chung nửa đầu rồi vòng cung mềm ra ngoài lá hàng trước, vào chéo góc lá hàng sau.",
   "Skill và phép nhiều mục tiêu vào 3 quái có 2 quái cùng cột: điểm tách nằm ngay dưới quái hàng trước của cột đó, quái thứ ba tách ra một vòng cung mềm vào chéo góc lá.",
   "Skill và phép nhiều mục tiêu vào 3 quái có 2 quái cùng cột: điểm tách nằm ngay dưới quái hàng trước thẳng với kẻ ra đòn, các nhánh còn lại vòng cung mềm như 2 quái hàng dọc, nhánh vào quái hàng sau vòng ra ngoài lá hàng trước của nó.",
+  "Kỹ năng diện rộng là kỹ năng chậm: chỉ dùng ở lượt của mình, không dùng để Trả đòn (nút ẩn khi Trả đòn). Sấm địa ngục chỉ tính là diện rộng khi có từ 2 kẻ địch bị ẩm.",
+  "Kỹ năng trúng nhiều quái hàng trước: mọi nhánh trúng xong, các quái hàng trước bị trúng lần lượt Trả đòn từ trái sang phải; kẻ ra đòn gục thì các lượt còn lại huỷ.",
   "Kiếm chỉ bên giữ quyền tấn công to hơn gần một phần ba, nổi lên hơn: viền sáng vàng nhẹ và lơ lửng cao hơn.",
 ];
 

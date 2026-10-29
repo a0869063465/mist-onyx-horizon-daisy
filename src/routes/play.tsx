@@ -73,6 +73,7 @@ import {
   fieldName,
   harmShift,
   harmSkill,
+  slowSkill,
   attackRound,
   hornFit,
   skillLook,
@@ -4977,18 +4978,22 @@ function PlayPage() {
           <div className="overlay is-ask">
             <div className="ask-card">
               <p>{askLabel("trai-tim-hai-long", "tide")}</p>
-              <button type="button" disabled={you.orb < tideCost(0)} onClick={() => setAim({ kind: "skill", uid: aim.uid, index: 1 })}>
-                {askLabel("trai-tim-hai-long", "surge")}
-              </button>
-              <button
-                type="button"
-                disabled={you.orb < tideCost(1)}
-                onClick={() => {
-                  setAim({ kind: "skill", uid: aim.uid, index: 2 });
-                }}
-              >
-                {askLabel("trai-tim-hai-long", "doom")}
-              </button>
+              {duel.counterAsk?.uid === aim.uid ? null : (
+                <>
+                  <button type="button" disabled={you.orb < tideCost(0)} onClick={() => setAim({ kind: "skill", uid: aim.uid, index: 1 })}>
+                    {askLabel("trai-tim-hai-long", "surge")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={you.orb < tideCost(1)}
+                    onClick={() => {
+                      setAim({ kind: "skill", uid: aim.uid, index: 2 });
+                    }}
+                  >
+                    {askLabel("trai-tim-hai-long", "doom")}
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -6420,6 +6425,8 @@ function UnitChips({
       room: empty,
     })) {
       if (!sword && harmSkill(card.id, chip.skill)) continue;
+      // Skill chậm (chủ game 29/10): a skill that lands on several is not for striking back; its button is hidden.
+      if (riposte && slowSkill(duel, uid, chip.skill)) continue;
       y.push({ key: chip.key, label: chip.label, go: chip.go });
     }
   }
