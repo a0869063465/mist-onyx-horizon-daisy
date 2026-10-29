@@ -3,11 +3,12 @@ import type { BoxPt } from "@/components/game/flow-canvas";
 /**
  * Dòng chảy (chủ game 29/10, hình vẽ vòi nước): the way each branch of a spread runs from its fork into its target. It
  * runs out sideways past its target, sagging back toward the one who sent it, rises beside the card and turns back in
- * to it (uốn ngược trở lại): round the outside of the end of a row into the card's outer side, up the gap between two
- * cards into the side of one behind them, or under a card straight ahead and up into its near edge from the side (a
- * flow may meet a card on any edge, anywhere). On each side the branches nest like the petals of a tulip: the inner
- * ones leave the fork rising and sag little, the outer ones leave it flat or falling and sag deeper, so none crosses
- * another.
+ * to it (uốn ngược trở lại): round the outside of the end of a row and in square to the card's outer side, up the gap
+ * between two cards and on along the side of one behind them (too narrow to turn in square), or under a card straight
+ * ahead and up square into its near edge, off to one side (a flow may meet a card on any edge, anywhere; it meets it
+ * right on its edge, chủ game 29/10). On each side the branches nest like the petals of a tulip: the inner ones leave
+ * the fork rising and sag little, the outer ones leave it flat or falling and sag deeper, so none crosses another;
+ * branches up the same way leave the fork as one and part where the nearer turns in.
  *
  * Board places are in % of the board (x of its width, y of its height); a branch's way and its directions are in the
  * 90 × 160 box the flows are drawn in.
@@ -22,14 +23,15 @@ export type FanRoute = {
   path: BoxPt[];
 };
 
-/** How far outside the end of a row the outer branches rise, in % of the board's width. */
-const OUTER = 3.5;
-/** How much farther out a second branch up the same outer way rises. */
-const LANE_STEP = 3;
+/** How far outside the end of a row the outer branches rise, in % of the board's width: room enough to turn in square
+ *  to the card's side. */
+const OUTER = 5;
 /** A card closer than this (in card widths) to the fork's line is straight ahead of it. */
 const AHEAD = 0.6;
-/** How far up a card's side a branch meets it, from the edge facing the fork (in card heights). */
+/** How far up a card's side a branch meets it, from the edge facing the fork (in card heights); how far to the side
+ *  of a card straight ahead it meets its near edge (in card widths). */
 const ENTRY_UP = 1 / 3;
+const NEAR_SIDE = 0.35;
 /** Box units an inner branch's sag keeps clear of the next one out. */
 const NEST = 1.2;
 
@@ -60,18 +62,21 @@ function along(path: BoxPt[], upto = Infinity): BoxPt[] {
 /**
  * A branch's way, in box units: from the fork `f` out to `side`, leaving it rising by `lift` (falling below 0), over
  * into its sag `dip` below the fork, round the bottom and up the lane `lane` (an x), then back in to `e`, arriving
- * along `into`. `toward`: +1 if its target lies down the board from the fork, -1 if up.
+ * along `into`. `toward`: +1 if its target lies down the board from the fork, -1 if up. Branches up the same way
+ * rise as one to the height `riseOf` sets (the nearer one's entry), so they part only where the nearer turns in.
  */
-function wayOf(f: BoxPt, e: BoxPt, into: BoxPt, lane: number, dip: number, lift: number, side: number, toward: number, kind: Kind): BoxPt[] {
+function wayOf(f: BoxPt, e: BoxPt, into: BoxPt, lane: number, dip: number, lift: number, side: number, toward: number, kind: Kind, riseOf = e.y): BoxPt[] {
   const reach = Math.abs(lane - f.x);
-  const low = { x: f.x + side * reach * 0.7, y: f.y - toward * dip };
+  // A branch that rises almost straight from the fork barely sags, or it would double back on itself.
+  const sag = Math.min(dip, reach * 0.6);
+  const low = { x: f.x + side * reach * 0.7, y: f.y - toward * sag };
   const out = unit(side, toward * lift);
   const first = Math.hypot(low.x - f.x, low.y - f.y);
-  const rise = { x: lane, y: low.y + (e.y - low.y) * 0.3 };
+  const rise = { x: lane, y: low.y + (riseOf - low.y) * 0.3 };
   const climb = Math.abs(rise.y - low.y);
   const last = Math.hypot(e.x - rise.x, e.y - rise.y);
-  // Into a card's side it bows round from its lane, as a petal's tip.
-  const turnIn = last * (kind === "side" ? 0.35 : 0.3);
+  // Into a card's side it turns in square off its lane, round a corner as wide as the room it has.
+  const turnIn = kind === "side" ? Math.abs(e.x - lane) : last * 0.3;
   return [
     f,
     { x: f.x + out.x * first * 0.45, y: f.y + out.y * first * 0.45 },
@@ -129,16 +134,17 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
       const near = card.y - (toward * card.h) / 2;
       lane = laneBeside(plan.col, side);
       if (plan.ahead && plan.inFront) {
-        // Under the card, out nearly to its side, then up and back in to its near edge.
+        // Out under the card, then up square into its near edge, off to that side.
         kind = "near";
-        lane = card.x + side * card.w * 0.45;
-        entry = { x: card.x + side * card.w * 0.15, y: near };
-        into = unit(-side * 0.4, toward);
+        lane = card.x + side * card.w * NEAR_SIDE;
+        entry = { x: lane, y: near };
+        into = { x: 0, y: toward };
       } else {
-        // Up beside it and in at its side, a third of the way up from its near edge.
+        // Up beside it and in at its side, a third of the way up from its near edge: in square from outside the row;
+        // from a gap too narrow to turn in, on along its side into the moat there.
         kind = lane === outerLeft || lane === outerRight ? "side" : "gap";
         entry = { x: edgeOf(card, side), y: near + toward * card.h * ENTRY_UP };
-        into = kind === "side" ? unit(-side, toward) : unit(-side * 0.35, toward);
+        into = kind === "side" ? { x: -side, y: 0 } : { x: 0, y: toward };
       }
     } else if (aim.ring) {
       // A player: up round the outside of the rows into the ring round its health, from below.
@@ -156,49 +162,46 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
     return { key: aim.key, side, entry, into, lane, kind };
   });
 
-  // Branches up the same outer way: the nearer turns in first, the farther rises outside it.
-  const byLane = new Map<string, typeof drafts>();
-  for (const draft of drafts) {
-    if (draft.kind !== "side" && draft.kind !== "ring") continue;
-    const id = `${draft.side}:${draft.lane.toFixed(1)}`;
-    byLane.set(id, [...(byLane.get(id) ?? []), draft]);
-  }
-  for (const group of byLane.values()) {
-    group.sort((a, b) => Math.abs(a.entry.y - fork.y) - Math.abs(b.entry.y - fork.y));
-    group.forEach((draft, index) => {
-      draft.lane += draft.side * LANE_STEP * index;
-    });
-  }
-
   const f = { x: fork.x * 0.9, y: fork.y * 1.6 };
   for (const side of [-1, 1]) {
-    const mine = drafts
-      .filter((draft) => draft.side === side)
-      .map((draft) => {
-        const lane = Math.min(98.5, Math.max(1.5, draft.lane)) * 0.9;
-        return { draft, lane, reach: Math.abs(lane - f.x), e: { x: draft.entry.x * 0.9, y: draft.entry.y * 1.6 } };
+    // Branches up the same way share it: the nearer turns in first, the farther rises on.
+    const lanes = new Map<string, Array<{ draft: (typeof drafts)[number]; e: BoxPt }>>();
+    for (const draft of drafts) {
+      if (draft.side !== side) continue;
+      const id = draft.lane.toFixed(1);
+      lanes.set(id, [...(lanes.get(id) ?? []), { draft, e: { x: draft.entry.x * 0.9, y: draft.entry.y * 1.6 } }]);
+    }
+    const groups = [...lanes.values()]
+      .map((members) => {
+        members.sort((a, b) => Math.abs(a.e.y - f.y) - Math.abs(b.e.y - f.y));
+        const lane = Math.min(98.5, Math.max(1.5, members[0].draft.lane)) * 0.9;
+        return { members, lane, reach: Math.abs(lane - f.x) };
       })
       .sort((a, b) => a.reach - b.reach);
-    if (!mine.length) continue;
+    if (!groups.length) continue;
     // The outermost sags deepest; it leaves the fork a little rising, or a little falling under branches nested
     // inside it.
     let outer: BoxPt[] | null = null;
-    let dip = Math.min(5, Math.max(2.5, mine[mine.length - 1].reach * 0.15 + 1));
-    let lift = mine.length > 1 ? -0.15 : 0.15;
-    for (let i = mine.length - 1; i >= 0; i -= 1) {
-      const row = mine[i];
-      let path = wayOf(f, row.e, row.draft.into, row.lane, dip, lift, side, toward, row.draft.kind);
+    let dip = Math.min(5, Math.max(2.5, groups[groups.length - 1].reach * 0.15 + 1));
+    let lift = groups.length > 1 ? -0.15 : 0.15;
+    for (let i = groups.length - 1; i >= 0; i -= 1) {
+      const group = groups[i];
+      const near = group.members[0];
+      let path = wayOf(f, near.e, near.draft.into, group.lane, dip, lift, side, toward, near.draft.kind);
       // Nested inside the one out from it: rising out of the fork, sagging less, clear of it all the way round.
       for (let tries = 0; outer && tries < 8 && !clearOf(path, outer, f, side, toward); tries += 1) {
         dip *= 0.75;
         lift = Math.min(0.9, lift + 0.12);
-        path = wayOf(f, row.e, row.draft.into, row.lane, dip, lift, side, toward, row.draft.kind);
+        path = wayOf(f, near.e, near.draft.into, group.lane, dip, lift, side, toward, near.draft.kind);
       }
-      routes.set(row.draft.key, { entry: row.draft.entry, into: row.draft.into, path });
+      for (const member of group.members) {
+        const way = member === near ? path : wayOf(f, member.e, member.draft.into, group.lane, dip, lift, side, toward, member.draft.kind, near.e.y);
+        routes.set(member.draft.key, { entry: member.draft.entry, into: member.draft.into, path: way });
+      }
       outer = path;
-      const next = mine[i - 1];
+      const next = groups[i - 1];
       if (next) {
-        dip = Math.max(0.6, Math.min(dip - 1, dip * (next.reach / Math.max(1, row.reach)) * 0.75));
+        dip = Math.max(0.6, Math.min(dip - 1, dip * (next.reach / Math.max(1, group.reach)) * 0.75));
         lift = Math.min(0.9, lift + 0.4);
       }
     }

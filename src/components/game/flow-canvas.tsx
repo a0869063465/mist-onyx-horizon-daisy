@@ -12,7 +12,8 @@ import type { FlowTone } from "@/lib/reaction-chain";
  * Đợt 2 (chủ game 29/10): a ribbon that reaches a card runs, like a canal reaching a walled city, into a thin moat
  * round it (a ring round a player or an icon); one that an icon stops surges against it without end, as a flood
  * against a dam: foam piled on the wall, spray and drops thrown back, waves running back up the flow; a spread's
- * ribbon runs to a fork and its branches run on from there.
+ * ribbon runs to a fork and its branches run on from there. The moat round a card runs right on its edge, and a
+ * ribbon touches the card there and flows on into it (chủ game 29/10).
  */
 
 /** A point or a direction in the 90 × 160 box the board is drawn in (it is 9:16, so the ribbons keep their shape). */
@@ -75,15 +76,21 @@ const SURGE = 0.42;
 const BLOOM = 0.55;
 /** Rows along a ribbon. */
 const ROWS = 56;
-/** A moat: seconds it takes to run round once the ribbon is there, its gap from the card and its width (box units). */
+/** A moat: seconds it takes to run round once the ribbon is there, its gap from a ring and its width (box units); round
+ *  a card it runs right on the card's edge. */
 const MOAT_RUN = 0.5;
 const MOAT_PAD = 1.05;
 const MOAT_HALF = 0.62;
 /** Drops thrown back by a dam at once. */
 const DROPS = 14;
 
+type Pt = { x: number; y: number };
 type Row = { x: number; y: number; nx: number; ny: number };
 type Geo = { sig: string; rows: Row[]; len: number; mesh: Float32Array };
+/** An arm of a moat, and how its light carries on the ribbon's: the share of its length it fades in over, where its
+ *  light starts along the ribbon (box units), how its light maps across onto the ribbon's (v × [0] + [1]), how bright
+ *  it is at its start and its end, and its light's seed. */
+type Arm = Geo & { fadeIn: number; from: number; vmap: [number, number]; ramp: [number, number]; seed: number };
 type Track = {
   spec: FlowSpec;
   born: number;
@@ -92,7 +99,13 @@ type Track = {
   gone: number | null;
   geo: Geo | null;
   /** The two arms of its moat. */
-  moat: Geo[];
+  moat: Arm[];
+  /** How its end fades where it parts into the moat round a card: over that share of its length, by that much. */
+  tailFade: [number, number];
+  /** The share of its length before its end where its moat's arms leave it. */
+  lead: number;
+  /** The way its flare lies, where not across the ribbon (along the edge of a card it runs on along). */
+  flat: Pt | null;
   bow: number;
   seed: number;
   buffer: WebGLBuffer | null;
@@ -200,8 +213,8 @@ function moatPath(moat: Moat, sx: number, sy: number, unit: number): Array<{ x: 
   }
   const cx = moat.c.x * sx;
   const cy = moat.c.y * sy;
-  const hw = moat.half.x * sx + unit * MOAT_PAD;
-  const hh = moat.half.y * sy + unit * MOAT_PAD;
+  const hw = moat.half.x * sx;
+  const hh = moat.half.y * sy;
   const rc = Math.min(hw, hh) * 0.16 + unit * 0.9;
   // A rounded box: straight edges and quarter turns, clockwise from the middle of the top edge.
   const corner = (ccx: number, ccy: number, from: number) => {
@@ -224,6 +237,115 @@ function moatPath(moat: Moat, sx: number, sy: number, unit: number): Array<{ x: 
   corner(cx - hw + rc, cy - hh + rc, Math.PI);
   edge(cx - hw + rc, cy - hh, cx, cy - hh);
   return pts;
+}
+
+function norm(x: number, y: number): Pt {
+  const len = Math.hypot(x, y) || 1;
+  return { x: x / len, y: y / len };
+}
+
+function cubicAt(a: Pt, b: Pt, c: Pt, d: Pt, t: number): Pt {
+  const u = 1 - t;
+  return {
+    x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+    y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+  };
+}
+
+function lengthOf(pts: Pt[]): number {
+  let len = 0;
+  for (let i = 1; i < pts.length; i += 1) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  return len;
+}
+
+/** Half the moat's width along an arm (px). */
+function moatHalf(u: number, unit: number, seed: number): number {
+  return unit * MOAT_HALF * (0.85 + 0.25 * Math.sin(u * 9 + seed * 6)) * (1 - 0.35 * smooth(0.8, 1, u));
+}
+
+/** The moat round a ring (a player's health, an icon): two thin arms from where the ribbon comes in, round either side,
+ *  meeting on the far side. */
+function ringArms(path: Pt[], at: number, unit: number, seed: number): Arm[] {
+  const n = path.length;
+  const halfN = Math.floor(n / 2);
+  return [1, -1].map((dir, i) => {
+    const { rows, total } = rowsAlong(
+      Array.from({ length: halfN + 1 }, (_, k) => path[(at + dir * k + n * 2) % n]),
+      ROWS,
+    );
+    const armSeed = (seed + i * 0.37) % 1;
+    const mesh = meshOf(rows, (u) => moatHalf(u, unit, armSeed), () => 1.1);
+    return { sig: "", rows, len: total, mesh, fadeIn: 0.06, from: 0, vmap: [1, 0], ramp: [0.63, 0.9], seed: armSeed };
+  });
+}
+
+/**
+ * The moat round a card (chủ game 29/10): the ribbon touches the card right on its edge and flows on into the moat,
+ * which runs on the edge. Met square on, the flow parts in two there as water against a wall: each half bends away
+ * round a rounded corner and runs along the edge, at first as wide as half the flow, thinning to the moat as it goes,
+ * the two meeting on the far side, while the ribbon's end fades as it parts; their light carries straight on from the
+ * ribbon's. Met along the edge (up a gap too narrow to turn in square), the flow runs straight on into the moat that
+ * way, while the moat's other arm sets off back the other way under it.
+ */
+function boxArms(path: Pt[], at: number, rows: Row[], total: number, half: number, middle: Pt, unit: number, seed: number): Pick<Track, "moat" | "tailFade" | "lead" | "flat"> {
+  const n = path.length;
+  const halfN = Math.floor(n / 2);
+  const ix = (i: number) => ((i % n) + n) % n;
+  const tip = path[ix(at)];
+  const end = rows[rows.length - 1];
+  const prior = rows[rows.length - 2];
+  const d = norm(end.x - prior.x, end.y - prior.y);
+  const flowN = { x: end.nx, y: end.ny };
+  const along = norm(path[ix(at + 1)].x - path[ix(at - 1)].x, path[ix(at + 1)].y - path[ix(at - 1)].y);
+  let inward = { x: -along.y, y: along.x };
+  if (inward.x * (middle.x - tip.x) + inward.y * (middle.y - tip.y) < 0) inward = { x: -inward.x, y: -inward.y };
+  const armOf = (pts: Pt[], startHalf: number, taper: number, fadeIn: number, from: number, vmapOf: (a0: Pt) => [number, number]): Arm => {
+    const { rows: armRows, total: armLen } = rowsAlong(pts, ROWS);
+    const thin = Math.min(1, taper / armLen);
+    const mesh = meshOf(armRows, (u) => startHalf + (moatHalf(u, unit, seed) - startHalf) * smooth(0, thin, u), () => 1.1);
+    return { sig: "", rows: armRows, len: armLen, mesh, fadeIn: Math.min(0.9, fadeIn / armLen), from, vmap: vmapOf({ x: armRows[0].nx, y: armRows[0].ny }), ramp: [1, 0.8], seed };
+  };
+  if (d.x * inward.x + d.y * inward.y < 0.5) {
+    // Along the edge: straight on into the moat that way; the other arm sets off back under the flow.
+    const ahead = (path[ix(at + 1)].x - tip.x) * d.x + (path[ix(at + 1)].y - tip.y) * d.y >= 0 ? 1 : -1;
+    const moat = [ahead, -ahead].map((dir) => {
+      const pts = Array.from({ length: halfN + 1 }, (_, k) => path[ix(at + dir * k)]);
+      const stretch = lengthOf(pts);
+      return dir === ahead
+        ? armOf(pts, half, stretch * 0.45, 0, total / unit, (a0) => [Math.sign(a0.x * flowN.x + a0.y * flowN.y) || 1, 0])
+        : armOf(pts, moatHalf(0, unit, seed), 1, stretch * 0.4, total / unit, () => [1, 0]);
+    });
+    return { moat, tailFade: [0, 0], lead: 0, flat: along };
+  }
+  // Square on: each half of the flow bends away round its own corner into the edge, a corner's width from the tip.
+  const bend = Math.min(unit * 4.5, Math.max(unit * 1.4, half * 1.1));
+  const moat = [1, -1].map((dir) => {
+    const way = norm(path[ix(at + dir)].x - tip.x, path[ix(at + dir)].y - tip.y);
+    const lean = way.x * d.x + way.y * d.y;
+    const side = norm(way.x - d.x * lean, way.y - d.y * lean);
+    const a = { x: tip.x - d.x * bend + (side.x * half) / 2, y: tip.y - d.y * bend + (side.y * half) / 2 };
+    let k = 0;
+    let run = 0;
+    while (k < halfN - 2 && run < bend + half / 2) {
+      run += Math.hypot(path[ix(at + dir * (k + 1))].x - path[ix(at + dir * k)].x, path[ix(at + dir * (k + 1))].y - path[ix(at + dir * k)].y);
+      k += 1;
+    }
+    const b = path[ix(at + dir * k)];
+    const onward = norm(path[ix(at + dir * (k + 1))].x - b.x, path[ix(at + dir * (k + 1))].y - b.y);
+    const pull = Math.hypot(b.x - a.x, b.y - a.y) * 0.39;
+    const corner = Array.from({ length: 16 }, (_, i) =>
+      cubicAt(a, { x: a.x + d.x * pull, y: a.y + d.y * pull }, { x: b.x - onward.x * pull, y: b.y - onward.y * pull }, b, i / 15),
+    );
+    const pts = [...corner, ...Array.from({ length: halfN - k }, (_, i) => path[ix(at + dir * (k + 1 + i))])];
+    const round = lengthOf(corner);
+    // Its light carries on that half of the ribbon's: from the middle of the ribbon out to that side.
+    const half1 = Math.sign(side.x * flowN.x + side.y * flowN.y) || 1;
+    return armOf(pts, half / 2, round * 2.2, round * 0.9, (total - bend) / unit, (a0) => {
+      const out = Math.sign(a0.x * side.x + a0.y * side.y) || 1;
+      return [half1 * 0.5 * out, half1 * 0.5];
+    });
+  });
+  return { moat, tailFade: [Math.min(0.5, (bend * 1.2) / total), 0.55], lead: bend / total, flat: null };
 }
 
 const VERTEX = `
@@ -261,6 +383,14 @@ uniform float uDam;
 uniform vec3 uCore;
 uniform vec3 uMid;
 uniform vec3 uDeep;
+// How it fades in at its start (a share of its length), and out at its end (over a share, by how much); where its
+// light starts along the flow it carries on (box units) and how it maps across onto that flow's; how bright it is at
+// its start and its end.
+uniform float uIn;
+uniform vec2 uOut;
+uniform float uFrom;
+uniform vec2 uVMap;
+uniform vec2 uRamp;
 
 float caustic(vec2 p, float t) {
   vec2 i = p;
@@ -282,11 +412,11 @@ void main() {
   float body = 1.0 - smoothstep(0.3, 1.0, av);
   float core = exp(-av * av * 7.0);
   // Long thin lines along the flow, several across it; far from the origin, where the warp stays fine.
-  vec2 p = vec2(u * uLen * 0.07 - uTime * 1.1, v * 1.7) * 3.0 + vec2(uSeed * 7.0 - 250.0, uSeed * 3.0 - 250.0);
+  vec2 p = vec2((uFrom + u * uLen) * 0.07 - uTime * 1.1, (v * uVMap.x + uVMap.y) * 1.7) * 3.0 + vec2(uSeed * 7.0 - 250.0, uSeed * 3.0 - 250.0);
   float lines = caustic(p, uTime * 0.85 + uSeed * 5.0) * 1.1 + caustic(p * 1.6 + vec2(3.1, 1.7), uTime * 1.2 + uSeed * 9.0) * 0.45;
   float shimmer = clamp((lines - 0.22) * 1.5, 0.0, 1.6);
   float fray = 1.0 - smoothstep(0.55, 1.0, av) + smoothstep(0.55, 1.0, av) * shimmer * 0.9;
-  float ends = smoothstep(0.0, 0.06, u) * (0.7 + 0.3 * u);
+  float ends = smoothstep(0.0, max(uIn, 0.0001), u) * mix(uRamp.x, uRamp.y, u) * (1.0 - uOut.y * smoothstep(1.0 - max(uOut.x, 0.0001), 1.0, u));
   float reach = 1.0 - smoothstep(uGrow - 0.05, uGrow + 0.015, u);
   float surge = uHead < 0.0 ? 0.0 : exp(-pow((u - uHead) * 8.0, 2.0)) * 2.4;
   // A luminous body in the flow's colour, brighter lines over it, white where the lines crowd in the middle; a slight
@@ -539,35 +669,25 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const dam = spec.land === "dam";
       const seed = track.seed;
       const foldAt = (u: number) => 0.45 + 0.55 * Math.abs(Math.cos(Math.PI * (0.35 + seed * 0.5 + (u * lenBox) / 34)));
-      const mesh = meshOf(
-        rows,
-        (u) => {
-          // Into a dam it keeps its old shape, the water piling up and spreading along the wall (chủ game 29/10: so
-          // the icon that stops it looks natural). Else its head as wide as it always was and its tail wider, as a
-          // dragon's flame; a spread's trunk widens half as much.
-          const breathe = dam
-            ? (1.5 + 0.85 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.05)), 0.8) - 0.55 * u) * (1 + 0.95 * smooth(0.7, 1, u))
-            : 1.5 + tail * Math.pow(u, 0.9) + 0.25 * Math.sin(u * 9 + seed * 6);
-          return breathe * foldAt(u) * unit * 1.5 * width;
-        },
-        (u) => 1 / (0.62 + 0.38 * foldAt(u)),
-      );
+      // Into a dam it keeps its old shape, the water piling up and spreading along the wall (chủ game 29/10: so the
+      // icon that stops it looks natural). Else its head as wide as it always was and its tail wider, as a dragon's
+      // flame; a spread's trunk widens half as much.
+      const halfOf = (u: number) => {
+        const breathe = dam
+          ? (1.5 + 0.85 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.05)), 0.8) - 0.55 * u) * (1 + 0.95 * smooth(0.7, 1, u))
+          : 1.5 + tail * Math.pow(u, 0.9) + 0.25 * Math.sin(u * 9 + seed * 6);
+        return breathe * foldAt(u) * unit * 1.5 * width;
+      };
+      const mesh = meshOf(rows, halfOf, (u) => 1 / (0.62 + 0.38 * foldAt(u)));
       track.geo = { sig: sigOf(spec), rows, len: total, mesh };
-      // The moat: two thin arms from where the ribbon comes in, round either side, meeting on the far side.
+      // The moat: round a card the flow parts into it at the card's edge; round a ring, two thin arms.
       track.moat = [];
-      if (path && tip.at >= 0) {
-        const n = path.length;
-        const halfN = Math.floor(n / 2);
-        for (const dir of [1, -1]) {
-          const arm = Array.from({ length: halfN + 1 }, (_, i) => path[(tip.at + dir * i + n * 2) % n]);
-          const { rows: armRows, total: armLen } = rowsAlong(arm, ROWS);
-          const armMesh = meshOf(
-            armRows,
-            (u) => unit * MOAT_HALF * (0.85 + 0.25 * Math.sin(u * 9 + seed * 6)) * (1 - 0.35 * smooth(0.8, 1, u)),
-            () => 1.1,
-          );
-          track.moat.push({ sig: "", rows: armRows, len: armLen, mesh: armMesh });
-        }
+      track.tailFade = [0, 0];
+      track.lead = 0;
+      track.flat = null;
+      if (path && tip.at >= 0 && spec.moat) {
+        if (spec.moat.kind === "box") Object.assign(track, boxArms(path, tip.at, rows, total, halfOf(1), { x: spec.moat.c.x * sx(), y: spec.moat.c.y * sy() }, unit, seed));
+        else track.moat = ringArms(path, tip.at, unit, seed);
       }
     };
 
@@ -600,7 +720,8 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
     /** How far the ribbon has reached out from its icon (0 to 1). */
     const growOf = (track: Track, now: number): number => clamp01((now - startOf(track)) / reachTime(track));
     /** How far its moat has run round (0 to 1), once the ribbon is there. */
-    const moatOf = (track: Track, now: number): number => clamp01((now - startOf(track) - reachTime(track)) / MOAT_RUN);
+    const moatOf = (track: Track, now: number): number =>
+      clamp01((now - startOf(track) - reachTime(track) * (track.lead > 0 ? Math.max(0, 0.93 - track.lead) : 1)) / MOAT_RUN);
     /** The head of a fire's surge along the ribbon, or -1; past 1 it runs on round the moat. */
     const headOf = (track: Track, now: number): number => {
       const spec = track.spec;
@@ -642,6 +763,9 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
             gone: null,
             geo: null,
             moat: [],
+            tailFade: [0, 0],
+            lead: 0,
+            flat: null,
             bow: (hash(spec.key) < 0.5 ? -1 : 1) * (0.55 + 0.45 * hash(`${spec.key}#`)),
             seed: hash(`${spec.key}~`),
             buffer: null,
@@ -704,10 +828,13 @@ type Timing = {
 };
 
 /** A quad at a ribbon's end: across it (`w`) and along it (`h`), in px, its middle `shift` px back up the ribbon. */
-function endQuad(geo: Geo, w: number, h: number, shift = 0): Float32Array {
+function endQuad(geo: Geo, w: number, h: number, shift = 0, flat: Pt | null = null): Float32Array {
   const tail = geo.rows[ROWS];
-  const tx = tail.ny;
-  const ty = -tail.nx;
+  // Across the ribbon, or along the way it is told to lie.
+  const ax = flat ? flat.x : tail.nx;
+  const ay = flat ? flat.y : tail.ny;
+  const tx = ay;
+  const ty = -ax;
   const cx = tail.x - tx * shift;
   const cy = tail.y - ty * shift;
   const quad = new Float32Array(4 * 5);
@@ -717,8 +844,8 @@ function endQuad(geo: Geo, w: number, h: number, shift = 0): Float32Array {
     [-1, 1],
     [1, 1],
   ].forEach(([qx, qy], i) => {
-    quad[i * 5] = cx + tail.nx * qx * w + tx * qy * h;
-    quad[i * 5 + 1] = cy + tail.ny * qx * w + ty * qy * h;
+    quad[i * 5] = cx + ax * qx * w + tx * qy * h;
+    quad[i * 5 + 1] = cy + ay * qx * w + ty * qy * h;
     quad[i * 5 + 2] = qx;
     quad[i * 5 + 3] = qy;
     quad[i * 5 + 4] = 1;
@@ -819,7 +946,10 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
     canvas.style.visibility = "hidden";
   };
   canvas.addEventListener("webglcontextlost", onLost);
-  const ribbonDraw = (mesh: Float32Array, buffer: WebGLBuffer | null, len: number, unit: number, uniforms: { fade: number; grow: number; head: number; seed: number; dam: number; pal: Pal }) => {
+  /** How a ribbon of light is drawn: a flow's (the defaults), or an arm of a moat carrying on the flow's light. */
+  type Look = { fadeIn: number; tailFade: [number, number]; from: number; vmap: [number, number]; ramp: [number, number] };
+  const FLOW_LOOK: Look = { fadeIn: 0.06, tailFade: [0, 0], from: 0, vmap: [1, 0], ramp: [0.7, 1] };
+  const ribbonDraw = (mesh: Float32Array, buffer: WebGLBuffer | null, len: number, unit: number, uniforms: { fade: number; grow: number; head: number; seed: number; dam: number; pal: Pal; look: Look }) => {
     let buf = buffer;
     if (!buf) {
       buf = g.createBuffer();
@@ -836,6 +966,11 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
     g.uniform3fv(spot(ribbon, "uCore"), uniforms.pal.core);
     g.uniform3fv(spot(ribbon, "uMid"), uniforms.pal.mid);
     g.uniform3fv(spot(ribbon, "uDeep"), uniforms.pal.deep);
+    g.uniform1f(spot(ribbon, "uIn"), uniforms.look.fadeIn);
+    g.uniform2f(spot(ribbon, "uOut"), uniforms.look.tailFade[0], uniforms.look.tailFade[1]);
+    g.uniform1f(spot(ribbon, "uFrom"), uniforms.look.from);
+    g.uniform2f(spot(ribbon, "uVMap"), uniforms.look.vmap[0], uniforms.look.vmap[1]);
+    g.uniform2f(spot(ribbon, "uRamp"), uniforms.look.ramp[0], uniforms.look.ramp[1]);
     g.drawArrays(g.TRIANGLE_STRIP, 0, mesh.length / 5);
     return buf;
   };
@@ -860,13 +995,29 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
         if (!geo || fade <= 0.003) continue;
         const pal = PAL[track.spec.tone];
         const dam = track.spec.land === "dam" ? smooth(0.85, 1, timing.growOf(track, now)) : 0;
-        track.buffer = ribbonDraw(geo.mesh, track.buffer, geo.len, unit, { fade, grow: timing.growOf(track, now) * 1.08, head: timing.headOf(track, now), seed: track.seed, dam, pal });
+        track.buffer = ribbonDraw(geo.mesh, track.buffer, geo.len, unit, {
+          fade,
+          grow: timing.growOf(track, now) * 1.08,
+          head: timing.headOf(track, now),
+          seed: track.seed,
+          dam,
+          pal,
+          look: { ...FLOW_LOOK, tailFade: track.tailFade },
+        });
         // The moat: the same light, thin, running round either side from where the ribbon comes in.
         const round = timing.moatOf(track, now);
         if (round > 0) {
           const head = timing.moatHeadOf(track, now);
           track.moat.forEach((arm, i) => {
-            track.moatBuffers[i] = ribbonDraw(arm.mesh, track.moatBuffers[i] ?? null, arm.len, unit, { fade: fade * 0.9, grow: round * 1.08, head, seed: (track.seed + i * 0.37) % 1, dam: 0, pal });
+            track.moatBuffers[i] = ribbonDraw(arm.mesh, track.moatBuffers[i] ?? null, arm.len, unit, {
+              fade,
+              grow: round * 1.08,
+              head,
+              seed: arm.seed,
+              dam: 0,
+              pal,
+              look: { fadeIn: arm.fadeIn, tailFade: [0, 0], from: arm.from, vmap: arm.vmap, ramp: arm.ramp },
+            });
           });
         }
       }
@@ -885,7 +1036,7 @@ function glPainter(canvas: HTMLCanvasElement, dprOf: () => number, timing: Timin
         const pal = PAL[track.spec.tone];
         const flicker = 0.9 + 0.1 * Math.sin(now * 11 + track.seed * 20) + 0.05 * Math.sin(now * 27);
         const lit = (bloom >= 0 ? 1 + 1.6 * bloom : 1) * flicker;
-        g.bufferData(g.ARRAY_BUFFER, endQuad(geo, unit * 4.6 * lit, unit * 1.9 * lit), g.DYNAMIC_DRAW);
+        g.bufferData(g.ARRAY_BUFFER, endQuad(geo, unit * 4.6 * lit, unit * 1.9 * lit, 0, track.flat), g.DYNAMIC_DRAW);
         bind(flare);
         g.uniform1f(spot(flare, "uFade"), fade * (bloom >= 0 ? 1.4 * (1 - bloom) + 0.6 : 1) * smooth(0.9, 1, grown));
         g.uniform3fv(spot(flare, "uCore"), pal.core);
