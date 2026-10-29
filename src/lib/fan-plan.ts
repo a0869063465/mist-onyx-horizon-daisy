@@ -369,15 +369,16 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
     if (card && !inRow(card)) {
       // A back-row card: one soft bow straight across the front row, over the cards (chủ game 29/10: cứ cho đi xuyên
       // lá, không len qua khe), into its near edge a little off its middle on the fork's side, slanting in.
+      // One bend only, as the standard of two in a column: it leaves the fork sideways and turns evenly down into
+      // the card, steeper as it lands (~60° to the edge).
       const e = { x: (card.x - out * card.w * 0.15) * 0.9, y: nearEdge(card) * 1.6 };
-      const into = unit(out * 0.7, toward);
-      const dx = Math.abs(e.x - f.x);
-      const rise = Math.abs(e.y - f.y);
-      const len = Math.hypot(dx, rise);
+      const leave = unit(out, toward * 0.25);
+      const into = unit(out * 0.6, toward);
+      const len = Math.hypot(e.x - f.x, e.y - f.y);
       routes.set(aim.key, {
         entry: { x: e.x / 0.9, y: e.y / 1.6 },
         into,
-        path: [f, onBoard({ x: f.x + out * dx * 0.5, y: f.y - toward * rise * 0.12 }), onBoard({ x: e.x - into.x * len * 0.45, y: e.y - into.y * len * 0.45 }), e],
+        path: [f, onBoard({ x: f.x + leave.x * len * 0.3, y: f.y + leave.y * len * 0.3 }), onBoard({ x: e.x - into.x * len * 0.35, y: e.y - into.y * len * 0.35 }), e],
       });
       continue;
     } else if (card) {
