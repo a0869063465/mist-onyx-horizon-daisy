@@ -737,6 +737,8 @@ export const PENDING_NOTES: string[] = [
   "Dải sáng bị phản về (Lá chắn phản đòn, Giáp cơ khí) và dải sáng của Gương phòng hộ, Vòng nguyền rủa ác ma đánh về kẻ ra đòn không đi trùng đường tới nữa: vòng sang bên rộng hơn rồi vào cạnh lá.",
   "Hấp thụ ma pháp: dải sáng trắng chảy vòng quanh icon phép bị hoá giải.",
   "Bỏ vạch sáng vàng chạy giữa sân khi dùng skill, đã có dải sáng thay.",
+  "Dải sáng nhỏ ở đầu, to dần về đích như đuôi lửa rồng. Skill nhiều mục tiêu: điểm tách nằm giữa khoảng trống giữa hai hàng, theo vị trí các mục tiêu; các nhánh bung lên và ra hai bên như vòi nước rồi uốn vòng cung vào từng mục tiêu, mục tiêu cùng cột thì nhánh bung trái phải xen kẽ nên không gối nhau.",
+  "Vòng cung của Vòng nguyền rủa ác ma và Gương phòng hộ hẹp hơn Lá chắn phản đòn.",
 ];
 
 function remarkOf(notes: string[]) {

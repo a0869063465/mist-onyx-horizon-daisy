@@ -134,7 +134,7 @@ export function ReactionLine({
   /** In the preview, a queued icon whose roll is still to come keeps its face but has no target yet. */
   aimless?: ReadonlySet<string>;
   /** Dòng chảy đợt 2: where a spread aimed at a side splits, just in front of that side's row. */
-  forkOf: (side: Side) => BoardPt | null;
+  forkOf: (orb: ChainOrb, from: BoardPt) => BoardPt | null;
   /** Where a spell that stops a flow flies in from: its owner's hand. */
   throwFrom: (side: Side) => BoardPt;
 }) {
@@ -202,7 +202,7 @@ export function ReactionLine({
   // ma). The way back swings round the side with more room, toward the middle of the board, and lands on that side of
   // its card; the way in bows a little the other way. A thrown skill's way back runs on once its way in has reached
   // the icon.
-  const backs = new Map<string, { swing: number; after?: string }>();
+  const backs = new Map<string, { swing: number; after?: string; wide: boolean }>();
   const arcs = new Map<string, number>();
   for (const orb of orbs) {
     const thrown = orb.to.find((link) => link.back && link.from && "orb" in link.from);
@@ -213,7 +213,7 @@ export function ReactionLine({
       const wayIn = orb.to.find((link) => !link.from && "orb" in link.end && link.end.orb === turn);
       if (from && to) {
         const swing = swingOf(from, to);
-        backs.set(keyOf(orb, thrown), { swing, after: wayIn ? keyOf(orb, wayIn) : undefined });
+        backs.set(keyOf(orb, thrown), { swing, after: wayIn ? keyOf(orb, wayIn) : undefined, wide: true });
         if (wayIn) arcs.set(keyOf(orb, wayIn), swing * 0.35);
       }
     }
@@ -224,7 +224,7 @@ export function ReactionLine({
     const to = back && from ? endOf(back.end, from) : null;
     if (stopped && back && from && to) {
       const swing = swingOf(from, to);
-      backs.set(keyOf(orb, back), { swing });
+      backs.set(keyOf(orb, back), { swing, wide: false });
       const wayIn = stopped.to.find((link) => link.dam && "orb" in link.end && link.end.orb === orb.id);
       if (wayIn) arcs.set(keyOf(stopped, wayIn), swing * 0.35);
     }
@@ -241,7 +241,7 @@ export function ReactionLine({
     const done = orb.done || Boolean(orb.miss);
     const end = orb.miss && !orb.end ? ("fizzle" as const) : orb.end;
     // A spread runs to the fork in front of the row it splits at, then a branch to each it lands on.
-    const fork = orb.spread !== undefined && orb.spread !== null ? forkOf(orb.spread) : null;
+    const fork = orb.spread !== undefined && orb.spread !== null ? forkOf(orb, here) : null;
     const trunk = fork ? `${orb.id}|fork` : "";
     if (fork) {
       flows.push({
@@ -282,7 +282,18 @@ export function ReactionLine({
       }
       const toward = unitDir((land.x - start.x) * 0.9, (land.y - start.y) * 1.6);
       const trunkDir = fork ? unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6) : toward;
-      const faceOut = link.fork ? unitDir(trunkDir.x + toward.x, trunkDir.y + toward.y) : !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
+      let faceOut = link.fork ? unitDir(trunkDir.x + toward.x, trunkDir.y + toward.y) : !link.from && here.face !== 0 ? { x: 0, y: here.face } : toward;
+      // A branch leaves the fork like a fountain: up and out a little against the flow, then gravity bends it round
+      // into its target. Targets straight ahead fan out left and right in turn, so none lie on another.
+      let fan: number | undefined;
+      if (link.fork) {
+        const forks = orb.to.filter((other) => other.fork);
+        const side = { x: -trunkDir.y, y: trunkDir.x };
+        const lean = toward.x * side.x + toward.y * side.y;
+        const turn = Math.abs(lean) > 0.18 ? Math.sign(lean) : forks.indexOf(link) % 2 ? 1 : -1;
+        faceOut = unitDir(-trunkDir.x * 0.55 + side.x * turn, -trunkDir.y * 0.55 + side.y * turn);
+        fan = 0.12 * turn;
+      }
       if (link.dam && "orb" in link.end && !done) walls.add(link.end.orb);
       // A flow into what stops it waits for the spell to fly in from the hand.
       const stopper = link.dam && "orb" in link.end ? orbs.find((other) => other.id === (link.end as { orb: string }).orb && other.stops) : undefined;
@@ -302,9 +313,9 @@ export function ReactionLine({
         delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
         land: link.dam ? "dam" : "flare",
         moat: moatOf(land),
-        bend: link.fork ? 0.22 * Math.sign(toward.x || 1) : undefined,
+        bend: fan,
         // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other.
-        arc: way ? way.swing * 1.1 : arcs.get(key),
+        arc: way ? way.swing * (way.wide ? 1.1 : 0.5) : arcs.get(key),
         after: link.fork ? trunk : way?.after,
         width: link.fork ? 0.8 : 1,
       });

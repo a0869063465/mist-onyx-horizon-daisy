@@ -495,7 +495,8 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
       const mesh = meshOf(
         rows,
         (u) => {
-          const breathe = 1.5 + 0.85 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.05)), 0.8) - 0.55 * u;
+          // Thin at its icon, wide at its end, as a dragon's flame (chủ game 29/10).
+          const breathe = 0.6 + 1.9 * Math.pow(u, 0.9) + 0.25 * Math.sin(u * 9 + seed * 6);
           // Against a dam the water piles up and spreads along the wall.
           const pile = dam ? 1 + 0.95 * smooth(0.7, 1, u) : 1;
           return breathe * foldAt(u) * unit * 1.5 * width * pile;

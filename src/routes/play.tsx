@@ -641,7 +641,7 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 const LUNGE_FACE = 0.42;
 /** Dòng chảy đợt 2: how far in front of a row a spread splits, in % of the board's height, and the ring round a
  *  player's health its light runs into, in % of the board's width. */
-const FORK_GAP = 2.4;
+const FORK_SHARE = 0.42;
 const HP_RING = 7.4;
 const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
@@ -4214,9 +4214,23 @@ function PlayPage() {
     const mid = front[1];
     return { top, edge, x: mid.x + mid.w / 2 };
   };
-  const forkOf = (side: Side) => {
-    const front = frontOf(side);
-    return { x: front.x, y: front.edge + (front.top ? 1 : -1) * FORK_GAP };
+  /** Where a spread splits: out in the middle band between the two front rows (not up against the monsters), toward
+   *  the middle of its targets, so branches fan out naturally (chủ game 29/10). */
+  const forkFor = (orb: ChainOrb, from: { x: number; y: number }) => {
+    const side = orb.spread as Side;
+    const near = frontOf(side);
+    const far = frontOf((1 - side) as Side);
+    const band = Math.abs(far.edge - near.edge);
+    const xs: number[] = [];
+    for (const link of orb.to) {
+      if (!link.fork) continue;
+      if ("uid" in link.end) {
+        const card = cardSpot(link.end.uid);
+        if (card) xs.push(card.x);
+      } else if ("face" in link.end) xs.push((link.end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
+    }
+    const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
+    return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y: near.edge + (near.top ? 1 : -1) * band * FORK_SHARE };
   };
   /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */
   const throwFrom = (side: Side) => (side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) });
@@ -4231,7 +4245,7 @@ function PlayPage() {
     if (!stopped || !from) return null;
     const tall = ICON * boardAspect();
     let goal: { x: number; y: number; side: Side; fork: boolean } | null = null;
-    if (stopped.spread !== undefined && stopped.spread !== null) goal = { ...forkOf(stopped.spread), side: stopped.spread, fork: true };
+    if (stopped.spread !== undefined && stopped.spread !== null) goal = { ...forkFor(stopped, from), side: stopped.spread, fork: true };
     else if (stopped.goal && "uid" in stopped.goal) {
       const card = cardSpot(stopped.goal.uid);
       const seat = seatOfUid(stopped.goal.uid);
@@ -4802,7 +4816,7 @@ function PlayPage() {
             onClosed={() => setChain((list) => (list.every((orb) => orb.done) ? [] : list))}
             cracked={peekIcons?.cracked}
             aimless={peekIcons?.aimless}
-            forkOf={forkOf}
+            forkOf={forkFor}
             throwFrom={throwFrom}
           />
         ) : null}
