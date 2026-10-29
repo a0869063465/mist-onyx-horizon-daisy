@@ -11,7 +11,7 @@ Máy chém hàng trước + Rồng con hàng sau, cùng cột.
 - Dòng kia dùng chung nửa đầu (tia tổng), nửa sau tách ra thành MỘT vòng cung mềm ra ngoài lá hàng trước, vào chéo góc mép gần lá hàng sau.
 
 ## Luật bắt buộc
-1. Tia tổng + BẤT KỲ một nhánh = một dòng liền, mượt, uốn tự nhiên. Ở điểm tách, nhánh rời đi theo đúng hướng tia tổng đang tới rồi mới cong dần ra. Không gãy góc.
+1. Tia tổng + BẤT KỲ một nhánh = một dòng liền, mượt, uốn tự nhiên, không gãy góc. Mẫu "liền mạch" là ảnh chuẩn: nhánh Rồng con rời điểm tách thành một vòng cung đẹp ra ngoài lá trước. KHÔNG ép nhánh rời đi dọc hướng tia tổng nếu làm nhánh bị bẻ khúc (đã thử 29/10: nhánh Rồng con đi lên trước rồi mới vòng ra, chủ game: "ảnh chuẩn dòng sau không bị gãy khúc như thế này, vòng uốn cong rất đẹp"). Ép hướng (`arrive`/`lead`) hiện chỉ dùng khi có lá thứ ba (`stacked` = 3 lá).
 2. Không đoạn thẳng. Không chạy dọc làn, dọc khe, dọc mép bàn. Không uốn thừa: một vòng cung mềm; đường rất dài mới cho chữ S nhẹ.
 3. Góc chạm 40°–70° so với mép lá (nhắm ~55°), không dưới 40°, không vuông 90°. Chạm góc lá được (vào chéo). Không chạm cạnh trong khe giữa 2 lá.
 4. Được đi đè qua lá, ô sao, xấp bài. Nhánh không cắt nhau, nhánh ngoài ôm nhánh trong. Không ra ngoài mép bàn.
