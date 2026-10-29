@@ -8,6 +8,14 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
 
 Chủ game nêu 6 việc: (1) Luật chơi mới; (2) Sữa lại toàn bộ bài theo VFX; (3) AI chiến đấu; (4) Bộ sưu tập bộ bài truyền thống; (5) Icon chuyển đánh; (6) VFX đánh; (7) VFX con mắt. Chưa có việc nào được làm. Cần hỏi lại trước khi làm từng việc (xem trả lời gửi chủ game).
 
+Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu hỏi:
+- Bể cá (bể sáng chuyển lượt, turn-light.tsx): đặt sát mí và mờ hơn. "Nói ai điều chỉnh" chưa rõ: hỏi lại chủ game là ai/cách chỉnh.
+- Thanh kiếm (turn-sword, kiếm có cánh): to hơn và nổi lên. Chủ game: "tự làm". Claude đề xuất cỡ và độ nổi, chờ "ok".
+- Flow bọc quái bên trong (hào quanh lá/viên máu): ĐÃ LÀM, không đổi.
+- Lá bài trong tay: khi nhấp lá hiện icon triệu hồi, triệu hồi, dung hợp (nếu có): "kêu AI sữa". Chưa rõ: AI nào, sữa gì, hỏi lại.
+- Khi bấm một loại triệu hồi trong mô tả (Triệu hồi / Hiến tế / Dung hợp), các loại còn lại biến mất. Chưa rõ: "các loại còn lại" là các nút nào, và có muốn giữ hay ẩn đi.
+- Kích thước lá trong tay bài: cần chủ game nói kích thước mong muốn (hiện: strip 17,8cqw × 100%).
+
 ## Luật mới (28/10): Phần 2 (luật Grok) và Phần 1 (xấp chung) ĐÃ LÀM ở engine, giao diện CHƯA
 
 - Chủ game duyệt plan (28/10, "ok, quyền sang đối thủ, bắt đầu phần 2 rồi phần 1"), làm bằng Opus. Thứ tự còn lại: Phần 5 (AI brain.ts, hướng dẫn, trial, reaction-chain, net-room) → Phần 3 (hàng chờ + mắt + X) → Phần 4 (giao diện, chờ sàn đấu mới).
