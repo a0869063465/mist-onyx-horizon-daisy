@@ -301,7 +301,7 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
 const PAIR_OUT = 3;
 
 /**
- * Up to three cards, two of them one behind the other, the fork right under one of the front-row cards (chủ game
+ * Up to four cards, two of them one behind the other, the fork right under one of the front-row cards (chủ game
  * 29/10: điểm tách nằm trên một trong các dòng, nửa đầu dòng kia dùng chung, nửa sau tách ra), drawn as the standard
  * of two in a column: the flow goes on into that card's near edge, a little off its middle; a card behind it shares the
  * flow as far as the fork, then sweeps out in one soft bow to the side with more room, past the front card and in
@@ -309,7 +309,7 @@ const PAIR_OUT = 3;
  * of that one; any other card bows out to it and in across the corner of its near edge on the fork's side.
  */
 function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number): Map<string, FanRoute> | null {
-  if (aims.length < 2 || aims.length > 3 || aims.some((aim) => !aim.card)) return null;
+  if (aims.length < 2 || aims.length > 4 || aims.some((aim) => !aim.card)) return null;
   const inRow = (card: FanCard) => Math.abs(card.y - front[0].y) < card.h * 0.5;
   const sameColumn = (a: FanCard, b: FanCard) => Math.abs(a.x - b.x) < a.w * 0.3;
   if (!aims.some((one) => aims.some((other) => one !== other && sameColumn(one.card!, other.card!)))) return null;

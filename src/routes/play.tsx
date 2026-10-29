@@ -4242,10 +4242,10 @@ function PlayPage() {
     // The front row it is aimed at, for the branches to find their way round its cards.
     const front = SLOT_BOX[screenSide(side, viewer)].slice(0, 3).map((box) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w, h: box.h }));
     const y = near.edge + (near.top ? 1 : -1) * band * FORK_SHARE;
-    // Up to three cards, two of them one behind the other: it splits on the way into one of the front-row cards, right
+    // Up to four cards, two of them one behind the other: it splits on the way into one of the front-row cards, right
     // under it, the one most in line with where it comes from (chủ game 29/10: điểm tách nằm trên một trong các dòng,
     // nửa đầu dòng kia dùng chung; as the standard of two in a column).
-    const stacked = cards && xs.length > 1 && xs.length <= 3 && xs.some((x, i) => xs.some((other, j) => j !== i && Math.abs(other - x) < front[1].w * 0.3));
+    const stacked = cards && xs.length > 1 && xs.length <= 4 && xs.some((x, i) => xs.some((other, j) => j !== i && Math.abs(other - x) < front[1].w * 0.3));
     const ahead = spots.filter((spot) => Math.abs(spot.y - front[0].y) < front[0].h * 0.5).sort((a, b) => Math.abs(a.x - from.x) - Math.abs(b.x - from.x))[0];
     if (stacked && ahead) return { x: ahead.x, y, front };
     return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y, front };
