@@ -725,6 +725,28 @@ function blockShift(duel: Duel, uid: string, viewer: Side): { x: number; y: numb
   return { x: 0, y: (row === 1 ? 1 : -1) * (lift / box.h) * 100 };
 }
 
+/** Phục kích (chủ game 30/10): the ally it sends flies at the one whose skill it stopped, once its pink light reached it
+ *  (`POUNCE_AFTER` ms after it is played), and waits there for the chain to land. In % of its own box. */
+const POUNCE_AFTER = 1100;
+function ambushShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
+  const ambush = duel.step === "respond" ? duel.hold?.ambush : null;
+  if (!ambush || ambush.ally !== uid) return null;
+  const seat = (id: string) => {
+    for (const side of [0, 1] as const) {
+      const index = duel.players[side].field.findIndex((mon) => mon?.uid === id);
+      if (index >= 0) return SLOT_BOX[screenSide(side, viewer)][index];
+    }
+    return null;
+  };
+  const from = seat(uid);
+  const to = seat(ambush.foe);
+  if (!from || !to) return null;
+  const dx = to.x + to.w / 2 - (from.x + from.w / 2);
+  const dy = to.y + to.h / 2 - (from.y + from.h / 2);
+  const travel = lungeTravel(LUNGE_BLOCKED, dx, dy);
+  return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
+}
+
 function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number } | null {
   const pending = duel.pending;
   if (!pending || pending.kind !== "face") return null;
@@ -1707,6 +1729,17 @@ function PlayPage() {
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
   const [thrust, setThrust] = useState<{ uid: string; x: number; y: number } | null>(null);
+  /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
+  const [pounce, setPounce] = useState<string | null>(null);
+  const sentAlly = duel?.step === "respond" ? duel.hold?.ambush?.ally ?? null : null;
+  useEffect(() => {
+    if (!sentAlly) {
+      setPounce(null);
+      return;
+    }
+    const timer = window.setTimeout(() => setPounce(sentAlly), POUNCE_AFTER);
+    return () => window.clearTimeout(timer);
+  }, [sentAlly]);
   /** A player's HP held at its old value until the lightning of a landing blow reaches it. */
   const [hpHold, setHpHold] = useState<Record<string, number>>({});
   const [floaters, setFloaters] = useState<Floater[]>([]);
@@ -4252,7 +4285,7 @@ function PlayPage() {
     if (!seat) return null;
     const row = screenSide(seat.side, viewer);
     const box = SLOT_BOX[row][seat.index];
-    const lunge = attackShift(duel, uid, viewer) ?? blockShift(duel, uid, viewer);
+    const lunge = attackShift(duel, uid, viewer) ?? blockShift(duel, uid, viewer) ?? (pounce === uid ? ambushShift(duel, uid, viewer) : null);
     const dx = lunge ? (lunge.x * box.w) / 100 : 0;
     const dy = lunge ? (lunge.y * box.h) / 100 : 0;
     return { x: box.x + box.w / 2 + dx, y: box.y + box.h / 2 + dy, w: box.w, h: box.h, top: row === 1, dx, dy };
@@ -4424,8 +4457,9 @@ function PlayPage() {
           face: card.top ? 1 : -1,
           // A lunging card's light starts as it arrives (an attack, or a skill at a player); an attacker's or a
           // caster's icon fades in only after its light has reached out (chủ game 23/10).
-          delay: lunging ? 0.75 : 0,
-          appear: orb.kind === "attack" || orb.kind === "skill" ? (lunging ? 1.3 : 0.5) : 0,
+          // Phục kích's ally strikes after its pink light reached it and it flew out.
+          delay: orb.sent ? POUNCE_AFTER / 1000 + 0.3 : lunging ? 0.75 : 0,
+          appear: orb.sent ? POUNCE_AFTER / 1000 : orb.kind === "attack" || orb.kind === "skill" ? (lunging ? 1.3 : 0.5) : 0,
         };
       } else if (!orb.near && orb.stops && stopSpot(orb, iconSpots)) {
         spot = stopSpot(orb, iconSpots);
@@ -5697,7 +5731,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={Boolean(duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken"))}
@@ -5749,7 +5783,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               attack={false}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
               veil={false}

@@ -201,6 +201,9 @@ export type Hold = {
    * an action of its owner, so the attacker answers; "set": the attacker let it through, its owner's OK lets it land.
    */
   mirror?: "up" | "set";
+  /** Phục kích (chủ game 30/10): it waits in the chain against the skill; once the chain lands the skill is stopped and
+   *  `ally` strikes `foe`, the one who used it. */
+  ambush?: { ally: string; foe: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3582,6 +3585,29 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
   return stampLegend(opened, [pending.attacker, pending.defender]);
 }
 
+/** Phục kích lands: the skill is stopped and the ally strikes the one who used it, +2 attack, without being struck back. */
+function ambushStrike(state: Duel, allyUid: string, foeUid: string): Duel {
+  const side = ownerSide(state, allyUid);
+  const open = { ...state, step: "main" as const, pending: null, hold: null };
+  if (side === null) return releaseLegend(note(open, "Phục kích chặn kỹ năng.", "spell"));
+  const foe = (1 - side) as Side;
+  const fighter = state.players[side].field.find((mon) => mon?.uid === allyUid) ?? null;
+  const attacker = state.players[foe].field.find((mon) => mon?.uid === foeUid) ?? null;
+  if (!fighter || !attacker || fighter.stun > 0 || (fighter.chain ?? 0) > 0) return releaseLegend(note(open, "Phục kích chặn kỹ năng.", "spell"));
+  const bonus = spellFigure("phuc-kich", "atk", 2);
+  const raw = fighter.atk + bonus;
+  const body = openShade(attacker);
+  const ambush = body.cardId === "chien-binh-rong" ? takePhysical(body, raw, open.players[foe].field) : null;
+  const dealt = ambush ? Math.max(0, body.hp - ambush.mon.hp) : physical(raw, body.def);
+  const foeField = open.players[foe].field.map((mon) =>
+    mon?.uid === attacker.uid ? (ambush ? { ...ambush.mon, dim: true } : { ...body, hp: body.hp - dealt, dim: true }) : mon,
+  );
+  const myField = open.players[side].field.map((mon) => (mon?.uid === fighter.uid ? { ...mon, dim: true } : mon));
+  let hit = patch(open, foe, dropDead({ ...open.players[foe], field: foeField }));
+  hit = patch(hit, side, { ...hit.players[side], field: myField });
+  return releaseLegend(note(hit, actNotice("Phục kích", ["chặn kỹ năng", `${cardOf(fighter).name} đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]), "hit"));
+}
+
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
 function mirrorStands(state: Duel, pending: Exclude<Pending, null>): boolean {
   if (pending.kind !== "melee" && !(pending.kind === "face" && !pending.skill)) return false;
@@ -3709,6 +3735,7 @@ function passResponseCore(state: Duel): Duel {
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
+  if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
     const ownerSide = pending.owner;
@@ -6254,28 +6281,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
     const attacker = next.players[foe].field.find((mon) => mon?.uid === skillAt) ?? null;
     if (!fighter || !attacker) return note(next, "Chọn quái để phục kích.");
-    const bonus = spellFigure("phuc-kich", "atk", 2);
-    const raw = fighter.atk + bonus;
-    const body = openShade(attacker);
-    const ambush = body.cardId === "chien-binh-rong" ? takePhysical(body, raw, next.players[foe].field) : null;
-    const dealt = ambush ? Math.max(0, body.hp - ambush.mon.hp) : physical(raw, body.def);
-    const foeField = next.players[foe].field.map((mon) =>
-      mon?.uid === attacker.uid ? (ambush ? { ...ambush.mon, dim: true } : { ...body, hp: body.hp - dealt, dim: true }) : mon,
-    );
-    const myField = next.players[side].field.map((mon) =>
-      mon?.uid === fighter.uid ? { ...mon, dim: true } : mon,
-    );
-    let hit = patch(next, foe, dropDead({ ...next.players[foe], field: foeField }));
-    hit = patch(hit, side, { ...hit.players[side], field: myField });
-    return releaseLegend({
-      ...note(
-        hit,
-        actNotice("Phục kích", ["chặn kỹ năng", `đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]),
-        "hit",
-      ),
-      step: "main",
-      pending: null,
-    });
+    // It waits in the chain (chủ game 30/10): the other side may answer; once it lands the skill is stopped.
+    if (!next.hold) return ambushStrike(next, fighter.uid, attacker.uid);
+    return keep(note({ ...next, hold: { ...next.hold, ambush: { ally: fighter.uid, foe: attacker.uid } } }, `Phục kích: ${cardOf(fighter).name} chờ đánh trả ${cardOf(attacker).name}.`, "spell"));
   }
   if (card.id === "hoan-doi") {
     if (state.step !== "respond" || !state.pending) return note(next, "Hoán đổi chỉ dùng khi có quái bị nhắm.");

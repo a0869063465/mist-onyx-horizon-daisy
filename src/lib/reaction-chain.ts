@@ -496,6 +496,11 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
     list.push(mirrorOrb(next, live, side));
   }
   const glass = live && next.hold?.mirror ? list.find((orb) => orb.spell === "guong-phong-ho" && orb.stops === live.id) ?? null : null;
+  // Phục kích waiting in the chain (chủ game 30/10): its icon stops the skill on its way in, its ally's strike waits.
+  const ambush = next.hold?.ambush ?? null;
+  const lurk = live && ambush ? list.find((orb) => orb.spell === "phuc-kich" && orb.stops === live.id) ?? null : null;
+  const pounce = live && ambush ? list.find((orb) => orb.sent && orb.source === ambush.ally) ?? null : null;
+  const wall = glass ?? lurk;
   if (live) {
     // Who stands in front of it: its block icon (made once per blocker), into which its smoke is drawn.
     const guard = guardOf(next, live.aim);
@@ -535,7 +540,10 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
     let to: FlowLink[];
     let spread: Side | null = null;
     let miss = false;
-    if (spreads && reach) {
+    if (wall) {
+      // Stopped before it splits: one flow into the icon that stops it.
+      to = [{ end: { orb: wall.id }, tone, dam: true }];
+    } else if (spreads && reach) {
       spread = reach.side;
       const guarded = guard ? aimedAt(next.pending) ?? (next.pending?.kind === "face" ? `face:${reach.side}` : null) : null;
       to = hits.map((hit): FlowLink => {
@@ -546,8 +554,6 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
       });
       if (shield && !to.some((link) => link.dam)) to.push({ end: { orb: shield.id }, tone, fork: true, dam: true });
       miss = reach.random && reach.known && hits.length === 0 && !shield && coverShields.size === 0;
-    } else if (glass) {
-      to = [{ end: { orb: glass.id }, tone, dam: true }];
     } else {
       to = selfLinks(pendingLinks(next, shield?.id ?? null, reflect), live.id);
       // A spell on a whole side (Sấm sét tận thế, Mũ ma pháp) splits the same way.
@@ -558,7 +564,16 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
     }
     list = list.map((orb) =>
       orb === live
-        ? { ...orb, to, tone: pendingTone(next, next.pending), strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null, spread: spread ?? (reflect ? orb.spread ?? null : null), miss }
+        ? {
+            ...orb,
+            to,
+            tone: pendingTone(next, next.pending),
+            strike: orb.kind === "attack" ? strikeOf(next, next.pending) ?? orb.strike : null,
+            spread: spread ?? (reflect ? orb.spread ?? null : null),
+            miss,
+            // Where an icon stopping it stands: on its way to what it was aimed at.
+            goal: wall && !orb.goal ? (aimedAt(next.pending) ? { uid: aimedAt(next.pending)! } : { face: (1 - (sideOf(next, orb.source) ?? next.turn)) as Side }) : orb.goal,
+          }
         : orb,
     );
   }
@@ -567,7 +582,7 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
     // The mirror stands until the attack it stops is over.
-    if (glass && orb.id === glass.id) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
+    if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.

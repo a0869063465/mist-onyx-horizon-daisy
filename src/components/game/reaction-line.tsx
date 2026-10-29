@@ -50,6 +50,8 @@ const FIZZLE_TAIL = 0.8;
 const DOUBLE_TAP = 380;
 /** Seconds a spell that stops a flow takes to fly in from the hand. */
 const THROW = 0.5;
+/** Seconds Phục kích holds the skill against it before its pink light runs to the ally it sends. */
+const AMBUSH_SEND = 0.6;
 
 const toBox = (x: number, y: number): BoxPt => ({ x: x * 0.9, y: y * 1.6 });
 
@@ -320,7 +322,8 @@ export function ReactionLine({
     const since = born.current.has(orb.id) ? now - born.current.get(orb.id)! : 0;
     const wait = Math.max(0, here.delay - since);
     // A spell that stops a flow sends its own light once it has flown in from the hand.
-    const thrownIn = orb.stops ? Math.max(0, THROW - since) : 0;
+    // Phục kích sends its ally only once the skill has surged against it (chủ game 30/10).
+    const thrownIn = orb.stops ? Math.max(0, THROW + (orb.spell === "phuc-kich" ? AMBUSH_SEND : 0) - since) : 0;
     const late = lateOf(orb);
     // A roll that hit nobody fades with its icon at once (chủ game 29/10).
     const done = orb.done || Boolean(orb.miss);

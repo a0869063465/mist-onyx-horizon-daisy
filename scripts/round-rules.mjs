@@ -230,13 +230,32 @@ test("Phục kích chặn kỹ năng gây sát thương, quái chọn đánh tr�
   s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
   const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
   assert.equal(breath.step, "respond", breath.live);
-  const cast = D.castSpell(breath, breath.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
+  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
+  assert.equal(waiting.pending?.kind, "beam", "Phục kích chờ trong chuỗi, chưa nổ");
+  assert.deepEqual(waiting.hold?.ambush, { ally: uid(s, 1, 0), foe: uid(s, 0, 0) }, waiting.live);
+  assert.equal(waiting.hold?.priority, 0, "quyền sang bên dùng kỹ năng");
+  assert.equal(at(waiting, 0, 0).hp, 20);
+  const cast = D.passResponse(waiting);
   assert.equal(cast.pending ?? null, null, cast.live);
   assert.equal(at(cast, 1, 0).hp, 20, "kỹ năng bị chặn");
   assert.ok(at(cast, 0, 0).hp < 20, "kẻ dùng kỹ năng bị đánh trả");
   const swung = D.attackMonster(s, uid(s, 0, 1), uid(s, 1, 0));
   const refused = D.castSpell(swung, swung.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
   assert.equal(refused.pending?.kind, "melee", "đòn đánh thường không bị Phục kích chặn");
+});
+
+test("Phục kích chặn cả kỹ năng nhiều mục tiêu (Con nước lớn tàn phá)", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
+  let s = board({ 1: ["trai-tim-hai-long", { hp: 30, maxHp: 30, def: 0 }] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });
+  s = D.testGrant(s, 1, "phuc-kich", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 3), 1));
+  const { sure } = spreadWith(staged, (row) => row.length >= 2);
+  const waiting = D.castSpell(sure, sure.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 1));
+  assert.ok(waiting.hold?.ambush, waiting.live);
+  const done = D.passResponse(waiting);
+  for (const slot of [0, 1, 3]) assert.equal(at(done, 1, slot).hp, 40, "không nhánh nào trúng");
+  assert.ok(at(done, 0, 1).hp < 30, "kẻ dùng kỹ năng bị đánh trả");
 });
 
 test("Vs Máy: máy được Trả đòn thì tự trả", () => {

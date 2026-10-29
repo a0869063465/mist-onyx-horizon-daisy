@@ -762,6 +762,7 @@ export const PENDING_NOTES: string[] = [
   "Máy biết chặn từng nhánh: khi bị kỹ năng trúng nhiều mục tiêu, máy cho quái hàng trước không bị trúng chặn nhánh vào quái hàng sau hoặc vào máy (tạm thời tối đa 1 nhánh). Con mắt xem trước tính cả quái chặn.",
   "Gương phòng hộ thành lá tường thành: dùng xong nằm ngang cạnh lá môi trường, số giữa lá là số lượt còn lại (3). Bị đánh thường (vào quái hoặc người chơi) thì Gương tự dựng lên chặn, dòng hồng về kẻ đánh; bên đánh bấm OK rồi chủ gương bấm OK thì Gương mới chặn và cướp một nửa chỉ số. Chặn không tốn lượt.",
   "Phục kích giờ chặn kỹ năng gây sát thương nhắm vào bạn (không còn chặn đòn đánh thường): dòng hồng tới quái đồng minh bạn chọn, quái đó hiện icon tấn công và dòng đỏ đánh trả kẻ dùng kỹ năng (+2 công, không bị phản đòn).",
+  "Phục kích giờ chờ trong chuỗi: kỹ năng dội vào icon Phục kích ngay trên đường vào (kể cả kỹ năng nhiều mục tiêu), dòng hồng tới đồng minh, đồng minh lao lên với icon tấn công và dòng đỏ vào kẻ dùng kỹ năng. Bấm tick để xác nhận; đối thủ bấm OK thì mới chặn và đánh trả.",
 ];
 
 function remarkOf(notes: string[]) {
