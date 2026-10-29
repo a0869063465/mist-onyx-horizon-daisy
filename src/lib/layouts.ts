@@ -77,8 +77,8 @@ export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = {
   endTurn: { x: 91.2, y: 83, size: 1, width: 14.4, height: 7.7, hidden: false },
   foeFace: { x: 88.3, y: 43.9, size: 1, width: 11.5, height: 5.2, hidden: false },
   youFace: { x: 11.5, y: 58.8, size: 1, width: 11.5, height: 5.2, hidden: false },
-  foeAtk: { x: 88.4, y: 43.7, size: 1, width: 10.2, height: 4.6, hidden: false },
-  youAtk: { x: 11.6, y: 58.8, size: 1, width: 10.2, height: 4.6, hidden: false },
+  foeAtk: { x: 88.4, y: 43.7, size: 1, width: 13.8, height: 6.2, hidden: false },
+  youAtk: { x: 11.6, y: 58.8, size: 1, width: 13.8, height: 6.2, hidden: false },
   foeDef: { x: 88.6, y: 43.9, size: 1, width: 10.2, height: 4.6, hidden: false },
   youDef: { x: 11.7, y: 59, size: 1, width: 10.2, height: 4.6, hidden: false },
 };

@@ -10,7 +10,7 @@ Chủ game nêu 6 việc: (1) Luật chơi mới; (2) Sữa lại toàn bộ bà
 
 Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu hỏi:
 - Bể cá (bể sáng chuyển lượt, turn-light.tsx): đặt sát mí và mờ hơn. "Nói ai điều chỉnh" chưa rõ: hỏi lại chủ game là ai/cách chỉnh.
-- Thanh kiếm (turn-sword, kiếm có cánh): to hơn và nổi lên. Chủ game: "tự làm". Claude đề xuất cỡ và độ nổi, chờ "ok".
+- Thanh kiếm (turn-sword, kiếm có cánh): to hơn và nổi lên. Chủ game: "tự làm". ĐÃ LÀM (29/10): ghim `youAtk`/`foeAtk` 10,2×4,6 → 13,8×6,2 (layouts.ts; bố cục đã lưu của máy chủ game giữ cỡ cũ, cần Mặc định lại trong Tuỳ chỉnh), viền sáng vàng nhẹ, lơ lửng 9% thay 5%.
 - Flow bọc quái bên trong (hào quanh lá/viên máu): ĐÃ LÀM, không đổi.
 - Lá bài trong tay: khi nhấp lá hiện icon triệu hồi, triệu hồi, dung hợp (nếu có): "kêu AI sữa". Chưa rõ: AI nào, sữa gì, hỏi lại.
 - Khi bấm một loại triệu hồi trong mô tả (Triệu hồi / Hiến tế / Dung hợp), các loại còn lại biến mất. Chưa rõ: "các loại còn lại" là các nút nào, và có muốn giữ hay ẩn đi.
