@@ -91,6 +91,96 @@ function wayOf(f: BoxPt, e: BoxPt, into: BoxPt, lane: number, dip: number, lift:
   ];
 }
 
+/**
+ * The way into a back-row card is the owner's own stroke (chủ game 29/10: drew them in red over a spread at all six
+ * and said to use them as drawn): round the far left into the lower half of the left-hand card's outer side; out left,
+ * back over the corner of the front row's left-hand card and up into the middle of the middle card's near edge; round
+ * the right and back left over the corner of the front row's right-hand card into the right part of the right-hand
+ * card's near edge. In % of the board as drawn (the fork at `DRAWN_FORK`, the red side's back row in its slots, the
+ * last point where it meets the card). The middle one starts at the fork; the other two from its sag.
+ */
+const DRAWN_FORK = { x: 40.02, y: 44.97 };
+type Drawn = { card: FanCard; pts: Array<[number, number]>; fromFork: boolean };
+const DRAWN: Record<"left" | "middle" | "right", Drawn> = {
+  left: {
+    card: { x: 19.6, y: 20.91, w: 17.6, h: 11.12 },
+    pts: [[18.06, 48.11], [13.68, 47.41], [9.48, 46.5], [7.04, 44.84], [3.74, 43.52], [1.77, 41.65], [1.09, 39.59], [1.55, 37.54], [2.06, 35.48], [2.02, 33.34], [2.4, 31.24], [2.51, 29.25], [2.1, 27.22], [3.51, 25.24], [6.59, 23.83], [10.8, 22.6]],
+    fromFork: false,
+  },
+  middle: {
+    card: { x: 41.3, y: 20.91, w: 17.6, h: 11.12 },
+    pts: [[39.52, 43.37], [35.04, 43.78], [30.56, 44.34], [26.84, 43.33], [24.56, 41.52], [24.67, 39.42], [26.21, 37.45], [28.84, 35.73], [32.13, 34.19], [35.42, 32.71], [38.46, 31.12], [39.45, 29.15], [40.93, 26.47]],
+    fromFork: true,
+  },
+  right: {
+    card: { x: 61.8, y: 20.91, w: 17.6, h: 11.12 },
+    pts: [[77.23, 44.79], [78.75, 42.99], [79.46, 40.98], [79.6, 38.88], [79.22, 36.78], [78.72, 34.68], [78.32, 32.63], [77.88, 30.57], [74.5, 29.36], [70.3, 28.39], [66.1, 27.48], [62.89, 26.47]],
+    fromFork: false,
+  },
+};
+
+/** One of the owner's strokes laid onto this spread: mirrored if its branch goes the other way, stretched across with
+ *  the card's place (the board's edges stay put), up and down with the fork (flipped for the blue side), and joined
+ *  to the fork; as cubic pieces through its points, in box units. */
+function drawnRoute(drawn: Drawn, mirror: boolean, card: FanCard, fork: { x: number; y: number }): FanRoute {
+  const ref = drawn.card;
+  const flipX = (x: number) => (mirror ? 2 * ref.x - x : x);
+  const refL = ref.x - ref.w / 2;
+  const refR = ref.x + ref.w / 2;
+  const left = card.x - card.w / 2;
+  const right = card.x + card.w / 2;
+  const mapX = (x: number) =>
+    x <= refL ? (x / refL) * left : x >= refR ? right + ((x - refR) / (100 - refR)) * (100 - right) : left + ((x - refL) / (refR - refL)) * (right - left);
+  const last = drawn.pts[drawn.pts.length - 1];
+  // Where it meets the card, as far across and up the card as on the one it was drawn on (from the near edge).
+  const down = card.y > fork.y ? -1 : 1;
+  const meet = { x: mapX(flipX(last[0])), y: card.y + ((last[1] - ref.y) / ref.h) * card.h * down };
+  const stretch = (meet.y - fork.y) / (last[1] - DRAWN_FORK.y);
+  let pts = drawn.pts.map(([x, y]) => ({ x: mapX(flipX(x)), y: fork.y + (y - DRAWN_FORK.y) * stretch }));
+  pts[pts.length - 1] = meet;
+  const K = 1870 / 841;
+  if (drawn.fromFork) {
+    // It starts at the fork: the start moves there, the rest of it less and less.
+    const lens = [0];
+    for (let i = 1; i < pts.length; i += 1) lens.push(lens[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, (pts[i].y - pts[i - 1].y) * K));
+    const total = lens[lens.length - 1] || 1;
+    const dx = fork.x - pts[0].x;
+    const dy = fork.y - pts[0].y;
+    pts = pts.map((pt, i) => {
+      const w = Math.pow(1 - Math.min(1, lens[i] / total / 0.35), 2);
+      return { x: pt.x + dx * w, y: pt.y + dy * w };
+    });
+  } else {
+    // Out from the fork to where the stroke starts, sagging into it the way it sets off.
+    const a = pts[0];
+    const b = pts[1];
+    const go = unit(b.x - a.x, (b.y - a.y) * K);
+    const side = Math.sign(a.x - fork.x) || 1;
+    const reach = Math.hypot(a.x - fork.x, (a.y - fork.y) * K);
+    const c1 = { x: fork.x + side * reach * 0.4, y: fork.y + (down * reach * 0.1) / K };
+    const c2 = { x: a.x - go.x * reach * 0.3, y: a.y - (go.y * reach * 0.3) / K };
+    const lead = Array.from({ length: 8 }, (_, i) => {
+      const t = i / 8;
+      const u = 1 - t;
+      return { x: u * u * u * fork.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * a.x, y: u * u * u * fork.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * a.y };
+    });
+    pts = [...lead, ...pts];
+  }
+  // Cubic pieces through every point (Catmull-Rom), in box units.
+  const box = pts.map((pt) => ({ x: pt.x * 0.9, y: pt.y * 1.6 }));
+  const path: BoxPt[] = [box[0]];
+  for (let i = 0; i + 1 < box.length; i += 1) {
+    const p0 = box[Math.max(0, i - 1)];
+    const p1 = box[i];
+    const p2 = box[i + 1];
+    const p3 = box[Math.min(box.length - 1, i + 2)];
+    path.push({ x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 }, { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 }, p2);
+  }
+  const end = box[box.length - 1];
+  const before = box[box.length - 2];
+  return { entry: meet, into: unit(end.x - before.x, end.y - before.y), path };
+}
+
 /** `front`: the three cards' places of the front row of the side the spread is aimed at (middles and sizes). */
 export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[]): Map<string, FanRoute> {
   const routes = new Map<string, FanRoute>();
@@ -205,6 +295,14 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
         lift = Math.min(0.9, lift + 0.4);
       }
     }
+  }
+  // A back-row card: the owner's own stroke for it (chủ game 29/10); everything else is worked out as before.
+  for (const plan of plans) {
+    const card = plan.aim.card;
+    if (!card || plan.inFront) continue;
+    const end = (plan.col === 0 && plan.side < 0) || (plan.col === 2 && plan.side > 0);
+    const drawn = end ? (plan.side < 0 ? DRAWN.left : DRAWN.right) : DRAWN.middle;
+    routes.set(plan.aim.key, drawnRoute(drawn, !end && plan.side > 0, card, fork));
   }
   return routes;
 }
