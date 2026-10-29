@@ -153,8 +153,9 @@ function drawnRoute(mirror: boolean, card: FanCard, fork: { x: number; y: number
   return { entry: meet, into: unit(end.x - before.x, end.y - before.y), path };
 }
 
-/** `front`: the three cards' places of the front row of the side the spread is aimed at (middles and sizes). */
-export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[]): Map<string, FanRoute> {
+/** `front`: the three cards' places of the front row of the side the spread is aimed at (middles and sizes). `arrive`:
+ *  the way the trunk runs into the fork, when it is drawn to (every branch then leaves along it). */
+export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], arrive?: BoxPt): Map<string, FanRoute> {
   const routes = new Map<string, FanRoute>();
   if (front.length < 3 || aims.length === 0) return routes;
   const toward = Math.sign(front[1].y - fork.y) || -1;
@@ -166,7 +167,7 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
   const laneBeside = (col: number, side: number) => (side < 0 ? (col === 0 ? outerLeft : gaps[col - 1]) : col === 2 ? outerRight : gaps[col]);
   const column = (x: number) => [0, 1, 2].reduce((best, i) => (Math.abs(front[i].x - x) < Math.abs(front[best].x - x) ? i : best), 0);
 
-  const lined = columnPair(fork, aims, front, toward);
+  const lined = columnPair(fork, aims, front, toward, arrive);
   if (lined) return lined;
 
   type Plan = { aim: FanAim; side: number; ahead: boolean; inFront: boolean; col: number };
@@ -307,7 +308,7 @@ const PAIR_OUT = 3;
  * the side with more room, up past the front card and in across the corner of its own near edge; any other card
  * splits off there too, in one soft bow out to it and across the corner of its near edge on the fork's side.
  */
-function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number): Map<string, FanRoute> | null {
+function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCard[], toward: number, arrive?: BoxPt): Map<string, FanRoute> | null {
   if (aims.length < 2 || aims.length > 3 || aims.some((aim) => !aim.card)) return null;
   const nearOf = (card: FanCard) => (card.y - fork.y) * toward;
   let pair: [FanAim, FanAim] | null = null;
@@ -324,6 +325,13 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
   const side = rest.length ? -Math.sign(rest[0].card!.x - ahead.x) || -1 : ahead.x < 50 ? -1 : 1;
   const f = { x: fork.x * 0.9, y: fork.y * 1.6 };
   const routes = new Map<string, FanRoute>();
+  // Each branch leaves the fork the way the trunk runs into it, so the trunk and any one branch are one smooth flow
+  // (chủ game 29/10), and only then bends off to its target.
+  const lead = (c: BoxPt): BoxPt => {
+    if (!arrive) return c;
+    const len = Math.hypot(c.x - f.x, c.y - f.y);
+    return { x: f.x + arrive.x * len, y: f.y + arrive.y * len };
+  };
 
   const nearEdge = (card: FanCard) => card.y - (toward * card.h) / 2;
   const inAt = { x: ahead.x - side * ahead.w * 0.2, y: nearEdge(ahead) };
@@ -332,7 +340,7 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
   routes.set(first.key, {
     entry: inAt,
     into: { x: 0, y: toward },
-    path: [f, { x: f.x + side * reach * 0.35, y: f.y + toward * reach * 0.4 }, { x: e1.x, y: e1.y - toward * reach * 0.45 }, e1],
+    path: [f, lead({ x: f.x + side * reach * 0.35, y: f.y + toward * reach * 0.4 }), { x: e1.x, y: e1.y - toward * reach * 0.45 }, e1],
   });
 
   // One soft bow, no straight run (chủ game 29/10): out of the fork sideways, round outside the front card and back in
@@ -345,7 +353,7 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
   routes.set(second.key, {
     entry: corner,
     into,
-    path: [f, { x: f.x + side * bow * 1.6, y: f.y + toward * rise * 0.2 }, { x: e2.x + side * bow * 1.5, y: e2.y - toward * rise * 0.45 }, e2],
+    path: [f, lead({ x: f.x + side * bow * 1.6, y: f.y + toward * rise * 0.2 }), { x: e2.x + side * bow * 1.5, y: e2.y - toward * rise * 0.45 }, e2],
   });
 
   for (const aim of rest) {
@@ -359,7 +367,7 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
     routes.set(aim.key, {
       entry: at,
       into: way,
-      path: [f, { x: f.x + out * dx * 0.7, y: f.y }, { x: e.x - way.x * len * 0.4, y: e.y - way.y * len * 0.4 }, e],
+      path: [f, lead({ x: f.x + out * dx * 0.7, y: f.y }), { x: e.x - way.x * len * 0.4, y: e.y - way.y * len * 0.4 }, e],
     });
   }
   return routes;

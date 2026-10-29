@@ -4241,7 +4241,7 @@ function PlayPage() {
     // Up to three cards, two of them one behind the other: it splits on the way into the front one of those, right
     // under it (chủ game 29/10: điểm tách nằm trên một trong các dòng, nửa đầu dòng kia dùng chung).
     const stacked = cards && xs.length > 1 && xs.length <= 3 ? xs.find((x, i) => xs.some((other, j) => j !== i && Math.abs(other - x) < front[1].w * 0.3)) : undefined;
-    if (stacked !== undefined) return { x: stacked, y, front };
+    if (stacked !== undefined) return { x: stacked, y, front, stacked: true };
     return { x: Math.min(86, Math.max(14, from.x * 0.4 + mean * 0.6)), y, front };
   };
   /** Where a spell that stops a flow flies in from: the player's hand at the bottom, the opponent's tray at the top. */

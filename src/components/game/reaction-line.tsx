@@ -21,7 +21,7 @@ export type EndSpot = { x: number; y: number; into: BoxPt; moat?: { kind: "box";
 export type BoardPt = { x: number; y: number };
 
 /** Where a spread splits, and the three cards' places of the front row it is aimed at (middles and sizes). */
-export type ForkSpot = BoardPt & { front: FanCard[] };
+export type ForkSpot = BoardPt & { front: FanCard[]; stacked?: boolean };
 
 /** How an icon looks: a 3D medal (attack, block), a skill's gem with its rim, or a card's picture in a rim. */
 export type IconLook =
@@ -247,13 +247,27 @@ export function ReactionLine({
     // A spread runs to the fork in front of the row it splits at, then a branch to each it lands on.
     const fork = orb.spread !== undefined && orb.spread !== null ? forkOf(orb, here) : null;
     const trunk = fork ? `${orb.id}|fork` : "";
+    // Split on the way into one of its targets, the trunk is drawn to: one bow from the icon, into the fork halfway
+    // between its own line and straight on at the row, the way every branch then leaves it (chủ game 29/10).
+    let arrive: BoxPt | undefined;
+    let trunkPath: BoxPt[] | undefined;
     if (fork) {
+      const a = toBox(here.x, here.y);
+      const f = toBox(fork.x, fork.y);
+      const chord = unitDir(f.x - a.x, f.y - a.y);
+      const out = here.face !== 0 ? { x: 0, y: here.face } : chord;
+      if (fork.stacked) {
+        arrive = unitDir(chord.x, chord.y + Math.sign(f.y - a.y));
+        const reach = Math.hypot(f.x - a.x, f.y - a.y) * 0.4;
+        trunkPath = [a, { x: a.x + out.x * reach, y: a.y + out.y * reach }, { x: f.x - arrive.x * reach, y: f.y - arrive.y * reach }, f];
+      }
       flows.push({
         key: trunk,
-        a: toBox(here.x, here.y),
-        b: toBox(fork.x, fork.y),
-        out: here.face !== 0 ? { x: 0, y: here.face } : unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
-        into: unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
+        a,
+        b: f,
+        out,
+        into: arrive ?? chord,
+        path: trunkPath,
         tone: orb.tone,
         done,
         end,
@@ -282,7 +296,7 @@ export function ReactionLine({
         });
       }
     }
-    const routes = fork ? fanRoutes(fork, aims, fork.front) : null;
+    const routes = fork ? fanRoutes(fork, aims, fork.front, arrive) : null;
     for (const link of orb.to) {
       if (link.fork && !fork) continue;
       const start = link.fork ? fork : link.from ? ("orb" in link.from ? spots.get(link.from.orb) ?? null : endOf(link.from, here)) : here;
