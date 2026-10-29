@@ -299,6 +299,8 @@ export function fanRoutes(fork: { x: number; y: number }, aims: FanAim[], front:
 
 /** How far outside the front card's side (in % of the board's width) the branch into the one behind it bows. */
 const PAIR_OUT = 3;
+/** How far in from its corner (in card widths) a card meets its branch when the bow beside it would hide it. */
+const SHIFT_IN = 0.35;
 
 /**
  * Up to four cards, two of them one behind the other, the fork right under one of the front-row cards (chủ game
@@ -358,8 +360,11 @@ function columnPair(fork: { x: number; y: number }, aims: FanAim[], front: FanCa
       bowRound(aim.key, card, before.card!, out);
       continue;
     }
-    const at = { x: card.x - (out * card.w) / 2, y: nearEdge(card) };
-    const way = unit(out, toward);
+    // Where the bow to the card behind the fork goes round the same side, it would hide this one in the gap: this one
+    // meets its near edge a little in from the corner instead, slanting (chủ game 29/10: di chuyển nó đi 1 chút).
+    const hidden = second !== undefined && out === side;
+    const at = { x: card.x - (out * card.w) / 2 + (hidden ? out * card.w * SHIFT_IN : 0), y: nearEdge(card) };
+    const way = hidden ? unit(out * 0.7, toward) : unit(out, toward);
     const e = { x: at.x * 0.9, y: at.y * 1.6 };
     const dx = Math.abs(e.x - f.x);
     const len = Math.hypot(dx, e.y - f.y);
