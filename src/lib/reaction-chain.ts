@@ -1,4 +1,4 @@
-import type { Duel, Pending, Side } from "./duel.ts";
+import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
 
 /**
  * The reaction icons (chủ game 23/10, in place of the fixed reaction line of 21/10): one icon for what is waiting (an
@@ -211,7 +211,12 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: strin
         const victim = pending.target ?? pending.caster;
         return reflect ? [{ end: { orb: reflect.id }, tone, dam: reflect.dam }, { from: { orb: reflect.id }, end: { uid: victim }, tone, back: true }] : [link({ uid: victim })];
       }
-      return pending.target ? [link({ uid: pending.target })] : [];
+      if (pending.target) return [link({ uid: pending.target })];
+      // A damaging skill with no monster aimed at hits the player (Cầu sấm, Ma đạo sĩ, Súng phóng lựu…): its flow runs
+      // to that player (chủ game 30/10).
+      const caster = monOf(duel, pending.caster);
+      const side = sideOf(duel, pending.caster);
+      return caster && side !== null && harmSkill(caster.cardId, pending.index) ? [link({ face: (1 - side) as Side })] : [];
     }
     case "lash":
       return [link({ uid: pending.foe })];
