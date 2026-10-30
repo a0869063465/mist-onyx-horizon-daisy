@@ -183,6 +183,39 @@ function clearOf(from: BoardPt, to: BoardPt, icon: BoardPt | undefined): number 
   return Math.abs(side) < 1 ? swingOf(from, to) : -Math.sign(side);
 }
 
+/** Which way (+1 to its left-hand side) a flow from a to b arcs to stay off flows made before it, or undefined when its
+ *  straight way is clear of them all (box units). */
+function keepOff(flows: FlowSpec[], key: string, a: { x: number; y: number }, b: { x: number; y: number }): number | undefined {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const near = ICON * 0.9 * 0.8;
+  let away: number | undefined;
+  for (const other of flows) {
+    if (other.key === key || other.path || other.a === other.b) continue;
+    const ex = other.b.x - other.a.x;
+    const ey = other.b.y - other.a.y;
+    const el = ex * ex + ey * ey || 1;
+    let close = false;
+    let side = 0;
+    for (const t of [0.15, 0.3, 0.45, 0.6, 0.75]) {
+      const px = a.x + dx * t;
+      const py = a.y + dy * t;
+      const u = Math.min(1, Math.max(0, ((px - other.a.x) * ex + (py - other.a.y) * ey) / el));
+      const qx = other.a.x + ex * u;
+      const qy = other.a.y + ey * u;
+      if (Math.hypot(px - qx, py - qy) < near) {
+        close = true;
+        side += (-dy / len) * (qx - px) + (dx / len) * (qy - py);
+      }
+    }
+    if (!close) continue;
+    away = Math.abs(side) < 0.5 ? Math.sign((-dy / len) * (45 - (a.x + b.x) / 2) + (dx / len) * (80 - (a.y + b.y) / 2)) || 1 : -Math.sign(side);
+    break;
+  }
+  return away === undefined ? undefined : away * 1.1;
+}
+
 /**
  * Icon phản ứng (chủ game 23/10, in place of the fixed reaction line): each action of the wait shows as an icon by
  * the card that makes it (a spell on its side's half, by what it answers), with smoke flowing to what it acts on. A
@@ -424,10 +457,15 @@ export function ReactionLine({
       // A flow into what stops it waits for the spell to fly in from the hand.
       const stopper = link.dam && "orb" in link.end ? orbs.find((other) => other.id === (link.end as { orb: string }).orb && other.stops) : undefined;
       const flyWait = stopper && born.current.has(stopper.id) ? Math.max(0, THROW - (now - born.current.get(stopper.id)!)) : 0;
+      const aBox = toBox(start.x, start.y);
+      const bBox = toBox(land.x, land.y);
+      // A flow made after another never runs along it (chủ game 30/10): when its straight way lies on an earlier
+      // flow, it arcs round to the side away from that one.
+      const keep = !way && !route && !link.fork && !link.dam && arcs.get(key) === undefined ? keepOff(flows, key, aBox, bBox) : undefined;
       flows.push({
         key,
-        a: toBox(start.x, start.y),
-        b: toBox(land.x, land.y),
+        a: aBox,
+        b: bBox,
         out: faceOut,
         into: land.into,
         tone: link.tone,
@@ -442,7 +480,7 @@ export function ReactionLine({
         path: route?.path,
         // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other. A
         // curse's or a mirror's way back to the attacker (no damage) takes a third of the arc and half the tail.
-        arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key),
+        arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key) ?? keep,
         after: link.fork ? trunk : way?.after,
         tail: way && !way.wide ? 0.5 : 1,
       });
