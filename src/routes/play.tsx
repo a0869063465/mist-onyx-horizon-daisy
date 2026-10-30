@@ -4556,7 +4556,18 @@ function PlayPage() {
       return { x, y: at.y, face: card.top ? 1 : -1, delay: 0, appear: 0 };
     };
     const rows = 16 / 9 / boardCut().v;
-    const clear = (x: number, y: number) => [...iconSpots.values()].every((other) => Math.hypot(x - other.x, (y - other.y) * rows) >= ICON * 1.08);
+    // An icon placed later never stands on the flow of one placed before (chủ game 30/10): each placed icon's flows, as
+    // straight runs from it to where they land, are kept clear of by `ICON * 0.95`.
+    const runs: Array<[{ x: number; y: number }, { x: number; y: number }]> = [];
+    const onRun = (x: number, y: number) =>
+      runs.some(([a, b]) => {
+        const dx = b.x - a.x;
+        const dy = (b.y - a.y) * rows;
+        const len2 = dx * dx + dy * dy || 1;
+        const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * rows * dy) / len2));
+        return Math.hypot(x - (a.x + t * dx), (y - (a.y + (t * dy) / rows)) * rows) < ICON * 0.95;
+      });
+    const clear = (x: number, y: number) => !onRun(x, y) && [...iconSpots.values()].every((other) => Math.hypot(x - other.x, (y - other.y) * rows) >= ICON * 1.08);
     for (const orb of chain) {
       const kept = keptSpots.current.get(orb.id);
       // Once the wait is over an icon stays where it stood (the attacker leaves its lunge before its icon fires).
@@ -4612,6 +4623,11 @@ function PlayPage() {
       if (!spot) continue;
       iconSpots.set(orb.id, spot);
       keptSpots.current.set(orb.id, spot);
+      for (const link of orb.to) {
+        if ("orb" in link.end) continue;
+        const land = flowEnd(link.end, spot);
+        if (land) runs.push([spot, land]);
+      }
     }
   }
   // Chặn từng nhánh (chủ game 29/10): the branches of a spread a monster can still stand in front of, as points along
