@@ -946,7 +946,7 @@ export const SPELLS: SpellCard[] = [
     "id": "ngan-chan-phong-ngu",
     "name": "Ngăn chặn phòng ngự",
     "gems": 0,
-    "effect": "Chỉ định 1 đối thú không thể tham gia phòng ngự trong lượt này (có thể dùng lúc tấn công)"
+    "effect": "Ngăn 1 quái thú tham gia phòng ngự hoặc được che chắn"
   },
   {
     "id": "thanh-guom-anh-sang",

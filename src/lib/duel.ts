@@ -50,6 +50,8 @@ export type FieldMon = {
   curse: boolean;
   vulnerable: number;
   noBlock: boolean;
+  /** Ngăn chặn phòng ngự (chủ game 30/10): until the end of the round nothing covers it and it covers no one. */
+  noCover?: boolean;
   charge: number;
   held: boolean;
   copy: boolean;
@@ -4085,6 +4087,34 @@ export function assignBlock(state: Duel, blockerUid: string, withSkill = false, 
   return traced(state, next, { kind: "block", actor, ok, cardId: mon?.cardId ?? null, target: monsterTarget(state, attacker), end: null });
 }
 
+/**
+ * Ngăn chặn phòng ngự: whom it can be aimed at while the attack waits: the monsters that have jumped out to block or
+ * cover, and the monsters they stand in front of (the one a blow or skill is aimed at in the back row, or a branch).
+ */
+export function shelterPicks(state: Duel): string[] {
+  const hold = state.hold;
+  if (state.step !== "respond" || !hold || !state.pending) return [];
+  const picks = new Set<string>();
+  const defender = (1 - state.turn) as Side;
+  const mine = (uid: string | null | undefined) => (uid && state.players[defender].field.some((mon) => mon?.uid === uid) ? uid : null);
+  const standing = hold.blocker !== null && hold.blocker !== undefined;
+  const pending = state.pending;
+  const aim = pending.kind === "melee" ? pending.defender : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.target : null;
+  if (standing) {
+    const guard = mine(hold.blocker);
+    if (guard) picks.add(guard);
+    const victim = mine(aim);
+    if (victim) picks.add(victim);
+  }
+  for (const row of hold.covers ?? []) {
+    const guard = mine(row.blocker);
+    if (guard) picks.add(guard);
+    const victim = mine(row.target);
+    if (victim) picks.add(victim);
+  }
+  return [...picks];
+}
+
 function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, branch?: string): Duel {
   if (state.hold?.stage) return state;
   const defender = (1 - state.turn) as Side;
@@ -4098,6 +4128,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     if (!hits.includes(branch)) return note(state, "Nhánh này không trúng ai.");
     const covered = branch === `face:${defender}` || state.players[defender].field.some((mon) => mon?.uid === branch && mon.row === "back");
     if (!covered) return note(state, "Quái chỉ chặn đòn vào người chơi hoặc vào hàng sau.");
+    if (state.players[defender].field.some((mon) => mon?.uid === branch && mon.noCover)) return note(state, "Quái này không được che chắn.");
     if (hits.includes(blockerUid)) return note(state, "Quái đang bị nhắm không chặn hộ được.");
     const covers = state.hold.covers ?? [];
     if (covers.some((row) => row.blocker === blockerUid)) return note(state, "Mỗi quái chỉ chặn một nhánh.");
@@ -4110,6 +4141,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     const victim = aim ? state.players[defender].field.find((mon) => mon?.uid === aim) ?? null : null;
     if (!victim) return note(state, "Quái chỉ chặn đòn đánh vào người hoặc vào hàng sau.");
     if (victim.row !== "back") return note(state, "Đánh vào hàng trước thì không ai chặn hộ được.");
+    if (victim.noCover) return note(state, "Quái này không được che chắn.");
   }
   const you = state.players[defender];
   const blocker = you.field.find((mon) => mon?.uid === blockerUid) ?? null;
@@ -6039,6 +6071,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && side !== state.turn) {
     return note(state, `${card.name} chỉ dùng khi bạn tấn công.`);
   }
+  if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && shelterPicks(state).length === 0) {
+    return note(state, `${card.name} chỉ dùng khi có quái đã lao ra chặn hoặc che.`);
+  }
   if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap") {
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
@@ -6314,11 +6349,22 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return finishRound({ ...note(next, "Vòng xoáy bảo hộ chặn đòn và kết thúc vòng.", "spell"), step: "main", pending: null, hold: null });
   }
   if (card.id === "ngan-chan-phong-ngu") {
-    if (!foeMon) return note(next, "Không có quái để chặn phòng ngự.");
-    const field = enemy.field.map((mon) => (mon?.uid === foeMon.uid ? { ...mon, noBlock: true } : mon));
-    let marked = note(patch(next, foe, { ...enemy, field }), `${cardOf(foeMon).name} không được chặn trong lượt này.`, "spell");
-    if (marked.hold?.blocker === foeMon.uid) {
-      marked = { ...marked, hold: { ...marked.hold, blocker: null, blockerSkill: false, armed: null } };
+    // Chủ game 30/10: used on the wait once a monster has jumped out to block or cover; it picks one of those, or the
+    // one they stand in front of. That monster blocks and covers no more, and nothing covers it, to the end of the round.
+    const pickable = shelterPicks(state);
+    const mark = targetUid ? pickable.find((uid) => uid === targetUid) : undefined;
+    const victim = mark ? enemy.field.find((mon) => mon?.uid === mark) ?? null : null;
+    if (!victim) return note(next, "Chọn quái đang chặn hoặc được che.");
+    const field = enemy.field.map((mon) => (mon?.uid === victim.uid ? { ...mon, noBlock: true, noCover: true } : mon));
+    let marked = note(patch(next, foe, { ...enemy, field }), `${cardOf(victim).name} không được tham gia phòng ngự hoặc được che chắn tới hết vòng.`, "spell");
+    if (marked.hold) {
+      const covers = (marked.hold.covers ?? []).filter((row) => row.blocker !== victim.uid && row.target !== victim.uid);
+      const aim = marked.pending?.kind === "melee" ? marked.pending.defender : marked.pending?.kind === "beam" || marked.pending?.kind === "gnaw-skill" ? marked.pending.target : null;
+      const dropBlock = marked.hold.blocker === victim.uid || (aim === victim.uid && marked.hold.blocker !== null);
+      marked = {
+        ...marked,
+        hold: { ...marked.hold, covers: covers.length ? covers : undefined, ...(dropBlock ? { blocker: null, blockerSkill: false, armed: null } : {}) },
+      };
     }
     return keep(marked);
   }
@@ -9000,6 +9046,7 @@ function endTurnCore(state: Duel): Duel {
         blessDmg: 0,
         nextDef: 0,
         tempGuard: 0,
+        noCover: undefined,
         seized: undefined,
       };
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
@@ -9059,6 +9106,7 @@ function endTurnCore(state: Duel): Duel {
         wet: mon.wet && mon.wet < 90 ? Math.max(0, mon.wet - 1) : mon.wet,
         spun: false,
         tempGuard: 0,
+        noCover: undefined,
       });
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
       return freeCage(settleGuard(settleVow(faded)));

@@ -120,6 +120,7 @@ import {
   testEnv,
   testReset,
   canCastSwap,
+  shelterPicks,
   answerSide,
   canTestReset,
   toggleStance,
@@ -839,7 +840,7 @@ const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguye
 const SLOW_AIM = new Set(["soi-xich-dia-nguc", "phan-nguyen"]);
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich"]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu"]);
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1042,7 +1043,7 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   if (id === "la-chan-phan-don") return skilled && !bindBeam(duel);
   if (id === "hap-thu-ma-phap") return pending?.kind === "spell" || pending?.kind === "lash";
   // Only the attacking side may use it, to stop a foe from blocking (owner, 21/10).
-  if (id === "ngan-chan-phong-ngu") return duel.hold?.priority === duel.turn && (Boolean(duel.hold?.blocker) || attacked);
+  if (id === "ngan-chan-phong-ngu") return duel.hold?.priority === duel.turn && shelterPicks(duel).length > 0;
   if (id === "vong-nguyen-rua-ac-ma") {
     if (pending?.kind === "face" || pending?.kind === "melee") return true;
     if (pending?.kind === "beam" || pending?.kind === "gnaw-skill") {
@@ -3747,6 +3748,18 @@ function PlayPage() {
         setAim({ kind: "spell", index: payload.index, spellId: payload.spellId });
         return;
       }
+      // Ngăn chặn phòng ngự: dropped on a monster it can take, it is cast; elsewhere on the board it waits as an icon.
+      if (payload.spellId === "ngan-chan-phong-ngu") {
+        if (hit?.closest(".hand")) return;
+        const mark = slotEl && owner !== viewer ? foe.field.find((mon) => mon?.uid === slotEl.dataset.uid) ?? null : null;
+        if (mark && shelterPicks(duel).includes(mark.uid)) {
+          apply(castSpell(duel, payload.index, mark.uid));
+          return;
+        }
+        playCue("chain");
+        setAim({ kind: "spell", index: payload.index, spellId: payload.spellId });
+        return;
+      }
       const reactEl = hit?.closest("[data-react]") as HTMLElement | null;
       if (reactEl && payload.spellId !== "soi-xich-dia-nguc") {
         const kind = reactEl.dataset.react;
@@ -4030,6 +4043,13 @@ function PlayPage() {
       }
       if (side !== viewer) {
         apply(castSpell(duel, aim.index, mon.uid, false, aim.from));
+        setAim(null);
+      }
+      return;
+    }
+    if (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu") {
+      if (side !== viewer && shelterPicks(duel).includes(mon.uid)) {
+        apply(castSpell(duel, aim.index, mon.uid));
         setAim(null);
       }
       return;
@@ -5818,7 +5838,7 @@ function PlayPage() {
           const allyAim = aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id);
           const curseStep = aim?.kind === "spell" && aim.spellId === "phan-nguyen" ? (aim.from ? "foe" : "ally") : drag?.kind === "spell" && drag.spellId === "phan-nguyen" ? "ally" : null;
           const witchFoe = aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian";
-          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
+          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && aim.spellId !== "ngan-chan-phong-ngu" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu" && shelterPicks(duel).includes(mon.uid)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
           const covered =
             !!mon &&
             mon.cardId === "kazura" &&
@@ -6124,6 +6144,15 @@ function PlayPage() {
                             setReflectPick({ index, uid: null });
                             return;
                           }
+                          if (id === "ngan-chan-phong-ngu") {
+                            if (shelterPicks(duel).length === 0) {
+                              holdNotice("Chưa có quái nào lao ra chặn hoặc che.");
+                              return;
+                            }
+                            playCue("chain");
+                            setAim({ kind: "spell", index, spellId: id });
+                            return;
+                          }
                           if (id === "phuc-kich") {
                             // Chọn mục tiêu theo video chủ game (30/10): icon giữa sân + dòng mô tả, đồng minh dùng được sáng viền.
                             if (!you.field.some((unit) => unit && ambushReady(unit))) {
@@ -6355,6 +6384,16 @@ function PlayPage() {
                           if (shownSpell.id === "ke-dao-mo") {
                             setInspect(null);
                             openDig(index);
+                            return;
+                          }
+                          if (shownSpell.id === "ngan-chan-phong-ngu") {
+                            setInspect(null);
+                            if (shelterPicks(duel).length === 0) {
+                              holdNotice("Chưa có quái nào lao ra chặn hoặc che.");
+                              return;
+                            }
+                            playCue("chain");
+                            setAim({ kind: "spell", index, spellId: shownSpell.id });
                             return;
                           }
                           const swap = shownSpell.id === "hoan-doi";

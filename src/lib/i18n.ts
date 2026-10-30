@@ -424,7 +424,7 @@ const PAIRS: Array<[string, string]> = [
   ["Hồi phục 2 máu cho tất cả đồng minh. Giải trừ tất cả trạng thái bất lợi.", "Heal 2 HP for every ally. Remove every harmful status."],
   ["Khi 1 quái thú đồng minh bị tấn công hoặc nhắm đến. Chọn 1 quái thú khác trên sân hoặc trên tay (đủ điều kiện để triệu hồi) rồi hoán đổi với nó.", "When 1 allied monster is attacked or targeted. Choose 1 other monster on the field or in your hand (legal to summon), then swap with it."],
   ["Ngăn chặn đòn tấn công, và buộc đối thủ kết thúc ngay lượt.", "Stop the attack, and force the opponent to end the turn at once."],
-  ["Chỉ định 1 đối thú không thể tham gia phòng ngự trong lượt này (có thể dùng lúc tấn công)", "Choose 1 enemy monster. It cannot defend this turn. You can cast this while attacking."],
+  ["Ngăn 1 quái thú tham gia phòng ngự hoặc được che chắn", "Stop 1 monster from taking part in defense or being covered."],
   ["Ngăn tất cả quái thú đối phương tấn công trong 5 lượt. Làm hiện hình tất cả quái thú đang ẩn mình đúng số lượt trên ô đếm. Hết thì ẩn lại.", "Enemy monsters cannot attack for 5 turns. Every hidden monster is revealed for the turns left on its counter, then hides again."],
   ["Chọn quái ra sân. Không vượt sao đã thu:", "Choose monsters for the field. Do not pass the recalled stars:"],
   ["Quái 4 sao tốn thêm 1 mana.", "Each 4-star monster costs 1 extra mana."],

@@ -775,6 +775,7 @@ export const PENDING_NOTES: string[] = [
   "Chữ mô tả mới cho Hoán đổi (chọn quái trên sân hoặc trên tay rồi hoán đổi), Cỗ máy thời gian và Giáp cơ khí (bỏ câu bấm Use ở thanh phản ứng).",
   "Bể sáng bên đỏ dời vào thêm để che hết dải cỏ ở rìa sân đỏ, liền mạch với nền; màu bể đỏ đổi sang cam đỏ cho hợp màu nền sân đỏ. Bể bên xanh giữ nguyên.",
   "Dải sáng trong bể bên đỏ nhạt bớt, bớt nổi hơn so với bản trước, vẫn che dải cỏ rìa và giữ màu cam đỏ hợp nền sân đỏ.",
+  "Ngăn chặn phòng ngự đổi cách dùng: dùng khi đã có quái đối thủ lao ra chặn hoặc che trên hàng chờ, chọn quái đó (để nó không che) hoặc quái được che (để không quái nào che được nó). Quái bị chọn không chặn, không che cho ai và không ai che cho nó tới hết vòng, đòn quay về đánh vào mục tiêu gốc. Chữ lá mới: Ngăn 1 quái thú tham gia phòng ngự hoặc được che chắn.",
 ];
 
 function remarkOf(notes: string[]) {

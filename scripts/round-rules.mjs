@@ -159,6 +159,30 @@ test("chặn: hàng trước chặn cho hàng sau; đánh hàng trước thì kh
   assert.match(D.assignBlock(onFront, uid(s, 1, 0)).live, /hàng trước thì không ai chặn hộ/);
 });
 
+test("Ngăn chặn phòng ngự: dùng sau khi quái lao ra chặn; quái bị chọn bỏ chặn, không che và không ai che cho nó tới hết vòng", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }], 1: ["rong-con"] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }], 1: ["kizuran", { hp: 20, maxHp: 20 }], 3: ["rong-con", { hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 0, "ngan-chan-phong-ngu", false);
+  s = D.endTurn(D.endTurn(s));
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })), turn: 0, round: 0 };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3));
+  const idx = swung.players[0].hand.indexOf("ngan-chan-phong-ngu");
+  assert.equal(swung.hold?.priority, 1, swung.live);
+  assert.deepEqual(D.shelterPicks(swung), [], "chưa ai chặn thì chưa có ai để chọn");
+  const blocked = D.assignBlock(swung, uid(s, 1, 0));
+  assert.equal(blocked.hold?.blocker, uid(s, 1, 0), blocked.live);
+  assert.deepEqual([...D.shelterPicks(blocked)].sort(), [uid(s, 1, 0), uid(s, 1, 3)].sort(), "chọn được quái chặn hoặc quái được che");
+  // Pick the blocker: it no longer blocks, and cannot cover again this round.
+  const a = D.castSpell(blocked, idx, uid(s, 1, 0));
+  assert.equal(a.hold?.blocker ?? null, null, a.live);
+  assert.equal(at(a, 1, 0).noBlock, true);
+  assert.match(D.assignBlock(a, uid(s, 1, 0)).live, /không chặn được/i);
+  // Pick the one covered: nobody covers it any more, the hit stands on it.
+  const b = D.castSpell(blocked, idx, uid(s, 1, 3));
+  assert.equal(b.hold?.blocker ?? null, null);
+  assert.equal(at(b, 1, 3).noCover, true);
+  assert.match(D.assignBlock(b, uid(s, 1, 1)).live, /không được che chắn/);
+});
+
 test("đánh người chơi: hàng trước chặn, chặn xong được Trả đòn", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 9 }] });
   const swung = D.attackFace(s, uid(s, 0, 0));

@@ -263,7 +263,7 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "vong-xoay-bao-ho":
         return ["Chặn đòn", "Đối thủ kết thúc lượt ngay"];
       case "ngan-chan-phong-ngu":
-        return ["1 quái đối thủ không thể phòng ngự lượt này"];
+        return ["Quái đó không chặn, không che và không được che tới hết vòng"];
       case "virus-an-mon":
         return [`Mỗi lượt ăn mòn 1 quái từ ${num(e, /từ\s*(\d+)\s*sao/, 3)} sao của đối thủ`, `Gây ${num(e, /Gây\s*(\d+)\s*sát thương chuẩn/, 1)} sát thương chuẩn, gấp đôi nếu từ ${num(e, /nếu từ\s*(\d+)\s*sao/, 4)} sao`];
       case "co-may-thoi-gian":
