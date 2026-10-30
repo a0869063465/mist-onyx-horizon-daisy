@@ -303,8 +303,11 @@ export function ReactionLine({
       setShow(landed.id);
     }
     const land = showing.current ? Math.max(0, showing.current.at + SHOW_LAND - now) : 0;
-    const delays = ended.map((orb) => [orb.id, land > 0 ? land + (orb.end === "fizzle" ? FIZZLE_AFTER : 0) : 0] as const);
-    if (land > 0 && delays.length) setLate((map) => new Map([...map, ...delays]));
+    // An icon a flow wraps (Hấp thụ ma pháp, Phản nguyền against Virus ăn mòn) is swallowed as that flow reaches it, not
+    // after the big card has landed (chủ game 30/10).
+    const wrapped = (orb: ChainOrb) => orbs.some((other) => other.to.some((link) => link.wrap && "orb" in link.end && link.end.orb === orb.id));
+    const delays = ended.map((orb) => [orb.id, wrapped(orb) && orb.end === "fizzle" ? THROW + FIZZLE_AFTER : land > 0 ? land + (orb.end === "fizzle" ? FIZZLE_AFTER : 0) : 0] as const);
+    if (delays.some(([, wait]) => wait > 0)) setLate((map) => new Map([...map, ...delays]));
     for (const [index, orb] of ended.entries()) playLine(orb.end!, delays[index][1] + (orb.end === "fire" ? 0.1 : 0.08));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orbs]);
