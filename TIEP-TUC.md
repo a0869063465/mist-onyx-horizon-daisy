@@ -233,6 +233,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## File APK (30/10): ĐÃ LÀM bản 1, đã gửi chủ game, CHỜ cài thử (chỉ ở nhánh, CHƯA áp `main`)
 
 - Bản 1 (30/10): GitHub Actions run 1 dựng thành công lần đầu (82 MB, 278 file game + 10 trang, bản web 4e2a05b5fb2f), ký bằng `sign-apk.py`, `apksigtool verify` = v2 verified (bản sửa 1 byte thì báo sai). Đã gửi chủ game `ClashOfTheBeasts.apk`, `clash-release.p12`, `khoa-ky-APK.txt` (mật khẩu). Khoá chỉ có ở chủ game (scratchpad mất khi hết phiên): lần dựng APK sau phải xin chủ game gửi lại file khoá + mật khẩu, rồi `python3 scripts/apk/sign-apk.py clash-unsigned.apk ClashOfTheBeasts.apk clash-release.p12 <mật khẩu>` (venv có `cryptography`, `apksigtool` để kiểm). Bản chưa ký tải ở `https://github.com/a0869063465/mist-onyx-horizon-daisy/releases/download/apk-latest/clash-unsigned.apk`. Đổi code web chỉ cần áp `main` là app tự tải; chỉ đổi `android/` mới cần APK mới (versionCode = số lần dựng).
+- Bản 2 (30/10): chủ game báo dải đen đầu màn (vùng tai thỏ) → `MainActivity.hideBars` đặt `layoutInDisplayCutoutMode` (commit 9f9c82c), run 2 thành công, đã ký và gửi lại. Cài đè được (versionCode tăng). Chờ chủ game xem còn dải đen không.
 - Chưa thử được trên Android thật (không có máy ảo): mở game, vào Vs Máy, tắt mạng mở lại, nhạc dừng khi rời app, nút Back, dòng thông báo toàn màn hình.
 
 - Việc vừa làm trước đó: bốc bài đợt 4 đã áp `main` (6c6fde1).
