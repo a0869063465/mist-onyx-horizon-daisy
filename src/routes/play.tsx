@@ -146,7 +146,7 @@ import {
   confirmStage,
   stageHold,
 } from "@/lib/duel";
-import { queueRuns, reachOf, type Reach } from "@/lib/preview";
+import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
@@ -3062,6 +3062,10 @@ function PlayPage() {
 
   // The picked card in hand goes back when the priority, the step or the round changes.
   useEffect(() => setHandPick(null), [duel?.turn, duel?.step, duel?.round]);
+  // The eye's preview goes with the reaction row it was for.
+  useEffect(() => {
+    if (peek && !queue && !(duel?.step === "respond" && duel.hold && !duel.hold.stage)) setPeek(false);
+  }, [duel, queue, peek]);
   // A queue left from another match, or an action the match no longer holds waiting, goes.
   useEffect(() => {
     if (!queue || !duel) return;
@@ -3140,22 +3144,29 @@ function PlayPage() {
   // The OK button is a tick while something waits for an answer or for this side's confirmation.
   const ticking = responding || Boolean(queue);
   // Con mắt (chủ game 28/10): the match after the tick, as if the opponent does not answer; only what is certain.
+  // The eye is open whenever a reaction row stands, whether this side has acted or not (chủ game 30/10); only X opens
+  // when this side has an action to cancel. With nothing of this side queued the preview is the match as it goes on if
+  // this side lets the waiting action through.
+  const eyeOn = Boolean(queue) || Boolean(responding && duel.hold && !duel.hold.stage);
   let sight: Sight | null = null;
-  if (peek && queue) {
+  if (peek && eyeOn) {
     const memo = sightMemo.current;
-    if (memo.duel === duel && memo.kind === queue.kind) sight = memo.sight;
+    const kind = queue?.kind ?? "pass";
+    if (memo.duel === duel && memo.kind === kind) sight = memo.sight;
     else {
       try {
-        sight = foresee(duel, queueRuns(duel, queue.kind, viewer));
+        sight = foresee(duel, queue ? queueRuns(duel, queue.kind, viewer) : [settle(duel)]);
       } catch {
         sight = null;
       }
-      sightMemo.current = { duel, kind: queue.kind, sight };
+      sightMemo.current = { duel, kind, sight };
     }
   }
   // In the preview the queued icons have gone through, so they show as cracks; one whose roll is still to come keeps
   // its icon, with no target yet (chủ game 28/10).
-  const peekIcons = sight && queue
+  const peekIcons = sight && !queue
+    ? { cracked: new Set(chain.map((orb) => orb.id)), aimless: new Set<string>() }
+    : sight && queue
     ? (() => {
         const fresh = new Set(chain.filter((orb) => !queue.chain.some((old) => old.id === orb.id)).map((orb) => orb.id));
         return sight.random && queue.kind === "act" ? { cracked: new Set<string>(), aimless: fresh } : { cracked: fresh, aimless: new Set<string>() };
@@ -6157,8 +6168,8 @@ function PlayPage() {
             </button>
           )}
           {board.drawSpell.hidden ? null : (
-            <button type="button" className={`oracle-act${queue ? " is-live" : ""}${peek && queue ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!queue} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
-              {peek && queue ? (
+            <button type="button" className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!eyeOn} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
+              {peek && eyeOn ? (
                 <span className="oracle-smoke" aria-hidden="true">
                   <i />
                   <i />
@@ -6167,7 +6178,7 @@ function PlayPage() {
                   <i />
                 </span>
               ) : null}
-              <OracleOrb kind="eye" state={queue ? (peek ? "look" : "open") : "shut"} />
+              <OracleOrb kind="eye" state={eyeOn ? (peek ? "look" : "open") : "shut"} />
             </button>
           )}
           {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
