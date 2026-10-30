@@ -23,7 +23,7 @@ function Flight({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) =
       return;
     }
     const ph = from.height;
-    const pw = ph * 0.656;
+    const pw = ph * 0.7;
     const fx = from.left + from.width / 2;
     const fy = from.top + from.height / 2;
     const tx = to.left + to.width / 2;
@@ -61,7 +61,7 @@ function Flight({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) =
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <div ref={ref} className="draw-flight" />;
+  return <div ref={ref} className={`draw-flight is-${flight.side}`} />;
 }
 
 /** Lá úp bay từ xấp lên tay (mình) hoặc vào khay bài của đối thủ (chủ game 30/10): chỉ hiển thị, luật rút bài không đổi. */

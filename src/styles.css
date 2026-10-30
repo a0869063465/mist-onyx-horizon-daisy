@@ -11624,9 +11624,9 @@ button.watch-back {
   position: absolute;
   max-width: none;
   left: -5.5cqw;
-  top: -11.2cqw;
+  top: -10.2cqw;
   width: 11cqw;
-  height: 16.7cqw;
+  height: 15.7cqw;
   border-radius: 0.5cqw;
   box-shadow: 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.55);
 }
@@ -11766,9 +11766,9 @@ button.watch-back {
   left: 50%;
   top: 50%;
   /* Nhỏ hơn lá trên sân một chút (lá sân rộng 15,4% bàn). */
-  width: 13.1cqw;
+  width: 12.6cqw;
   height: auto;
-  aspect-ratio: 400 / 610;
+  aspect-ratio: 400 / 572;
   transform: translate(calc(-50% + var(--down) * -0.16em), calc(-50% + var(--down) * 0.28em)) rotate(var(--tilt));
   filter: brightness(calc(1 - var(--down) * 0.07)) drop-shadow(0 0.08em 0.1em rgba(0, 0, 0, 0.5));
 }
@@ -11782,7 +11782,8 @@ button.watch-back {
   position: fixed;
   z-index: 60;
   pointer-events: none;
-  background: url(/ui/card-back.webp) center / 100% 100% no-repeat;
+  background: url(/ui/card-back-you.webp) center / 100% 100% no-repeat;
   filter: drop-shadow(0 0.2rem 0.35rem rgba(0, 0, 0, 0.55));
   will-change: transform;
 }
+.draw-flight.is-foe { background-image: url(/ui/card-back-foe.webp); }

@@ -5033,7 +5033,7 @@ function PlayPage() {
             <div className="foe-fan" aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
               {Array.from({ length: shown }, (_, i) => {
                 const k = i - (shown - 1) / 2;
-                return <img key={i} src="/ui/card-back.webp" alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
+                return <img key={i} src="/ui/card-back-foe.webp" alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
               })}
             </div>
           );
@@ -5124,7 +5124,7 @@ function PlayPage() {
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
           <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
-            <DeckPile count={pileLeft(foe)} />
+            <DeckPile count={pileLeft(foe)} side="foe" />
           </div>
         )}
         {marksView.map(([key, value]) => {
@@ -6065,7 +6065,7 @@ function PlayPage() {
             if (mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0) apply(draw(duel));
           }}
         >
-          <DeckPile count={pileLeft(you)} />
+          <DeckPile count={pileLeft(you)} side="you" />
           {pileLeft(you) > 0 ? <b>{pileLeft(you)}</b> : null}
         </button>
         )}

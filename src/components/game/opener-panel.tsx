@@ -130,7 +130,7 @@ export function OpenerPanel({
               <button type="button" className="op-card" disabled={phase !== "pick" || !card.can} onClick={() => toggle(index)}>
                 <span className="op-flip">
                   <span className="op-front">{card.face}</span>
-                  <img className="op-back" src="/ui/card-back.webp" alt="" draggable={false} />
+                  <img className="op-back" src="/ui/card-back-you.webp" alt="" draggable={false} />
                 </span>
                 {marked ? <span className="op-swirl" aria-hidden="true" /> : null}
               </button>

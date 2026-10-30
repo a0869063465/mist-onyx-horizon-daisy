@@ -10,7 +10,7 @@ export const pileLayers = (count: number) => (count <= 0 ? 0 : Math.min(MAX_LAYE
  * Xấp bài úp vẽ bằng code trên ô trống của ảnh bàn (chủ game 30/10): dày theo số lá còn trong xấp, lá bốc bay ra từ
  * mặt xấp. Lớp dưới tối hơn và lệch xuống một chút cho ra cảm giác có độ dày.
  */
-export function DeckPile({ count }: { count: number }) {
+export function DeckPile({ count, side }: { count: number; side: "you" | "foe" }) {
   const layers = pileLayers(count);
   return (
     <span className="deck-pile" aria-hidden="true">
@@ -19,7 +19,7 @@ export function DeckPile({ count }: { count: number }) {
         return (
           <img
             key={i}
-            src="/ui/card-back.webp"
+            src={side === "you" ? "/ui/card-back-you.webp" : "/ui/card-back-foe.webp"}
             alt=""
             draggable={false}
             style={{ ["--down" as string]: up, ["--tilt" as string]: `${((i * 37) % 5) - 2}deg` } as CSSProperties}

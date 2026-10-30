@@ -14,8 +14,23 @@ export type LoadFace = { mode: string; pool: Array<{ name: string; art: string }
  * deck picked at random, in a gold ring with its name. Its foot stops a little above the loading line and the bar, so
  * it never covers them (chủ game, câu 12). The monster's story is for later (câu 11).
  */
+const LOGO_KEY = "clash-load-logo";
+
+/** Màn tải game thay phiên hai linh vật: sư tử rồi rắn (chủ game 30/10). */
+function nextLogo() {
+  try {
+    const was = localStorage.getItem(LOGO_KEY);
+    const now = was === "lion" ? "snake" : "lion";
+    localStorage.setItem(LOGO_KEY, now);
+    return now === "snake" ? "/ui/logo-snake.webp" : "/ui/logo.webp";
+  } catch {
+    return "/ui/logo.webp";
+  }
+}
+
 export function LoadScreen({ kind, title, jobs, onDone, face }: { kind: "game" | "match"; title: string; jobs: () => Job[]; onDone: () => void; face?: LoadFace }) {
   const [shown] = useState(() => (face?.pool.length ? face.pool[Math.floor(Math.random() * face.pool.length)] : null));
+  const [logo] = useState(() => (kind === "game" ? nextLogo() : "/ui/logo.webp"));
   const [pct, setPct] = useState(0);
   const [skip, setSkip] = useState(false);
   const finished = useRef(false);
@@ -39,7 +54,7 @@ export function LoadScreen({ kind, title, jobs, onDone, face }: { kind: "game" |
 
   return (
     <div className={`load-screen is-${kind}${face ? " has-banner" : ""}`} role="status" aria-live="polite">
-      {kind === "game" ? <img className="load-logo" src="/ui/logo.webp" alt="Clash of the Beasts" fetchPriority="high" draggable={false} /> : null}
+      {kind === "game" ? <img className="load-logo" src={logo} alt="Clash of the Beasts" fetchPriority="high" draggable={false} /> : null}
       {face ? (
         <div className="load-banner">
           <b className="load-mode">{face.mode}</b>
