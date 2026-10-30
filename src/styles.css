@@ -11618,11 +11618,12 @@ button.watch-back {
   z-index: 3;
   width: 0;
   height: 0;
-  pointer-events: none;
+  cursor: pointer;
 }
 .foe-fan img {
   position: absolute;
   max-width: none;
+  pointer-events: auto;
   left: -5.5cqw;
   top: -10.2cqw;
   width: 11cqw;
@@ -11759,8 +11760,7 @@ button.watch-back {
   inset: 0;
   pointer-events: none;
 }
-.face-pile b { position: relative; z-index: 1; }
-.face-pile .deck-pile { transform: translateY(-4%); }
+.face-pile .deck-pile { transform: translateY(-7%); }
 .deck-pile img {
   position: absolute;
   left: 50%;
@@ -11776,7 +11776,7 @@ button.watch-back {
   position: absolute;
   z-index: 3;
   transform: translate(-50%, -44%);
-  pointer-events: none;
+  cursor: pointer;
 }
 .draw-flight {
   position: fixed;
@@ -11787,3 +11787,36 @@ button.watch-back {
   will-change: transform;
 }
 .draw-flight.is-foe { background-image: url(/ui/card-back-foe.webp); }
+
+/* Số lá còn trong xấp của mình (nhấp đôi hiện 3 giây): cùng kiểu ô số như bên đối thủ (.mark.is-count b). */
+.deck-count {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.15em;
+  border-radius: 0.3em;
+  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
+  border: 0.07em solid #f4d27a;
+  box-shadow: 0 0.1em 0 #6b430c, 0 0.18em 0.3em rgba(0, 0, 0, 0.65), inset 0 0.07em 0.05em rgba(255, 255, 255, 0.35);
+  color: #ffe9a6;
+  font-size: 1.2em;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+  animation: deck-count-in 0.18s ease-out both;
+}
+@keyframes deck-count-in { from { opacity: 0; transform: scale(0.7); } }
+/* Xấp của mình to hơn một chút cho dễ nhìn (xấp địch giữ 12,6cqw). */
+.face-pile .deck-pile img { width: 14.1cqw; }
+/* Chưa rút bài: viền và glow sáng quanh lá trên cùng, thở nhẹ. */
+.deck-pile.is-ready img:last-child {
+  filter: drop-shadow(0 0 0.1em #fff) drop-shadow(0 0 0.15em #fff) drop-shadow(0 0 0.5em #b4ecff) drop-shadow(0 0 1.1em #4fb4ff);
+  animation: deck-ready 1.6s ease-in-out infinite;
+}
+@keyframes deck-ready {
+  50% { filter: drop-shadow(0 0 0.14em #fff) drop-shadow(0 0 0.3em #fff) drop-shadow(0 0 0.8em #c8f1ff) drop-shadow(0 0 1.7em #62c2ff); }
+}
+@media (prefers-reduced-motion: reduce) { .deck-pile.is-ready img:last-child { animation: none; } }

@@ -1822,6 +1822,14 @@ function PlayPage() {
   const [flights, setFlights] = useState<DrawFlight[]>([]);
   const flightId = useRef(0);
   const flightDone = (id: number) => setFlights((list) => list.filter((flight) => flight.id !== id));
+  // Số lá còn trong xấp / trên tay: ẩn, chỉ hiện khi bấm (chủ game 30/10). Địch: bấm xấp hoặc khay tay bật/tắt; xấp mình: nhấp
+  // đôi hiện 3 giây rồi tự mất (nhấp đơn là rút, nên rút chờ DOUBLE_TAP xem có lần bấm thứ hai không).
+  const [showFoeDeck, setShowFoeDeck] = useState(false);
+  const [showFoeHand, setShowFoeHand] = useState(false);
+  const [showMyDeck, setShowMyDeck] = useState(false);
+  const pileTap = useRef(0);
+  const countTimer = useRef(0);
+  const drawNow = useRef<() => void>(() => undefined);
   const stall = useRef({ live: "", n: 0 });
   const resetHold = useRef(0);
   const riteHold = useRef(0);
@@ -4219,6 +4227,11 @@ function PlayPage() {
   }
 
   const foeSide = (viewer === 0 ? 1 : 0) as Side;
+  const canDrawNow = Boolean(mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0);
+  drawNow.current = () => {
+    if (queueBlocked()) return;
+    if (canDrawNow) apply(draw(duel));
+  };
   const marksView = [
     ["foeHp", laserHp[`face:${foeSide}`] ?? hpHold[`face:${foeSide}`] ?? heldHp(foeSide) ?? foe.hp, ""],
     ["foeOrb", tutView?.foeOrb ?? foe.orb, ""],
@@ -5030,7 +5043,7 @@ function PlayPage() {
           const shown = Math.min(FOE_FAN.most, count);
           const at = marks.foeReserve;
           return (
-            <div className="foe-fan" aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
+            <div className="foe-fan" role="button" onClick={() => setShowFoeHand((on) => !on)} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
               {Array.from({ length: shown }, (_, i) => {
                 const k = i - (shown - 1) / 2;
                 return <img key={i} src="/ui/card-back-foe.webp" alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
@@ -5123,7 +5136,7 @@ function PlayPage() {
           </div>
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
-          <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
+          <div className="foe-pile" role="button" onClick={() => setShowFoeDeck((on) => !on)} style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
             <DeckPile count={pileLeft(foe)} side="foe" />
           </div>
         )}
@@ -5135,6 +5148,7 @@ function PlayPage() {
           const gemOwner = key.startsWith("you") ? you : foe;
           if (gemKey && gemOwner.stars >= 4) return null;
           const always = orbKey || starKey || Boolean(tutView?.show?.includes(key));
+          if ((key === "foeHand" && !showFoeDeck && !tutView?.show?.includes(key)) || (key === "foeReserve" && !showFoeHand && !tutView?.show?.includes(key))) return null;
           if (marks[key].hidden || (value === 0 && !always)) return null;
           const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : tutView?.foeOrb ?? foe.orb;
           const starLit = starFlash !== null && ((starFlash === viewer && key === "youStars") || (starFlash !== viewer && key === "foeStars"));
@@ -6049,7 +6063,7 @@ function PlayPage() {
         {board.stack.hidden ? null : (
         <button
           type="button"
-          className={`face-pile press${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
+          className={`face-pile press${canDrawNow ? " is-ready" : ""}${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
           style={{
             left: `${board.stack.x}%`,
             top: `${board.stack.y}%`,
@@ -6061,12 +6075,23 @@ function PlayPage() {
           onClick={() => {
             setInspect(null);
             setAim((current) => (current?.kind === "summon" ? null : current));
-            if (queueBlocked()) return;
-            if (mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0) apply(draw(duel));
+            if (pileTap.current) {
+              // Nhấp đôi: chỉ hiện số lá còn lại khoảng 3 giây, không rút (chủ game 30/10).
+              window.clearTimeout(pileTap.current);
+              pileTap.current = 0;
+              setShowMyDeck(true);
+              window.clearTimeout(countTimer.current);
+              countTimer.current = window.setTimeout(() => setShowMyDeck(false), 3000);
+              return;
+            }
+            pileTap.current = window.setTimeout(() => {
+              pileTap.current = 0;
+              drawNow.current();
+            }, DOUBLE_TAP);
           }}
         >
-          <DeckPile count={pileLeft(you)} side="you" />
-          {pileLeft(you) > 0 ? <b>{pileLeft(you)}</b> : null}
+          <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} />
+          {showMyDeck && pileLeft(you) > 0 ? <span className="deck-count">{pileLeft(you)}</span> : null}
         </button>
         )}
         <div
