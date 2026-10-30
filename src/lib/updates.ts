@@ -783,6 +783,7 @@ export const PENDING_NOTES: string[] = [
   "Phản nguyền: dòng trắng bọc icon Virus (hoặc quái bị nguyền), dòng thứ hai đi từ icon Phản nguyền tới nơi phản lại. Chữ: Hoá giải Virus ăn mòn, Trả lại Virus ăn mòn.",
   "Dòng chảy vào xấp bài và tay bài ôm theo viền chữ nhật của xấp, không còn vòng tròn.",
   "Phản nguyền chống Virus ăn mòn: dòng trắng bọc icon Virus, icon mờ dần và bị nuốt như Hấp thụ ma pháp.",
+  "Chữ mới cho Virus ăn mòn và Phản nguyền.",
 ];
 
 function remarkOf(notes: string[]) {

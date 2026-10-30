@@ -912,7 +912,7 @@ export const SPELLS: SpellCard[] = [
     "id": "phan-nguyen",
     "name": "Phản nguyền",
     "gems": 0,
-    "effect": "Chọn 1 đồng minh đang mang trạng thái xấu, rồi chọn 1 quái đối thủ.\nChuyển trạng thái xấu đó sang quái đối thủ. Thời gian đếm lại từ đầu nếu biết mốc ban đầu.",
+    "effect": "Dùng để dịch chuyển lời nguyền đã bị đối phương gây ra, lên 1 mục tiêu khác về lại phía đối thủ.",
     "picture": "spell:hap-thu-ma-phap"
   },
   {
@@ -1036,7 +1036,7 @@ export const SPELLS: SpellCard[] = [
     "id": "virus-an-mon",
     "name": "Virus ăn mòn",
     "gems": 0,
-    "effect": "Khi quái thú 1 sao đồng minh bị nhắm, kích hoạt. \nNếu quái đó bị tiêu diệt ngay sau đó, Virus ăn mòn bắt đầu.\nLập tức và mỗi đầu lượt, ăn mòn 1 quái từ 3 sao trở lên của đối thủ, ngẫu nhiên trong bộ bài, dự bị hoặc trên sân.\nGây 1 sát thương chuẩn, gấp đôi nếu từ 4 sao. Hết máu thì bị loại."
+    "effect": "Chỉ dùng được khi quái 1 sao đang bị nhắm đến và bị hạ gục. Virus sẽ ăn mòn dần các quái thú cấp cao (từ 3 sao trở lên) trong bộ bài đối thủ."
   },
   {
     "id": "ke-dao-mo",
