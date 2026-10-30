@@ -1,0 +1,5 @@
+.gradle/
+build/
+local.properties
+# The game's files, fetched from the live site when the APK is built (scripts/apk/bundle-web.mjs).
+app/src/main/assets/

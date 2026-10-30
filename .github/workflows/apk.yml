@@ -1,0 +1,51 @@
+# The Android app (chủ game 30/10). Builds an UNSIGNED APK carrying the live site's files and publishes it on the
+# Releases page under the tag apk-latest; it is signed afterwards, away from this public repository
+# (scripts/apk/sign-apk.py). An unsigned APK does not install.
+name: apk
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, ccr-6ec5ff6c-vl497v]
+    paths: ["android/**", "scripts/apk/**", ".github/workflows/apk.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+
+      - name: Game files from the live site
+        run: node scripts/apk/bundle-web.mjs https://clashofthebeasts.vercel.app android/app/src/main/assets
+
+      - name: Build
+        run: gradle -p android assembleRelease --no-daemon --stacktrace
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk clash-unsigned.apk
+          ls -l clash-unsigned.apk
+          gh release delete apk-latest --yes --cleanup-tag || true
+          gh release create apk-latest clash-unsigned.apk --prerelease --target "$GITHUB_SHA" \
+            --title "APK chưa ký (bản dựng ${{ github.run_number }})" \
+            --notes "Bản chưa ký, không cài được. Claude ký rồi gửi chủ game."
