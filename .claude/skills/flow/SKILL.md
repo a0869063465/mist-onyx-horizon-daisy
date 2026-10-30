@@ -35,6 +35,7 @@ Dùng cho mọi dòng đi ngược về kẻ ra đòn: skill bị phản (Lá ch
 3. Đáp vào CẠNH BÊN lá đích (phía nó vòng tới / phía đồng minh), không đáp giữa mép gần dưới icon.
 4. Bỏ uốn lượn, đầu không nhỏ. Dòng sát thương (đỏ, skill bị phản): đuôi to như skill sát thương. Dòng hồng không sát thương (Gương, Vòng nguyền): cung còn 1/3, đuôi loe một nửa.
 5. Đường về chờ đường tới chạm icon rồi mới chạy (`after`).
+6. Dòng hồng tới đồng minh được chọn (Phục kích, chủ game chốt 30/10): KHÔNG đáp giữa mép gần lá, vì đó là chỗ icon tấn công của đồng minh (gối lên nhau). Đáp vào CẠNH BÊN lá phía icon phép, cách mép gần 1/3 nửa lá, vào xiên ~55°; có lá đứng sát bên phía đó thì vào GÓC GẦN, chéo 45° (`besideFree` trong play.tsx). Áp cho mọi phép sau này có dòng tới đồng minh mà đồng minh hiện icon tấn công ở mép gần.
 Code: reaction-line.tsx, vòng dựng `backs`/`arcs` và đoạn "The way back lands on the side".
 
 ## Cách làm với chủ game
