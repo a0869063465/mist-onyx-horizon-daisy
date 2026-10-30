@@ -4537,15 +4537,23 @@ function PlayPage() {
       return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
     }
     if ("hand" in end || "pile" in end) {
-      // Virus ăn mòn eats a card in the hand or the deck (chủ game 30/10): the flow runs into it, its name shows.
+      // Virus ăn mòn eats a card in the hand or the deck (chủ game 30/10): the flow runs into a moat that follows the
+      // edge of the pile (the printed pile on the board) or of the hand, not a circle.
       const mine = ("hand" in end ? end.hand : end.pile) === viewer;
       const el = mine ? document.querySelector("hand" in end ? ".hand" : ".face-pile") : null;
+      const stack = board.stack;
       const mark = "hand" in end ? marks.foeReserve : board.marks.foeHand;
-      const spot = mine && el ? boardSpot(el, { x: 50, y: 94, w: 40 }) : { x: mark.x, y: mark.y, w: 12 };
-      const dx = (spot.x - from.x) * 0.9;
-      const dy = (spot.y - from.y) * 1.6 * boardCut().v;
-      const len = Math.hypot(dx, dy) || 1;
-      return { x: spot.x, y: spot.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: spot.x, y: spot.y, r: HP_RING } };
+      const box =
+        mine && el
+          ? (() => {
+              const r = el.getBoundingClientRect();
+              const bd = document.querySelector(".board")?.getBoundingClientRect();
+              return bd ? { x: ((r.left + r.width / 2 - bd.left) / bd.width) * 100, y: ((r.top + r.height / 2 - bd.top) / bd.height) * 100, w: (r.width / bd.width) * 100, h: (r.height / bd.height) * 100 } : null;
+            })()
+          : null;
+      const spot = box ?? { x: mark.x, y: mark.y, w: "hand" in end ? 30 : stack.width, h: "hand" in end ? 9 : stack.height };
+      const below = from.y > spot.y;
+      return { x: spot.x, y: below ? spot.y + spot.h * 0.5 : spot.y - spot.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: spot.x, y: spot.y, w: spot.w, h: spot.h } };
     }
     const card = cardSpot(end.uid);
     if (!card) return null;

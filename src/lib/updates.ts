@@ -781,6 +781,7 @@ export const PENDING_NOTES: string[] = [
   "Bên bị Virus ăn mòn cầm Hấp thụ ma pháp thì mỗi lần ăn mòn chờ trong chuỗi; Hấp thụ ma pháp nuốt Virus vĩnh viễn.",
   "Phản nguyền dùng được khi Virus ăn mòn đang chờ: chuyển Virus sang người gửi, họ phản lại được. Chỉ 1 đồng minh bị bất lợi thì tự chọn.",
   "Phản nguyền: dòng trắng bọc icon Virus (hoặc quái bị nguyền), dòng thứ hai đi từ icon Phản nguyền tới nơi phản lại. Chữ: Hoá giải Virus ăn mòn, Trả lại Virus ăn mòn.",
+  "Dòng chảy vào xấp bài và tay bài ôm theo viền chữ nhật của xấp, không còn vòng tròn.",
 ];
 
 function remarkOf(notes: string[]) {
