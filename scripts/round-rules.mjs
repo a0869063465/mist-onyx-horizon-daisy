@@ -549,6 +549,41 @@ test("luật bộ bài: 16–24 lá, ít nhất 13 quái, phép không bắt bu�
   assert.equal(C.deckLegal(20, 5), false, "25 lá");
 });
 
+test("Virus ăn mòn: chỉ dùng khi quái 1 sao có thể bị hạ; ăn mòn ngay, hoặc chờ trong chuỗi khi bên bị ăn mòn cầm Hấp thụ ma pháp", () => {
+  const make = (atk, breaker) => {
+    let s = board({ 0: ["khong-lo-mot-mat", { atk, hp: 20, maxHp: 20 }], 1: ["thuong-quan-long", { hp: 10, maxHp: 10, def: 0, mdef: 0 }] }, { 0: ["may-chem", { hp: 2, maxHp: 2, def: 0 }] });
+    s = D.testGrant(s, 1, "virus-an-mon", false);
+    if (breaker) s = D.testGrant(s, 0, "hap-thu-ma-phap", false);
+    s = D.endTurn(D.endTurn(s));
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 5, ...(i === 0 ? { monsterDeck: [], reserve: [] } : {}) })), turn: 0, round: 0 };
+    const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+    assert.equal(swung.hold?.priority, 1, swung.live);
+    return { s, swung, cast: D.castSpell(swung, swung.players[1].hand.indexOf("virus-an-mon"), null) };
+  };
+  const settle = (x) => {
+    for (let i = 0; i < 6 && x.step === "respond" && !x.pending?.corrode; i++) x = D.passResponse(x);
+    return x;
+  };
+  const weak = make(1, false);
+  assert.equal(weak.cast.virusArm ?? null, null, "quái không thể bị hạ thì không dùng được");
+  const now = make(9, false);
+  assert.equal(now.cast.virusArm?.owner, 1, now.cast.live);
+  const ate = settle(now.cast);
+  assert.equal(ate.virus?.owner, 1, ate.live);
+  assert.equal(at(ate, 0, 1).hp, 8, "4 sao: 2 sát thương chuẩn ngay");
+  assert.match(ate.corrosions?.at(-1)?.line ?? "", /Virus ăn mòn Thương quản long/);
+  const held = settle(make(9, true).cast);
+  assert.equal(held.pending?.corrode?.uid, uid(held, 0, 1), held.live);
+  assert.equal(held.hold?.priority, 0);
+  assert.equal(at(held, 0, 1).hp, 10, "chưa ăn mòn khi còn chờ");
+  const landed = D.passResponse(held);
+  assert.equal(at(landed, 0, 1).hp, 8, landed.live);
+  assert.equal(landed.step, "main");
+  const cured = D.castSpell(held, held.players[0].hand.indexOf("hap-thu-ma-phap"), null);
+  assert.equal(cured.virus ?? null, null, cured.live);
+  assert.equal(at(cured, 0, 1).hp, 10);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

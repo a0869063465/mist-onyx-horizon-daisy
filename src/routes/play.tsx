@@ -121,6 +121,7 @@ import {
   testReset,
   canCastSwap,
   shelterPicks,
+  virusTargets,
   answerSide,
   canTestReset,
   toggleStance,
@@ -1080,14 +1081,7 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   }
   if (id === "virus-an-mon") {
     const side = duel.hold?.priority;
-    const uid = aimedUid(duel);
-    if (side === undefined || !uid) return false;
-    const mon = duel.players[side].field.find((unit) => unit?.uid === uid);
-    if (!mon) return false;
-    const stars = mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1
-      ? (monsterCard((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang")?.stars ?? 1)
-      : (monsterCard(mon.cardId)?.stars ?? 0);
-    return stars === 1;
+    return side !== undefined && virusTargets(duel, side).length > 0;
   }
   return false;
 }
@@ -4538,6 +4532,17 @@ function PlayPage() {
       const dy = (mark.y - from.y) * 1.6 * boardCut().v;
       const len = Math.hypot(dx, dy) || 1;
       return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
+    }
+    if ("hand" in end || "pile" in end) {
+      // Virus ăn mòn eats a card in the hand or the deck (chủ game 30/10): the flow runs into it, its name shows.
+      const mine = ("hand" in end ? end.hand : end.pile) === viewer;
+      const el = mine ? document.querySelector("hand" in end ? ".hand" : ".face-pile") : null;
+      const mark = "hand" in end ? marks.foeReserve : board.marks.foeHand;
+      const spot = mine && el ? boardSpot(el, { x: 50, y: 94, w: 40 }) : { x: mark.x, y: mark.y, w: 12 };
+      const dx = (spot.x - from.x) * 0.9;
+      const dy = (spot.y - from.y) * 1.6 * boardCut().v;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: spot.x, y: spot.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: spot.x, y: spot.y, r: HP_RING } };
     }
     const card = cardSpot(end.uid);
     if (!card) return null;

@@ -175,9 +175,15 @@ export type Pending =
   | { kind: "gnaw-skill"; caster: string; target: string; index: number }
   | { kind: "melee"; attacker: string; defender: string }
   | { kind: "beam"; caster: string; target: string | null; index: number; back?: boolean; extra?: string | null }
-  | { kind: "spell"; owner: Side; cardId: string; target: string | null; source?: string | null }
+  | { kind: "spell"; owner: Side; cardId: string; target: string | null; source?: string | null; corrode?: CorrodePick }
   | { kind: "lash"; owner: Side; bird: string; foe: string; stun: boolean }
   | null;
+
+/** Virus ăn mòn: the monster of the foe it eats, in their deck, reserve or on the field. */
+export type CorrodePick = { zone: "deck" | "reserve" | "field"; index: number; id: string; uid?: string };
+
+/** One bite of Virus ăn mòn as it lands, for its icon (chủ game 30/10): `n` counts up through the match. */
+export type CorrodeHit = { n: number; owner: Side; zone: CorrodePick["zone"]; uid?: string; cardId: string; line: string };
 
 /** Chặn nhiều nhánh (chủ game 29/10): a front-row monster standing in front of one branch of a skill that lands on
  *  several; `target` is the monster (uid) or player ("face:N") it covers. */
@@ -279,6 +285,11 @@ export type Duel = {
   swap?: { first: string | null; side: Side; locked?: string | null } | null;
   virusArm?: { owner: Side; uid: string } | null;
   virus?: { owner: Side } | null;
+  /** Bites of Virus ăn mòn held back while the side it eats holds a card that breaks it (Hấp thụ ma pháp): each waits
+   *  in the chain once nothing else does. */
+  virusDue?: number;
+  /** The last bites of Virus ăn mòn, for their icons. */
+  corrosions?: CorrodeHit[];
   soulAsk?: { uid: string; kind: "melee" | "face"; target?: string } | null;
   plumeAsk?: { bird: string; foe: string } | null;
   parley?: {
@@ -3711,7 +3722,7 @@ export function passResponse(state: Duel): Duel {
   if (!resolved) return next;
   const marked = traced(state, next, { kind: "pass", actor: state.hold.priority, ok: true, cardId: null, target: null, end: null });
   const reflect = Boolean(state.pending && "back" in state.pending && state.pending.back);
-  return yieldResolved(state, withResults(state, marked, { blocked: Boolean(state.hold.blocker), reflect, turn: false }));
+  return flushVirus(yieldResolved(state, withResults(state, marked, { blocked: Boolean(state.hold.blocker), reflect, turn: false })));
 }
 
 /**
@@ -3724,7 +3735,7 @@ function yieldResolved(before: Duel, after: Duel): Duel {
   const pending = before.pending;
   if (!pending) return after;
   if (pending.kind === "melee" || pending.kind === "face" || pending.kind === "gnaw") return yieldTurn(after);
-  if (pending.kind === "spell") return pending.owner === before.turn ? yieldTurn(after) : after;
+  if (pending.kind === "spell") return pending.owner === before.turn && !pending.corrode ? yieldTurn(after) : after;
   if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
     const owner = ownerSide(before, pending.caster);
     const mon = owner === null ? null : before.players[owner].field.find((unit) => unit?.uid === pending.caster) ?? null;
@@ -3749,6 +3760,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
+  if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
     const ownerSide = pending.owner;
@@ -6025,7 +6037,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
   if (!replay && card.id === "virus-an-mon") {
-    if (state.step !== "respond" || !watchedOneStar(state, side)) return note(state, "Virus ăn mòn chỉ dùng khi quái 1 sao đồng minh bị nhắm.");
+    if (!virusPick(state, side, targetUid)) return note(state, "Virus ăn mòn chỉ dùng khi quái 1 sao đồng minh có thể bị hạ.");
   }
   if (!replay && card.id === "co-may-thoi-gian") {
     const ally = targetUid ? player.field.find((mon) => mon?.uid === targetUid) ?? null : null;
@@ -6301,7 +6313,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     }
     if (state.pending?.kind !== "spell") return note(next, "Chỉ hấp thu được lá phép đang thi triển.");
     const eaten = spellCard(state.pending.cardId)?.name ?? state.pending.cardId;
-    return note({ ...next, step: "main", pending: null, hold: null }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
+    // Virus ăn mòn taken is gone for good (chủ game 30/10).
+    const cured = state.pending.cardId === "virus-an-mon" ? { virus: null, virusDue: 0 } : {};
+    return note({ ...next, ...cured, step: "main", pending: null, hold: null }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
   }
   if (card.id === "phan-nguyen") {
     const ally = next.players[side].field.find((mon) => mon?.uid === spellSource) ?? null;
@@ -6340,8 +6354,8 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (card.id === "virus-an-mon") {
     if (state.step !== "respond") return note(next, "Virus ăn mòn chỉ dùng khi quái 1 sao bị nhắm.");
-    const marked = watchedOneStar(next, side);
-    if (!marked) return note(next, "Chỉ theo dõi được quái 1 sao đồng minh đang bị nhắm.");
+    const marked = virusPick(state, side, targetUid);
+    if (!marked) return note(next, "Chỉ theo dõi được quái 1 sao đồng minh có thể bị hạ.");
     return note({ ...next, virusArm: { owner: side, uid: marked.uid } }, `Virus ăn mòn theo dõi ${cardOf(marked).name}. Nếu nó bị tiêu diệt, virus sẽ ăn mòn đối thủ.`, "info");
   }
   if (card.id === "vong-xoay-bao-ho") {
@@ -8542,26 +8556,43 @@ export function confirmRecall(state: Duel, indexes: number[]): Duel {
   return note(pingStars(marked, side, before, placed.stars), line, "spell");
 }
 
-function watchedOneStar(state: Duel, side: Side): FieldMon | null {
-  const pending = state.pending;
-  if (!pending) return null;
-  const uid =
-    pending.kind === "melee" || pending.kind === "gnaw"
-      ? (state.hold?.blocker ?? pending.defender)
-      : pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell"
-        ? (state.hold?.blocker ?? pending.target)
-        : pending.kind === "face"
-          ? state.hold?.blocker ?? null
-          : null;
-  if (!uid) return null;
-  const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || cardStars(mon.cardId, mon.level ?? 1) !== 1) return null;
-  return mon;
+/** The cards that break Virus ăn mòn: while the side it eats holds one, each bite waits in the chain. */
+const VIRUS_BREAKERS = ["hap-thu-ma-phap"];
+
+/** Whether a monster falls once what waits lands with nobody doing more (as the eye sees it). */
+function fallsAfter(state: Duel, uid: string): boolean {
+  if (state.step !== "respond" || !state.hold || !state.pending) return false;
+  let run: Duel = { ...state, virusArm: null, hold: { ...state.hold, stage: undefined } };
+  for (let i = 0; i < 6 && run.step === "respond" && run.hold && run.pending; i++) {
+    const next = withSeed(run.hold.seed, () => passResponseCore(run));
+    if (next === run) break;
+    run = next;
+  }
+  const mon = run.players[0].field.find((unit) => unit?.uid === uid) ?? run.players[1].field.find((unit) => unit?.uid === uid) ?? null;
+  return !mon || mon.hp <= 0;
 }
 
-function corrodeSide(state: Duel, foe: Side): { state: Duel; line: string } {
+/**
+ * Virus ăn mòn (chủ game 30/10): it is played only on a 1-star ally under attack that would fall if nobody did more;
+ * the one picked (`targetUid`), or the first such ally.
+ */
+function virusPick(state: Duel, side: Side, targetUid: string | null | undefined): FieldMon | null {
+  if (state.step !== "respond" || !state.pending) return null;
+  const ones = state.players[side].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && cardStars(mon.cardId, mon.level ?? 1) === 1));
+  const picked = targetUid ? ones.filter((mon) => mon.uid === targetUid) : ones;
+  return picked.find((mon) => fallsAfter(state, mon.uid)) ?? null;
+}
+
+/** The 1-star allies Virus ăn mòn could be played on now. */
+export function virusTargets(state: Duel, side: Side): string[] {
+  if (state.step !== "respond" || !state.pending) return [];
+  return state.players[side].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && cardStars(mon.cardId, mon.level ?? 1) === 1 && fallsAfter(state, mon.uid))).map((mon) => mon.uid);
+}
+
+/** A random 3-star-or-more monster of `foe` for Virus ăn mòn to eat, in their deck, reserve or on the field. */
+function corrodePick(state: Duel, foe: Side): CorrodePick | null {
   const player = state.players[foe];
-  const pool: Array<{ zone: "deck" | "reserve" | "field"; index: number; id: string; uid?: string }> = [];
+  const pool: CorrodePick[] = [];
   player.monsterDeck.forEach((card, index) => {
     if (cardStars(card.id, card.saved?.level ?? 1) >= 3) pool.push({ zone: "deck", index, id: card.id });
   });
@@ -8571,43 +8602,120 @@ function corrodeSide(state: Duel, foe: Side): { state: Duel; line: string } {
   player.field.forEach((mon, index) => {
     if (mon && mon.hp > 0 && cardStars(mon.cardId, mon.level ?? 1) >= 3) pool.push({ zone: "field", index, id: mon.cardId, uid: mon.uid });
   });
-  if (pool.length === 0) return { state, line: "" };
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  const stars = pick.zone === "field"
-    ? cardStars(pick.id, player.field[pick.index]?.level ?? 1)
-    : cardStars(pick.id, (pick.zone === "deck" ? player.monsterDeck[pick.index] : player.reserve[pick.index])?.saved?.level ?? 1);
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+
+/** Where a picked monster is now (cards may have moved while the bite waited); null when it is gone. */
+function corrodeFind(state: Duel, foe: Side, pick: CorrodePick): CorrodePick | null {
+  const player = state.players[foe];
+  if (pick.zone === "field") {
+    const index = player.field.findIndex((mon) => Boolean(mon && mon.uid === pick.uid && mon.hp > 0));
+    return index >= 0 ? { ...pick, index } : null;
+  }
+  const list = pick.zone === "deck" ? player.monsterDeck : player.reserve;
+  if (list[pick.index]?.id === pick.id) return pick;
+  const index = list.findIndex((card) => card.id === pick.id);
+  return index >= 0 ? { ...pick, index } : null;
+}
+
+/** One bite: 1 true damage, twice from 4 stars; its notice names the monster, wherever it is (chủ game 30/10). */
+function corrodeAt(state: Duel, foe: Side, found: CorrodePick): { state: Duel; line: string } {
+  const player = state.players[foe];
+  const name = monsterCard(found.id)?.name ?? "quái";
+  const stars = found.zone === "field"
+    ? cardStars(found.id, player.field[found.index]?.level ?? 1)
+    : cardStars(found.id, (found.zone === "deck" ? player.monsterDeck[found.index] : player.reserve[found.index])?.saved?.level ?? 1);
   const dmg = stars >= 4 ? 2 : 1;
-  const name = monsterCard(pick.id)?.name ?? "quái";
+  const hit = (line: string, next: Duel): { state: Duel; line: string } => {
+    const n = (state.corrosions?.[state.corrosions.length - 1]?.n ?? 0) + 1;
+    const row: CorrodeHit = { n, owner: (1 - foe) as Side, zone: found.zone, uid: found.uid, cardId: found.id, line };
+    return { state: { ...next, corrosions: [...(state.corrosions ?? []).slice(-5), row] }, line };
+  };
   const previous = charmDamage;
   charmDamage = 0;
   try {
-    if (pick.zone === "field") {
-      const mon = player.field[pick.index];
+    if (found.zone === "field") {
+      const mon = player.field[found.index];
       if (!mon) return { state, line: "" };
-      const lineN = shownTru(mon, dmg, player.field);
       const hurtMon = trueDamage(mon, dmg, player.field);
-      const field = player.field.map((unit, index) => (index === pick.index ? hurtMon : unit));
-      const next = patch(state, foe, dropDead({ ...player, field }));
-      const line = hurtMon.hp <= 0 ? `Virus ăn mòn tiêu diệt ${name}` : `Virus ăn mòn gây ${lineN} sát thương chuẩn lên ${name}`;
-      return { state: next, line };
+      const field = player.field.map((unit, index) => (index === found.index ? hurtMon : unit));
+      return hit(hurtMon.hp <= 0 ? `Virus ăn mòn ${name} bị hạ` : `Virus ăn mòn ${name}`, patch(state, foe, dropDead({ ...player, field })));
     }
-    if (pick.zone === "deck") {
-      const held = woundPile(player.monsterDeck[pick.index], dmg);
-      const monsterDeck = held ? player.monsterDeck.map((card, index) => (index === pick.index ? held : card)) : player.monsterDeck.filter((_, index) => index !== pick.index);
-      const line = held ? `Virus ăn mòn gây ${dmg} sát thương chuẩn lên ${name} trong bộ bài` : `Virus ăn mòn tiêu diệt ${name} trong bộ bài`;
-      return { state: patch(state, foe, { ...player, monsterDeck }), line };
+    if (found.zone === "deck") {
+      const held = woundPile(player.monsterDeck[found.index], dmg);
+      const monsterDeck = held ? player.monsterDeck.map((card, index) => (index === found.index ? held : card)) : player.monsterDeck.filter((_, index) => index !== found.index);
+      return hit(held ? `Virus ăn mòn ${name}` : `Virus ăn mòn ${name} bị hạ`, patch(state, foe, { ...player, monsterDeck }));
     }
-    const held = woundPile(player.reserve[pick.index], dmg);
-    const reserve = held ? player.reserve.map((card, index) => (index === pick.index ? held : card)) : player.reserve.filter((_, index) => index !== pick.index);
-    const line = held ? `Virus ăn mòn gây ${dmg} sát thương chuẩn lên ${name}` : `Virus ăn mòn tiêu diệt ${name}`;
-    return { state: patch(state, foe, { ...player, reserve }), line };
+    const held = woundPile(player.reserve[found.index], dmg);
+    const reserve = held ? player.reserve.map((card, index) => (index === found.index ? held : card)) : player.reserve.filter((_, index) => index !== found.index);
+    return hit(held ? `Virus ăn mòn ${name}` : `Virus ăn mòn ${name} bị hạ`, patch(state, foe, { ...player, reserve }));
   } finally {
     charmDamage = previous;
   }
 }
 
+/** Whether the side Virus ăn mòn eats holds a card that breaks it: then each bite waits in the chain. */
+function virusStops(state: Duel, foe: Side): boolean {
+  return state.players[foe].hand.some((id) => VIRUS_BREAKERS.includes(id));
+}
+
+/** A bite now, or held back to wait in the chain (`virusDue`) when the side it eats can break it. */
+function corrodeSide(state: Duel, foe: Side): { state: Duel; line: string } {
+  if (virusStops(state, foe)) return { state: { ...state, virusDue: (state.virusDue ?? 0) + 1 }, line: "" };
+  const pick = corrodePick(state, foe);
+  return pick ? corrodeAt(state, foe, pick) : { state, line: "" };
+}
+
+/**
+ * A bite held back opens its wait once nothing else waits: its icon flows into the monster it eats, and the side it
+ * eats may answer (Hấp thụ ma pháp takes the virus for good) or let it land.
+ */
+function flushVirus(state: Duel): Duel {
+  if (!state.virusDue || !state.virus || !settled(state)) return state;
+  const owner = state.virus.owner;
+  const foe = (1 - owner) as Side;
+  if (!virusStops(state, foe)) {
+    let next: Duel = { ...state, virusDue: 0 };
+    const lines: string[] = [];
+    for (let i = 0; i < (state.virusDue ?? 0); i++) {
+      const pick = corrodePick(next, foe);
+      if (!pick) break;
+      const bit = corrodeAt(next, foe, pick);
+      next = bit.state;
+      lines.push(bit.line);
+    }
+    return lines.length ? checkWinner(note(next, lines.join(". "), "hit")) : next;
+  }
+  const pick = corrodePick(state, foe);
+  if (!pick) return { ...state, virusDue: 0 };
+  const name = monsterCard(pick.id)?.name ?? "quái";
+  return note(
+    {
+      ...state,
+      virusDue: state.virusDue - 1,
+      step: "respond",
+      pending: { kind: "spell", owner, cardId: "virus-an-mon", target: pick.uid ?? null, corrode: pick },
+      hold: { priority: foe, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
+    },
+    `Virus ăn mòn nhắm ${name}.`,
+    "spell",
+  );
+}
+
+/** The waiting bite lands. */
+function landVirus(state: Duel): Duel {
+  const pending = state.pending;
+  const open: Duel = { ...state, step: "main", pending: null, hold: null };
+  if (pending?.kind !== "spell" || !pending.corrode || !state.virus) return open;
+  const foe = (1 - pending.owner) as Side;
+  const found = corrodeFind(open, foe, pending.corrode);
+  if (!found) return note(open, `Virus ăn mòn trượt.`, "info");
+  const bit = corrodeAt(open, foe, found);
+  return checkWinner(note(bit.state, bit.line, "hit"));
+}
+
 function igniteVirus(state: Duel, owner: Side): Duel {
-  const tick = corrodeSide(state, (1 - owner) as Side);
+  const tick = corrodeSide({ ...state, virus: { owner } }, (1 - owner) as Side);
   const extra = tick.line ? `Virus ăn mòn bắt đầu. ${tick.line}` : "Virus ăn mòn bắt đầu.";
   return {
     ...tick.state,
@@ -8976,6 +9084,8 @@ export function endTurn(state: Duel): Duel {
   if (state.step !== "main" || state.winner !== null || state.pending || state.hold || state.recall || state.counterAsk) return state;
   const waiting = needUpkeep(state);
   if (waiting) return waiting;
+  const due = flushVirus(state);
+  if (due !== state) return due;
   const skipped: [boolean, boolean] = [Boolean(state.skipped?.[0]), Boolean(state.skipped?.[1])];
   skipped[state.turn] = true;
   if (skipped[0] && skipped[1]) return finishRound({ ...state, skipped });
@@ -8997,7 +9107,7 @@ function finishRound(state: Duel): Duel {
   }
   const opened: Duel = { ...next, round: (1 - owner) as Side, skipped: [false, false], counterAsk: null };
   const marked = traced(state, opened, { kind: "end-turn", actor: state.turn, ok: true, cardId: null, target: null, end: null });
-  return withResults(state, marked, { blocked: false, reflect: false, turn: true });
+  return flushVirus(withResults(state, marked, { blocked: false, reflect: false, turn: true }));
 }
 
 function endTurnCore(state: Duel): Duel {

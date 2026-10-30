@@ -9,7 +9,13 @@ import type { Duel, Pending, Side } from "./duel.ts";
  * into its own icon. When the wait ends, the icon of what waited fires if both sides let it through, or fizzles if an
  * answer stopped it; the others have done their work and fade with it.
  */
-export type FlowEnd = { uid: string } | { face: Side } | { orb: string };
+export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side };
+
+/** Where a bite of Virus ăn mòn lands (chủ game 30/10): the card on the field, the hand for a reserve card, the
+ *  face-down deck for one still in it. */
+function biteEnd(zone: "deck" | "reserve" | "field", uid: string | undefined, side: Side): FlowEnd {
+  return zone === "field" && uid ? { uid } : zone === "reserve" ? { hand: side } : { pile: side };
+}
 
 /** Smoke colours (chủ game 23/10): red a plain attack, blue a skill (Sừng lôi phá's and Mắt xanh's strikes too),
  *  pink a spell that harms, white one that breaks a spell, green one that helps an ally. */
@@ -212,6 +218,7 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: strin
       if (pending.cardId === "sam-set-tan-the" || pending.cardId === "thanh-guom-anh-sang") return living(duel, foe).map(link);
       if (pending.cardId === "mu-ma-phap") return living(duel, pending.owner).map(link);
       if (pending.cardId === "vong-nguyen-rua-ac-ma") return pending.source ? [link({ uid: pending.source })] : [];
+      if (pending.corrode) return [link(biteEnd(pending.corrode.zone, pending.corrode.uid, foe))];
       if (pending.cardId === "phan-nguyen") {
         return [...(pending.source ? [{ from: { uid: pending.source }, end: { orb: "self" }, tone }] : []), ...(pending.target ? [link({ uid: pending.target })] : [])];
       }
@@ -300,6 +307,10 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
       // Chủ game 29/10: it stops the skill; pink to the ally it sends, which strikes the one who used it (its own
       // attack icon, `ambushOrb`).
       to = target ? [{ end: target, tone }] : into;
+      break;
+    case "virus-an-mon":
+      // Its icon wraps the 1-star ally it watches (chủ game 30/10).
+      to = next.virusArm ? [{ end: { uid: next.virusArm.uid }, tone }] : into;
       break;
     case "giap-co-khi": {
       // Giáp cơ khí (chủ game 23/10): green into the ally it arms; a skill it throws back runs through its icon.
@@ -444,6 +455,42 @@ export type ChainReach = { side: Side; hits: string[]; random: boolean; known: b
  * is confirmed); a roll that hits nobody fades with its icon at once.
  */
 export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: ChainReach | null = null): ChainOrb[] {
+  const list = stepCore(prev, next, chain, reach);
+  // Each bite of Virus ăn mòn that lands at once is an action of its own (chủ game 30/10): its icon fires into the
+  // monster it eats, named whatever is hidden. A bite that waited already has its icon.
+  const seen = prev?.corrosions?.at(-1)?.n ?? 0;
+  const waited = prev?.pending?.kind === "spell" && Boolean(prev.pending.corrode);
+  const bites = (next.corrosions ?? []).filter((hit) => hit.n > seen).slice(waited ? 1 : 0);
+  if (!prev || bites.length === 0) return list;
+  const tone = spellTone("virus-an-mon");
+  return [
+    ...list,
+    ...bites.map(
+      (hit): ChainOrb => ({
+        id: `orb${orbSeq++}`,
+        kind: "spell",
+        side: hit.owner,
+        source: null,
+        cardId: hit.cardId,
+        spell: "virus-an-mon",
+        near: null,
+        by: null,
+        to: [{ end: biteEnd(hit.zone, hit.uid, (1 - hit.owner) as Side), tone }],
+        tone,
+        skill: null,
+        strike: null,
+        base: null,
+        aim: null,
+        notice: hit.line,
+        done: true,
+        end: "fire",
+        result: hit.line,
+      }),
+    ),
+  ];
+}
+
+function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: ChainReach | null): ChainOrb[] {
   const open = next.step === "respond";
   let list: ChainOrb[];
   let passed = false;

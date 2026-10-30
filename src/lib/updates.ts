@@ -777,6 +777,8 @@ export const PENDING_NOTES: string[] = [
   "Dải sáng trong bể bên đỏ nhạt bớt.",
   "Ngăn chặn phòng ngự: dùng sau khi quái đối thủ lao ra chặn, quái bị chọn không chặn, không che tới hết vòng.",
   "Dòng chảy mới không còn chạy trùng lên dòng cũ, tự uốn sang bên.",
+  "Virus ăn mòn chỉ dùng khi quái 1 sao có thể bị hạ. Mỗi lần ăn mòn có icon và tên quái bị ăn mòn.",
+  "Bên bị Virus ăn mòn cầm Hấp thụ ma pháp thì mỗi lần ăn mòn chờ trong chuỗi; Hấp thụ ma pháp nuốt Virus vĩnh viễn.",
 ];
 
 function remarkOf(notes: string[]) {

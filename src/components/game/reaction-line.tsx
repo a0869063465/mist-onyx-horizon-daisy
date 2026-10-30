@@ -72,7 +72,7 @@ function unitDir(dx: number, dy: number): BoxPt {
 }
 
 function endKey(end: FlowEnd): string {
-  return "uid" in end ? `u:${end.uid}` : "face" in end ? `f:${end.face}` : `o:${end.orb}`;
+  return "uid" in end ? `u:${end.uid}` : "face" in end ? `f:${end.face}` : "hand" in end ? `h:${end.hand}` : "pile" in end ? `p:${end.pile}` : `o:${end.orb}`;
 }
 
 /** A flow's key: its icon, where it leaves from (a fork, another place, or the icon) and where it lands. */
