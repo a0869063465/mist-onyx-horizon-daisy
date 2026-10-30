@@ -233,7 +233,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## Quy tắc làm việc với chủ game
 
 - KẾT THÚC VIỆC (chủ game 30/10): khi xong phần việc dành cho mô hình đang chạy (theo bảng "Đề xuất mô hình và mức nỗ lực" của kế hoạch, hoặc chủ game nói "xong đến đó thì dừng") thì DỪNG, báo lại, chờ chủ game duyệt mô hình và mức nỗ lực của phần kế rồi mới làm. Không tự làm tiếp phần cần mô hình khác. Mỗi kế hoạch phải ghi đề xuất mô hình và nỗ lực vào file md.
-- TAY ĐỐI THỦ (chủ game 30/10: "quá nhỏ, phóng lớn với kích cỡ phù hợp"): lá úp 4,9×7,4cqw → 7,5×11,3cqw (`.foe-fan img` styles.css), `FOE_FAN` gap 6,3, turn 5, drop 0,25 (play.tsx); lá lấp đầy băng rôn và hơi tràn mép. Chủ game chưa xem ảnh.
+- TAY ĐỐI THỦ (chủ game 30/10: "quá nhỏ, phóng lớn với kích cỡ phù hợp"): lá úp 4,9×7,4cqw → ĐÚNG gấp rưỡi 7,35×11,1cqw (`.foe-fan img` styles.css); `FOE_FAN` giữ như cũ (gap 5,6, turn 6). Chủ game nhắc "gấp rưỡi chứ không phải vừa khít".
 - CON MẮT VÀ X (chủ game 30/10): con mắt LUÔN MỞ khi có hàng phản ứng (đối thủ ra đòn/skill/phép chờ mình đáp, hoặc mình đã xếp), dù mình có hành động hay không; bấm mắt xem trước. Dấu X đỏ chỉ mở khi mình có hành động (`queue` hoặc đang chọn mục tiêu `markId`) và phải bấm để huỷ. Code: play.tsx `eyeOn`; chưa hành động thì xem trước = `settle(duel)` (mình bỏ qua).
 - MÀU DÒNG (chủ game 30/10): phép phản ứng (nhanh, siêu tốc) dòng HỒNG; đã sửa Hoán đổi (trước là xanh lá). Xanh lá chỉ còn Mũ ma pháp và Giáp cơ khí (dòng buff vào quái, chưa đổi, hỏi lại khi làm Giáp cơ khí).
 

@@ -7028,7 +7028,7 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
 
 /** The opponent's hand fan in the card tray (the red banner): its middle sits `lift`% of the full board picture above the
  *  hand count, the cards `gap` cqw apart along the banner's arch (each step `turn` degrees, lower by `drop` cqw × k²). */
-const FOE_FAN = { lift: 0.7, most: 7, turn: 5, gap: 6.3, drop: 0.25 } as const;
+const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
 
 /** The turn light's tanks on the full board picture (board-cut.ts maps them onto a cut board): the walls at the edges of
  *  the stone field, each bottom where that side's area meets the field, both open toward the middle. */
