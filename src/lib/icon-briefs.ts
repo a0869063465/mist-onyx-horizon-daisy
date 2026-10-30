@@ -231,7 +231,7 @@ export function skillBrief(at: SkillAt): string {
 }
 
 /** A spell's icon: its name, then its results. `rebound`: Giáp cơ khí threw the skill back. */
-export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = false): string {
+export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = false, againstVirus = false): string {
   const card = spellCard(spellId);
   if (!card) return "";
   const e = plainCopy(card.effect);
@@ -246,7 +246,7 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "mu-ma-phap":
         return ["Mũ che sân, đối phương chỉ thấy mũ"];
       case "phan-nguyen":
-        return ["Chuyển trạng thái xấu sang quái đối thủ"];
+        return againstVirus ? ["Hoá giải Virus ăn mòn", "Trả lại Virus ăn mòn"] : ["Chuyển trạng thái xấu sang quái đối thủ"];
       case "guong-phong-ho":
         return ["Chặn đòn giáp lá cà", "Cướp 1/2 mọi chỉ số quái đang tấn công"];
       case "la-chan-phan-don":

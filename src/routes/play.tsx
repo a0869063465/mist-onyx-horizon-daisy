@@ -4740,7 +4740,7 @@ function PlayPage() {
   const iconNote = (orb: ChainOrb): ReactNode => {
     const brief =
       orb.kind === "spell" && orb.spell
-        ? spellBrief(duel, orb.spell, orb.side, chain.some((other) => other.to.some((link) => link.from && "orb" in link.from && link.from.orb === orb.id)))
+        ? spellBrief(duel, orb.spell, orb.side, chain.some((other) => other.to.some((link) => link.from && "orb" in link.from && link.from.orb === orb.id)), chain.some((other) => other.id === orb.by && other.spell === "virus-an-mon"))
         : (orb.kind === "skill" || orb.strike === "gaze") && !hiddenMon(orb)
           ? iconSkill(orb)?.brief ?? ""
           : "";

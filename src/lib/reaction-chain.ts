@@ -220,7 +220,8 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: strin
       if (pending.cardId === "vong-nguyen-rua-ac-ma") return pending.source ? [link({ uid: pending.source })] : [];
       if (pending.corrode) return [link(biteEnd(pending.corrode.zone, pending.corrode.uid, foe))];
       if (pending.cardId === "phan-nguyen") {
-        return [...(pending.source ? [{ from: { uid: pending.source }, end: { orb: "self" }, tone }] : []), ...(pending.target ? [link({ uid: pending.target })] : [])];
+        // The cure wraps the cursed ally in white; the curse flows from the icon on to the foe it is given to.
+        return [...(pending.source ? [{ end: { uid: pending.source }, tone: "white" as FlowTone }] : []), ...(pending.target ? [link({ uid: pending.target })] : [])];
       }
       return pending.target ? [link({ uid: pending.target })] : [];
     }
@@ -297,7 +298,7 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     case "phan-nguyen":
       // Against a bite of Virus ăn mòn: its light wraps the virus's icon, then runs to the face-down deck of whoever
       // sent it (chủ game 30/10).
-      to = answered?.spell === "virus-an-mon" ? [{ end: { orb: answered.id }, tone, wrap: true }, { from: { orb: answered.id }, end: { pile: (1 - side) as Side }, tone }] : target ? [{ end: target, tone }] : into;
+      to = answered?.spell === "virus-an-mon" ? [{ end: { orb: answered.id }, tone: "white", wrap: true }, { end: { pile: (1 - side) as Side }, tone }] : target ? [{ end: target, tone }] : into;
       break;
     case "la-chan-phan-don":
       // Its icon stands in the skill's way; the skill runs on from it to the one it is thrown at (the waiting action's

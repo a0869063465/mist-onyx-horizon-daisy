@@ -780,6 +780,7 @@ export const PENDING_NOTES: string[] = [
   "Virus ăn mòn chỉ dùng khi quái 1 sao có thể bị hạ. Mỗi lần ăn mòn có icon và tên quái bị ăn mòn.",
   "Bên bị Virus ăn mòn cầm Hấp thụ ma pháp thì mỗi lần ăn mòn chờ trong chuỗi; Hấp thụ ma pháp nuốt Virus vĩnh viễn.",
   "Phản nguyền dùng được khi Virus ăn mòn đang chờ: chuyển Virus sang người gửi, họ phản lại được. Chỉ 1 đồng minh bị bất lợi thì tự chọn.",
+  "Phản nguyền: dòng trắng bọc icon Virus (hoặc quái bị nguyền), dòng thứ hai đi từ icon Phản nguyền tới nơi phản lại. Chữ: Hoá giải Virus ăn mòn, Trả lại Virus ăn mòn.",
 ];
 
 function remarkOf(notes: string[]) {
