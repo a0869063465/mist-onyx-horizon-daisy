@@ -204,6 +204,9 @@ export type Hold = {
   /** Phục kích (chủ game 30/10): it waits in the chain against the skill; once the chain lands the skill is stopped and
    *  `ally` strikes `foe`, the one who used it. */
   ambush?: { ally: string; foe: string };
+  /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
+   *  state, and the action then falls on it as it was. */
+  rewind?: { ally: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3735,6 +3738,14 @@ function passResponseCore(state: Duel): Duel {
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
+  if (hold.rewind) {
+    const { ally } = hold.rewind;
+    const side = ownerSide(state, ally);
+    const stamp = side === null ? null : turnStamp(state, ally);
+    const rewound = side === null ? null : rewindAlly(state, side, ally);
+    const cleared = { ...(rewound ?? state), hold: { ...hold, rewind: undefined } };
+    return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
+  }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
@@ -6216,6 +6227,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const stamp = turnStamp(next, ally.uid);
     const rewound = rewindAlly(next, side, ally.uid);
     if (!rewound || !stamp) return note(next, "Không có trạng thái trước.");
+    const line = `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`;
+    // A fast spell: it waits in the chain, the other side may answer, and the monster goes back once it lands.
+    if (next.hold && !next.hold.rewind) return keep(note({ ...next, hold: { ...next.hold, rewind: { ally: ally.uid } } }, line, "spell"));
     return keep(note(rewound, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell"));
   }
   if (card.id === "giap-co-khi") {

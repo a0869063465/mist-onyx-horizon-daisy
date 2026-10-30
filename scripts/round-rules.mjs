@@ -244,6 +244,23 @@ test("Phục kích chặn kỹ năng gây sát thương, quái chọn đánh tr�
   assert.equal(refused.pending?.kind, "melee", "đòn đánh thường không bị Phục kích chặn");
 });
 
+test("Cỗ máy thời gian chờ trong chuỗi, chỉ lùi quái khi chuỗi nổ", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+  s = D.testGrant(s, 1, "co-may-thoi-gian", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const ally = uid(s, 1, 0);
+  s = { ...s, born: { [ally]: { mon: { ...at(s, 1, 0), def: 5, mdef: 5 }, slot: 0 } } };
+  const breath = D.declareSkill(s, uid(s, 0, 0), ally, 0);
+  assert.equal(breath.step, "respond", breath.live);
+  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("co-may-thoi-gian"), ally);
+  assert.deepEqual(waiting.hold?.rewind, { ally }, waiting.live);
+  assert.equal(at(waiting, 1, 0).def, 0, "chưa lùi khi còn chờ");
+  assert.equal(waiting.hold?.priority, 0, "quyền sang bên dùng kỹ năng");
+  const landed = D.passResponse(waiting);
+  assert.equal(at(landed, 1, 0).def, 5, landed.live);
+  assert.ok(!landed.hold?.rewind, "đã lùi xong");
+});
+
 test("Phục kích chặn cả kỹ năng nhiều mục tiêu (Con nước lớn tàn phá)", () => {
   const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
   let s = board({ 1: ["trai-tim-hai-long", { hp: 30, maxHp: 30, def: 0 }] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });

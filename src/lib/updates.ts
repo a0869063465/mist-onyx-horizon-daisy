@@ -766,6 +766,7 @@ export const PENDING_NOTES: string[] = [
   "Chọn mục tiêu cho Phục kích như LoR: dùng lá (bấm nút dùng hoặc kéo lên sân) thì icon Phục kích hiện giữa sân kèm dòng mô tả, các đồng minh ra đòn được sáng viền, nút OK ghi \"Chọn mục tiêu\"; bấm đồng minh là chọn, nút ghi \"Xác nhận\". Bấm X đỏ hoặc kéo icon về tay để thôi dùng.",
   "Phục kích: dòng đỏ đồng minh đánh trả đi vòng tránh icon kỹ năng của kẻ ra đòn rồi chạm cạnh bên lá kẻ đó, như dòng phản về của Lá chắn phản đòn. Dòng hồng tới đồng minh chạm cạnh bên hoặc góc gần lá, không đè lên icon tấn công.",
   "Hoán đổi là phép siêu tốc, chọn kiểu mới: dùng lá thì icon hiện giữa sân kèm dòng mô tả, các đồng minh đổi được sáng viền (kể cả quái dự bị trên tay), bấm vào quái nào là đổi chỗ ngay, không còn bảng liệt kê tên. Hai quái đổi chỗ chạy theo hai nửa hình elip đối diện nhau. Đổi với quái dự bị thì quái trên sân bay vào tay còn quái dự bị bay ra sân.",
+  "Cỗ máy thời gian là phép nhanh: dùng xong chưa lùi ngay, hiện icon cùng dòng hồng bọc quanh quái đồng minh và chờ đối thủ phản ứng. Đối thủ bấm OK thì quái mới về trạng thái cũ rồi mới chịu đòn. Con mắt xem trước thấy quái ở trạng thái cũ và số máu sau khi chịu đòn.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -80,7 +80,8 @@ const WHITE_SPELLS = new Set(["hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thu
 const DAM_SPELLS = new Set(["la-chan-phan-don", "guong-phong-ho", "vong-nguyen-rua-ac-ma", "phuc-kich"]);
 /** Spells that throw a skill back from their icon. */
 const REFLECT_SPELLS = new Set(["giap-co-khi", "la-chan-phan-don"]);
-const GREEN_SPELLS = new Set(["co-may-thoi-gian", "mu-ma-phap", "hoan-doi", "giap-co-khi"]);
+// Cỗ máy thời gian runs pink (chủ game 30/10), as a flow wrapping the ally it takes back.
+const GREEN_SPELLS = new Set(["mu-ma-phap", "hoan-doi", "giap-co-khi"]);
 
 /** The smoke of a spell: white when it breaks a spell, green when it helps an ally, pink when it harms. */
 export function spellTone(id: string | null): FlowTone {
@@ -501,6 +502,8 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   const lurk = live && ambush ? list.find((orb) => orb.spell === "phuc-kich" && orb.stops === live.id) ?? null : null;
   const pounce = live && ambush ? list.find((orb) => orb.sent && orb.source === ambush.ally) ?? null : null;
   const wall = glass ?? lurk;
+  // Cỗ máy thời gian waiting in the chain: its icon and its pink light round the ally stay until the chain lands.
+  const rewinding = live && next.hold?.rewind ? [...list].reverse().find((orb) => orb.spell === "co-may-thoi-gian") ?? null : null;
   if (live) {
     // Who stands in front of it: its block icon (made once per blocker), into which its smoke is drawn.
     const guard = guardOf(next, live.aim);
@@ -582,7 +585,7 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
     // The mirror stands until the attack it stops is over.
-    if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
+    if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.
