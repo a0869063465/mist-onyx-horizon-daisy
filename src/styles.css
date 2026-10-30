@@ -11760,12 +11760,14 @@ button.watch-back {
   pointer-events: none;
 }
 .face-pile b { position: relative; z-index: 1; }
+.face-pile .deck-pile { transform: translateY(-4%); }
 .deck-pile img {
   position: absolute;
   left: 50%;
   top: 50%;
-  height: 90%;
-  width: auto;
+  /* Nhỏ hơn lá trên sân một chút (lá sân rộng 15,4% bàn). */
+  width: 13.1cqw;
+  height: auto;
   aspect-ratio: 400 / 610;
   transform: translate(calc(-50% + var(--down) * -0.16em), calc(-50% + var(--down) * 0.28em)) rotate(var(--tilt));
   filter: brightness(calc(1 - var(--down) * 0.07)) drop-shadow(0 0.08em 0.1em rgba(0, 0, 0, 0.5));
@@ -11773,7 +11775,7 @@ button.watch-back {
 .foe-pile {
   position: absolute;
   z-index: 3;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -44%);
   pointer-events: none;
 }
 .draw-flight {

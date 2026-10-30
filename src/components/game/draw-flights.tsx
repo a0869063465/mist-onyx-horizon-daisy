@@ -11,7 +11,9 @@ function Flight({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) =
     const el = ref.current;
     if (!el) return;
     const mine = flight.side === "you";
-    const from = document.querySelector(mine ? ".face-pile" : ".foe-pile")?.getBoundingClientRect();
+    const pile = document.querySelector(mine ? ".face-pile" : ".foe-pile");
+    // Lá bay ra từ mặt xấp (lá trên cùng); xấp hết bài thì từ chỗ để xấp.
+    const from = (pile?.querySelector(".deck-pile img:last-child") ?? pile)?.getBoundingClientRect();
     const cards = mine ? document.querySelectorAll<HTMLElement>(".hand .hand-card") : null;
     const target = cards && cards.length ? cards[Math.max(0, cards.length - 1 - flight.slot)] : null;
     const fan = mine ? null : document.querySelector(".foe-fan");
@@ -20,7 +22,7 @@ function Flight({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) =
       onDone(flight.id);
       return;
     }
-    const ph = from.height * 0.9;
+    const ph = from.height;
     const pw = ph * 0.656;
     const fx = from.left + from.width / 2;
     const fy = from.top + from.height / 2;
