@@ -771,7 +771,7 @@ export const PENDING_NOTES: string[] = [
   "Con mắt luôn mở khi có hàng phản ứng, dù bạn đã hành động hay chưa; bấm vào xem bàn sau khi đòn của đối thủ rơi nếu bạn không phản ứng. Dấu X đỏ chỉ mở khi bạn có hành động, bấm để huỷ.",
   "Bài trên tay đối thủ phóng lớn hơn gấp đôi so với ban đầu (rộng 11, dài 16,7), chân lá đặt trên khay bài và đầu lá nhô lên trên, khoảng cách giữa các lá giữ như cũ.",
   "Bể sáng báo lượt: đáy bể sát liền với mép khu của mỗi bên, không còn khe hở; hai thành bể chạy sát hai mép màn hình; dòng sáng trong bể nhạt hơn để không làm mất tập trung.",
-  "Giáp cơ khí là phép nhanh: dùng xong chưa trang bị ngay, chờ đối thủ phản ứng. Nếu công của quái sau khi tăng lớn hơn sát thương của kỹ năng, icon Giáp đứng chắn ngay trên đường kỹ năng và kỹ năng dội vào nó; không đủ công thì icon lách sang bên, chỉ có dòng xanh lá tăng chỉ số vào quái. Đối thủ đáp lại làm giảm công thì icon tự lách ra. Chuỗi nổ: quái tăng 2 công và 2 thủ phép, đủ công thì kỹ năng bị phản về kẻ dùng.",
+  "Giáp cơ khí: icon chắn ngay trên đường kỹ năng như đập nước khi quái sau khi tăng công đủ để phản, kỹ năng dội vào icon rồi vòng về kẻ dùng. Không đủ công thì icon lách sang bên, chỉ có dòng xanh lá tăng chỉ số vào quái. Luật lá giữ nguyên: tăng chỉ số và so công ngay lúc dùng.",
 ];
 
 function remarkOf(notes: string[]) {

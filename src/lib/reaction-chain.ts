@@ -1,4 +1,4 @@
-import { armorThrows, type Duel, type Pending, type Side } from "./duel.ts";
+import type { Duel, Pending, Side } from "./duel.ts";
 
 /**
  * The reaction icons (chủ game 23/10, in place of the fixed reaction line of 21/10): one icon for what is waiting (an
@@ -501,12 +501,7 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   const ambush = next.hold?.ambush ?? null;
   const lurk = live && ambush ? list.find((orb) => orb.spell === "phuc-kich" && orb.stops === live.id) ?? null : null;
   const pounce = live && ambush ? list.find((orb) => orb.sent && orb.source === ambush.ally) ?? null : null;
-  // Giáp cơ khí waiting in the chain (chủ game 30/10): while the ally's attack, armed, would beat the skill its icon
-  // stands in the skill's way and the skill surges against it; else it steps aside and only its green light arms the
-  // ally. Worked out again at every step, so an answer that lowers the ally's attack moves it aside.
-  const armoring = live && next.hold?.armor ? [...list].reverse().find((orb) => orb.spell === "giap-co-khi") ?? null : null;
-  const armorWall = armoring && armorThrows(next) ? armoring : null;
-  const wall = glass ?? lurk ?? armorWall;
+  const wall = glass ?? lurk;
   // Cỗ máy thời gian waiting in the chain: its icon and its pink light round the ally stay until the chain lands.
   const rewinding = live && next.hold?.rewind ? [...list].reverse().find((orb) => orb.spell === "co-may-thoi-gian") ?? null : null;
   if (live) {
@@ -539,7 +534,10 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
     }
     // Giáp cơ khí or Lá chắn phản đòn throwing the skill back: the spell's icon is where the skill turns.
     const turner = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell && REFLECT_SPELLS.has(orb.spell)) ?? null : null;
-    const reflect = turner ? { id: turner.id, dam: DAM_SPELLS.has(turner.spell!) } : null;
+    // Giáp cơ khí is a dam only once its buff is enough to throw the skill back (chủ game 30/10): the skill surges
+    // against its icon; when it is not enough there is no `turner` and the icon only steps aside.
+    const reflect = turner ? { id: turner.id, dam: DAM_SPELLS.has(turner.spell!) || turner.spell === "giap-co-khi" } : null;
+    if (turner && turner.spell === "giap-co-khi" && turner.stops !== live.id) list = list.map((orb) => (orb === turner ? { ...orb, stops: live.id } : orb));
     const tone = pendingTone(next, next.pending);
     // A skill landing on more than one, or whose roll decides whom (dòng chảy đợt 2): to a fork, then a branch each;
     // the branch to what a blocker stands in front of runs into the blocker's icon instead.
@@ -590,7 +588,6 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
     // The mirror stands until the attack it stops is over.
-    if (armoring && orb.id === armoring.id) return { ...orb, done: false, end: null, stops: armorWall && live ? live.id : null };
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };

@@ -37,7 +37,7 @@ Dùng cho mọi dòng đi ngược về kẻ ra đòn: skill bị phản (Lá ch
 4. Bỏ uốn lượn, đầu không nhỏ. Dòng sát thương (đỏ, skill bị phản): đuôi to như skill sát thương. Dòng hồng không sát thương (Gương, Vòng nguyền): cung còn 1/3, đuôi loe một nửa.
 5. Đường về chờ đường tới chạm icon rồi mới chạy (`after`).
 6. Dòng hồng tới đồng minh được chọn (Phục kích, chủ game chốt 30/10): KHÔNG đáp giữa mép gần lá, vì đó là chỗ icon tấn công của đồng minh (gối lên nhau). Đáp vào CẠNH BÊN lá phía icon phép, cách mép gần 1/3 nửa lá, vào xiên ~55°; có lá đứng sát bên phía đó thì vào GÓC GẦN, chéo 45° (`besideFree` trong play.tsx). Áp cho mọi phép sau này có dòng tới đồng minh mà đồng minh hiện icon tấn công ở mép gần.
-7. Giáp cơ khí chờ trong chuỗi (chủ game 30/10): icon chắn trên đường kỹ năng (đập nước) CHỈ khi công sau khi tăng thắng sát thương (`armorThrows`, tính lại mỗi bước chuỗi); không thì icon lách sang bên (không gối lên dòng, mục 0), chỉ còn dòng xanh lá buff vào quái. Chuỗi nổ mà phản thì dòng kỹ năng vào icon rồi vòng về kẻ dùng như mục 1–5.
+7. Giáp cơ khí (chủ game 30/10; luật lá chạy NGAY như Hoán đổi, tăng chỉ số và so công ngay lúc dùng, KHÔNG sửa luật lá): đủ công phản thì icon chắn trên đường kỹ năng (đập nước, `dam` chỉ khi `pending.back`), kỹ năng dội vào icon rồi vòng về kẻ dùng như mục 1–5; không đủ thì icon lách sang bên (mục 0), chỉ còn dòng xanh lá buff vào quái.
 Code: reaction-line.tsx, vòng dựng `backs`/`arcs` và đoạn "The way back lands on the side".
 
 ## Cách làm với chủ game
