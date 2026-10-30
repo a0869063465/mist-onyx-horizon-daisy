@@ -2335,18 +2335,46 @@ function PlayPage() {
     if (loaded && introSeen && openerLive) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
   // Hết đổi bài đầu trận (bảng đóng): 3 lá đầu bay từ xấp lên tay mỗi bên, lần lượt (chủ game 30/10).
+  // Lá rút bay lên tay (chủ game 30/10): tạo trước khi trình duyệt vẽ, để lá mới không hiện lên tay rồi mới bay.
+  // Đầu trận (hết bảng đổi bài): mọi lá trên tay mỗi bên bay lần lượt; sau đó mỗi lần rút là lá vừa thêm vào cuối dự bị
+  // hoặc cuối phép trên tay.
   const openerWas = useRef(false);
-  useEffect(() => {
-    if (openerWas.current && !openerOpen && duel && !duel.opener) {
-      const born: DrawFlight[] = [];
-      (["you", "foe"] as const).forEach((side) => {
-        for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side, slot: OPENING_CARDS - 1 - i, delay: i * 0.15 });
-      });
+  const drawPrev = useRef<Duel | null>(null);
+  useLayoutEffect(() => {
+    const prev = drawPrev.current;
+    drawPrev.current = duel;
+    if (!duel) return;
+    const me = viewer;
+    if (openerWas.current && !openerOpen && !duel.opener) {
+      openerWas.current = false;
+      const mine = [...duel.players[me].reserve.map((_, i) => `r:${i}`), ...duel.players[me].hand.map((_, i) => `s:${i}`)].slice(0, OPENING_CARDS);
+      const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
+      for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
       setFlights((list) => [...list, ...born]);
       for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      return;
     }
-    openerWas.current = openerOpen;
-  }, [openerOpen, duel]);
+    if (openerOpen) openerWas.current = true;
+    if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
+    const born: DrawFlight[] = [];
+    ([0, 1] as const).forEach((side) => {
+      const was = prev.players[side];
+      const now = duel.players[side];
+      const n = Math.min(3, now.draws - was.draws);
+      if (n <= 0) return;
+      if (side !== me) {
+        for (let i = 0; i < n; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.14 });
+        return;
+      }
+      const fresh = [
+        ...now.reserve.slice(was.reserve.length).map((_, i) => `r:${was.reserve.length + i}`),
+        ...now.hand.slice(was.hand.length).map((_, i) => `s:${was.hand.length + i}`),
+      ].slice(-n);
+      fresh.forEach((target, i) => born.push({ id: (flightId.current += 1), side: "you", target, delay: i * 0.14 }));
+    });
+    if (born.length) setFlights((list) => [...list, ...born]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel, openerOpen, loaded]);
 
   // The reaction icons fade out a moment after the wait is over and then report it (onClosed); this is the backstop
   // in case the fade never runs.
@@ -2605,14 +2633,6 @@ function PlayPage() {
       }
     }
     if (drew) playCue("draw");
-    if (drew && loaded && !duel.opener) {
-      const born: DrawFlight[] = [];
-      ([0, 1] as const).forEach((side) => {
-        const n = Math.min(3, duel.players[side].draws - prev.players[side].draws);
-        for (let i = 0; i < n; i += 1) born.push({ id: (flightId.current += 1), side: side === viewerNow ? "you" : "foe", slot: n - 1 - i, delay: i * 0.14 });
-      });
-      if (born.length) setFlights((list) => [...list, ...born]);
-    }
     if (summoned) playCue("summon");
     if (!quiet && /tích luỹ năng lượng/i.test(said)) playCue("spellRise");
     if (!quiet && /Lộ diện quái dự bị/.test(said)) playCue("dispel");
@@ -6096,7 +6116,7 @@ function PlayPage() {
         )}
         <div
           style={{ top: `${ry(88.6)}%`, height: `${rh(11.4)}%` }}
-          className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${riteHand !== null ? " is-rite" : ""}`}
+          className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onScroll={() => setHandPick(null)}
           onPointerDown={(event) => {
@@ -6136,7 +6156,7 @@ function PlayPage() {
                 const react = cottonCard ? { label: "Bông mềm", go: () => setCottonAsk("hand") } : standCard ? { label: "Thế thân trên tay", go: () => apply(standIn(duel, index)) } : null;
                 const reactLook = react ? bookSkill(id, react.label, card.skill ?? "") : undefined;
                 return (
-                  <div key={`${id}-${index}`} className="hand-pick">
+                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`r:${index}`}>
                     <button
                       type="button"
                       className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
@@ -6194,7 +6214,7 @@ function PlayPage() {
                 );
                 // One tap on a spell that can be used now shows its use icon (chủ game 28/10: "Bấm 1 lần hiện icon dùng phép").
                 return (
-                  <div key={`${id}-${index}`} className="hand-pick">
+                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`s:${index}`}>
                     {card}
                     {picked && (usable || slowUse) && !using ? (
                       <HandUse

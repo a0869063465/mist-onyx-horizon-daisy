@@ -791,6 +791,7 @@ export const PENDING_NOTES: string[] = [
   "Xấp bài hai bên dày mỏng theo số lá còn lại. Rút bài thì lá úp bay từ xấp lên tay, đầu trận 3 lá bay lần lượt.",
   "Lưng lá hai bên mới: xanh hình rắn, cam đỏ hình sư tử. Màn tải game thay phiên logo sư tử và rắn.",
   "Số lá còn trong xấp và trên tay đối thủ ẩn, bấm vào mới hiện (bấm nữa thì mất). Xấp của mình nhấp đôi hiện số 3 giây, không rút. Xấp to hơn, viền sáng khi chưa rút bài.",
+  "Lá rút bay 3D từ xấp và lật mặt đúng vào chỗ của nó trên tay. Lá trên tay trượt sang nhường chỗ.",
 ];
 
 function remarkOf(notes: string[]) {
