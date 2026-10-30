@@ -552,6 +552,7 @@ test("luật bộ bài: 16–24 lá, ít nhất 13 quái, phép không bắt bu�
 test("Virus ăn mòn: chỉ dùng khi quái 1 sao có thể bị hạ; ăn mòn ngay, hoặc chờ trong chuỗi khi bên bị ăn mòn cầm Hấp thụ ma pháp", () => {
   const make = (atk, breaker) => {
     let s = board({ 0: ["khong-lo-mot-mat", { atk, hp: 20, maxHp: 20 }], 1: ["thuong-quan-long", { hp: 10, maxHp: 10, def: 0, mdef: 0 }] }, { 0: ["may-chem", { hp: 2, maxHp: 2, def: 0 }] });
+    s = { ...s, players: s.players.map((p) => ({ ...p, hand: [], tolls: [] })) };
     s = D.testGrant(s, 1, "virus-an-mon", false);
     if (breaker) s = D.testGrant(s, 0, "hap-thu-ma-phap", false);
     s = D.endTurn(D.endTurn(s));
@@ -582,6 +583,26 @@ test("Virus ăn mòn: chỉ dùng khi quái 1 sao có thể bị hạ; ăn mòn 
   const cured = D.castSpell(held, held.players[0].hand.indexOf("hap-thu-ma-phap"), null);
   assert.equal(cured.virus ?? null, null, cured.live);
   assert.equal(at(cured, 0, 1).hp, 10);
+});
+
+test("Phản nguyền: lúc Virus ăn mòn chờ thì chuyển Virus sang người gửi; chỉ 1 đồng minh xấu thì không cần chọn", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 9, hp: 20, maxHp: 20 }], 1: ["thuong-quan-long", { hp: 10, maxHp: 10, def: 0, mdef: 0 }] }, { 0: ["may-chem", { hp: 2, maxHp: 2, def: 0 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, hand: [], tolls: [] })) };
+  s = D.testGrant(s, 1, "virus-an-mon", false);
+  s = D.testGrant(s, 0, "phan-nguyen", false);
+  s = D.endTurn(D.endTurn(s));
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 5, ...(i === 0 ? { monsterDeck: [], reserve: [] } : {}) })), turn: 0, round: 0 };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  let x = D.castSpell(swung, swung.players[1].hand.indexOf("virus-an-mon"), null);
+  for (let i = 0; i < 6 && x.step === "respond" && !x.pending?.corrode; i++) x = D.passResponse(x);
+  assert.ok(x.pending?.corrode, x.live);
+  const turned = D.castSpell(x, x.players[0].hand.indexOf("phan-nguyen"), null);
+  assert.equal(turned.virus?.owner, 0, turned.live);
+  assert.equal(turned.step, "main");
+  assert.equal(at(turned, 0, 1).hp, 10, "quái không bị ăn mòn");
+  assert.match(D.castSpell(swung, 0, null).live, /./);
+  const idle = D.castSpell({ ...s }, s.players[0].hand.indexOf("phan-nguyen"), null);
+  assert.equal(idle.virus ?? null, null);
 });
 
 let failed = 0;

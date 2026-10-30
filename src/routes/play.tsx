@@ -1014,6 +1014,7 @@ const ANSWER_SPELLS = new Set([
   "virus-an-mon",
   "co-may-thoi-gian",
   "giap-co-khi",
+  "phan-nguyen",
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1043,6 +1044,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   if (id === "vong-xoay-bao-ho" || id === "guong-phong-ho") return attacked;
   if (id === "la-chan-phan-don") return skilled && !bindBeam(duel);
   if (id === "hap-thu-ma-phap") return pending?.kind === "spell" || pending?.kind === "lash";
+  // Phản nguyền turns a bite of Virus ăn mòn that waits on its owner back (chủ game 30/10).
+  if (id === "phan-nguyen") return pending?.kind === "spell" && Boolean(pending.corrode);
   // Only the attacking side may use it, to stop a foe from blocking (owner, 21/10).
   if (id === "ngan-chan-phong-ngu") return duel.hold?.priority === duel.turn && shelterPicks(duel).length > 0;
   if (id === "vong-nguyen-rua-ac-ma") {
@@ -1135,7 +1138,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const card = spellCard(id);
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
-  if (ANSWER_SPELLS.has(id)) {
+  if (ANSWER_SPELLS.has(id) && (id !== "phan-nguyen" || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
     if (id === "hoan-doi") return canCastSwap(duel, viewer);
@@ -6128,8 +6131,15 @@ function PlayPage() {
                             return;
                           }
                           if (slowUse && id === "phan-nguyen") {
-                            if (!you.field.some((mon) => mon && harmShift(mon))) {
+                            const cursed = you.field.filter((mon) => mon && harmShift(mon));
+                            if (cursed.length === 0) {
                               holdNotice("Không có đồng minh đang mang trạng thái xấu.");
+                              return;
+                            }
+                            // One cursed ally is picked by itself; from two the player chooses (chủ game 30/10).
+                            if (cursed.length === 1 && cursed[0]) {
+                              setAim({ kind: "spell", index, spellId: id, from: cursed[0].uid });
+                              holdNotice("Chọn quái đối thủ để chuyển trạng thái.");
                               return;
                             }
                             setAim({ kind: "spell", index, spellId: id });

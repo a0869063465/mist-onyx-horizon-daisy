@@ -779,6 +779,7 @@ export const PENDING_NOTES: string[] = [
   "Dòng chảy mới không còn chạy trùng lên dòng cũ, tự uốn sang bên.",
   "Virus ăn mòn chỉ dùng khi quái 1 sao có thể bị hạ. Mỗi lần ăn mòn có icon và tên quái bị ăn mòn.",
   "Bên bị Virus ăn mòn cầm Hấp thụ ma pháp thì mỗi lần ăn mòn chờ trong chuỗi; Hấp thụ ma pháp nuốt Virus vĩnh viễn.",
+  "Phản nguyền dùng được khi Virus ăn mòn đang chờ: chuyển Virus sang người gửi, họ phản lại được. Chỉ 1 đồng minh bị bất lợi thì tự chọn.",
 ];
 
 function remarkOf(notes: string[]) {

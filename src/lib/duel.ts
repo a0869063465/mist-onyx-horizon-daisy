@@ -6027,6 +6027,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     "virus-an-mon",
     "co-may-thoi-gian",
     "giap-co-khi",
+    ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
   ]);
   if (!replay && card.id === "hoan-doi") {
     if (!canCastSwap(state, side)) {
@@ -6107,7 +6108,11 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     targetUid = picked.uid;
   }
   let spellSource: string | null = null;
-  if (card.id === "phan-nguyen") {
+  const turnsVirus = card.id === "phan-nguyen" && state.step === "respond";
+  if (turnsVirus && !(state.pending?.kind === "spell" && state.pending.corrode && state.hold?.priority === side)) {
+    return note(state, "Phản nguyền chỉ phản được Virus ăn mòn đang chờ.");
+  }
+  if (card.id === "phan-nguyen" && !turnsVirus) {
     const foeSide = (1 - side) as Side;
     const ally = sourceUid
       ? player.field.find((mon) => mon?.uid === sourceUid) ?? null
@@ -6316,6 +6321,11 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     // Virus ăn mòn taken is gone for good (chủ game 30/10).
     const cured = state.pending.cardId === "virus-an-mon" ? { virus: null, virusDue: 0 } : {};
     return note({ ...next, ...cured, step: "main", pending: null, hold: null }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
+  }
+  if (card.id === "phan-nguyen" && turnsVirus) {
+    // Phản nguyền against Virus ăn mòn (chủ game 30/10): it breaks the bite, and the virus turns to eat its sender for
+    // good; they may turn it back the same way.
+    return note({ ...next, step: "main", pending: null, hold: null, virus: { owner: side }, virusDue: 0 }, "Phản nguyền chuyển Virus ăn mòn sang đối thủ.", "spell");
   }
   if (card.id === "phan-nguyen") {
     const ally = next.players[side].field.find((mon) => mon?.uid === spellSource) ?? null;
@@ -8557,7 +8567,7 @@ export function confirmRecall(state: Duel, indexes: number[]): Duel {
 }
 
 /** The cards that break Virus ăn mòn: while the side it eats holds one, each bite waits in the chain. */
-const VIRUS_BREAKERS = ["hap-thu-ma-phap"];
+const VIRUS_BREAKERS = ["hap-thu-ma-phap", "phan-nguyen"];
 
 /** Whether a monster falls once what waits lands with nobody doing more (as the eye sees it). */
 function fallsAfter(state: Duel, uid: string): boolean {

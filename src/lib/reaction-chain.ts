@@ -294,6 +294,11 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     case "vong-xoay-bao-ho":
       to = into;
       break;
+    case "phan-nguyen":
+      // Against a bite of Virus ăn mòn: its light wraps the virus's icon, then runs to the face-down deck of whoever
+      // sent it (chủ game 30/10).
+      to = answered?.spell === "virus-an-mon" ? [{ end: { orb: answered.id }, tone, wrap: true }, { from: { orb: answered.id }, end: { pile: (1 - side) as Side }, tone }] : target ? [{ end: target, tone }] : into;
+      break;
     case "la-chan-phan-don":
       // Its icon stands in the skill's way; the skill runs on from it to the one it is thrown at (the waiting action's
       // own flows draw that).
