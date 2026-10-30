@@ -787,6 +787,7 @@ export const PENDING_NOTES: string[] = [
   "Lão hoá, Cường hoá, Dòng chảy thời gian, Nguyền rủa, Thổi bay, Mê hoặc, Dụ dỗ, Gió xoáy giờ là skill chậm: vào hàng chờ, đối thủ hoá giải được bằng Hấp thụ ma pháp, quái không chặn được.",
   "Vòng quay thời gian chỉ quay khi chuỗi đã xong.",
   "Skill gây sát thương lên người chơi (Cầu sấm, Ma đạo sĩ, Máy ném bom hình nhện…) giờ có dòng chảy tới viên máu.",
+  "Kiếm cánh và khiên của bên đang tấn công có hiệu ứng mới. Đổi bên thì bên cũ mờ đi, bên mới hiện ra. Lá môi trường hai bên dời sang chỗ mới.",
 ];
 
 function remarkOf(notes: string[]) {

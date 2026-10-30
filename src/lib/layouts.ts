@@ -65,8 +65,8 @@ export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, h
 export const DEFAULT_TRAIL: Trail = { x: 6.6, y: 46.3, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false };
 export const DEFAULT_REACTION: Notice = { x: 64, y: 44, w: 22, h: 12, font: 3.2, hidden: false };
 export const DEFAULT_STACK: Spot = { x: 85, y: 69.1, size: 2.6, width: 15, height: 7.2, hidden: false };
-export const DEFAULT_ENV: Spot = { x: 84.3, y: 59.6, size: 2.2, width: 16, height: 4, hidden: false };
-export const DEFAULT_ENV_FOE: Spot = { x: 12.9, y: 43.3, size: 2.2, width: 16, height: 4, hidden: false };
+export const DEFAULT_ENV: Spot = { x: 73.4, y: 59.2, size: 2.2, width: 16, height: 4, hidden: false };
+export const DEFAULT_ENV_FOE: Spot = { x: 74.1, y: 43.4, size: 2.2, width: 16, height: 4, hidden: false };
 /** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
 export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
 
@@ -77,8 +77,8 @@ export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = {
   endTurn: { x: 91.2, y: 83, size: 1, width: 14.4, height: 7.7, hidden: false },
   foeFace: { x: 88.3, y: 43.9, size: 1, width: 11.5, height: 5.2, hidden: false },
   youFace: { x: 11.5, y: 58.8, size: 1, width: 11.5, height: 5.2, hidden: false },
-  foeAtk: { x: 88.4, y: 43.7, size: 1, width: 13.8, height: 6.2, hidden: false },
-  youAtk: { x: 11.6, y: 58.8, size: 1, width: 13.8, height: 6.2, hidden: false },
+  foeAtk: { x: 91.9, y: 44.1, size: 1, width: 19.8, height: 9.2, hidden: false },
+  youAtk: { x: 90.2, y: 57.8, size: 1, width: 19.8, height: 9.2, hidden: false },
   foeDef: { x: 88.6, y: 43.9, size: 1, width: 10.2, height: 4.6, hidden: false },
   youDef: { x: 11.7, y: 59, size: 1, width: 10.2, height: 4.6, hidden: false },
 };
@@ -168,7 +168,7 @@ export const DEFAULT_FIELD: Record<FieldKey, FieldSpot> = {
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 
-const BOARD_KEY = "clash-board-layout-v10";
+const BOARD_KEY = "clash-board-layout-v11";
 const ALERT_KEY = "clash-alert-size";
 
 export type AlertLook = { glow: number; border: number };

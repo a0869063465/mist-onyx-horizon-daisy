@@ -58,6 +58,8 @@ export const FX_VIDEOS = [
   "/fx/set-dien.mp4?v=1",
   "/fx/set-to.mp4?v=1",
   "/fx/hien-te-vong.mp4?v=2",
+  "/ui/atk-you.webm?v=1",
+  "/ui/atk-foe.webm?v=1",
 ];
 
 const CORE_PICTURES = [
@@ -65,8 +67,8 @@ const CORE_PICTURES = [
   "/title.png",
   DEFAULT_BOARD_ART,
   "/board-floor.jpg",
-  "/ui/sword-you.webp",
-  "/ui/sword-foe.webp",
+  "/ui/atk-you.webp?v=1",
+  "/ui/atk-foe.webp?v=1",
   "/board-bleed.jpg",
   "/card-frame.png",
   "/spell-frame.png",

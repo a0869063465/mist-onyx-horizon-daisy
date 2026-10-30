@@ -39,6 +39,7 @@ import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type Openin
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
+import { AttackEmblem } from "@/components/game/attack-emblem";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
 import { ownFace, roomFace } from "@/lib/match-faces";
@@ -5009,18 +5010,11 @@ function PlayPage() {
           );
         })()}
         {(() => {
-          // Kiếm có cánh (ảnh chủ game mua, 28/10): chỉ ở bên đang giữ token tấn công của vòng, xanh là mình, tím là đối
-          // thủ; đổi bên thì kiếm bay vào lại.
+          // Kiếm cánh + khiên (video chủ game, 30/10): chỉ ở bên đang giữ token tấn công của vòng; đổi bên thì bên cũ mờ tắt,
+          // bên mới chạy hiệu ứng. Chưa hiện khi còn màn tải, màn VS hay đổi bài đầu trận.
           const holder = duel.round ?? duel.turn;
-          const ours = holder === viewer;
-          const spot = ours ? board.youAtk : board.foeAtk;
-          if (spot.hidden || duel.winner !== null) return null;
-          const src = ours ? "/ui/sword-you.webp" : "/ui/sword-foe.webp";
-          return (
-            <span key={`sword-${holder}`} className={`turn-sword${ours ? " is-you" : " is-foe"}`} aria-hidden="true" style={{ ...pinBox(spot), ["--sword" as string]: `url(${src})` } as CSSProperties}>
-              <img src={src} alt="" draggable={false} />
-            </span>
-          );
+          const box = (spot: typeof board.youAtk) => (spot.hidden ? null : (pinBox(spot) as CSSProperties));
+          return <AttackEmblem current={duel.winner !== null || !(loaded || tutorial || trial) || duel.opener ? null : holder === viewer ? "you" : "foe"} boxes={{ you: box(board.youAtk), foe: box(board.foeAtk) }} />;
         })()}
         {[
           { id: you.env, spot: board.env, key: "you-env" },
