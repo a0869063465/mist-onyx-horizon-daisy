@@ -40,6 +40,8 @@ import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
 import { AttackEmblem } from "@/components/game/attack-emblem";
+import { DeckPile } from "@/components/game/deck-pile";
+import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
 import { ownFace, roomFace } from "@/lib/match-faces";
@@ -69,6 +71,7 @@ import {
   declareSkill,
   dismissGlimpse,
   draw,
+  OPENING_CARDS,
   pileLeft,
   FIELD_SLOTS,
   pickCounter,
@@ -1815,6 +1818,10 @@ function PlayPage() {
   const scratch = useRef<Scratch>(freshScratch());
   const matchRef = useRef<{ id: string; startedAt: number; decks: OpeningDecks | null; saved: boolean } | null>(null);
   const starTimer = useRef(0);
+  // Lá bốc bay từ xấp lên tay (chủ game 30/10).
+  const [flights, setFlights] = useState<DrawFlight[]>([]);
+  const flightId = useRef(0);
+  const flightDone = (id: number) => setFlights((list) => list.filter((flight) => flight.id !== id));
   const stall = useRef({ live: "", n: 0 });
   const resetHold = useRef(0);
   const riteHold = useRef(0);
@@ -2319,6 +2326,19 @@ function PlayPage() {
   useEffect(() => {
     if (loaded && introSeen && openerLive) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
+  // Hết đổi bài đầu trận (bảng đóng): 3 lá đầu bay từ xấp lên tay mỗi bên, lần lượt (chủ game 30/10).
+  const openerWas = useRef(false);
+  useEffect(() => {
+    if (openerWas.current && !openerOpen && duel && !duel.opener) {
+      const born: DrawFlight[] = [];
+      (["you", "foe"] as const).forEach((side) => {
+        for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side, slot: OPENING_CARDS - 1 - i, delay: i * 0.15 });
+      });
+      setFlights((list) => [...list, ...born]);
+      for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+    }
+    openerWas.current = openerOpen;
+  }, [openerOpen, duel]);
 
   // The reaction icons fade out a moment after the wait is over and then report it (onClosed); this is the backstop
   // in case the fade never runs.
@@ -2577,6 +2597,14 @@ function PlayPage() {
       }
     }
     if (drew) playCue("draw");
+    if (drew && loaded && !duel.opener) {
+      const born: DrawFlight[] = [];
+      ([0, 1] as const).forEach((side) => {
+        const n = Math.min(3, duel.players[side].draws - prev.players[side].draws);
+        for (let i = 0; i < n; i += 1) born.push({ id: (flightId.current += 1), side: side === viewerNow ? "you" : "foe", slot: n - 1 - i, delay: i * 0.14 });
+      });
+      if (born.length) setFlights((list) => [...list, ...born]);
+    }
     if (summoned) playCue("summon");
     if (!quiet && /tích luỹ năng lượng/i.test(said)) playCue("spellRise");
     if (!quiet && /Lộ diện quái dự bị/.test(said)) playCue("dispel");
@@ -4915,6 +4943,7 @@ function PlayPage() {
   return (
     <main className="stage is-play" data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
+      <DrawFlights flights={flights} onDone={flightDone} />
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroMid(duel.mid ?? "")} /> : null}
       {openerOpen ? (
@@ -5093,6 +5122,11 @@ function PlayPage() {
             </button>
           </div>
         ) : null}
+        {board.stack.hidden || marks.foeHand.hidden ? null : (
+          <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
+            <DeckPile count={pileLeft(foe)} />
+          </div>
+        )}
         {marksView.map(([key, value]) => {
           const orbKey = key === "youOrb" || key === "foeOrb";
           const flaskKey = key === "youFlask" || key === "foeFlask";
@@ -6031,6 +6065,7 @@ function PlayPage() {
             if (mine && duel.step === "main" && duel.turn === viewer && !gemHold && !duel.counterAsk && !you.drawLock && you.draws < 1 && pileLeft(you) > 0) apply(draw(duel));
           }}
         >
+          <DeckPile count={pileLeft(you)} />
           {pileLeft(you) > 0 ? <b>{pileLeft(you)}</b> : null}
         </button>
         )}

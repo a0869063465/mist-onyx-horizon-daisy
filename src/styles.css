@@ -11752,3 +11752,35 @@ button.watch-back {
   overflow: visible;
   filter: drop-shadow(0 0 1.2cqw rgba(80, 170, 255, 0.8));
 }
+
+/* Xấp bài vẽ bằng code trên ô trống của bàn: dày theo số lá còn trong xấp (DeckPile). */
+.deck-pile {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.face-pile b { position: relative; z-index: 1; }
+.deck-pile img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 90%;
+  width: auto;
+  aspect-ratio: 400 / 610;
+  transform: translate(calc(-50% + var(--down) * -0.16em), calc(-50% + var(--down) * 0.28em)) rotate(var(--tilt));
+  filter: brightness(calc(1 - var(--down) * 0.07)) drop-shadow(0 0.08em 0.1em rgba(0, 0, 0, 0.5));
+}
+.foe-pile {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.draw-flight {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: url(/ui/card-back.webp) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 0.2rem 0.35rem rgba(0, 0, 0, 0.55));
+  will-change: transform;
+}

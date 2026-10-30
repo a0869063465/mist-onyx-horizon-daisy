@@ -788,6 +788,7 @@ export const PENDING_NOTES: string[] = [
   "Vòng quay thời gian chỉ quay khi chuỗi đã xong.",
   "Skill gây sát thương lên người chơi (Cầu sấm, Ma đạo sĩ, Máy ném bom hình nhện…) giờ có dòng chảy tới viên máu.",
   "Kiếm cánh và khiên của bên đang tấn công có hiệu ứng mới. Đổi bên thì bên cũ mờ đi, bên mới hiện ra. Lá môi trường hai bên dời sang chỗ mới.",
+  "Xấp bài hai bên dày mỏng theo số lá còn lại. Rút bài thì lá úp bay từ xấp lên tay, đầu trận 3 lá bay lần lượt.",
 ];
 
 function remarkOf(notes: string[]) {
