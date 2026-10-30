@@ -7030,10 +7030,11 @@ function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
  *  hand count, the cards `gap` cqw apart along the banner's arch (each step `turn` degrees, lower by `drop` cqw × k²). */
 const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
 
-/** The turn light's tanks on the full board picture (board-cut.ts maps them onto a cut board): the walls at the edges of
- *  the stone field, each bottom where that side's area meets the field, both open toward the middle. */
-const TANK_WALLS = [5, 91.6] as const;
-const TANK_BASE = { foe: 41.4, you: 61.4 } as const;
+/** The turn light's tanks on the full board picture (board-cut.ts maps them onto a cut board): the walls at the two
+ *  edges of the screen, each bottom flush with the edge of that side's area (chủ game 30/10: no gap between), both open
+ *  toward the middle. */
+const TANK_WALLS = [0, 100] as const;
+const TANK_BASE = { foe: 40.5, you: 62.3 } as const;
 const TANK_OPEN = 51;
 
 /** A board pin (Grok layout): centred on its spot, sized by width × size of the board. */

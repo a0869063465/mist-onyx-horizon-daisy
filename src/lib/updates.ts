@@ -770,6 +770,7 @@ export const PENDING_NOTES: string[] = [
   "Icon phép phản ứng (Cỗ máy thời gian, Hoán đổi…) không còn nằm đè lên dòng chảy của skill hay đòn đánh đã hiện trước đó, mà dời sang bên cạnh. Hoán đổi và Cỗ máy thời gian đều dùng dòng hồng.",
   "Con mắt luôn mở khi có hàng phản ứng, dù bạn đã hành động hay chưa; bấm vào xem bàn sau khi đòn của đối thủ rơi nếu bạn không phản ứng. Dấu X đỏ chỉ mở khi bạn có hành động, bấm để huỷ.",
   "Bài trên tay đối thủ phóng lớn hơn gấp đôi so với ban đầu (rộng 11, dài 16,7), chân lá đặt trên khay bài và đầu lá nhô lên trên, khoảng cách giữa các lá giữ như cũ.",
+  "Bể sáng báo lượt: đáy bể sát liền với mép khu của mỗi bên, không còn khe hở; hai thành bể chạy sát hai mép màn hình; dòng sáng trong bể nhạt hơn để không làm mất tập trung.",
 ];
 
 function remarkOf(notes: string[]) {

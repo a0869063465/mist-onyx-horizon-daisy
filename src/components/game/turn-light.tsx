@@ -36,6 +36,9 @@ const TITLE_IN = 0.24;
 const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
+/** The ribbons and their fibres are this much of their first strength (chủ game 30/10: paler, so they do not pull the eye). */
+const PALE = 0.55;
+
 /** Ribbons of light in a tank: where they meet the left and right walls and how low they sag (parts of the tank's depth). */
 const RIBBONS: Array<{ a: number; b: number; c: number; d: number; w: number; rate: number; phase: number; fibres: Array<{ k: number; taper: number; hot: boolean }> }> = [
   { a: 0.9, b: 0.2, c: 0.08, d: 0.12, w: 0.3, rate: 0.17, phase: 0, fibres: [{ k: -0.9, taper: 0.5, hot: false }, { k: 0.15, taper: 0.4, hot: true }, { k: 1, taper: 0.55, hot: false }] },
@@ -208,6 +211,12 @@ export class TurnLightArt {
     haze.addColorStop(1, rgba(tone.mid, 0));
     ctx.fillStyle = haze;
     ctx.fillRect(x0, Math.min(base, at(0.8)), width, depth * 0.8);
+    // The bottom runs on from the edge of the side's area with no gap: a band of the colour along it (chủ game 30/10).
+    const bank = ctx.createLinearGradient(0, base, 0, at(0.16));
+    bank.addColorStop(0, rgba(tone.mid, 0.5));
+    bank.addColorStop(1, rgba(tone.mid, 0));
+    ctx.fillStyle = bank;
+    ctx.fillRect(x0, Math.min(base, at(0.16)), width, depth * 0.16);
     ctx.globalCompositeOperation = "destination-out";
     for (const [edge, inward] of [
       [x0, 1],
@@ -247,7 +256,7 @@ export class TurnLightArt {
         [0.3, 0.11],
       ] as const) {
         curve(0, 0.45);
-        ctx.strokeStyle = rgba(tone.mid, alpha);
+        ctx.strokeStyle = rgba(tone.mid, alpha * PALE);
         ctx.lineWidth = spread * 2.4 * k + 2 * unit;
         ctx.stroke();
       }
@@ -257,20 +266,20 @@ export class TurnLightArt {
         const pulse = 0.72 + 0.28 * Math.sin(t * 1.7 + i * 1.9 + ribbon.phase);
         curve(fibre.k, fibre.taper);
         ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = rgba(tone.mid, 0.14 * pulse);
+        ctx.strokeStyle = rgba(tone.mid, 0.14 * pulse * PALE);
         ctx.lineWidth = 7 * unit;
         ctx.stroke();
-        ctx.strokeStyle = rgba(tone.mid, (fibre.hot ? 0.62 : 0.42) * pulse);
+        ctx.strokeStyle = rgba(tone.mid, (fibre.hot ? 0.62 : 0.42) * pulse * PALE);
         ctx.lineWidth = (fibre.hot ? 2.2 : 1.5) * unit;
         ctx.stroke();
         if (!fibre.hot) return;
         ctx.globalCompositeOperation = "lighter";
         const shine = ctx.createLinearGradient(x0, 0, x1, 0);
-        shine.addColorStop(0, rgba(tone.core, 0.3 * pulse));
-        shine.addColorStop(Math.max(0, glossAt - 0.2), rgba(tone.core, 0.34 * pulse));
-        shine.addColorStop(glossAt, rgba(tone.core, 0.95 * pulse));
-        shine.addColorStop(Math.min(1, glossAt + 0.2), rgba(tone.core, 0.34 * pulse));
-        shine.addColorStop(1, rgba(tone.core, 0.3 * pulse));
+        shine.addColorStop(0, rgba(tone.core, 0.3 * pulse * PALE));
+        shine.addColorStop(Math.max(0, glossAt - 0.2), rgba(tone.core, 0.34 * pulse * PALE));
+        shine.addColorStop(glossAt, rgba(tone.core, 0.95 * pulse * PALE));
+        shine.addColorStop(Math.min(1, glossAt + 0.2), rgba(tone.core, 0.34 * pulse * PALE));
+        shine.addColorStop(1, rgba(tone.core, 0.3 * pulse * PALE));
         ctx.strokeStyle = shine;
         ctx.lineWidth = 1.1 * unit;
         ctx.stroke();
