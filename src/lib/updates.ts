@@ -773,6 +773,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng báo lượt: đáy bể sát liền với mép khu của mỗi bên, không còn khe hở; hai thành bể chạy sát hai mép màn hình; dòng sáng trong bể nhạt hơn để không làm mất tập trung.",
   "Giáp cơ khí: icon chắn ngay trên đường kỹ năng như đập nước khi quái sau khi tăng công đủ để phản, kỹ năng dội vào icon rồi vòng về kẻ dùng. Không đủ công thì icon lách sang bên, chỉ có dòng xanh lá tăng chỉ số vào quái. Luật lá giữ nguyên: tăng chỉ số và so công ngay lúc dùng.",
   "Chữ mô tả mới cho Hoán đổi (chọn quái trên sân hoặc trên tay rồi hoán đổi), Cỗ máy thời gian và Giáp cơ khí (bỏ câu bấm Use ở thanh phản ứng).",
+  "Bể sáng bên đỏ dời vào thêm để che hết dải cỏ ở rìa sân đỏ, liền mạch với nền; màu bể đỏ đổi sang cam đỏ cho hợp màu nền sân đỏ. Bể bên xanh giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {

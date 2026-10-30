@@ -19,9 +19,12 @@ export type TankGeo = { x0: number; x1: number; base: number; open: number };
 export type TitleCue = { id: number; kind: "turn" | "round"; lines: string[] };
 
 type Rgb = [number, number, number];
-const TONE: Record<TankSide, { mid: Rgb; core: Rgb }> = {
-  foe: { mid: [255, 46, 82], core: [255, 222, 228] },
-  you: { mid: [44, 128, 255], core: [210, 234, 255] },
+/** `gain`: how much stronger its water and ribbons show; `bank`: the band along the bottom, its depth in parts of the tank,
+ *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
+ *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
+const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
+  foe: { mid: [222, 82, 26], core: [255, 216, 178], gain: 1.7, bank: [0.34, 0.75, 0.14] },
+  you: { mid: [44, 128, 255], core: [210, 234, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
 /** Seconds: the sparkles before the light, its run across the tank, its fade, and the gap before the new side starts. */
@@ -205,18 +208,24 @@ export class TurnLightArt {
 
     // The water: a glow rising off the bottom, thinning toward the open end and softly toward each wall (no edge).
     const haze = ctx.createLinearGradient(0, base, 0, at(0.8));
-    haze.addColorStop(0, rgba(tone.mid, 0.42));
-    haze.addColorStop(0.3, rgba(tone.mid, 0.2));
-    haze.addColorStop(0.7, rgba(tone.mid, 0.06));
+    haze.addColorStop(0, rgba(tone.mid, 0.42 * tone.gain));
+    haze.addColorStop(0.3, rgba(tone.mid, 0.2 * tone.gain));
+    haze.addColorStop(0.7, rgba(tone.mid, 0.06 * tone.gain));
     haze.addColorStop(1, rgba(tone.mid, 0));
     ctx.fillStyle = haze;
     ctx.fillRect(x0, Math.min(base, at(0.8)), width, depth * 0.8);
     // The bottom runs on from the edge of the side's area with no gap: a band of the colour along it (chủ game 30/10).
-    const bank = ctx.createLinearGradient(0, base, 0, at(0.16));
-    bank.addColorStop(0, rgba(tone.mid, 0.5));
+    const [bankDepth, bankAlpha, bankLead] = tone.bank;
+    const behind = base - dir * depth * bankLead;
+    const bank = ctx.createLinearGradient(0, behind, 0, at(bankDepth));
+    const span = depth * (bankDepth + bankLead);
+    const lead = (depth * bankLead) / span;
+    if (lead > 0) bank.addColorStop(0, rgba(tone.mid, 0));
+    bank.addColorStop(lead, rgba(tone.mid, bankAlpha));
+    bank.addColorStop(lead + (1 - lead) * 0.5, rgba(tone.mid, bankAlpha * 0.6));
     bank.addColorStop(1, rgba(tone.mid, 0));
     ctx.fillStyle = bank;
-    ctx.fillRect(x0, Math.min(base, at(0.16)), width, depth * 0.16);
+    ctx.fillRect(x0, Math.min(behind, at(bankDepth)), width, span);
     ctx.globalCompositeOperation = "destination-out";
     for (const [edge, inward] of [
       [x0, 1],
@@ -256,7 +265,7 @@ export class TurnLightArt {
         [0.3, 0.11],
       ] as const) {
         curve(0, 0.45);
-        ctx.strokeStyle = rgba(tone.mid, alpha * PALE);
+        ctx.strokeStyle = rgba(tone.mid, alpha * PALE * tone.gain);
         ctx.lineWidth = spread * 2.4 * k + 2 * unit;
         ctx.stroke();
       }
@@ -266,20 +275,20 @@ export class TurnLightArt {
         const pulse = 0.72 + 0.28 * Math.sin(t * 1.7 + i * 1.9 + ribbon.phase);
         curve(fibre.k, fibre.taper);
         ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = rgba(tone.mid, 0.14 * pulse * PALE);
+        ctx.strokeStyle = rgba(tone.mid, 0.14 * pulse * PALE * tone.gain);
         ctx.lineWidth = 7 * unit;
         ctx.stroke();
-        ctx.strokeStyle = rgba(tone.mid, (fibre.hot ? 0.62 : 0.42) * pulse * PALE);
+        ctx.strokeStyle = rgba(tone.mid, (fibre.hot ? 0.62 : 0.42) * pulse * PALE * tone.gain);
         ctx.lineWidth = (fibre.hot ? 2.2 : 1.5) * unit;
         ctx.stroke();
         if (!fibre.hot) return;
         ctx.globalCompositeOperation = "lighter";
         const shine = ctx.createLinearGradient(x0, 0, x1, 0);
-        shine.addColorStop(0, rgba(tone.core, 0.3 * pulse * PALE));
-        shine.addColorStop(Math.max(0, glossAt - 0.2), rgba(tone.core, 0.34 * pulse * PALE));
-        shine.addColorStop(glossAt, rgba(tone.core, 0.95 * pulse * PALE));
-        shine.addColorStop(Math.min(1, glossAt + 0.2), rgba(tone.core, 0.34 * pulse * PALE));
-        shine.addColorStop(1, rgba(tone.core, 0.3 * pulse * PALE));
+        shine.addColorStop(0, rgba(tone.core, 0.3 * pulse * PALE * tone.gain));
+        shine.addColorStop(Math.max(0, glossAt - 0.2), rgba(tone.core, 0.34 * pulse * PALE * tone.gain));
+        shine.addColorStop(glossAt, rgba(tone.core, 0.95 * pulse * PALE * tone.gain));
+        shine.addColorStop(Math.min(1, glossAt + 0.2), rgba(tone.core, 0.34 * pulse * PALE * tone.gain));
+        shine.addColorStop(1, rgba(tone.core, 0.3 * pulse * PALE * tone.gain));
         ctx.strokeStyle = shine;
         ctx.lineWidth = 1.1 * unit;
         ctx.stroke();
