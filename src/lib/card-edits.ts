@@ -295,7 +295,7 @@ function dropKnown(store: Store) {
     }
     changed = true;
   }
-  for (const [id, old] of [["thao-nguyen", "Nếu một đồng minh tham gia"], ["nui", "tăng thêm 2 sát thương kỹ năng"]] as const) {
+  for (const [id, old] of [["thao-nguyen", "Nếu một đồng minh tham gia"], ["nui", "tăng thêm 2 sát thương kỹ năng"], ["hoan-doi", "rồi bấm OK"], ["co-may-thoi-gian", "Thanh phản ứng hiện ra"], ["giap-co-khi", "Thanh phản ứng hiện ra"]] as const) {
     const card = store.spells[id];
     if (!card?.effect?.includes(old)) continue;
     delete card.effect;

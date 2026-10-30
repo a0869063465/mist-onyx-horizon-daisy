@@ -932,7 +932,7 @@ export const SPELLS: SpellCard[] = [
     "id": "hoan-doi",
     "name": "Hoán đổi",
     "gems": 0,
-    "effect": "Khi bị tấn công hoặc nhắm đến. Quái đang bị nhắm đã khoá. Chọn 1 quái khác rồi bấm OK. (Quái dự bị phải đủ điều kiện triệu hồi.) Hoán đổi vị trí của nó với quái thú đó.",
+    "effect": "Khi 1 quái thú đồng minh bị tấn công hoặc nhắm đến. Chọn 1 quái thú khác trên sân hoặc trên tay (đủ điều kiện để triệu hồi) rồi hoán đổi với nó.",
     "picture": "spell:phuc-kich"
   },
   {
@@ -1049,14 +1049,14 @@ export const SPELLS: SpellCard[] = [
     "id": "co-may-thoi-gian",
     "name": "Cỗ máy thời gian",
     "gems": 0,
-    "effect": "Khi một quái đồng minh bị chọn làm mục tiêu của phép, kỹ năng hoặc đòn đánh thường.\nThanh phản ứng hiện ra thì bấm Use.\nĐưa quái đó về trạng thái ở đầu 3 lượt chung trước.\nNếu nó được triệu hồi sau mốc đó thì về đúng trạng thái lúc vừa triệu hồi.",
+    "effect": "Khi một quái đồng minh bị chọn làm mục tiêu của phép, kỹ năng hoặc đòn đánh thườn.\nĐưa quái đó về trạng thái ở đầu 3 lượt chung trước. (Nếu nó được triệu hồi sau mốc đó thì về đúng trạng thái lúc vừa triệu hồi.)",
     "picture": "spell:co-may-thoi-gian"
   },
   {
     "id": "giap-co-khi",
     "name": "Giáp cơ khí",
     "gems": 0,
-    "effect": "Khi một quái đồng minh bị một kỹ năng của quái đối phương nhắm đến.\nThanh phản ứng hiện ra thì bấm Use.\nTăng 2 công và 2 thủ phép vĩnh viễn, trước khi đòn rơi.\nNếu công sau khi tăng cao hơn sát thương của đòn, phản nguyên đòn về quái ra đòn.\nNhiều phát cùng loại thì cộng. Đòn hỗn hợp thì lấy loại cao nhất.",
+    "effect": "Khi một quái đồng minh bị một kỹ năng của quái đối phương nhắm đến.\nTăng 2 công và 2 thủ phép vĩnh viễn cho quái thú đó.\nTrước khi đòn rơi. Nếu công sau khi tăng cao hơn sát thương của đòn, phản nguyên đòn về quái ra đòn. (Sát thương của phép chỉ tính loại sát thương cao nhất)",
     "picture": "spell:giap-co-khi"
   },
   {
