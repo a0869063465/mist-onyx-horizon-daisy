@@ -207,6 +207,9 @@ export type Hold = {
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
+  /** Giáp cơ khí (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` is armed, and if its attack
+   *  then beats the skill's damage the skill is thrown back. */
+  armor?: { ally: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3732,12 +3735,68 @@ function yieldResolved(before: Duel, after: Duel): Duel {
   return after;
 }
 
+/** What Giáp cơ khí adds: attack and magic defence, read from the card. */
+function armorBonus(): { atk: number; mdef: number } {
+  const text = spellCard("giap-co-khi")?.effect ?? "";
+  return { atk: grabNums(text, /(\d+)\s*công/gi)[0] ?? 2, mdef: grabNums(text, /(\d+)\s*thủ phép/gi)[0] ?? 2 };
+}
+
+/**
+ * Giáp cơ khí lands: the ally gains its attack and magic defence for good, before the blow; if its attack is then above
+ * the waiting skill's damage the skill is thrown back at the one who used it (`thrown`), else the skill goes on.
+ */
+function armorLand(state: Duel, side: Side, allyUid: string): { state: Duel; thrown: boolean } {
+  const ally = state.players[side].field.find((mon) => mon?.uid === allyUid) ?? null;
+  if (!ally) return { state, thrown: false };
+  const plus = armorBonus();
+  const buffed = { ...ally, atk: ally.atk + plus.atk, mdef: ally.mdef + plus.mdef, raised: markRaised(ally, { atk: plus.atk, mdef: plus.mdef }) };
+  const field = state.players[side].field.map((mon) => (mon?.uid === ally.uid ? buffed : mon));
+  const plated = patch(state, side, { ...state.players[side], field });
+  const base = `Giáp cơ khí tăng ${plus.atk} công và ${plus.mdef} thủ phép cho ${cardOf(ally).name}.`;
+  const pending = state.pending;
+  const caster = pending?.kind === "beam" && !pending.back ? fieldMonOf(plated, pending.caster) : null;
+  if (!caster || pending?.kind !== "beam" || liveAtk(buffed) <= skillThreat(caster.cardId, pending.index)) return { state: note(plated, base, "spell"), thrown: false };
+  const casterSide = (plated.players[0].field.some((mon) => mon?.uid === caster.uid) ? 0 : 1) as Side;
+  return {
+    state: {
+      ...note(plated, `${base} ${castName(caster.cardId, pending.index)} bị phản vào ${cardOf(caster).name}.`, "spell"),
+      step: "respond",
+      pending: { kind: "beam", caster: caster.uid, target: caster.uid, index: pending.index, back: true },
+      hold: { priority: casterSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
+    },
+    thrown: true,
+  };
+}
+
+/** Whether Giáp cơ khí waiting in the chain would throw the skill back if the chain landed now (its icon then stands in
+ *  the skill's way; else it steps aside and only arms the ally, chủ game 30/10). */
+export function armorThrows(state: Duel): boolean {
+  const wait = state.hold?.armor;
+  const pending = state.pending;
+  if (!wait || pending?.kind !== "beam" || pending.back) return false;
+  const ally = fieldMonOf(state, wait.ally);
+  const caster = fieldMonOf(state, pending.caster);
+  if (!ally || !caster) return false;
+  return liveAtk({ ...ally, atk: ally.atk + armorBonus().atk }) > skillThreat(caster.cardId, pending.index);
+}
+
+function fieldMonOf(state: Duel, uid: string): FieldMon | null {
+  return state.players[0].field.find((mon) => mon?.uid === uid) ?? state.players[1].field.find((mon) => mon?.uid === uid) ?? null;
+}
+
 function passResponseCore(state: Duel): Duel {
   if (state.step !== "respond" || !state.hold || !state.pending || state.winner) return state;
   if (state.swap) return note(state, state.swap.locked ? "Hãy chọn 1 quái để hoán đổi." : "Hãy chọn hai quái để hoán đổi.");
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
+  if (hold.armor) {
+    const side = ownerSide(state, hold.armor.ally);
+    const cleared = { ...state, hold: { ...hold, armor: undefined } };
+    if (side === null) return passResponseCore(cleared);
+    const landed = armorLand(cleared, side, hold.armor.ally);
+    return landed.thrown ? landed.state : passResponseCore(landed.state);
+  }
   if (hold.rewind) {
     const { ally } = hold.rewind;
     const side = ownerSide(state, ally);
@@ -6238,21 +6297,10 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const casterUid = pending?.kind === "beam" ? pending.caster : "";
     const caster = next.players[0].field.find((mon) => mon?.uid === casterUid) ?? next.players[1].field.find((mon) => mon?.uid === casterUid) ?? null;
     if (!ally || !caster || pending?.kind !== "beam") return note(next, "Giáp cơ khí chỉ dùng khi kỹ năng đối phương nhắm một đồng minh.");
-    const atkPlus = grabNums(card.effect, /(\d+)\s*công/gi)[0] ?? 2;
-    const mdefPlus = grabNums(card.effect, /(\d+)\s*thủ phép/gi)[0] ?? 2;
-    const buffed = { ...ally, atk: ally.atk + atkPlus, mdef: ally.mdef + mdefPlus, raised: markRaised(ally, { atk: atkPlus, mdef: mdefPlus }) };
-    const field = next.players[side].field.map((mon) => (mon?.uid === ally.uid ? buffed : mon));
-    const plated = patch(next, side, { ...next.players[side], field });
-    const threat = skillThreat(caster.cardId, pending.index);
-    const base = `Giáp cơ khí tăng ${atkPlus} công và ${mdefPlus} thủ phép cho ${cardOf(ally).name}.`;
-    if (liveAtk(buffed) <= threat) return keep(note(plated, base, "spell"));
-    const casterSide = (plated.players[0].field.some((mon) => mon?.uid === caster.uid) ? 0 : 1) as Side;
-    return {
-      ...note(plated, `${base} ${castName(caster.cardId, pending.index)} bị phản vào ${cardOf(caster).name}.`, "spell"),
-      step: "respond",
-      pending: { kind: "beam", caster: caster.uid, target: caster.uid, index: pending.index, back: true },
-      hold: { priority: casterSide, passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed() },
-    };
+    // A fast spell (chủ game 30/10): it waits in the chain; the other side may answer (lowering the ally's attack, say),
+    // and only once the chain lands does it arm the ally and weigh its attack against the skill.
+    if (next.hold && !next.hold.armor) return keep(note({ ...next, hold: { ...next.hold, armor: { ally: ally.uid } } }, `Giáp cơ khí chờ trang bị cho ${cardOf(ally).name}.`, "spell"));
+    return armorLand(next, side, ally.uid).state;
   }
   if (card.id === "hap-thu-ma-phap") {
     if (state.pending?.kind === "lash") {

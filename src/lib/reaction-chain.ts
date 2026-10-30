@@ -1,4 +1,4 @@
-import type { Duel, Pending, Side } from "./duel.ts";
+import { armorThrows, type Duel, type Pending, type Side } from "./duel.ts";
 
 /**
  * The reaction icons (chủ game 23/10, in place of the fixed reaction line of 21/10): one icon for what is waiting (an
@@ -501,7 +501,12 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   const ambush = next.hold?.ambush ?? null;
   const lurk = live && ambush ? list.find((orb) => orb.spell === "phuc-kich" && orb.stops === live.id) ?? null : null;
   const pounce = live && ambush ? list.find((orb) => orb.sent && orb.source === ambush.ally) ?? null : null;
-  const wall = glass ?? lurk;
+  // Giáp cơ khí waiting in the chain (chủ game 30/10): while the ally's attack, armed, would beat the skill its icon
+  // stands in the skill's way and the skill surges against it; else it steps aside and only its green light arms the
+  // ally. Worked out again at every step, so an answer that lowers the ally's attack moves it aside.
+  const armoring = live && next.hold?.armor ? [...list].reverse().find((orb) => orb.spell === "giap-co-khi") ?? null : null;
+  const armorWall = armoring && armorThrows(next) ? armoring : null;
+  const wall = glass ?? lurk ?? armorWall;
   // Cỗ máy thời gian waiting in the chain: its icon and its pink light round the ally stay until the chain lands.
   const rewinding = live && next.hold?.rewind ? [...list].reverse().find((orb) => orb.spell === "co-may-thoi-gian") ?? null : null;
   if (live) {
@@ -585,6 +590,7 @@ export function stepChain(prev: Duel | null, next: Duel, chain: ChainOrb[], reac
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
     // The mirror stands until the attack it stops is over.
+    if (armoring && orb.id === armoring.id) return { ...orb, done: false, end: null, stops: armorWall && live ? live.id : null };
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };

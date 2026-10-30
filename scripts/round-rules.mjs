@@ -261,6 +261,32 @@ test("Cỗ máy thời gian chờ trong chuỗi, chỉ lùi quái khi chuỗi n�
   assert.ok(!landed.hold?.rewind, "đã lùi xong");
 });
 
+test("Giáp cơ khí chờ trong chuỗi; lúc nổ mới tăng chỉ số, công đủ thì phản, đối thủ giảm công thì không phản", () => {
+  const make = (atk) => {
+    let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 0, mdef: 0, atk }] });
+    s = D.testGrant(s, 1, "giap-co-khi", false);
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+    const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+    return { s, waiting: D.castSpell(breath, breath.players[1].hand.indexOf("giap-co-khi"), uid(s, 1, 0)) };
+  };
+  const strong = make(10);
+  assert.deepEqual(strong.waiting.hold?.armor, { ally: uid(strong.s, 1, 0) }, strong.waiting.live);
+  assert.equal(at(strong.waiting, 1, 0).atk, 10, "chưa tăng khi còn chờ");
+  assert.equal(strong.waiting.hold?.priority, 0, "quyền sang bên dùng kỹ năng");
+  assert.equal(D.armorThrows(strong.waiting), true);
+  const thrown = D.passResponse(strong.waiting);
+  assert.equal(at(thrown, 1, 0).atk, 12, thrown.live);
+  assert.equal(thrown.pending?.kind, "beam");
+  assert.equal(thrown.pending?.back, true, "kỹ năng bị phản về kẻ dùng");
+  // The other side lowers the ally's attack before the chain lands: no throw, the skill goes on into the armed ally.
+  const lowered = { ...strong.waiting, players: strong.waiting.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m, k) => (k === 0 ? { ...m, atk: 0 } : m)) } : p)) };
+  assert.equal(D.armorThrows(lowered), false, "icon lách ra khi công không đủ");
+  const through = D.passResponse(lowered);
+  assert.equal(at(through, 1, 0).atk, 2, through.live);
+  assert.ok(!(through.pending?.kind === "beam" && through.pending.back), "không phản");
+  assert.ok(!through.hold?.armor, "Giáp đã nổ");
+});
+
 test("Phục kích chặn cả kỹ năng nhiều mục tiêu (Con nước lớn tàn phá)", () => {
   const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
   let s = board({ 1: ["trai-tim-hai-long", { hp: 30, maxHp: 30, def: 0 }] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });
