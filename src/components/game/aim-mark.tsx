@@ -8,11 +8,11 @@ import { spellTone } from "@/lib/reaction-chain";
  * line (the one its icon shows when tapped) on the left; the targets it may take glow. Dragging the icon back down to
  * the hand puts it away. `y`: the icon's height on the board (%).
  */
-export function AimMark({ spellId, text, y, onDrop }: { spellId: string; text: string; y: number; onDrop: (x: number, y: number) => void }) {
+export function AimMark({ spellId, text, y, bare = false, onDrop }: { spellId: string; text: string; y: number; /** Only its line: the spell's own icon already stands in the chain (Hoán đổi, a spell that runs at once). */ bare?: boolean; onDrop: (x: number, y: number) => void }) {
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   return (
-    <div className="aim-mark" style={{ top: `${y}%` }}>
+    <div className={`aim-mark${bare ? " is-bare" : ""}`} style={{ top: `${y}%` }}>
       <p className="aim-mark-text">{text}</p>
       <button
         type="button"

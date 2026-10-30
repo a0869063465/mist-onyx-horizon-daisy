@@ -1730,6 +1730,9 @@ function PlayPage() {
   const [sound, setSoundOn] = useState(true);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [swapPick, setSwapPick] = useState<string[]>([]);
+  /** Hoán đổi (chủ game 30/10): the monster that goes back into a hand flies there as a ghost of its card. */
+  const [swapGhost, setSwapGhost] = useState<{ key: number; mon: FieldMon; rect: { left: number; top: number; width: number; height: number }; to: { x: number; y: number } } | null>(null);
+  const swapSeen = useRef<Duel | null>(null);
   const [recallPick, setRecallPick] = useState<number[]>([]);
   const [reflectPick, setReflectPick] = useState<{ index: number; uid: string | null } | null>(null);
   const [ambushPick, setAmbushPick] = useState<{ index: number; uid: string | null } | null>(null);
@@ -2091,6 +2094,68 @@ function PlayPage() {
   useEffect(() => {
     setRecallPick([]);
   }, [duel?.recall]);
+
+  // Hoán đổi (chủ game 30/10): two monsters that trade places run round each other, each on half of an ellipse whose
+  // two ends are the two monsters; one traded with a card of the hand flies into the hand while the card flies out.
+  useLayoutEffect(() => {
+    const before = swapSeen.current;
+    swapSeen.current = duel;
+    if (!duel || !before || before.mid !== duel.mid || !/Hoán đổi (xong|quái)/.test(duel.live)) return;
+    const slotOf = (side: number, index: number) => document.querySelector<HTMLElement>(`[data-slot="${side}-${index}"]`);
+    const centre = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    const handOf = (rect: DOMRect) => {
+      const c = centre(rect);
+      const box = document.querySelector(c.y > window.innerHeight / 2 ? ".hand" : ".foe-fan")?.getBoundingClientRect();
+      return box ? centre(box) : { x: window.innerWidth / 2, y: c.y > window.innerHeight / 2 ? window.innerHeight : 0 };
+    };
+    const play = (el: HTMLElement, frames: Keyframe[], ms: number, easing: string) => {
+      el.style.zIndex = "40";
+      const run = el.animate(frames, { duration: ms, easing });
+      run.onfinish = () => {
+        el.style.zIndex = "";
+      };
+    };
+    for (const side of [0, 1] as const) {
+      const was = before.players[side].field;
+      const now = duel.players[side].field;
+      const done = new Set<number>();
+      for (let i = 0; i < 6; i += 1) {
+        const oldMon = was[i];
+        const newMon = now[i];
+        if (done.has(i) || !newMon || oldMon?.uid === newMon.uid) continue;
+        const j = oldMon ? now.findIndex((mon, k) => k > i && mon?.uid === oldMon.uid && was[k]?.uid === newMon.uid) : -1;
+        const elI = slotOf(side, i);
+        if (!elI) continue;
+        if (j >= 0) {
+          const elJ = slotOf(side, j);
+          if (!elJ) continue;
+          done.add(j);
+          const ci = centre(elI.getBoundingClientRect());
+          const cj = centre(elJ.getBoundingClientRect());
+          const mid = { x: (ci.x + cj.x) / 2, y: (ci.y + cj.y) / 2 };
+          const d = Math.hypot(cj.x - ci.x, cj.y - ci.y) || 1;
+          const n = { x: -(cj.y - ci.y) / d, y: (cj.x - ci.x) / d };
+          const bow = Math.max(elI.getBoundingClientRect().height * 0.55, d * 0.3);
+          const ring = (own: { x: number; y: number }, far: { x: number; y: number }, sign: number): Keyframe[] =>
+            Array.from({ length: 21 }, (_, k) => {
+              const t = k / 20;
+              const th = Math.PI * (t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t));
+              const x = mid.x + (far.x - mid.x) * Math.cos(th) + sign * n.x * bow * Math.sin(th);
+              const y = mid.y + (far.y - mid.y) * Math.cos(th) + sign * n.y * bow * Math.sin(th);
+              return { translate: `${x - own.x}px ${y - own.y}px`, offset: t };
+            });
+          play(elI, ring(ci, cj, 1), 760, "linear");
+          play(elJ, ring(cj, ci, -1), 760, "linear");
+        } else if (!now.some((mon, k) => k !== i && mon && oldMon && mon.uid === oldMon.uid) && !was.some((mon) => mon?.uid === newMon.uid)) {
+          const rect = elI.getBoundingClientRect();
+          const c = centre(rect);
+          const hand = handOf(rect);
+          play(elI, [{ translate: `${hand.x - c.x}px ${hand.y - c.y}px`, scale: "0.35", opacity: 0 }, { translate: "0px 0px", scale: "1", opacity: 1 }], 720, "cubic-bezier(.2,.8,.3,1)");
+          if (oldMon) setSwapGhost({ key: Date.now(), mon: oldMon, rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, to: hand });
+        }
+      }
+    }
+  }, [duel]);
 
   useEffect(() => {
     if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial || trial || queue) return;
@@ -3120,6 +3185,14 @@ function PlayPage() {
   const board = matchBoard(foe.env, you.env);
   /** Chọn mục tiêu theo video chủ game (30/10): the spell waits as an icon in the middle with its short line. */
   const aimMark = aim?.kind === "spell" && AIM_MARK.has(aim.spellId) ? aim : null;
+  /** Hoán đổi (siêu tốc, chủ game 30/10): the monster aimed at is locked; the others that can trade glow, tap one. */
+  const swapAsk = duel.swap && duel.swap.side === viewer && duel.swap.locked ? duel.swap : null;
+  const swapFit = (unit: FieldMon | null | undefined) => Boolean(swapAsk && unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && `f:${unit.uid}` !== swapAsk.locked);
+  const swapBench = (held: (typeof you.reserve)[number]) => {
+    const card = monsterCard(held.id);
+    return Boolean(swapAsk && card && card.stars !== 0 && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
+  };
+  const markId = aimMark?.spellId ?? (swapAsk ? "hoan-doi" : null);
   /**
    * Tường thành (chủ game 29/10): cards lying across by a side's environment card, the same size, in a row toward the
    * middle of the board (the opponent's to the right of theirs, yours to the left of yours). Gương phòng hộ shows the
@@ -3916,6 +3989,11 @@ function PlayPage() {
       return;
     }
     if (!mine || !duel) return;
+    // Hoán đổi: tap a glowing ally to trade places with the monster aimed at.
+    if (swapAsk) {
+      if (side === viewer && swapFit(mon)) apply(confirmSwap(duel, swapAsk.locked!, `f:${mon.uid}`));
+      return;
+    }
     if (aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian") {
       if (mon.uid === aim.uid) {
         setAim(null);
@@ -4885,15 +4963,19 @@ function PlayPage() {
             </button>
           );
         })}
-        {aimMark ? (
+        {markId ? (
           <AimMark
-            spellId={aimMark.spellId}
-            text={spellBrief(duel, aimMark.spellId, viewer).split("\n").slice(1).join("\n")}
+            bare={Boolean(swapAsk)}
+            spellId={markId}
+            text={spellBrief(duel, markId, viewer).split("\n").slice(1).join("\n")}
             y={ry(51)}
             onDrop={(x, y) => {
               // Kéo icon về tay là thôi dùng (lá vẫn trên tay).
               const hand = document.querySelector(".hand")?.getBoundingClientRect();
-              if (hand && y >= hand.top && x >= hand.left && x <= hand.right) setAim(null);
+              if (hand && y >= hand.top && x >= hand.left && x <= hand.right) {
+                if (swapAsk) cancelQueue();
+                else setAim(null);
+              }
             }}
           />
         ) : null}
@@ -5276,64 +5358,7 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
-        {duel.swap && duel.swap.side === viewer ? (
-          <div className="overlay is-ask">
-            <div className="ask-card">
-              <p>{duel.swap.locked ? "Quái bị nhắm đã khoá. Chọn 1 quái để đổi, rồi bấm OK." : "Chọn 2 quái để đổi, rồi bấm OK."}</p>
-              {duel.swap.locked ? <p>{fieldName(you.field.find((unit) => unit && `f:${unit.uid}` === duel.swap?.locked) ?? { cardId: "" })} đang bị nhắm.</p> : null}
-              {you.field.map((unit) =>
-                unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && `f:${unit.uid}` !== duel.swap?.locked ? (
-                  <button
-                    key={unit.uid}
-                    type="button"
-                    className={swapPick.includes(`f:${unit.uid}`) ? "on" : ""}
-                    onClick={() =>
-                      setSwapPick((list) => {
-                        const token = `f:${unit.uid}`;
-                        const cap = duel.swap?.locked ? 1 : 2;
-                        return list.includes(token) ? list.filter((item) => item !== token) : list.length >= cap ? [token] : [...list, token];
-                      })
-                    }
-                  >
-                    {tr(fieldName(unit))}
-                  </button>
-                ) : null,
-              )}
-              {you.reserve.map((held, index) => {
-                const card = monsterCard(held.id);
-                if (!card || (held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars) || card.stars === 0) return null;
-                const token = `r:${index}`;
-                return (
-                  <button
-                    key={token}
-                    type="button"
-                    className={swapPick.includes(token) ? "on" : ""}
-                    onClick={() =>
-                      setSwapPick((list) => {
-                        const cap = duel.swap?.locked ? 1 : 2;
-                        return list.includes(token) ? list.filter((item) => item !== token) : list.length >= cap ? [token] : [...list, token];
-                      })
-                    }
-                  >
-                    {held.saved ? fieldName({ cardId: held.id, level: held.saved.level }) : card.name}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                disabled={swapPick.length !== (duel.swap.locked ? 1 : 2)}
-                onClick={() => {
-                  const locked = duel.swap?.locked;
-                  const next = locked ? confirmSwap(duel, locked, swapPick[0]) : confirmSwap(duel, swapPick[0], swapPick[1]);
-                  if (!next.swap) setSwapPick([]);
-                  apply(next);
-                }}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        ) : null}
+        {swapGhost ? <SwapGhost key={swapGhost.key} ghost={swapGhost} onDone={() => setSwapGhost(null)} /> : null}
         {reflectPick ? (
           <div className="overlay is-ask">
             <div className="ask-card">
@@ -5834,7 +5859,7 @@ function PlayPage() {
               near
               index={index}
               layout={fieldLayout}
-              hot={((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon))}
+              hot={((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon))}
               fuse={Boolean(mon && ((fuseOn && fuseUids.has(mon.uid)) || (drag?.kind === "summon" && (findFusion(drag.card.id, mon.cardId) || findKnightFusion(drag.card.id, mon.cardId, you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId))))))}
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
@@ -5958,6 +5983,7 @@ function PlayPage() {
                 const open = inspect?.pile === "reserve" && inspect.index === index;
                 const picked = handPick?.pile === "reserve" && handPick.index === index && handPick.id === id;
                 const lit = open || picked || (aim?.kind === "summon" && aim.index === index);
+                const swapCard = swapBench(held);
                 const cottonCard = id === "cuc-bong-ma-quai" && cotton.hand;
                 const standCard = id === "the-than-cua-shien" && standHand;
                 // A monster flashing orange uses its skill from the hand: tap the card, then the skill (Bông mềm, Thế thân).
@@ -5967,10 +5993,10 @@ function PlayPage() {
                   <div key={`${id}-${index}`} className="hand-pick">
                     <button
                       type="button"
-                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard ? " is-alert" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
+                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
-                      onClick={() => openHand("reserve", index, id)}
+                      onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}
                       onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                       onPointerMove={move}
                       onPointerUp={end}
@@ -6110,8 +6136,8 @@ function PlayPage() {
         <div className="actions is-spread">
           {/* Hàng chờ (chủ game 28/10): X huỷ hết hàng chờ, con mắt bật/tắt xem trước; cả hai khép khi không có gì chờ. */}
           {board.drawMon.hidden ? null : (
-            <button type="button" className={`oracle-act${queue || aimMark ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !aimMark} style={pinMedal(board.drawMon)} onClick={() => (aimMark && !queue ? setAim(null) : cancelQueue())}>
-              <OracleOrb kind="cancel" state={queue || aimMark ? "open" : "shut"} />
+            <button type="button" className={`oracle-act${queue || markId ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !markId} style={pinMedal(board.drawMon)} onClick={() => (aimMark && !queue ? setAim(null) : cancelQueue())}>
+              <OracleOrb kind="cancel" state={queue || markId ? "open" : "shut"} />
             </button>
           )}
           {board.drawSpell.hidden ? null : (
@@ -6135,7 +6161,7 @@ function PlayPage() {
               style={pinMedal(board.endTurn)}
               aria-label={ticking ? "OK" : tr("Hết lượt")}
               onClick={() => {
-                if (aimMark) return;
+                if (markId) return;
                 if (queue) confirmQueue();
                 else if (duel.hold?.stage) land(confirmStage(duel));
                 else if (responding) land(passResponse(duel));
@@ -6144,7 +6170,7 @@ function PlayPage() {
             >
               <Medal tone={ticking ? "blue" : closesRound ? "red" : "blue"} icon={ticking ? "check-mark" : closesRound ? "hourglass" : "up-arrow"} glyph={!ticking && !closesRound ? 1.42 : 1} />
               {/* Như video chủ game (30/10): đang chọn mục tiêu / đã xếp chờ xác nhận. */}
-              {aimMark ? <span className="act-caption">{tr("Chọn mục tiêu")}</span> : queue ? <span className="act-caption">{tr("Xác nhận")}</span> : null}
+              {markId ? <span className="act-caption">{tr("Chọn mục tiêu")}</span> : queue ? <span className="act-caption">{tr("Xác nhận")}</span> : null}
             </button>
           ) : null}
         </div>
@@ -7204,5 +7230,27 @@ function BoardSlot({
         {!mask && !debtOn && countShown ? spot("count", countShown, false, false) : null}
       </span>
     </button>
+  );
+}
+
+/** Hoán đổi with a card of the hand: the monster that leaves the field flies into the hand as a shrinking ghost of its card. */
+function SwapGhost({ ghost, onDone }: { ghost: { mon: FieldMon; rect: { left: number; top: number; width: number; height: number }; to: { x: number; y: number } }; onDone: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const dx = ghost.to.x - (ghost.rect.left + ghost.rect.width / 2);
+    const dy = ghost.to.y - (ghost.rect.top + ghost.rect.height / 2);
+    const run = el.animate([{ translate: "0px 0px", scale: "1", opacity: 1 }, { translate: `${dx}px ${dy}px`, scale: "0.3", opacity: 0 }], { duration: 720, easing: "cubic-bezier(.5,0,.8,.4)", fill: "forwards" });
+    run.onfinish = onDone;
+    return () => run.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const card = monsterCard(ghost.mon.cardId);
+  if (!card) return null;
+  return (
+    <div ref={ref} style={{ position: "fixed", left: ghost.rect.left, top: ghost.rect.top, width: ghost.rect.width, height: ghost.rect.height, zIndex: 45, pointerEvents: "none" }}>
+      <CardFace monster={card} level={ghost.mon.level ?? 1} live={{ name: fieldName(ghost.mon), atk: ghost.mon.atk, def: ghost.mon.def, mdef: ghost.mon.mdef, hp: ghost.mon.hp }} />
+    </div>
   );
 }
