@@ -232,6 +232,9 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## Quy tắc làm việc với chủ game
 
+- KẾT THÚC VIỆC (chủ game 30/10): khi xong phần việc dành cho mô hình đang chạy (theo bảng "Đề xuất mô hình và mức nỗ lực" của kế hoạch, hoặc chủ game nói "xong đến đó thì dừng") thì DỪNG, báo lại, chờ chủ game duyệt mô hình và mức nỗ lực của phần kế rồi mới làm. Không tự làm tiếp phần cần mô hình khác. Mỗi kế hoạch phải ghi đề xuất mô hình và nỗ lực vào file md.
+- MÀU DÒNG (chủ game 30/10): phép phản ứng (nhanh, siêu tốc) dòng HỒNG; đã sửa Hoán đổi (trước là xanh lá). Xanh lá chỉ còn Mũ ma pháp và Giáp cơ khí (dòng buff vào quái, chưa đổi, hỏi lại khi làm Giáp cơ khí).
+
 - CÁCH LÀM GIAO DIỆN (chủ game 28/10, nhắc gắt, KHÔNG được lặp lại): chủ game KHÔNG thử từng bước, nên KHÔNG làm bản tạm "cho chạy để thử" rồi sửa dần. Trước khi làm: đọc kỹ toàn bộ tài nguyên gốc (video, ảnh, code Grok) và chốt BỨC TRANH CHUNG với chủ game (bố cục trên xuống dưới, từng phần cuối cùng trông ra sao), rồi phác hoạ từng phần, rồi mới làm một lượt cho đúng bản cuối; xong phiên thì chạy được là đủ. Ví dụ đã sai: chân dung chớp xanh (cuối cùng là dòng sáng xanh/đỏ kiểu bể cá), icon tấn công, icon chuyển lượt (Grok có 3 mặt), làm rồi lại phải bỏ.
 - HỎI HẾT MỌI KHÂU THIẾT KẾ TRƯỚC KHI LÀM (chủ game 28/10, nhắc gắt sau vụ mũi tên ↑↓, tay đối thủ, xấp bài): trước khi làm một phần giao diện, liệt kê và hỏi TẤT CẢ những khâu thiết kế có thể phát sinh: vị trí chính xác (trên/ngoài lá, cạnh nhau hay chồng, chỗ nào trên bàn), nút cũ biến mất hay giữ, hình in sẵn trên bàn dùng hay vẽ thêm, số đặt ở đâu, kích thước, lúc nào hiện/ẩn, cách huỷ, áp cho những chỗ nào. Không tự chọn chỗ nào chưa được nói rõ, kể cả chỗ tưởng là nhỏ. Lần này Claude tự đặt mũi tên đè lên lá, mũi tên hai bên nút Triệu hồi, tay đối thủ cạnh xấp bài, mà chưa từng hỏi.
 - LỖI ĐÃ MẮC, TUYỆT ĐỐI KHÔNG LẶP LẠI (chủ game 29/10: "Những lỗi sai cập nhật vào file md, tuyệt đối không để sai nữa"):

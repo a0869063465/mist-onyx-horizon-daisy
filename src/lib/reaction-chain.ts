@@ -80,8 +80,8 @@ const WHITE_SPELLS = new Set(["hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thu
 const DAM_SPELLS = new Set(["la-chan-phan-don", "guong-phong-ho", "vong-nguyen-rua-ac-ma", "phuc-kich"]);
 /** Spells that throw a skill back from their icon. */
 const REFLECT_SPELLS = new Set(["giap-co-khi", "la-chan-phan-don"]);
-// Cỗ máy thời gian runs pink (chủ game 30/10), as a flow wrapping the ally it takes back.
-const GREEN_SPELLS = new Set(["mu-ma-phap", "hoan-doi", "giap-co-khi"]);
+// Cỗ máy thời gian and Hoán đổi run pink (chủ game 30/10), like the other answers; Hoán đổi is no green spell.
+const GREEN_SPELLS = new Set(["mu-ma-phap", "giap-co-khi"]);
 
 /** The smoke of a spell: white when it breaks a spell, green when it helps an ally, pink when it harms. */
 export function spellTone(id: string | null): FlowTone {
