@@ -84,6 +84,8 @@ import {
   chronoChoice,
   chronoHighAlly,
   rollTimeSector,
+  pullWheel,
+  settleWheel,
   digChoices,
   digGrave,
   passResponse,
@@ -122,6 +124,7 @@ import {
   canCastSwap,
   shelterPicks,
   virusTargets,
+  slowWaiting,
   answerSide,
   canTestReset,
   toggleStance,
@@ -1036,6 +1039,8 @@ const GUARD_SPELLS = new Set([
 
 function spellCanAnswer(id: string, duel: Duel): boolean {
   if (duel.step !== "respond" || !ANSWER_SPELLS.has(id)) return false;
+  // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
+  if (slowWaiting(duel)) return id === "hap-thu-ma-phap";
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
   const horn = hornPending(duel);
@@ -1603,7 +1608,7 @@ function TimeWheel({
 }: {
   sector: number | null;
   title: string;
-  onPull: () => void;
+  onPull: (() => void) | null;
   onDone: () => void;
 }) {
   const [turn, setTurn] = useState(0);
@@ -1645,10 +1650,12 @@ function TimeWheel({
             style={{ transform: `rotate(${turn}deg)` }}
           />
         </div>
-        {sector === null ? (
+        {sector === null && onPull ? (
           <button type="button" className="act press" onClick={onPull}>
             Quay
           </button>
+        ) : sector === null ? (
+          <p>Đối thủ đang quay.</p>
         ) : (
           <p>Đang quay.</p>
         )}
@@ -2156,7 +2163,7 @@ function PlayPage() {
   }, [duel]);
 
   useEffect(() => {
-    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || !loaded || tutorial || trial || queue) return;
+    if (!duel || busy || duel.winner !== null || duel.mode !== "ai" || duel.reel || duel.wheel || !loaded || tutorial || trial || queue) return;
     const aiResponds = duel.step === "respond" && duel.hold?.priority === 1 && !duel.hold.stage;
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
@@ -2282,6 +2289,14 @@ function PlayPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [duel, busy]);
+
+  // The machine pulls its own time wheel (Vs Máy); it lands when the wheel stops, as for the player.
+  useEffect(() => {
+    const wheel = duel?.wheel;
+    if (!duel || !wheel || wheel.sector !== null || duel.mode !== "ai" || !duel.players[1].field.some((mon) => mon?.uid === wheel.uid)) return;
+    const timer = window.setTimeout(() => setDuel((current) => (current?.wheel && current.wheel.sector === null ? pullWheel(current) : current)), 900);
+    return () => window.clearTimeout(timer);
+  }, [duel]);
 
   useLayoutEffect(() => {
     if (!duel) return;
@@ -3138,6 +3153,7 @@ function PlayPage() {
   const foe = duel.players[viewer === 0 ? 1 : 0];
   const mine = !busy && duel.winner === null && (duel.mode === "hotseat" || duel.mode === "test" || actor === (duel.mode === "ai" ? 0 : viewer));
   const gemHold = duel.gemCap === viewer || duel.gemWarn === viewer;
+  const wheelOwner: Side | null = duel.wheel ? (duel.players[0].field.some((mon) => mon?.uid === duel.wheel?.uid) ? 0 : 1) : null;
   const canPlay = mine && duel.step === "main" && duel.turn === viewer && !duel.upkeep && !gemHold && !duel.counterAsk && !queue;
   // The OK button is a tick while something waits for an answer or for this side's confirmation.
   const ticking = responding || Boolean(queue);
@@ -5799,7 +5815,8 @@ function PlayPage() {
                   setChronoWarn(ask);
                   return;
                 }
-                setChronoSpin({ caster: ask.caster, target: ask.target, index: 1, sector: null });
+                // It waits in the chain; its wheel turns once the chain is over (chủ game 30/10).
+                apply(useSkill(duel, ask.caster, ask.target, 1, true));
               }}
             >
               {tr("Cường hoá")}
@@ -5820,13 +5837,25 @@ function PlayPage() {
               onClick={() => {
                 const ask = chronoWarn;
                 setChronoWarn(null);
-                setChronoSpin({ caster: ask.caster, target: ask.target, index: 1, sector: null });
+                apply(useSkill(duel, ask.caster, ask.target, 1, true));
               }}
             >
               Ok
             </button>
             <button type="button" onClick={() => setChronoWarn(null)}>{tr("Không")}</button>
           </div>
+        ) : null}
+        {duel.wheel ? (
+          <TimeWheel
+            key={duel.wheel.id}
+            sector={duel.wheel.sector}
+            title={duel.wheel.index === 2 ? tr("Dòng chảy thời gian") : tr("Cường hoá")}
+            onPull={wheelOwner === viewer && canPlay ? () => apply(pullWheel(duel)) : null}
+            onDone={() => {
+              // The owner's screen lands it (the machine's too, in Vs Máy); the other only watches.
+              if (duel.wheel && (wheelOwner === viewer || duel.mode === "ai")) apply(settleWheel(duel));
+            }}
+          />
         ) : null}
         {chronoSpin ? (
           <TimeWheel
@@ -6287,7 +6316,7 @@ function PlayPage() {
               setAim(null);
               setChronoAsk(null);
               setChronoWarn(null);
-              setChronoSpin({ caster: uid, target: null, index: 2, sector: null });
+              apply(useSkill(duel, uid, null, 2));
             }}
             onLure={(uid) => setLureAsk(uid)}
             setAim={setAim}

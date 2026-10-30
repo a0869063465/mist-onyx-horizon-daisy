@@ -24,7 +24,9 @@ import {
   harpyWard,
   passResponse,
   pullReel,
+  pullWheel,
   settleReel,
+  settleWheel,
   spreadHits,
   spiritCover,
   canSpirit,
@@ -160,6 +162,7 @@ function moved(prev: Duel, next: Duel): boolean {
     next.swap !== prev.swap ||
     next.parley !== prev.parley ||
     next.reel !== prev.reel ||
+    next.wheel !== prev.wheel ||
     Boolean(next.upkeep) !== Boolean(prev.upkeep) ||
     next.recall !== prev.recall ||
     next.legs !== prev.legs ||
@@ -264,6 +267,13 @@ export function quiet(state: Duel, budget = 2): Duel {
     if (s.reel) {
       const next = s.reel.phase === "wait" ? pullReel(s) : settleReel(s);
       if (!moved(s, next) && next.reel === s.reel) return s;
+      s = next;
+      continue;
+    }
+    // The time wheel turns once the chain is over (chủ game 30/10): pulled and landed in one go here.
+    if (s.wheel) {
+      const next = settleWheel(pullWheel(s));
+      if (next.wheel === s.wheel) return s;
       s = next;
       continue;
     }
@@ -526,7 +536,7 @@ function planAnswer(state: Duel): Act {
 
 /** Nước máy (bên 1) chọn lúc này; null khi không tới lượt máy. */
 export function brainChoose(state: Duel, budgetMs = BUDGET_MS): Act | null {
-  if (state.mode !== "ai" || state.winner !== null || state.reel) return null;
+  if (state.mode !== "ai" || state.winner !== null || state.reel || state.wheel) return null;
   if (aiAnswerAsk(state)) return ["ask"];
   if (state.step === "respond" && state.hold?.priority === ME) return planAnswer(state);
   if (state.turn !== ME || state.step !== "main") return null;

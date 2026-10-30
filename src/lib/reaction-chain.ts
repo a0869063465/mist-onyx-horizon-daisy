@@ -165,6 +165,8 @@ function pendingTone(duel: Duel, pending: Pending): FlowTone {
   if (!pending) return "red";
   if (pending.kind === "spell") return spellTone(pending.cardId);
   if (faceSkill(pending)) return "blue";
+  // Lão hoá / Cường hoá (chủ game 30/10): pink on a foe, blue on an ally.
+  if (pending.kind === "beam" && pending.target && monOf(duel, pending.caster)?.cardId === "phu-thuy-thoi-gian" && sideOf(duel, pending.target) !== sideOf(duel, pending.caster)) return "pink";
   if (pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw") return strikeOf(duel, pending) ? "blue" : "red";
   return "blue";
 }

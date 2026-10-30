@@ -1,9 +1,7 @@
 import { monsterCard, spellCard } from "@/lib/catalog";
 import { plainCopy } from "@/lib/copy-mark";
 import {
-  ageMon,
   bulletRamp,
-  buffMon,
   favorShots,
   hellFigures,
   liveAtk,
@@ -77,20 +75,6 @@ function came(result: string | undefined): string[] {
   return result ? [result.replace(/^\d+\.\s*/, "").replace(/[.\s]+$/, "").trim()] : [];
 }
 
-/** A stat change as the sheet reads it: "-4 công, -1 thủ, -2 máu". */
-function change(before: FieldMon, after: FieldMon): string {
-  const rows: Array<[number, string]> = [
-    [after.atk - before.atk, "công"],
-    [after.def - before.def, "thủ"],
-    [after.mdef - before.mdef, "thủ phép"],
-    [after.hp - before.hp, "máu"],
-  ];
-  return rows
-    .filter(([n]) => n !== 0)
-    .map(([n, what]) => `${n > 0 ? "+" : ""}${n} ${what}`)
-    .join(", ");
-}
-
 function harpy(name: string, t: string, target: FieldMon | null): string[] {
   const who = target ? monsterCard(target.cardId)?.name ?? "1 quái địch" : "1 quái địch";
   switch (name) {
@@ -156,10 +140,10 @@ function lines(at: SkillAt): string[] {
       return [deal(blow(mon, spellOnly(2 + 3 * (mon?.stored ?? 0))))];
     case "phu-thuy-thoi-gian": {
       if (name === "Dòng chảy thời gian") return ["Lão hoá lên tất cả quái trên sân"];
-      if (!target) return [];
-      const ally = side !== null && duel.players[side].field.some((unit) => unit?.uid === target.uid);
-      const shift = change(target, ally ? buffMon(target) : ageMon(target));
-      return shift ? [shift] : [];
+      // Chủ game 30/10: line 1 on a foe, line 2 on an ally, whoever it is aimed at.
+      if (/cường hoá/i.test(name)) return ["Kẻ địch: bị tiêu diệt nếu vòng quay trúng", "Đồng minh đặc biệt: tiến hoá nếu vòng quay trúng"];
+      const pct = num(t, /(\d+)%/, 35);
+      return [`Kẻ địch: giảm ${pct}% chỉ số`, `Đồng minh: tăng ${pct}% chỉ số`];
     }
     case "yeu-tinh-chuc-phuc":
       if (name !== "Hỗ công") return [];

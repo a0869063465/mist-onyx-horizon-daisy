@@ -317,6 +317,9 @@ export type Duel = {
   history?: Array<Record<string, { mon: FieldMon; slot: Slot }>>;
   now?: Record<string, { mon: FieldMon; slot: Slot }>;
   born?: Record<string, { mon: FieldMon; slot: Slot }>;
+  /** Vòng quay thời gian (chủ game 30/10): a time witch's luck skill turns its wheel only once the chain it waited in
+   *  is over, so nobody can tell its outcome beforehand; its owner pulls it, then it lands. */
+  wheel?: { id: number; uid: string; target: string | null; index: number; sector: number | null } | null;
   reel?: {
     id: number;
     uid: string;
@@ -1339,6 +1342,26 @@ function breakWitch(state: Duel, side: Side, owner: Player, uid: string, beforeS
   const field = owner.field.map((unit) => (unit?.uid === uid ? { ...unit, hp: 0 } : unit));
   const next = pingStars(patch(state, side, dropDead({ ...owner, field })), side, beforeStars, owner.stars);
   return note(next, `Vòng quay trượt. ${monsterCard("phu-thuy-thoi-gian")?.name ?? "Phù thuỷ thời gian"} tự huỷ.`, "spell");
+}
+
+/** The owner pulls the time wheel: where it stops is drawn now, not before (chủ game 30/10). */
+export function pullWheel(state: Duel): Duel {
+  if (!state.wheel || state.wheel.sector !== null) return state;
+  return { ...state, wheel: { ...state.wheel, sector: rollTimeSector() } };
+}
+
+/** The wheel has stopped: the skill lands, hit or miss, and the turn passes as for any skill. */
+export function settleWheel(state: Duel): Duel {
+  const wheel = state.wheel;
+  if (!wheel || wheel.sector === null) return state;
+  const side = ownerSide(state, wheel.uid);
+  const open: Duel = { ...state, wheel: null };
+  if (side === null) return open;
+  const mon = state.players[side].field.find((unit) => unit?.uid === wheel.uid) ?? null;
+  const landed = useSkill(open, wheel.uid, wheel.target, wheel.index, true, wheel.sector % 3 === 0 ? "hit" : "miss", true);
+  const free = mon ? skillIsFree(mon.cardId, wheel.index) : true;
+  const next = !free && settled(landed) && landed.turn === side ? yieldTurn(landed) : landed;
+  return flushVirus(next);
 }
 
 export function buffMon(mon: FieldMon): FieldMon {
@@ -2653,7 +2676,8 @@ function settled(state: Duel): boolean {
     !state.plumeAsk &&
     !state.birdAsk &&
     !state.preyAsk &&
-    !state.reel
+    !state.reel &&
+    !state.wheel
   );
 }
 
@@ -3806,6 +3830,11 @@ function passResponseCore(state: Duel): Duel {
     const legal = canIntercept(mon, Boolean(blocker));
     const target = redirectCover(state.players[foe].field, legal ? blocker : pending.target) ?? (legal ? blocker : pending.target);
     const open = commitGuardShot({ ...state, step: "main" as const, pending: null, hold: null }, pending.caster, target ?? "", false);
+    const witch = state.players[state.turn].field.find((unit) => unit?.uid === pending.caster) ?? null;
+    if (witch?.cardId === "phu-thuy-thoi-gian" && (pending.index === 1 || pending.index === 2) && !pending.extra) {
+      // The wheel turns only now that the chain is over (chủ game 30/10): its owner pulls it.
+      return note({ ...open, wheel: { id: state.seq + 1, uid: pending.caster, target, index: pending.index, sector: null } }, "Vòng quay thời gian mở ra.", "spell");
+    }
     if (pending.index === 8 && open.echo === pending.caster) return swordFollow(open, target, true);
     if (pending.index === 9 && open.last === pending.caster) return swordLast(open, target, true);
     const resolved = releaseGuardMark(withCovers(hold.covers, () => useSkill(open, pending.caster, target, pending.index, true, pending.extra ?? null, true)), target);
@@ -4134,6 +4163,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
   if (state.step !== "respond" || !state.hold || state.hold.priority !== defender) {
     return note(state, "Chưa tới lượt chặn");
   }
+  if (slowWaiting(state)) return note(state, "Kỹ năng này không chặn được.");
   if (branch) {
     const hits = spreadHits(state);
     if (!hits || hits.length < 2) return note(state, "Chỉ chặn từng nhánh khi kỹ năng trúng nhiều mục tiêu.");
@@ -4246,6 +4276,27 @@ export function spreadHits(state: Duel): string[] | null {
 }
 
 /**
+ * Skill chậm vào hàng chờ (chủ game 30/10): skills that used to work at once now wait in the chain like any skill: the
+ * opponent sees them and may break them (Hấp thụ ma pháp), and no monster blocks them. Used on its own turn only, its
+ * monster standing still. Roi sấm stays a quick answer.
+ */
+export function waitSkill(cardId: string, index: number): boolean {
+  if (cardId === "phu-thuy-thoi-gian") return index <= 2;
+  if (cardId === "mo-voi-ma-mut") return index === 0;
+  if (cardId === PERFECT) return index === 0 || index === 3;
+  if (isHarpy(cardId)) return index === 0 || index === 1 || index === 3;
+  return false;
+}
+
+/** The skill waiting in the chain is one of those (`waitSkill`). */
+export function slowWaiting(state: Duel): boolean {
+  const pending = state.pending;
+  if (pending?.kind !== "beam" || pending.back) return false;
+  const caster = state.players[0].field.find((mon) => mon?.uid === pending.caster) ?? state.players[1].field.find((mon) => mon?.uid === pending.caster) ?? null;
+  return Boolean(caster && waitSkill(caster.cardId, pending.index));
+}
+
+/**
  * Skill chậm (chủ game 29/10): a skill that lands on several is used only while its monster stands in its slot, on
  * its own turn; never to strike back (Trả đòn). Sấm địa ngục only lands on several when more than one foe is wet.
  */
@@ -4254,6 +4305,7 @@ export function slowSkill(state: Duel, uid: string, index: number, targetUid: st
   if (side === null) return false;
   const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon) return false;
+  if (waitSkill(mon.cardId, index)) return true;
   const id = mon.cardId;
   if (id === "loi-nguyen-cua-rong" || isHell(id) || id === "ngai-khong-lo" || id === "ngai-nu-hoang" || id === "ngai-hoan-my" || id === "may-nem-bom-hinh-nhen" || id === "thuong-quan-long") return index === 0;
   if (id === "trai-tim-hai-long") return index >= 1;
@@ -5623,7 +5675,7 @@ export function answerGnaw(state: Duel, useSkillNow: boolean): Duel {
 
 export function declareSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, extra: string | null = null): Duel {
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
-  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng diện rộng không dùng để Trả đòn được.");
+  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   const counter = counterStart(state, uid);
   if (counter) {
     const next = declareSkillCore(counter.state, uid, targetUid, skillIndex, extra);
@@ -5677,8 +5729,13 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   if (state.step !== "main" || state.winner) return state;
   const you = state.players[state.turn];
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || mon.dim || held(mon) || hexLocked(mon)) return state;
+  if (!mon || (mon.dim && !(mon.cardId === PERFECT && skillIndex === 0)) || held(mon) || hexLocked(mon)) return state;
   if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
+  if (waitSkill(mon.cardId, skillIndex)) {
+    // What it would refuse when it lands it refuses now (a wrong target, no mana), before it waits in the chain.
+    const dry = useSkillCore(state, uid, targetUid, skillIndex, true, extra ?? "hit", true);
+    if (dry.players === state.players && !dry.plumeAsk) return dry;
+  }
   if (isHell(mon.cardId) && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   if (mon.cardId === "may-nem-bom-hinh-nhen" && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   const foeField = state.players[(1 - state.turn) as Side].field;
@@ -5695,7 +5752,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   if (isHell(mon.cardId) && !aimed) {
     return beginHold(state, { kind: "face", attacker: uid, skill: true }, `${cardOf(mon).name} dùng ${skill} lên người chơi. Có thể chặn`);
   }
-  if (isHarpy(mon.cardId)) {
+  if (isHarpy(mon.cardId) && skillIndex === 1) {
     if ((mon.shed ?? []).includes("charm")) return note(state, "Mê hoặc đã biến mất.");
     if (!aimed) return note(state, "Chọn một quái đối thủ.");
     if (you.orb < harpyKit(mon.cardId).charm) return note(state, "Cần 1 mana.");
@@ -6034,7 +6091,10 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       return note(state, swapRows(player).length < 2 ? "Không đủ quái để hoán đổi." : "Hoán đổi chỉ dùng khi có quái bị nhắm.");
     }
   }
-  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state)) {
+  if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap") {
+    return note(state, "Chỉ Hấp thụ ma pháp hoá giải được kỹ năng này.");
+  }
+  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
   if (!replay && card.id === "virus-an-mon") {
@@ -6316,6 +6376,10 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       const field = owner.field.map((unit) => (unit?.uid === whip.mon.uid ? { ...unit, bolt: undefined } : unit));
       return note(patch({ ...next, step: "main", pending: null, hold: null }, whip.side, { ...owner, field }), "Hấp thụ ma pháp nuốt Roi sấm.", "spell");
     }
+    if (state.pending?.kind === "beam" && slowWaiting(state)) {
+      const caster = ownerCard(state, state.pending.caster);
+      return note({ ...next, step: "main", pending: null, hold: null }, `Hấp thụ ma pháp hoá giải ${castName(caster, state.pending.index)}.`, "spell");
+    }
     if (state.pending?.kind !== "spell") return note(next, "Chỉ hấp thu được lá phép đang thi triển.");
     const eaten = spellCard(state.pending.cardId)?.name ?? state.pending.cardId;
     // Virus ăn mòn taken is gone for good (chủ game 30/10).
@@ -6451,6 +6515,8 @@ export function answerSide(state: Duel): Side | null {
   const flip = (side: Side | null): Side | null => (side === null ? null : ((1 - side) as Side));
   if (pending.kind === "melee" || pending.kind === "gnaw") return sideOf(state.hold?.blocker ?? pending.defender) ?? flip(sideOf(pending.attacker));
   if (pending.kind === "face") return flip(sideOf(pending.attacker)) ?? ((1 - state.turn) as Side);
+  // A skill that waits in the chain is answered by the caster's opponent, whomever it aims at (Lão hoá on an ally too).
+  if (pending.kind === "beam" && slowWaiting(state)) return flip(sideOf(pending.caster));
   if (pending.kind === "beam" || pending.kind === "gnaw-skill") return sideOf(pending.target) ?? flip(sideOf(pending.caster));
   if (pending.kind === "spell") return (1 - pending.owner) as Side;
   if (pending.kind === "lash") return (1 - pending.owner) as Side;
@@ -7365,7 +7431,10 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   const run = (from: Duel) => lavaSkill(from, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
   if (silent) return run(state);
-  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng diện rộng không dùng để Trả đòn được.");
+  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
+  // These wait in the chain now (chủ game 30/10), from any caller.
+  const caster = state.step === "main" ? state.players[state.turn].field.find((unit) => unit?.uid === uid) ?? null : null;
+  if (caster && waitSkill(caster.cardId, skillIndex)) return declareSkill(state, uid, targetUid, skillIndex, extra);
   const counter = counterStart(state, uid);
   if (counter) {
     const next = run(counter.state);

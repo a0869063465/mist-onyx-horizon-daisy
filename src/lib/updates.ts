@@ -784,6 +784,8 @@ export const PENDING_NOTES: string[] = [
   "Dòng chảy vào xấp bài và tay bài ôm theo viền chữ nhật của xấp, không còn vòng tròn.",
   "Phản nguyền chống Virus ăn mòn: dòng trắng bọc icon Virus, icon mờ dần và bị nuốt như Hấp thụ ma pháp.",
   "Chữ mới cho Virus ăn mòn và Phản nguyền.",
+  "Lão hoá, Cường hoá, Dòng chảy thời gian, Nguyền rủa, Thổi bay, Mê hoặc, Dụ dỗ, Gió xoáy giờ là skill chậm: vào hàng chờ, đối thủ hoá giải được bằng Hấp thụ ma pháp, quái không chặn được.",
+  "Vòng quay thời gian chỉ quay khi chuỗi đã xong.",
 ];
 
 function remarkOf(notes: string[]) {

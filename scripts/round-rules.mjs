@@ -472,7 +472,7 @@ test("skill chậm: kỹ năng diện rộng không dùng để Trả đòn", ()
   assert.equal(open.counterAsk?.uid, uid(s, 1, 0));
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 1), true);
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 0), false);
-  assert.match(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 1).live, /diện rộng/);
+  assert.match(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 1).live, /Kỹ năng chậm/);
   assert.notEqual(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0).step, "main", "kỹ năng một mục tiêu vẫn trả đòn được");
 });
 
@@ -603,6 +603,58 @@ test("Phản nguyền: lúc Virus ăn mòn chờ thì chuyển Virus sang ngư�
   assert.match(D.castSpell(swung, 0, null).live, /./);
   const idle = D.castSpell({ ...s }, s.players[0].hand.indexOf("phan-nguyen"), null);
   assert.equal(idle.virus ?? null, null);
+});
+
+test("skill chậm vào hàng chờ: Lão hoá, Cường hoá (vòng quay sau chuỗi), Nguyền rủa, Thổi bay; chỉ Hấp thụ hoá giải, không chặn", () => {
+  const make = (mine, theirs) => {
+    let s = board(mine, theirs);
+    s = { ...s, players: s.players.map((p) => ({ ...p, hand: [], tolls: [] })) };
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, players: s.players.map((p) => ({ ...p, orb: 6 })), turn: 0, round: 0 };
+  };
+  let s = make({ 0: ["phu-thuy-thoi-gian", { hp: 20, maxHp: 20 }] }, { 0: ["khong-lo-mot-mat", { atk: 9, def: 6, mdef: 6, hp: 20, maxHp: 20 }], 1: ["may-chem", { hp: 20, maxHp: 20 }] });
+  const age = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0, true);
+  assert.equal(age.step, "respond", age.live);
+  assert.equal(age.pending?.kind, "beam");
+  assert.equal(at(age, 1, 0).atk, 9, "chưa có tác dụng khi còn chờ");
+  assert.match(D.assignBlock(age, uid(s, 1, 1)).live, /không chặn được/);
+  const aged = D.passResponse(age);
+  assert.ok(at(aged, 1, 0).atk < 9, aged.live);
+  // Hấp thụ ma pháp hoá giải: nothing happens.
+  const withAbsorb = D.testGrant(age, 1, "hap-thu-ma-phap", false);
+  const eaten = D.castSpell(withAbsorb, withAbsorb.players[1].hand.indexOf("hap-thu-ma-phap"), null);
+  assert.equal(eaten.step, "main", eaten.live);
+  assert.equal(at(eaten, 1, 0).atk, 9);
+  // Other answers are refused.
+  const withMirror = D.testGrant(age, 1, "vong-xoay-bao-ho", false);
+  assert.match(D.castSpell(withMirror, withMirror.players[1].hand.indexOf("vong-xoay-bao-ho"), null).live, /Hấp thụ ma pháp/);
+  // Cường hoá: the wheel opens only once the chain is over, then lands.
+  const boost = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 1, true);
+  assert.equal(boost.step, "respond", boost.live);
+  assert.equal(boost.wheel ?? null, null, "chưa quay khi còn chờ");
+  const opened = D.passResponse(boost);
+  assert.equal(opened.wheel?.sector, null, opened.live);
+  assert.equal(at(opened, 1, 0).hp, 20);
+  const pulled = D.pullWheel(opened);
+  assert.notEqual(pulled.wheel?.sector, null);
+  const landed = D.settleWheel(pulled);
+  assert.equal(landed.wheel ?? null, null);
+  const hit = pulled.wheel.sector % 3 === 0;
+  if (hit) assert.ok(!at(landed, 1, 0), landed.live);
+  else assert.ok(!at(landed, 0, 0), "trượt thì phù thuỷ tự huỷ");
+  // Mộ voi ma mút: Nguyền rủa waits too.
+  s = make({ 0: ["mo-voi-ma-mut", { hp: 6, maxHp: 6 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, mdef: 0 }] });
+  const curse = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0, true);
+  assert.equal(curse.step, "respond", curse.live);
+  assert.equal(at(curse, 1, 0).hp, 20);
+  assert.ok(at(D.passResponse(curse), 1, 0).hp < 20);
+  // Thổi bay (Mỹ điểu nhân) waits; then a spell leaves the foe's hand.
+  s = make({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 1, "vong-xoay-bao-ho", false);
+  const gust = D.useSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(gust.step, "respond", gust.live);
+  assert.equal(gust.players[1].hand.length, 1);
+  assert.equal(D.passResponse(gust).players[1].hand.length, 0);
 });
 
 let failed = 0;
