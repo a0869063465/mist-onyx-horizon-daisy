@@ -23,7 +23,7 @@ type Rgb = [number, number, number];
  *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
  *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
 const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
-  foe: { mid: [222, 82, 26], core: [255, 216, 178], gain: 1.7, bank: [0.34, 0.75, 0.14] },
+  foe: { mid: [222, 82, 26], core: [255, 216, 178], gain: 1.2, bank: [0.34, 0.75, 0.14] },
   you: { mid: [44, 128, 255], core: [210, 234, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
