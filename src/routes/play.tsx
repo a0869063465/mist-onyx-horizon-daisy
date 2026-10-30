@@ -4321,6 +4321,19 @@ function PlayPage() {
     const dy = lunge ? (lunge.y * box.h) / 100 : 0;
     return { x: box.x + box.w / 2 + dx, y: box.y + box.h / 2 + dy, w: box.w, h: box.h, top: row === 1, dx, dy };
   };
+  /** Whether no card stands right beside a monster's card in its row, to its left (-1) or right (+1) on the screen. */
+  const besideFree = (uid: string, dir: -1 | 1) => {
+    const seat = seatOfUid(uid);
+    if (!seat) return true;
+    const boxes = SLOT_BOX[screenSide(seat.side, viewer)];
+    const own = boxes[seat.index];
+    const row = seat.index < 3 ? [0, 1, 2] : [3, 4, 5];
+    return !row.some((index) => {
+      if (index === seat.index || !duel.players[seat.side].field[index]) return false;
+      const gap = boxes[index].x - own.x;
+      return Math.sign(gap) === dir && Math.abs(gap) < own.w * 1.6;
+    });
+  };
   /** Dòng chảy đợt 2: a side's front row, in % of the board: the edge facing the middle and where a spread splits. */
   const frontOf = (side: Side) => {
     const row = screenSide(side, viewer);
@@ -5055,6 +5068,7 @@ function PlayPage() {
             aimless={peekIcons?.aimless}
             forkOf={forkFor}
             throwFrom={throwFrom}
+            besideFree={besideFree}
           />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (

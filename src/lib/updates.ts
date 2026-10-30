@@ -764,6 +764,7 @@ export const PENDING_NOTES: string[] = [
   "Phục kích giờ chặn kỹ năng gây sát thương nhắm vào bạn (không còn chặn đòn đánh thường): dòng hồng tới quái đồng minh bạn chọn, quái đó hiện icon tấn công và dòng đỏ đánh trả kẻ dùng kỹ năng (+2 công, không bị phản đòn).",
   "Phục kích giờ chờ trong chuỗi: kỹ năng dội vào icon Phục kích ngay trên đường vào (kể cả kỹ năng nhiều mục tiêu), dòng hồng tới đồng minh, đồng minh lao lên với icon tấn công và dòng đỏ vào kẻ dùng kỹ năng. Bấm tick để xác nhận; đối thủ bấm OK thì mới chặn và đánh trả.",
   "Chọn mục tiêu cho Phục kích như LoR: dùng lá (bấm nút dùng hoặc kéo lên sân) thì icon Phục kích hiện giữa sân kèm dòng mô tả, các đồng minh ra đòn được sáng viền, nút OK ghi \"Chọn mục tiêu\"; bấm đồng minh là chọn, nút ghi \"Xác nhận\". Bấm X đỏ hoặc kéo icon về tay để thôi dùng.",
+  "Phục kích: dòng đỏ đồng minh đánh trả đi vòng tránh icon kỹ năng của kẻ ra đòn rồi chạm cạnh bên lá kẻ đó, như dòng phản về của Lá chắn phản đòn. Dòng hồng tới đồng minh chạm cạnh bên hoặc góc gần lá, không đè lên icon tấn công.",
 ];
 
 function remarkOf(notes: string[]) {

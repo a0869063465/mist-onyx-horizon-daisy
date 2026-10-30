@@ -172,6 +172,17 @@ function swingOf(from: BoardPt, to: BoardPt): number {
   return Math.sign((-dy / len) * (45 - mx) + (dx / len) * (80 - my)) || 1;
 }
 
+/** Which way a flow back swings to keep clear of an icon near its way (+1 to its left-hand side): away from it, or
+ *  toward the middle of the board when the icon is right on its way. */
+function clearOf(from: BoardPt, to: BoardPt, icon: BoardPt | undefined): number {
+  if (!icon) return swingOf(from, to);
+  const dx = (to.x - from.x) * 0.9;
+  const dy = (to.y - from.y) * 1.6;
+  const len = Math.hypot(dx, dy) || 1;
+  const side = (-dy / len) * (icon.x - (from.x + to.x) / 2) * 0.9 + (dx / len) * (icon.y - (from.y + to.y) / 2) * 1.6;
+  return Math.abs(side) < 1 ? swingOf(from, to) : -Math.sign(side);
+}
+
 /**
  * Icon phản ứng (chủ game 23/10, in place of the fixed reaction line): each action of the wait shows as an icon by
  * the card that makes it (a spell on its side's half, by what it answers), with smoke flowing to what it acts on. A
@@ -196,6 +207,7 @@ export function ReactionLine({
   aimless,
   forkOf,
   throwFrom,
+  besideFree,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
@@ -224,6 +236,8 @@ export function ReactionLine({
   forkOf: (orb: ChainOrb, from: BoardPt) => ForkSpot | null;
   /** Where a spell that stops a flow flies in from: its owner's hand. */
   throwFrom: (side: Side, wall?: string | null) => BoardPt;
+  /** Whether no card stands right beside a monster's card in its row, to its left (-1) or right (+1) on the screen. */
+  besideFree: (uid: string, dir: -1 | 1) => boolean;
 }) {
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
@@ -289,7 +303,7 @@ export function ReactionLine({
   // ma). The way back swings round the side with more room, toward the middle of the board, and lands on that side of
   // its card; the way in bows a little the other way. A thrown skill's way back runs on once its way in has reached
   // the icon.
-  const backs = new Map<string, { swing: number; after?: string; wide: boolean }>();
+  const backs = new Map<string, { swing: number; after?: string; wide: boolean; edge?: number }>();
   const arcs = new Map<string, number>();
   for (const orb of orbs) {
     const thrown = orb.to.find((link) => link.back && link.from && "orb" in link.from);
@@ -314,6 +328,20 @@ export function ReactionLine({
       backs.set(keyOf(orb, back), { swing, wide: false });
       const wayIn = stopped.to.find((link) => link.dam && "orb" in link.end && link.end.orb === orb.id);
       if (wayIn) arcs.set(keyOf(stopped, wayIn), swing * 0.35);
+    }
+    // Phục kích's ally striking back at the one whose skill it stopped (chủ game 30/10): as a flow thrown back, it
+    // swings round clear of that skill's icon and lands on the side of the caster's card, not under the icon.
+    const strike = orb.sent ? orb.to.find((link) => !link.from && "uid" in link.end) : undefined;
+    const strikeFrom = strike ? spots.get(orb.id) : undefined;
+    const strikeTo = strike && strikeFrom ? endOf(strike.end, strikeFrom) : null;
+    if (strike && strikeFrom && strikeTo && "uid" in strike.end) {
+      const caster = strike.end.uid;
+      const skill = orbs.find((other) => other.kind === "skill" && other.source === caster);
+      // It lands on the side of the card facing the ally, however long and steep its way.
+      const box = strikeTo.moat?.kind === "box" ? strikeTo.moat : null;
+      const edge = box ? (strikeFrom.x >= box.x ? 1 : -1) : undefined;
+      const lands = box && edge ? { x: box.x + (edge * box.w) / 2, y: box.y } : strikeTo;
+      backs.set(keyOf(orb, strike), { swing: clearOf(strikeFrom, lands, skill ? spots.get(skill.id) : undefined), wide: true, edge });
     }
   }
   for (const orb of orbs) {
@@ -365,6 +393,17 @@ export function ReactionLine({
         route = (wall && cutAt(route, wall, ICON * 0.45 * 0.95)) || undefined;
       }
       if (route) land = { ...land, x: route.entry.x, y: route.entry.y, into: route.into };
+      // Phục kích's pink light to the ally it sends (chủ game 30/10) keeps off the ally's attack icon in the middle of
+      // its near edge: into the card's side facing the spell, a third of the way from the near edge, slanting in, or
+      // into the near corner when another card stands beside it there.
+      if (orb.spell === "phuc-kich" && "uid" in link.end && land.moat?.kind === "box") {
+        const box = land.moat;
+        const dir = start.x >= box.x ? 1 : -1;
+        const near = start.y >= box.y ? 1 : -1;
+        land = besideFree(link.end.uid, dir)
+          ? { ...land, x: box.x + (dir * box.w) / 2, y: box.y + (near * box.h) / 2 - (near * box.h) / 3, into: { x: -dir * 0.82, y: -near * 0.57 } }
+          : { ...land, x: box.x + (dir * box.w) / 2, y: box.y + (near * box.h) / 2, into: { x: -dir * 0.71, y: -near * 0.71 } };
+      }
       // The way back lands on the side of its target it swings round to, not under the icon it left from.
       if (way && land.moat?.kind === "box") {
         const dx = (land.x - start.x) * 0.9;
@@ -373,8 +412,9 @@ export function ReactionLine({
         const nx = (-dy / len) * way.swing;
         const ny = (dx / len) * way.swing;
         const box = land.moat;
-        land =
-          Math.abs(nx) >= Math.abs(ny)
+        land = way.edge
+          ? { ...land, x: box.x + (way.edge * box.w) / 2, y: box.y, into: { x: -way.edge, y: 0 } }
+          : Math.abs(nx) >= Math.abs(ny)
             ? { ...land, x: box.x + (Math.sign(nx) * box.w) / 2, y: box.y, into: { x: -Math.sign(nx), y: 0 } }
             : { ...land, x: box.x, y: box.y + (Math.sign(ny) * box.h) / 2, into: { x: 0, y: -Math.sign(ny) } };
       }

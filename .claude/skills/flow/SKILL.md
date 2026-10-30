@@ -28,6 +28,15 @@ Dòng một mục tiêu (vào giữa mép lá), dòng phản về, dòng hồng 
 - Các nhánh không gối lên nhau: nhánh vào lá ngay trên điểm tách nghiêng về phía không có nhánh khác.
 - Icon chặn từng nhánh đứng ở 70% đường nhánh tính từ điểm tách (`COVER_ALONG`); quái chặn trượt tới đó, được đè lá khác (chủ game chọn B 29/10).
 
+## Dòng phản về / dòng đánh trả (chủ game chốt khi sửa Lá chắn phản đòn 29/10; áp cho Phục kích 30/10)
+Dùng cho mọi dòng đi ngược về kẻ ra đòn: skill bị phản (Lá chắn phản đòn, Giáp cơ khí), dòng hồng Gương phòng hộ / Vòng nguyền rủa ác ma về kẻ đánh, dòng đỏ đồng minh Phục kích đánh trả kẻ dùng skill, và phép/skill phản đòn thêm sau.
+1. KHÔNG đi thẳng vào, KHÔNG lòn dưới icon skill/đòn đứng trước lá kẻ ra đòn. Vòng sang một bên, né đường tới.
+2. Đường tới và đường về chạy ngược chiều, mỗi đường vòng về bên trái của chính nó: đường về cung rộng (`arc` = swing × 1,1), đường tới cong nhẹ ngược lại (swing × 0,35). Bên vòng: bên rộng hơn, về phía giữa bàn (`swingOf`); có icon nằm gần đường thì vòng về phía xa icon đó (`clearOf`).
+3. Đáp vào CẠNH BÊN lá đích (phía nó vòng tới / phía đồng minh), không đáp giữa mép gần dưới icon.
+4. Bỏ uốn lượn, đầu không nhỏ. Dòng sát thương (đỏ, skill bị phản): đuôi to như skill sát thương. Dòng hồng không sát thương (Gương, Vòng nguyền): cung còn 1/3, đuôi loe một nửa.
+5. Đường về chờ đường tới chạm icon rồi mới chạy (`after`).
+Code: reaction-line.tsx, vòng dựng `backs`/`arcs` và đoạn "The way back lands on the side".
+
 ## Cách làm với chủ game
 - Mỗi lần 1 trường hợp, gửi đúng 1 ảnh, chờ xem. Chưa rõ thì đưa 2–3 cách (A/B/C).
 - Chủ game báo chỗ xấu thì sửa cả nhóm cùng đặc điểm, không vá riêng.
