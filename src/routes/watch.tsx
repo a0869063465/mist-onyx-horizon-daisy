@@ -7,8 +7,8 @@ import { DECK_NOTES, FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "@/l
 import { clearHabits, loadHabits, watchLines } from "@/lib/habits";
 import { diagnoseHistory, exportStoredHistory, matchHistoryProblem, type HistoryDiag, type HistoryPack } from "@/lib/match-history";
 import { loadStrategies, saveStrategies, sortCards, sortStrategies, type Strategy } from "@/lib/strategies";
-import { plainCode, redeemCode, useAppMode } from "@/lib/app-mode";
-import { addStars } from "@/lib/shop";
+import { useAppMode } from "@/lib/app-mode";
+import { CodeEntry } from "@/components/code-entry";
 import { tr, useLang } from "@/lib/i18n";
 import { UPDATE_RELEASES } from "@/lib/updates";
 
@@ -645,60 +645,6 @@ function Updates({ onBack }: { onBack: () => void }) {
           <p>{tr("Chưa có bản cập nhật.")}</p>
         )}
       </section>
-    </main>
-  );
-}
-
-/** Nhập mã: a box for gift codes; for now its codes switch between the publisher and the guest view. */
-function CodeEntry({ onBack }: { onBack: () => void }) {
-  const [text, setText] = useState("");
-  const [note, setNote] = useState("");
-  function submit() {
-    // S300: 300 stars, as many times as wanted while testing (owner, 19/10).
-    if (plainCode(text) === "S300") {
-      addStars(300);
-      setText("");
-      setNote("Đã nhận 300 sao.");
-      return;
-    }
-    const mode = redeemCode(text);
-    if (!mode) {
-      setNote("Mã không đúng.");
-      return;
-    }
-    setText("");
-    setNote(mode === "guest" ? "Đã chuyển sang chế độ khách." : "Đã chuyển sang chế độ nhà phát hành.");
-  }
-  return (
-    <main className="watch menu-page">
-      <button type="button" className="watch-back" onClick={onBack}>
-        {tr("Quay lại")}
-      </button>
-      <h1>{tr("Nhập mã")}</h1>
-      <form
-        className="watch-card code-entry"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-      >
-        <input
-          className="tune-input"
-          value={text}
-          autoCapitalize="characters"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label={tr("Nhập mã")}
-          onChange={(event) => {
-            setText(event.target.value.toUpperCase());
-            setNote("");
-          }}
-        />
-        <button type="submit" className="act press" disabled={!text.trim()}>
-          {tr("Xác nhận")}
-        </button>
-        {note ? <p className="code-note">{tr(note)}</p> : null}
-      </form>
     </main>
   );
 }

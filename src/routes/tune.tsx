@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CodeEntry } from "@/components/code-entry";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyEdit } from "@/components/game/copy-text";
@@ -46,7 +47,7 @@ import { DEFAULT_BOARD_ART, ENV_BOARDS } from "@/lib/env-boards";
 
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
-type Screen = "menu" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
+type Screen = "menu" | "code" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
 type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | ActKey | FaceKey;
 type SpotPick = "stack" | "env" | "envFoe" | ActKey | FaceKey;
 const SPOT_KEYS = new Set<string>(["stack", "env", "envFoe", ...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
@@ -61,6 +62,7 @@ function clamp(value: number, min: number, max: number) {
 function TunePage() {
   const [screen, setScreen] = useState<Screen>("menu");
   if (screen === "menu") return <Menu onPick={setScreen} />;
+  if (screen === "code") return <CodeEntry onBack={() => setScreen("menu")} />;
   if (screen === "board") return <BoardTune onBack={() => setScreen("menu")} />;
   if (screen === "monster") return <SpotTune kind="monster" onBack={() => setScreen("menu")} />;
   if (screen === "spell") return <SpotTune kind="spell" onBack={() => setScreen("menu")} />;
@@ -124,7 +126,7 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
       <Link to="/" className="tuner-back">
         {tr("Về menu")}
       </Link>
-      <h1>{tr("Tuỳ chỉnh")}</h1>
+      <h1>{tr("Cài đặt")}</h1>
       <p className="tuner-note">{tr("Ngôn ngữ")}</p>
       <div className="pad2">
         <button type="button" className={`tuner-item${language === "vi" ? " on" : ""}`} onClick={() => setLang("vi")}>
@@ -155,6 +157,10 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
       )}
       <button type="button" className="tuner-save" onClick={() => onPick("sound")}>
         {tr("Âm thanh")}
+      </button>
+      {/* Nhập mã moved here from Thông tin (chủ game 31/10). */}
+      <button type="button" className="tuner-save alt" onClick={() => onPick("code")}>
+        {tr("Nhập mã")}
       </button>
       {guest ? null : (
         <>

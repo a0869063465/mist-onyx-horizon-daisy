@@ -796,6 +796,7 @@ export const PENDING_NOTES: string[] = [
   "Kéo quái từ tay: nhích lên xuống là ô sáng, thả là triệu hồi, không cần thả đúng ô. Kéo quái đánh: mục tiêu gần ngón sáng, thả là chọn.",
   "Dấu X trên con mắt huỷ được thao tác đang chọn (tấn công, skill, chọn mục tiêu).",
   "Nút Tấn công và nút skill: ấn giữ rồi trượt, mục tiêu gần ngón sáng, thả là chọn.",
+  "Menu chính mới: thẻ hai bên, hồ sơ và nút Chơi ở dưới, bánh răng Cài đặt có Nhập mã; bỏ Góp ý và Thông tin.",
 ];
 
 function remarkOf(notes: string[]) {

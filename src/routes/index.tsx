@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { tr, useLang } from "@/lib/i18n";
-import { listNotes, sendNote, type Note } from "@/lib/notes";
+import { artSrc } from "@/lib/catalog";
+import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
 
@@ -18,73 +19,32 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+type Tab = { key: string; label: string; icon: ReactNode; to?: "/shop" | "/collection"; go?: () => void };
+
 function Home() {
   const [wins, setWins] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [fail, setFail] = useState(false);
-  const [lock, setLock] = useState(false);
-  const [code, setCode] = useState("");
-  const [inbox, setInbox] = useState<Note[] | null>(null);
   const [missions, setMissions] = useState(false);
-  const held = useRef(false);
-  const timer = useRef(0);
+  const [face, setFace] = useState<string | null>(null);
   useLang();
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
+    const book = loadBook();
+    const entry = book.decks.find((row) => row.n === book.active) ?? book.decks[0] ?? null;
+    setFace(entry ? coverOf(entry) : null);
   }, []);
-  const close = () => {
-    setOpen(false);
-    setTitle("");
-    setBody("");
-    setFail(false);
-  };
-  const closeLock = () => {
-    setLock(false);
-    setCode("");
-  };
-  const arm = () => {
-    held.current = false;
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      held.current = true;
-      close();
-      setSent(false);
-      setInbox(null);
-      setLock(true);
-    }, 420);
-  };
-  const drop = () => {
-    window.clearTimeout(timer.current);
-  };
-  const submit = async () => {
-    if (busy) return;
-    if (!title.trim() && !body.trim()) return;
-    setBusy(true);
-    setFail(false);
-    try {
-      const result = await sendNote({ data: { title, body } });
-      if (!result.ok) {
-        setFail(true);
-        return;
-      }
-      close();
-      setSent(true);
-    } catch {
-      setFail(true);
-    } finally {
-      setBusy(false);
-    }
-  };
-  const unlock = async () => {
-    if (code !== "3725") return;
-    const notes = await listNotes({ data: { password: code } }).catch(() => [] as Note[]);
-    closeLock();
-    setInbox(notes);
-  };
+  // Menu chính (chủ game 31/10): 4 thẻ bình hành mỗi bên, lú nửa ra từ mép màn hình; thẻ chưa có tính năng thì khoá.
+  const left: Tab[] = [
+    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, to: "/shop" },
+    { key: "events", label: "Sự kiện", icon: <FlagIcon /> },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, go: () => setMissions(true) },
+    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, to: "/collection" },
+  ];
+  const right: Tab[] = [
+    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon /> },
+    { key: "news", label: "Tin tức", icon: <NewsIcon /> },
+    { key: "friends", label: "Bạn bè", icon: <FriendsIcon /> },
+    { key: "mail", label: "Thư", icon: <MailIcon /> },
+  ];
   return (
     <main className="home">
       <div className="home-stage">
@@ -112,166 +72,149 @@ function Home() {
             {tr("Thành đã phá")}: <strong>{wins}</strong>
           </p>
         ) : null}
-        <button
-          type="button"
-          className="mail-open"
-          data-sfx
-          onContextMenu={(event) => event.preventDefault()}
-          onPointerDown={() => {
-            playUi("soft");
-            arm();
-          }}
-          onPointerUp={drop}
-          onPointerLeave={drop}
-          onPointerCancel={drop}
-          onClick={() => {
-            if (held.current) return;
-            setSent(false);
-            closeLock();
-            setInbox(null);
-            setOpen(true);
-          }}
-        >
+        {/* Bánh răng Cài đặt (chủ game 31/10): mọi tuỳ chỉnh và Nhập mã. */}
+        <Link to="/tune" className="home-gear" data-sfx onPointerDown={() => playUi("soft")} aria-label={tr("Cài đặt")}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="5" width="18" height="14" rx="2" />
-            <path d="M4 7l8 6 8-6" />
+            <circle cx="12" cy="12" r="3.2" />
+            <path d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1L5.3 5.3" />
+            <circle cx="12" cy="12" r="6.6" />
           </svg>
-          Góp ý
-        </button>
-        {sent ? <p className="mail-sent">Đã gửi</p> : null}
-        {open ? (
-          <form
-            className="mail-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
-          >
-            <label>
-              Tên vấn đề hoặc lá bài
-              <input value={title} onChange={(event) => setTitle(event.target.value)} />
-            </label>
-            <label>
-              Chi tiết
-              <textarea value={body} onChange={(event) => setBody(event.target.value)} />
-            </label>
-            {fail ? <p>Chưa gửi được.</p> : null}
-            <div>
-              <button type="submit" disabled={busy}>
-                OK
-              </button>
-              <button type="button" onClick={close}>
-                Huỷ
-              </button>
-            </div>
-          </form>
-        ) : null}
-        {lock ? (
-          <form
-            className="mail-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void unlock();
-            }}
-          >
-            <label>
-              Mật khẩu
-              <input
-                value={code}
-                inputMode="numeric"
-                type="password"
-                onChange={(event) => setCode(event.target.value)}
-              />
-            </label>
-            <div>
-              <button type="submit">OK</button>
-              <button type="button" onClick={closeLock}>
-                Huỷ
-              </button>
-            </div>
-          </form>
-        ) : null}
-        {inbox ? (
-          <section className="mail-form mail-box">
-            <h2>Hộp thư</h2>
-            {inbox.length === 0 ? <p>Chưa có góp ý.</p> : null}
-            <ul>
-              {inbox.map((note) => (
-                <li key={note.id}>
-                  <strong>{note.title || "Không tên"}</strong>
-                  <span>{note.created_at.slice(0, 16).replace("T", " ")}</span>
-                  <p>{note.body}</p>
-                </li>
-              ))}
-            </ul>
-            <div>
-              <button type="button" onClick={() => setInbox(null)}>
-                Huỷ
-              </button>
-            </div>
-          </section>
-        ) : null}
-        <nav className="home-menu" aria-label="Menu">
-          <Link
-            to="/modes"
-            className="home-play"
-            data-sfx
-            onPointerDown={() => playUi("confirm")}
-            aria-label="Vào đấu trường"
-          >
+        </Link>
+        <nav className="home-tabs is-left" aria-label="Menu trái">
+          {left.map((tab, index) => (
+            <SideTab key={tab.key} tab={tab} side="left" index={index} />
+          ))}
+        </nav>
+        <nav className="home-tabs is-right" aria-label="Menu phải">
+          {right.map((tab, index) => (
+            <SideTab key={tab.key} tab={tab} side="right" index={index} />
+          ))}
+        </nav>
+        <div className="home-base">
+          {/* Hồ sơ: khung tạm, chưa có luật cấp và hạng (chủ game 31/10). */}
+          <div className="home-profile">
+            <span className="home-avatar">{face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}</span>
+            <span className="home-ranks">
+              <b>{tr("Cấp")} 1</b>
+              <i>{tr("Hạng")} —</i>
+            </span>
+          </div>
+          <Link to="/modes" className="home-play" data-sfx onPointerDown={() => playUi("confirm")} aria-label="Vào đấu trường">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 4l9 9M4 4h4l9 9M4 4v4l9 9M20 4l-9 9M20 4h-4M20 4v4M14 15l3 3M10 15l-3 3M15 19l4-4M9 19l-4-4" />
             </svg>
             <span>{tr("Chơi")}</span>
           </Link>
-          {/* Where the deck builder button was (owner, 18/10). Open to everyone (owner, 19/10). */}
-          <Link to="/shop" className="home-btn" data-sfx onPointerDown={() => playUi("select")}>
-            <ShopIcon />
-            <span>{tr("Cửa hàng")}</span>
-          </Link>
-          {/* Bộ sưu tập under the shop (owner, 19/10), open since 21/10: Kho bài and Album sưu tập. */}
-          <Link
-            to="/collection"
-            className="home-btn"
-            data-sfx
-            onPointerDown={() => playUi("select")}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="8" y="4" width="11" height="15" rx="1.8" />
-              <path d="M5.5 7.5v11A2.5 2.5 0 0 0 8 21h8.5" />
-              <path d="M11.5 9.5l2 2.5 2-2.5M13.5 12v3" />
-            </svg>
-            <span>{tr("Bộ sưu tập")}</span>
-          </Link>
-          {/* Nhiệm vụ (chủ game 22/10): today's missions, the same rows as after a match. */}
-          <button type="button" className="home-btn" data-sfx onPointerDown={() => playUi("select")} onClick={() => setMissions(true)}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 3.5h10.5a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-3 0v-1.5H4.5V5.5a2 2 0 0 1 2-2" />
-              <path d="M16.5 17.5V19a1.5 1.5 0 0 0 1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5v-1.5M8 8l1.2 1.2L11.5 7M8 12.5l1.2 1.2 2.3-2.2M13.5 8.2h3M13.5 12.7h3" />
-            </svg>
-            <span>{tr("Nhiệm vụ")}</span>
-          </button>
-          <div className="home-row">
-            <Link to="/tune" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
-                <circle cx="16" cy="7" r="2" />
-                <circle cx="8" cy="17" r="2" />
-              </svg>
-              <span>{tr("Tuỳ chỉnh bàn và lá")}</span>
-            </Link>
-            <Link to="/watch" className="home-chip" data-sfx onPointerDown={() => playUi("soft")}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 11v6M12 7.5v.5" />
-              </svg>
-              <span>{tr("Thông tin")}</span>
-            </Link>
-          </div>
-        </nav>
+        </div>
       </div>
       {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
     </main>
+  );
+}
+
+function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index: number }) {
+  const shut = !tab.to && !tab.go;
+  const inner = (
+    <>
+      {tab.icon}
+      <span>{tr(tab.label)}</span>
+      {shut ? <LockIcon /> : null}
+    </>
+  );
+  const className = `home-tab is-${side}${shut ? " is-shut" : ""}`;
+  const style = { animationDelay: `${0.3 + index * 0.08}s` };
+  if (tab.to) {
+    return (
+      <Link to={tab.to} className={className} style={style} data-sfx onPointerDown={() => playUi("select")}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={className}
+      style={style}
+      disabled={shut}
+      aria-disabled={shut}
+      data-sfx={shut ? undefined : true}
+      onPointerDown={shut ? undefined : () => playUi("select")}
+      onClick={tab.go}
+    >
+      {inner}
+    </button>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function FlagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+    </svg>
+  );
+}
+
+function ScrollIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 3.5h10.5a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-3 0v-1.5H4.5V5.5a2 2 0 0 1 2-2" />
+      <path d="M8 8l1.2 1.2L11.5 7M8 12.5l1.2 1.2 2.3-2.2M13.5 8.2h3M13.5 12.7h3" />
+    </svg>
+  );
+}
+
+function AlbumIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="8" y="4" width="11" height="15" rx="1.8" />
+      <path d="M5.5 7.5v11A2.5 2.5 0 0 0 8 21h8.5" />
+    </svg>
+  );
+}
+
+function GiftIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="9" width="16" height="11" rx="1.5" />
+      <path d="M3 9h18M12 9v11M12 9c-1.5-4-6-4-5 0M12 9c1.5-4 6-4 5 0" />
+    </svg>
+  );
+}
+
+function NewsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M8 9h8M8 13h8M8 17h5" />
+    </svg>
+  );
+}
+
+function FriendsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="9" cy="8.5" r="3" />
+      <circle cx="16.5" cy="9.5" r="2.4" />
+      <path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15a4.5 4.5 0 0 1 6 4" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M4 7l8 6 8-6" />
+    </svg>
   );
 }
 
