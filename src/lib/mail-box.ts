@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MAILS, MAIL_DAYS, type Mail } from "@/lib/mails";
+import { MAILS, MAIL_DAYS, type Mail, type MailKind } from "@/lib/mails";
 import { addOwned, addStars, ownedIds } from "@/lib/shop";
 
 /**
@@ -43,25 +43,42 @@ export function syncMail(now = Date.now()) {
   if (changed) save(box);
 }
 
-export type MailRow = { mail: Mail; got: number; read: boolean; claimed: boolean; left: number; owing: boolean };
+/** The tab a letter is in: as the owner set it, else gift if it carries a gift, else plain. */
+export function kindOf(mail: Mail): MailKind {
+  return mail.kind ?? ((mail.gifts?.length ?? 0) > 0 ? "gift" : "mail");
+}
 
-export function mailRows(now = Date.now()): MailRow[] {
+export type MailRow = { mail: Mail; kind: MailKind; got: number; read: boolean; claimed: boolean; left: number; owing: boolean };
+
+/** The letters of this phone, newest first (news by its own day). Plain letters go after their days; news never does. */
+export function mailRows(now = Date.now(), kind?: MailKind): MailRow[] {
   const box = load();
   const rows: Array<MailRow & { index: number }> = [];
   MAILS.forEach((mail, index) => {
     const entry = box[mail.id];
     if (!entry || entry.gone) return;
-    const ends = entry.got + (mail.days ?? MAIL_DAYS) * DAY;
-    if (now >= ends) return;
-    rows.push({ mail, index, got: entry.got, read: entry.read, claimed: entry.claimed, left: Math.ceil((ends - now) / DAY), owing: (mail.gifts?.length ?? 0) > 0 && !entry.claimed });
+    const mine = kindOf(mail);
+    if (kind && mine !== kind) return;
+    const days = mail.days ?? MAIL_DAYS;
+    const ends = entry.got + days * DAY;
+    if (mine !== "news" && now >= ends) return;
+    rows.push({ mail, index, kind: mine, got: entry.got, read: entry.read, claimed: entry.claimed, left: mine === "news" ? 0 : Math.ceil((ends - now) / DAY), owing: (mail.gifts?.length ?? 0) > 0 && !entry.claimed });
   });
-  rows.sort((a, b) => b.got - a.got || b.index - a.index);
+  const when = (row: MailRow) => (row.kind === "news" && row.mail.date ? Date.parse(row.mail.date) || row.got : row.got);
+  rows.sort((a, b) => when(b) - when(a) || b.index - a.index);
   return rows;
 }
 
-/** Letters not read, or with a gift not claimed: the red dot on the menu. */
-export function unseenCount(now = Date.now()): number {
-  return mailRows(now).filter((row) => !row.read || row.owing).length;
+/** Letters not read, or with a gift not claimed: the red dot on the menu and on a tab. */
+export function unseenCount(now = Date.now(), kind?: MailKind): number {
+  return mailRows(now, kind).filter((row) => !row.read || row.owing).length;
+}
+
+/** The count for each tab. */
+export function unseenByKind(rows: MailRow[]): Record<MailKind, number> {
+  const out: Record<MailKind, number> = { mail: 0, warn: 0, gift: 0, news: 0 };
+  for (const row of rows) if (!row.read || row.owing) out[row.kind] += 1;
+  return out;
 }
 
 export function markRead(id: string) {
@@ -104,8 +121,8 @@ export function claimMail(id: string): Claimed | null {
   return got;
 }
 
-export function claimAll(): Claimed | null {
-  const rows = mailRows().filter((row) => row.owing);
+export function claimAll(kind?: MailKind): Claimed | null {
+  const rows = mailRows(Date.now(), kind).filter((row) => row.owing);
   if (rows.length === 0) return null;
   const box = load();
   const got: Claimed = { stars: 0, refund: 0, cards: [] };
@@ -117,19 +134,19 @@ export function claimAll(): Claimed | null {
 /** A letter with a gift not claimed is not deleted (a slip of the finger would lose it). */
 export function deleteMail(id: string): boolean {
   const row = mailRows().find((one) => one.mail.id === id);
-  if (!row || row.owing) return false;
+  if (!row || row.owing || row.kind === "news") return false;
   const box = load();
   box[id].gone = true;
   save(box);
   return true;
 }
 
-export function deletableCount(): number {
-  return mailRows().filter((row) => row.read && !row.owing).length;
+export function deletableCount(kind?: MailKind): number {
+  return mailRows(Date.now(), kind).filter((row) => row.kind !== "news" && row.read && !row.owing).length;
 }
 
-export function deleteRead(): number {
-  const rows = mailRows().filter((row) => row.read && !row.owing);
+export function deleteRead(kind?: MailKind): number {
+  const rows = mailRows(Date.now(), kind).filter((row) => row.kind !== "news" && row.read && !row.owing);
   if (rows.length === 0) return 0;
   const box = load();
   for (const row of rows) box[row.mail.id].gone = true;
@@ -162,6 +179,15 @@ export function useMail(): MailRow[] {
     };
   }, []);
   return rows;
+}
+
+/** The day of a letter: news shows the day the owner set, the others the day this phone got them. */
+export function mailDay(row: MailRow): string {
+  if (row.kind === "news" && row.mail.date) {
+    const [year, month, day] = row.mail.date.split("-");
+    if (year && month && day) return `${day}/${month}/${year}`;
+  }
+  return formatDay(row.got);
 }
 
 export function formatDay(ms: number): string {

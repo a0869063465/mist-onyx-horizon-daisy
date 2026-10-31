@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail"; go?: () => void; dot?: boolean };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail"; search?: { tab: "news" }; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
@@ -44,9 +44,9 @@ function Home() {
   ];
   const right: Tab[] = [
     { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
-    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg" },
+    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg", to: "/mail", search: { tab: "news" }, dot: mails.some((row) => row.kind === "news" && !row.read) },
     { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg" },
-    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
+    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => row.kind !== "news" && (!row.read || row.owing)) },
   ];
   return (
     <main className="home">
@@ -137,7 +137,7 @@ function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index
   const style = { animationDelay: `${0.3 + index * 0.08}s` };
   if (tab.to) {
     return (
-      <Link to={tab.to} className={className} style={style} data-sfx onPointerDown={() => playUi("select")}>
+      <Link to={tab.to} search={tab.search} className={className} style={style} data-sfx onPointerDown={() => playUi("select")}>
         {inner}
       </Link>
     );
