@@ -1105,32 +1105,17 @@
 .home-tab.is-right .home-tab-art {
   clip-path: polygon(2% 8%, 81% 8%, 98% 92%, 19% 92%);
 }
-.home-tab.is-shut .home-tab-art,
-.home-tab.is-shut .home-tab-pop {
+.home-tab.is-shut .home-tab-art {
   filter: grayscale(1) brightness(0.8);
-}
-.home-tab-pop {
-  position: absolute;
-  bottom: 0.45rem;
-  height: 4.6rem;
-  width: 3.2rem;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.6));
-}
-.home-tab.is-left .home-tab-pop {
-  right: 0.7rem;
-}
-.home-tab.is-right .home-tab-pop {
-  left: 0.7rem;
 }
 .home-tab-label {
   position: absolute;
-  bottom: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  max-width: 4rem;
+  max-width: 5.6rem;
   font-size: 0.76rem;
   font-weight: 900;
   line-height: 1.05;
@@ -1138,12 +1123,12 @@
   text-shadow: 0 1px 3px #000, 0 0 6px rgb(0 0 0 / 0.8);
 }
 .home-tab.is-left .home-tab-label {
-  right: 4.2rem;
+  right: 1.4rem;
   align-items: flex-end;
   text-align: right;
 }
 .home-tab.is-right .home-tab-label {
-  left: 4.2rem;
+  left: 1.4rem;
   align-items: flex-start;
   text-align: left;
 }
@@ -1168,10 +1153,10 @@
   filter: drop-shadow(0 1px 2px #000);
 }
 .home-tab.is-left .home-lock {
-  right: 4.6rem;
+  right: 1.8rem;
 }
 .home-tab.is-right .home-lock {
-  left: 4.6rem;
+  left: 1.8rem;
 }
 @keyframes home-tab-left {
   from {
@@ -1246,42 +1231,32 @@
   font-style: normal;
   font-weight: 700;
 }
-/* Nút Chơi chia đôi (chủ game 31/10): ảnh viên thuốc cắt chéo, PvE khoá (trái), PvP vào trang chơi cũ (phải). */
+/* Nút Chơi (chủ game 31/10): 2 viên thuốc RIÊNG, PvE khoá (trái), PvP vào trang chơi cũ (phải). */
 .home-base .home-play {
-  position: relative;
   flex: 1 1 0;
   min-width: 0;
+  width: auto;
   height: auto;
-  aspect-ratio: 600 / 258;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: visible;
   border: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
-  animation: home-rise 0.7s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both, home-glow 2.6s 1s ease-in-out infinite;
+  animation: home-rise 0.7s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .home-base .home-play::after {
   display: none;
 }
-.home-play-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  user-select: none;
-  filter: drop-shadow(0 4px 10px rgb(255 170 30 / 0.4));
-}
-.home-play-img.is-pve {
-  filter: grayscale(0.85) brightness(0.62);
-}
-.home-half {
-  position: absolute;
-  inset: 0;
+.home-pill {
+  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  height: 4rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1291,37 +1266,47 @@
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-.home-half b {
-  font-size: 1.1rem;
+.home-pill img {
+  display: block;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 3px 8px rgb(255 170 30 / 0.4));
+}
+.home-pill.is-pvp {
+  margin-left: -1.5rem;
+}
+.home-pill b {
+  position: absolute;
+  font-size: 1.05rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-shadow: 0 1px 0 rgb(255 245 200 / 0.7);
 }
-.home-half.is-pve {
-  right: 40%;
-  left: 0;
-  clip-path: polygon(0 0, 100% 0, 52% 100%, 0 100%);
-  color: #e9e2cf;
+.home-pill.is-pve {
   cursor: default;
 }
-.home-half.is-pve b {
+.home-pill.is-pve img {
+  filter: grayscale(0.85) brightness(0.6);
+}
+.home-pill.is-pve b {
+  top: 1.05rem;
+  color: #e9e2cf;
   text-shadow: 0 1px 2px #000;
 }
-.home-half.is-pve svg {
+.home-pill.is-pve .home-lock {
+  position: absolute;
+  bottom: 0.95rem;
   width: 0.95rem;
   height: 0.95rem;
   fill: none;
-  stroke: currentColor;
+  stroke: #e9e2cf;
   stroke-width: 2;
   stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px #000);
 }
-.home-half.is-pvp {
-  left: 40%;
-  right: 0;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  padding-left: 0.4rem;
-}
-.home-half.is-pvp:active {
+.home-pill.is-pvp:active {
   filter: brightness(1.15);
 }
 @keyframes home-art-in {

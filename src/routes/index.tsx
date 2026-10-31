@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; pop: string; to?: "/shop" | "/collection"; go?: () => void };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection"; go?: () => void };
 
 function Home() {
   const [wins, setWins] = useState(0);
@@ -34,16 +34,16 @@ function Home() {
   }, []);
   // Menu chính (chủ game 31/10): 4 thẻ bình hành mỗi bên, lú nửa ra từ mép màn hình; thẻ chưa có tính năng thì khoá.
   const left: Tab[] = [
-    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", pop: "/ui/pack.webp", to: "/shop" },
-    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg", pop: "/ui/card-back-ur.webp" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", pop: "/ui/atk-you.webp", go: () => setMissions(true) },
-    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", pop: "/ui/card-back-sr.webp", to: "/collection" },
+    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
+    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", go: () => setMissions(true) },
+    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
   ];
   const right: Tab[] = [
-    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg", pop: "/ui/card-back.webp" },
-    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg", pop: "/ui/logo.webp" },
-    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", pop: "/ui/logo-snake.webp" },
-    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", pop: "/ui/card-back-foe.webp" },
+    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
+    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg" },
+    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg" },
+    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg" },
   ];
   return (
     <main className="home">
@@ -75,9 +75,8 @@ function Home() {
         {/* Bánh răng Cài đặt (chủ game 31/10): mọi tuỳ chỉnh và Nhập mã. */}
         <Link to="/tune" className="home-gear" data-sfx onPointerDown={() => playUi("soft")} aria-label={tr("Cài đặt")}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.2" />
-            <path d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1L5.3 5.3" />
-            <circle cx="12" cy="12" r="6.6" />
+            <path d="M10.3 2.5h3.4l.5 2.6c.6.2 1.1.5 1.6.9l2.5-.9 1.7 2.9-2 1.8c.1.6.1 1.2 0 1.8l2 1.8-1.7 2.9-2.5-.9c-.5.4-1 .7-1.6.9l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.1-.5-1.6-.9l-2.5.9-1.7-2.9 2-1.8a5.6 5.6 0 0 1 0-1.8l-2-1.8 1.7-2.9 2.5.9c.5-.4 1-.7 1.6-.9z" transform="translate(0 1.2)" />
+            <circle cx="12" cy="13.2" r="2.7" />
           </svg>
         </Link>
         <nav className="home-tabs is-left" aria-label="Menu trái">
@@ -101,13 +100,13 @@ function Home() {
           </div>
           {/* Nút Chơi chia đôi (chủ game 31/10): PvP vào trang chơi cũ, PvE là chế độ mới, đang khoá. */}
           <div className="home-play">
-            <img className="home-play-img is-pve" src="/ui/menu-play-pve.webp" alt="" draggable={false} />
-            <img className="home-play-img is-pvp" src="/ui/menu-play-pvp.webp" alt="" draggable={false} />
-            <button type="button" className="home-half is-pve" disabled aria-disabled="true" aria-label="PvE">
+            <button type="button" className="home-pill is-pve" disabled aria-disabled="true" aria-label="PvE">
+              <img src="/ui/menu-play-pve.webp" alt="" draggable={false} />
               <b>PvE</b>
               <LockIcon />
             </button>
-            <Link to="/modes" className="home-half is-pvp" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvP">
+            <Link to="/modes" className="home-pill is-pvp" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvP">
+              <img src="/ui/menu-play-pvp.webp" alt="" draggable={false} />
               <b>PvP</b>
             </Link>
           </div>
@@ -123,7 +122,6 @@ function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index
   const inner = (
     <>
       <span className="home-tab-art" style={{ backgroundImage: `url(${tab.bg})` }} aria-hidden="true" />
-      <img className="home-tab-pop" src={tab.pop} alt="" draggable={false} />
       <span className="home-tab-label">
         {tab.icon}
         <span>{tr(tab.label)}</span>
