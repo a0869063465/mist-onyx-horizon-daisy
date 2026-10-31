@@ -1738,6 +1738,11 @@ function PlayPage() {
   const [testFind, setTestFind] = useState("");
   const [sound, setSoundOn] = useState(true);
   const [drag, setDrag] = useState<Drag | null>(null);
+  // Chọn mục tiêu thông minh (chủ game 31/10): while a card is dragged, the target nearest the finger lights ("<side>-<slot>"
+  // as data-slot, or "face"), and a drop that is not right on a target picks it. `snapPool` holds the targets the match
+  // accepts for this drag, worked out once when it starts.
+  const [snap, setSnap] = useState<string | null>(null);
+  const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
   const [swapPick, setSwapPick] = useState<string[]>([]);
   /** Hoán đổi (chủ game 30/10): the monster that goes back into a hand flies there as a ghost of its card. */
   const [swapGhost, setSwapGhost] = useState<{ key: number; mon: FieldMon; rect: { left: number; top: number; width: number; height: number }; to: { x: number; y: number } } | null>(null);
@@ -3275,6 +3280,19 @@ function PlayPage() {
     return Boolean(swapAsk && card && card.stars !== 0 && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
   };
   const markId = aimMark?.spellId ?? (swapAsk ? "hoan-doi" : null);
+  // X (chủ game 31/10): opens as soon as a skill, an attack or a target choice is under way, and cancels that choice, not
+  // only what stands in the queue.
+  const picking = Boolean((aim && aim.kind !== "unit" && aim.kind !== "menu" && aim.kind !== "skill-info" && aim.kind !== "cast" && aim.kind !== "innate") || vowAsk || hornAsk || knightAsk || chronoAsk || digPick);
+  function cancelPick() {
+    setAim(null);
+    setVowAsk(null);
+    setHornAsk(null);
+    setKnightAsk(null);
+    setChronoAsk(null);
+    setDigPick(null);
+    setRiteHand(null);
+    holdNotice("");
+  }
   /**
    * Tường thành (chủ game 29/10): cards lying across by a side's environment card, the same size, in a row toward the
    * middle of the board (the opponent's to the right of theirs, yours to the left of yours). Gương phòng hộ shows the
@@ -3678,6 +3696,82 @@ function PlayPage() {
     setInspect(null);
     setHandPick(null);
     setDrag({ ...payload, x: event.clientX, y: event.clientY });
+    if (snapPool.current?.grab !== payload) snapPool.current = { grab: payload, keys: snapKeys(payload) };
+    setSnap(snapAt(payload, event.clientX, event.clientY));
+  }
+
+  /** The targets this drag can land on, by the match's own rules: empty slots it can be summoned into, enemies it can attack. */
+  function snapKeys(payload: Grab): Set<string> {
+    const keys = new Set<string>();
+    if (!duel || !canPlay || responding || duel.step !== "main" || queue) return keys;
+    if (payload.kind === "summon") {
+      if (riteHand === payload.index) return keys;
+      for (const slot of [...ROW_SLOTS.front, ...ROW_SLOTS.back]) {
+        if (!you.field[slot] && took(summon(duel, payload.index, slot))) keys.add(`${viewer}-${slot}`);
+      }
+      return keys;
+    }
+    if (payload.kind === "unit" && !aim) {
+      const side = (1 - viewer) as Side;
+      foe.field.forEach((mon, slot) => {
+        if (!mon) return;
+        const next = attackMonster(duel, payload.uid, mon.uid);
+        if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk))) keys.add(`${side}-${slot}`);
+      });
+      const face = attackFace(duel, payload.uid);
+      if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
+    }
+    return keys;
+  }
+
+  function snapNode(key: string): HTMLElement | null {
+    return document.querySelector<HTMLElement>(key === "face" ? ".face-drop" : `[data-slot="${key}"]`);
+  }
+
+  /**
+   * The target a drag points at. A summon: up or down picks the row (front or back of your side), across picks the empty
+   * slot nearest the finger in it; the other row when this one is full. An attack: the enemy (or the player) nearest the
+   * finger, once it is above your front row. A finger right on a target keeps that target; over the hand, nothing.
+   */
+  function snapAt(payload: Grab, x: number, y: number): string | null {
+    const keys = snapPool.current?.grab === payload ? snapPool.current.keys : null;
+    if (!keys || keys.size === 0) return null;
+    const hit = under(x, y);
+    if (hit?.closest(".hand")) return null;
+    const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
+    if (direct && keys.has(direct)) return direct;
+    const centre = (node: HTMLElement | null) => {
+      const box = node?.getBoundingClientRect();
+      return box ? { x: box.left + box.width / 2, y: box.top + box.height / 2, top: box.top } : null;
+    };
+    if (payload.kind === "summon") {
+      // Your own monster under the finger: fusion or a sacrifice, as before.
+      if (direct && direct.startsWith(`${viewer}-`) && you.field[Number(direct.split("-")[1])]) return null;
+      const rowY = (row: SummonRow) => {
+        const ys = ROW_SLOTS[row].map((slot) => centre(snapNode(`${viewer}-${slot}`))?.y).filter((v): v is number => v !== undefined);
+        return ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : null;
+      };
+      const front = rowY("front");
+      const back = rowY("back");
+      if (front === null || back === null) return null;
+      const row: SummonRow = Math.abs(y - front) <= Math.abs(y - back) ? "front" : "back";
+      const pick = (slots: Slot[]) =>
+        slots
+          .map((slot) => ({ key: `${viewer}-${slot}`, at: centre(snapNode(`${viewer}-${slot}`)) }))
+          .filter((item) => keys.has(item.key) && item.at)
+          .sort((a, b) => Math.abs(a.at!.x - x) - Math.abs(b.at!.x - x))[0]?.key ?? null;
+      return pick(ROW_SLOTS[row]) ?? pick(ROW_SLOTS[row === "front" ? "back" : "front"]);
+    }
+    const fronts = ROW_SLOTS.front.map((slot) => centre(snapNode(`${viewer}-${slot}`))?.top).filter((v): v is number => v !== undefined);
+    if (fronts.length && y > Math.min(...fronts)) return null;
+    let best: { key: string; gap: number } | null = null;
+    for (const key of keys) {
+      const at = centre(snapNode(key));
+      if (!at) continue;
+      const gap = Math.hypot(at.x - x, at.y - y);
+      if (!best || gap < best.gap) best = { key, gap };
+    }
+    return best?.key ?? null;
   }
 
   function commitBlock(uid: string, skill: boolean, buff: boolean) {
@@ -4039,6 +4133,9 @@ function PlayPage() {
     origin.current.pan = false;
     window.clearTimeout(riteHold.current);
     setDrag(null);
+    setSnap(null);
+    const snapped = payload && moved && !panned ? snapAt(payload, event.clientX, event.clientY) : null;
+    snapPool.current = null;
     if (panned) {
       suppressClick.current = true;
       return;
@@ -4056,7 +4153,7 @@ function PlayPage() {
     }
     if (!moved) return;
     suppressClick.current = true;
-    finishDrop(under(event.clientX, event.clientY), payload, { x: event.clientX, y: event.clientY });
+    finishDrop((snapped ? snapNode(snapped) : null) ?? under(event.clientX, event.clientY), payload, { x: event.clientX, y: event.clientY });
   }
 
   function onSlot(side: Side, index: number) {
@@ -5967,6 +6064,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
+              snapped={snap === `${side}-${index}`}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
@@ -6018,6 +6116,7 @@ function PlayPage() {
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
+              snapped={snap === `${viewer}-${index}`}
               attack={false}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
@@ -6070,7 +6169,7 @@ function PlayPage() {
         {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
           <button
             type="button"
-            className="face-drop"
+            className={`face-drop${snap === "face" ? " is-snap" : ""}`}
             data-face="1"
             onClick={() => {
               if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
@@ -6318,8 +6417,8 @@ function PlayPage() {
         <div className="actions is-spread">
           {/* Hàng chờ (chủ game 28/10): X huỷ hết hàng chờ, con mắt bật/tắt xem trước; cả hai khép khi không có gì chờ. */}
           {board.drawMon.hidden ? null : (
-            <button type="button" className={`oracle-act${queue || markId ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !markId} style={pinMedal(board.drawMon)} onClick={() => (aimMark && !queue ? setAim(null) : cancelQueue())}>
-              <OracleOrb kind="cancel" state={queue || markId ? "open" : "shut"} />
+            <button type="button" className={`oracle-act${queue || markId || picking ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !markId && !picking} style={pinMedal(board.drawMon)} onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : cancelQueue())}>
+              <OracleOrb kind="cancel" state={queue || markId || picking ? "open" : "shut"} />
             </button>
           )}
           {board.drawSpell.hidden ? null : (
@@ -7256,6 +7355,7 @@ function BoardSlot({
   fuseHide = false,
   tone = "monster",
   picked = false,
+  snapped = false,
   attack,
   shift = null,
   thrust = false,
@@ -7288,6 +7388,8 @@ function BoardSlot({
   fuseHide?: boolean;
   tone?: "monster" | "skill";
   picked?: boolean;
+  /** Chọn mục tiêu thông minh: the target a drag will land on. */
+  snapped?: boolean;
   attack: boolean;
   shift?: { x: number; y: number } | null;
   /** The last thrust of a landing blow: a quick move in place of the slow lunge. */
@@ -7312,7 +7414,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%` };

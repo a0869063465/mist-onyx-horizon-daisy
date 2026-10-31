@@ -1777,6 +1777,19 @@
   outline-offset: 1px;
   border-radius: 0.6rem;
 }
+/* Chọn mục tiêu thông minh (chủ game 31/10): the slot or the player a drag will land on, brighter than the others. */
+.slot.is-snap,
+.face-drop.is-snap {
+  outline: 3px solid #fff3b0;
+  outline-offset: 2px;
+  border-radius: 0.6rem;
+  box-shadow: 0 0 0.9rem 0.25rem color-mix(in srgb, #ffd54a 70%, transparent);
+  animation: snap-glow 0.9s ease-in-out infinite alternate;
+}
+@keyframes snap-glow {
+  from { box-shadow: 0 0 0.6rem 0.15rem color-mix(in srgb, #ffd54a 55%, transparent); }
+  to { box-shadow: 0 0 1.2rem 0.4rem color-mix(in srgb, #ffd54a 85%, transparent); }
+}
 .slot-f0 {
   left: 10.3%;
   top: 27.49%;

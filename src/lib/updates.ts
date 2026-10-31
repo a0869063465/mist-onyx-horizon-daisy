@@ -793,6 +793,8 @@ export const PENDING_NOTES: string[] = [
   "Số lá còn trong xấp và trên tay đối thủ ẩn, bấm vào mới hiện (bấm nữa thì mất). Xấp của mình nhấp đôi hiện số 3 giây, không rút. Xấp to hơn, viền sáng khi chưa rút bài.",
   "Lá rút bay 3D từ xấp và lật mặt đúng vào chỗ của nó trên tay. Lá trên tay trượt sang nhường chỗ.",
   "Màn tải game hiện ngẫu nhiên hình sư tử hoặc rắn.",
+  "Kéo quái từ tay: nhích lên xuống là ô sáng, thả là triệu hồi, không cần thả đúng ô. Kéo quái đánh: mục tiêu gần ngón sáng, thả là chọn.",
+  "Dấu X trên con mắt huỷ được thao tác đang chọn (tấn công, skill, chọn mục tiêu).",
 ];
 
 function remarkOf(notes: string[]) {
