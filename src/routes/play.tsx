@@ -166,6 +166,8 @@ import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
+import { pushWatch, readWatch } from "@/lib/friends";
+import { PLAYER_NAME, playerId, usePulse, WATCH_KEY, WATCH_SEAT_KEY } from "@/lib/friend-state";
 
 export const Route = createFileRoute("/play")({ component: PlayPage });
 
@@ -536,6 +538,7 @@ function spoken(text: string, viewer: Side): string {
 
 function savedSeat(): "host" | "guest" | null {
   if (typeof sessionStorage === "undefined") return null;
+  if (sessionStorage.getItem(WATCH_KEY)) return sessionStorage.getItem(WATCH_SEAT_KEY) === "guest" ? "guest" : "host";
   try {
     const raw = JSON.parse(sessionStorage.getItem("clash-net") ?? "null") as { seat?: string } | null;
     return raw?.seat === "host" || raw?.seat === "guest" ? raw.seat : null;
@@ -1863,6 +1866,10 @@ function PlayPage() {
   const [pinnedId, setPinnedId] = useState<number | null>(null);
   const [net, setNet] = useState<{ code: string; seat: NetSeat } | null>(null);
   const [wait, setWait] = useState("");
+  /** Xem trận của bạn bè (chủ game 31/10): ID bạn đó; trận chỉ để xem, không bấm được gì. */
+  const [watch, setWatch] = useState<{ friend: string; over: boolean } | null>(null);
+  const friendPulse = usePulse();
+  const watchPush = useRef<{ at: number; timer: number; rev: number }>({ at: 0, timer: 0, rev: 0 });
 
   function remember(items: { text: string; ink: TrailInk; clock: number }[]) {
     const fresh = items.filter((item) => item.text && !trailSkip(item.text));
@@ -1988,6 +1995,44 @@ function PlayPage() {
   }, [pinnedId]);
 
   useEffect(() => {
+    const friend = sessionStorage.getItem(WATCH_KEY);
+    if (friend) {
+      // Người xem: đọc trận của bạn mình mỗi 1,5 giây, nhìn từ phía bạn đó. Trận nào cũng hiện như trận online.
+      matchRef.current = null;
+      setWatch({ friend, over: false });
+      setWait("Đang tải trận…");
+      let stop = false;
+      let seen = -1;
+      let gone = 0;
+      const tick = async () => {
+        try {
+          const got = await readWatch({ data: { id: playerId(), friend } });
+          if (stop) return;
+          if (got.phase === "play") {
+            gone = 0;
+            if (got.rev === seen) return;
+            seen = got.rev;
+            const raw = JSON.parse(got.duel) as Duel;
+            sessionStorage.setItem(WATCH_SEAT_KEY, got.side === 1 ? "guest" : "host");
+            const quick = got.mode === "quick";
+            setNet((current) => (current?.seat === (got.side === 1 ? "guest" : "host") ? current : ({ code: "", seat: got.side === 1 ? "guest" : "host", ...(quick ? { quick: true } : {}) } as { code: string; seat: NetSeat })));
+            setWait("");
+            setDuel({ ...raw, mode: "net", glimpse: null });
+          } else if (got.phase === "gone") {
+            gone += 1;
+            if (gone >= 2) setWatch((current) => (current ? { ...current, over: true } : current));
+          }
+        } catch {
+          // Mất mạng: thử lại lần sau.
+        }
+      };
+      void tick();
+      const timer = window.setInterval(() => void tick(), 1500);
+      return () => {
+        stop = true;
+        window.clearInterval(timer);
+      };
+    }
     let join: { code: string; seat: NetSeat } | null = null;
     try {
       join = JSON.parse(sessionStorage.getItem("clash-net") ?? "null") as { code: string; seat: NetSeat } | null;
@@ -2031,8 +2076,8 @@ function PlayPage() {
     // A room paired by Đánh thường has both decks already: no code to share.
     const quick = Boolean((join as { quick?: boolean }).quick);
     // Mời bạn bè vào trận (chủ game 31/10): chờ bạn nhận lời mời, không cần đưa mã.
-    const friend = Boolean((join as { friend?: boolean }).friend);
-    setWait(quick ? "Đang vào trận…" : friend && join.seat === "host" ? "Đang chờ bạn vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
+    const invited = Boolean((join as { friend?: boolean }).friend);
+    setWait(quick ? "Đang vào trận…" : invited && join.seat === "host" ? "Đang chờ bạn vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
     let stop = false;
     let voting = false;
     const tick = async () => {
@@ -2244,6 +2289,32 @@ function PlayPage() {
     if (trial && verdict === "pass") setTrialPaid(markTrial(trial.id, trial.level));
   }, [trial, verdict]);
 
+  // Xem trận (chủ game 31/10): trận chạy trên máy này (Vs Máy, Test) gửi bản chụp lên khi có bạn bè đang xem,
+  // tối đa mỗi 1,5 giây. Trận online thì người xem đọc thẳng phòng.
+  const watchedNow = friendPulse.watched;
+  const watchDuel = useRef<Duel | null>(null);
+  watchDuel.current = duel;
+  useEffect(() => {
+    const push = watchPush.current;
+    if (!duel || watch || tutorial || trial || !watchedNow || (duel.mode !== "ai" && duel.mode !== "test")) return;
+    const send = () => {
+      const current = watchDuel.current;
+      if (!current) return;
+      push.at = Date.now();
+      push.rev += 1;
+      void pushWatch({ data: { id: playerId(), duel: JSON.stringify({ ...current, glimpse: null }), rev: push.rev } }).catch(() => undefined);
+    };
+    const wait = 1500 - (Date.now() - push.at);
+    if (wait <= 0) send();
+    else if (!push.timer) {
+      push.timer = window.setTimeout(() => {
+        push.timer = 0;
+        send();
+      }, wait);
+    }
+  }, [duel, watch, tutorial, trial, watchedNow]);
+  useEffect(() => () => window.clearTimeout(watchPush.current.timer), []);
+
   // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions a win
   // moved (paid once), then the old panel. Elsewhere only the old panel.
   const ended = duel?.winner ?? null;
@@ -2257,6 +2328,8 @@ function PlayPage() {
       return;
     }
     if (endedAt.current?.mid !== duel.mid) endedAt.current = { mid: duel.mid, at: Date.now() };
+    // Người xem trận của bạn bè: không cảnh hết trận, không thưởng.
+    if (sessionStorage.getItem(WATCH_KEY)) return;
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
@@ -2341,7 +2414,7 @@ function PlayPage() {
   }, [tutorial, trial]);
   const openerLive = Boolean(duel?.opener);
   useEffect(() => {
-    if (loaded && introSeen && openerLive) setOpenerOpen(true);
+    if (loaded && introSeen && openerLive && !sessionStorage.getItem(WATCH_KEY)) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
   // Hết đổi bài đầu trận (bảng đóng): 3 lá đầu bay từ xấp lên tay mỗi bên, lần lượt (chủ game 30/10).
   // Lá rút bay lên tay (chủ game 30/10): tạo trước khi trình duyệt vẽ, để lá mới không hiện lên tay rồi mới bay.
@@ -3206,8 +3279,13 @@ function PlayPage() {
   if (!duel) {
     return (
       <main className="stage">
-        <p>{wait || "Đang mở đấu trường…"}</p>
-        {net?.seat === "host" && !(net as { quick?: boolean }).quick ? <p className="room-code">{net.code}</p> : null}
+        <p>{tr(watch?.over ? "Trận đã kết thúc." : wait || "Đang mở đấu trường…")}</p>
+        {net?.seat === "host" && !(net as { quick?: boolean }).quick && !watch ? <p className="room-code">{net.code}</p> : null}
+        {watch ? (
+          <button type="button" className="fr-btn" onClick={leaveWatch}>
+            {tr("Thoát")}
+          </button>
+        ) : null}
       </main>
     );
   }
@@ -3490,6 +3568,12 @@ function PlayPage() {
 
   /** Bài khởi đầu: the picked opening cards (indexes over the 2 monsters, then the spell) are replaced. Online, both
    *  sides choose at once, so a pick that clashes with the other side's is put on top of it when the poll brings it. */
+  function leaveWatch() {
+    sessionStorage.removeItem(WATCH_KEY);
+    sessionStorage.removeItem(WATCH_SEAT_KEY);
+    void navigate({ to: "/friends" });
+  }
+
   function confirmOpener(picked: number[]) {
     if (!duel?.opener) return;
     const count = you.reserve.length;
@@ -5207,6 +5291,19 @@ function PlayPage() {
     <main className="stage is-play" data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       <DrawFlights flights={flights} onDone={flightDone} />
+      {watch ? (
+        <>
+          <div className="watch-shield" aria-hidden="true" />
+          <div className="watch-bar">
+            <span>
+              {tr(duel.winner !== null || watch.over ? "Trận đã kết thúc." : "Đang xem trận của")} {duel.winner !== null || watch.over ? null : <b>{tr(PLAYER_NAME)} {watch.friend}</b>}
+            </span>
+            <button type="button" className="fr-btn" onClick={leaveWatch}>
+              {tr("Thoát")}
+            </button>
+          </div>
+        </>
+      ) : null}
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
       {loaded && duel.opener && !introSeen ? <MatchIntro top={introSide(viewer === 0 ? 1 : 0)} bottom={introSide(viewer)} onDone={() => setIntroMid(duel.mid ?? "")} /> : null}
       {openerOpen ? (

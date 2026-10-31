@@ -54,11 +54,15 @@ export function setFriendMatch(value: FriendMatch | null) {
   else sessionStorage.removeItem(FRIEND_MATCH_KEY);
 }
 
+/** Đang xem trận của bạn: ID bạn đó (sessionStorage), và bên của bạn đó trong trận. */
+export const WATCH_KEY = "clash-watch";
+export const WATCH_SEAT_KEY = "clash-watch-seat";
+
 /** Chế độ đang chơi trên máy này, theo trang trận (null = ngoài trận = Đang chờ). */
 export function currentMode(): { mode: FriendMode | null; room: string | null; seat: string | null } {
   const none = { mode: null, room: null, seat: null };
   if (typeof window === "undefined" || window.location.pathname !== "/play") return none;
-  if (sessionStorage.getItem("clash-watch")) return none;
+  if (sessionStorage.getItem(WATCH_KEY)) return none;
   const saved = sessionStorage.getItem("clash-mode");
   try {
     const net = JSON.parse(sessionStorage.getItem("clash-net") ?? "null") as { code?: string; seat?: string; quick?: boolean } | null;
@@ -72,8 +76,9 @@ export function currentMode(): { mode: FriendMode | null; room: string | null; s
   return { ...none, mode: "ai" };
 }
 
-type Shared = { asks: number; invites: InviteRow[] };
-let shared: Shared = { asks: 0, invites: [] };
+/** `watched`: có bạn bè đang xem trận trên máy này (trận Vs Máy / Test thì gửi bản chụp lên). */
+type Shared = { asks: number; invites: InviteRow[]; watched: boolean };
+let shared: Shared = { asks: 0, invites: [], watched: false };
 const listeners = new Set<() => void>();
 
 export function setPulse(next: Shared) {

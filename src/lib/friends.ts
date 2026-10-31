@@ -13,6 +13,8 @@ export const INVITE_MS = 60_000;
 const STALE_MS = 45_000;
 /** Bản chụp trận cũ hơn chừng này thì không còn xem được. */
 const WATCH_STALE = 3 * 60_000;
+/** Có người xem trong chừng này thì trận trên máy (Vs Máy, Test) gửi bản chụp lên. */
+const WATCHED_MS = 15_000;
 
 export type FriendMode = "ai" | "test" | "quick" | "custom" | "tutorial" | "trial";
 const MODES: FriendMode[] = ["ai", "test", "quick", "custom", "tutorial", "trial"];
@@ -66,7 +68,7 @@ export const pulse = createServerFn({ method: "POST" })
   .validator((data: PulseIn) => data)
   .handler(async ({ data }) => {
     const id = cleanId(data.id);
-    if (!validId(id)) return { ok: false as const, invites: [] as InviteRow[], asks: 0, replies: [] as ReplyRow[] };
+    if (!validId(id)) return { ok: false as const, invites: [] as InviteRow[], asks: 0, replies: [] as ReplyRow[], watched: false };
     const sql = await db();
     const now = Date.now();
     const mode = modeOf(data.mode);
@@ -93,6 +95,8 @@ export const pulse = createServerFn({ method: "POST" })
     if (sent.length) {
       await sql.query(`delete from clash_invites where id = any($1)`, [sent.map((row) => row.id)]);
     }
+    const watchedRows = await sql<{ watched_at: number | null }>`select watched_at from clash_players where id = ${id}`;
+    const watched = Number(watchedRows[0]?.watched_at ?? 0) >= now - WATCHED_MS;
     const asks = await sql<{ n: number }>`
       select count(*) as n from clash_friends where status = 'ask' and from_id <> ${id} and (a = ${id} or b = ${id})
     `;
@@ -101,6 +105,7 @@ export const pulse = createServerFn({ method: "POST" })
       invites: invites.map((row) => ({ id: row.id, from: row.from_id, cover: row.cover, code: row.code, at: Number(row.created_at) })),
       asks: Number(asks[0]?.n ?? 0),
       replies: sent.map((row) => ({ id: row.id, to: row.to_id, state: row.state === "no" ? ("no" as const) : ("late" as const) })),
+      watched,
     };
   });
 
@@ -113,12 +118,11 @@ export const friendList = createServerFn({ method: "POST" })
     if (!validId(id)) return empty;
     const sql = await db();
     const now = Date.now();
-    const rows = await sql<{ other: string; from_id: string; status: string; created_at: number; cover: string | null; mode: string | null; seen_at: number | null; watched: number | null }>`
+    const rows = await sql<{ other: string; from_id: string; status: string; created_at: number; cover: string | null; mode: string | null; seen_at: number | null }>`
       select case when f.a = ${id} then f.b else f.a end as other, f.from_id, f.status, f.created_at,
-        p.cover, p.mode, p.seen_at, w.updated_at as watched
+        p.cover, p.mode, p.seen_at
       from clash_friends f
       left join clash_players p on p.id = case when f.a = ${id} then f.b else f.a end
-      left join clash_watch w on w.player_id = p.id
       where f.a = ${id} or f.b = ${id}
       order by f.created_at desc
     `;
@@ -126,9 +130,8 @@ export const friendList = createServerFn({ method: "POST" })
       if (row.status === "friend") {
         const fresh = row.seen_at !== null && Number(row.seen_at) >= now - STALE_MS;
         const mode = fresh ? modeOf(row.mode) : null;
-        const online = mode === "quick" || mode === "custom";
-        const local = row.watched !== null && Number(row.watched) >= now - WATCH_STALE;
-        empty.friends.push({ id: row.other, cover: row.cover, mode, watch: Boolean(mode) && (online || local) });
+        const watch = mode === "ai" || mode === "test" || mode === "quick" || mode === "custom";
+        empty.friends.push({ id: row.other, cover: row.cover, mode, watch });
       } else if (row.from_id === id) empty.sent.push({ id: row.other, cover: row.cover, at: Number(row.created_at) });
       else empty.asks.push({ id: row.other, cover: row.cover, at: Number(row.created_at) });
     }
@@ -241,6 +244,7 @@ export const pushWatch = createServerFn({ method: "POST" })
 
 export type WatchView =
   | { phase: "play"; duel: string; rev: number; side: 0 | 1; mode: FriendMode }
+  | { phase: "wait" }
   | { phase: "gone" };
 
 /** Người xem: đọc trận bạn mình đang đánh (chỉ bạn bè mới xem được). `side` = bên của bạn mình trong trận. */
@@ -259,16 +263,18 @@ export const readWatch = createServerFn({ method: "POST" })
     const player = players[0];
     const mode = player && Number(player.seen_at) >= now - STALE_MS ? modeOf(player.mode) : null;
     if (!player || !mode) return { phase: "gone" };
+    await sql`update clash_players set watched_at = ${now} where id = ${friend}`;
     if ((mode === "quick" || mode === "custom") && player.room) {
       const rooms = await sql<{ duel: string | null; rev: number }>`select duel, rev from clash_rooms where code = ${player.room}`;
       const room = rooms[0];
-      if (!room?.duel) return { phase: "gone" };
+      if (!room) return { phase: "gone" };
+      if (!room.duel) return { phase: "wait" };
       return { phase: "play", duel: room.duel, rev: Number(room.rev), side: player.seat === "guest" ? 1 : 0, mode };
     }
     const shots = await sql<{ duel: string; rev: number; updated_at: number }>`
       select duel, rev, updated_at from clash_watch where player_id = ${friend}
     `;
     const shot = shots[0];
-    if (!shot || Number(shot.updated_at) < now - WATCH_STALE) return { phase: "gone" };
+    if (!shot || Number(shot.updated_at) < now - WATCH_STALE) return { phase: "wait" };
     return { phase: "play", duel: shot.duel, rev: Number(shot.rev), side: 0, mode };
   });

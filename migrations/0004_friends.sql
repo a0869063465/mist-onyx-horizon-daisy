@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS clash_players (
   mode text,
   room text,
   seat text,
+  watched_at bigint,
   seen_at bigint NOT NULL
 );
 

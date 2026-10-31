@@ -41,7 +41,7 @@ export function FriendPulse() {
         for (const row of got.invites) if (!seen.current.has(row.id)) seen.current.set(row.id, at);
         const open = got.invites.filter((row) => !gone.current.has(row.id));
         setInvites(open);
-        setPulse({ asks: got.asks, invites: open });
+        setPulse({ asks: got.asks, invites: open, watched: got.watched });
         const reply = got.replies[0];
         if (reply) setNote(reply.state === "no" ? "Bạn bè đã từ chối lời mời." : "Lời mời vào trận đã hết hạn.");
       } catch {

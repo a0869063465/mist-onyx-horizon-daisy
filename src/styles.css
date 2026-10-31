@@ -12554,3 +12554,13 @@ button.watch-back {
 .lor-invite span { flex: 1; }
 .lor-invite button { flex: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.3); color: #fff; font: inherit; font-size: 0.82rem; cursor: pointer; }
 .lor-invite-note { font-style: normal; color: #ffb3a3; }
+/* Xem trận của bạn bè: phủ trong suốt chặn mọi thao tác, dải trên cùng có nút Thoát. */
+.stage .watch-shield { position: fixed; inset: 0; z-index: 900; background: transparent; touch-action: none; }
+.stage .watch-bar {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 0.4rem); z-index: 901; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0.7rem; width: max-content; max-width: 94vw; padding: 0.4rem 0.45rem 0.4rem 0.85rem;
+  border: 1px solid #e3c27a; border-radius: 99px; background: rgba(6, 12, 30, 0.88); color: #fff; font-size: 0.85rem; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.stage .watch-bar b { font-family: "Barlow Condensed", sans-serif; letter-spacing: 0.06em; color: #ffe3a3; }
+.stage .watch-bar .fr-btn, .stage > .fr-btn { color: #fff; font-family: "Barlow Condensed", sans-serif; }
+.stage .watch-bar .fr-btn { padding: 0.3rem 0.8rem; border-radius: 99px; }
