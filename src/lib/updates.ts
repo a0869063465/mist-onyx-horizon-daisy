@@ -795,6 +795,7 @@ export const PENDING_NOTES: string[] = [
   "Màn tải game hiện ngẫu nhiên hình sư tử hoặc rắn.",
   "Kéo quái từ tay: nhích lên xuống là ô sáng, thả là triệu hồi, không cần thả đúng ô. Kéo quái đánh: mục tiêu gần ngón sáng, thả là chọn.",
   "Dấu X trên con mắt huỷ được thao tác đang chọn (tấn công, skill, chọn mục tiêu).",
+  "Nút Tấn công và nút skill: ấn giữ rồi trượt, mục tiêu gần ngón sáng, thả là chọn.",
 ];
 
 function remarkOf(notes: string[]) {

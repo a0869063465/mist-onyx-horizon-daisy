@@ -1742,6 +1742,8 @@ function PlayPage() {
   // as data-slot, or "face"), and a drop that is not right on a target picks it. `snapPool` holds the targets the match
   // accepts for this drag, worked out once when it starts.
   const [snap, setSnap] = useState<string | null>(null);
+  // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
+  const slideFire = useRef<(key: string) => void>(() => undefined);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
   const [swapPick, setSwapPick] = useState<string[]>([]);
   /** Hoán đổi (chủ game 30/10): the monster that goes back into a hand flies there as a ghost of its card. */
@@ -3711,17 +3713,134 @@ function PlayPage() {
       }
       return keys;
     }
-    if (payload.kind === "unit" && !aim) {
-      const side = (1 - viewer) as Side;
-      foe.field.forEach((mon, slot) => {
-        if (!mon) return;
-        const next = attackMonster(duel, payload.uid, mon.uid);
-        if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk))) keys.add(`${side}-${slot}`);
-      });
-      const face = attackFace(duel, payload.uid);
-      if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
-    }
+    if (payload.kind === "unit" && !aim) return attackKeys(payload.uid);
     return keys;
+  }
+
+  /** The enemies (and the player) this monster can attack now, by the rules. */
+  function attackKeys(uid: string): Set<string> {
+    const keys = new Set<string>();
+    if (!duel) return keys;
+    const side = (1 - viewer) as Side;
+    foe.field.forEach((mon, slot) => {
+      if (!mon) return;
+      const next = attackMonster(duel, uid, mon.uid);
+      if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk))) keys.add(`${side}-${slot}`);
+    });
+    const face = attackFace(duel, uid);
+    if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
+    return keys;
+  }
+
+  /**
+   * The targets a button can slide to (ấn giữ rồi trượt, chủ game 31/10): the ones a tap after the button would take,
+   * found by running the same rule a tap runs.
+   */
+  function slideKeys(slide: ChipSlide): Set<string> {
+    const keys = new Set<string>();
+    if (!duel || !canPlay || duel.step !== "main" || queue) return keys;
+    if (slide.kind === "attack") return attackKeys(slide.uid);
+    const caster = you.field.find((unit) => unit?.uid === slide.uid);
+    const card = caster ? monsterCard(caster.cardId) : undefined;
+    if (!caster || !card) return keys;
+    const changed = (next: Duel) => next !== duel;
+    const each = (side: Side, take: (mon: FieldMon) => boolean) =>
+      duel.players[side].field.forEach((mon, slot) => {
+        if (mon && take(mon)) keys.add(`${side}-${slot}`);
+      });
+    const foeSide = (1 - viewer) as Side;
+    if (card.id === "phu-thuy-thoi-gian") {
+      each(viewer, (mon) => mon.uid !== caster.uid && Boolean(chronoChoice(duel, caster.uid, mon.uid)) && !chronoHighAlly(duel, caster.uid, mon.uid));
+      each(foeSide, (mon) => Boolean(chronoChoice(duel, caster.uid, mon.uid)) && !chronoImmortal(mon));
+      return keys;
+    }
+    if (slide.index === 3 && (card.id === "nu-chua-dieu-nhan" || card.id === "nu-chua-dieu-nhan-hoan-my")) {
+      each(foeSide, () => true);
+      return keys;
+    }
+    if (allySkill(card.id)) {
+      const selfOk = card.id === "thien-than-be-nho";
+      each(viewer, (mon) => (selfOk || mon.uid !== caster.uid) && changed(useSkill(duel, caster.uid, mon.uid, slide.index, true)));
+      return keys;
+    }
+    each(foeSide, (mon) =>
+      changed(shotSkill(card.id) ? declareSkill(duel, caster.uid, mon.uid, slide.index) : useSkill(duel, caster.uid, mon.uid, slide.index, true)),
+    );
+    if (faceSkill(card.id, slide.index) && changed(declareSkill(duel, caster.uid, null, slide.index))) keys.add("face");
+    return keys;
+  }
+
+  /** The lit target of a slide: one right under the finger, else the nearest; enemies only once the finger is above your front row. */
+  function slideAt(keys: Set<string>, x: number, y: number): string | null {
+    if (keys.size === 0) return null;
+    const hit = under(x, y);
+    const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
+    if (direct && keys.has(direct)) return direct;
+    const fronts = ROW_SLOTS.front
+      .map((slot) => snapNode(`${viewer}-${slot}`)?.getBoundingClientRect().top)
+      .filter((v): v is number => v !== undefined);
+    const upField = !fronts.length || y <= Math.min(...fronts);
+    let best: { key: string; gap: number } | null = null;
+    for (const key of keys) {
+      if (!key.startsWith(`${viewer}-`) && !upField) continue;
+      const box = snapNode(key)?.getBoundingClientRect();
+      if (!box) continue;
+      const gap = Math.hypot(box.left + box.width / 2 - x, box.top + box.height / 2 - y);
+      if (!best || gap < best.gap) best = { key, gap };
+    }
+    return best?.key ?? null;
+  }
+
+  /**
+   * Ấn giữ rồi trượt (chủ game 31/10): holding a target button (0.25 s, or moving off it) turns it on as a tap would,
+   * then the target nearest the finger lights up and letting go picks it, as tapping it would. Letting go where it was
+   * pressed keeps the button on (as a tap); letting go away from every target turns it off. A quick tap is as before.
+   */
+  function startSlide(slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!duel || event.button > 0) return;
+    const keys = slideKeys(slide);
+    if (keys.size === 0) return;
+    const from = { x: event.clientX, y: event.clientY };
+    const pointer = event.pointerId;
+    let on = false;
+    let moved = false;
+    let lit: string | null = null;
+    const arm = () => {
+      if (on) return;
+      on = true;
+      window.clearTimeout(timer);
+      go();
+      holdNotice("Trượt tới mục tiêu rồi thả");
+    };
+    const timer = window.setTimeout(arm, 250);
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return;
+      if (!moved && Math.hypot(e.clientX - from.x, e.clientY - from.y) > 9) moved = true;
+      if (!moved) return;
+      arm();
+      lit = slideAt(keys, e.clientX, e.clientY);
+      setSnap(lit);
+    };
+    const stop = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return;
+      window.clearTimeout(timer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+      if (!on) return;
+      setSnap(null);
+      if (e.type === "pointercancel") return;
+      if (lit) {
+        holdNotice("");
+        slideFire.current(lit);
+      } else if (moved) {
+        setAim(null);
+        holdNotice("");
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
   }
 
   function snapNode(key: string): HTMLElement | null {
@@ -4173,6 +4292,18 @@ function PlayPage() {
     setAim(null);
     apply(summon(duel, aim.index, index as 0 | 1 | 2));
   }
+
+  slideFire.current = (key: string) => {
+    if (!duel) return;
+    if (key === "face") {
+      if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
+      else if (aim?.kind === "skill") apply(declareSkill(duel, aim.uid, null, aim.index));
+      return;
+    }
+    const [side, slot] = key.split("-").map(Number);
+    const mon = duel.players[side as Side]?.field[slot];
+    if (mon) onUnit(side as Side, mon);
+  };
 
   function onUnit(side: Side, mon: FieldMon) {
     if (suppressClick.current) {
@@ -6492,6 +6623,7 @@ function PlayPage() {
               apply(useSkill(duel, uid, null, 2));
             }}
             onLure={(uid) => setLureAsk(uid)}
+            onSlide={startSlide}
             setAim={setAim}
             apply={apply}
           />
@@ -6911,6 +7043,9 @@ function isPrime(duel: Duel, mon: FieldMon, side: Side) {
   return gnawReady(duel, mon, side);
 }
 
+/** A button on a monster that picks a target, for ấn giữ rồi trượt: Tấn công, or the skill it aims. */
+type ChipSlide = { kind: "attack"; uid: string } | { kind: "skill"; uid: string; index: number };
+
 function UnitChips({
   duel,
   uid,
@@ -6921,6 +7056,7 @@ function UnitChips({
   onBless,
   onChronoFlow,
   onLure,
+  onSlide,
   setAim,
   apply,
 }: {
@@ -6934,6 +7070,8 @@ function UnitChips({
   onBless: () => void;
   onChronoFlow: (uid: string) => void;
   onLure: (uid: string) => void;
+  /** Ấn giữ rồi trượt (chủ game 31/10): a button that picks a target starts a slide to it. */
+  onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void;
   setAim: (aim: Aim | null) => void;
   apply: (next: Duel) => void;
 }) {
@@ -6947,8 +7085,10 @@ function UnitChips({
   const noSkill = (mon.dim && !riposte) || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
   const noAttack = noSkill || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
   const empty = you.field.filter((unit) => !unit).length;
-  const y: Array<{ key: string; label: string; go: () => void }> = [];
-  const z: Array<{ key: string; label: string; go: () => void }> = [];
+  type Row = { key: string; label: string; go: () => void; slide?: ChipSlide };
+  const y: Row[] = [];
+  const z: Row[] = [];
+  const aimed = (skillIndex: number): ChipSlide => ({ kind: "skill", uid, index: skillIndex });
   const afford = (cost: number) => Boolean(duel.parley && duel.step === "respond") || you.orb >= cost;
   const aimSkill = (skillIndex: number) => setAim({ kind: "skill", uid, index: skillIndex });
   // Chỉ bên giữ kiếm (token tấn công của vòng) được đánh và dùng kỹ năng gây sát thương; Trả đòn thì luôn được.
@@ -6972,16 +7112,16 @@ function UnitChips({
       if (!sword && harmSkill(card.id, chip.skill)) continue;
       // Skill chậm (chủ game 29/10): a skill that lands on several is not for striking back; its button is hidden.
       if (riposte && slowSkill(duel, uid, chip.skill)) continue;
-      y.push({ key: chip.key, label: chip.label, go: chip.go });
+      y.push({ key: chip.key, label: chip.label, go: chip.go, ...(chip.aims ? { slide: aimed(chip.skill) } : {}) });
     }
   }
 
   if (attackable && !noSkill && !mon.copy && card.id === "ga-he-dang-so") {
     if (you.orb >= 1) y.push({ key: "charge", label: chipLabel(card.id, "charge"), go: () => apply(useSkill(duel, uid, null, 0)) });
-    if (mon.charge >= 2 && sword) z.push({ key: "cast", label: chipLabel(card.id, "cast"), go: () => aimSkill(1) });
+    if (mon.charge >= 2 && sword) z.push({ key: "cast", label: chipLabel(card.id, "cast"), go: () => aimSkill(1), slide: aimed(1) });
   }
   if (attackable && !mon.copy && card.id === "sat-nhan-bat-giu" && !mon.seized && mon.stun === 0 && (mon.chain ?? 0) === 0 && (mon.path ?? 0) === 0 && !mon.cage) {
-    y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0) });
+    y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0), slide: aimed(0) });
   }
   if (attackable && !noSkill && card.id === "mat-xanh-huy-diet" && !mon.gaze && you.orb >= 1) {
     y.push({ key: "gaze", label: "Cầu sấm ánh sáng", go: () => apply(useSkill(duel, uid, null, 0)) });
@@ -6995,19 +7135,20 @@ function UnitChips({
       y.push({ key: "gust", label: chipLabel(card.id, "gust"), go: () => apply(useSkill(duel, uid, null, 0)) });
       if (!mon.bolt && you.orb >= 1) y.push({ key: "bolt", label: chipLabel(card.id, "bolt"), go: () => apply(useSkill(duel, uid, null, 2)) });
     }
-    if (!noSkill) y.push({ key: "lure", label: chipLabel(card.id, "lure"), go: () => aimSkill(3) });
+    if (!noSkill) y.push({ key: "lure", label: chipLabel(card.id, "lure"), go: () => aimSkill(3), slide: aimed(3) });
   }
   if (attackable && !noSkill && (card.id === "my-dieu-nhan" || card.id === "nu-chua-dieu-nhan")) {
     const spent = new Set(mon.shed ?? []);
     const gust = card.id === "nu-chua-dieu-nhan" ? 0 : 1;
     const charm = 0;
     if (!spent.has("gust") && you.orb >= gust) y.push({ key: "gust", label: chipLabel(card.id, "gust"), go: () => apply(useSkill(duel, uid, null, 0)) });
-    if (card.id === "nu-chua-dieu-nhan" && mon.lure) y.push({ key: "lure", label: chipLabel(card.id, "lure"), go: () => aimSkill(3) });
+    if (card.id === "nu-chua-dieu-nhan" && mon.lure) y.push({ key: "lure", label: chipLabel(card.id, "lure"), go: () => aimSkill(3), slide: aimed(3) });
     else if (!spent.has("charm") && you.orb >= charm) {
       y.push({
         key: "charm",
         label: chipLabel(card.id, "charm"),
         go: () => (card.id === "nu-chua-dieu-nhan" ? onLure(uid) : aimSkill(1)),
+        ...(card.id === "nu-chua-dieu-nhan" ? {} : { slide: aimed(1) }),
       });
     }
   }
@@ -7038,7 +7179,7 @@ function UnitChips({
       },
     });
   }
-  if (attackable && !noSkill && card.id === "may-quay-thuong" && you.orb >= 1 && sword) y.push({ key: "rage", label: chipLabel(card.id, "rage"), go: () => aimSkill(1) });
+  if (attackable && !noSkill && card.id === "may-quay-thuong" && you.orb >= 1 && sword) y.push({ key: "rage", label: chipLabel(card.id, "rage"), go: () => aimSkill(1), slide: aimed(1) });
   if (attackable && !noSkill && card.id === "trai-tim-hai-long" && sword) {
     y.push({ key: "tide", label: chipLabel(card.id, "tide"), go: () => setAim({ kind: "tide", uid }) });
   }
@@ -7102,8 +7243,19 @@ function UnitChips({
     const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : tone === "z" ? "risk" : "active";
     return { icon: hit?.icon ?? (tone === "z" ? "magic-swirl" : "sparkles"), kind };
   };
-  const rows: Array<{ key: string; label: string; go: () => void; icon: string; kind: UnitActKind }> = [
-    ...(strikeShown ? [{ key: "attack", label: attackLabel(), go: () => (riposte ? apply(pickCounter(duel, "phys")) : setAim({ kind: "attack", uid })), icon: "broadsword", kind: "attack" as const }] : []),
+  const rows: Array<Row & { icon: string; kind: UnitActKind }> = [
+    ...(strikeShown
+      ? [
+          {
+            key: "attack",
+            label: attackLabel(),
+            go: () => (riposte ? apply(pickCounter(duel, "phys")) : setAim({ kind: "attack", uid })),
+            icon: "broadsword",
+            kind: "attack" as const,
+            ...(riposte ? {} : { slide: { kind: "attack", uid } as ChipSlide }),
+          },
+        ]
+      : []),
     ...y.map((item) => ({ ...item, ...lookOf(item.label, "y") })),
     ...z.map((item) => ({ ...item, ...lookOf(item.label, "z") })),
   ];
@@ -7114,7 +7266,13 @@ function UnitChips({
     <div className={`unit-acts${riposte ? " is-riposte" : ""}`} style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
       {riposte ? <p className="riposte-title">{tr("Trả đòn")}</p> : null}
       {rows.map((row) => (
-        <button key={row.key} type="button" className={`unit-act is-${row.kind} press`} onClick={row.go}>
+        <button
+          key={row.key}
+          type="button"
+          className={`unit-act is-${row.kind} press`}
+          onClick={row.go}
+          onPointerDown={row.slide && onSlide ? (event) => onSlide(row.slide!, row.go, event) : undefined}
+        >
           <span className="unit-act-ico">
             <span className="unit-act-core">
               <Glyph name={row.icon} />
