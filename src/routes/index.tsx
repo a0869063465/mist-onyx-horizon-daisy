@@ -6,6 +6,7 @@ import { START_RANK, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
+import { useMail } from "@/lib/mail-box";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -20,13 +21,14 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection"; go?: () => void };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail"; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
   const [missions, setMissions] = useState(false);
   const [face, setFace] = useState<string | null>(null);
   useLang();
+  const mails = useMail();
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
     const book = loadBook();
@@ -44,7 +46,7 @@ function Home() {
     { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
     { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg" },
     { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg" },
-    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg" },
+    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
   ];
   return (
     <main className="home">
@@ -128,6 +130,7 @@ function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index
         <span>{tr(tab.label)}</span>
       </span>
       {shut ? <LockIcon /> : null}
+      {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
     </>
   );
   const className = `home-tab is-${side}${shut ? " is-shut" : ""}`;

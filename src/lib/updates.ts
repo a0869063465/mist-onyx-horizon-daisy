@@ -800,6 +800,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: thẻ lú nửa ra mép, hồ sơ có tên và hạng (Tập chơi IV), hai nút PvE (khoá) và PvP khít nhau, bánh răng mới.",
   "Bàn đấu mới.",
   "Nút OK / chuyển lượt đổi icon mới.",
+  "Hộp thư mới ở menu chính.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -14,6 +14,7 @@ import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as DeckRouteImport } from './routes/deck'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
+import { Route as MailRouteImport } from './routes/mail'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -43,6 +44,11 @@ const GuideRoute = GuideRouteImport.update({
 const HopThuRoute = HopThuRouteImport.update({
   id: '/hop-thu',
   path: '/hop-thu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MailRoute = MailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModesRoute = ModesRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/deck': typeof DeckRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
+  '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/deck': typeof DeckRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
+  '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/deck': typeof DeckRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
+  '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/deck'
     | '/guide'
     | '/hop-thu'
+    | '/mail'
     | '/modes'
     | '/play'
     | '/shop'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/deck'
     | '/guide'
     | '/hop-thu'
+    | '/mail'
     | '/modes'
     | '/play'
     | '/shop'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/deck'
     | '/guide'
     | '/hop-thu'
+    | '/mail'
     | '/modes'
     | '/play'
     | '/shop'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   DeckRoute: typeof DeckRoute
   GuideRoute: typeof GuideRoute
   HopThuRoute: typeof HopThuRoute
+  MailRoute: typeof MailRoute
   ModesRoute: typeof ModesRoute
   PlayRoute: typeof PlayRoute
   ShopRoute: typeof ShopRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/hop-thu'
       fullPath: '/hop-thu'
       preLoaderRoute: typeof HopThuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mail': {
+      id: '/mail'
+      path: '/mail'
+      fullPath: '/mail'
+      preLoaderRoute: typeof MailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/modes': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeckRoute: DeckRoute,
   GuideRoute: GuideRoute,
   HopThuRoute: HopThuRoute,
+  MailRoute: MailRoute,
   ModesRoute: ModesRoute,
   PlayRoute: PlayRoute,
   ShopRoute: ShopRoute,
