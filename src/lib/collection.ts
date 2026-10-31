@@ -318,3 +318,14 @@ export function claimSet(set: CardSet): number {
   addStars(stars);
   return stars;
 }
+
+/** Số lá có / tổng và tiến độ từng album (chỉ các lá có số No), cho hồ sơ bạn bè. */
+export function collectionStat(owned: Set<string>): { have: number; total: number; albums: { name: string; have: number; total: number }[] } {
+  const list = albums().filter((album) => album.cards.length > 0);
+  const seen = new Set<string>();
+  const rows = list.map((album) => {
+    for (const card of album.cards) seen.add(card.id);
+    return { name: album.name, have: album.cards.filter((card) => owned.has(card.id)).length, total: album.cards.length };
+  });
+  return { have: [...seen].filter((id) => owned.has(id)).length, total: seen.size, albums: rows };
+}

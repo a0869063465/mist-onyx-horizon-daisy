@@ -7,6 +7,8 @@ import { artSrc } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import { loadProfile } from "@/lib/profile";
+import { collectionStat, collectionOwned } from "@/lib/collection";
+import { ownedIds } from "@/lib/shop";
 
 const EVERY = 5000;
 
@@ -37,7 +39,7 @@ export function FriendPulse() {
         const book = loadBook();
         const entry = book.decks.find((row) => row.n === book.active) ?? book.decks[0] ?? null;
         const where = currentMode();
-        const profile = JSON.stringify(loadProfile());
+        const profile = JSON.stringify({ ...loadProfile(), collection: collectionStat(collectionOwned(ownedIds())) });
         const fresh = profile !== sentProfile.current;
         const got = await pulse({ data: { id, cover: entry ? coverOf(entry) : null, ...where, ...(fresh ? { profile } : {}) } });
         if (got.ok && fresh) sentProfile.current = profile;

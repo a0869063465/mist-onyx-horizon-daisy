@@ -2334,7 +2334,7 @@ function PlayPage() {
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
     // Hồ sơ (chủ game 31/10): chỉ trận với người (Đánh thường, Tuỳ chọn).
     if (duel.mode === "net" && duel.mid && !tutorial && !trial) {
-      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null, at: Date.now() });
+      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null, at: Date.now(), turns: duel.clock ?? 0 });
     }
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
