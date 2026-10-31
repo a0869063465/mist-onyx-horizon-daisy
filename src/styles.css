@@ -12712,6 +12712,14 @@ button.watch-back {
   font-family: "Barlow Condensed", "Be Vietnam Pro", sans-serif;
 }
 .rp-top { display: flex; align-items: center; gap: 0.6rem; }
+.rp-top.is-grip { cursor: grab; touch-action: none; user-select: none; }
+.rp-top.is-grip:active { cursor: grabbing; }
+.stage.is-replay { pointer-events: none; }
+.stage.is-replay .rp-bar, .stage.is-replay .actions .act.replay-cam { pointer-events: auto; }
+.stage .actions .act.replay-cam { z-index: 902; }
+.stage .actions .act.replay-cam .act-face { filter: drop-shadow(0 0 0.35rem rgba(80, 170, 255, 0.85)); animation: replay-cam-glow 2.4s ease-in-out infinite; }
+.stage .actions .act.replay-cam:not(.is-on) .act-face { opacity: 0.75; }
+@keyframes replay-cam-glow { 0%, 100% { filter: drop-shadow(0 0 0.25rem rgba(80, 170, 255, 0.55)); } 50% { filter: drop-shadow(0 0 0.7rem rgba(120, 200, 255, 1)); } }
 .rp-top b { font-size: 0.95rem; letter-spacing: 0.14em; color: #ffe3a3; }
 .rp-round { padding: 0.05rem 0.55rem; border-radius: 99px; background: rgba(95, 224, 255, 0.16); color: #8be8ff; font-size: 0.85rem; letter-spacing: 0.06em; }
 .rp-exit { margin-left: auto; padding: 0.22rem 0.8rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 99px; background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; font-size: 0.85rem; cursor: pointer; }

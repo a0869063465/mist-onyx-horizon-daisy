@@ -1877,6 +1877,9 @@ function PlayPage() {
   const [watch, setWatch] = useState<{ friend: string; over: boolean } | null>(null);
   // Xem lại trận (chủ game 31/10): sách khung, khung đang xem, đang chạy, tốc độ.
   const [replay, setReplay] = useState<{ book: ReplayBook; at: number; playing: boolean; speed: 1 | 2 | 4 } | null>(null);
+  /** Thanh điều khiển xem lại (chủ game 01/11): nút camera bật/tắt, kéo bằng dải tiêu đề, vị trí giữ tới khi thoát. */
+  const [rpShow, setRpShow] = useState(true);
+  const [rpPos, setRpPos] = useState<{ x: number; y: number } | null>(null);
   const friendPulse = usePulse();
   const watchPush = useRef<{ at: number; timer: number; rev: number }>({ at: 0, timer: 0, rev: 0 });
 
@@ -5407,14 +5410,16 @@ function PlayPage() {
       : null;
 
   return (
-    <main className="stage is-play" data-cut={cut.top > 0 ? "" : undefined}>
+    <main className={`stage is-play${replay ? " is-replay" : ""}`} data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       <DrawFlights flights={flights} onDone={flightDone} />
       {watch ? (
         <>
           <div className="watch-shield" aria-hidden="true" />
-          {replay ? (
+          {replay && rpShow ? (
             <ReplayBar
+              pos={rpPos}
+              onMove={setRpPos}
               at={replay.at}
               total={replay.book.length}
               round={duel.clock ?? 1}
@@ -6785,12 +6790,19 @@ function PlayPage() {
             ở chỗ hai nút rút cũ, chưa bấm được (hàng chờ hành động làm sau). Rút bài = bấm xấp bài úp. */}
         <div className="actions is-spread">
           {/* Hàng chờ (chủ game 28/10): X huỷ hết hàng chờ, con mắt bật/tắt xem trước; cả hai khép khi không có gì chờ. */}
-          {board.drawMon.hidden ? null : (
+          {replay ? (
+            board.endTurn.hidden ? null : (
+              <button type="button" className={`act medal-act press replay-cam${rpShow ? " is-on" : ""}`} style={pinMedal(board.endTurn)} aria-label={tr("Thanh điều khiển")} aria-pressed={rpShow} onClick={() => setRpShow((on) => !on)}>
+                <img className="medal act-face" src="/ui/replay-cam.webp?v=1" alt="" draggable={false} />
+              </button>
+            )
+          ) : null}
+          {replay || board.drawMon.hidden ? null : (
             <button type="button" className={`oracle-act${queue || markId || picking ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !markId && !picking} style={pinMedal(board.drawMon)} onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : cancelQueue())}>
               <OracleOrb kind="cancel" state={queue || markId || picking ? "open" : "shut"} />
             </button>
           )}
-          {board.drawSpell.hidden ? null : (
+          {replay || board.drawSpell.hidden ? null : (
             <button type="button" className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!eyeOn} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
               {peek && eyeOn ? (
                 <span className="oracle-smoke" aria-hidden="true">
@@ -6804,7 +6816,7 @@ function PlayPage() {
               <OracleOrb kind="eye" state={eyeOn ? (peek ? "look" : "open") : "shut"} />
             </button>
           )}
-          {mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
+          {!replay && mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
             <button
               type="button"
               className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
@@ -7947,15 +7959,35 @@ function SwapGhost({ ghost, onDone }: { ghost: { mon: FieldMon; rect: { left: nu
 }
 
 /** Dải điều khiển khi xem lại trận (chủ game 31/10): lùi 1 bước, chạy / tạm dừng, tới 1 bước, thanh tua kèm Vòng, x1/x2/x4. */
-function ReplayBar({ at, total, round, playing, speed, onSeek, onStep, onPlay, onSpeed, onExit }: { at: number; total: number; round: number; playing: boolean; speed: number; onSeek: (at: number) => void; onStep: (by: number) => void; onPlay: () => void; onSpeed: () => void; onExit: () => void }) {
+function ReplayBar({ pos, onMove, at, total, round, playing, speed, onSeek, onStep, onPlay, onSpeed, onExit }: { pos: { x: number; y: number } | null; onMove: (pos: { x: number; y: number }) => void; at: number; total: number; round: number; playing: boolean; speed: number; onSeek: (at: number) => void; onStep: (by: number) => void; onPlay: () => void; onSpeed: () => void; onExit: () => void }) {
   const icon = (d: string) => (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d={d} />
     </svg>
   );
+  const box = useRef<HTMLDivElement | null>(null);
+  const grab = useRef<{ dx: number; dy: number } | null>(null);
+  const down = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("button")) return;
+    const rect = box.current?.getBoundingClientRect();
+    if (!rect) return;
+    grab.current = { dx: event.clientX - (rect.left + rect.width / 2), dy: event.clientY - (rect.top + rect.height / 2) };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const drag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const hold = grab.current;
+    const rect = box.current?.getBoundingClientRect();
+    if (!hold || !rect) return;
+    const halfW = rect.width / 2;
+    const halfH = rect.height / 2;
+    onMove({
+      x: Math.min(Math.max(event.clientX - hold.dx, halfW), window.innerWidth - halfW),
+      y: Math.min(Math.max(event.clientY - hold.dy, halfH), window.innerHeight - halfH),
+    });
+  };
   return (
-    <div className="rp-bar">
-      <div className="rp-top">
+    <div className="rp-bar" ref={box} style={pos ? { left: pos.x, top: pos.y } : undefined}>
+      <div className="rp-top is-grip" onPointerDown={down} onPointerMove={drag} onPointerUp={() => (grab.current = null)} onPointerCancel={() => (grab.current = null)}>
         <b>{tr("XEM LẠI TRẬN")}</b>
         <span className="rp-round">
           {tr("Vòng")} {round}

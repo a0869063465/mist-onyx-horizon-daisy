@@ -811,6 +811,7 @@ export const PENDING_NOTES: string[] = [
   "Xem lại trận (replay) trong Lịch sử đấu, cả trận Vs Máy; tua, tạm dừng, x1/x2/x4.",
   "Bấm ảnh đại diện ở menu để xem hồ sơ của mình; bấm hàng trên bảng xếp hạng để xem hồ sơ người đó.",
   "Bảng xếp hạng: hàng kính mờ trong suốt, bấm hàng để chọn, bấm lại để xem hồ sơ.",
+  "Xem lại trận: nút camera thay cụm OK, bấm để ẩn hoặc hiện thanh điều khiển, kéo thanh bằng dải tiêu đề.",
 ];
 
 function remarkOf(notes: string[]) {
