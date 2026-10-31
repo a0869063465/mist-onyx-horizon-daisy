@@ -2344,6 +2344,7 @@ function PlayPage() {
         turns: duel.clock ?? 0,
         mine: deckOf(duel.faces?.[mine]),
         foe: deckOf(duel.faces?.[mine === 0 ? 1 : 0]),
+        foeId: duel.faces?.[mine === 0 ? 1 : 0]?.pid ?? undefined,
       });
     }
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);

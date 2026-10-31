@@ -1,14 +1,15 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { tr } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankLabel } from "@/lib/rank";
 import { readProfile, type FriendMode } from "@/lib/friends";
 import { MODE_LABELS, PLAYER_NAME, playerId } from "@/lib/friend-state";
+import { StatBoard } from "@/components/friend-stats";
 import { AlbumPic } from "@/components/collection/album-parts";
 import { DeckDrawer, type SummarySeat } from "@/components/game/match-summary";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { cardName } from "@/lib/collection";
-import { avgTurns, cleanProfile, EMPTY_PROFILE, favourites, winRate, type DeckLite, type Profile } from "@/lib/profile";
+import { cleanProfile, EMPTY_PROFILE, favourites, winRate, type DeckLite, type Profile } from "@/lib/profile";
 
 const MODE_NAMES = { quick: "Đánh thường", custom: "Tuỳ chọn" } as const;
 
@@ -24,15 +25,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "stats", label: "Chỉ số" },
   { key: "collection", label: "Bộ sưu tập" },
 ];
-
-function Row({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="fp-cell">
-      <span>{tr(label)}</span>
-      <b>{value}</b>
-    </div>
-  );
-}
 
 const percent = (have: number, total: number) => (total ? Math.floor((have / total) * 100) : 0);
 
@@ -68,18 +60,12 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
   const best = favourites(profile);
   const bg = ready?.cover ? artSrc(ready.cover, 1) : null;
   const pet = best.cover ? artSrc(best.cover, 1) : null;
-  const turns = avgTurns(profile);
   const col = profile.collection;
   const albumsDone = col ? col.albums.filter((row) => row.total > 0 && row.have >= row.total).length : 0;
   const games = profile.recent.filter((game) => filter === "all" || game.mode === filter);
   const sets = col?.sets ?? [];
   const set = sets[Math.min(pick, Math.max(0, sets.length - 1))];
   const setHave = set ? set.cards.filter((card) => card.own).length : 0;
-  const rate = (mode: "quick" | "custom") => {
-    const played = profile.modes[mode];
-    const wins = profile.winsBy?.[mode] ?? 0;
-    return `${played ? Math.round((wins / played) * 100) : 0}% · ${wins}/${played}`;
-  };
 
   return (
     <div className={`fp is-${tab}`} role="dialog" aria-label={tr(PLAYER_NAME)}>
@@ -220,20 +206,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             </ul>
           )
         ) : null}
-        {tab === "stats" ? (
-          <div className="fp-sheet">
-            <div className="fp-grid2">
-              <Row label="Trận" value={profile.games} />
-              <Row label="Tỉ lệ thắng" value={`${winRate(profile)}%`} />
-              <Row label="Thắng" value={profile.wins} />
-              <Row label="Thua" value={profile.games - profile.wins} />
-              <Row label="Chuỗi thắng dài nhất" value={profile.best ?? 0} />
-              <Row label="Lối chơi (lượt trung bình)" value={turns ?? "—"} />
-              <Row label="Đánh thường" value={rate("quick")} />
-              <Row label="Tuỳ chọn" value={rate("custom")} />
-            </div>
-          </div>
-        ) : null}
+        {tab === "stats" ? <StatBoard friend={friend} /> : null}
         {tab === "collection" ? (
           col ? (
             <div className="fp-coll">

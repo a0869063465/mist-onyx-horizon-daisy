@@ -300,3 +300,82 @@ export const readProfile = createServerFn({ method: "POST" })
     const mode = Number(row.seen_at) >= Date.now() - STALE_MS ? modeOf(row.mode) : null;
     return { ok: true, id: friend, cover: row.cover, mode, profile: row.profile };
   });
+
+/** Bảng xếp hạng chỉ số (chủ game 31/10): mọi người chơi có hồ sơ trên máy chủ, hoặc chỉ mình + bạn bè của mình. */
+export type BoardScope = "all" | "friends";
+const BOARD_ROWS = 20;
+const FIELD_CAP = 3000;
+
+async function boardField(sql: Awaited<ReturnType<typeof db>>, id: string, subject: string, scope: BoardScope) {
+  const { cleanProfile } = await import("@/lib/profile");
+  const toEntry = (row: { id: string; cover: string | null; profile: string | null }) => {
+    const profile = cleanProfile(row.profile);
+    return profile ? { id: row.id, cover: row.cover, profile } : null;
+  };
+  const field: NonNullable<ReturnType<typeof toEntry>>[] = [];
+  if (scope === "friends") {
+    const links = await sql<{ a: string; b: string }>`select a, b from clash_friends where status = 'friend' and (a = ${id} or b = ${id})`;
+    const ids = [id, ...links.map((row) => (row.a === id ? row.b : row.a))];
+    for (const one of ids.slice(0, 500)) {
+      const rows = await sql<{ id: string; cover: string | null; profile: string | null }>`select id, cover, profile from clash_players where id = ${one}`;
+      const entry = rows[0] ? toEntry(rows[0]) : null;
+      if (entry) field.push(entry);
+    }
+  } else {
+    const rows = await sql<{ id: string; cover: string | null; profile: string | null }>`select id, cover, profile from clash_players where profile is not null limit ${FIELD_CAP}`;
+    for (const row of rows) {
+      const entry = toEntry(row);
+      if (entry) field.push(entry);
+    }
+  }
+  if (!field.some((entry) => entry.id === subject)) {
+    const rows = await sql<{ id: string; cover: string | null; profile: string | null }>`select id, cover, profile from clash_players where id = ${subject}`;
+    const entry = rows[0] ? toEntry(rows[0]) : null;
+    if (entry) field.push(entry);
+  }
+  return field;
+}
+
+export type BoardView =
+  | { ok: true; total: number; rows: import("@/lib/ranking").Ranked[]; subject: import("@/lib/ranking").Ranked | null; first: import("@/lib/ranking").Ranked | null }
+  | { ok: false };
+
+export const rankBoard = createServerFn({ method: "POST" })
+  .validator((data: { id: string; subject: string; stat: string; scope: string; q?: string }) => data)
+  .handler(async ({ data }): Promise<BoardView> => {
+    const id = cleanId(data.id);
+    const subject = cleanId(data.subject);
+    if (!validId(id) || !validId(subject)) return { ok: false };
+    const { STAT_LIST, rankAll } = await import("@/lib/ranking");
+    const stat = STAT_LIST.find((one) => one.key === data.stat)?.key;
+    if (!stat) return { ok: false };
+    const sql = await db();
+    if (id !== subject && !(await areFriends(sql, id, subject))) return { ok: false };
+    const scope: BoardScope = data.scope === "friends" ? "friends" : "all";
+    const ranked = rankAll(await boardField(sql, id, subject, scope), stat);
+    const q = cleanQuery(data.q);
+    const shown = q ? ranked.filter((row) => row.id.includes(q)) : ranked;
+    return { ok: true, total: ranked.length, rows: shown.slice(0, BOARD_ROWS), subject: ranked.find((row) => row.id === subject) ?? null, first: ranked[0] ?? null };
+  });
+
+function cleanQuery(raw: unknown): string {
+  return typeof raw === "string" ? raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, ID_LENGTH) : "";
+}
+
+export type RadarView = { ok: true; total: number; enough: boolean; scores: Record<string, number> } | { ok: false };
+
+/** Tổng quan: điểm x/5 của người đó trên 5 trục so với mọi người (hoặc bạn bè) đã có hồ sơ. */
+export const rankRadar = createServerFn({ method: "POST" })
+  .validator((data: { id: string; subject: string; scope: string }) => data)
+  .handler(async ({ data }): Promise<RadarView> => {
+    const id = cleanId(data.id);
+    const subject = cleanId(data.subject);
+    if (!validId(id) || !validId(subject)) return { ok: false };
+    const sql = await db();
+    if (id !== subject && !(await areFriends(sql, id, subject))) return { ok: false };
+    const { RADAR_AXES, RADAR_MIN, radarScore } = await import("@/lib/ranking");
+    const field = await boardField(sql, id, subject, data.scope === "friends" ? "friends" : "all");
+    const scores: Record<string, number> = {};
+    for (const axis of RADAR_AXES) scores[axis] = radarScore(field, subject, axis);
+    return { ok: true, total: field.length, enough: field.length >= RADAR_MIN, scores };
+  });

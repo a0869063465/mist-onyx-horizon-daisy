@@ -220,7 +220,7 @@ export type Hold = {
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
  *  also has its own name (a Japanese name, chủ game 22/10). `cards`: the deck it brought, for Tìm hiểu bộ bài on the
  *  summary after the match. */
-export type DuelFace = { deck: string | null; cover: string | null; name?: string | null; cards?: { monsters: string[]; spells: string[] } | null };
+export type DuelFace = { deck: string | null; cover: string | null; pid?: string | null; name?: string | null; cards?: { monsters: string[]; spells: string[] } | null };
 
 /** Chơi lại in Tuỳ chọn (chủ game 22/10): a side wants the same pair to play again, or has left the room. */
 export type AgainVote = "want" | "left" | null;

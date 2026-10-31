@@ -477,7 +477,7 @@ function DeckSelectPage() {
 /** A deck as a room gets it: the cards, with its name and cover for the VS screen (chủ game 22/10). */
 function netDeck(row: DeckEntry): NetDeck {
   const cards = cardsOf(row);
-  return { ...cards, fake: fakeIds([...cards.monsters, ...cards.spells]), name: row.name, cover: coverOf(row) };
+  return { ...cards, fake: fakeIds([...cards.monsters, ...cards.spells]), name: row.name, cover: coverOf(row), pid: playerId() };
 }
 
 /**

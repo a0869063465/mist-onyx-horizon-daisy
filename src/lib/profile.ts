@@ -5,10 +5,15 @@
 export type ProfileMode = "quick" | "custom";
 /** Bộ bài mang vào trận (cho dấu ba gạch trong Lịch sử đấu). */
 export type DeckLite = { monsters: string[]; spells: string[]; name?: string | null; cover?: string | null };
-export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number; mine?: DeckLite; foe?: DeckLite };
+export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number; mine?: DeckLite; foe?: DeckLite; foeId?: string };
 export type AlbumStat = { name: string; cover: string; have: number; total: number };
 export type SetStat = { name: string; reward: number; claimed: boolean; cards: { id: string; own: boolean }[] };
 export type CollectionStat = { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] };
+/**
+ * Chuỗi thắng (chủ game 31/10): chỉ trận Đánh thường. `run` = ID đối thủ của các trận thắng đang tính trong chuỗi hiện tại,
+ * `last`/`same` = đối thủ thắng gần nhất và số trận thắng liên tiếp trước cùng người đó. `best` = chuỗi hợp lệ dài nhất từng đạt.
+ */
+export type Chain = { best: number; run: string[]; last: string | null; same: number };
 export type Profile = {
   games: number;
   wins: number;
@@ -22,6 +27,7 @@ export type Profile = {
   best?: number;
   winsBy?: Record<ProfileMode, number>;
   collection?: CollectionStat;
+  chain?: Chain;
 };
 
 const KEY = "clash-profile";
@@ -39,6 +45,49 @@ export function loadProfile(): Profile {
   return { ...EMPTY_PROFILE, modes: { quick: 0, custom: 0 }, covers: {}, recent: [] };
 }
 
+const RUN_CAP = 300;
+
+/**
+ * Độ dài chuỗi sau khi áp quy tắc "ít nhất một nửa là người khác nhau": số người khác nhau × 2 ≥ số trận, không đủ thì
+ * loại dần một trận của người gặp nhiều nhất.
+ */
+export function chainLength(run: string[]): number {
+  const counts = new Map<string, number>();
+  for (const id of run) counts.set(id, (counts.get(id) ?? 0) + 1);
+  let total = run.length;
+  while (total > 0 && counts.size * 2 < total) {
+    let top = "";
+    let most = 0;
+    for (const [id, n] of counts) if (n > most) { top = id; most = n; }
+    if (most <= 1) break;
+    counts.set(top, most - 1);
+    total -= 1;
+  }
+  return total;
+}
+
+/**
+ * Cập nhật chuỗi thắng sau một trận Đánh thường. Thua thì hết chuỗi. Thắng không có ID đối thủ (trận cũ) thì không tính.
+ * Thắng cùng một đối thủ lần thứ 3 liên tiếp trở đi thì bỏ qua, chuỗi không đứt.
+ */
+export function advanceChain(chain: Chain | undefined, win: boolean, foeId: string | undefined): Chain {
+  const now: Chain = { best: chain?.best ?? 0, run: [...(chain?.run ?? [])], last: chain?.last ?? null, same: chain?.same ?? 0 };
+  if (!win) return { ...now, run: [], last: null, same: 0 };
+  if (!foeId) return now;
+  now.same = now.last === foeId ? now.same + 1 : 1;
+  now.last = foeId;
+  if (now.same > 2) return now;
+  now.run = [...now.run, foeId].slice(-RUN_CAP);
+  now.best = Math.max(now.best, chainLength(now.run));
+  return now;
+}
+
+/** Bản gửi lên máy chủ: bỏ danh sách đối thủ của chuỗi hiện tại, chỉ giữ kỷ lục. */
+export function shareable(profile: Profile): Profile {
+  const { chain, ...rest } = profile;
+  return { ...rest, chain: { best: chain?.best ?? 0, run: [], last: null, same: 0 } };
+}
+
 /** Ghi một trận với người; cùng `mid` chỉ tính một lần. */
 export function recordGame(game: ProfileGame): boolean {
   if (!game.mid) return false;
@@ -54,6 +103,7 @@ export function recordGame(game: ProfileGame): boolean {
     profile.turns = (profile.turns ?? 0) + game.turns;
     profile.turnGames = (profile.turnGames ?? 0) + 1;
   }
+  if (game.mode === "quick") profile.chain = advanceChain(profile.chain, game.win, game.foeId);
   profile.modes[game.mode] += 1;
   if (game.cover) profile.covers[game.cover] = (profile.covers[game.cover] ?? 0) + 1;
   profile.recent = [game, ...profile.recent].slice(0, RECENT);
@@ -106,6 +156,7 @@ export function cleanProfile(raw: unknown): Profile | null {
       streak: num(data.streak),
       best: num(data.best),
       winsBy: { quick: num(data.winsBy?.quick), custom: num(data.winsBy?.custom) },
+      chain: { best: num(data.chain?.best), run: [], last: null, same: 0 },
       collection: data.collection
         ? {
             have: num(data.collection.have),
@@ -128,6 +179,7 @@ export function cleanProfile(raw: unknown): Profile | null {
         turns: num(row.turns) || undefined,
         mine: cleanDeck(row.mine),
         foe: cleanDeck(row.foe),
+        foeId: typeof row.foeId === "string" ? row.foeId.slice(0, 8) : undefined,
       })),
     };
   } catch {

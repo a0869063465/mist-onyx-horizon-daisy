@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 /** A deck sent to a room: its cards, and its name and cover for the VS screen (chủ game 22/10). */
-export type NetDeck = { monsters: string[]; spells: string[]; name?: string; cover?: string | null; fake?: string[] };
+export type NetDeck = { monsters: string[]; spells: string[]; name?: string; cover?: string | null; fake?: string[]; pid?: string };
 export type NetSeat = "host" | "guest";
 
 type Vote = "want" | "left" | null;
@@ -41,7 +41,7 @@ function deckOf(value: NetDeck): NetDeck {
   const list = (ids: unknown) =>
     Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string" && id.length < 80).slice(0, 40) : [];
   const text = (raw: unknown, max: number) => (typeof raw === "string" ? raw.slice(0, max) : undefined);
-  return { monsters: list(value?.monsters), spells: list(value?.spells), fake: list(value?.fake), name: text(value?.name, 40), cover: text(value?.cover, 80) ?? null };
+  return { monsters: list(value?.monsters), spells: list(value?.spells), fake: list(value?.fake), name: text(value?.name, 40), cover: text(value?.cover, 80) ?? null, pid: text(value?.pid, 8) };
 }
 
 function readDeck(raw: string | null): NetDeck | null {
