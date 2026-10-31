@@ -167,6 +167,7 @@ import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
 import { pushWatch, readWatch } from "@/lib/friends";
+import { recordGame } from "@/lib/profile";
 import { PLAYER_NAME, playerId, usePulse, WATCH_KEY, WATCH_SEAT_KEY } from "@/lib/friend-state";
 
 export const Route = createFileRoute("/play")({ component: PlayPage });
@@ -2331,6 +2332,10 @@ function PlayPage() {
     // Người xem trận của bạn bè: không cảnh hết trận, không thưởng.
     if (sessionStorage.getItem(WATCH_KEY)) return;
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
+    // Hồ sơ (chủ game 31/10): chỉ trận với người (Đánh thường, Tuỳ chọn).
+    if (duel.mode === "net" && duel.mid && !tutorial && !trial) {
+      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null, at: Date.now() });
+    }
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
     if (earns && duel.mid) {

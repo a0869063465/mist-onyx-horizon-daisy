@@ -12564,3 +12564,36 @@ button.watch-back {
 .stage .watch-bar b { font-family: "Barlow Condensed", sans-serif; letter-spacing: 0.06em; color: #ffe3a3; }
 .stage .watch-bar .fr-btn, .stage > .fr-btn { color: #fff; font-family: "Barlow Condensed", sans-serif; }
 .stage .watch-bar .fr-btn { padding: 0.3rem 0.8rem; border-radius: 99px; }
+/* Hồ sơ bạn bè (chủ game 31/10). */
+.fr-face.is-tap { cursor: pointer; }
+.fp { position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: #060a16; color: #e9eefc; font-family: "Be Vietnam Pro", system-ui, sans-serif; animation: ml-in 0.25s both; }
+.fp-bg { position: fixed; inset: 0; background: #0b1430 center 20% / cover no-repeat; opacity: 0.5; filter: saturate(1.1); }
+.fp-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 10, 22, 0.1) 0%, rgba(6, 10, 22, 0.75) 38%, #060a16 70%); }
+.fp-close { position: fixed; left: 1rem; top: calc(env(safe-area-inset-top, 0px) + 0.8rem); z-index: 2; --gold: #e3c27a; --gold-hi: #ffe3a3; }
+.fp-card { position: relative; z-index: 1; display: grid; gap: 0.85rem; padding: calc(env(safe-area-inset-top, 0px) + 4.2rem) 1rem calc(env(safe-area-inset-bottom, 0px) + 1.4rem); }
+.fp-head { display: flex; align-items: center; gap: 1rem; }
+.fp-face { position: relative; flex: none; width: 5.2rem; height: 5.2rem; }
+.fp-pic { position: absolute; inset: 0; border-radius: 50%; border: 3px solid #e3c27a; background: #0b1430 center 22% / cover no-repeat; box-shadow: 0 0 0 3px rgba(6, 10, 22, 0.9), 0 6px 16px rgba(0, 0, 0, 0.6); }
+.fp-face em { position: absolute; left: 50%; bottom: -0.6rem; transform: translateX(-50%); min-width: 2rem; padding: 0 0.4rem; border-radius: 99px; border: 1.5px solid #e3c27a; background: radial-gradient(circle at 50% 30%, #2d4a8f, #0a1430); font-style: normal; font-family: "Barlow Condensed", sans-serif; font-size: 0.85rem; font-weight: 700; line-height: 1.5rem; text-align: center; }
+.fp-head > div { display: grid; gap: 0.15rem; min-width: 0; }
+.fp-head h2 { margin: 0; font-size: 1.35rem; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8); }
+.fp-head i { font-style: normal; font-family: "Barlow Condensed", sans-serif; letter-spacing: 0.1em; color: rgba(233, 238, 252, 0.6); }
+.fp-rank { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 1.05rem; color: #ffe3a3; }
+.fp-note { margin: 0; color: #ff9b9b; font-size: 0.85rem; }
+.fp-box { padding: 0.7rem 0.85rem 0.8rem; border: 1px solid rgba(227, 194, 122, 0.4); background: rgba(8, 14, 34, 0.78); }
+.fp-box h3 { margin: 0 0 0.5rem; font-family: "Barlow Condensed", sans-serif; font-size: 1rem; letter-spacing: 0.14em; text-transform: uppercase; color: #ffe3a3; }
+.fp-none { margin: 0; font-size: 0.85rem; color: rgba(233, 238, 252, 0.5); }
+.fp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.fp-stats > div { display: grid; justify-items: center; align-content: start; gap: 0.3rem; padding: 0.6rem 0.2rem; border: 1px solid rgba(227, 194, 122, 0.4); background: rgba(8, 14, 34, 0.78); text-align: center; }
+.fp-stats b { display: grid; align-items: center; min-height: 2.4rem; font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; line-height: 1.1; color: #fff; }
+.fp-stats span { font-size: 0.66rem; color: rgba(233, 238, 252, 0.6); }
+.fp-deck { display: block; width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 2px solid #e3c27a; background: #0b1430 center 22% / cover no-repeat; }
+.fp-deck.is-small { width: 1.9rem; height: 1.9rem; border-width: 1.5px; }
+.fp-list { margin: 0; padding: 0; list-style: none; display: grid; }
+.fp-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; border-bottom: 1px solid rgba(227, 194, 122, 0.14); font-size: 0.85rem; }
+.fp-list li:last-child { border-bottom: 0; }
+.fp-list li b { width: 3.2rem; font-family: "Barlow Condensed", sans-serif; font-size: 1.05rem; }
+.fp-list li.is-win b { color: #6be08f; }
+.fp-list li.is-loss b { color: #ff8a8a; }
+.fp-list li span:not(.fp-deck) { flex: 1; color: rgba(233, 238, 252, 0.75); }
+.fp-list li i { font-style: normal; font-size: 0.75rem; color: rgba(233, 238, 252, 0.5); }

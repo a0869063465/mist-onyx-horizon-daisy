@@ -61,7 +61,7 @@ async function areFriends(sql: Awaited<ReturnType<typeof db>>, x: string, y: str
   return rows[0]?.status === "friend";
 }
 
-type PulseIn = { id: string; cover?: string | null; mode?: string | null; room?: string | null; seat?: string | null };
+type PulseIn = { id: string; cover?: string | null; mode?: string | null; room?: string | null; seat?: string | null; profile?: string | null };
 
 /** Mỗi vài giây: báo trạng thái, nhận lời mời vào trận, lời mời kết bạn đang chờ, và lời mời mình gửi bị từ chối. */
 export const pulse = createServerFn({ method: "POST" })
@@ -80,6 +80,8 @@ export const pulse = createServerFn({ method: "POST" })
       values (${id}, ${cover}, ${mode}, ${room}, ${seat}, ${now})
       on conflict (id) do update set cover = ${cover}, mode = ${mode}, room = ${room}, seat = ${seat}, seen_at = ${now}
     `;
+    const profile = typeof data.profile === "string" && data.profile.length < 8000 ? data.profile : null;
+    if (profile) await sql`update clash_players set profile = ${profile} where id = ${id}`;
     if (!mode) await sql`delete from clash_watch where player_id = ${id}`;
     await sql`delete from clash_invites where created_at < ${now - 10 * 60_000}`;
     const invites = await sql<{ id: string; from_id: string; code: string; created_at: number; cover: string | null }>`
@@ -277,4 +279,24 @@ export const readWatch = createServerFn({ method: "POST" })
     const shot = shots[0];
     if (!shot || Number(shot.updated_at) < now - WATCH_STALE) return { phase: "wait" };
     return { phase: "play", duel: shot.duel, rev: Number(shot.rev), side: 0, mode };
+  });
+
+export type ProfileView = { ok: true; id: string; cover: string | null; mode: FriendMode | null; profile: string | null } | { ok: false };
+
+/** Hồ sơ của một người bạn (chỉ bạn bè mới đọc được). */
+export const readProfile = createServerFn({ method: "POST" })
+  .validator((data: { id: string; friend: string }) => data)
+  .handler(async ({ data }): Promise<ProfileView> => {
+    const id = cleanId(data.id);
+    const friend = cleanId(data.friend);
+    if (!validId(id) || !validId(friend)) return { ok: false };
+    const sql = await db();
+    if (!(await areFriends(sql, id, friend))) return { ok: false };
+    const rows = await sql<{ cover: string | null; mode: string | null; seen_at: number; profile: string | null }>`
+      select cover, mode, seen_at, profile from clash_players where id = ${friend}
+    `;
+    const row = rows[0];
+    if (!row) return { ok: false };
+    const mode = Number(row.seen_at) >= Date.now() - STALE_MS ? modeOf(row.mode) : null;
+    return { ok: true, id: friend, cover: row.cover, mode, profile: row.profile };
   });

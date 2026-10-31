@@ -5,6 +5,7 @@ import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankLabel } from "@/lib/rank";
 import { playUi } from "@/lib/sfx";
 import { addFriend, answerFriend, cleanId, friendList, ID_LENGTH, removeFriend, type AskRow, type FriendRow } from "@/lib/friends";
+import { FriendProfile } from "@/components/friend-profile";
 import { MODE_LABELS, PLAYER_NAME, playerId, readPulse, setFriendMatch, setPulse, usePulse } from "@/lib/friend-state";
 
 type Tab = "friends" | "asks" | "sent";
@@ -35,6 +36,7 @@ function FriendsPage() {
   const [menu, setMenu] = useState<string | null>(null);
   const [asking, setAsking] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [look, setLook] = useState<string | null>(null);
   const busy = useRef(false);
 
   const load = useCallback(async () => {
@@ -247,7 +249,13 @@ function FriendsPage() {
               {friends.map((row, order) => (
                 <li key={row.id} style={{ ["--i" as string]: order }}>
                   <div className="fr-row">
-                    <Face cover={row.cover} />
+                    <Face
+                      cover={row.cover}
+                      onOpen={() => {
+                        playUi("select");
+                        setLook(row.id);
+                      }}
+                    />
                     <div className="fr-who">
                       <b>{tr(PLAYER_NAME)}</b>
                       <i>{row.id}</i>
@@ -343,6 +351,7 @@ function FriendsPage() {
           </ul>
         )}
       </section>
+      {look ? <FriendProfile friend={look} onClose={() => setLook(null)} /> : null}
       {note ? <p className="fr-toast is-page">{tr(note)}</p> : null}
       {asking ? (
         <div className="fr-ask-back" onClick={() => setAsking(null)}>
@@ -366,10 +375,10 @@ function FriendsPage() {
   );
 }
 
-function Face({ cover }: { cover: string | null }) {
+function Face({ cover, onOpen }: { cover: string | null; onOpen?: () => void }) {
   const art = cover ? artSrc(cover, 1) : null;
   return (
-    <span className="fr-face">
+    <span className={`fr-face${onOpen ? " is-tap" : ""}`} role={onOpen ? "button" : undefined} tabIndex={onOpen ? 0 : undefined} onClick={onOpen}>
       <span className="fr-pic" style={art ? { backgroundImage: `url(${art})` } : undefined} />
       <em className="fr-lv">lv 1</em>
     </span>

@@ -6,6 +6,7 @@ import { coverOf, loadBook } from "@/lib/deck-book";
 import { artSrc } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
+import { loadProfile } from "@/lib/profile";
 
 const EVERY = 5000;
 
@@ -22,6 +23,7 @@ export function FriendPulse() {
   const [now, setNow] = useState(() => Date.now());
   const seen = useRef(new Map<string, number>());
   const gone = useRef(new Set<string>());
+  const sentProfile = useRef("");
   const busy = useRef(false);
 
   useEffect(() => {
@@ -35,7 +37,10 @@ export function FriendPulse() {
         const book = loadBook();
         const entry = book.decks.find((row) => row.n === book.active) ?? book.decks[0] ?? null;
         const where = currentMode();
-        const got = await pulse({ data: { id, cover: entry ? coverOf(entry) : null, ...where } });
+        const profile = JSON.stringify(loadProfile());
+        const fresh = profile !== sentProfile.current;
+        const got = await pulse({ data: { id, cover: entry ? coverOf(entry) : null, ...where, ...(fresh ? { profile } : {}) } });
+        if (got.ok && fresh) sentProfile.current = profile;
         if (stop || !got.ok) return;
         const at = Date.now();
         for (const row of got.invites) if (!seen.current.has(row.id)) seen.current.set(row.id, at);
