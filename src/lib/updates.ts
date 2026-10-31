@@ -803,6 +803,7 @@ export const PENDING_NOTES: string[] = [
   "Hộp thư mới ở menu chính.",
   "Hộp thư có 4 tab: Thư, Báo vi phạm, Thư quà, Tin tức; nhận quà có màn Bạn đã nhận được.",
   "Trang Tin tức mới ở menu chính.",
+  "Bạn bè: kết bạn bằng ID, xem bạn đang chơi gì, mời bạn vào trận.",
 ];
 
 function remarkOf(notes: string[]) {

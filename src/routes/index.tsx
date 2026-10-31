@@ -7,6 +7,7 @@ import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
 import { useMail } from "@/lib/mail-box";
+import { usePulse } from "@/lib/friend-state";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news"; go?: () => void; dot?: boolean };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends"; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
@@ -29,6 +30,7 @@ function Home() {
   const [face, setFace] = useState<string | null>(null);
   useLang();
   const mails = useMail();
+  const friends = usePulse();
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
     const book = loadBook();
@@ -45,7 +47,7 @@ function Home() {
   const right: Tab[] = [
     { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
     { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg", to: "/news", dot: mails.some((row) => row.kind === "news" && !row.read) },
-    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg" },
+    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
     { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => row.kind !== "news" && (!row.read || row.owing)) },
   ];
   return (

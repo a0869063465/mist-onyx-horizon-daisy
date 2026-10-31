@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as DeckRouteImport } from './routes/deck'
+import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as MailRouteImport } from './routes/mail'
@@ -35,6 +36,11 @@ const CollectionRoute = CollectionRouteImport.update({
 const DeckRoute = DeckRouteImport.update({
   id: '/deck',
   path: '/deck',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FriendsRoute = FriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuideRoute = GuideRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/collection': typeof CollectionRoute
   '/deck': typeof DeckRoute
+  '/friends': typeof FriendsRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/collection': typeof CollectionRoute
   '/deck': typeof DeckRoute
+  '/friends': typeof FriendsRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/collection': typeof CollectionRoute
   '/deck': typeof DeckRoute
+  '/friends': typeof FriendsRoute
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/collection'
     | '/deck'
+    | '/friends'
     | '/guide'
     | '/hop-thu'
     | '/mail'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/collection'
     | '/deck'
+    | '/friends'
     | '/guide'
     | '/hop-thu'
     | '/mail'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/collection'
     | '/deck'
+    | '/friends'
     | '/guide'
     | '/hop-thu'
     | '/mail'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CollectionRoute: typeof CollectionRoute
   DeckRoute: typeof DeckRoute
+  FriendsRoute: typeof FriendsRoute
   GuideRoute: typeof GuideRoute
   HopThuRoute: typeof HopThuRoute
   MailRoute: typeof MailRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/deck'
       fullPath: '/deck'
       preLoaderRoute: typeof DeckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/friends': {
+      id: '/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof FriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guide': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CollectionRoute: CollectionRoute,
   DeckRoute: DeckRoute,
+  FriendsRoute: FriendsRoute,
   GuideRoute: GuideRoute,
   HopThuRoute: HopThuRoute,
   MailRoute: MailRoute,

@@ -5,6 +5,7 @@ import { SoundTap } from "@/components/sound-tap";
 import { MenuMusic } from "@/components/menu-music";
 import { OfflineApp } from "@/components/offline-app";
 import { FullScreen } from "@/components/full-screen";
+import { FriendPulse } from "@/components/friend-pulse";
 import { CopySize } from "@/components/game/copy-text";
 import { publishLayout } from "@/lib/layouts";
 import { GameLoad } from "@/components/game/load-screen";
@@ -49,6 +50,7 @@ export const Route = createRootRoute({
         <CopySize />
         <AuthProvider>
           <Outlet />
+          <FriendPulse />
         </AuthProvider>
         <GameLoad jobs={gameJobs} />
         <Scripts />

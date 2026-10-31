@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS clash_players (
   id text PRIMARY KEY,
   cover text,
   mode text,
+  room text,
+  seat text,
   seen_at bigint NOT NULL
 );
 
@@ -27,3 +29,11 @@ CREATE TABLE IF NOT EXISTS clash_invites (
   created_at bigint NOT NULL
 );
 CREATE INDEX IF NOT EXISTS clash_invites_to ON clash_invites (to_id);
+
+-- Xem trận (đợt B): trận chạy trên máy người chơi (Vs Máy, Test) gửi bản chụp lên đây; người xem đọc.
+CREATE TABLE IF NOT EXISTS clash_watch (
+  player_id text PRIMARY KEY,
+  duel text NOT NULL,
+  rev bigint NOT NULL,
+  updated_at bigint NOT NULL
+);

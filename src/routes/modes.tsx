@@ -16,6 +16,8 @@ import {
 import { tr, useLang } from "@/lib/i18n";
 import { fakeIds } from "@/lib/owned-cards";
 import { joinRoom, leaveQueue, openRoom, seekMatch, type NetDeck } from "@/lib/net-room";
+import { inviteFriend } from "@/lib/friends";
+import { loadFriendMatch, PLAYER_NAME, playerId, setFriendMatch, type FriendMatch } from "@/lib/friend-state";
 
 export const Route = createFileRoute("/modes")({ component: DeckSelectPage });
 
@@ -59,9 +61,9 @@ function reasonOf(error: unknown): string {
 }
 
 /** `quick`: paired by Đánh thường, so the match shows "Đang vào trận…" instead of a code to share. */
-function remember(code: string, seat: "host" | "guest", quick = false) {
+function remember(code: string, seat: "host" | "guest", quick = false, friend = false) {
   sessionStorage.setItem("clash-mode", "net");
-  sessionStorage.setItem("clash-net", JSON.stringify({ code, seat, ...(quick ? { quick: true } : {}) }));
+  sessionStorage.setItem("clash-net", JSON.stringify({ code, seat, ...(quick ? { quick: true } : {}), ...(friend ? { friend: true } : {}) }));
 }
 
 /**
@@ -85,6 +87,9 @@ function DeckSelectPage() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [queueing, setQueueing] = useState(false);
+  // Mời bạn bè vào trận / nhận lời mời (chủ game 31/10): mỗi người tự chọn bộ bài rồi Chơi ngay.
+  const [friend, setFriend] = useState<FriendMatch | null>(null);
+  const [friendNote, setFriendNote] = useState("");
   useLang();
 
   useEffect(() => {
@@ -99,6 +104,7 @@ function DeckSelectPage() {
     );
     setActive(stored.active);
     setMode(loadMode());
+    setFriend(loadFriendMatch());
     setBooted(true);
     // Chơi lại after an Đánh thường match (chủ game 22/10): straight back into the queue with the same deck.
     if (sessionStorage.getItem("clash-requeue")) {
@@ -118,7 +124,7 @@ function DeckSelectPage() {
 
   const decks = deckOrder(book);
   const shown = book.find((row) => row.n === open) ?? null;
-  const modeInfo = MODES.find((item) => item.key === mode) ?? MODES[0];
+  const modeInfo = (friend ? MODES.find((item) => item.key === "custom") : MODES.find((item) => item.key === mode)) ?? MODES[0];
 
   // The builder opens the book's active deck; the state follows too, so the save after a change keeps it.
   function edit(n: number) {
@@ -172,6 +178,10 @@ function DeckSelectPage() {
     saveDeck(cards);
     setActive(row.n);
     saveBook({ decks: book, active: row.n });
+    if (friend) {
+      void withFriend(row, friend);
+      return;
+    }
     if (mode === "custom") {
       setNote("");
       setCode("");
@@ -183,6 +193,43 @@ function DeckSelectPage() {
       return;
     }
     goLocal(mode === "test" ? "test" : "ai");
+  }
+
+  function dropFriend() {
+    setFriendMatch(null);
+    setFriend(null);
+    setFriendNote("");
+  }
+
+  async function withFriend(row: DeckEntry, match: FriendMatch) {
+    setBusy(true);
+    setFriendNote("");
+    try {
+      if (match.kind === "invite") {
+        const opened = await openRoom({ data: { deck: netDeck(row) } });
+        const sent = await inviteFriend({ data: { id: playerId(), to: match.to, code: opened.code } });
+        if (!sent.ok) {
+          setFriendNote(sent.error);
+          setBusy(false);
+          return;
+        }
+        setFriendMatch(null);
+        remember(opened.code, "host", false, true);
+      } else {
+        const joined = await joinRoom({ data: { code: match.code, deck: netDeck(row) } });
+        if (!joined.ok) {
+          setFriendNote(joined.error);
+          setBusy(false);
+          return;
+        }
+        setFriendMatch(null);
+        remember(joined.code, "guest", false, true);
+      }
+      await navigate({ to: "/play" });
+    } catch (error) {
+      setFriendNote(`Mất kết nối.${reasonOf(error)}`);
+      setBusy(false);
+    }
   }
 
   async function host(row: DeckEntry) {
@@ -237,6 +284,19 @@ function DeckSelectPage() {
             {tr("Hướng dẫn")}
           </Link>
         </header>
+        {friend ? (
+          <div className="lor-invite">
+            <span>
+              {friend.kind === "invite"
+                ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
+                : `${tr("Vào trận với")} ${tr(PLAYER_NAME)} ${friend.from}: ${tr("chọn bộ bài rồi Chơi ngay.")}`}
+              {friendNote ? <em className="lor-invite-note"> {tr(friendNote)}</em> : null}
+            </span>
+            <button type="button" onClick={dropFriend}>
+              {tr("Huỷ")}
+            </button>
+          </div>
+        ) : null}
         <div className="lor-bar">
           <button type="button" className="lor-stone" onClick={makeDeck}>
             {tr("Bộ bài mới")}
@@ -262,7 +322,7 @@ function DeckSelectPage() {
           onClick={(event) => event.target === event.currentTarget && setOpen(null)}
         >
           <aside className="lor-drawer" role="dialog" aria-label={shown.name}>
-            <button type="button" className="lor-pill" onClick={() => setPicking(true)}>
+            <button type="button" className="lor-pill" onClick={() => !friend && setPicking(true)}>
               {tr(modeInfo.label)}
             </button>
             <div className="lor-drawer-body">
@@ -299,11 +359,12 @@ function DeckSelectPage() {
                 type="button"
                 className="lor-play"
                 data-ui="confirm"
-                disabled={Boolean(deckIssues(cardsOf(shown)))}
+                disabled={Boolean(deckIssues(cardsOf(shown))) || (Boolean(friend) && busy)}
                 onClick={() => play(shown)}
               >
                 {tr("Chơi ngay")}
               </button>
+              {friend && friendNote ? <p className="lor-note">{tr(friendNote)}</p> : null}
             </div>
             <button
               type="button"

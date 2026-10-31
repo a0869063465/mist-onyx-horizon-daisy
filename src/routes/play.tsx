@@ -2030,7 +2030,9 @@ function PlayPage() {
     setNet(join);
     // A room paired by Đánh thường has both decks already: no code to share.
     const quick = Boolean((join as { quick?: boolean }).quick);
-    setWait(quick ? "Đang vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
+    // Mời bạn bè vào trận (chủ game 31/10): chờ bạn nhận lời mời, không cần đưa mã.
+    const friend = Boolean((join as { friend?: boolean }).friend);
+    setWait(quick ? "Đang vào trận…" : friend && join.seat === "host" ? "Đang chờ bạn vào trận…" : join.seat === "host" ? `Mã ${join.code}. Đợi đối thủ nhập mã này.` : "Đang vào phòng…");
     let stop = false;
     let voting = false;
     const tick = async () => {

@@ -11,7 +11,7 @@ const FILES = "clash-files";
 const PAGES = "clash-pages";
 const FONTS = "clash-fonts";
 const META = "/__offline-meta.json";
-const PAGE_PATHS = ["/", "/modes", "/deck", "/play", "/shop", "/collection", "/tune", "/watch", "/guide", "/hop-thu", "/mail", "/news"];
+const PAGE_PATHS = ["/", "/modes", "/deck", "/play", "/shop", "/collection", "/tune", "/watch", "/guide", "/hop-thu", "/mail", "/news", "/friends"];
 const PAGE_WAIT_MS = 4000;
 
 let syncing = null;
