@@ -3,7 +3,9 @@
  * rồi gửi bản tổng hợp lên máy chủ cho bạn bè xem. Trận trước khi có tính năng này không được tính.
  */
 export type ProfileMode = "quick" | "custom";
-export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number };
+/** Bộ bài mang vào trận (cho dấu ba gạch trong Lịch sử đấu). */
+export type DeckLite = { monsters: string[]; spells: string[]; name?: string | null; cover?: string | null };
+export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number; mine?: DeckLite; foe?: DeckLite };
 export type AlbumStat = { name: string; cover: string; have: number; total: number };
 export type SetStat = { name: string; reward: number; claimed: boolean; cards: { id: string; own: boolean }[] };
 export type CollectionStat = { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] };
@@ -79,6 +81,13 @@ export function winRate(profile: Profile): number {
   return profile.games === 0 ? 0 : Math.round((profile.wins / profile.games) * 100);
 }
 
+function cleanDeck(raw: unknown): DeckLite | undefined {
+  const deck = raw as DeckLite | undefined;
+  if (!deck || !Array.isArray(deck.monsters) || !Array.isArray(deck.spells)) return undefined;
+  const ids = (list: unknown[]) => list.slice(0, 40).map((id) => String(id).slice(0, 80));
+  return { monsters: ids(deck.monsters), spells: ids(deck.spells), name: typeof deck.name === "string" ? deck.name.slice(0, 40) : null, cover: typeof deck.cover === "string" ? deck.cover.slice(0, 80) : null };
+}
+
 /** Đọc bản tổng hợp từ máy chủ: chỉ nhận số và chữ ngắn. */
 export function cleanProfile(raw: unknown): Profile | null {
   try {
@@ -116,6 +125,9 @@ export function cleanProfile(raw: unknown): Profile | null {
         mode: row.mode === "custom" ? "custom" : "quick",
         cover: typeof row.cover === "string" ? row.cover.slice(0, 80) : null,
         at: num(row.at),
+        turns: num(row.turns) || undefined,
+        mine: cleanDeck(row.mine),
+        foe: cleanDeck(row.foe),
       })),
     };
   } catch {

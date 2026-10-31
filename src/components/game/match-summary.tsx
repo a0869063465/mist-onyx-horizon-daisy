@@ -159,7 +159,7 @@ function SeatRow({ seat, at, onLook }: { seat: SummarySeat; at: number; onLook: 
 }
 
 /** "Bộ bài của …": the deck's cards as the deck builder lists them, two to a line as LoR shows them. */
-function DeckDrawer({
+export function DeckDrawer({
   seat,
   cards,
   leaving,

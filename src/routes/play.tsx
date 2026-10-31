@@ -548,6 +548,11 @@ function savedSeat(): "host" | "guest" | null {
   }
 }
 
+/** Bộ bài của một bên lúc vào trận, để ghi vào hồ sơ. */
+function deckOf(face: import("@/lib/duel").DuelFace | undefined) {
+  return face?.cards ? { monsters: [...face.cards.monsters], spells: [...face.cards.spells], name: face.deck ?? null, cover: face.cover ?? null } : undefined;
+}
+
 const TEST_DUEL_KEY = "clash-test-duel";
 
 function loadTestDuel(): Duel | null {
@@ -2334,7 +2339,12 @@ function PlayPage() {
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
     // Hồ sơ (chủ game 31/10): chỉ trận với người (Đánh thường, Tuỳ chọn).
     if (duel.mode === "net" && duel.mid && !tutorial && !trial) {
-      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null, at: Date.now(), turns: duel.clock ?? 0 });
+      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null,
+        at: Date.now(),
+        turns: duel.clock ?? 0,
+        mine: deckOf(duel.faces?.[mine]),
+        foe: deckOf(duel.faces?.[mine === 0 ? 1 : 0]),
+      });
     }
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;

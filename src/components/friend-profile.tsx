@@ -5,7 +5,10 @@ import { START_RANK, rankLabel } from "@/lib/rank";
 import { readProfile, type FriendMode } from "@/lib/friends";
 import { MODE_LABELS, PLAYER_NAME, playerId } from "@/lib/friend-state";
 import { AlbumPic } from "@/components/collection/album-parts";
-import { avgTurns, cleanProfile, EMPTY_PROFILE, favourites, winRate, type Profile } from "@/lib/profile";
+import { DeckDrawer, type SummarySeat } from "@/components/game/match-summary";
+import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { cardName } from "@/lib/collection";
+import { avgTurns, cleanProfile, EMPTY_PROFILE, favourites, winRate, type DeckLite, type Profile } from "@/lib/profile";
 
 const MODE_NAMES = { quick: "Đánh thường", custom: "Tuỳ chọn" } as const;
 
@@ -15,8 +18,9 @@ function stamp(at: number): string {
   return `${two(date.getDate())}/${two(date.getMonth() + 1)}/${date.getFullYear()} ${two(date.getHours())}:${two(date.getMinutes())}`;
 }
 
-type Tab = "history" | "stats" | "collection";
+type Tab = "overview" | "history" | "stats" | "collection";
 const TABS: { key: Tab; label: string }[] = [
+  { key: "overview", label: "Tổng quan" },
   { key: "history", label: "Lịch sử đấu" },
   { key: "stats", label: "Chỉ số" },
   { key: "collection", label: "Bộ sưu tập" },
@@ -39,7 +43,10 @@ const percent = (have: number, total: number) => (total ? Math.floor((have / tot
  */
 export function FriendProfile({ friend, onClose }: { friend: string; onClose: () => void }) {
   const [view, setView] = useState<{ cover: string | null; mode: FriendMode | null; profile: Profile } | null | "fail">(null);
-  const [tab, setTab] = useState<Tab>("history");
+  const [tab, setTab] = useState<Tab>("overview");
+  const [menu, setMenu] = useState<string | null>(null);
+  const [deck, setDeck] = useState<{ label: string; cards: DeckLite } | null>(null);
+  const [sheet, setSheet] = useState<{ id: string; kind: "monster" | "spell" } | null>(null);
   const [filter, setFilter] = useState<"all" | "quick" | "custom">("all");
   const [pick, setPick] = useState(0);
 
@@ -108,33 +115,40 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             {ready?.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[ready.mode])}` : tr("Đang chờ")}
           </span>
         </div>
-        <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
-          <b>{tr("Huy hiệu")}</b>
-          <span aria-hidden="true" />
-          <span aria-hidden="true" />
-          <span aria-hidden="true" />
-        </div>
-      </section>
-      <section className="fp-quick">
-        <div>
-          <b>{profile.games}</b>
-          <span>{tr("Số trận")}</span>
-        </div>
-        <div>
-          <b>{winRate(profile)}%</b>
-          <span>{tr("Tỉ lệ thắng")}</span>
-        </div>
-        <div>
-          <b>{best.mode ? tr(MODE_NAMES[best.mode]) : "—"}</b>
-          <span>{tr("Chế độ hay chơi")}</span>
-        </div>
-        <div>
-          <span className="fp-deck" style={pet ? { backgroundImage: `url(${pet})` } : undefined} />
-          <span>{tr("Bộ bài hay chơi")}</span>
-        </div>
       </section>
       {view === "fail" ? <p className="fp-note">{tr("Không tải được hồ sơ.")}</p> : null}
       <div className="fp-body" key={tab}>
+        {tab === "overview" ? (
+          <div className="fp-over">
+            <section className="fp-badges-box">
+              <h3>{tr("Huy hiệu")}</h3>
+              <div className="fp-badges-row" aria-hidden="true">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span key={i} />
+                ))}
+              </div>
+              <p>{tr("Chưa có huy hiệu")}</p>
+            </section>
+      <section className="fp-quick">
+              <div>
+                <b>{profile.games}</b>
+                <span>{tr("Số trận")}</span>
+              </div>
+              <div>
+                <b>{winRate(profile)}%</b>
+                <span>{tr("Tỉ lệ thắng")}</span>
+              </div>
+              <div>
+                <b>{best.mode ? tr(MODE_NAMES[best.mode]) : "—"}</b>
+                <span>{tr("Chế độ hay chơi")}</span>
+              </div>
+              <div>
+                <span className="fp-deck" style={pet ? { backgroundImage: `url(${pet})` } : undefined} />
+                <span>{tr("Bộ bài hay chơi")}</span>
+              </div>
+            </section>
+          </div>
+        ) : null}
         {tab === "history" ? (
           games.length === 0 ? (
             <p className="fp-none">{tr("Chưa có trận nào với người chơi.")}</p>
@@ -157,11 +171,46 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
                       <time>{stamp(game.at)}</time>
                     </div>
                     <div className="fp-btns">
-                      <button type="button" className="fp-round" disabled aria-label={tr("Chi tiết")}>
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M8 7h11M8 12h11M8 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01" />
-                        </svg>
-                      </button>
+                      {menu === game.mid ? (
+                        <>
+                          <button
+                            type="button"
+                            className="fp-round is-blue"
+                            disabled={!game.mine}
+                            aria-label={tr("Bộ bài của bạn")}
+                            onClick={() => {
+                              setMenu(null);
+                              if (game.mine) setDeck({ label: PLAYER_NAME, cards: game.mine });
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <rect x="5" y="4" width="10" height="14" rx="1.6" />
+                              <path d="M9 6.5h8.4a1.6 1.6 0 0 1 1.6 1.6V19" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="fp-round is-red"
+                            disabled={!game.foe}
+                            aria-label={tr("Bộ bài đối thủ")}
+                            onClick={() => {
+                              setMenu(null);
+                              if (game.foe) setDeck({ label: "Đối thủ", cards: game.foe });
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <rect x="5" y="4" width="10" height="14" rx="1.6" />
+                              <path d="M9 6.5h8.4a1.6 1.6 0 0 1 1.6 1.6V19" />
+                            </svg>
+                          </button>
+                        </>
+                      ) : (
+                        <button type="button" className="fp-round" aria-label={tr("Xem bộ bài")} onClick={() => setMenu(game.mid)}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8 7h11M8 12h11M8 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01" />
+                          </svg>
+                        </button>
+                      )}
                       <button type="button" className="fp-round" disabled aria-label={tr("Xem lại")}>
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                           <path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4.5 4.5v4h4" />
@@ -193,29 +242,30 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           col ? (
             <div className="fp-coll">
               <div className="fp-total">
+                <span className="fp-total-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3.5" y="5" width="11" height="15" rx="1.6" />
+                    <path d="M9 3.5h9.4a1.6 1.6 0 0 1 1.6 1.6v12.4" />
+                  </svg>
+                </span>
                 <div>
+                  <span>{tr("Tổng số lá")}</span>
                   <b>
                     {col.have}
                     <small>/{col.total}</small>
                   </b>
-                  <span>{tr("Tổng số lá")}</span>
-                </div>
-                <div>
-                  <b>
-                    {albumsDone}
-                    <small>/{col.albums.length}</small>
-                  </b>
-                  <span>{tr("Album hoàn thành")}</span>
                 </div>
               </div>
+              <h3 className="fp-sec">{tr("BỘ SƯU TẬP")}</h3>
               <ul className="fp-albums">
                 {col.albums.map((row) => {
                   const pct = percent(row.have, row.total);
                   return (
                     <li key={row.name} className={pct >= 100 ? "is-done" : ""}>
-                      <span className="fp-album-pic" style={row.cover ? { backgroundImage: `url(${row.cover})` } : undefined}>
-                        <b>{pct}%</b>
+                      <span className="fp-album-ring" style={{ ["--p" as string]: `${pct}%` }}>
+                        <span className="fp-album-pic" style={row.cover ? { backgroundImage: `url(${row.cover})` } : undefined} />
                       </span>
+                      <b className="fp-album-pct">{pct}%</b>
                       <span className="fp-album-name">{tr(row.name)}</span>
                     </li>
                   );
@@ -223,7 +273,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
               </ul>
               {set ? (
                 <>
-                  <h3 className="fp-sec">{tr("NHÓM BÀI NGOÀI ALBUM")}</h3>
+                  <h3 className="fp-sec">{tr("CÁC NHÓM BÀI")}</h3>
                   <div className="fp-sets">
                     <ul className="fp-set-list">
                       {sets.map((one, index) => {
@@ -232,7 +282,9 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
                           <li key={one.name}>
                             <button type="button" className={index === pick ? "on" : ""} onClick={() => setPick(index)}>
                               <b>{tr(one.name)}</b>
-                              <span>{percent(own, one.cards.length)}%</span>
+                              <span>
+                                {own}/{one.cards.length}
+                              </span>
                             </button>
                           </li>
                         );
@@ -243,16 +295,22 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
                       <p>
                         {tr("THU THẬP TẤT CẢ")} <b>{setHave}/{set.cards.length}</b>
                       </p>
-                      <div className="fp-set-grid" style={{ ["--n" as string]: Math.min(3, set.cards.length) }}>
+                      <div className="fp-set-grid">
                         {set.cards.map((card) => (
                           <span key={card.id} className="fp-set-cell">
                             <AlbumPic id={card.id} missing={!card.own} />
+                            <em>{tr(cardName(card.id))}</em>
                           </span>
                         ))}
                       </div>
                       <div className={`fp-reward${setHave >= set.cards.length ? " is-done" : ""}`}>
-                        <b>{tr("PHẦN THƯỞNG")}</b>
-                        <span>★ {set.reward}</span>
+                        <span className="fp-reward-star" aria-hidden="true">
+                          ★
+                        </span>
+                        <div>
+                          <b>{tr("PHẦN THƯỞNG")}</b>
+                          <span>{set.reward}</span>
+                        </div>
                         <i aria-hidden="true">{setHave >= set.cards.length ? "✓" : ""}</i>
                       </div>
                     </div>
@@ -265,6 +323,17 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           )
         ) : null}
       </div>
+      {deck ? (
+        <DeckDrawer
+          seat={{ label: deck.label, deck: deck.cards.name ?? null, cover: deck.cards.cover ?? null, board: "", cards: deck.cards } as SummarySeat}
+          cards={deck.cards}
+          leaving={false}
+          onPick={setSheet}
+          onClose={() => setDeck(null)}
+        />
+      ) : null}
+      {sheet?.kind === "monster" ? <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} /> : null}
+      {sheet?.kind === "spell" ? <SpellSheet id={sheet.id} onClose={() => setSheet(null)} /> : null}
       <nav className="fp-tabs" role="tablist">
         {TABS.map((one) => (
           <button key={one.key} type="button" role="tab" aria-selected={tab === one.key} className={tab === one.key ? "on" : ""} onClick={() => setTab(one.key)}>

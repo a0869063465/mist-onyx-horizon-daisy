@@ -80,7 +80,7 @@ export const pulse = createServerFn({ method: "POST" })
       values (${id}, ${cover}, ${mode}, ${room}, ${seat}, ${now})
       on conflict (id) do update set cover = ${cover}, mode = ${mode}, room = ${room}, seat = ${seat}, seen_at = ${now}
     `;
-    const profile = typeof data.profile === "string" && data.profile.length < 8000 ? data.profile : null;
+    const profile = typeof data.profile === "string" && data.profile.length < 60000 ? data.profile : null;
     if (profile) await sql`update clash_players set profile = ${profile} where id = ${id}`;
     if (!mode) await sql`delete from clash_watch where player_id = ${id}`;
     await sql`delete from clash_invites where created_at < ${now - 10 * 60_000}`;
