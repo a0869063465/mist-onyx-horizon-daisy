@@ -797,6 +797,7 @@ export const PENDING_NOTES: string[] = [
   "Dấu X trên con mắt huỷ được thao tác đang chọn (tấn công, skill, chọn mục tiêu).",
   "Nút Tấn công và nút skill: ấn giữ rồi trượt, mục tiêu gần ngón sáng, thả là chọn.",
   "Menu chính mới: thẻ hai bên, hồ sơ và nút Chơi ở dưới, bánh răng Cài đặt có Nhập mã; bỏ Góp ý và Thông tin.",
+  "Menu chính: thẻ kính có tranh nền, hồ sơ mới, nút Chơi chia PvE (khoá) và PvP.",
 ];
 
 function remarkOf(notes: string[]) {

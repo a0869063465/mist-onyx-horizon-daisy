@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; to?: "/shop" | "/collection"; go?: () => void };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; pop: string; to?: "/shop" | "/collection"; go?: () => void };
 
 function Home() {
   const [wins, setWins] = useState(0);
@@ -34,16 +34,16 @@ function Home() {
   }, []);
   // Menu chính (chủ game 31/10): 4 thẻ bình hành mỗi bên, lú nửa ra từ mép màn hình; thẻ chưa có tính năng thì khoá.
   const left: Tab[] = [
-    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, to: "/shop" },
-    { key: "events", label: "Sự kiện", icon: <FlagIcon /> },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, go: () => setMissions(true) },
-    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, to: "/collection" },
+    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", pop: "/ui/pack.webp", to: "/shop" },
+    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg", pop: "/ui/card-back-ur.webp" },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", pop: "/ui/atk-you.webp", go: () => setMissions(true) },
+    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", pop: "/ui/card-back-sr.webp", to: "/collection" },
   ];
   const right: Tab[] = [
-    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon /> },
-    { key: "news", label: "Tin tức", icon: <NewsIcon /> },
-    { key: "friends", label: "Bạn bè", icon: <FriendsIcon /> },
-    { key: "mail", label: "Thư", icon: <MailIcon /> },
+    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg", pop: "/ui/card-back.webp" },
+    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg", pop: "/ui/logo.webp" },
+    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", pop: "/ui/logo-snake.webp" },
+    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", pop: "/ui/card-back-foe.webp" },
   ];
   return (
     <main className="home">
@@ -99,12 +99,18 @@ function Home() {
               <i>{tr("Hạng")} —</i>
             </span>
           </div>
-          <Link to="/modes" className="home-play" data-sfx onPointerDown={() => playUi("confirm")} aria-label="Vào đấu trường">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 4l9 9M4 4h4l9 9M4 4v4l9 9M20 4l-9 9M20 4h-4M20 4v4M14 15l3 3M10 15l-3 3M15 19l4-4M9 19l-4-4" />
-            </svg>
-            <span>{tr("Chơi")}</span>
-          </Link>
+          {/* Nút Chơi chia đôi (chủ game 31/10): PvP vào trang chơi cũ, PvE là chế độ mới, đang khoá. */}
+          <div className="home-play">
+            <img className="home-play-img is-pve" src="/ui/menu-play-pve.webp" alt="" draggable={false} />
+            <img className="home-play-img is-pvp" src="/ui/menu-play-pvp.webp" alt="" draggable={false} />
+            <button type="button" className="home-half is-pve" disabled aria-disabled="true" aria-label="PvE">
+              <b>PvE</b>
+              <LockIcon />
+            </button>
+            <Link to="/modes" className="home-half is-pvp" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvP">
+              <b>PvP</b>
+            </Link>
+          </div>
         </div>
       </div>
       {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
@@ -116,8 +122,12 @@ function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index
   const shut = !tab.to && !tab.go;
   const inner = (
     <>
-      {tab.icon}
-      <span>{tr(tab.label)}</span>
+      <span className="home-tab-art" style={{ backgroundImage: `url(${tab.bg})` }} aria-hidden="true" />
+      <img className="home-tab-pop" src={tab.pop} alt="" draggable={false} />
+      <span className="home-tab-label">
+        {tab.icon}
+        <span>{tr(tab.label)}</span>
+      </span>
       {shut ? <LockIcon /> : null}
     </>
   );
