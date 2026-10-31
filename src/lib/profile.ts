@@ -4,8 +4,9 @@
  */
 export type ProfileMode = "quick" | "custom";
 export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number };
-export type AlbumStat = { name: string; have: number; total: number };
-export type CollectionStat = { have: number; total: number; albums: AlbumStat[] };
+export type AlbumStat = { name: string; cover: string; have: number; total: number };
+export type SetStat = { name: string; reward: number; claimed: boolean; cards: { id: string; own: boolean }[] };
+export type CollectionStat = { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] };
 export type Profile = {
   games: number;
   wins: number;
@@ -100,7 +101,13 @@ export function cleanProfile(raw: unknown): Profile | null {
         ? {
             have: num(data.collection.have),
             total: num(data.collection.total),
-            albums: (Array.isArray(data.collection.albums) ? data.collection.albums : []).slice(0, 30).map((row) => ({ name: String(row.name ?? "").slice(0, 40), have: num(row.have), total: num(row.total) })),
+            albums: (Array.isArray(data.collection.albums) ? data.collection.albums : []).slice(0, 30).map((row) => ({ name: String(row.name ?? "").slice(0, 40), cover: String(row.cover ?? "").slice(0, 120), have: num(row.have), total: num(row.total) })),
+            sets: (Array.isArray(data.collection.sets) ? data.collection.sets : []).slice(0, 20).map((row) => ({
+              name: String(row.name ?? "").slice(0, 40),
+              reward: num(row.reward),
+              claimed: Boolean(row.claimed),
+              cards: (Array.isArray(row.cards) ? row.cards : []).slice(0, 6).map((card) => ({ id: String(card.id ?? "").slice(0, 80), own: Boolean(card.own) })),
+            })),
           }
         : undefined,
       recent: (Array.isArray(data.recent) ? data.recent : []).slice(0, RECENT).map((row) => ({

@@ -319,13 +319,18 @@ export function claimSet(set: CardSet): number {
   return stars;
 }
 
-/** Số lá có / tổng và tiến độ từng album (chỉ các lá có số No), cho hồ sơ bạn bè. */
-export function collectionStat(owned: Set<string>): { have: number; total: number; albums: { name: string; have: number; total: number }[] } {
+export type SetStat = { name: string; reward: number; claimed: boolean; cards: { id: string; own: boolean }[] };
+export type AlbumStat = { name: string; cover: string; have: number; total: number };
+
+/** Số lá có / tổng, tiến độ từng album (ảnh bìa + số lá) và các nhóm bài ngoài album, cho hồ sơ bạn bè. */
+export function collectionStat(owned: Set<string>): { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] } {
   const list = albums().filter((album) => album.cards.length > 0);
   const seen = new Set<string>();
   const rows = list.map((album) => {
     for (const card of album.cards) seen.add(card.id);
-    return { name: album.name, have: album.cards.filter((card) => owned.has(card.id)).length, total: album.cards.length };
+    return { name: album.name, cover: album.cover, have: album.cards.filter((card) => owned.has(card.id)).length, total: album.cards.length };
   });
-  return { have: [...seen].filter((id) => owned.has(id)).length, total: seen.size, albums: rows };
+  const claimed = claimedSets();
+  const sets = cardSets().map((set) => ({ name: set.name, reward: setReward(set), claimed: claimed.has(set.id), cards: set.ids.map((id) => ({ id, own: owned.has(id) })) }));
+  return { have: [...seen].filter((id) => owned.has(id)).length, total: seen.size, albums: rows, sets };
 }
