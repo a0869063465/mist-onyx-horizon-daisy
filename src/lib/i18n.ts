@@ -219,6 +219,7 @@ const PAIRS: Array<[string, string]> = [
   ["Thư", "Mail"],
   ["Cấp", "Level"],
   ["Hạng", "Rank"],
+  ["Người chơi", "Player"],
   ["Đầu hàng", "Surrender"],
   ["Đóng", "Close"],
   ["Hết lượt", "End turn"],

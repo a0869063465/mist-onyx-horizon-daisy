@@ -1044,10 +1044,10 @@
   gap: 0.35rem;
 }
 .home-tabs.is-left {
-  left: -2.4rem;
+  left: -5.2rem;
 }
 .home-tabs.is-right {
-  right: -2.4rem;
+  right: -5.2rem;
   align-items: flex-end;
 }
 /* Thẻ hình bình hành kính (chủ game 31/10): tranh nền cắt theo khung, một tranh nhô ra ngoài khung; xanh mở, trắng khoá. */
@@ -1115,20 +1115,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  max-width: 5.6rem;
-  font-size: 0.76rem;
+  max-width: 4.6rem;
+  font-size: 0.72rem;
   font-weight: 900;
   line-height: 1.05;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 3px #000, 0 0 6px rgb(0 0 0 / 0.8);
 }
 .home-tab.is-left .home-tab-label {
-  right: 1.4rem;
+  right: 1.2rem;
   align-items: flex-end;
   text-align: right;
 }
 .home-tab.is-right .home-tab-label {
-  left: 1.4rem;
+  left: 1.2rem;
   align-items: flex-start;
   text-align: left;
 }
@@ -1153,10 +1153,10 @@
   filter: drop-shadow(0 1px 2px #000);
 }
 .home-tab.is-left .home-lock {
-  right: 1.8rem;
+  right: 1.6rem;
 }
 .home-tab.is-right .home-lock {
-  left: 1.8rem;
+  left: 1.6rem;
 }
 @keyframes home-tab-left {
   from {
@@ -1231,15 +1231,14 @@
   font-style: normal;
   font-weight: 700;
 }
-/* Nút Chơi (chủ game 31/10): 2 viên thuốc RIÊNG, PvE khoá (trái), PvP vào trang chơi cũ (phải). */
+/* Nút Chơi (chủ game 31/10): 2 viên thuốc RIÊNG nhưng đặt đúng vị trí trong ảnh gốc nên khít; PvE khoá (trái), PvP vào trang chơi cũ (phải). */
 .home-base .home-play {
+  position: relative;
   flex: 1 1 0;
   min-width: 0;
   width: auto;
   height: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 1251 / 539;
   overflow: visible;
   border: 0;
   border-radius: 0;
@@ -1251,12 +1250,10 @@
   display: none;
 }
 .home-pill {
-  position: relative;
-  flex: none;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 4rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1266,16 +1263,25 @@
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
+.home-pill.is-pve {
+  left: 0;
+  top: 1.9%;
+  width: 58.2%;
+  height: 98.1%;
+}
+.home-pill.is-pvp {
+  left: 39.7%;
+  top: 0;
+  width: 60.3%;
+  height: 99.6%;
+}
 .home-pill img {
   display: block;
+  width: 100%;
   height: 100%;
-  width: auto;
   pointer-events: none;
   user-select: none;
   filter: drop-shadow(0 3px 8px rgb(255 170 30 / 0.4));
-}
-.home-pill.is-pvp {
-  margin-left: -1.5rem;
 }
 .home-pill b {
   position: absolute;
@@ -1284,6 +1290,9 @@
   letter-spacing: 0.08em;
   text-shadow: 0 1px 0 rgb(255 245 200 / 0.7);
 }
+.home-pill.is-pvp b {
+  margin-left: 0.6rem;
+}
 .home-pill.is-pve {
   cursor: default;
 }
@@ -1291,13 +1300,13 @@
   filter: grayscale(0.85) brightness(0.6);
 }
 .home-pill.is-pve b {
-  top: 1.05rem;
+  top: 24%;
   color: #e9e2cf;
   text-shadow: 0 1px 2px #000;
 }
 .home-pill.is-pve .home-lock {
   position: absolute;
-  bottom: 0.95rem;
+  bottom: 22%;
   width: 0.95rem;
   height: 0.95rem;
   fill: none;

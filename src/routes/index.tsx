@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { tr, useLang } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
+import { START_RANK, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
@@ -94,8 +95,8 @@ function Home() {
           <div className="home-profile">
             <span className="home-avatar">{face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}</span>
             <span className="home-ranks">
-              <b>{tr("Cấp")} 1</b>
-              <i>{tr("Hạng")} —</i>
+              <b>{tr("Người chơi")}</b>
+              <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>
             </span>
           </div>
           {/* Nút Chơi chia đôi (chủ game 31/10): PvP vào trang chơi cũ, PvE là chế độ mới, đang khoá. */}

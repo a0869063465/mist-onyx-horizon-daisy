@@ -15,6 +15,8 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
 
 - V3 SỬA LẦN 2 ĐÃ LÀM 31/10 (Sonnet medium): chủ game: bỏ hình nổi (tranh nhô ra của 8 thẻ, đã xoá `pop` + `.home-tab-pop`, nhãn thẻ giữa phần nhìn thấy); viên thuốc bị lỗi hình và PvP/PvE phải là RIÊNG → `menu-play-pve.webp`/`menu-play-pvp.webp` cắt lại mỗi ảnh một khung riêng, `.home-play` = 2 nút `.home-pill is-pve` (khoá, xám, ổ khoá) / `is-pvp` (→ /modes) cạnh nhau, PvP chồng lên khe chéo `margin-left` -1,5rem; bánh răng đổi sang bánh răng 8 răng + lỗ tròn. Thử Chromium: PvE không bấm, PvP → /modes, thẻ khoá không bấm, Cửa hàng → /shop.
 
+- V3 SỬA LẦN 3 ĐÃ LÀM 31/10 (Sonnet medium, nhánh `ccr-6ec5ff6c-vl497v`, CHƯA áp `main`): thẻ hai bên kéo vào còn lộ ~nửa (`-5,2rem`, nhãn nhỏ lại); viên thuốc PvE/PvP đặt đúng toạ độ ảnh gốc trong một khung `aspect-ratio` 1251/539 (khít); hồ sơ dòng trên = tên ("Người chơi" tạm), dòng dưới = hạng + cấp; `src/lib/rank.ts`: 6 hạng (Vua trò chơi, Đấu thủ lừng danh, Đấu thủ chuyên nghiệp, Học viên học viện, Bài thủ nghiệp dư, Tập chơi), mỗi hạng 4 cấp IV thấp nhất … I cao nhất, mọi người tạm "Tập chơi IV", CHƯA có luật lên hạng. Chưa có chỗ đổi tên. Đề xuất mô hình và nỗ lực cho phần kế: V1/V2 Sonnet medium (chờ ảnh), V4 Opus high (chờ luật), V5 Sonnet low.
+
 ## Kế hoạch tuần (chủ game, 29/10): CHƯA LÀM, CHỜ trả lời câu hỏi
 
 Chủ game nêu 6 việc: (1) Luật chơi mới; (2) Sữa lại toàn bộ bài theo VFX; (3) AI chiến đấu; (4) Bộ sưu tập bộ bài truyền thống; (5) Icon chuyển đánh; (6) VFX đánh; (7) VFX con mắt. Chưa có việc nào được làm. Cần hỏi lại trước khi làm từng việc (xem trả lời gửi chủ game).
