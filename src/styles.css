@@ -12574,11 +12574,14 @@ button.watch-back {
     linear-gradient(90deg, rgba(120, 140, 220, 0.05) 1px, transparent 1px) 0 0 / 2.6rem 2.6rem,
     linear-gradient(180deg, #0c1432, #070c1f 60%);
 }
-.fp.is-history, .fp.is-stats {
+.fp.is-overview, .fp.is-stats {
   background:
     linear-gradient(118deg, rgba(22, 168, 178, 0.55) 0%, rgba(22, 168, 178, 0) 38%),
     linear-gradient(160deg, #1b6f93 0%, #153f86 46%, #0e2a63 100%);
 }
+.fp-medals { flex: none; display: grid; grid-template-columns: repeat(3, 1.5rem); gap: 0.3rem; justify-items: center; }
+.fp-medals b { grid-column: 1 / -1; font-family: "Barlow Condensed", sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(223, 230, 247, 0.55); }
+.fp-medals span { width: 1.5rem; height: 1.5rem; transform: rotate(45deg) scale(0.8); border: 1px dashed rgba(223, 230, 247, 0.4); }
 .fp-bg { position: absolute; inset: 0; background: #0b1430 center 12% / cover no-repeat; opacity: 0.16; filter: saturate(1.2); pointer-events: none; }
 .fp-bar { position: relative; z-index: 3; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: calc(env(safe-area-inset-top, 0px) + 0.6rem) 1rem 0.3rem; }
 .fp-back { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0.3rem; border: 0; background: none; color: #fff; cursor: pointer; }
@@ -12626,14 +12629,6 @@ button.watch-back {
 .fp-cell { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.8rem 0.8rem; background: rgba(10, 40, 100, 0.55); }
 .fp-cell span { font-size: 0.75rem; color: rgba(223, 230, 247, 0.7); }
 .fp-cell b { font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; color: #fff; white-space: nowrap; }
-/* Tổng quan */
-.fp-over { display: grid; gap: 0.7rem; padding: 0.2rem 1rem 0; }
-.fp-badges-box { display: grid; gap: 0.55rem; justify-items: center; padding: 0.8rem 0.9rem 0.9rem; background: rgba(10, 18, 48, 0.6); border: 1px solid rgba(190, 215, 255, 0.18); }
-.fp-badges-box h3 { margin: 0; justify-self: start; font-family: "Barlow Condensed", sans-serif; font-size: 0.95rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
-.fp-badges-row { display: flex; gap: 1.1rem; padding: 0.4rem 0; }
-.fp-badges-row span { width: 2.2rem; height: 2.2rem; transform: rotate(45deg) scale(0.78); border: 1.5px dashed rgba(223, 230, 247, 0.35); background: rgba(255, 255, 255, 0.03); }
-.fp-badges-box p { margin: 0; font-size: 0.8rem; color: rgba(223, 230, 247, 0.5); }
-.fp-over .fp-quick { margin: 0; }
 /* Bộ sưu tập */
 .fp-coll { display: grid; gap: 0.8rem; padding: 0.2rem 1rem 0.4rem; }
 .fp-total { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 1rem; background: linear-gradient(100deg, rgba(60, 70, 150, 0.55), rgba(18, 24, 66, 0.7)); border: 1px solid rgba(227, 194, 122, 0.4); clip-path: polygon(0.6rem 0, 100% 0, 100% calc(100% - 0.6rem), calc(100% - 0.6rem) 100%, 0 100%, 0 0.6rem); }

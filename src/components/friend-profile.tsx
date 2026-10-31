@@ -18,10 +18,9 @@ function stamp(at: number): string {
   return `${two(date.getDate())}/${two(date.getMonth() + 1)}/${date.getFullYear()} ${two(date.getHours())}:${two(date.getMinutes())}`;
 }
 
-type Tab = "overview" | "history" | "stats" | "collection";
+type Tab = "overview" | "stats" | "collection";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Tổng quan" },
-  { key: "history", label: "Lịch sử đấu" },
   { key: "stats", label: "Chỉ số" },
   { key: "collection", label: "Bộ sưu tập" },
 ];
@@ -92,7 +91,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           </svg>
           <b>{tr("HỒ SƠ")}</b>
         </button>
-        {tab === "history" ? (
+        {tab === "overview" ? (
           <label className="fp-select">
             <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)} aria-label={tr("Lọc trận")}>
               <option value="all">{tr("Tất cả trận đấu")}</option>
@@ -115,41 +114,38 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             {ready?.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[ready.mode])}` : tr("Đang chờ")}
           </span>
         </div>
+        {tab === "overview" ? (
+          <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
+            <b>{tr("Huy hiệu")}</b>
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </div>
+        ) : null}
       </section>
+      {tab === "overview" ? (
+        <section className="fp-quick">
+          <div>
+            <b>{profile.games}</b>
+            <span>{tr("Số trận")}</span>
+          </div>
+          <div>
+            <b>{winRate(profile)}%</b>
+            <span>{tr("Tỉ lệ thắng")}</span>
+          </div>
+          <div>
+            <b>{best.mode ? tr(MODE_NAMES[best.mode]) : "—"}</b>
+            <span>{tr("Chế độ hay chơi")}</span>
+          </div>
+          <div>
+            <span className="fp-deck" style={pet ? { backgroundImage: `url(${pet})` } : undefined} />
+            <span>{tr("Bộ bài hay chơi")}</span>
+          </div>
+        </section>
+      ) : null}
       {view === "fail" ? <p className="fp-note">{tr("Không tải được hồ sơ.")}</p> : null}
       <div className="fp-body" key={tab}>
         {tab === "overview" ? (
-          <div className="fp-over">
-            <section className="fp-badges-box">
-              <h3>{tr("Huy hiệu")}</h3>
-              <div className="fp-badges-row" aria-hidden="true">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span key={i} />
-                ))}
-              </div>
-              <p>{tr("Chưa có huy hiệu")}</p>
-            </section>
-      <section className="fp-quick">
-              <div>
-                <b>{profile.games}</b>
-                <span>{tr("Số trận")}</span>
-              </div>
-              <div>
-                <b>{winRate(profile)}%</b>
-                <span>{tr("Tỉ lệ thắng")}</span>
-              </div>
-              <div>
-                <b>{best.mode ? tr(MODE_NAMES[best.mode]) : "—"}</b>
-                <span>{tr("Chế độ hay chơi")}</span>
-              </div>
-              <div>
-                <span className="fp-deck" style={pet ? { backgroundImage: `url(${pet})` } : undefined} />
-                <span>{tr("Bộ bài hay chơi")}</span>
-              </div>
-            </section>
-          </div>
-        ) : null}
-        {tab === "history" ? (
           games.length === 0 ? (
             <p className="fp-none">{tr("Chưa có trận nào với người chơi.")}</p>
           ) : (

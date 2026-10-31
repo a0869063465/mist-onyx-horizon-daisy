@@ -806,7 +806,7 @@ export const PENDING_NOTES: string[] = [
   "Bạn bè: kết bạn bằng ID, xem bạn đang chơi gì, mời bạn vào trận.",
   "Xem trận bạn bè đang đánh (cả Vs Máy).",
   "Bấm ảnh bạn bè để xem hồ sơ: số trận, tỉ lệ thắng, lịch sử.",
-  "Hồ sơ làm lại: 4 tab Tổng quan, Lịch sử đấu, Chỉ số, Bộ sưu tập (album theo %, các nhóm bài); bấm ≡ ở lịch sử để xem bộ bài của bạn và đối thủ.",
+  "Hồ sơ làm lại: 3 tab Tổng quan (có lịch sử đấu), Chỉ số, Bộ sưu tập (album theo %, các nhóm bài); bấm ≡ ở lịch sử để xem bộ bài của bạn và đối thủ.",
 ];
 
 function remarkOf(notes: string[]) {
