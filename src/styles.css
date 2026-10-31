@@ -12691,8 +12691,8 @@ button.watch-back {
 .fs-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); gap: 0.5rem; }
 .fs-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 .fs-none { margin: 1rem 0; text-align: center; font-size: 0.85rem; color: rgba(223, 230, 247, 0.7); }
-.fs-rows { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: 0.15rem; overscroll-behavior: contain; }
-.fs-pin { flex: none; margin: 0; padding: 0; list-style: none; }
+.fs-rows { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: 0.12rem; overscroll-behavior: contain; -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 0.9rem), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 0.9rem), transparent); }
+.fs-pin { flex: none; margin: 0; padding: 0.55rem 0 0; list-style: none; }
 .fs-radar { flex: 1; display: grid; place-items: center; align-content: center; }
 .fs-radar svg { width: 100%; max-height: 22rem; overflow: visible; }
 .fs-ring-out { fill: none; stroke: rgba(227, 194, 122, 0.7); stroke-width: 1.4; }
@@ -12747,34 +12747,41 @@ button.watch-back {
 .fs-nav button { position: relative; padding: 0.72rem 0.25rem; background: transparent; border: 0; font-family: "Barlow Condensed", sans-serif; font-size: 0.98rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.05; color: rgba(236, 232, 222, 0.72); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7); cursor: pointer; }
 .fs-nav button.on { color: #fff; background: linear-gradient(90deg, rgba(160, 120, 70, 0.15), rgba(214, 170, 100, 0.45)); box-shadow: inset -3px 0 0 #e3c27a; }
 .fs-nav button.on::after { content: ""; position: absolute; right: -0.4rem; top: 50%; border: 0.4rem solid transparent; border-left-color: #e3c27a; margin-top: -0.4rem; }
-.fs-row { flex: none; position: relative; border: 1px solid rgba(0, 0, 0, 0.35); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); overflow: hidden; background: linear-gradient(90deg, #4a332b, #2c1f1b 75%); }
-.fs-row.is-p1 { background: linear-gradient(90deg, #c49a3c 0%, #8f6a24 45%, #5e4718 100%); border: 2px solid #f6d77e; box-shadow: 0 0 12px rgba(246, 215, 126, 0.45), 0 3px 8px rgba(0, 0, 0, 0.45); }
-.fs-row.is-p2 { background: linear-gradient(90deg, #4f8fd6 0%, #2e64a8 50%, #1d416f 100%); }
-.fs-row.is-p3 { background: linear-gradient(90deg, #9a6440 0%, #6e4430 50%, #452c22 100%); }
-.fs-row.is-me { background: linear-gradient(90deg, #3d7be0 0%, #2557b8 55%, #173a80 100%); border: 1px solid rgba(160, 205, 255, 0.6); }
-.fs-hit { position: relative; display: grid; grid-template-columns: 2rem 3rem minmax(0, 1fr); align-items: center; gap: 0.4rem; width: 100%; padding: 0.45rem 0.5rem 0.45rem 0.2rem; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.fs-row-art { position: absolute; inset: 0 0 0 40%; background: center 20% / cover no-repeat; opacity: 0.32; filter: blur(1.5px) saturate(1.2); -webkit-mask-image: linear-gradient(90deg, transparent, #000 45%); mask-image: linear-gradient(90deg, transparent, #000 45%); pointer-events: none; }
-.fs-pos { position: relative; font-family: "Georgia", "Times New Roman", serif; font-size: 2.05rem; font-style: italic; font-weight: 700; text-align: center; line-height: 1; color: #fff; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.55); }
-.fs-row.is-p1 .fs-pos { background: linear-gradient(180deg, #fff6c8, #f2c14e 55%, #b07a1c); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
-.fs-row.is-p2 .fs-pos { background: linear-gradient(180deg, #ffffff, #c9dcf2 55%, #7e9ec4); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
-.fs-row.is-p3 .fs-pos { background: linear-gradient(180deg, #ffe0b8, #e09a52 55%, #9a5a26); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
-.fs-row.is-p4 .fs-pos, .fs-row.is-me .fs-pos { font-family: "Barlow Condensed", sans-serif; font-size: 1.35rem; font-style: normal; color: #f1ece0; }
+/* Hàng là kính mờ trong suốt (video chủ game 01/11): thấy hình nền mờ phía sau; 1–3 có dải màu từ trái nhạt dần sang phải. */
+.fs-row { flex: none; position: relative; overflow: hidden; background: linear-gradient(90deg, rgba(40, 46, 66, 0.55), rgba(30, 36, 54, 0.32) 70%, rgba(30, 36, 54, 0.22)); -webkit-backdrop-filter: blur(7px) saturate(1.15); backdrop-filter: blur(7px) saturate(1.15); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(0, 0, 0, 0.35); }
+.fs-row.is-p1 { background: linear-gradient(90deg, rgba(196, 160, 80, 0.92) 0%, rgba(160, 128, 62, 0.62) 35%, rgba(110, 92, 60, 0.28) 75%, rgba(80, 70, 56, 0.18)); }
+.fs-row.is-p2 { background: linear-gradient(90deg, rgba(74, 132, 204, 0.92) 0%, rgba(60, 112, 180, 0.62) 35%, rgba(52, 84, 130, 0.28) 75%, rgba(44, 60, 92, 0.18)); }
+.fs-row.is-p3 { background: linear-gradient(90deg, rgba(150, 98, 70, 0.92) 0%, rgba(124, 82, 62, 0.62) 35%, rgba(92, 66, 56, 0.28) 75%, rgba(66, 52, 48, 0.18)); }
+.fs-row.is-sel { box-shadow: inset 0 0 0 2px #f2c94c, 0 0 8px rgba(242, 201, 76, 0.35); }
+/* Hàng của chủ hồ sơ ghim ở cuối: xanh đặc, sáng ở trên, cách danh sách một khoảng. */
+.fs-pin .fs-row { background: linear-gradient(180deg, #3f74c8 0%, #2f5eac 45%, #284f96 100%); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 1px 0 rgba(170, 205, 255, 0.45), 0 2px 8px rgba(0, 0, 0, 0.45); }
+.fs-pin .fs-row.is-sel { box-shadow: inset 0 0 0 2px #f2c94c, 0 2px 8px rgba(0, 0, 0, 0.45); }
+.fs-hit { position: relative; display: grid; grid-template-columns: 2rem 3rem minmax(0, 1fr); align-items: center; gap: 0.4rem; width: 100%; padding: 0.5rem 0.5rem 0.5rem 0.2rem; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.fs-pos { position: relative; font-family: "Georgia", "Times New Roman", serif; font-size: 2.05rem; font-style: italic; font-weight: 700; text-align: center; line-height: 1; color: #fff; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45); }
+.fs-row.is-p1 .fs-pos { background: linear-gradient(180deg, #fff8d4, #f6d06a 50%, #c9932c); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 1px rgba(60, 40, 0, 0.45)); }
+.fs-row.is-p2 .fs-pos { background: linear-gradient(180deg, #ffffff, #dfe9f6 50%, #9fb6d4); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 1px rgba(10, 30, 60, 0.45)); }
+.fs-row.is-p3 .fs-pos { background: linear-gradient(180deg, #ffe6c0, #f0aa5c 50%, #c4702c); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 1px rgba(60, 25, 0, 0.45)); }
+.fs-row.is-p4 .fs-pos, .fs-pin .fs-row .fs-pos { font-family: "Barlow Condensed", sans-serif; font-size: 1.3rem; font-style: normal; font-weight: 600; color: #e6e9f2; background: none; -webkit-background-clip: border-box; background-clip: border-box; filter: none; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
 .fs-ava { position: relative; display: grid; place-items: center; width: 2.95rem; height: 2.95rem; border-radius: 50%; background: conic-gradient(from 210deg, #f6d77e, #8f6a24, #f6d77e, #b07a1c, #f6d77e); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.5); }
 .fs-ava::before { content: ""; position: absolute; top: -0.22rem; left: 50%; width: 0.6rem; height: 0.6rem; margin-left: -0.3rem; transform: rotate(45deg); background: linear-gradient(135deg, #fff2b8, #d6a43c); box-shadow: 0 0 4px rgba(255, 220, 140, 0.8); }
 .fs-ava span { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #0b1430 center 20% / cover no-repeat; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45); }
 .fs-who { position: relative; display: grid; gap: 0.15rem; min-width: 0; line-height: 1.15; }
-.fs-who > b { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.02em; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fs-row.is-me .fs-who > b { color: #ffd76a; }
+.fs-who > b { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.02em; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-row.is-me .fs-who > b { color: #f5c842; }
 .fs-sub { display: flex; align-items: center; gap: 0.25rem; min-width: 0; font-size: 0.7rem; white-space: nowrap; }
-.fs-sub i { flex: none; font-style: normal; font-weight: 600; color: #f3e6c4; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
-.fs-sub em { font-style: normal; color: rgba(255, 255, 255, 0.45); }
+.fs-sub i { flex: none; font-style: normal; font-weight: 600; color: rgba(236, 238, 245, 0.88); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+.fs-sub em { font-style: normal; color: rgba(255, 255, 255, 0.35); }
 .fs-emblem { flex: none; width: 0.95rem; height: 0.95rem; fill: #c94a5a; stroke: #3a0d14; stroke-width: 0.8; }
 .fs-emblem path + path { fill: #ffd5a0; stroke: none; }
-.fs-val { display: inline-flex; align-items: center; gap: 0.25rem; font-family: "Barlow Condensed", sans-serif; font-size: 0.9rem; font-weight: 600; color: #6fd8ff; white-space: nowrap; }
-.fs-val svg { width: 0.65rem; height: 0.65rem; fill: rgba(111, 216, 255, 0.25); stroke: #6fd8ff; stroke-width: 1.3; }
-.fs-first { position: relative; flex: none; display: grid; grid-template-columns: auto auto 1fr; align-items: end; gap: 0 0.5rem; min-height: 5.2rem; padding: 0.55rem 0.6rem; border: 1px solid rgba(227, 194, 122, 0.5); border-radius: 0; background: #0b1430 right 18% / 60% auto no-repeat; color: #fff; font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
-.fs-first::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 14, 30, 0.95) 0%, rgba(10, 14, 30, 0.7) 45%, rgba(10, 14, 30, 0.05) 100%), linear-gradient(0deg, rgba(10, 14, 30, 0.85), transparent 60%); }
-.fs-first > * { position: relative; }
+.fs-val { display: inline-flex; align-items: center; gap: 0.25rem; font-family: "Barlow Condensed", sans-serif; font-size: 0.9rem; font-weight: 600; color: #7fd3dc; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.fs-val svg { width: 0.65rem; height: 0.65rem; fill: rgba(127, 211, 220, 0.25); stroke: #7fd3dc; stroke-width: 1.3; }
+.fs-ask { flex: none; display: grid; place-items: center; width: 0.95rem; height: 0.95rem; margin-left: 0.35rem; border-radius: 0.12rem; background: rgba(200, 212, 235, 0.55); color: #2a4f92; font-size: 0.68rem; font-weight: 800; }
+/* Hình nền = tranh của người đang chọn, nằm sau cả bảng; hàng kính mờ nhìn xuyên thấy. */
+.fs { position: relative; }
+.fs > :not(.fs-stage) { position: relative; z-index: 1; }
+.fs-stage { position: absolute; inset: -0.5rem 0 0; z-index: 0; background: #0b1430 70% 18% / cover no-repeat; opacity: 0.9; pointer-events: none; }
+.fs-stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8, 12, 28, 0.82) 0%, rgba(8, 12, 28, 0.45) 30%, rgba(8, 12, 28, 0.2) 70%, rgba(8, 12, 28, 0.35)), linear-gradient(180deg, rgba(8, 12, 28, 0.55), transparent 22%, transparent 75%, rgba(8, 12, 28, 0.75)); }
+.fs-first { position: relative; flex: none; display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 0 0.5rem; padding: 0.5rem 0.4rem; border: 0; border-radius: 0; background: transparent; color: #fff; font: inherit; text-align: left; cursor: pointer; }
 .fs-first b { font-family: "Barlow Condensed", sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.12em; color: #fff; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7); white-space: nowrap; }
-.fs-first i { padding: 0.12rem 0.4rem; margin-bottom: 0.2rem; border-left: 1px solid rgba(255, 255, 255, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.5); background: rgba(20, 28, 50, 0.85); font-style: normal; font-size: 0.72rem; letter-spacing: 0.03em; color: #dfe6f7; }
+.fs-first i { padding: 0.12rem 0.5rem; border-left: 1px solid rgba(255, 255, 255, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.5); background: rgba(20, 28, 50, 0.7); font-style: normal; font-size: 0.72rem; letter-spacing: 0.03em; color: #dfe6f7; }
 .fs-first span { justify-self: end; font-size: 0.72rem; white-space: nowrap; line-height: 1.3; color: #f1ece0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }

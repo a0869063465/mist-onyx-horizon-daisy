@@ -30,12 +30,11 @@ function format(stat: StatKey, v: number | null): string {
   }
 }
 
-function Row({ row, stat, me, onOpen }: { row: Ranked; stat: StatKey; me: boolean; onOpen?: (id: string) => void }) {
+function Row({ row, stat, me, sel, pin, onTap }: { row: Ranked; stat: StatKey; me: boolean; sel: boolean; pin?: boolean; onTap: (row: Ranked) => void }) {
   const art = row.cover ? artSrc(row.cover, 1) : null;
   return (
-    <li className={`fs-row is-p${Math.min(row.pos, 4)}${me ? " is-me" : ""}`}>
-      <button type="button" className="fs-hit" onClick={() => onOpen?.(row.id)} aria-label={`${tr(PLAYER_NAME)} ${row.id}`}>
-        {art ? <span className="fs-row-art" style={{ backgroundImage: `url(${art})` }} aria-hidden="true" /> : null}
+    <li className={`fs-row is-p${Math.min(row.pos, 4)}${me ? " is-me" : ""}${sel ? " is-sel" : ""}`}>
+      <button type="button" className="fs-hit" onClick={() => onTap(row)} aria-label={`${tr(PLAYER_NAME)} ${row.id}`}>
         <b className="fs-pos">{row.pos}</b>
         <span className="fs-ava">
           <span style={art ? { backgroundImage: `url(${art})` } : undefined} />
@@ -55,6 +54,11 @@ function Row({ row, stat, me, onOpen }: { row: Ranked; stat: StatKey; me: boolea
               </svg>
               {format(stat, row.v)}
             </span>
+            {pin ? (
+              <span className="fs-ask" aria-hidden="true">
+                ?
+              </span>
+            ) : null}
           </span>
         </span>
       </button>
@@ -130,6 +134,8 @@ export function StatBoard({ friend, onOpen }: { friend: string; onOpen?: (id: st
   const [search, setSearch] = useState("");
   const [board, setBoard] = useState<BoardView | null>(null);
   const [radar, setRadar] = useState<RadarView | null>(null);
+  /** Hàng đang chọn (viền vàng, hình nền + thanh HẠNG theo người đó); bấm lại hàng đang chọn thì mở hồ sơ. */
+  const [sel, setSel] = useState<Ranked | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(query.trim()), 300);
@@ -147,7 +153,11 @@ export function StatBoard({ friend, onOpen }: { friend: string; onOpen?: (id: st
         .catch(() => !stop && setRadar({ ok: false }));
     } else {
       rankBoard({ data: { id: mine, subject: friend, stat: pick, scope, q: search } })
-        .then((got) => !stop && setBoard(got))
+        .then((got) => {
+          if (stop) return;
+          setBoard(got);
+          setSel(got.ok ? got.first ?? null : null);
+        })
         .catch(() => !stop && setBoard({ ok: false }));
     }
     return () => {
@@ -156,12 +166,17 @@ export function StatBoard({ friend, onOpen }: { friend: string; onOpen?: (id: st
   }, [friend, pick, scope, search]);
 
   const stat = pick === "overview" ? null : pick;
-  const first = board?.ok ? board.first : null;
-  const firstArt = first?.cover ? artSrc(first.cover, 1) : null;
   const subject = board?.ok ? board.subject : null;
+  const shown = pick === "overview" ? null : sel;
+  const shownArt = shown?.cover ? artSrc(shown.cover, 1) : null;
+  const tap = (row: Ranked) => {
+    if (sel?.id === row.id) onOpen?.(row.id);
+    else setSel(row);
+  };
 
   return (
     <div className="fs">
+      {shownArt ? <div className="fs-stage" style={{ backgroundImage: `url(${shownArt})` }} aria-hidden="true" /> : null}
       <div className="fs-tools">
         <h3 className="fs-title">
           {tr("BẢNG XẾP HẠNG")}
@@ -210,24 +225,24 @@ export function StatBoard({ friend, onOpen }: { friend: string; onOpen?: (id: st
               <ul className="fs-rows">
                 {board.rows.length === 0 ? <li className="fs-none">{tr("Không có ai khớp.")}</li> : null}
                 {board.rows.map((row) => (
-                  <Row key={row.id} row={row} stat={stat!} me={row.id === friend} onOpen={onOpen} />
+                  <Row key={row.id} row={row} stat={stat!} me={row.id === friend} sel={sel?.id === row.id} onTap={tap} />
                 ))}
               </ul>
               {subject ? (
                 <ul className="fs-pin">
-                  <Row row={subject} stat={stat!} me onOpen={onOpen} />
+                  <Row row={subject} stat={stat!} me pin sel={sel?.id === subject.id} onTap={tap} />
                 </ul>
               ) : null}
-              {first ? (
-                <button type="button" className="fs-first" onClick={() => onOpen?.(first.id)} style={firstArt ? { backgroundImage: `url(${firstArt})` } : undefined}>
+              {shown ? (
+                <button type="button" className="fs-first" onClick={() => onOpen?.(shown.id)}>
                   <b>
-                    {tr("HẠNG")} 1
+                    {tr("HẠNG")} {shown.pos}
                   </b>
-                  <i>{first.id}</i>
+                  <i>{shown.id}</i>
                   <span>
-                    {first.wins} {tr("Trận Thắng")}
+                    {shown.wins} {tr("Trận Thắng")}
                     <br />
-                    {first.games - first.wins} {tr("Trận Thua")}
+                    {shown.games - shown.wins} {tr("Trận Thua")}
                   </span>
                 </button>
               ) : null}
