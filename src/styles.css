@@ -10612,6 +10612,15 @@ button.watch-back {
   50% { filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.6)) drop-shadow(0 0 10px #4aa8ff); }
 }
 .stage .actions .act.medal-act:active { transform: translateY(1px) scale(0.95); filter: brightness(1.12); }
+/* Icon nút OK mới (chủ game 31/10): ảnh có cánh nhô ra ngoài ô nút, cùng cỡ vành ở cả 3 mặt. */
+.stage .actions .act.medal-act .act-face {
+  width: 136%;
+  height: 136%;
+  max-width: none;
+  margin: -18%;
+  pointer-events: none;
+  user-select: none;
+}
 
 /* Icon phản ứng (chủ game 23/10, in place of the fixed reaction line of 21/10): an icon by each card that acts (a
    spell on its side's half), smoke from each icon to what it acts on, all above the cards. The notice board hides

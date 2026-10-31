@@ -11,8 +11,8 @@ export const FULL_RATIO = BOARD_PX.h / BOARD_PX.w;
 /** Cắt ở trên tối đa tới đây (phần trăm chiều cao ảnh): chạm mép trên cầu mana của đối thủ. */
 export const TOP_KEEP = 5;
 /** Mép dưới nửa đỏ (hết lớp đất cam) và mép trên nửa xanh, theo ảnh bàn. */
-export const RED_END = 42.2;
-export const BLUE_START = 60.7;
+export const RED_END = 40.5;
+export const BLUE_START = 62.2;
 /** Hai nửa chừa lại ít nhất chừng này nền sân giữa chúng. */
 const MIN_GAP = 1.5;
 

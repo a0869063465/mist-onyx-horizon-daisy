@@ -798,6 +798,8 @@ export const PENDING_NOTES: string[] = [
   "Nút Tấn công và nút skill: ấn giữ rồi trượt, mục tiêu gần ngón sáng, thả là chọn.",
   "Menu chính mới: thẻ hai bên, hồ sơ và nút Chơi ở dưới, bánh răng Cài đặt có Nhập mã; bỏ Góp ý và Thông tin.",
   "Menu chính: thẻ lú nửa ra mép, hồ sơ có tên và hạng (Tập chơi IV), hai nút PvE (khoá) và PvP khít nhau, bánh răng mới.",
+  "Bàn đấu mới.",
+  "Nút OK / chuyển lượt đổi icon mới.",
 ];
 
 function remarkOf(notes: string[]) {
