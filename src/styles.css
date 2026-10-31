@@ -12421,6 +12421,22 @@ button.watch-back {
   .ml-list > li, .ml-detail, .ml-dot, .ml-claim::after, .ml-act.is-call, .ml-band, .ml-ring, .ml-wave, .ml-mote, .ml-prize, .ml-go, .ml-got h2 { animation: none; }
   .ml-ink { transition: none; }
 }
+/* Tin tức (chủ game 31/10): the News page, on the shell of Hộp thư. */
+.nw-tabs { grid-template-columns: repeat(2, 1fr); }
+.nw-tabs > button { padding: 0.85rem 0.3rem 0.8rem; }
+.nw-tabs > button span { font-size: 0.8rem; letter-spacing: 0.08em; white-space: normal; text-align: center; line-height: 1.15; padding: 0 1.3rem; }
+.nw-tabs .ml-ink { width: 50%; }
+.nw-tabs .ml-badge { right: 0.6rem; top: 0.45rem; }
+.nw-grid { margin: 0; padding: 0.9rem 0 1rem; list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem 0.8rem; }
+.nw-grid > li { animation: ml-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.nw-card { width: 100%; display: grid; gap: 0; padding: 0; border: 1px solid rgba(227, 194, 122, 0.45); background: linear-gradient(#142042, #0a1226); color: inherit; font: inherit; text-align: left; cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.nw-card:active { transform: scale(0.97); }
+.nw-pic { position: relative; display: block; aspect-ratio: 16 / 10; background: #0b1126 center 24% / cover no-repeat; border-bottom: 1.5px solid var(--gold); }
+.nw-pic b { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.2rem 0.55rem 0.3rem; background: linear-gradient(transparent, rgba(3, 6, 18, 0.9)); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; }
+.nw-pic em { position: absolute; top: 0.4rem; right: 0.4rem; padding: 0.08rem 0.5rem; font-style: normal; font-family: var(--cond); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; color: #fff; background: linear-gradient(#ff6b6b, #b02222); clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
+.nw-title { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 4rem; padding: 0.6rem 0.65rem 0.7rem; font-size: 0.9rem; font-weight: 600; line-height: 1.3; color: rgba(233, 238, 252, 0.88); }
+.nw-card.is-new .nw-title { color: #fff; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .nw-grid > li { animation: none; } }
 .home-tab-dot { position: absolute; top: 0.2rem; z-index: 3; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #ff3d3d; border: 1.5px solid #fff; box-shadow: 0 0 6px #ff3d3d; }
 .home-tab.is-left .home-tab-dot { right: 1rem; }
 .home-tab.is-right .home-tab-dot { left: 1rem; }

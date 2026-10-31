@@ -802,6 +802,7 @@ export const PENDING_NOTES: string[] = [
   "Nút OK / chuyển lượt đổi icon mới.",
   "Hộp thư mới ở menu chính.",
   "Hộp thư có 4 tab: Thư, Báo vi phạm, Thư quà, Tin tức; nhận quà có màn Bạn đã nhận được.",
+  "Trang Tin tức mới ở menu chính.",
 ];
 
 function remarkOf(notes: string[]) {

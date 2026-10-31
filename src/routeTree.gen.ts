@@ -16,6 +16,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as MailRouteImport } from './routes/mail'
 import { Route as ModesRouteImport } from './routes/modes'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TuneRouteImport } from './routes/tune'
@@ -56,6 +57,11 @@ const ModesRoute = ModesRouteImport.update({
   path: '/modes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayRoute = PlayRouteImport.update({
   id: '/play',
   path: '/play',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
+  '/news': typeof NewsRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
+  '/news': typeof NewsRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
   '/modes': typeof ModesRoute
+  '/news': typeof NewsRoute
   '/play': typeof PlayRoute
   '/shop': typeof ShopRoute
   '/tune': typeof TuneRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/mail'
     | '/modes'
+    | '/news'
     | '/play'
     | '/shop'
     | '/tune'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/mail'
     | '/modes'
+    | '/news'
     | '/play'
     | '/shop'
     | '/tune'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/hop-thu'
     | '/mail'
     | '/modes'
+    | '/news'
     | '/play'
     | '/shop'
     | '/tune'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   HopThuRoute: typeof HopThuRoute
   MailRoute: typeof MailRoute
   ModesRoute: typeof ModesRoute
+  NewsRoute: typeof NewsRoute
   PlayRoute: typeof PlayRoute
   ShopRoute: typeof ShopRoute
   TuneRoute: typeof TuneRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/play': {
       id: '/play'
       path: '/play'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   HopThuRoute: HopThuRoute,
   MailRoute: MailRoute,
   ModesRoute: ModesRoute,
+  NewsRoute: NewsRoute,
   PlayRoute: PlayRoute,
   ShopRoute: ShopRoute,
   TuneRoute: TuneRoute,
