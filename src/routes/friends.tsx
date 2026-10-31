@@ -6,7 +6,7 @@ import { START_RANK, rankLabel } from "@/lib/rank";
 import { playUi } from "@/lib/sfx";
 import { addFriend, answerFriend, cleanId, friendList, ID_LENGTH, removeFriend, type AskRow, type FriendRow } from "@/lib/friends";
 import { FriendProfile } from "@/components/friend-profile";
-import { MODE_LABELS, PLAYER_NAME, playerId, readPulse, setFriendMatch, setPulse, usePulse } from "@/lib/friend-state";
+import { MODE_LABELS, PLAYER_NAME, playerId, readPulse, setFriendMatch, setPulse, takeProfileBack, usePulse } from "@/lib/friend-state";
 
 type Tab = "friends" | "asks" | "sent";
 
@@ -37,6 +37,11 @@ function FriendsPage() {
   const [asking, setAsking] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [look, setLook] = useState<string | null>(null);
+  // Về từ màn xem lại trận: mở lại hồ sơ đang xem.
+  useEffect(() => {
+    const back = takeProfileBack("/friends");
+    if (back) setLook(back);
+  }, []);
   const busy = useRef(false);
 
   const load = useCallback(async () => {

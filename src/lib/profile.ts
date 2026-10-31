@@ -5,7 +5,9 @@
 export type ProfileMode = "quick" | "custom";
 /** Bộ bài mang vào trận (cho dấu ba gạch trong Lịch sử đấu). */
 export type DeckLite = { monsters: string[]; spells: string[]; name?: string | null; cover?: string | null };
-export type ProfileGame = { mid: string; win: boolean; mode: ProfileMode; cover: string | null; at: number; turns?: number; mine?: DeckLite; foe?: DeckLite; foeId?: string };
+/** Trận trong Lịch sử đấu: trận với người, và trận Vs Máy ("ai": có replay, không tính chỉ số; chủ game 31/10). */
+export type GameMode = ProfileMode | "ai";
+export type ProfileGame = { mid: string; win: boolean; mode: GameMode; cover: string | null; at: number; turns?: number; mine?: DeckLite; foe?: DeckLite; foeId?: string; replay?: boolean };
 export type AlbumStat = { name: string; cover: string; have: number; total: number };
 export type SetStat = { name: string; reward: number; claimed: boolean; cards: { id: string; own: boolean }[] };
 export type CollectionStat = { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] };
@@ -93,26 +95,45 @@ export function recordGame(game: ProfileGame): boolean {
   if (!game.mid) return false;
   const profile = loadProfile();
   if (profile.recent.some((row) => row.mid === game.mid)) return false;
+  if (game.mode === "ai") {
+    // Vs Máy: chỉ vào lịch sử (để xem replay), không cộng vào số trận, tỉ lệ thắng, chuỗi thắng, lối chơi.
+    profile.recent = [game, ...profile.recent].slice(0, RECENT);
+    return saveProfile(profile);
+  }
+  const mode = game.mode;
   profile.games += 1;
   if (game.win) profile.wins += 1;
   profile.winsBy = { quick: profile.winsBy?.quick ?? 0, custom: profile.winsBy?.custom ?? 0 };
-  if (game.win) profile.winsBy[game.mode] += 1;
+  if (game.win) profile.winsBy[mode] += 1;
   profile.streak = game.win ? (profile.streak ?? 0) + 1 : 0;
   profile.best = Math.max(profile.best ?? 0, profile.streak);
   if (game.turns && game.turns > 0) {
     profile.turns = (profile.turns ?? 0) + game.turns;
     profile.turnGames = (profile.turnGames ?? 0) + 1;
   }
-  if (game.mode === "quick") profile.chain = advanceChain(profile.chain, game.win, game.foeId);
-  profile.modes[game.mode] += 1;
+  if (mode === "quick") profile.chain = advanceChain(profile.chain, game.win, game.foeId);
+  profile.modes[mode] += 1;
   if (game.cover) profile.covers[game.cover] = (profile.covers[game.cover] ?? 0) + 1;
   profile.recent = [game, ...profile.recent].slice(0, RECENT);
+  return saveProfile(profile);
+}
+
+function saveProfile(profile: Profile): boolean {
   try {
     localStorage.setItem(KEY, JSON.stringify(profile));
   } catch {
     return false;
   }
   return true;
+}
+
+/** Replay của trận đã lên máy chủ: bật nút xem lại trong Lịch sử đấu. */
+export function markReplay(mid: string) {
+  const profile = loadProfile();
+  const row = profile.recent.find((game) => game.mid === mid);
+  if (!row || row.replay) return;
+  row.replay = true;
+  saveProfile(profile);
 }
 
 /** Chế độ chơi nhiều nhất (null khi chưa có trận), bìa bộ bài dùng nhiều nhất. */
@@ -173,13 +194,14 @@ export function cleanProfile(raw: unknown): Profile | null {
       recent: (Array.isArray(data.recent) ? data.recent : []).slice(0, RECENT).map((row) => ({
         mid: String(row.mid ?? "").slice(0, 40),
         win: Boolean(row.win),
-        mode: row.mode === "custom" ? "custom" : "quick",
+        mode: row.mode === "custom" ? "custom" : row.mode === "ai" ? "ai" : "quick",
         cover: typeof row.cover === "string" ? row.cover.slice(0, 80) : null,
         at: num(row.at),
         turns: num(row.turns) || undefined,
         mine: cleanDeck(row.mine),
         foe: cleanDeck(row.foe),
         foeId: typeof row.foeId === "string" ? row.foeId.slice(0, 8) : undefined,
+        replay: row.replay === true || undefined,
       })),
     };
   } catch {

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { tr } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankLabel } from "@/lib/rank";
 import { readProfile, type FriendMode } from "@/lib/friends";
-import { MODE_LABELS, PLAYER_NAME, playerId } from "@/lib/friend-state";
+import { MODE_LABELS, PLAYER_NAME, playerId, PROFILE_BACK_KEY, REPLAY_KEY } from "@/lib/friend-state";
 import { StatBoard } from "@/components/friend-stats";
 import { AlbumPic } from "@/components/collection/album-parts";
 import { DeckDrawer, type SummarySeat } from "@/components/game/match-summary";
@@ -11,7 +12,7 @@ import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { cardName } from "@/lib/collection";
 import { cleanProfile, EMPTY_PROFILE, favourites, winRate, type DeckLite, type Profile } from "@/lib/profile";
 
-const MODE_NAMES = { quick: "Đánh thường", custom: "Tuỳ chọn" } as const;
+const MODE_NAMES = { quick: "Đánh thường", custom: "Tuỳ chọn", ai: "Vs Máy" } as const;
 
 function stamp(at: number): string {
   const date = new Date(at);
@@ -38,8 +39,19 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
   const [menu, setMenu] = useState<string | null>(null);
   const [deck, setDeck] = useState<{ label: string; cards: DeckLite } | null>(null);
   const [sheet, setSheet] = useState<{ id: string; kind: "monster" | "spell" } | null>(null);
-  const [filter, setFilter] = useState<"all" | "quick" | "custom">("all");
+  const [filter, setFilter] = useState<"all" | "quick" | "custom" | "ai">("all");
   const [pick, setPick] = useState(0);
+  const navigate = useNavigate();
+  // Bảng xếp hạng (chủ game 31/10): bấm một hàng mở hồ sơ người đó (hồ sơ công khai).
+  const [other, setOther] = useState<string | null>(null);
+  const path = useRouterState({ select: (state) => state.location.pathname });
+
+  /** Xem lại trận (chủ game 31/10): mở màn trận ở chế độ xem lại; Thoát thì về đúng trang này, hồ sơ mở lại. */
+  function watchReplay(mid: string) {
+    sessionStorage.setItem(REPLAY_KEY, JSON.stringify({ player: friend, mid }));
+    sessionStorage.setItem(PROFILE_BACK_KEY, JSON.stringify({ path, player: friend }));
+    void navigate({ to: "/play" });
+  }
 
   useEffect(() => {
     let stop = false;
@@ -83,6 +95,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
               <option value="all">{tr("Tất cả trận đấu")}</option>
               <option value="quick">{tr("Đánh thường")}</option>
               <option value="custom">{tr("Tuỳ chọn")}</option>
+              <option value="ai">{tr("Vs Máy")}</option>
             </select>
           </label>
         ) : null}
@@ -133,7 +146,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
       <div className="fp-body" key={tab}>
         {tab === "overview" ? (
           games.length === 0 ? (
-            <p className="fp-none">{tr("Chưa có trận nào với người chơi.")}</p>
+            <p className="fp-none">{tr("Chưa có trận nào.")}</p>
           ) : (
             <ul className="fp-games">
               {games.map((game) => {
@@ -193,7 +206,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
                           </svg>
                         </button>
                       )}
-                      <button type="button" className="fp-round" disabled aria-label={tr("Xem lại")}>
+                      <button type="button" className={`fp-round${game.replay ? " is-replay" : ""}`} disabled={!game.replay} aria-label={tr("Xem lại")} onClick={() => watchReplay(game.mid)}>
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                           <path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4.5 4.5v4h4" />
                           <path d="M10.5 9l4.5 3-4.5 3z" />
@@ -206,7 +219,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             </ul>
           )
         ) : null}
-        {tab === "stats" ? <StatBoard friend={friend} /> : null}
+        {tab === "stats" ? <StatBoard friend={friend} onOpen={(id) => id !== friend && setOther(id)} /> : null}
         {tab === "collection" ? (
           col ? (
             <div className="fp-coll">
@@ -310,6 +323,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           </button>
         ))}
       </nav>
+      {other ? <FriendProfile friend={other} onClose={() => setOther(null)} /> : null}
     </div>
   );
 }

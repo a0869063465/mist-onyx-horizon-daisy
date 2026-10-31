@@ -166,9 +166,10 @@ import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
 import { emitFx, LASER_MS } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
-import { pushWatch, readWatch } from "@/lib/friends";
-import { recordGame } from "@/lib/profile";
-import { PLAYER_NAME, playerId, usePulse, WATCH_KEY, WATCH_SEAT_KEY } from "@/lib/friend-state";
+import { pushReplay, pushWatch, readReplay, readWatch } from "@/lib/friends";
+import { markReplay, recordGame } from "@/lib/profile";
+import { ReplayBook, ReplayRecorder, packReplay, unpackReplay } from "@/lib/replay";
+import { loadReplayAsk, PLAYER_NAME, playerId, PROFILE_BACK_KEY, REPLAY_KEY, usePulse, WATCH_KEY, WATCH_SEAT_KEY } from "@/lib/friend-state";
 
 export const Route = createFileRoute("/play")({ component: PlayPage });
 
@@ -539,7 +540,7 @@ function spoken(text: string, viewer: Side): string {
 
 function savedSeat(): "host" | "guest" | null {
   if (typeof sessionStorage === "undefined") return null;
-  if (sessionStorage.getItem(WATCH_KEY)) return sessionStorage.getItem(WATCH_SEAT_KEY) === "guest" ? "guest" : "host";
+  if (sessionStorage.getItem(WATCH_KEY) || sessionStorage.getItem(REPLAY_KEY)) return sessionStorage.getItem(WATCH_SEAT_KEY) === "guest" ? "guest" : "host";
   try {
     const raw = JSON.parse(sessionStorage.getItem("clash-net") ?? "null") as { seat?: string } | null;
     return raw?.seat === "host" || raw?.seat === "guest" ? raw.seat : null;
@@ -1874,6 +1875,8 @@ function PlayPage() {
   const [wait, setWait] = useState("");
   /** Xem trận của bạn bè (chủ game 31/10): ID bạn đó; trận chỉ để xem, không bấm được gì. */
   const [watch, setWatch] = useState<{ friend: string; over: boolean } | null>(null);
+  // Xem lại trận (chủ game 31/10): sách khung, khung đang xem, đang chạy, tốc độ.
+  const [replay, setReplay] = useState<{ book: ReplayBook; at: number; playing: boolean; speed: 1 | 2 | 4 } | null>(null);
   const friendPulse = usePulse();
   const watchPush = useRef<{ at: number; timer: number; rev: number }>({ at: 0, timer: 0, rev: 0 });
 
@@ -2001,6 +2004,36 @@ function PlayPage() {
   }, [pinnedId]);
 
   useEffect(() => {
+    const ask = loadReplayAsk();
+    if (ask) {
+      // Xem lại trận: tải bản ghi, nhìn từ phía chủ trận, không thao tác được, lật hết bài hai bên.
+      matchRef.current = null;
+      setWatch({ friend: ask.player, over: false });
+      setWait("Đang tải trận…");
+      let stop = false;
+      void readReplay({ data: ask })
+        .then(async (got) => {
+          if (stop) return;
+          const data = got.ok ? await unpackReplay(got.data) : null;
+          if (stop) return;
+          if (!data) {
+            setWait("Không tải được trận này.");
+            return;
+          }
+          const book = new ReplayBook(data);
+          sessionStorage.setItem(WATCH_SEAT_KEY, data.seat);
+          setNet({ code: "", seat: data.seat, ...(data.mode === "quick" ? { quick: true } : {}) } as { code: string; seat: NetSeat });
+          setReplay({ book, at: 0, playing: true, speed: 1 });
+          setWait("");
+          setDuel({ ...book.frame<Duel>(0), mode: "net", glimpse: null });
+        })
+        .catch(() => {
+          if (!stop) setWait("Không tải được trận này.");
+        });
+      return () => {
+        stop = true;
+      };
+    }
     const friend = sessionStorage.getItem(WATCH_KEY);
     if (friend) {
       // Người xem: đọc trận của bạn mình mỗi 1,5 giây, nhìn từ phía bạn đó. Trận nào cũng hiện như trận online.
@@ -2321,6 +2354,48 @@ function PlayPage() {
   }, [duel, watch, tutorial, trial, watchedNow]);
   useEffect(() => () => window.clearTimeout(watchPush.current.timer), []);
 
+  // Xem lại trận: tự sang khung kế theo đúng nhịp lúc đánh (chậm nhất 2,5 giây, nhanh nhất 0,25 giây), chia tốc độ.
+  useEffect(() => {
+    if (!replay?.playing) return;
+    const { book, at, speed } = replay;
+    if (at >= book.length - 1) return;
+    const gap = Math.min(2500, Math.max(250, book.timeAt(at + 1) - book.timeAt(at))) / speed;
+    const timer = window.setTimeout(() => seekReplay(at + 1), gap);
+    return () => window.clearTimeout(timer);
+  }, [replay]);
+
+  // Replay (chủ game 31/10): ghi từng bước của trận Vs Máy, Đánh thường, Tuỳ chọn trên máy này; hết trận thì nén và gửi
+  // lên máy chủ (mỗi người giữ 10 trận). Trận mở lại giữa chừng (tải lại trang) chỉ ghi từ lúc mở lại.
+  const recorder = useRef<ReplayRecorder | null>(null);
+  const replaySent = useRef<string | null>(null);
+  useEffect(() => {
+    if (!duel?.mid || watch || tutorial || trial || sessionStorage.getItem(REPLAY_KEY)) return;
+    if (duel.mode !== "ai" && duel.mode !== "net") return;
+    const plain = { ...duel, glimpse: null };
+    const rec = recorder.current;
+    if (rec && rec.mid === duel.mid) {
+      rec.push(plain);
+      return;
+    }
+    if (duel.winner !== null) return;
+    const quick = Boolean((net as { quick?: boolean } | null)?.quick);
+    recorder.current = new ReplayRecorder(duel.mid, duel.mode === "ai" ? "ai" : quick ? "quick" : "custom", duel.mode === "net" ? (net?.seat ?? "host") : "host", plain);
+  }, [duel, watch, tutorial, trial, net]);
+
+  function sendReplay(done: Duel) {
+    const rec = recorder.current;
+    if (!rec || !done.mid || rec.mid !== done.mid || replaySent.current === done.mid) return;
+    replaySent.current = done.mid;
+    rec.push({ ...done, glimpse: null });
+    const mid = done.mid;
+    void packReplay(rec.done())
+      .then((data) => pushReplay({ data: { id: playerId(), mid, data } }))
+      .then((got) => {
+        if (got.ok) markReplay(mid);
+      })
+      .catch(() => undefined);
+  }
+
   // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions a win
   // moved (paid once), then the old panel. Elsewhere only the old panel.
   const ended = duel?.winner ?? null;
@@ -2334,18 +2409,19 @@ function PlayPage() {
       return;
     }
     if (endedAt.current?.mid !== duel.mid) endedAt.current = { mid: duel.mid, at: Date.now() };
-    // Người xem trận của bạn bè: không cảnh hết trận, không thưởng.
-    if (sessionStorage.getItem(WATCH_KEY)) return;
+    // Người xem trận của bạn bè và người xem lại trận: không cảnh hết trận, không thưởng.
+    if (sessionStorage.getItem(WATCH_KEY) || sessionStorage.getItem(REPLAY_KEY)) return;
     const mine = viewerSide(duel, boardActor(duel), net?.seat ?? null);
-    // Hồ sơ (chủ game 31/10): chỉ trận với người (Đánh thường, Tuỳ chọn).
-    if (duel.mode === "net" && duel.mid && !tutorial && !trial) {
-      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null,
+    // Hồ sơ (chủ game 31/10): trận với người (Đánh thường, Tuỳ chọn) tính chỉ số; Vs Máy chỉ vào lịch sử để xem replay.
+    if ((duel.mode === "net" || duel.mode === "ai") && duel.mid && !tutorial && !trial) {
+      recordGame({ mid: duel.mid, win: duel.winner === mine, mode: duel.mode === "ai" ? "ai" : (net as { quick?: boolean } | null)?.quick ? "quick" : "custom", cover: duel.faces?.[mine]?.cover ?? null,
         at: Date.now(),
         turns: duel.clock ?? 0,
         mine: deckOf(duel.faces?.[mine]),
         foe: deckOf(duel.faces?.[mine === 0 ? 1 : 0]),
         foeId: duel.faces?.[mine === 0 ? 1 : 0]?.pid ?? undefined,
       });
+      sendReplay(duel);
     }
     const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
@@ -2430,7 +2506,7 @@ function PlayPage() {
   }, [tutorial, trial]);
   const openerLive = Boolean(duel?.opener);
   useEffect(() => {
-    if (loaded && introSeen && openerLive && !sessionStorage.getItem(WATCH_KEY)) setOpenerOpen(true);
+    if (loaded && introSeen && openerLive && !sessionStorage.getItem(WATCH_KEY) && !sessionStorage.getItem(REPLAY_KEY)) setOpenerOpen(true);
   }, [loaded, introSeen, openerLive]);
   // Hết đổi bài đầu trận (bảng đóng): 3 lá đầu bay từ xấp lên tay mỗi bên, lần lượt (chủ game 30/10).
   // Lá rút bay lên tay (chủ game 30/10): tạo trước khi trình duyệt vẽ, để lá mới không hiện lên tay rồi mới bay.
@@ -3585,9 +3661,36 @@ function PlayPage() {
   /** Bài khởi đầu: the picked opening cards (indexes over the 2 monsters, then the spell) are replaced. Online, both
    *  sides choose at once, so a pick that clashes with the other side's is put on top of it when the poll brings it. */
   function leaveWatch() {
+    if (replay || sessionStorage.getItem(REPLAY_KEY)) {
+      leaveReplay();
+      return;
+    }
     sessionStorage.removeItem(WATCH_KEY);
     sessionStorage.removeItem(WATCH_SEAT_KEY);
     void navigate({ to: "/friends" });
+  }
+
+  /** Thoát xem lại: về đúng trang đã mở hồ sơ, hồ sơ mở lại (PROFILE_BACK_KEY). */
+  function leaveReplay() {
+    sessionStorage.removeItem(REPLAY_KEY);
+    sessionStorage.removeItem(WATCH_SEAT_KEY);
+    let path = "/friends";
+    try {
+      const back = JSON.parse(sessionStorage.getItem(PROFILE_BACK_KEY) ?? "null") as { path?: string } | null;
+      if (back?.path === "/" || back?.path === "/friends") path = back.path;
+    } catch {
+      // Không đọc được: về Bạn bè.
+    }
+    void navigate({ to: path });
+  }
+
+  function seekReplay(at: number, playing?: boolean) {
+    setReplay((current) => {
+      if (!current) return current;
+      const next = Math.max(0, Math.min(at, current.book.length - 1));
+      setDuel({ ...current.book.frame<Duel>(next), mode: "net", glimpse: null });
+      return { ...current, at: next, playing: (playing ?? current.playing) && next < current.book.length - 1 };
+    });
   }
 
   function confirmOpener(picked: number[]) {
@@ -5310,6 +5413,23 @@ function PlayPage() {
       {watch ? (
         <>
           <div className="watch-shield" aria-hidden="true" />
+          {replay ? (
+            <ReplayBar
+              at={replay.at}
+              total={replay.book.length}
+              round={duel.clock ?? 1}
+              playing={replay.playing}
+              speed={replay.speed}
+              onSeek={(at) => seekReplay(at, false)}
+              onStep={(by) => seekReplay(replay.at + by, false)}
+              onPlay={() => {
+                if (replay.at >= replay.book.length - 1) seekReplay(0, true);
+                else setReplay({ ...replay, playing: !replay.playing });
+              }}
+              onSpeed={() => setReplay({ ...replay, speed: replay.speed === 1 ? 2 : replay.speed === 2 ? 4 : 1 })}
+              onExit={leaveReplay}
+            />
+          ) : (
           <div className="watch-bar">
             <span>
               {tr(duel.winner !== null || watch.over ? "Trận đã kết thúc." : "Đang xem trận của")} {duel.winner !== null || watch.over ? null : <b>{tr(PLAYER_NAME)} {watch.friend}</b>}
@@ -5318,6 +5438,7 @@ function PlayPage() {
               {tr("Thoát")}
             </button>
           </div>
+          )}
         </>
       ) : null}
       {loaded || tutorial || trial ? null : <LoadScreen kind="match" title={tutorial ? "Đang chuẩn bị trận hướng dẫn" : "Đang chuẩn bị trận đấu"} jobs={() => matchJobs(duel)} onDone={() => setLoaded(true)} face={loadFace} />}
@@ -5405,11 +5526,13 @@ function PlayPage() {
           if (count === 0) return null;
           const shown = Math.min(FOE_FAN.most, count);
           const at = marks.foeReserve;
+          // Xem lại trận (chủ game 31/10): lật hết bài hai bên, tay đối thủ hiện hình lá thật.
+          const faces = replay ? [...foe.reserve.map((mon) => artSrc(mon.id)), ...foe.hand.map((id) => spellSrc(id))] : null;
           return (
-            <div className="foe-fan" role="button" onClick={() => setShowFoeHand((on) => !on)} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
+            <div className={`foe-fan${faces ? " is-open" : ""}`} role="button" onClick={() => setShowFoeHand((on) => !on)} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
               {Array.from({ length: shown }, (_, i) => {
                 const k = i - (shown - 1) / 2;
-                return <img key={i} src="/ui/card-back-foe.webp" alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
+                return <img key={i} src={faces?.[i] || "/ui/card-back-foe.webp"} alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
               })}
             </div>
           );
@@ -7819,6 +7942,46 @@ function SwapGhost({ ghost, onDone }: { ghost: { mon: FieldMon; rect: { left: nu
   return (
     <div ref={ref} style={{ position: "fixed", left: ghost.rect.left, top: ghost.rect.top, width: ghost.rect.width, height: ghost.rect.height, zIndex: 45, pointerEvents: "none" }}>
       <CardFace monster={card} level={ghost.mon.level ?? 1} live={{ name: fieldName(ghost.mon), atk: ghost.mon.atk, def: ghost.mon.def, mdef: ghost.mon.mdef, hp: ghost.mon.hp }} />
+    </div>
+  );
+}
+
+/** Dải điều khiển khi xem lại trận (chủ game 31/10): lùi 1 bước, chạy / tạm dừng, tới 1 bước, thanh tua kèm Vòng, x1/x2/x4. */
+function ReplayBar({ at, total, round, playing, speed, onSeek, onStep, onPlay, onSpeed, onExit }: { at: number; total: number; round: number; playing: boolean; speed: number; onSeek: (at: number) => void; onStep: (by: number) => void; onPlay: () => void; onSpeed: () => void; onExit: () => void }) {
+  const icon = (d: string) => (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+  return (
+    <div className="rp-bar">
+      <div className="rp-top">
+        <b>{tr("XEM LẠI TRẬN")}</b>
+        <span className="rp-round">
+          {tr("Vòng")} {round}
+        </span>
+        <button type="button" className="rp-exit" onClick={onExit}>
+          {tr("Thoát")}
+        </button>
+      </div>
+      <input className="rp-seek" type="range" min={0} max={Math.max(0, total - 1)} value={at} onChange={(event) => onSeek(Number(event.target.value))} aria-label={tr("Tua trận")} style={{ ["--p" as string]: `${total > 1 ? (at / (total - 1)) * 100 : 0}%` }} />
+      <div className="rp-keys">
+        <button type="button" onClick={() => onStep(-1)} disabled={at <= 0} aria-label={tr("Lùi 1 bước")}>
+          {icon("M6 5h2.4v14H6zM20 5v14L9.5 12z")}
+        </button>
+        <button type="button" className="rp-play" onClick={onPlay} aria-label={tr(playing ? "Tạm dừng" : "Chạy")}>
+          {playing ? icon("M7 5h3.6v14H7zm6.4 0H17v14h-3.6z") : icon("M8 5v14l11-7z")}
+        </button>
+        <button type="button" onClick={() => onStep(1)} disabled={at >= total - 1} aria-label={tr("Tới 1 bước")}>
+          {icon("M15.6 5H18v14h-2.4zM4 5l10.5 7L4 19z")}
+        </button>
+        <button type="button" className="rp-speed" onClick={onSpeed} aria-label={tr("Tốc độ")}>
+          x{speed}
+        </button>
+        <span className="rp-count">
+          {at + 1}/{total}
+        </span>
+      </div>
     </div>
   );
 }

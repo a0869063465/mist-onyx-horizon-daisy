@@ -291,7 +291,7 @@ export const readProfile = createServerFn({ method: "POST" })
     const friend = cleanId(data.friend);
     if (!validId(id) || !validId(friend)) return { ok: false };
     const sql = await db();
-    if (!(await areFriends(sql, id, friend))) return { ok: false };
+    // Hồ sơ công khai (chủ game 31/10): ai dò được người đó (bạn bè, bảng xếp hạng) đều xem được.
     const rows = await sql<{ cover: string | null; mode: string | null; seen_at: number; profile: string | null }>`
       select cover, mode, seen_at, profile from clash_players where id = ${friend}
     `;
@@ -350,7 +350,6 @@ export const rankBoard = createServerFn({ method: "POST" })
     const stat = STAT_LIST.find((one) => one.key === data.stat)?.key;
     if (!stat) return { ok: false };
     const sql = await db();
-    if (id !== subject && !(await areFriends(sql, id, subject))) return { ok: false };
     const scope: BoardScope = data.scope === "friends" ? "friends" : "all";
     const ranked = rankAll(await boardField(sql, id, subject, scope), stat);
     const q = cleanQuery(data.q);
@@ -372,10 +371,41 @@ export const rankRadar = createServerFn({ method: "POST" })
     const subject = cleanId(data.subject);
     if (!validId(id) || !validId(subject)) return { ok: false };
     const sql = await db();
-    if (id !== subject && !(await areFriends(sql, id, subject))) return { ok: false };
     const { RADAR_AXES, RADAR_MIN, radarScore } = await import("@/lib/ranking");
     const field = await boardField(sql, id, subject, data.scope === "friends" ? "friends" : "all");
     const scores: Record<string, number> = {};
     for (const axis of RADAR_AXES) scores[axis] = radarScore(field, subject, axis);
     return { ok: true, total: field.length, enough: field.length >= RADAR_MIN, scores };
+  });
+
+/** Replay (chủ game 31/10): mỗi người giữ 10 trận gần nhất; ai mở được hồ sơ thì xem được. */
+const REPLAY_KEEP = 10;
+const REPLAY_MAX = 2_000_000;
+
+export const pushReplay = createServerFn({ method: "POST" })
+  .validator((data: { id: string; mid: string; data: string }) => data)
+  .handler(async ({ data }) => {
+    const id = cleanId(data.id);
+    const mid = typeof data.mid === "string" ? data.mid.slice(0, 40) : "";
+    if (!validId(id) || !mid || typeof data.data !== "string" || !data.data || data.data.length > REPLAY_MAX) return { ok: false as const };
+    const sql = await db();
+    const now = Date.now();
+    await sql`
+      insert into clash_replays (player, mid, at, data) values (${id}, ${mid}, ${now}, ${data.data})
+      on conflict (player, mid) do update set data = excluded.data, at = excluded.at
+    `;
+    const rows = await sql<{ mid: string }>`select mid from clash_replays where player = ${id} order by at desc`;
+    for (const row of rows.slice(REPLAY_KEEP)) await sql`delete from clash_replays where player = ${id} and mid = ${row.mid}`;
+    return { ok: true as const };
+  });
+
+export const readReplay = createServerFn({ method: "POST" })
+  .validator((data: { player: string; mid: string }) => data)
+  .handler(async ({ data }) => {
+    const player = cleanId(data.player);
+    const mid = typeof data.mid === "string" ? data.mid.slice(0, 40) : "";
+    if (!validId(player) || !mid) return { ok: false as const };
+    const sql = await db();
+    const rows = await sql<{ data: string }>`select data from clash_replays where player = ${player} and mid = ${mid}`;
+    return rows[0] ? { ok: true as const, data: rows[0].data } : { ok: false as const };
   });

@@ -7,7 +7,8 @@ import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
 import { useMail } from "@/lib/mail-box";
-import { usePulse } from "@/lib/friend-state";
+import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
+import { FriendProfile } from "@/components/friend-profile";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -27,6 +28,12 @@ type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/sho
 function Home() {
   const [wins, setWins] = useState(0);
   const [missions, setMissions] = useState(false);
+  // Hồ sơ của mình (chủ game 31/10): bấm ảnh đại diện ở khung hồ sơ; về từ màn xem lại trận thì mở lại.
+  const [mine, setMine] = useState<string | null>(null);
+  useEffect(() => {
+    const back = takeProfileBack("/");
+    if (back) setMine(back);
+  }, []);
   const [face, setFace] = useState<string | null>(null);
   useLang();
   const mails = useMail();
@@ -97,7 +104,12 @@ function Home() {
         <div className="home-base">
           {/* Hồ sơ: khung tạm, chưa có luật cấp và hạng (chủ game 31/10). */}
           <div className="home-profile">
-            <span className="home-avatar">{face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}</span>
+            <button type="button" className="home-avatar" aria-label={tr("Hồ sơ")} onClick={() => {
+              playUi("select");
+              setMine(playerId());
+            }}>
+              {face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}
+            </button>
             <span className="home-ranks">
               <b>{tr("Người chơi")}</b>
               <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>
@@ -118,6 +130,7 @@ function Home() {
         </div>
       </div>
       {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
+      {mine ? <FriendProfile friend={mine} onClose={() => setMine(null)} /> : null}
     </main>
   );
 }

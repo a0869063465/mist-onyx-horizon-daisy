@@ -57,12 +57,38 @@ export function setFriendMatch(value: FriendMatch | null) {
 /** Đang xem trận của bạn: ID bạn đó (sessionStorage), và bên của bạn đó trong trận. */
 export const WATCH_KEY = "clash-watch";
 export const WATCH_SEAT_KEY = "clash-watch-seat";
+/** Xem lại trận (replay): {player, mid}; và chỗ quay về khi Thoát (hồ sơ đang mở). */
+export const REPLAY_KEY = "clash-replay";
+export const PROFILE_BACK_KEY = "clash-profile-back";
+export type ReplayAsk = { player: string; mid: string };
+export type ProfileBack = { path: string; player: string };
+
+/** Hồ sơ cần mở lại khi quay về trang `path` từ màn xem lại trận (dùng một lần). */
+export function takeProfileBack(path: string): string | null {
+  try {
+    const back = JSON.parse(sessionStorage.getItem(PROFILE_BACK_KEY) ?? "null") as ProfileBack | null;
+    if (!back || back.path !== path || typeof back.player !== "string") return null;
+    sessionStorage.removeItem(PROFILE_BACK_KEY);
+    return back.player;
+  } catch {
+    return null;
+  }
+}
+
+export function loadReplayAsk(): ReplayAsk | null {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(REPLAY_KEY) ?? "null") as ReplayAsk | null;
+    return raw && typeof raw.player === "string" && typeof raw.mid === "string" ? raw : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Chế độ đang chơi trên máy này, theo trang trận (null = ngoài trận = Đang chờ). */
 export function currentMode(): { mode: FriendMode | null; room: string | null; seat: string | null } {
   const none = { mode: null, room: null, seat: null };
   if (typeof window === "undefined" || window.location.pathname !== "/play") return none;
-  if (sessionStorage.getItem(WATCH_KEY)) return none;
+  if (sessionStorage.getItem(WATCH_KEY) || sessionStorage.getItem(REPLAY_KEY)) return none;
   const saved = sessionStorage.getItem("clash-mode");
   try {
     const net = JSON.parse(sessionStorage.getItem("clash-net") ?? "null") as { code?: string; seat?: string; quick?: boolean } | null;

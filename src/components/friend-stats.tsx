@@ -30,22 +30,34 @@ function format(stat: StatKey, v: number | null): string {
   }
 }
 
-function Row({ row, stat, me }: { row: Ranked; stat: StatKey; me: boolean }) {
+function Row({ row, stat, me, onOpen }: { row: Ranked; stat: StatKey; me: boolean; onOpen?: (id: string) => void }) {
   const art = row.cover ? artSrc(row.cover, 1) : null;
   return (
     <li className={`fs-row is-p${Math.min(row.pos, 4)}${me ? " is-me" : ""}`}>
-      <b className="fs-pos">{row.pos}</b>
-      <span className="fs-ava" style={art ? { backgroundImage: `url(${art})` } : undefined} />
-      <span className="fs-who">
-        <b>{tr(PLAYER_NAME)}</b>
-        <i>#{row.id}</i>
-      </span>
-      <span className="fs-val">
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M6 .8 11.2 6 6 11.2.8 6z" />
-        </svg>
-        {format(stat, row.v)}
-      </span>
+      <button type="button" className="fs-hit" onClick={() => onOpen?.(row.id)} aria-label={`${tr(PLAYER_NAME)} ${row.id}`}>
+        {art ? <span className="fs-row-art" style={{ backgroundImage: `url(${art})` }} aria-hidden="true" /> : null}
+        <b className="fs-pos">{row.pos}</b>
+        <span className="fs-ava">
+          <span style={art ? { backgroundImage: `url(${art})` } : undefined} />
+        </span>
+        <span className="fs-who">
+          <b>{tr(PLAYER_NAME)}</b>
+          <span className="fs-sub">
+            <svg className="fs-emblem" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2 4.5 6v6.2c0 4.3 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.5 7.5-9.8V6z" />
+              <path d="M12 7.2 13.6 10.6 17.3 11l-2.8 2.5.8 3.6L12 15.3l-3.3 1.8.8-3.6L6.7 11l3.7-.4z" />
+            </svg>
+            <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>
+            <em aria-hidden="true">|</em>
+            <span className="fs-val">
+              <svg viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M6 .8 11.2 6 6 11.2.8 6z" />
+              </svg>
+              {format(stat, row.v)}
+            </span>
+          </span>
+        </span>
+      </button>
     </li>
   );
 }
@@ -111,7 +123,7 @@ function Radar({ view }: { view: RadarView | null }) {
  * Chỉ số trong hồ sơ (chủ game 31/10, theo bảng xếp hạng Liên Quân): cột trái là danh sách chỉ số, mỗi chỉ số một bảng
  * xếp hạng, mục cuối Tổng quan là mạng nhện x/5. Hàng của người đang xem hồ sơ nằm ghim ở cuối kèm hạng.
  */
-export function StatBoard({ friend }: { friend: string }) {
+export function StatBoard({ friend, onOpen }: { friend: string; onOpen?: (id: string) => void }) {
   const [pick, setPick] = useState<Pick>("games");
   const [scope, setScope] = useState<Scope>("all");
   const [query, setQuery] = useState("");
@@ -151,6 +163,10 @@ export function StatBoard({ friend }: { friend: string }) {
   return (
     <div className="fs">
       <div className="fs-tools">
+        <h3 className="fs-title">
+          {tr("BẢNG XẾP HẠNG")}
+          <i aria-hidden="true">?</i>
+        </h3>
         <label className="fs-select">
           <select value={scope} onChange={(event) => setScope(event.target.value as Scope)} aria-label={tr("Phạm vi xếp hạng")}>
             <option value="all">{tr("Toàn bộ")}</option>
@@ -194,24 +210,26 @@ export function StatBoard({ friend }: { friend: string }) {
               <ul className="fs-rows">
                 {board.rows.length === 0 ? <li className="fs-none">{tr("Không có ai khớp.")}</li> : null}
                 {board.rows.map((row) => (
-                  <Row key={row.id} row={row} stat={stat!} me={row.id === friend} />
+                  <Row key={row.id} row={row} stat={stat!} me={row.id === friend} onOpen={onOpen} />
                 ))}
               </ul>
               {subject ? (
                 <ul className="fs-pin">
-                  <Row row={subject} stat={stat!} me />
+                  <Row row={subject} stat={stat!} me onOpen={onOpen} />
                 </ul>
               ) : null}
               {first ? (
-                <div className="fs-first" style={firstArt ? { backgroundImage: `url(${firstArt})` } : undefined}>
+                <button type="button" className="fs-first" onClick={() => onOpen?.(first.id)} style={firstArt ? { backgroundImage: `url(${firstArt})` } : undefined}>
                   <b>
                     {tr("HẠNG")} 1
                   </b>
-                  <i>#{first.id}</i>
+                  <i>{first.id}</i>
                   <span>
-                    {first.wins} {tr("trận thắng")} · {first.games - first.wins} {tr("trận thua")}
+                    {first.wins} {tr("Trận Thắng")}
+                    <br />
+                    {first.games - first.wins} {tr("Trận Thua")}
                   </span>
-                </div>
+                </button>
               ) : null}
             </>
           )}
