@@ -814,6 +814,7 @@ export const PENDING_NOTES: string[] = [
   "Xem lại trận: nút camera thay cụm OK, bấm để ẩn hoặc hiện thanh điều khiển, kéo thanh bằng dải tiêu đề.",
   "Huy hiệu hạng: hồ sơ hiện huy hiệu to, menu, bảng xếp hạng và danh sách bạn bè hiện bản nhỏ.",
   "Bố cục bàn đấu và lá môi trường dùng chung cho mọi môi trường, hết lệch khỏi chỗ đã chỉnh trong Tuỳ chỉnh.",
+  "Bể sáng chuyển lượt: thêm dòng chảy cong theo mép viền sân, đỉnh sóng hai bên thấp hơn, dải sáng dày và rõ hơn.",
 ];
 
 function remarkOf(notes: string[]) {

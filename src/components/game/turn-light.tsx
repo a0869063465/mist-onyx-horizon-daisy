@@ -40,15 +40,20 @@ const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
 /** The ribbons and their fibres are this much of their first strength (chủ game 30/10: paler, so they do not pull the eye). */
-const PALE = 0.55;
+const PALE = 0.75;
 
 /** Ribbons of light in a tank: where they meet the left and right walls and how low they sag (parts of the tank's depth). */
 const RIBBONS: Array<{ a: number; b: number; c: number; d: number; w: number; rate: number; phase: number; fibres: Array<{ k: number; taper: number; hot: boolean }> }> = [
-  { a: 0.9, b: 0.2, c: 0.08, d: 0.12, w: 0.3, rate: 0.17, phase: 0, fibres: [{ k: -0.9, taper: 0.5, hot: false }, { k: 0.15, taper: 0.4, hot: true }, { k: 1, taper: 0.55, hot: false }] },
-  { a: 0.18, b: 0.9, c: 0.12, d: 0.06, w: 0.26, rate: 0.13, phase: 1.7, fibres: [{ k: -1, taper: 0.45, hot: false }, { k: -0.1, taper: 0.4, hot: true }, { k: 0.8, taper: 0.5, hot: false }] },
-  { a: 0.66, b: 0.7, c: 0.02, d: 0.03, w: 0.34, rate: 0.11, phase: 3.1, fibres: [{ k: -0.7, taper: 0.35, hot: true }, { k: 0.4, taper: 0.45, hot: false }, { k: 1.1, taper: 0.6, hot: false }] },
+  { a: 0.6, b: 0.2, c: 0.08, d: 0.12, w: 0.3, rate: 0.17, phase: 0, fibres: [{ k: -0.9, taper: 0.5, hot: false }, { k: 0.15, taper: 0.4, hot: true }, { k: 1, taper: 0.55, hot: false }] },
+  { a: 0.18, b: 0.62, c: 0.12, d: 0.06, w: 0.26, rate: 0.13, phase: 1.7, fibres: [{ k: -1, taper: 0.45, hot: false }, { k: -0.1, taper: 0.4, hot: true }, { k: 0.8, taper: 0.5, hot: false }] },
+  { a: 0.5, b: 0.52, c: 0.02, d: 0.03, w: 0.34, rate: 0.11, phase: 3.1, fibres: [{ k: -0.7, taper: 0.35, hot: true }, { k: 0.4, taper: 0.45, hot: false }, { k: 1.1, taper: 0.6, hot: false }] },
   { a: 0.48, b: 0.44, c: 0.16, d: 0.14, w: 0.22, rate: 0.19, phase: 4.4, fibres: [{ k: -0.6, taper: 0.5, hot: false }, { k: 0.6, taper: 0.5, hot: true }] },
+  { a: 0.36, b: 0.5, c: 0.1, d: 0.2, w: 0.28, rate: 0.15, phase: 5.2, fibres: [{ k: -0.8, taper: 0.45, hot: false }, { k: 0.3, taper: 0.4, hot: true }, { k: 1, taper: 0.5, hot: false }] },
+  { a: 0.28, b: 0.28, c: 0.22, d: 0.1, w: 0.2, rate: 0.21, phase: 2.2, fibres: [{ k: -0.5, taper: 0.5, hot: true }, { k: 0.7, taper: 0.45, hot: false }] },
 ];
+
+/** The court's edge on the new board (measured on board-full.jpg): flat across, then rounding away from the open end at each wall, by this much of the board's height. */
+const EDGE_DIP = 0.028;
 
 type Mode = "off" | "in" | "on" | "out";
 type Tank = { mode: Mode; at: number };
@@ -293,6 +298,45 @@ export class TurnLightArt {
         ctx.lineWidth = 1.1 * unit;
         ctx.stroke();
       });
+    }
+
+    // A ribbon that runs along the court's edge, bending gently with its rounded corners, to cover the border when the turn comes
+    // (chủ game 01/11); it sways a little and shares the tank's colour and gloss.
+    {
+      const lift = this.h * EDGE_DIP;
+      const wall = base - dir * lift;
+      const sway = 0.0035 * this.h * Math.sin(now * 1.3);
+      const ends = (up: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x0, wall + up);
+        ctx.bezierCurveTo(x0 + width * 0.05, wall + up, x0 + width * 0.08, base + sway + up, x0 + width * 0.17, base + sway + up);
+        ctx.bezierCurveTo(x0 + width * 0.4, base + sway * 0.4 + up, x0 + width * 0.6, base + sway * 0.4 + up, x1 - width * 0.17, base + sway + up);
+        ctx.bezierCurveTo(x1 - width * 0.08, base + sway + up, x1 - width * 0.05, wall + up, x1, wall + up);
+      };
+      ctx.globalCompositeOperation = "source-over";
+      for (const [up, line, alpha] of [
+        [0, 9, 0.22],
+        [0, 4.5, 0.4],
+        [-dir * 3, 2.2, 0.55],
+      ] as const) {
+        ends(up * unit);
+        ctx.strokeStyle = rgba(tone.mid, alpha * tone.gain);
+        ctx.lineWidth = line * unit;
+        ctx.stroke();
+      }
+      const gloss = clamp01(((now * 0.14) % 1.4) - 0.2);
+      ctx.globalCompositeOperation = "lighter";
+      const shine = ctx.createLinearGradient(x0, 0, x1, 0);
+      shine.addColorStop(0, rgba(tone.core, 0.12 * tone.gain));
+      shine.addColorStop(Math.max(0, gloss - 0.2), rgba(tone.core, 0.18 * tone.gain));
+      shine.addColorStop(gloss, rgba(tone.core, 0.7 * tone.gain));
+      shine.addColorStop(Math.min(1, gloss + 0.2), rgba(tone.core, 0.18 * tone.gain));
+      shine.addColorStop(1, rgba(tone.core, 0.12 * tone.gain));
+      ends(-dir * 3 * unit);
+      ctx.strokeStyle = shine;
+      ctx.lineWidth = 1.3 * unit;
+      ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
     }
 
     // The moving front: only the part it has passed shows (or, fading out, only the part it has not reached yet).
