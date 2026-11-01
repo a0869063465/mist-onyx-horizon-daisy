@@ -268,6 +268,7 @@ function asStack(value: unknown): Spot {
   return { ...base, hidden: raw.hidden === true };
 }
 
+/** Bố cục bàn dùng CHUNG cho mọi môi trường (chủ game 01/11): khoá riêng từng môi trường cũ không còn được đọc. */
 function boardKey(env?: string) {
   return env ? `${BOARD_KEY}:${env}` : BOARD_KEY;
 }
@@ -277,11 +278,10 @@ function asActions(value: unknown): Spot {
   return { ...spot, hidden: false };
 }
 
-/** Layout for the default board, or for one environment's board (falls back to the default layout until saved). */
-export function loadBoard(env?: string): BoardLayout {
+/** Layout of the board: one for every environment (the parameter is kept for old callers and ignored). */
+export function loadBoard(_env?: string): BoardLayout {
   publishLayout();
-  const own = env ? read(boardKey(env)) : null;
-  const raw = (own ?? read(BOARD_KEY)) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
+  const raw = read(BOARD_KEY) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
   const marks = { ...DEFAULT_BOARD };
   const source = raw?.marks ?? (raw && typeof raw.foeHp?.x === "number" ? raw : DEFAULT_BOARD);
   for (const key of Object.keys(DEFAULT_BOARD) as HudKey[]) {
@@ -310,8 +310,8 @@ function spotsOf(raw: Partial<Record<ActKey | FaceKey, Spot>> | null): Record<Ac
   return out;
 }
 
-export function saveBoard(layout: BoardLayout, env?: string) {
-  localStorage.setItem(boardKey(env), JSON.stringify(layout));
+export function saveBoard(layout: BoardLayout, _env?: string) {
+  localStorage.setItem(BOARD_KEY, JSON.stringify(layout));
 }
 
 /** Drop an environment's own layout so it follows the default board layout again. */
@@ -319,11 +319,9 @@ export function clearBoard(env: string) {
   localStorage.removeItem(boardKey(env));
 }
 
-/** Environments that have their own saved layout. */
+/** No environment has its own layout any more. */
 export function savedBoards(): Record<string, BoardLayout> {
-  const out: Record<string, BoardLayout> = {};
-  for (const env of Object.keys(ENV_BOARDS)) if (read(boardKey(env))) out[env] = loadBoard(env);
-  return out;
+  return {};
 }
 
 const TOP_MARKS: HudKey[] = ["foeHp", "foeOrb", "foeFlask", "foeStars", "foeGems", "foeHand", "foeReserve"];

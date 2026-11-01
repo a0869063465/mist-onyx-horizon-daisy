@@ -813,6 +813,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng xếp hạng: hàng kính mờ trong suốt, bấm hàng để chọn, bấm lại để xem hồ sơ.",
   "Xem lại trận: nút camera thay cụm OK, bấm để ẩn hoặc hiện thanh điều khiển, kéo thanh bằng dải tiêu đề.",
   "Huy hiệu hạng: hồ sơ hiện huy hiệu to, menu, bảng xếp hạng và danh sách bạn bè hiện bản nhỏ.",
+  "Bố cục bàn đấu và lá môi trường dùng chung cho mọi môi trường, hết lệch khỏi chỗ đã chỉnh trong Tuỳ chỉnh.",
 ];
 
 function remarkOf(notes: string[]) {

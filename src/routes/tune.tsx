@@ -373,16 +373,9 @@ function Pad({
 function BoardTune({ onBack }: { onBack: () => void }) {
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<BoardPick | null>(null);
-  const [env, setEnv] = useState("");
   const [layout, setLayout] = useState<BoardLayout>(() => loadBoard());
   const [picked, setPicked] = useState<BoardPick>("notice");
   const [saved, setSaved] = useState(false);
-
-  function pickEnv(next: string) {
-    setEnv(next);
-    setLayout(loadBoard(next || undefined));
-    setSaved(false);
-  }
 
   function at(event: ReactPointerEvent) {
     const node = stage.current;
@@ -511,17 +504,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       </button>
       <h1>Chỉnh bàn đấu</h1>
       <p className="tuner-note">Chọn một số, rồi bấm mũi tên. Kéo cũng được. Lưu xong vào trận để xem.</p>
-      <p className="tuner-note">Bàn theo môi trường. Nửa trên theo môi trường của đối thủ, nửa dưới theo môi trường của bạn.</p>
-      <div className="env-picks">
-        <button type="button" className={`tuner-item${env === "" ? " on" : ""}`} onClick={() => pickEnv("")}>
-          Mặc định
-        </button>
-        {Object.keys(ENV_BOARDS).map((id) => (
-          <button key={id} type="button" className={`tuner-item${env === id ? " on" : ""}`} onClick={() => pickEnv(id)}>
-            {tr(spellCard(id)?.name ?? id)}
-          </button>
-        ))}
-      </div>
+      <p className="tuner-note">Một bố cục dùng chung cho mọi môi trường.</p>
       <div ref={stage} className="tune-stage tune-board">
         {/* Trận đang dùng bàn Grok cho mọi môi trường (chủ game 28/10: khoan làm môi trường). */}
         <img src={DEFAULT_BOARD_ART} alt="" />
@@ -774,7 +757,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         type="button"
         className="tuner-save"
         onClick={() => {
-          saveBoard(layout, env || undefined);
+          saveBoard(layout);
           setSaved(true);
         }}
       >
@@ -784,19 +767,14 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         type="button"
         className="pad-btn"
         onClick={() => {
-          if (env) {
-            clearBoard(env);
-            setLayout(loadBoard(env));
-          } else {
-            setLayout(DEFAULT_BOARD_LAYOUT);
-            saveBoard(DEFAULT_BOARD_LAYOUT);
-          }
+          setLayout(DEFAULT_BOARD_LAYOUT);
+          saveBoard(DEFAULT_BOARD_LAYOUT);
           setSaved(true);
         }}
       >
-        {env ? "Dùng lại bố cục Mặc định" : "Trả về mặc định"}
+        Trả về mặc định
       </button>
-      {saved ? <p className="tuner-note">{env ? `Đã lưu cho ${tr(spellCard(env)?.name ?? env)}. Vào chơi để xem.` : "Đã lưu. Vào chơi để xem."}</p> : null}
+      {saved ? <p className="tuner-note">Đã lưu. Vào chơi để xem.</p> : null}
     </main>
   );
 }
