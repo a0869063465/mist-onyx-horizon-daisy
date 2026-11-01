@@ -3471,9 +3471,9 @@ function PlayPage() {
     holdNotice("");
   }
   /**
-   * Tường thành (chủ game 29/10): cards lying across by a side's environment card, the same size, in a row toward the
-   * middle of the board (the opponent's to the right of theirs, yours to the left of yours). Gương phòng hộ shows the
-   * turns it has left. In % of the board: the top-left corner and the size.
+   * Tường thành (chủ game 29/10, xếp dọc 01/11): cards lying across by a side's environment card, the same size, stacked
+   * in a column toward the middle of the board (the opponent's go down from theirs, yours go up from yours). Gương phòng hộ
+   * shows the turns it has left. In % of the board: the centre and the size (the same anchor as the settings screen).
    */
   const wallCards = (side: Side) => {
     const spot = side === viewer ? board.env : board.envFoe;
@@ -3481,7 +3481,7 @@ function PlayPage() {
     const walls = duel.players[side].mirror > 0 ? [{ id: "guong-phong-ho", left: duel.players[side].mirror }] : [];
     // Without an environment card the first one takes its place.
     const from = duel.players[side].env && !spot.hidden ? 1 : 0;
-    return walls.map((wall, index) => ({ ...wall, x: spot.x + toward * (index + from) * (spot.width + WALL_GAP), y: spot.y, w: spot.width, h: spot.height }));
+    return walls.map((wall, index) => ({ ...wall, x: spot.x, y: spot.y + toward * (index + from) * (spot.height + WALL_GAP), w: spot.width, h: spot.height }));
   };
   // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
   const compact = cut.to - cut.from > 1;
@@ -5002,7 +5002,7 @@ function PlayPage() {
   /** Where a spell that stops a flow flies in from: the player's hand, or the wall card it lies as (Gương phòng hộ). */
   const throwFrom = (side: Side, wall?: string | null) => {
     const lying = wall ? wallCards(side).find((card) => card.id === wall) : undefined;
-    if (lying) return { x: lying.x + lying.w / 2, y: lying.y + lying.h / 2 };
+    if (lying) return { x: lying.x, y: lying.y };
     return side === viewer ? { x: 50, y: ry(95) } : { x: 51.6, y: ry(7.2) };
   };
   /**
@@ -5666,7 +5666,8 @@ function PlayPage() {
             </div>
           );
         })}
-        {board.trail.hidden ? null : (
+        {/* Chấm lịch sử và bảng thông báo ẩn hẳn trong trận (chủ game 01/11); Hướng dẫn và Thực chiến còn chỉ vào bảng nên giữ. */}
+        {board.trail.hidden || !(tutorial || trial) ? null : (
           <div
             className="notice-trail"
             style={{

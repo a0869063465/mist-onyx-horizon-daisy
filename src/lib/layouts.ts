@@ -360,17 +360,16 @@ function cutLayout(layout: BoardLayout): BoardLayout {
   const marks = {} as BoardLayout["marks"];
   for (const key of Object.keys(layout.marks) as HudKey[]) marks[key] = { ...layout.marks[key], y: ry(layout.marks[key].y, cut) };
   const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
-  // Nút và xấp bài tính theo tâm; ô môi trường tính theo góc trên trái.
+  // Mọi ô (nút, xấp bài, lá môi trường) neo theo tâm, như màn Tuỳ chỉnh (`.tune-pin` dịch -50%, -50%).
   const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });
-  const corner = (value: Spot): Spot => ({ ...value, y: ry(value.y + value.height / 2, cut) - rh(value.height, cut) / 2, height: rh(value.height, cut) });
   return {
     marks,
     notice: box(layout.notice),
     trail: box(layout.trail),
     reaction: box(layout.reaction),
     stack: spot(layout.stack),
-    env: corner(layout.env),
-    envFoe: corner(layout.envFoe),
+    env: spot(layout.env),
+    envFoe: spot(layout.envFoe),
     actions: spot(layout.actions),
     drawMon: spot(layout.drawMon),
     drawSpell: spot(layout.drawSpell),
