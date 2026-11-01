@@ -657,6 +657,18 @@ test("skill chậm vào hàng chờ: Lão hoá, Cường hoá (vòng quay sau ch
   assert.equal(D.passResponse(gust).players[1].hand.length, 0);
 });
 
+test("Hoa ăn thịt người chỉ hấp thụ ở vòng tấn công của mình", () => {
+  let s = board({ 0: ["hoa-an-thit-nguoi", { hp: 3, maxHp: 3 }] }, { 0: ["khong-lo-mot-mat", { hp: 6, maxHp: 6 }] });
+  // Round (token) belongs to the foe: the flower must not bite.
+  const off = { ...s, turn: 0, round: 1 };
+  const refused = D.useSkill(off, uid(off, 0, 0), uid(off, 1, 0), 0);
+  assert.equal(at(refused, 1, 0).maxHp, 6, refused.live);
+  assert.match(refused.live, /Chưa đến vòng/);
+  // Its own round: the bite lands.
+  const own = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  assert.ok(at(own, 1, 0).maxHp < 6, own.live);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

@@ -835,6 +835,7 @@ export const PENDING_NOTES: string[] = [
   "Chọn mục tiêu kiểu đèn pin: kéo quái, hoặc bấm Tấn công/skill rồi bấm xuống và rê. Nhích nhẹ qua lại đổi mục tiêu, nhích sâu là hàng sau và người chơi.",
   "Quái không chọn được khi tấn công, dùng skill hay phép có viền và glow đỏ.",
   "Skill bị Phục kích chặn không còn nổ hiệu ứng lửa trên mục tiêu.",
+  "Hoa ăn thịt người chỉ hấp thụ được ở vòng tấn công của mình, không còn ăn quái địch trong vòng của đối thủ.",
 ];
 
 function remarkOf(notes: string[]) {

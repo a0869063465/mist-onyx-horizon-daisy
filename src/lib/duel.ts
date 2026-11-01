@@ -2566,6 +2566,8 @@ export function harmSkill(cardId: string, index = 0) {
   if (cardId === "ma-dao-si" || cardId === "loi-nguyen-cua-rong" || cardId === "rong-ac-ma" || cardId === "con-thinh-no-cua-hai-vuong") return true;
   if (cardId === QUEEN_KNIGHT) return true;
   if (cardId === "cuc-bong-ma-quai") return index === 0;
+  // Hấp thụ cướp máu tối đa của quái địch (dame chuẩn): chỉ ở vòng tấn công của mình (chủ game 01/11).
+  if (cardId === "hoa-an-thit-nguoi") return true;
   return false;
 }
 
