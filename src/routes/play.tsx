@@ -1734,6 +1734,9 @@ function PlayPage() {
   // Bấm một lần lá trên tay (chủ game 28/10): quái hiện mũi tên ↑↓ chọn hàng, phép hiện icon dùng phép; bấm đôi mới mở
   // bảng lá. `lastTap` nhận ra lần bấm thứ hai của một lần bấm đôi.
   const [handPick, setHandPick] = useState<{ pile: "reserve" | "spell"; index: number; id: string } | null>(null);
+  /** Bấm 1 lần lá quái trên tay: hàng nút (menu) rồi 2 mũi tên chọn hàng (rows). */
+  const [pickStage, setPickStage] = useState<"menu" | "rows">("menu");
+  useEffect(() => setPickStage("menu"), [handPick]);
   const lastTap = useRef<{ pile: "reserve" | "spell"; index: number; at: number } | null>(null);
   // `slot` null: chosen from the Hiến tế button, the row arrows choose where it lands; a drop on a slot keeps that slot.
   const [vowAsk, setVowAsk] = useState<{ index: number; slot: Slot | null; picks: string[] } | null>(null);
@@ -3884,7 +3887,7 @@ function PlayPage() {
     suppressClick.current = false;
     grab.current = payload;
     origin.current = { x: event.clientX, y: event.clientY, moved: false, t: Date.now(), pan: false, lastX: event.clientX };
-    torch.current = payload.kind === "unit" ? lightTorch(event.clientX, event.clientY) : null;
+    torch.current = payload.kind === "unit" || payload.kind === "summon" ? lightTorch(event.clientX, event.clientY) : null;
     event.currentTarget.setPointerCapture(event.pointerId);
     window.clearTimeout(riteHold.current);
     if (payload.kind === "summon") {
@@ -4059,27 +4062,10 @@ function PlayPage() {
     if (hit?.closest(".hand")) return null;
     const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
     if (direct && keys.has(direct) && payload.kind !== "unit") return direct;
-    const centre = (node: HTMLElement | null) => {
-      const box = node?.getBoundingClientRect();
-      return box ? { x: box.left + box.width / 2, y: box.top + box.height / 2, top: box.top } : null;
-    };
     if (payload.kind === "summon") {
       // Your own monster under the finger: fusion or a sacrifice, as before.
       if (direct && direct.startsWith(`${viewer}-`) && you.field[Number(direct.split("-")[1])]) return null;
-      const rowY = (row: SummonRow) => {
-        const ys = ROW_SLOTS[row].map((slot) => centre(snapNode(`${viewer}-${slot}`))?.y).filter((v): v is number => v !== undefined);
-        return ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : null;
-      };
-      const front = rowY("front");
-      const back = rowY("back");
-      if (front === null || back === null) return null;
-      const row: SummonRow = Math.abs(y - front) <= Math.abs(y - back) ? "front" : "back";
-      const pick = (slots: Slot[]) =>
-        slots
-          .map((slot) => ({ key: `${viewer}-${slot}`, at: centre(snapNode(`${viewer}-${slot}`)) }))
-          .filter((item) => keys.has(item.key) && item.at)
-          .sort((a, b) => Math.abs(a.at!.x - x) - Math.abs(b.at!.x - x))[0]?.key ?? null;
-      return pick(ROW_SLOTS[row]) ?? pick(ROW_SLOTS[row === "front" ? "back" : "front"]);
+      // Kéo triệu hồi kiểu đèn pin (chủ game 01/11): cùng cách kéo đánh, mục tiêu = các ô trống của sân mình.
     }
     if (!torch.current) torch.current = lightTorch(origin.current.x, origin.current.y);
     return aimTorch(torch.current, torchBoxes(keys), x, y, direct && keys.has(direct) ? direct : null);
@@ -4887,6 +4873,27 @@ function PlayPage() {
   const pickMon = pickHeld && pickHeld.id === handPick?.id && canPlay && !(pickHeld.id === "cuc-bong-ma-quai" && cotton.hand) && !(pickHeld.id === "the-than-cua-shien" && standHand) ? handPick.index : null;
   const pickRows = pickMon !== null ? { front: rowSlot("front", summonAt(pickMon)), back: rowSlot("back", summonAt(pickMon)) } : null;
   const pickShown = pickRows && (pickRows.front !== null || pickRows.back !== null) ? pickRows : null;
+  // Bấm 1 lần lá quái trên tay (chủ game 01/11): hàng nút Triệu hồi / Hiến tế / Dung hợp (nút nào luật cho mới hiện) ở chỗ
+  // 2 mũi tên; bấm Triệu hồi thì các nút biến mất, 2 mũi tên hiện thế chỗ.
+  const pickActs: SheetAction[] =
+    pickMon !== null
+      ? handActions(pickMon).map((act) => {
+          const index = pickMon;
+          const press = act.key === "summon" ? () => setPickStage("rows") : act.onPress;
+          return {
+            ...act,
+            rows: undefined,
+            onPress: () => {
+              if (secondTap("reserve", index)) {
+                openSheet("reserve", index);
+                return;
+              }
+              if (act.key !== "summon") setHandPick(null);
+              press?.();
+            },
+          };
+        })
+      : [];
 
   /** An arrow on a picked monster in hand: summon it into that row; the second tap of a double tap opens its sheet. */
   function pickRow(index: number, row: SummonRow) {
@@ -5531,7 +5538,7 @@ function PlayPage() {
           suppressClick.current = false;
           startPress(event);
           // A touch anywhere but the hand puts the picked card back.
-          if (!(event.target as HTMLElement).closest(".hand")) setHandPick(null);
+          if (!(event.target as HTMLElement).closest(".hand, .hand-acts, .row-arrows")) setHandPick(null);
         }}
         onPointerDown={graspAsk}
         onPointerMove={dragAsk}
@@ -6818,7 +6825,14 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
-        {pickShown && pickSpot && pickMon !== null ? (
+        {pickStage === "menu" && pickActs.length > 0 && pickSpot && pickMon !== null ? (
+          <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
+            {pickActs.map((act) => (
+              <ActionButton key={act.key} action={act} mini />
+            ))}
+          </span>
+        ) : null}
+        {pickStage === "rows" && pickShown && pickSpot && pickMon !== null ? (
           // Mũi tên chọn hàng (chủ game 28/10): ngoài lá, ngay trên mép trên lá, nằm cạnh nhau như ở nút Triệu hồi.
           <span className="row-arrows is-hand" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }}>
             <RowArrow row="front" off={pickShown.front === null} onPick={() => pickRow(pickMon, "front")} />

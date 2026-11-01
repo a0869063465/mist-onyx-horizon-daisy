@@ -132,14 +132,13 @@ function ShopPage() {
                 </div>
               </div>
             </div>
-            <p className="shop-pity">{toUr === 1 ? tr("Gói kế tiếp chắc chắn có UR") : `${tr("Còn")} ${toUr} ${tr("gói nữa tới gói UR")}`}</p>
             <div className="shop-buys">
               <button type="button" className="shop-buy" onClick={() => setAsking(1)}>
                 <b>
                   <i aria-hidden="true">★</i>
                   {PACK_PRICE}
                 </b>
-                <small>{tr("1 gói")}</small>
+                <small>{tr("1 gói")} ({toUr === 1 ? tr("gói kế tiếp chắc chắn có UR") : `${tr("còn")} ${toUr} ${tr("gói nữa tới gói UR")}`})</small>
               </button>
               <button type="button" className="shop-buy is-ten" onClick={() => setAsking(10)}>
                 <b>

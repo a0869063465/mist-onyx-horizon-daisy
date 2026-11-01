@@ -12829,3 +12829,13 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   color: #ffd86a;
   text-shadow: 0 1px 2px #000;
 }
+/* Bấm 1 lần lá quái trên tay (chủ game 01/11): hàng nút Triệu hồi / Hiến tế / Dung hợp, canh giữa, ngay trên mép trên lá. */
+.hand-acts {
+  position: absolute;
+  z-index: 14;
+  display: flex;
+  gap: 0.5rem;
+  transform: translate(-50%, calc(-100% - 0.6cqw));
+  pointer-events: none;
+}
+.hand-acts .act3d { pointer-events: auto; }

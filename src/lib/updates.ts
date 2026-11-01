@@ -841,6 +841,9 @@ export const PENDING_NOTES: string[] = [
   "Phù thuỷ tí hơn: Cầu sấm giảm sát thương gốc từ 3 xuống 2.",
   "Kizuran giảm công từ 3 xuống 2. Kazura giảm công từ 6 xuống 5, máu từ 3 xuống 2.",
   "Ong khổng lồ giảm công từ 6 xuống 4, máu từ 3 xuống 1. Kim châm tê liệt gây thêm 2 sát thương phép, chỉ dùng ở vòng tấn công của mình.",
+  "Nút 1 gói ghi trong ngoặc còn bao nhiêu gói nữa tới gói UR.",
+  "Kéo lá quái ra triệu hồi chọn ô kiểu đèn pin, giống kéo đánh.",
+  "Bấm 1 lần lá quái trên tay hiện hàng nút Triệu hồi, Hiến tế, Dung hợp. Bấm Triệu hồi thì hiện 2 mũi tên chọn hàng.",
 ];
 
 function remarkOf(notes: string[]) {
