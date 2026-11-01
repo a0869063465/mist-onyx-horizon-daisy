@@ -844,6 +844,7 @@ export const PENDING_NOTES: string[] = [
   "Nút 1 gói ghi trong ngoặc còn bao nhiêu gói nữa tới gói UR.",
   "Kéo lá quái ra triệu hồi chọn ô kiểu đèn pin, giống kéo đánh.",
   "Bấm 1 lần lá quái trên tay hiện hàng nút Triệu hồi, Hiến tế, Dung hợp. Bấm Triệu hồi thì hiện 2 mũi tên chọn hàng.",
+  "Màn thấp dùng bàn đấu mới (khay đỏ nhỏ hơn), tay bài bên đỏ đặt lại theo khay mới.",
 ];
 
 function remarkOf(notes: string[]) {

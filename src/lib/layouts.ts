@@ -1,4 +1,4 @@
-import { BLUE_START, boardCut, NO_CUT, RED_END, rh, ry } from "./board-cut.ts";
+import { BLUE_START, boardCut, NO_CUT, RED_END, rh, ry, SHORT_TRAY_DROP } from "./board-cut.ts";
 import { boardEnv, ENV_BOARDS } from "./env-boards.ts";
 export type HudKey =
   | "foeHp"
@@ -367,7 +367,7 @@ function cutLayout(layout: BoardLayout): BoardLayout {
   const cut = boardCut();
   if (cut === NO_CUT || cut.v === 1) return layout;
   const marks = {} as BoardLayout["marks"];
-  for (const key of Object.keys(layout.marks) as HudKey[]) marks[key] = { ...layout.marks[key], y: ry(layout.marks[key].y, cut) };
+  for (const key of Object.keys(layout.marks) as HudKey[]) marks[key] = { ...layout.marks[key], y: ry(layout.marks[key].y + (cut.short && key === "foeReserve" ? SHORT_TRAY_DROP : 0), cut) };
   const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
   // Mọi ô (nút, xấp bài, lá môi trường) neo theo tâm, như màn Tuỳ chỉnh (`.tune-pin` dịch -50%, -50%).
   const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });

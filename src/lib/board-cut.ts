@@ -10,6 +10,14 @@ export const FULL_RATIO = BOARD_PX.h / BOARD_PX.w;
 
 /** Cắt ở trên tối đa tới đây (phần trăm chiều cao ảnh): chạm mép trên cầu mana của đối thủ. */
 export const TOP_KEEP = 5;
+/**
+ * Bàn thấp (chủ game 01/11): `board-short.jpg` là bàn cũ đã bỏ 112 px đầu (5,99% chiều cao) và vẽ lại khay đỏ thấp hơn.
+ * Mọi chỗ khác trùng điểm ảnh với `board-full.jpg`. Màn cần cắt từ ngần này trở lên thì dùng ảnh đó, còn thấp nữa mới cắt tiếp.
+ */
+export const SHORT_TOP = 5.99;
+export const SHORT_PX_H = 1758;
+/** Khay đỏ của bàn thấp nằm thấp hơn khay cũ chừng này (phần trăm của bàn đầy đủ). */
+export const SHORT_TRAY_DROP = 2.8;
 /** Mép dưới nửa đỏ (hết lớp đất cam) và mép trên nửa xanh, theo ảnh bàn. */
 export const RED_END = 42.6;
 export const BLUE_START = 62.2;
@@ -24,6 +32,8 @@ export type BoardCut = {
   to: number;
   /** Phần của bàn đầy đủ còn lại (0–1). */
   v: number;
+  /** Dùng ảnh bàn thấp (`board-short.jpg`) thay ảnh đầy đủ. */
+  short?: boolean;
 };
 
 export const NO_CUT: BoardCut = { top: 0, from: RED_END, to: RED_END, v: 1 };
@@ -34,14 +44,15 @@ export function planCut(boardW: number, screenH: number): BoardCut {
   // Dư một chút để làm tròn điểm ảnh không chừa khe ở mép trên (thừa thì mép trên bị xén, không thấy).
   const need = Math.max(0, (1 - screenH / full) * 100 + 0.2);
   if (need <= 0.2 || !Number.isFinite(need)) return NO_CUT;
-  const top = Math.min(need, TOP_KEEP);
+  const short = need >= SHORT_TOP;
+  const top = short ? SHORT_TOP : Math.min(need, TOP_KEEP);
   const band = Math.min(need - top, BLUE_START - RED_END - MIN_GAP);
   const v = 1 - (top + band) / 100;
-  return { top, from: RED_END, to: RED_END + band, v };
+  return { top, from: RED_END, to: RED_END + band, v, short };
 }
 
 export function sameCut(a: BoardCut, b: BoardCut): boolean {
-  return a.top === b.top && a.from === b.from && a.to === b.to && a.v === b.v;
+  return a.top === b.top && Boolean(a.short) === Boolean(b.short) && a.from === b.from && a.to === b.to && a.v === b.v;
 }
 
 let current: BoardCut = NO_CUT;

@@ -9,7 +9,7 @@ import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
-import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, type BoardCut } from "@/lib/board-cut";
+import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, SHORT_TOP, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
@@ -392,6 +392,7 @@ const DOUBLE_TAP = 350;
 
 /** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
 const FLOOR_ART = "/board-floor.jpg";
+const SHORT_ART = "/board-short.jpg";
 const SLOT_POS = cutView(RAW_SLOT_POS, (raw, cut) => ({
   0: raw[0].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
   1: raw[1].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
@@ -7777,8 +7778,11 @@ function pinMedal(spot: { x: number; y: number; width: number; size: number }): 
 /** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
 function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
   if (cut.v === 1) return <img className="board-art" src={src} alt="" />;
-  const size = `100% ${100 / cut.v}cqh`;
-  const at = (imageY: number) => `0 ${-imageY / cut.v}cqh`;
+  // Bàn thấp: ảnh đã bỏ SHORT_TOP phần trăm đầu, toạ độ vẫn tính theo bàn đầy đủ (trừ SHORT_TOP khi đặt vị trí ảnh).
+  if (cut.short) src = SHORT_ART;
+  const lost = cut.short ? SHORT_TOP : 0;
+  const size = `100% ${(100 - lost) / cut.v}cqh`;
+  const at = (imageY: number) => `0 ${-(imageY - lost) / cut.v}cqh`;
   const redEnd = (RED_END - cut.top) / cut.v;
   if (cut.to - cut.from < 0.01) {
     return <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />;

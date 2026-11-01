@@ -67,6 +67,7 @@ const CORE_PICTURES = [
   "/title.png",
   DEFAULT_BOARD_ART,
   "/board-floor.jpg",
+  "/board-short.jpg",
   "/ui/act-pass.webp?v=1",
   "/ui/act-turn.webp?v=1",
   "/ui/act-round.webp?v=1",
