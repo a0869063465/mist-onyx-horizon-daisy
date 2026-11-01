@@ -2103,6 +2103,17 @@
   box-shadow: 0 0 0.9rem 0.25rem color-mix(in srgb, #ffd54a 70%, transparent);
   animation: snap-glow 0.9s ease-in-out infinite alternate;
 }
+/* T2 (chủ game 01/11): a monster the current attack, skill or spell cannot pick. */
+.slot.is-blocked {
+  border-radius: 0.6rem;
+  /* A red band between two dark lines, so it reads on the red field too. */
+  box-shadow: 0 0 0 2px #1a0000, 0 0 0 4.5px #ff3a3a, 0 0 0 6px #1a0000, 0 0 1rem 0.5rem color-mix(in srgb, #ff1a1a 70%, transparent);
+  animation: blocked-glow 0.8s ease-in-out infinite alternate;
+}
+@keyframes blocked-glow {
+  from { box-shadow: 0 0 0 2px #1a0000, 0 0 0 4.5px #ff3a3a, 0 0 0 6px #1a0000, 0 0 0.6rem 0.3rem color-mix(in srgb, #ff1a1a 55%, transparent); }
+  to { box-shadow: 0 0 0 2px #1a0000, 0 0 0 4.5px #ff5a5a, 0 0 0 6px #1a0000, 0 0 1.3rem 0.65rem #ff1a1a; }
+}
 @keyframes snap-glow {
   from { box-shadow: 0 0 0.6rem 0.15rem color-mix(in srgb, #ffd54a 55%, transparent); }
   to { box-shadow: 0 0 1.2rem 0.4rem color-mix(in srgb, #ffd54a 85%, transparent); }

@@ -832,6 +832,8 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng xanh: hai góc dưới có dải sáng riêng, đáy và thành đậm bám theo đoạn bo của sân.",
   "Bể sáng chuyển lượt: màu bể suy ra từ màu sân (xanh và đỏ cùng quy luật), bể đỏ là bể xanh lật úp.",
   "Màn ngắn: viền vàng dưới sân đỏ không còn bị cắt mất. Lá môi trường, tường thành và kiếm bám theo sân của bên mình, cỡ màn nào cũng không lệch.",
+  "Chọn mục tiêu kiểu đèn pin: kéo quái, hoặc bấm Tấn công/skill rồi bấm xuống và rê. Nhích nhẹ qua lại đổi mục tiêu, nhích sâu là hàng sau và người chơi.",
+  "Quái không chọn được khi tấn công, dùng skill hay phép có viền và glow đỏ.",
 ];
 
 function remarkOf(notes: string[]) {

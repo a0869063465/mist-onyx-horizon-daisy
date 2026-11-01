@@ -8,6 +8,7 @@ import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } f
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
+import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
 import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
@@ -1755,6 +1756,11 @@ function PlayPage() {
   // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
   const slideFire = useRef<(key: string) => void>(() => undefined);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
+  /** Chọn mục tiêu bằng đèn pin (chủ game 01/11): the lamp at the touch-down point of an attack drag or a target press. */
+  const torch = useRef<TorchState | null>(null);
+  /** A target press (startPress) is on: the field's own drags stay off. */
+  const pressing = useRef(false);
+  const planCache = useRef<{ duel: Duel | null; aim: Aim | null; uid: string | null; plan: TargetPlan | null }>({ duel: null, aim: null, uid: null, plan: null });
   const [swapPick, setSwapPick] = useState<string[]>([]);
   /** Hoán đổi (chủ game 30/10): the monster that goes back into a hand flies there as a ghost of its card. */
   const [swapGhost, setSwapGhost] = useState<{ key: number; mon: FieldMon; rect: { left: number; top: number; width: number; height: number }; to: { x: number; y: number } } | null>(null);
@@ -3872,10 +3878,11 @@ function PlayPage() {
   }
 
   function begin(event: ReactPointerEvent, payload: Grab) {
-    if (!mine) return;
+    if (!mine || pressing.current) return;
     suppressClick.current = false;
     grab.current = payload;
     origin.current = { x: event.clientX, y: event.clientY, moved: false, t: Date.now(), pan: false, lastX: event.clientX };
+    torch.current = payload.kind === "unit" ? lightTorch(event.clientX, event.clientY) : null;
     event.currentTarget.setPointerCapture(event.pointerId);
     window.clearTimeout(riteHold.current);
     if (payload.kind === "summon") {
@@ -3982,73 +3989,52 @@ function PlayPage() {
     return keys;
   }
 
-  /** The lit target of a slide: one right under the finger, else the nearest; enemies only once the finger is above your front row. */
-  function slideAt(keys: Set<string>, x: number, y: number): string | null {
-    if (keys.size === 0) return null;
-    const hit = under(x, y);
-    const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
-    if (direct && keys.has(direct)) return direct;
-    const fronts = ROW_SLOTS.front
-      .map((slot) => snapNode(`${viewer}-${slot}`)?.getBoundingClientRect().top)
-      .filter((v): v is number => v !== undefined);
-    const upField = !fronts.length || y <= Math.min(...fronts);
-    let best: { key: string; gap: number } | null = null;
-    for (const key of keys) {
-      if (!key.startsWith(`${viewer}-`) && !upField) continue;
-      const box = snapNode(key)?.getBoundingClientRect();
-      if (!box) continue;
-      const gap = Math.hypot(box.left + box.width / 2 - x, box.top + box.height / 2 - y);
-      if (!best || gap < best.gap) best = { key, gap };
-    }
-    return best?.key ?? null;
-  }
-
   /**
-   * Ấn giữ rồi trượt (chủ game 31/10): holding a target button (0.25 s, or moving off it) turns it on as a tap would,
-   * then the target nearest the finger lights up and letting go picks it, as tapping it would. Letting go where it was
-   * pressed keeps the button on (as a tap); letting go away from every target turns it off. A quick tap is as before.
+   * Nhấp icon rồi bấm xuống và rê (chủ game 01/11): with Tấn công or a skill on, a touch anywhere on the field lights a
+   * torch at that point; moving lights the target its beam picks (as an attack drag does) and letting go picks it, as
+   * tapping it would. Letting go with nothing lit turns the button off. A tap with no move is a plain tap, as before.
    */
-  function startSlide(slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!duel || event.button > 0) return;
-    const keys = slideKeys(slide);
+  function startPress(event: ReactPointerEvent) {
+    if (!duel || event.button > 0 || drag || grab.current) return;
+    if (aim?.kind !== "attack" && !(aim?.kind === "skill" && !aim.also)) return;
+    const target = event.target as HTMLElement;
+    if (target.closest(".unit-acts, .hand, .act, .aim-mark, .rp-bar") || (target.closest("button") && !target.closest(".slot, .face-drop"))) return;
+    const keys = aim.kind === "attack" ? attackKeys(aim.uid) : slideKeys({ kind: "skill", uid: aim.uid, index: aim.index });
     if (keys.size === 0) return;
-    const from = { x: event.clientX, y: event.clientY };
+    const lamp = lightTorch(event.clientX, event.clientY);
+    torch.current = lamp;
+    pressing.current = true;
     const pointer = event.pointerId;
-    let on = false;
     let moved = false;
     let lit: string | null = null;
-    const arm = () => {
-      if (on) return;
-      on = true;
-      window.clearTimeout(timer);
-      go();
-      holdNotice("Trượt tới mục tiêu rồi thả");
-    };
-    const timer = window.setTimeout(arm, 250);
     const onMove = (e: PointerEvent) => {
       if (e.pointerId !== pointer) return;
-      if (!moved && Math.hypot(e.clientX - from.x, e.clientY - from.y) > 9) moved = true;
+      if (!moved && Math.hypot(e.clientX - lamp.x, e.clientY - lamp.y) > 9) moved = true;
       if (!moved) return;
-      arm();
-      lit = slideAt(keys, e.clientX, e.clientY);
+      const hit = under(e.clientX, e.clientY);
+      const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
+      lit = aimTorch(lamp, torchBoxes(keys), e.clientX, e.clientY, direct && keys.has(direct) ? direct : null);
       setSnap(lit);
     };
     const stop = (e: PointerEvent) => {
       if (e.pointerId !== pointer) return;
-      window.clearTimeout(timer);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", stop);
       window.removeEventListener("pointercancel", stop);
-      if (!on) return;
+      pressing.current = false;
+      if (torch.current === lamp) torch.current = null;
+      if (!moved) return;
       setSnap(null);
       if (e.type === "pointercancel") return;
       if (lit) {
         holdNotice("");
         slideFire.current(lit);
-      } else if (moved) {
+      } else {
         setAim(null);
         holdNotice("");
       }
+      // The click after this press must not pick again.
+      suppressClick.current = true;
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", stop);
@@ -4070,7 +4056,7 @@ function PlayPage() {
     const hit = under(x, y);
     if (hit?.closest(".hand")) return null;
     const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
-    if (direct && keys.has(direct)) return direct;
+    if (direct && keys.has(direct) && payload.kind !== "unit") return direct;
     const centre = (node: HTMLElement | null) => {
       const box = node?.getBoundingClientRect();
       return box ? { x: box.left + box.width / 2, y: box.top + box.height / 2, top: box.top } : null;
@@ -4093,16 +4079,40 @@ function PlayPage() {
           .sort((a, b) => Math.abs(a.at!.x - x) - Math.abs(b.at!.x - x))[0]?.key ?? null;
       return pick(ROW_SLOTS[row]) ?? pick(ROW_SLOTS[row === "front" ? "back" : "front"]);
     }
-    const fronts = ROW_SLOTS.front.map((slot) => centre(snapNode(`${viewer}-${slot}`))?.top).filter((v): v is number => v !== undefined);
-    if (fronts.length && y > Math.min(...fronts)) return null;
-    let best: { key: string; gap: number } | null = null;
-    for (const key of keys) {
-      const at = centre(snapNode(key));
-      if (!at) continue;
-      const gap = Math.hypot(at.x - x, at.y - y);
-      if (!best || gap < best.gap) best = { key, gap };
+    if (!torch.current) torch.current = lightTorch(origin.current.x, origin.current.y);
+    return aimTorch(torch.current, torchBoxes(keys), x, y, direct && keys.has(direct) ? direct : null);
+  }
+
+  /**
+   * The targets an attack (drag or Tấn công) or a skill can pick now, and the sides it looks at; the monsters there that it
+   * cannot pick glow red (chủ game 01/11, T2). Kept until the match, the aim or the dragged monster changes.
+   */
+  function targetPlan(): TargetPlan | null {
+    if (!duel || !canPlay || responding || duel.step !== "main" || queue) return null;
+    const uid = drag?.kind === "unit" ? drag.uid : null;
+    const cache = planCache.current;
+    if (cache.duel === duel && cache.aim === aim && cache.uid === uid) return cache.plan;
+    let plan: TargetPlan | null = null;
+    if (uid && !aim) plan = { keys: attackKeys(uid), foe: true, you: false, caster: uid };
+    else if (aim?.kind === "attack") plan = { keys: attackKeys(aim.uid), foe: true, you: false, caster: aim.uid };
+    else if (aim?.kind === "skill" && !aim.also) {
+      const id = you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "";
+      const both = id === "phu-thuy-thoi-gian";
+      const ally = allySkill(id);
+      plan = { keys: slideKeys({ kind: "skill", uid: aim.uid, index: aim.index }), foe: both || !ally, you: both || ally, caster: aim.uid };
     }
-    return best?.key ?? null;
+    planCache.current = { duel, aim, uid, plan };
+    return plan;
+  }
+
+  /** The boxes on screen of the targets a torch can pick. */
+  function torchBoxes(keys: Set<string>): TorchBox[] {
+    const boxes: TorchBox[] = [];
+    for (const key of keys) {
+      const box = snapNode(key)?.getBoundingClientRect();
+      if (box && box.width > 0) boxes.push({ key, left: box.left, top: box.top, width: box.width, height: box.height });
+    }
+    return boxes;
   }
 
   function commitBlock(uid: string, skill: boolean, buff: boolean) {
@@ -5517,6 +5527,7 @@ function PlayPage() {
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
+          startPress(event);
           // A touch anywhere but the hand puts the picked card back.
           if (!(event.target as HTMLElement).closest(".hand")) setHandPick(null);
         }}
@@ -6413,6 +6424,7 @@ function PlayPage() {
           />
         ) : null}
         {([0, 1, 2, 3, 4, 5] as const).map((index) => {
+          const plan = targetPlan();
           const side = (viewer === 0 ? 1 : 0) as Side;
           const mon = foe.field[index] ?? null;
           const held = linger.find((item) => item.side === side && item.index === index);
@@ -6428,6 +6440,12 @@ function PlayPage() {
             foe.field.some((unit) => unit && unit.cardId === "kizuran" && unit.cover && unit.hp > 0 && unit.stun === 0 && (unit.chain ?? 0) === 0);
           const sheltered = !!mon && sanctuaryShielded(duel, mon.uid) && drag?.kind !== "spell" && aim?.kind !== "spell";
           const untouchable = sheltered || (!!mon && mon.cardId === "kazura" && (mon.safe ?? 0) > 0 && !covered && drag?.kind !== "spell" && aim?.kind !== "skill");
+          const foeHot = plan ? !!mon && plan.keys.has(`${side}-${index}`) : attacking && !untouchable;
+          const foeSpell =
+            curseStep === "foe" ||
+            (drag?.kind === "spell" && !["sung-loi-pha", "phan-nguyen", "hoan-doi", "ke-dao-mo", "soi-xich-dia-nguc"].includes(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
+            (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || spellDragLive(aim.spellId, duel, viewer, aim.index)));
+          const foeBlocked = !!mon && !frozen && !foeHot && (plan ? plan.foe : foeSpell);
           return (
             <BoardSlot
               key={`f${index}`}
@@ -6439,9 +6457,10 @@ function PlayPage() {
               near={false}
               index={index}
               layout={fieldLayout}
-              hot={attacking && !untouchable}
+              hot={foeHot}
+              blocked={foeBlocked}
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
-              attack={attacking && !untouchable && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
+              attack={foeHot && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
               snapped={snap === `${side}-${index}`}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
@@ -6478,6 +6497,14 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
+          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
+          const plan = targetPlan();
+          const youSpell =
+            (drag?.kind === "spell" && drag.spellId === "sung-loi-pha" && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
+            (aim?.kind === "spell" && (aim.spellId === "sung-loi-pha" || aim.spellId === "phuc-kich" || (aim.spellId === "phan-nguyen" && !aim.from))) ||
+            Boolean(swapAsk);
+          const youBlocked =
+            !!mon && !frozen && mon.uid !== plan?.caster && !(plan ? plan.keys.has(`${viewer}-${index}`) : youHot) && (plan ? plan.you : youSpell);
           const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || (canIntercept && mon.row !== "back"))));
           return (
             <BoardSlot
@@ -6490,7 +6517,8 @@ function PlayPage() {
               near
               index={index}
               layout={fieldLayout}
-              hot={((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon))}
+              hot={youHot}
+              blocked={youBlocked}
               fuse={Boolean(mon && ((fuseOn && fuseUids.has(mon.uid)) || (drag?.kind === "summon" && (findFusion(drag.card.id, mon.cardId) || findKnightFusion(drag.card.id, mon.cardId, you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId))))))}
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
@@ -6551,6 +6579,10 @@ function PlayPage() {
             className={`face-drop${snap === "face" ? " is-snap" : ""}`}
             data-face="1"
             onClick={() => {
+              if (suppressClick.current) {
+                suppressClick.current = false;
+                return;
+              }
               if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
               if (aim?.kind === "skill") apply(declareSkill(duel, aim.uid, null, aim.index));
             }}
@@ -6878,7 +6910,6 @@ function PlayPage() {
               apply(useSkill(duel, uid, null, 2));
             }}
             onLure={(uid) => setLureAsk(uid)}
-            onSlide={startSlide}
             setAim={setAim}
             apply={apply}
           />
@@ -7299,6 +7330,7 @@ function isPrime(duel: Duel, mon: FieldMon, side: Side) {
 }
 
 /** A button on a monster that picks a target, for ấn giữ rồi trượt: Tấn công, or the skill it aims. */
+type TargetPlan = { keys: Set<string>; foe: boolean; you: boolean; caster: string };
 type ChipSlide = { kind: "attack"; uid: string } | { kind: "skill"; uid: string; index: number };
 
 function UnitChips({
@@ -7765,6 +7797,7 @@ function BoardSlot({
   layout,
   near,
   hot,
+  blocked = false,
   fuse = false,
   fuseHide = false,
   tone = "monster",
@@ -7798,6 +7831,8 @@ function BoardSlot({
   index: number;
   layout: ReturnType<typeof loadField>;
   hot: boolean;
+  /** T2 (chủ game 01/11): a monster the current attack, skill or spell cannot pick, red outline and glow. */
+  blocked?: boolean;
   fuse?: boolean;
   fuseHide?: boolean;
   tone?: "monster" | "skill";
@@ -7828,7 +7863,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%` };
