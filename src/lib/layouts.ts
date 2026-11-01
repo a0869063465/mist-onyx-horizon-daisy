@@ -371,18 +371,11 @@ function cutLayout(layout: BoardLayout): BoardLayout {
   const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
   // Mọi ô (nút, xấp bài, lá môi trường) neo theo tâm, như màn Tuỳ chỉnh (`.tune-pin` dịch -50%, -50%).
   const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });
-  // Lá môi trường, tường thành và kiếm nằm trong dải nền sân giữa hai nửa. Khi dải bị cắt, `ry` dồn mọi điểm rơi vào đoạn bỏ đi về
-  // một chỗ nên hai lá đè lên nhau; ở đây cả dải gốc được co đều vào phần nền sân còn lại, giữ thứ tự và không ra khỏi dải.
-  const strip = (value: Spot): Spot => {
-    if (value.y <= RED_END || value.y >= BLUE_START) return spot(value);
-    const gap = BLUE_START - cut.to;
-    const t = (value.y - RED_END) / (BLUE_START - RED_END);
-    const start = cut.from - cut.top;
-    const half = value.height / 2;
-    const lo = start + half;
-    const hi = start + gap - half;
-    const mid = hi < lo ? start + gap / 2 : Math.min(hi, Math.max(lo, start + t * gap));
-    return { ...value, y: mid / cut.v, height: rh(value.height, cut) };
+  // Lá môi trường, tường thành và kiếm gắn cứng vào sân của bên mình (chủ game 01/11): bên đỏ đo từ mép dưới sân đỏ,
+  // bên xanh đo từ mép trên sân xanh, nên dù cắt bàn cỡ nào khoảng cách tới sân vẫn như bàn đầy đủ.
+  const strip = (value: Spot, side: "foe" | "you"): Spot => {
+    const y = side === "foe" ? ry(RED_END, cut) + (value.y - RED_END) / cut.v : ry(BLUE_START, cut) - (BLUE_START - value.y) / cut.v;
+    return { ...value, y, height: rh(value.height, cut) };
   };
   return {
     marks,
@@ -390,18 +383,18 @@ function cutLayout(layout: BoardLayout): BoardLayout {
     trail: box(layout.trail),
     reaction: box(layout.reaction),
     stack: spot(layout.stack),
-    env: strip(layout.env),
-    envFoe: strip(layout.envFoe),
-    wall: strip(layout.wall),
-    wallFoe: strip(layout.wallFoe),
+    env: strip(layout.env, "you"),
+    envFoe: strip(layout.envFoe, "foe"),
+    wall: strip(layout.wall, "you"),
+    wallFoe: strip(layout.wallFoe, "foe"),
     actions: spot(layout.actions),
     drawMon: spot(layout.drawMon),
     drawSpell: spot(layout.drawSpell),
     endTurn: spot(layout.endTurn),
     foeFace: spot(layout.foeFace),
     youFace: spot(layout.youFace),
-    foeAtk: strip(layout.foeAtk),
-    youAtk: strip(layout.youAtk),
+    foeAtk: strip(layout.foeAtk, "foe"),
+    youAtk: strip(layout.youAtk, "you"),
     foeDef: spot(layout.foeDef),
     youDef: spot(layout.youDef),
   };
