@@ -33,3 +33,8 @@ Hình: KHÔNG phải sợi, không phải nêm đặc. Là các dải lụa/khó
 Đỏ: pixel đỏ rất không đều (p10 = 0, p50 11-22, p90 ~85, p99 ~130), trung bình vùng trong ~27-33; một đường dọc cắt 2-3 dải, mỗi dải cao ~20% bể; dải đậm ở sát hai thành (tới ~145), thưa ở giữa. Thành trái ~18, phải ~10 trên cùng thước.
 Xanh: giữa bể = 0, chỉ có dải gần hai thành (trung bình mỗi bên ~7-8, thành ~30 trên vùng đo); mỗi bên đập nhẹ giữa ~4,5 và ~12 chu kỳ ~9 s, hai bên lệch pha; không đổi khi có lá đặt xuống sân (hai đoạn 0-37 s và 45-96 s giống nhau).
 Game (T2f, `RIBBONS` + `POOL`): xanh thành 71-80, đáy 41, nội thất 2,7-3; đỏ thành 75-80, đáy 67, nội thất 33.
+
+## Dải khói (T2i, 01/11): hình và đo chuyển động
+Hình (clip đỏ 5 s, xanh 1:30): mỗi thành toả một quạt dải khói/lụa trong mờ, rộng ở thành, thon dần thành sợi nằm dọc đáy ở ~0,2–0,5 bề ngang; mép dải sáng hơn thân, mép KHÔNG bắt chéo (bắt chéo = trông như dây/sợi, chủ game chê). Góc đáy-thành đậm nhất. Đỏ dày, đậm; xanh thưa, nhạt.
+Chuyển động: đo trên 20% điểm ảnh dao động nhiều nhất, thước như trên. Video: xanh |đổi|/giây ~45, độ lệch chuẩn ~16–18, nhịp tâm ~0,8 Hz, đỉnh 0,1–0,25 Hz; đỏ ~53–84, ~16–30, ~0,9–1,0 Hz. Phồng xẹp chậm 0,1 Hz (T2h) = đứng yên. Game T2i: xanh 45 / 14 / 0,89 Hz; đỏ 48 / 18 / 0,84 Hz.
+Cách đo: tách khung video bằng ffmpeg rawvideo 30 khung/giây; game: gọi thẳng `TurnLightArt.draw(t)` trên trang (import `/src/components/game/turn-light.tsx` qua Vite, vẽ lên `board-full.jpg`) từng mốc 1/30 giây rồi chụp; so cùng thước. Sửa theo số, không theo mắt.

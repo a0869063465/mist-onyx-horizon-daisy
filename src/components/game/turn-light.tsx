@@ -39,34 +39,65 @@ const TITLE_IN = 0.24;
 const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
-/** The ribbons and their fibres are this much of their first strength (chủ game 30/10: paler, so they do not pull the eye). */
-
-/** The pool's strengths per side, measured on the video: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the silk sheets and the bottom rim, each as a strength. */
-const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; silk: number; rim: number; bank: number }> = {
-  you: { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, silk: 1.6, rim: 0.5, bank: 0.7 },
-  foe: { haze: [0.5, 0.4, 0.22, 0.08], hazeDepth: 1, wall: 0.35, silk: 1.3, rim: 0.4, bank: 0.5 },
+/** The pool's strengths per side: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the bottom rim and the bank. */
+const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; rim: number; bank: number; corner: number }> = {
+  you: { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, rim: 0.5, bank: 0.7, corner: 0.45 },
+  foe: { haze: [0.4, 0.22, 0.07, 0], hazeDepth: 0.75, wall: 0.45, rim: 0.4, bank: 0.5, corner: 0.6 },
 };
 
-/** Ribbons of see-through silk (videos of 01/11): each starts at a wall `y` up the depth with thickness `w` (parts of the depth), slides down toward the bottom
- *  and thins to nothing after `reach` of the width. The edges are a little denser than the middle, thin ones denser than thick ones, and each one swells
- *  and fades over a few seconds (the blue ones about every 9 s, out of step between the walls). */
-type Ribbon = { left: boolean; y: number; w: number; reach: number; alpha: number; rate: number; phase: number };
-const RIBBONS: Record<TankSide, Ribbon[]> = {
-  you: [
-    { left: true, y: 0.78, w: 0.55, reach: 0.62, alpha: 0.2, rate: 0.11, phase: 0 },
-    { left: true, y: 0.42, w: 0.26, reach: 0.46, alpha: 0.24, rate: 0.12, phase: 2.6 },
-    { left: false, y: 0.75, w: 0.5, reach: 0.66, alpha: 0.22, rate: 0.11, phase: 3.4 },
-    { left: false, y: 0.4, w: 0.24, reach: 0.5, alpha: 0.26, rate: 0.12, phase: 5.8 },
-  ],
-  foe: [
-    { left: true, y: 0.85, w: 0.5, reach: 0.7, alpha: 0.4, rate: 0.1, phase: 0.4 },
-    { left: true, y: 0.55, w: 0.3, reach: 0.55, alpha: 0.5, rate: 0.13, phase: 2.2 },
-    { left: true, y: 0.3, w: 0.18, reach: 0.4, alpha: 0.55, rate: 0.16, phase: 4.1 },
-    { left: false, y: 0.82, w: 0.48, reach: 0.72, alpha: 0.4, rate: 0.11, phase: 1.5 },
-    { left: false, y: 0.5, w: 0.28, reach: 0.56, alpha: 0.5, rate: 0.14, phase: 3.3 },
-    { left: false, y: 0.28, w: 0.16, reach: 0.42, alpha: 0.55, rate: 0.17, phase: 5.4 },
-  ],
+/**
+ * Smoke wisps (clips of 01/11, measured frame by frame): from each wall a fan of thin see-through sheets, broad where they
+ * leave the wall and thinning to a thread that settles along the bottom, like smoke breathed out or silk in water. Each
+ * one rolls (its two edges twist past each other, brighter where it turns edge-on), flutters with a wave running out
+ * along it, sways slowly and fades in and out on its own clock, so the fan never stands still. Measured on the video:
+ * pixels in the wisps change by about 3× their spread every second, most of the change near 1 Hz with a slow part at
+ * 0.1–0.4 Hz.
+ */
+type Wisp = {
+  /** Where it leaves the wall (part of the depth from the bottom), how thick it is there, how far across it reaches and how low it ends. */
+  v: number;
+  thick: number;
+  reach: number;
+  end: number;
+  /** Strength, and the phases and rates (Hz) of its slow sway, its fade and its roll. */
+  alpha: number;
+  phase: number;
+  sway: number;
+  fade: number;
+  roll: number;
 };
+const WISP_COUNT: Record<TankSide, number> = { you: 5, foe: 7 };
+/** Colours: the see-through body, the brighter edges; strength; how fast it moves (the blue clip is calmer than the red). */
+const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number; speed: number }> = {
+  you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1.3, speed: 0.95 },
+  foe: { body: [232, 52, 104], edge: [255, 128, 172], alpha: 1.35, speed: 1.15 },
+};
+
+/** A fixed set of wisps per wall, spread over the wall's height (lower ones shorter), drawn from a seeded source so every load looks alike. */
+function makeWisps(side: TankSide, seed: number): Wisp[] {
+  const rand = seeded(seed);
+  const n = WISP_COUNT[side];
+  return Array.from({ length: n }, (_, i) => {
+    const k = (i + 0.5) / n;
+    return {
+      v: 0.18 + k * 0.68 + (rand() - 0.5) * 0.08,
+      thick: 0.2 + rand() * 0.2,
+      reach: 0.22 + k * 0.26 + rand() * 0.06,
+      end: 0.03 + rand() * 0.07,
+      alpha: 0.75 + rand() * 0.35,
+      phase: rand() * Math.PI * 2,
+      sway: 0.12 + rand() * 0.2,
+      fade: 0.08 + rand() * 0.12,
+      roll: 0.24 + rand() * 0.18,
+    };
+  });
+}
+const WISPS: Record<TankSide, [Wisp[], Wisp[]]> = {
+  you: [makeWisps("you", 11), makeWisps("you", 23)],
+  foe: [makeWisps("foe", 37), makeWisps("foe", 41)],
+};
+/** The wisps are drawn at this part of the full resolution and scaled up, which softens their edges like smoke. */
+const WISP_SCALE = 0.5;
 
 /** The court's edge on the new board (measured on board-full.jpg): flat across, then rounding away from the open end at each wall, by this much of the board's height. */
 const EDGE_DIP = 0.022;
@@ -100,6 +131,7 @@ export class TurnLightArt {
   private light: CanvasRenderingContext2D;
   private title: CanvasRenderingContext2D;
   private layer: Record<TankSide, CanvasRenderingContext2D>;
+  private smoke: CanvasRenderingContext2D;
   private tanks: Record<TankSide, Tank> = { foe: { mode: "off", at: 0 }, you: { mode: "off", at: 0 } };
   private sparks: Spark[] = [];
   private glints: Glint[] = [];
@@ -124,6 +156,7 @@ export class TurnLightArt {
       return canvas.getContext("2d")!;
     };
     this.layer = { foe: own(), you: own() };
+    this.smoke = own();
   }
 
   resize(w: number, h: number, dpr: number) {
@@ -134,6 +167,8 @@ export class TurnLightArt {
       ctx.canvas.width = Math.round(this.w * dpr);
       ctx.canvas.height = Math.round(this.h * dpr);
     }
+    this.smoke.canvas.width = Math.max(1, Math.round(this.w * dpr * WISP_SCALE));
+    this.smoke.canvas.height = Math.max(1, Math.round(this.h * dpr * WISP_SCALE));
   }
 
   /** Who holds the turn now; `instant` shows it without the hand-over (a page opened mid-match). */
@@ -267,73 +302,21 @@ export class TurnLightArt {
       ctx.fillRect(Math.min(edge, edge + inward * width * 0.02), Math.min(base, at(0.95)), width * 0.02, depth * 0.95);
     }
 
-    // Ribbons of see-through silk: a soft fill with slightly denser edges, thinning toward the tip, swelling and fading slowly.
-    const t = now;
-    const smooth = (u: number) => u * u * (3 - 2 * u);
-    RIBBONS[side].forEach((rb, i) => {
-      const swell = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2 * rb.rate + rb.phase));
-      const drift = Math.sin(t * 0.37 + rb.phase * 1.7);
-      const sign = rb.left ? 1 : -1;
-      const from = rb.left ? x0 : x1;
-      const reach = rb.reach + 0.04 * drift;
-      const yc = rb.y + 0.05 * Math.sin(t * 0.29 + i * 1.3 + rb.phase);
-      const tipV = 0.06;
-      const steps = 26;
-      const upper: Array<[number, number]> = [];
-      const lower: Array<[number, number]> = [];
-      for (let k = 0; k <= steps; k += 1) {
-        const u = k / steps;
-        const e = smooth(u);
-        const vc = yc * (1 - e) + tipV * e;
-        const half = (rb.w / 2) * Math.pow(1 - u, 0.85);
-        const x = from + sign * width * reach * u;
-        upper.push([x, at(vc + half)]);
-        lower.push([x, at(Math.max(0, vc - half))]);
-      }
-      const tipX = from + sign * width * reach;
-      // Thin ribbons are denser than thick ones.
-      const dense = rb.alpha * 1.4 * swell * spec.silk * (1 + Math.max(0, 0.3 - rb.w) * 1.6);
-      const along = (alpha: number, mid = 0.55) => {
-        const gr = ctx.createLinearGradient(from, 0, tipX, 0);
-        gr.addColorStop(0, rgba(tone.mid, alpha));
-        gr.addColorStop(mid, rgba(tone.mid, alpha * 0.6));
-        gr.addColorStop(1, rgba(tone.mid, 0));
-        return gr;
-      };
-      ctx.beginPath();
-      upper.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      for (let k = lower.length - 1; k >= 0; k -= 1) ctx.lineTo(lower[k][0], lower[k][1]);
-      ctx.closePath();
-      ctx.fillStyle = along(dense);
-      ctx.fill();
-      // The edges: a little denser than the middle, softened by a wider fainter stroke under a narrow one.
-      for (const edge of [upper, lower]) {
-        for (const [wide, k] of [
-          [5, 0.35],
-          [2, 0.55],
-        ] as const) {
-          ctx.beginPath();
-          edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-          ctx.strokeStyle = along(dense * k, 0.5);
-          ctx.lineWidth = wide * unit;
-          ctx.stroke();
-        }
-      }
-      // A pale core along the edges, added as light so the ribbon glows on the stone instead of sinking into it.
-      ctx.globalCompositeOperation = "lighter";
-      const glow = ctx.createLinearGradient(from, 0, tipX, 0);
-      glow.addColorStop(0, rgba(tone.core, dense * 0.55));
-      glow.addColorStop(0.5, rgba(tone.core, dense * 0.3));
-      glow.addColorStop(1, rgba(tone.core, 0));
-      for (const edge of [upper, lower]) {
-        ctx.beginPath();
-        edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-        ctx.strokeStyle = glow;
-        ctx.lineWidth = 1.4 * unit;
-        ctx.stroke();
-      }
-      ctx.globalCompositeOperation = "source-over";
-    });
+    // The corners where each wall meets the bottom are the deepest (clips of 01/11).
+    for (const cx of [x0, x0 + width]) {
+      const r = width * 0.32;
+      const g = ctx.createRadialGradient(cx, base, 0, cx, base, r);
+      g.addColorStop(0, rgba(tone.mid, spec.corner));
+      g.addColorStop(0.35, rgba(tone.mid, spec.corner * 0.45));
+      g.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - r, Math.min(base, at(1)), r * 2, depth);
+    }
+
+    // Smoke wisps from both walls, drawn small and scaled up so their edges are soft.
+    this.paintWisps(side, now, x0, width, at);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(this.smoke.canvas, 0, 0, this.w, this.h);
 
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
     // covers the gold (the bottom keeps to the court's edge; the top is open).
@@ -386,6 +369,100 @@ export class TurnLightArt {
     }
 
     ctx.globalCompositeOperation = "source-over";
+  }
+
+  /** The smoke wisps of a tank into the small smoke canvas (see `Wisp`). */
+  private paintWisps(side: TankSide, now: number, x0: number, width: number, at: (v: number) => number) {
+    const ctx = this.smoke;
+    const scale = this.dpr * WISP_SCALE;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const unit = Math.max(1, this.w / 412);
+    const tone = WISP_TONE[side];
+    const tau = Math.PI * 2;
+    const t = now * tone.speed;
+    const steps = 30;
+    WISPS[side].forEach((wisps, wall) => {
+      const sign = wall === 0 ? 1 : -1;
+      const from = wall === 0 ? x0 : x0 + width;
+      wisps.forEach((w) => {
+        const ph = w.phase;
+        const vA = w.v + 0.07 * Math.sin(tau * w.sway * t + ph);
+        const reach = w.reach + 0.05 * Math.sin(tau * w.sway * 1.7 * t + ph * 1.3);
+        const vEnd = w.end + 0.02 * Math.sin(tau * w.sway * 0.8 * t + ph * 2.1);
+        const bow = 0.06 * Math.sin(tau * w.sway * 1.3 * t + ph * 0.6);
+        const life = 0.5 + 0.5 * Math.sin(tau * w.fade * t + ph * 0.7);
+        const strength = w.alpha * tone.alpha * (0.22 + 0.78 * life * life);
+        // The spine: a cubic from the wall into the tank that settles along the bottom.
+        const p1u = reach * 0.38;
+        const p1v = vA * 0.92 + bow;
+        const p2u = reach * 0.7;
+        const p2v = vEnd + (vA - vEnd) * 0.18;
+        const upper: Array<[number, number]> = [];
+        const lower: Array<[number, number]> = [];
+        const spine: Array<[number, number, number]> = [];
+        for (let k = 0; k <= steps; k += 1) {
+          const s = k / steps;
+          const m = 1 - s;
+          const u = 3 * m * m * s * p1u + 3 * m * s * s * p2u + s * s * s * reach;
+          let v = m * m * m * vA + 3 * m * m * s * p1v + 3 * m * s * s * p2v + s * s * s * vEnd;
+          // A flutter running out along it, growing toward the loose end.
+          v += 0.04 * s * Math.sin(tau * 1.2 * s - tau * w.roll * 0.7 * t + ph);
+          // Its roll: the sheet turns slowly, thinning as it goes edge on (its edges never cross, which reads as string).
+          const turn = 0.62 + 0.38 * Math.cos(tau * 0.85 * s - tau * w.roll * t + ph * 2);
+          const half = (w.thick / 2) * Math.pow(m, 1.1) * (0.85 + 0.15 * Math.sin(tau * 2.2 * s - tau * 0.45 * t + ph)) + 0.004;
+          const x = from + sign * width * u;
+          upper.push([x, at(Math.max(0, v + half * turn))]);
+          lower.push([x, at(Math.max(0, v - half * turn))]);
+          spine.push([x, at(Math.max(0, v)), Math.abs(turn)]);
+        }
+        const tipX = from + sign * width * reach;
+        const along = (rgb: Rgb, alpha: number) => {
+          const gr = ctx.createLinearGradient(from, 0, tipX, 0);
+          gr.addColorStop(0, rgba(rgb, alpha * 0.7));
+          gr.addColorStop(0.18, rgba(rgb, alpha));
+          gr.addColorStop(0.6, rgba(rgb, alpha * 0.6));
+          gr.addColorStop(1, rgba(rgb, 0));
+          return gr;
+        };
+        // The see-through body.
+        ctx.beginPath();
+        upper.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        for (let k = lower.length - 1; k >= 0; k -= 1) ctx.lineTo(lower[k][0], lower[k][1]);
+        ctx.closePath();
+        ctx.fillStyle = along(tone.body, 0.55 * strength);
+        ctx.fill();
+        // The edges, denser than the body: a soft wide stroke under a fine one.
+        for (const edge of [upper, lower]) {
+          for (const [wide, k] of [
+            [7, 0.22],
+            [3, 0.45],
+          ] as const) {
+            ctx.beginPath();
+            edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+            ctx.strokeStyle = along(tone.edge, k * strength);
+            ctx.lineWidth = wide * unit;
+            ctx.stroke();
+          }
+        }
+        // Where it turns edge on, a short dense streak along the spine.
+        for (let k = 1; k < spine.length; k += 1) {
+          const edgeOn = 1 - Math.min(spine[k][2], spine[k - 1][2]);
+          if (edgeOn < 0.5) continue;
+          const fadeOut = 1 - k / spine.length;
+          ctx.beginPath();
+          ctx.moveTo(spine[k - 1][0], spine[k - 1][1]);
+          ctx.lineTo(spine[k][0], spine[k][1]);
+          ctx.strokeStyle = rgba(tone.edge, ((edgeOn - 0.5) / 0.26) * 0.35 * strength * fadeOut);
+          ctx.lineWidth = 6 * unit;
+          ctx.stroke();
+        }
+      });
+    });
   }
 
   /** Sparkles: a few before the light comes in, many at its head as it runs, a few drifting while it stays. */
