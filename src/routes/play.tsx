@@ -3471,17 +3471,15 @@ function PlayPage() {
     holdNotice("");
   }
   /**
-   * Tường thành (chủ game 29/10, xếp dọc 01/11): cards lying across by a side's environment card, the same size, stacked
-   * in a column toward the middle of the board (the opponent's go down from theirs, yours go up from yours). Gương phòng hộ
+   * Tường thành (chủ game 29/10, xếp dọc 01/11): cards lying across, the first at the spot the owner sets in the settings screen,
+   * the rest stacked in a column toward the middle of the board (the opponent's go down, yours go up). Gương phòng hộ
    * shows the turns it has left. In % of the board: the centre and the size (the same anchor as the settings screen).
    */
   const wallCards = (side: Side) => {
-    const spot = side === viewer ? board.env : board.envFoe;
+    const spot = side === viewer ? board.wall : board.wallFoe;
     const toward = side === viewer ? -1 : 1;
-    const walls = duel.players[side].mirror > 0 ? [{ id: "guong-phong-ho", left: duel.players[side].mirror }] : [];
-    // Without an environment card the first one takes its place.
-    const from = duel.players[side].env && !spot.hidden ? 1 : 0;
-    return walls.map((wall, index) => ({ ...wall, x: spot.x, y: spot.y + toward * (index + from) * (spot.height + WALL_GAP), w: spot.width, h: spot.height }));
+    const walls = !spot.hidden && duel.players[side].mirror > 0 ? [{ id: "guong-phong-ho", left: duel.players[side].mirror }] : [];
+    return walls.map((wall, index) => ({ ...wall, x: spot.x, y: spot.y + toward * index * (spot.height + WALL_GAP), w: spot.width, h: spot.height }));
   };
   // Bàn cắt giữa sân thì không còn chỗ cho bảng thông báo: chỉ hiện khi bấm một chấm lịch sử (chủ game 28/10).
   const compact = cut.to - cut.from > 1;

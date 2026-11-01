@@ -48,9 +48,9 @@ import { DEFAULT_BOARD_ART, ENV_BOARDS } from "@/lib/env-boards";
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
 type Screen = "menu" | "code" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
-type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | ActKey | FaceKey;
-type SpotPick = "stack" | "env" | "envFoe" | ActKey | FaceKey;
-const SPOT_KEYS = new Set<string>(["stack", "env", "envFoe", ...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
+type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
+type SpotPick = "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
+const SPOT_KEYS = new Set<string>(["stack", "env", "envFoe", "wall", "wallFoe", ...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
 /** Nút, hồ sơ, kiếm của bàn Grok: "cỡ" phóng cả ghim, không phải cỡ chữ. */
 const ICON_KEYS = new Set<string>([...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
 const isSpotPick = (key: BoardPick): key is SpotPick => SPOT_KEYS.has(key);
@@ -470,7 +470,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   }
 
   const label =
-    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : BOARD_ACTS.find((item) => item.key === picked)?.label ?? BOARD_FACES.find((item) => item.key === picked)?.label ?? HUD_MARKS.find((mark) => mark.key === picked)?.label;
+    picked === "notice" ? "Bảng thông báo" : picked === "trail" ? "Lịch sử thông báo" : picked === "stack" ? "Xấp bài úp" : picked === "env" ? "Môi trường mình" : picked === "envFoe" ? "Môi trường địch" : picked === "wall" ? "Tường thành mình" : picked === "wallFoe" ? "Tường thành địch" : BOARD_ACTS.find((item) => item.key === picked)?.label ?? BOARD_FACES.find((item) => item.key === picked)?.label ?? HUD_MARKS.find((mark) => mark.key === picked)?.label;
   const boxy = picked === "notice" || picked === "trail" || isSpotPick(picked);
   const hidden =
     picked === "notice"
@@ -648,6 +648,58 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         >
           Môi trường địch
         </button>
+        <button
+          type="button"
+          className={`tune-pin is-env${picked === "wall" ? " on" : ""}${layout.wall.hidden ? " is-hidden" : ""}`}
+          style={{
+            left: `${layout.wall.x}%`,
+            top: `${layout.wall.y}%`,
+            width: `${layout.wall.width}%`,
+            height: `${layout.wall.height}%`,
+            fontSize: `${layout.wall.size}cqw`,
+          }}
+          onPointerDown={(event) => {
+            drag.current = "wall";
+            setPicked("wall");
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (drag.current !== "wall") return;
+            const spot = at(event);
+            if (spot) place("wall", spot.x, spot.y);
+          }}
+          onPointerUp={() => {
+            drag.current = null;
+          }}
+        >
+          Tường thành mình
+        </button>
+        <button
+          type="button"
+          className={`tune-pin is-env${picked === "wallFoe" ? " on" : ""}${layout.wallFoe.hidden ? " is-hidden" : ""}`}
+          style={{
+            left: `${layout.wallFoe.x}%`,
+            top: `${layout.wallFoe.y}%`,
+            width: `${layout.wallFoe.width}%`,
+            height: `${layout.wallFoe.height}%`,
+            fontSize: `${layout.wallFoe.size}cqw`,
+          }}
+          onPointerDown={(event) => {
+            drag.current = "wallFoe";
+            setPicked("wallFoe");
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (drag.current !== "wallFoe") return;
+            const spot = at(event);
+            if (spot) place("wallFoe", spot.x, spot.y);
+          }}
+          onPointerUp={() => {
+            drag.current = null;
+          }}
+        >
+          Tường thành địch
+        </button>
         {BOARD_ACTS.map((item) => (
           <button
             key={item.key}
@@ -739,6 +791,12 @@ function BoardTune({ onBack }: { onBack: () => void }) {
         </button>
         <button type="button" className={`tuner-item${picked === "envFoe" ? " on" : ""}`} onClick={() => setPicked("envFoe")}>
           Môi trường địch{layout.envFoe.hidden ? " · ẩn" : ""} · rộng {layout.envFoe.width} · cao {layout.envFoe.height} · chữ {layout.envFoe.size}
+        </button>
+        <button type="button" className={`tuner-item${picked === "wall" ? " on" : ""}`} onClick={() => setPicked("wall")}>
+          Tường thành mình{layout.wall.hidden ? " · ẩn" : ""} · rộng {layout.wall.width} · cao {layout.wall.height} · chữ {layout.wall.size}
+        </button>
+        <button type="button" className={`tuner-item${picked === "wallFoe" ? " on" : ""}`} onClick={() => setPicked("wallFoe")}>
+          Tường thành địch{layout.wallFoe.hidden ? " · ẩn" : ""} · rộng {layout.wallFoe.width} · cao {layout.wallFoe.height} · chữ {layout.wallFoe.size}
         </button>
         {[...BOARD_ACTS, ...BOARD_FACES.filter((item) => item.kind === "atk")].map((item) => (
           <button key={item.key} type="button" className={`tuner-item${picked === item.key ? " on" : ""}`} onClick={() => setPicked(item.key)}>

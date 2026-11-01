@@ -58,7 +58,7 @@ export type Trail = { x: number; y: number; w: number; h: number; dot: number; g
 export type ActKey = "drawMon" | "drawSpell" | "endTurn";
 export type FaceKey = "foeFace" | "youFace" | "foeAtk" | "youAtk" | "foeDef" | "youDef";
 /** Bố cục bàn Grok (chủ game 28/10): mỗi nút, chân dung, kiếm, khiên có ghim riêng; `actions` cũ giữ để đọc bố cục đã lưu. */
-export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; trail: Trail; actions: Spot } & Record<ActKey | FaceKey, Spot>;
+export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; wall: Spot; wallFoe: Spot; trail: Trail; actions: Spot } & Record<ActKey | FaceKey, Spot>;
 
 // Bàn mới 841 x 1870 (chủ game 28/10): số mặc định theo bố cục của bàn Grok.
 export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, hidden: false };
@@ -67,6 +67,9 @@ export const DEFAULT_REACTION: Notice = { x: 64, y: 44, w: 22, h: 12, font: 3.2,
 export const DEFAULT_STACK: Spot = { x: 85, y: 69.1, size: 2.6, width: 15, height: 7.2, hidden: false };
 export const DEFAULT_ENV: Spot = { x: 73.4, y: 59.2, size: 2.2, width: 16, height: 4, hidden: false };
 export const DEFAULT_ENV_FOE: Spot = { x: 74.1, y: 43.4, size: 2.2, width: 16, height: 4, hidden: false };
+/** Tường thành (chủ game 01/11): chỗ lá đầu tiên, tâm; các lá sau nối dọc về phía giữa sân. Mặc định = một bước dọc cạnh lá môi trường. */
+export const DEFAULT_WALL: Spot = { x: 73.4, y: 54.4, size: 2.2, width: 16, height: 4, hidden: false };
+export const DEFAULT_WALL_FOE: Spot = { x: 74.1, y: 48.2, size: 2.2, width: 16, height: 4, hidden: false };
 /** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
 export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
 
@@ -105,6 +108,8 @@ export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
   stack: DEFAULT_STACK,
   env: DEFAULT_ENV,
   envFoe: DEFAULT_ENV_FOE,
+  wall: DEFAULT_WALL,
+  wallFoe: DEFAULT_WALL_FOE,
   actions: DEFAULT_ACTIONS,
 };
 
@@ -296,6 +301,8 @@ export function loadBoard(_env?: string): BoardLayout {
     stack: asStack(raw?.stack),
     env: asEnv(raw?.env),
     envFoe: raw?.envFoe ? asStack(raw.envFoe) : { ...DEFAULT_ENV_FOE },
+    wall: raw?.wall ? asStack(raw.wall) : { ...DEFAULT_WALL },
+    wallFoe: raw?.wallFoe ? asStack(raw.wallFoe) : { ...DEFAULT_WALL_FOE },
     actions: asActions(raw?.actions),
     ...spotsOf(raw as Partial<Record<ActKey | FaceKey, Spot>> | null),
   };
@@ -338,7 +345,9 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
     trail: top.trail,
     reaction: top.reaction,
     envFoe: top.envFoe,
+    wallFoe: top.wallFoe,
     env: bottom.env,
+    wall: bottom.wall,
     stack: bottom.stack,
     actions: bottom.actions,
     drawMon: bottom.drawMon,
@@ -370,6 +379,8 @@ function cutLayout(layout: BoardLayout): BoardLayout {
     stack: spot(layout.stack),
     env: spot(layout.env),
     envFoe: spot(layout.envFoe),
+    wall: spot(layout.wall),
+    wallFoe: spot(layout.wallFoe),
     actions: spot(layout.actions),
     drawMon: spot(layout.drawMon),
     drawSpell: spot(layout.drawSpell),

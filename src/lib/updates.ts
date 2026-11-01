@@ -820,6 +820,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng chuyển lượt sáng hơn, đỏ chuyển sang crimson hợp màu sân.",
   "Lá môi trường nằm đúng chỗ đã chỉnh trong Tuỳ chỉnh; lá tường thành xếp dọc về phía giữa sân.",
   "Ẩn chấm lịch sử và bảng thông báo trong trận.",
+  "Tuỳ chỉnh có thêm Tường thành mình và Tường thành địch để tự đặt chỗ lá tường thành.",
 ];
 
 function remarkOf(notes: string[]) {
