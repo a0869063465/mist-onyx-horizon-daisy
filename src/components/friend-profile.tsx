@@ -105,6 +105,7 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           <span className="fp-pic" style={bg ? { backgroundImage: `url(${bg})` } : undefined} />
           <em>1</em>
         </span>
+        <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
         <div className="fp-id">
           <h2>{tr(PLAYER_NAME)}</h2>
           <span className="fp-rank">{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
@@ -121,7 +122,6 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             </div>
           ) : null}
         </div>
-        <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
       </section>
       {tab === "overview" ? (
         <section className="fp-quick">

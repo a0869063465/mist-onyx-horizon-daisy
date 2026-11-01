@@ -110,10 +110,12 @@ function Home() {
             }}>
               {face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}
             </button>
-            <img className="home-rank-badge" src={rankBadge(START_RANK.tier)} alt="" draggable={false} />
             <span className="home-ranks">
               <b>{tr("Người chơi")}</b>
-              <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>
+              <i>
+                <img className="home-rank-badge" src={rankBadge(START_RANK.tier)} alt="" draggable={false} />
+                {tr(rankLabel(START_RANK.tier, START_RANK.level))}
+              </i>
             </span>
           </div>
           {/* Nút Chơi chia đôi (chủ game 31/10): PvP vào trang chơi cũ, PvE là chế độ mới, đang khoá. */}
