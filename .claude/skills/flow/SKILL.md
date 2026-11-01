@@ -2,6 +2,8 @@
 name: flow
 description: Vẽ hoặc sửa dòng chảy (flow) của skill/phép nhiều mục tiêu trong Clash of the Beasts. Dùng mỗi khi chủ game nhắc tới flow, dòng chảy, nhánh, điểm tách, điểm chạm.
 ---
+> Làm theo video thì đối chiếu cạnh nhau: xem skill `hoc-tu-video` (bể sáng: `be-sang`).
+
 # Dòng chảy skill/phép nhiều mục tiêu
 
 ## Chuẩn (chủ game chốt 29/10): chuan-2-quai-hang-doc.png
