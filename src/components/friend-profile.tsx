@@ -113,17 +113,15 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
             {ready?.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[ready.mode])}` : tr("Đang chờ")}
           </span>
         </div>
-        <div className="fp-side">
-          <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
-          {tab === "overview" ? (
+        <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
+        {tab === "overview" ? (
           <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
             <b>{tr("Huy hiệu")}</b>
             <span aria-hidden="true" />
             <span aria-hidden="true" />
             <span aria-hidden="true" />
           </div>
-          ) : null}
-        </div>
+        ) : null}
       </section>
       {tab === "overview" ? (
         <section className="fp-quick">
