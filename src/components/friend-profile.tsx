@@ -105,7 +105,6 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           <span className="fp-pic" style={bg ? { backgroundImage: `url(${bg})` } : undefined} />
           <em>1</em>
         </span>
-        <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
         <div className="fp-id">
           <h2>{tr(PLAYER_NAME)}</h2>
           <span className="fp-rank">{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
@@ -113,13 +112,16 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           <span className={`fr-state${ready?.mode ? " is-play" : ""}`}>
             {ready?.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[ready.mode])}` : tr("Đang chờ")}
           </span>
+        </div>
+        <div className="fp-side">
+          <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
           {tab === "overview" ? (
-            <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
-              <b>{tr("Huy hiệu")}</b>
-              <span aria-hidden="true" />
-              <span aria-hidden="true" />
-              <span aria-hidden="true" />
-            </div>
+          <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
+            <b>{tr("Huy hiệu")}</b>
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </div>
           ) : null}
         </div>
       </section>
