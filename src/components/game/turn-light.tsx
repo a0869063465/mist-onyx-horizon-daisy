@@ -318,6 +318,8 @@ export class TurnLightArt {
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(this.smoke.canvas, 0, 0, this.w, this.h);
 
+    if (side === "you") this.paintCorners(ctx, now, x0, x1, base, dir, unit);
+
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
     // covers the gold (the bottom keeps to the court's edge; the top is open).
     {
@@ -369,6 +371,82 @@ export class TurnLightArt {
     }
 
     ctx.globalCompositeOperation = "source-over";
+  }
+
+  /**
+   * The two lower corners of the blue tank (chủ game 01/11): where the court's edge rounds off, a flow of its own with a deep
+   * bottom along the arc and a deep side wall only as tall as the arc, and a little light running round it. Same colour as the
+   * wall above so the two meet without a seam.
+   */
+  private paintCorners(ctx: CanvasRenderingContext2D, now: number, x0: number, x1: number, base: number, dir: number, unit: number) {
+    const tone = TONE.you;
+    const lift = this.h * EDGE_DIP;
+    const wall = base - dir * lift;
+    const flat = base;
+    const corner = (x1 - x0) * EDGE_CORNER.you;
+    for (const [edge, sign] of [
+      [x0, 1],
+      [x1, -1],
+    ] as const) {
+      const p0: [number, number] = [edge, wall];
+      const p1: [number, number] = [edge + sign * corner * 0.2, wall + (flat - wall) * 0.55];
+      const p2: [number, number] = [edge + sign * corner * 0.55, flat - (flat - wall) * 0.08];
+      const p3: [number, number] = [edge + sign * corner, flat];
+      const at = (u: number): [number, number] => {
+        const m = 1 - u;
+        return [
+          m * m * m * p0[0] + 3 * m * m * u * p1[0] + 3 * m * u * u * p2[0] + u * u * u * p3[0],
+          m * m * m * p0[1] + 3 * m * m * u * p1[1] + 3 * m * u * u * p2[1] + u * u * u * p3[1],
+        ];
+      };
+      // The body of the corner: between the wall, the arc and the line it would run along.
+      const body = ctx.createLinearGradient(edge, 0, edge + sign * corner, 0);
+      body.addColorStop(0, rgba(tone.mid, 0.55));
+      body.addColorStop(1, rgba(tone.mid, 0.12));
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.moveTo(edge, flat);
+      ctx.lineTo(...p0);
+      ctx.bezierCurveTo(...p1, ...p2, ...p3);
+      ctx.lineTo(p3[0], flat);
+      ctx.closePath();
+      ctx.fill();
+      // The deep side wall, as tall as the arc.
+      const side = ctx.createLinearGradient(edge, 0, edge + sign * 8 * unit, 0);
+      side.addColorStop(0, rgba(tone.mid, 0.85));
+      side.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = side;
+      ctx.fillRect(Math.min(edge, edge + sign * 8 * unit), Math.min(flat, wall), 8 * unit, Math.abs(wall - flat));
+      // The deep bottom along the arc.
+      ctx.lineCap = "round";
+      for (const [width, alpha] of [
+        [10, 0.35],
+        [5, 0.7],
+      ] as const) {
+        ctx.beginPath();
+        ctx.moveTo(...p0);
+        ctx.bezierCurveTo(...p1, ...p2, ...p3);
+        ctx.strokeStyle = rgba(tone.mid, alpha);
+        ctx.lineWidth = width * unit;
+        ctx.stroke();
+      }
+      // Light running round the arc, two at a time.
+      ctx.globalCompositeOperation = "lighter";
+      for (let k = 0; k < 2; k += 1) {
+        const head = (now * 0.3 + k * 0.5 + (sign > 0 ? 0 : 0.25)) % 1;
+        const tail = Math.max(0, head - 0.3);
+        ctx.beginPath();
+        for (let i = 0; i <= 12; i += 1) {
+          const [x, y] = at(tail + ((head - tail) * i) / 12);
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        }
+        ctx.strokeStyle = rgba(tone.core, 0.45 * Math.sin(Math.PI * head) ** 0.7);
+        ctx.lineWidth = 3 * unit;
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
   }
 
   /** The smoke wisps of a tank into the small smoke canvas (see `Wisp`). */
