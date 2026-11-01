@@ -66,12 +66,12 @@ export function AlbumTab() {
     <>
       <div className="al-shelf">
         {[
+          { key: "char", title: "Nhân vật", group: list.filter((album) => album.group === "char") },
           {
             key: "env",
             title: "Môi trường",
             group: list.filter((album) => album.group !== "char"),
           },
-          { key: "char", title: "Nhân vật", group: list.filter((album) => album.group === "char") },
         ]
           .filter((part) => part.group.length)
           .map(({ key, title, group }) => (
