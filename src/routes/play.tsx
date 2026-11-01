@@ -3336,13 +3336,17 @@ function PlayPage() {
 
   // Dòng sáng chuyển lượt (turn-light.tsx, chủ game 28/10): bể của bên đang giữ quyền ở giữa sân, sát khu của bên đó;
   // chữ "TỚI LƯỢT CỦA BẠN" khi quyền về mình, "VÒNG N" khi sang vòng mới. Bể đi theo vết cắt của bàn.
-  const tankGeo = useMemo<Record<TankSide, TankGeo>>(
-    () => ({
-      foe: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: ry(TANK_BASE.foe, cut), open: ry(TANK_OPEN, cut) },
-      you: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: ry(TANK_BASE.you, cut), open: ry(TANK_OPEN, cut) },
-    }),
-    [cut],
-  );
+  // Miệng bể nằm giữa dải đá còn nhìn thấy giữa hai đáy. Không đi qua `ry(TANK_OPEN)`: khi màn ngắn cả đoạn giữa sân bị bỏ dồn
+  // về một điểm, bể hai bên dẹp lại thành một vạch (chủ game 01/11, bên đỏ).
+  const tankGeo = useMemo<Record<TankSide, TankGeo>>(() => {
+    const foeBase = ry(TANK_BASE.foe, cut);
+    const youBase = ry(TANK_BASE.you, cut);
+    const open = (foeBase + youBase) / 2;
+    return {
+      foe: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: foeBase, open },
+      you: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: youBase, open },
+    };
+  }, [cut]);
   const [turnCue, setTurnCue] = useState<TitleCue | null>(null);
   const lightSeen = useRef<{ actor: Side; clock: number } | null>(null);
   const cueTimer = useRef(0);
@@ -7706,7 +7710,6 @@ const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
  *  toward the middle. */
 const TANK_WALLS = [0, 100] as const;
 const TANK_BASE = { foe: 40.3, you: 62.3 } as const;
-const TANK_OPEN = 51;
 
 /** A board pin (Grok layout): centred on its spot, sized by width × size of the board. */
 function pinBox(spot: { x: number; y: number; width: number; height: number; size: number }): CSSProperties {
