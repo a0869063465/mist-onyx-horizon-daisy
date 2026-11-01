@@ -821,6 +821,7 @@ export const PENDING_NOTES: string[] = [
   "Lá môi trường nằm đúng chỗ đã chỉnh trong Tuỳ chỉnh; lá tường thành xếp dọc về phía giữa sân.",
   "Ẩn chấm lịch sử và bảng thông báo trong trận.",
   "Tuỳ chỉnh có thêm Tường thành mình và Tường thành địch để tự đặt chỗ lá tường thành.",
+  "Bể sáng chuyển lượt đậm và rõ hơn trên nền đá sân, cả xanh lẫn đỏ.",
 ];
 
 function remarkOf(notes: string[]) {

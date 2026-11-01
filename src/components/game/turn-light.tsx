@@ -24,7 +24,7 @@ type Rgb = [number, number, number];
  *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
 const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
   foe: { mid: [228, 40, 78], core: [255, 205, 218], gain: 1.2, bank: [0.34, 0.75, 0.14] },
-  you: { mid: [50, 125, 245], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
+  you: { mid: [30, 105, 240], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
 /** Seconds: the sparkles before the light, its run across the tank, its fade, and the gap before the new side starts. */
@@ -43,8 +43,8 @@ const TITLE_OUT = 0.45;
 
 /** The pool's strengths per side, measured on the video: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the silk sheets and the bottom rim, each as a strength. */
 const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; silk: number; rim: number; bank: number }> = {
-  you: { haze: [0.14, 0.08, 0.03, 0], hazeDepth: 0.5, wall: 0.24, silk: 0.45, rim: 0.2, bank: 0.4 },
-  foe: { haze: [0.2, 0.18, 0.1, 0.04], hazeDepth: 1, wall: 0.03, silk: 0.5, rim: 0.1, bank: 0.25 },
+  you: { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, silk: 1.6, rim: 0.5, bank: 0.7 },
+  foe: { haze: [0.5, 0.4, 0.22, 0.08], hazeDepth: 1, wall: 0.35, silk: 1.3, rim: 0.4, bank: 0.5 },
 };
 
 /** Ribbons of see-through silk (videos of 01/11): each starts at a wall `y` up the depth with thickness `w` (parts of the depth), slides down toward the bottom
