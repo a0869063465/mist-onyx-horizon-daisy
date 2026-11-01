@@ -42,15 +42,24 @@ const TITLE_OUT = 0.45;
 /** The ribbons and their fibres are this much of their first strength (chủ game 30/10: paler, so they do not pull the eye). */
 const PALE = 0.75;
 
-/** Ribbons of light in a tank: where they meet the left and right walls and how low they sag (parts of the tank's depth). */
-const RIBBONS: Array<{ a: number; b: number; c: number; d: number; w: number; rate: number; phase: number; fibres: Array<{ k: number; taper: number; hot: boolean }> }> = [
-  { a: 0.6, b: 0.2, c: 0.08, d: 0.12, w: 0.3, rate: 0.17, phase: 0, fibres: [{ k: -0.9, taper: 0.5, hot: false }, { k: 0.15, taper: 0.4, hot: true }, { k: 1, taper: 0.55, hot: false }] },
-  { a: 0.18, b: 0.62, c: 0.12, d: 0.06, w: 0.26, rate: 0.13, phase: 1.7, fibres: [{ k: -1, taper: 0.45, hot: false }, { k: -0.1, taper: 0.4, hot: true }, { k: 0.8, taper: 0.5, hot: false }] },
-  { a: 0.5, b: 0.52, c: 0.02, d: 0.03, w: 0.34, rate: 0.11, phase: 3.1, fibres: [{ k: -0.7, taper: 0.35, hot: true }, { k: 0.4, taper: 0.45, hot: false }, { k: 1.1, taper: 0.6, hot: false }] },
-  { a: 0.48, b: 0.44, c: 0.16, d: 0.14, w: 0.22, rate: 0.19, phase: 4.4, fibres: [{ k: -0.6, taper: 0.5, hot: false }, { k: 0.6, taper: 0.5, hot: true }] },
-  { a: 0.36, b: 0.5, c: 0.1, d: 0.2, w: 0.28, rate: 0.15, phase: 5.2, fibres: [{ k: -0.8, taper: 0.45, hot: false }, { k: 0.3, taper: 0.4, hot: true }, { k: 1, taper: 0.5, hot: false }] },
-  { a: 0.28, b: 0.28, c: 0.22, d: 0.1, w: 0.2, rate: 0.21, phase: 2.2, fibres: [{ k: -0.5, taper: 0.5, hot: true }, { k: 0.7, taper: 0.45, hot: false }] },
-];
+/** Silk sheets: which wall each starts at, how high up the wall (parts of the depth), how thick at the wall, how far across it reaches, its strength. */
+type Silk = { left: boolean; top: number; thick: number; reach: number; alpha: number; rate: number; phase: number };
+const SILKS: Record<TankSide, Silk[]> = {
+  you: [
+    { left: true, top: 0.62, thick: 0.34, reach: 0.78, alpha: 0.34, rate: 0.11, phase: 0 },
+    { left: true, top: 0.3, thick: 0.22, reach: 0.55, alpha: 0.27, rate: 0.15, phase: 2.1 },
+    { left: false, top: 0.6, thick: 0.34, reach: 0.78, alpha: 0.34, rate: 0.12, phase: 3.3 },
+    { left: false, top: 0.3, thick: 0.22, reach: 0.5, alpha: 0.27, rate: 0.14, phase: 5 },
+  ],
+  foe: [
+    { left: true, top: 0.7, thick: 0.4, reach: 0.9, alpha: 0.44, rate: 0.1, phase: 0.5 },
+    { left: true, top: 0.45, thick: 0.3, reach: 0.7, alpha: 0.37, rate: 0.14, phase: 2.4 },
+    { left: true, top: 0.22, thick: 0.2, reach: 0.5, alpha: 0.31, rate: 0.17, phase: 4 },
+    { left: false, top: 0.7, thick: 0.4, reach: 0.9, alpha: 0.44, rate: 0.11, phase: 1.3 },
+    { left: false, top: 0.45, thick: 0.3, reach: 0.7, alpha: 0.37, rate: 0.15, phase: 3.1 },
+    { left: false, top: 0.22, thick: 0.2, reach: 0.5, alpha: 0.31, rate: 0.16, phase: 5.2 },
+  ],
+};
 
 /** The court's edge on the new board (measured on board-full.jpg): flat across, then rounding away from the open end at each wall, by this much of the board's height. */
 const EDGE_DIP = 0.022;
@@ -233,114 +242,65 @@ export class TurnLightArt {
     bank.addColorStop(1, rgba(tone.mid, 0));
     ctx.fillStyle = bank;
     ctx.fillRect(x0, Math.min(behind, at(bankDepth)), width, span);
-    ctx.globalCompositeOperation = "destination-out";
-    for (const [edge, inward] of [
-      [x0, 1],
-      [x1, -1],
-    ] as const) {
-      const thin = ctx.createLinearGradient(edge, 0, edge + inward * width * 0.07, 0);
-      thin.addColorStop(0, "rgba(0,0,0,1)");
-      thin.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = thin;
-      ctx.fillRect(Math.min(edge, edge + inward * width * 0.07), Math.min(base, at(0.8)), width * 0.07, depth * 0.8);
-    }
     ctx.globalCompositeOperation = "source-over";
 
-    // The ribbons: soft sheets of light hanging between the walls, each with a few bright fibres along it, swaying
-    // slowly like water; a gloss runs along the brightest fibre.
+    // Silk sheets (video of 01/11): a few wide, see-through wedges, each starting thick at a wall and thinning as it slides
+    // down toward the middle of the bottom, overlapping and swaying slowly. The red is denser than the blue.
     const t = now;
-    for (const ribbon of RIBBONS) {
-      const sway = (k: number) => Math.sin(t * Math.PI * 2 * ribbon.rate + ribbon.phase + k);
-      const a = ribbon.a + 0.07 * sway(0);
-      const b = ribbon.b + 0.07 * sway(1.3);
-      const c = Math.max(0, ribbon.c + 0.05 * sway(2.1));
-      const d = Math.max(0, ribbon.d + 0.05 * sway(3.4));
-      const bend = 0.06 * sway(0.7);
-      const spread = ribbon.w * depth * 0.5;
-      const curve = (k: number, taper = 0.45) => {
-        const end = k * spread;
-        const mid = k * spread * taper;
-        ctx.beginPath();
-        ctx.moveTo(x0, at(a) - dir * end);
-        ctx.bezierCurveTo(x0 + width * (0.3 + bend), at(c) - dir * mid, x0 + width * (0.7 + bend), at(d) - dir * mid, x1, at(b) - dir * end);
-      };
-      // The sheet: a soft band, widest where it meets the walls.
-      ctx.globalCompositeOperation = "source-over";
-      for (const [k, alpha] of [
-        [0.95, 0.07],
-        [0.6, 0.09],
-        [0.3, 0.11],
-      ] as const) {
-        curve(0, 0.45);
-        ctx.strokeStyle = rgba(tone.mid, alpha * PALE * tone.gain);
-        ctx.lineWidth = spread * 2.4 * k + 2 * unit;
-        ctx.stroke();
-      }
-      // The fibres: uneven, two coloured, the leading one white hot with a running gloss.
-      const glossAt = clamp01(((t * 0.16 + ribbon.phase * 0.13) % 1.4) - 0.2);
-      ribbon.fibres.forEach((fibre, i) => {
-        const pulse = 0.72 + 0.28 * Math.sin(t * 1.7 + i * 1.9 + ribbon.phase);
-        curve(fibre.k, fibre.taper);
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = rgba(tone.mid, 0.14 * pulse * PALE * tone.gain);
-        ctx.lineWidth = 7 * unit;
-        ctx.stroke();
-        ctx.strokeStyle = rgba(tone.mid, (fibre.hot ? 0.62 : 0.42) * pulse * PALE * tone.gain);
-        ctx.lineWidth = (fibre.hot ? 2.2 : 1.5) * unit;
-        ctx.stroke();
-        if (!fibre.hot) return;
-        ctx.globalCompositeOperation = "lighter";
-        const shine = ctx.createLinearGradient(x0, 0, x1, 0);
-        shine.addColorStop(0, rgba(tone.core, 0.3 * pulse * PALE * tone.gain));
-        shine.addColorStop(Math.max(0, glossAt - 0.2), rgba(tone.core, 0.34 * pulse * PALE * tone.gain));
-        shine.addColorStop(glossAt, rgba(tone.core, 0.95 * pulse * PALE * tone.gain));
-        shine.addColorStop(Math.min(1, glossAt + 0.2), rgba(tone.core, 0.34 * pulse * PALE * tone.gain));
-        shine.addColorStop(1, rgba(tone.core, 0.3 * pulse * PALE * tone.gain));
-        ctx.strokeStyle = shine;
-        ctx.lineWidth = 1.1 * unit;
-        ctx.stroke();
-      });
-    }
+    const lean = side === "foe" ? 1.7 : 1;
+    SILKS[side].forEach((silk, i) => {
+      const sway = Math.sin(t * Math.PI * 2 * silk.rate + silk.phase);
+      const from = silk.left ? x0 : x1;
+      const sign = silk.left ? 1 : -1;
+      const tipX = from + sign * width * (silk.reach + 0.05 * sway);
+      const top = at(silk.top + 0.04 * sway);
+      const mouth = depth * silk.thick;
+      const tipY = at(0.04 + 0.03 * Math.sin(t * 0.9 + i));
+      ctx.beginPath();
+      ctx.moveTo(from, top);
+      ctx.bezierCurveTo(from + sign * width * 0.3, top - dir * mouth * 0.1, tipX - sign * width * 0.25, tipY + dir * mouth * 0.05, tipX, tipY);
+      ctx.bezierCurveTo(tipX - sign * width * 0.3, tipY - dir * mouth * 0.45, from + sign * width * 0.3, top - dir * mouth * 0.8, from, top - dir * mouth);
+      ctx.closePath();
+      const fill = ctx.createLinearGradient(from, 0, tipX, 0);
+      fill.addColorStop(0, rgba(tone.mid, silk.alpha * lean * PALE * tone.gain));
+      fill.addColorStop(0.5, rgba(tone.mid, silk.alpha * 0.55 * lean * PALE * tone.gain));
+      fill.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = fill;
+      ctx.fill();
+    });
 
-    // A ribbon that runs along the court's edge, bending gently with its rounded corners, to cover the border when the turn comes
-    // (chủ game 01/11); it sways a little and shares the tank's colour and gloss.
+    // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
+    // covers the gold (the bottom keeps to the court's edge; the top is open).
     {
       const lift = this.h * EDGE_DIP;
       const wall = base - dir * lift;
-      const sway = 0.0035 * this.h * Math.sin(now * 1.3);
       const corner = width * EDGE_CORNER[side];
-      const flat = base + sway;
-      const ends = (up: number) => {
-        // Down the rounded corner at each wall (steep at the wall, easing into the flat edge), as the court's gold rim does.
+      const strong = side === "foe" ? 1.5 : 1;
+      const flat = base + 0.0025 * this.h * Math.sin(now * 1.3);
+      const rim = (up: number) => {
         ctx.beginPath();
-        ctx.moveTo(x0, wall + up);
+        ctx.moveTo(x0, at(0.92));
+        ctx.lineTo(x0, wall + up);
         ctx.bezierCurveTo(x0 + corner * 0.2, wall + (flat - wall) * 0.55 + up, x0 + corner * 0.55, flat - (flat - wall) * 0.08 + up, x0 + corner, flat + up);
-        ctx.bezierCurveTo(x0 + width * 0.35, base + sway * 0.4 + up, x0 + width * 0.65, base + sway * 0.4 + up, x1 - corner, flat + up);
+        ctx.bezierCurveTo(x0 + width * 0.35, base + up, x0 + width * 0.65, base + up, x1 - corner, flat + up);
         ctx.bezierCurveTo(x1 - corner * 0.55, flat - (flat - wall) * 0.08 + up, x1 - corner * 0.2, wall + (flat - wall) * 0.55 + up, x1, wall + up);
+        ctx.lineTo(x1, at(0.92));
       };
       ctx.globalCompositeOperation = "source-over";
       for (const [up, line, alpha] of [
-        [0, 15, 0.16],
-        [0, 9, 0.26],
-        [-dir * 1.5, 4.5, 0.42],
-        [-dir * 3, 2.2, 0.58],
+        [0, 20, 0.2],
+        [-dir * 1, 11, 0.36],
+        [-dir * 2, 5, 0.7],
       ] as const) {
-        ends(up * unit);
-        ctx.strokeStyle = rgba(tone.mid, alpha * tone.gain);
+        rim(up * unit);
+        ctx.strokeStyle = rgba(tone.mid, alpha * strong * tone.gain);
         ctx.lineWidth = line * unit;
         ctx.stroke();
       }
-      const gloss = clamp01(((now * 0.14) % 1.4) - 0.2);
       ctx.globalCompositeOperation = "lighter";
-      const shine = ctx.createLinearGradient(x0, 0, x1, 0);
-      shine.addColorStop(0, rgba(tone.core, 0.12 * tone.gain));
-      shine.addColorStop(Math.max(0, gloss - 0.2), rgba(tone.core, 0.18 * tone.gain));
-      shine.addColorStop(gloss, rgba(tone.core, 0.7 * tone.gain));
-      shine.addColorStop(Math.min(1, gloss + 0.2), rgba(tone.core, 0.18 * tone.gain));
-      shine.addColorStop(1, rgba(tone.core, 0.12 * tone.gain));
-      ends(-dir * 3 * unit);
-      ctx.strokeStyle = shine;
-      ctx.lineWidth = 1.3 * unit;
+      rim(-dir * 2 * unit);
+      ctx.strokeStyle = rgba(tone.core, 0.45 * tone.gain);
+      ctx.lineWidth = 2 * unit;
       ctx.stroke();
       ctx.globalCompositeOperation = "source-over";
     }

@@ -815,6 +815,7 @@ export const PENDING_NOTES: string[] = [
   "Huy hiệu hạng: hồ sơ hiện huy hiệu to, menu, bảng xếp hạng và danh sách bạn bè hiện bản nhỏ.",
   "Bố cục bàn đấu và lá môi trường dùng chung cho mọi môi trường, hết lệch khỏi chỗ đã chỉnh trong Tuỳ chỉnh.",
   "Bể sáng chuyển lượt: thêm dòng chảy cong theo mép viền sân, đỉnh sóng hai bên thấp hơn, dải sáng dày và rõ hơn.",
+  "Bể sáng chuyển lượt làm lại theo video: gờ sáng ở đáy và hai thành, dải lụa rộng toả từ hai thành, bên đỏ đậm hơn.",
 ];
 
 function remarkOf(notes: string[]) {
