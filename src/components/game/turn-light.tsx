@@ -23,7 +23,7 @@ type Rgb = [number, number, number];
  *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
  *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
 const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
-  foe: { mid: [228, 40, 78], core: [255, 205, 218], gain: 1.2, bank: [0.34, 0.75, 0.14] },
+  foe: { mid: [226, 32, 10], core: [255, 205, 170], gain: 1.2, bank: [0.34, 0.75, 0.14] },
   you: { mid: [30, 105, 240], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
@@ -70,7 +70,7 @@ const DRAIN: Record<TankSide, number> = { you: 1.3, foe: 0.45 };
 /** Colours: the see-through body, the brighter edges; strength. */
 const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number }> = {
   you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1 },
-  foe: { body: [232, 52, 104], edge: [255, 128, 172], alpha: 1.35 },
+  foe: { body: [226, 40, 14], edge: [255, 122, 74], alpha: 1.35 },
 };
 
 /** The streaks of one wall, evenly spread over the cycle so one leaves while another arrives. */
