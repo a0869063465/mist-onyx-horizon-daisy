@@ -306,6 +306,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## Quy tắc làm việc với chủ game
 
+- SAI MÔ HÌNH THÌ KHÔNG LÀM (chủ game 01/11): mỗi việc có mô hình + nỗ lực đã chốt với chủ game. Nếu mô hình/nỗ lực đang chạy khác chốt thì DỪNG, báo, chờ chủ game đổi, kể cả khi đã được cấp quyền sửa. Xong phần được duyệt thì DỪNG, không tự sang bước kế (01/11 đã tự sang T2d sau khi chỉ được duyệt bước 1 là sai).
 - BÁO KẾ HOẠCH NGẮN (chủ game 01/11, nhắc lại nhiều lần): giữa chừng chỉ nói HIỆN TRẠNG (vừa xong phần nào, hoặc lỗi là gì) rồi HƯỚNG LÀM, kèm MÔ HÌNH. Vài dòng, không dài. File kế hoạch cũng giữ ngắn.
 - LÀM THEO VIDEO (chủ game 01/11): xem kỹ cả video bằng số liệu và chụp cận, dựng game cạnh khung video để so; không làm theo trí nhớ. Chi tiết ở skill `hoc-tu-video`, `be-sang`.
 - T2d ĐÃ LÀM 01/11 (Sonnet high, nhánh `ccr-6ec5ff6c-vl497v`, CHƯA áp `main`, chờ chủ game xem ảnh): `turn-light.tsx` bỏ sợi mảnh, vệt bóng, dải neon mép và phần làm mờ hai thành; thêm `SILKS` (2 tấm mỗi thành bên xanh, 3 bên đỏ, hình nêm từ thành chéo xuống giữa đáy, đung đưa chậm, đỏ nhân `lean` 1,7), gờ sáng chữ U dọc hai thành + đáy bám cung bo (`EDGE_DIP`, `EDGE_CORNER`), đỏ gờ ×1,5. Đã đối chiếu cạnh khung video (`/tmp/clashtest/side.png`, `side-red.png`). Mũi quét trái sang phải giữ nguyên. Chưa đo số góc/độ đậm từng khung; chưa chụp 390×740.
