@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { tr } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
-import { START_RANK, rankLabel } from "@/lib/rank";
+import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { readProfile, type FriendMode } from "@/lib/friends";
 import { MODE_LABELS, PLAYER_NAME, playerId, PROFILE_BACK_KEY, REPLAY_KEY } from "@/lib/friend-state";
 import { StatBoard } from "@/components/friend-stats";
@@ -112,15 +112,16 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
           <span className={`fr-state${ready?.mode ? " is-play" : ""}`}>
             {ready?.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[ready.mode])}` : tr("Đang chờ")}
           </span>
+          {tab === "overview" ? (
+            <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
+              <b>{tr("Huy hiệu")}</b>
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+            </div>
+          ) : null}
         </div>
-        {tab === "overview" ? (
-          <div className="fp-medals" title={tr("Chưa có huy hiệu")}>
-            <b>{tr("Huy hiệu")}</b>
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-          </div>
-        ) : null}
+        <img className="fp-rank-badge" src={rankBadge(START_RANK.tier)} alt={tr(rankLabel(START_RANK.tier, START_RANK.level))} draggable={false} />
       </section>
       {tab === "overview" ? (
         <section className="fp-quick">

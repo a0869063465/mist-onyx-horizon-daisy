@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { tr, useLang } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
-import { START_RANK, rankLabel } from "@/lib/rank";
+import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { playUi } from "@/lib/sfx";
 import { addFriend, answerFriend, cleanId, friendList, ID_LENGTH, removeFriend, type AskRow, type FriendRow } from "@/lib/friends";
 import { FriendProfile } from "@/components/friend-profile";
@@ -268,7 +268,10 @@ function FriendsPage() {
                         {row.mode ? `${tr("Đang chơi")} ${tr(MODE_LABELS[row.mode])}` : tr("Đang chờ")}
                       </span>
                     </div>
-                    <span className="fr-rank">{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
+                    <span className="fr-rank">
+                      <img src={rankBadge(START_RANK.tier)} alt="" draggable={false} />
+                      {tr(rankLabel(START_RANK.tier, START_RANK.level))}
+                    </span>
                     <button
                       type="button"
                       className="fr-more"

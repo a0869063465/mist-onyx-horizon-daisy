@@ -18,3 +18,10 @@ export function rankLabel(tier: number, level: number): string {
 
 /** Người chơi mới: hạng thấp nhất. */
 export const START_RANK = { tier: RANKS.length - 1, level: 4 };
+
+/** Huy hiệu hạng (chủ game 01/11): cùng một hình cho cả 4 cấp, xếp theo `RANKS` (0 = Vua trò chơi … 5 = Tập chơi). */
+const BADGES = ["vua", "lung-danh", "chuyen-nghiep", "hoc-vien", "nghiep-du", "tap-choi"] as const;
+
+export function rankBadge(tier: number): string {
+  return `/ui/rank/${BADGES[Math.min(BADGES.length - 1, Math.max(0, tier))]}.webp`;
+}

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { tr, useLang } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
-import { START_RANK, rankLabel } from "@/lib/rank";
+import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { MissionBoard } from "@/components/game/mission-panel";
@@ -110,6 +110,7 @@ function Home() {
             }}>
               {face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}
             </button>
+            <img className="home-rank-badge" src={rankBadge(START_RANK.tier)} alt="" draggable={false} />
             <span className="home-ranks">
               <b>{tr("Người chơi")}</b>
               <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>

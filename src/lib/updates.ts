@@ -812,6 +812,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm ảnh đại diện ở menu để xem hồ sơ của mình; bấm hàng trên bảng xếp hạng để xem hồ sơ người đó.",
   "Bảng xếp hạng: hàng kính mờ trong suốt, bấm hàng để chọn, bấm lại để xem hồ sơ.",
   "Xem lại trận: nút camera thay cụm OK, bấm để ẩn hoặc hiện thanh điều khiển, kéo thanh bằng dải tiêu đề.",
+  "Huy hiệu hạng: hồ sơ hiện huy hiệu to, menu, bảng xếp hạng và danh sách bạn bè hiện bản nhỏ.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { tr } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
-import { START_RANK, rankLabel } from "@/lib/rank";
+import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { rankBoard, rankRadar, type BoardView, type RadarView } from "@/lib/friends";
 import { PLAYER_NAME, playerId } from "@/lib/friend-state";
 import { RADAR_AXES, RADAR_MIN, STAT_LIST, type Ranked, type StatKey } from "@/lib/ranking";
@@ -42,10 +42,7 @@ function Row({ row, stat, me, sel, pin, onTap }: { row: Ranked; stat: StatKey; m
         <span className="fs-who">
           <b>{tr(PLAYER_NAME)}</b>
           <span className="fs-sub">
-            <svg className="fs-emblem" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 2 4.5 6v6.2c0 4.3 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.5 7.5-9.8V6z" />
-              <path d="M12 7.2 13.6 10.6 17.3 11l-2.8 2.5.8 3.6L12 15.3l-3.3 1.8.8-3.6L6.7 11l3.7-.4z" />
-            </svg>
+            <img className="fs-emblem" src={rankBadge(START_RANK.tier)} alt="" draggable={false} />
             <i>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</i>
             <em aria-hidden="true">|</em>
             <span className="fs-val">
