@@ -816,6 +816,7 @@ export const PENDING_NOTES: string[] = [
   "Bố cục bàn đấu và lá môi trường dùng chung cho mọi môi trường, hết lệch khỏi chỗ đã chỉnh trong Tuỳ chỉnh.",
   "Bể sáng chuyển lượt: thêm dòng chảy cong theo mép viền sân, đỉnh sóng hai bên thấp hơn, dải sáng dày và rõ hơn.",
   "Bể sáng chuyển lượt làm lại theo video: gờ sáng ở đáy và hai thành, dải lụa rộng toả từ hai thành, bên đỏ đậm hơn.",
+  "Bể sáng chuyển lượt: dải lụa trong mờ chồng nhau, mép đậm hơn, phồng và nhạt chậm.",
 ];
 
 function remarkOf(notes: string[]) {

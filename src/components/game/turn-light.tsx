@@ -44,25 +44,27 @@ const TITLE_OUT = 0.45;
 /** The pool's strengths per side, measured on the video: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the silk sheets and the bottom rim, each as a strength. */
 const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; silk: number; rim: number; bank: number }> = {
   you: { haze: [0.14, 0.08, 0.03, 0], hazeDepth: 0.5, wall: 0.24, silk: 0.45, rim: 0.2, bank: 0.4 },
-  foe: { haze: [0.38, 0.35, 0.2, 0.07], hazeDepth: 1, wall: 0.03, silk: 0.5, rim: 0.1, bank: 0.25 },
+  foe: { haze: [0.2, 0.18, 0.1, 0.04], hazeDepth: 1, wall: 0.03, silk: 0.5, rim: 0.1, bank: 0.25 },
 };
 
-/** Silk sheets: which wall each starts at, how high up the wall (parts of the depth), how thick at the wall, how far across it reaches, its strength. */
-type Silk = { left: boolean; top: number; thick: number; reach: number; alpha: number; rate: number; phase: number };
-const SILKS: Record<TankSide, Silk[]> = {
+/** Ribbons of see-through silk (videos of 01/11): each starts at a wall `y` up the depth with thickness `w` (parts of the depth), slides down toward the bottom
+ *  and thins to nothing after `reach` of the width. The edges are a little denser than the middle, thin ones denser than thick ones, and each one swells
+ *  and fades over a few seconds (the blue ones about every 9 s, out of step between the walls). */
+type Ribbon = { left: boolean; y: number; w: number; reach: number; alpha: number; rate: number; phase: number };
+const RIBBONS: Record<TankSide, Ribbon[]> = {
   you: [
-    { left: true, top: 0.62, thick: 0.34, reach: 0.78, alpha: 0.34, rate: 0.11, phase: 0 },
-    { left: true, top: 0.3, thick: 0.22, reach: 0.55, alpha: 0.27, rate: 0.15, phase: 2.1 },
-    { left: false, top: 0.6, thick: 0.34, reach: 0.78, alpha: 0.34, rate: 0.12, phase: 3.3 },
-    { left: false, top: 0.3, thick: 0.22, reach: 0.5, alpha: 0.27, rate: 0.14, phase: 5 },
+    { left: true, y: 0.78, w: 0.55, reach: 0.62, alpha: 0.2, rate: 0.11, phase: 0 },
+    { left: true, y: 0.42, w: 0.26, reach: 0.46, alpha: 0.24, rate: 0.12, phase: 2.6 },
+    { left: false, y: 0.75, w: 0.5, reach: 0.66, alpha: 0.22, rate: 0.11, phase: 3.4 },
+    { left: false, y: 0.4, w: 0.24, reach: 0.5, alpha: 0.26, rate: 0.12, phase: 5.8 },
   ],
   foe: [
-    { left: true, top: 0.7, thick: 0.4, reach: 0.9, alpha: 0.44, rate: 0.1, phase: 0.5 },
-    { left: true, top: 0.45, thick: 0.3, reach: 0.7, alpha: 0.37, rate: 0.14, phase: 2.4 },
-    { left: true, top: 0.22, thick: 0.2, reach: 0.5, alpha: 0.31, rate: 0.17, phase: 4 },
-    { left: false, top: 0.7, thick: 0.4, reach: 0.9, alpha: 0.44, rate: 0.11, phase: 1.3 },
-    { left: false, top: 0.45, thick: 0.3, reach: 0.7, alpha: 0.37, rate: 0.15, phase: 3.1 },
-    { left: false, top: 0.22, thick: 0.2, reach: 0.5, alpha: 0.31, rate: 0.16, phase: 5.2 },
+    { left: true, y: 0.85, w: 0.5, reach: 0.7, alpha: 0.4, rate: 0.1, phase: 0.4 },
+    { left: true, y: 0.55, w: 0.3, reach: 0.55, alpha: 0.5, rate: 0.13, phase: 2.2 },
+    { left: true, y: 0.3, w: 0.18, reach: 0.4, alpha: 0.55, rate: 0.16, phase: 4.1 },
+    { left: false, y: 0.82, w: 0.48, reach: 0.72, alpha: 0.4, rate: 0.11, phase: 1.5 },
+    { left: false, y: 0.5, w: 0.28, reach: 0.56, alpha: 0.5, rate: 0.14, phase: 3.3 },
+    { left: false, y: 0.28, w: 0.16, reach: 0.42, alpha: 0.55, rate: 0.17, phase: 5.4 },
   ],
 };
 
@@ -265,28 +267,58 @@ export class TurnLightArt {
       ctx.fillRect(Math.min(edge, edge + inward * width * 0.02), Math.min(base, at(0.95)), width * 0.02, depth * 0.95);
     }
 
-    // Silk sheets (video of 01/11): a few wide, see-through wedges, each starting thick at a wall and thinning as it slides
-    // down toward the middle of the bottom, overlapping and swaying slowly. The red is denser than the blue.
+    // Ribbons of see-through silk: a soft fill with slightly denser edges, thinning toward the tip, swelling and fading slowly.
     const t = now;
-    SILKS[side].forEach((silk, i) => {
-      const sway = Math.sin(t * Math.PI * 2 * silk.rate + silk.phase);
-      const from = silk.left ? x0 : x1;
-      const sign = silk.left ? 1 : -1;
-      const tipX = from + sign * width * (silk.reach + 0.05 * sway);
-      const top = at(silk.top + 0.04 * sway);
-      const mouth = depth * silk.thick;
-      const tipY = at(0.04 + 0.03 * Math.sin(t * 0.9 + i));
+    const smooth = (u: number) => u * u * (3 - 2 * u);
+    RIBBONS[side].forEach((rb, i) => {
+      const swell = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2 * rb.rate + rb.phase));
+      const drift = Math.sin(t * 0.37 + rb.phase * 1.7);
+      const sign = rb.left ? 1 : -1;
+      const from = rb.left ? x0 : x1;
+      const reach = rb.reach + 0.04 * drift;
+      const yc = rb.y + 0.05 * Math.sin(t * 0.29 + i * 1.3 + rb.phase);
+      const tipV = 0.06;
+      const steps = 26;
+      const upper: Array<[number, number]> = [];
+      const lower: Array<[number, number]> = [];
+      for (let k = 0; k <= steps; k += 1) {
+        const u = k / steps;
+        const e = smooth(u);
+        const vc = yc * (1 - e) + tipV * e;
+        const half = (rb.w / 2) * Math.pow(1 - u, 0.85);
+        const x = from + sign * width * reach * u;
+        upper.push([x, at(vc + half)]);
+        lower.push([x, at(Math.max(0, vc - half))]);
+      }
+      const tipX = from + sign * width * reach;
+      // Thin ribbons are denser than thick ones.
+      const dense = rb.alpha * swell * spec.silk * (1 + Math.max(0, 0.3 - rb.w) * 1.6);
+      const along = (alpha: number, mid = 0.55) => {
+        const gr = ctx.createLinearGradient(from, 0, tipX, 0);
+        gr.addColorStop(0, rgba(tone.mid, alpha));
+        gr.addColorStop(mid, rgba(tone.mid, alpha * 0.6));
+        gr.addColorStop(1, rgba(tone.mid, 0));
+        return gr;
+      };
       ctx.beginPath();
-      ctx.moveTo(from, top);
-      ctx.bezierCurveTo(from + sign * width * 0.3, top - dir * mouth * 0.1, tipX - sign * width * 0.25, tipY + dir * mouth * 0.05, tipX, tipY);
-      ctx.bezierCurveTo(tipX - sign * width * 0.3, tipY - dir * mouth * 0.45, from + sign * width * 0.3, top - dir * mouth * 0.8, from, top - dir * mouth);
+      upper.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      for (let k = lower.length - 1; k >= 0; k -= 1) ctx.lineTo(lower[k][0], lower[k][1]);
       ctx.closePath();
-      const fill = ctx.createLinearGradient(from, 0, tipX, 0);
-      fill.addColorStop(0, rgba(tone.mid, silk.alpha * spec.silk));
-      fill.addColorStop(0.5, rgba(tone.mid, silk.alpha * 0.55 * spec.silk));
-      fill.addColorStop(1, rgba(tone.mid, 0));
-      ctx.fillStyle = fill;
+      ctx.fillStyle = along(dense);
       ctx.fill();
+      // The edges: a little denser than the middle, softened by a wider fainter stroke under a narrow one.
+      for (const edge of [upper, lower]) {
+        for (const [wide, k] of [
+          [5, 0.35],
+          [2, 0.55],
+        ] as const) {
+          ctx.beginPath();
+          edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+          ctx.strokeStyle = along(dense * k, 0.5);
+          ctx.lineWidth = wide * unit;
+          ctx.stroke();
+        }
+      }
     });
 
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
