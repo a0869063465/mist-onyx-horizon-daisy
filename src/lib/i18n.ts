@@ -394,6 +394,8 @@ const PAIRS: Array<[string, string]> = [
   ["Hiến tế 2 máu để +1 công, +1 phòng ngự và +1 máu tối đa trong giao tranh?", "Sacrifice 2 HP for +1 attack, +1 defense, and +1 max HP during this clash?"],
   ["Hiến tế", "Sacrifice"],
   ["Không", "No"],
+  ["Có", "Yes"],
+  ["Đầu hàng?", "Surrender?"],
   ["Xoá bộ này?", "Delete this deck?"],
   ["Xoá", "Delete"],
   ["Lưu bộ sưu tập", "Save deck collection"],

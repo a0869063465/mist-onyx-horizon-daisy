@@ -26,6 +26,7 @@ export function DeckPile({ count, side, ready }: { count: number; side: "you" | 
           />
         );
       })}
+      {layers > 0 ? <b className="deck-left">{count}</b> : null}
     </span>
   );
 }

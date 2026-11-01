@@ -1851,9 +1851,7 @@ function PlayPage() {
   const flightDone = (id: number) => setFlights((list) => list.filter((flight) => flight.id !== id));
   // Số lá còn trong xấp / trên tay: ẩn, chỉ hiện khi bấm (chủ game 30/10). Địch: bấm xấp hoặc khay tay bật/tắt; xấp mình: nhấp
   // đôi hiện 3 giây rồi tự mất (nhấp đơn là rút, nên rút chờ DOUBLE_TAP xem có lần bấm thứ hai không).
-  const [showFoeDeck, setShowFoeDeck] = useState(false);
-  const [showFoeHand, setShowFoeHand] = useState(false);
-  const [showMyDeck, setShowMyDeck] = useState(false);
+  const [surrenderAsk, setSurrenderAsk] = useState(false);
   const pileTap = useRef(0);
   const countTimer = useRef(0);
   const drawNow = useRef<() => void>(() => undefined);
@@ -5559,7 +5557,7 @@ function PlayPage() {
           // Xem lại trận (chủ game 31/10): lật hết bài hai bên, tay đối thủ hiện hình lá thật.
           const faces = replay ? [...foe.reserve.map((mon) => artSrc(mon.id)), ...foe.hand.map((id) => spellSrc(id))] : null;
           return (
-            <div className={`foe-fan${faces ? " is-open" : ""}`} role="button" onClick={() => setShowFoeHand((on) => !on)} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
+            <div className={`foe-fan${faces ? " is-open" : ""}`} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
               {Array.from({ length: shown }, (_, i) => {
                 const k = i - (shown - 1) / 2;
                 return <img key={i} src={faces?.[i] || "/ui/card-back-foe.webp"} alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
@@ -5652,7 +5650,7 @@ function PlayPage() {
           </div>
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
-          <div className="foe-pile" role="button" onClick={() => setShowFoeDeck((on) => !on)} style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
+          <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
             <DeckPile count={pileLeft(foe)} side="foe" />
           </div>
         )}
@@ -5664,7 +5662,8 @@ function PlayPage() {
           const gemOwner = key.startsWith("you") ? you : foe;
           if (gemKey && gemOwner.stars >= 4) return null;
           const always = orbKey || starKey || Boolean(tutView?.show?.includes(key));
-          if ((key === "foeHand" && !showFoeDeck && !tutView?.show?.includes(key)) || (key === "foeReserve" && !showFoeHand && !tutView?.show?.includes(key))) return null;
+          // Số xấp địch nay nằm dưới xấp (DeckPile); số tay bài địch luôn hiện (chủ game 01/11).
+          if (key === "foeHand") return null;
           if (marks[key].hidden || (value === 0 && !always)) return null;
           const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : tutView?.foeOrb ?? foe.orb;
           const starLit = starFlash !== null && ((starFlash === viewer && key === "youStars") || (starFlash !== viewer && key === "foeStars"));
@@ -6616,12 +6615,10 @@ function PlayPage() {
             setInspect(null);
             setAim((current) => (current?.kind === "summon" ? null : current));
             if (pileTap.current) {
-              // Nhấp đôi: chỉ hiện số lá còn lại khoảng 3 giây, không rút (chủ game 30/10).
+              // Nhấp đôi: hỏi Đầu hàng (chủ game 01/11), không rút.
               window.clearTimeout(pileTap.current);
               pileTap.current = 0;
-              setShowMyDeck(true);
-              window.clearTimeout(countTimer.current);
-              countTimer.current = window.setTimeout(() => setShowMyDeck(false), 3000);
+              if (!tutorial && !trial) setSurrenderAsk(true);
               return;
             }
             pileTap.current = window.setTimeout(() => {
@@ -6631,7 +6628,6 @@ function PlayPage() {
           }}
         >
           <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} />
-          {showMyDeck && pileLeft(you) > 0 ? <span className="deck-count">{pileLeft(you)}</span> : null}
         </button>
         )}
         <div
@@ -7126,6 +7122,28 @@ function PlayPage() {
               <button type="button" className="act press" onClick={() => setDuel(dismissGlimpse(duel))}>
                 Đóng
               </button>
+            </div>
+          </div>
+        ) : null}
+        {surrenderAsk ? (
+          <div className="overlay" onClick={() => setSurrenderAsk(false)}>
+            <div className="sheet surrender-ask" onClick={(event) => event.stopPropagation()}>
+              <h2>{tr("Đầu hàng?")}</h2>
+              <div className="pad2">
+                <button
+                  type="button"
+                  className="act press"
+                  onClick={() => {
+                    setSurrenderAsk(false);
+                    apply(concede(duel, viewer));
+                  }}
+                >
+                  {tr("Có")}
+                </button>
+                <button type="button" className="act alt press" onClick={() => setSurrenderAsk(false)}>
+                  {tr("Không")}
+                </button>
+              </div>
             </div>
           </div>
         ) : null}

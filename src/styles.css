@@ -12190,6 +12190,27 @@ button.watch-back {
   animation: deck-count-in 0.18s ease-out both;
 }
 @keyframes deck-count-in { from { opacity: 0; transform: scale(0.7); } }
+/* Số lá còn lại: ô nhỏ treo dưới cạnh đáy xấp, luôn hiện (chủ game 01/11), như "lv" dưới ảnh đại diện. */
+.deck-pile { --half: 9cqw; }
+.face-pile .deck-pile { --half: 10.1cqw; }
+.deck-left {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + var(--half));
+  transform: translate(-50%, -8%);
+  min-width: 1.5em;
+  padding: 0.12em 0.4em;
+  border-radius: 0.35em;
+  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
+  border: 0.07em solid #f4d27a;
+  box-shadow: 0 0.1em 0 #6b430c, 0 0.18em 0.3em rgba(0, 0, 0, 0.65);
+  color: #ffe9a6;
+  font-size: 3cqw;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+}
 /* Xấp của mình to hơn một chút cho dễ nhìn (xấp địch giữ 12,6cqw). */
 .face-pile .deck-pile img { width: 14.1cqw; }
 /* Chưa rút bài: viền và glow sáng quanh lá trên cùng, thở nhẹ. */
