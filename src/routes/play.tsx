@@ -3341,10 +3341,12 @@ function PlayPage() {
   const tankGeo = useMemo<Record<TankSide, TankGeo>>(() => {
     const foeBase = ry(TANK_BASE.foe, cut);
     const youBase = ry(TANK_BASE.you, cut);
-    const open = (foeBase + youBase) / 2;
+    // Sâu bằng khoảng một ô gạch ở mọi màn (chủ game 01/11, bản màn cắt trông ổn): màn đủ dài không để bể sâu cả nửa dải đá; màn
+    // bị cắt thì dải đá còn ít nên bể nông hơn thế.
+    const depth = Math.min((youBase - foeBase) / 2, rh(TANK_DEPTH, cut));
     return {
-      foe: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: foeBase, open },
-      you: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: youBase, open },
+      foe: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: foeBase, open: foeBase + depth },
+      you: { x0: TANK_WALLS[0], x1: TANK_WALLS[1], base: youBase, open: youBase - depth },
     };
   }, [cut]);
   const [turnCue, setTurnCue] = useState<TitleCue | null>(null);
@@ -7710,6 +7712,8 @@ const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
  *  toward the middle. */
 const TANK_WALLS = [0, 100] as const;
 const TANK_BASE = { foe: 40.3, you: 62.3 } as const;
+/** Độ sâu bể (phần trăm chiều cao bàn đầy đủ): khoảng một ô gạch, ~54 px trên màn rộng 390. */
+const TANK_DEPTH = 6.2;
 
 /** A board pin (Grok layout): centred on its spot, sized by width × size of the board. */
 function pinBox(spot: { x: number; y: number; width: number; height: number; size: number }): CSSProperties {

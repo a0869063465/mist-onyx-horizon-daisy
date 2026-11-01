@@ -828,6 +828,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng chuyển lượt của đối thủ đổi sang đỏ cam hợp màu sân đỏ.",
   "Lá môi trường, tường thành và kiếm không còn dồn đè nhau ở giữa sân khi màn bị cắt.",
   "Bể sáng chuyển lượt trả về kiểu dải khói từ hai thành (giữ màu đỏ cam bên địch).",
+  "Bể sáng chuyển lượt thấp bằng khoảng một ô gạch ở mọi màn.",
 ];
 
 function remarkOf(notes: string[]) {
