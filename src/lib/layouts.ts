@@ -1,4 +1,4 @@
-import { boardCut, NO_CUT, rh, ry } from "./board-cut.ts";
+import { BLUE_START, boardCut, NO_CUT, RED_END, rh, ry } from "./board-cut.ts";
 import { boardEnv, ENV_BOARDS } from "./env-boards.ts";
 export type HudKey =
   | "foeHp"
@@ -371,24 +371,37 @@ function cutLayout(layout: BoardLayout): BoardLayout {
   const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
   // Mọi ô (nút, xấp bài, lá môi trường) neo theo tâm, như màn Tuỳ chỉnh (`.tune-pin` dịch -50%, -50%).
   const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });
+  // Lá môi trường, tường thành và kiếm nằm trong dải nền sân giữa hai nửa. Khi dải bị cắt, `ry` dồn mọi điểm rơi vào đoạn bỏ đi về
+  // một chỗ nên hai lá đè lên nhau; ở đây cả dải gốc được co đều vào phần nền sân còn lại, giữ thứ tự và không ra khỏi dải.
+  const strip = (value: Spot): Spot => {
+    if (value.y <= RED_END || value.y >= BLUE_START) return spot(value);
+    const gap = BLUE_START - cut.to;
+    const t = (value.y - RED_END) / (BLUE_START - RED_END);
+    const start = cut.from - cut.top;
+    const half = value.height / 2;
+    const lo = start + half;
+    const hi = start + gap - half;
+    const mid = hi < lo ? start + gap / 2 : Math.min(hi, Math.max(lo, start + t * gap));
+    return { ...value, y: mid / cut.v, height: rh(value.height, cut) };
+  };
   return {
     marks,
     notice: box(layout.notice),
     trail: box(layout.trail),
     reaction: box(layout.reaction),
     stack: spot(layout.stack),
-    env: spot(layout.env),
-    envFoe: spot(layout.envFoe),
-    wall: spot(layout.wall),
-    wallFoe: spot(layout.wallFoe),
+    env: strip(layout.env),
+    envFoe: strip(layout.envFoe),
+    wall: strip(layout.wall),
+    wallFoe: strip(layout.wallFoe),
     actions: spot(layout.actions),
     drawMon: spot(layout.drawMon),
     drawSpell: spot(layout.drawSpell),
     endTurn: spot(layout.endTurn),
     foeFace: spot(layout.foeFace),
     youFace: spot(layout.youFace),
-    foeAtk: spot(layout.foeAtk),
-    youAtk: spot(layout.youAtk),
+    foeAtk: strip(layout.foeAtk),
+    youAtk: strip(layout.youAtk),
     foeDef: spot(layout.foeDef),
     youDef: spot(layout.youDef),
   };

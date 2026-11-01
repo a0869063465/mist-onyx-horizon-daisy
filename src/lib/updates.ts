@@ -826,6 +826,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng không còn bị dẹp thành vạch khi màn ngắn (bàn bị cắt).",
   "Bể sáng chuyển lượt: dải màu trôi theo dòng nước rồi tan, dải mới thay, không còn treo ở thành bể.",
   "Bể sáng chuyển lượt của đối thủ đổi sang đỏ cam hợp màu sân đỏ.",
+  "Lá môi trường, tường thành và kiếm không còn dồn đè nhau ở giữa sân khi màn bị cắt.",
 ];
 
 function remarkOf(notes: string[]) {
