@@ -12795,8 +12795,11 @@ button.watch-back {
 .fs-first span { justify-self: end; font-size: 0.72rem; white-space: nowrap; line-height: 1.3; color: #f1ece0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
 
 /* Huy hiệu hạng (chủ game 01/11): hồ sơ to nhất, các chỗ khác nhỏ. */
-.fp-top .fp-id { flex: none; }
-.fp-rank-badge { flex: none; width: 5.2rem; height: auto; margin: -0.3rem 0 -0.3rem -0.2rem; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55)); }
+.fp-top .fp-id { flex: none; display: grid; grid-template-columns: auto auto; grid-auto-rows: auto; column-gap: 0.5rem; align-items: center; }
+.fp-top .fp-id > h2 { grid-column: 1 / -1; }
+.fp-top .fp-id > :not(h2):not(img) { grid-column: 1; }
+/* Huy hiệu hạng thu nhỏ: cao bằng 3 hàng dưới tên (hạng, ID, trạng thái), đứng bên phải 3 hàng đó (chủ game 01/11). */
+.fp-rank-badge { grid-column: 2; grid-row: 2 / 5; align-self: stretch; justify-self: start; height: 100%; width: auto; max-height: 3.6rem; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55)); }
 /* Huy hiệu nhỏ: chừa chỗ bên phải, xếp từ trái sang phải rồi từ trên xuống dưới (chủ game 01/11). */
 .fp-top .fp-medals { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, 1.2rem); grid-auto-flow: row; gap: 0.3rem; justify-content: start; justify-items: start; align-content: start; align-self: stretch; padding-top: 0.2rem; }
 .fp-top .fp-medals b { grid-column: 1 / -1; white-space: nowrap; letter-spacing: 0.08em; }
