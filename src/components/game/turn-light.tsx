@@ -46,56 +46,59 @@ const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; 
 };
 
 /**
- * Smoke wisps (clips of 01/11, measured frame by frame): from each wall a fan of thin see-through sheets, broad where they
- * leave the wall and thinning to a thread that settles along the bottom, like smoke breathed out or silk in water. Each
- * one rolls (its two edges twist past each other, brighter where it turns edge-on), flutters with a wave running out
- * along it, sways slowly and fades in and out on its own clock, so the fan never stands still. Measured on the video:
- * pixels in the wisps change by about 3× their spread every second, most of the change near 1 Hz with a slow part at
- * 0.1–0.4 Hz.
+ * Dye carried by the water (clips of 01/11, the 20 s red clip measured frame by frame with optical flow): each pool turns
+ * slowly like a conveyor, down its left wall toward the bottom (~0.1 of the depth a second), along the bottom to the right
+ * (~0.04 of the width a second) and back up its right wall; the dense streaks ride that current and leave, they are never
+ * pinned to a wall. A streak is born at a wall, slides along its stream (from the wall curving down onto the bottom), thins
+ * as it goes and fades; a new one, on a new stream, takes its place, so the pool never repeats itself.
  */
-type Wisp = {
-  /** Where it leaves the wall (part of the depth from the bottom), how thick it is there, how far across it reaches and how low it ends. */
-  v: number;
+type Streak = {
+  /** Thickness at the wall (part of the depth), strength, length of the streak (part of its stream), its place in the cycle, the cycle in seconds, roll rate (Hz). */
   thick: number;
-  reach: number;
-  end: number;
-  /** Strength, and the phases and rates (Hz) of its slow sway, its fade and its roll. */
   alpha: number;
+  len: number;
   phase: number;
-  sway: number;
-  fade: number;
+  period: number;
   roll: number;
+  seed: number;
 };
-const WISP_COUNT: Record<TankSide, number> = { you: 5, foe: 7 };
-/** Colours: the see-through body, the brighter edges; strength; how fast it moves (the blue clip is calmer than the red). */
-const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number; speed: number }> = {
-  you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1.3, speed: 0.95 },
-  foe: { body: [232, 52, 104], edge: [255, 128, 172], alpha: 1.35, speed: 1.15 },
+const STREAK_COUNT: Record<TankSide, number> = { you: 7, foe: 10 };
+/** Seconds for a streak to ride its stream (measured: about 9–10 s from the wall to where it fades along the bottom). */
+const STREAK_PERIOD: Record<TankSide, number> = { you: 4.5, foe: 6.5 };
+/** The right wall's streaks take this part of the left's time (measured: the red drains about twice as fast as it feeds, the blue the other way). */
+const DRAIN: Record<TankSide, number> = { you: 1.3, foe: 0.45 };
+/** Colours: the see-through body, the brighter edges; strength. */
+const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number }> = {
+  you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1 },
+  foe: { body: [232, 52, 104], edge: [255, 128, 172], alpha: 1.35 },
 };
 
-/** A fixed set of wisps per wall, spread over the wall's height (lower ones shorter), drawn from a seeded source so every load looks alike. */
-function makeWisps(side: TankSide, seed: number): Wisp[] {
+/** The streaks of one wall, evenly spread over the cycle so one leaves while another arrives. */
+function makeStreaks(side: TankSide, seed: number): Streak[] {
   const rand = seeded(seed);
-  const n = WISP_COUNT[side];
-  return Array.from({ length: n }, (_, i) => {
-    const k = (i + 0.5) / n;
-    return {
-      v: 0.18 + k * 0.68 + (rand() - 0.5) * 0.08,
-      thick: 0.2 + rand() * 0.2,
-      reach: 0.22 + k * 0.26 + rand() * 0.06,
-      end: 0.03 + rand() * 0.07,
-      alpha: 0.75 + rand() * 0.35,
-      phase: rand() * Math.PI * 2,
-      sway: 0.12 + rand() * 0.2,
-      fade: 0.08 + rand() * 0.12,
-      roll: 0.24 + rand() * 0.18,
-    };
-  });
+  const n = STREAK_COUNT[side];
+  return Array.from({ length: n }, (_, i) => ({
+    thick: 0.14 + rand() * 0.14,
+    alpha: 0.7 + rand() * 0.4,
+    len: 0.6 + rand() * 0.3,
+    phase: (i + rand() * 0.6) / n,
+    period: STREAK_PERIOD[side] * (0.85 + rand() * 0.3),
+    roll: 0.2 + rand() * 0.15,
+    seed: Math.floor(rand() * 1e6),
+  }));
 }
-const WISPS: Record<TankSide, [Wisp[], Wisp[]]> = {
-  you: [makeWisps("you", 11), makeWisps("you", 23)],
-  foe: [makeWisps("foe", 37), makeWisps("foe", 41)],
+const STREAKS: Record<TankSide, [Streak[], Streak[]]> = {
+  you: [makeStreaks("you", 11), makeStreaks("you", 23)],
+  foe: [makeStreaks("foe", 37), makeStreaks("foe", 41)],
 };
+/** A number in [0, 1) from two integers: the stream a streak takes on a given trip. */
+function hash01(a: number, b: number) {
+  let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35);
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x27d4eb2d);
+  h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+}
 /** The wisps are drawn at this part of the full resolution and scaled up, which softens their edges like smoke. */
 const WISP_SCALE = 0.5;
 
@@ -111,6 +114,10 @@ type Glint = { x: number; y: number; vy: number; age: number; life: number; size
 
 const rgba = (c: Rgb, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+const smoothstep = (a: number, b: number, x: number) => {
+  const k = clamp01((x - a) / (b - a));
+  return k * k * (3 - 2 * k);
+};
 const easeOut = (x: number) => 1 - (1 - x) ** 3;
 const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
@@ -371,7 +378,7 @@ export class TurnLightArt {
     ctx.globalCompositeOperation = "source-over";
   }
 
-  /** The smoke wisps of a tank into the small smoke canvas (see `Wisp`). */
+  /** The streaks of a tank into the small smoke canvas (see `Streak`). */
   private paintWisps(side: TankSide, now: number, x0: number, width: number, at: (v: number) => number) {
     const ctx = this.smoke;
     const scale = this.dpr * WISP_SCALE;
@@ -384,82 +391,83 @@ export class TurnLightArt {
     const unit = Math.max(1, this.w / 412);
     const tone = WISP_TONE[side];
     const tau = Math.PI * 2;
-    const t = now * tone.speed;
-    const steps = 30;
-    WISPS[side].forEach((wisps, wall) => {
+    const t = now;
+    const steps = 22;
+    STREAKS[side].forEach((streaks, wall) => {
+      // The left wall feeds the current (wall -> bottom), the right wall drains it (bottom -> wall).
       const sign = wall === 0 ? 1 : -1;
       const from = wall === 0 ? x0 : x0 + width;
-      wisps.forEach((w) => {
-        const ph = w.phase;
-        const vA = w.v + 0.07 * Math.sin(tau * w.sway * t + ph);
-        const reach = w.reach + 0.05 * Math.sin(tau * w.sway * 1.7 * t + ph * 1.3);
-        const vEnd = w.end + 0.02 * Math.sin(tau * w.sway * 0.8 * t + ph * 2.1);
-        const bow = 0.06 * Math.sin(tau * w.sway * 1.3 * t + ph * 0.6);
-        const life = 0.5 + 0.5 * Math.sin(tau * w.fade * t + ph * 0.7);
-        const strength = w.alpha * tone.alpha * (0.22 + 0.78 * life * life);
-        // The spine: a cubic from the wall into the tank that settles along the bottom.
-        const p1u = reach * 0.38;
-        const p1v = vA * 0.92 + bow;
-        const p2u = reach * 0.7;
-        const p2v = vEnd + (vA - vEnd) * 0.18;
+      streaks.forEach((k) => {
+        // Measured: the two walls run at different speeds (see DRAIN).
+        const run = t / (k.period * (wall === 0 ? 1 : DRAIN[side])) + k.phase;
+        const trip = Math.floor(run);
+        const life = run - trip;
+        // Each trip takes a new stream: where it meets the wall (part of the depth) and how far along the bottom it runs.
+        const v0 = 0.2 + 0.72 * hash01(k.seed, trip);
+        const reach = 0.36 + 0.16 * hash01(k.seed + 7, trip);
+        // Measured: the current runs along the bottom as a broad band (a fifth to a third of the depth up), not hugging the rim.
+        const end = 0.12 + 0.2 * hash01(k.seed + 13, trip);
+        // Present for nearly the whole trip: in quickly, out at the very end (the right wall's streaks are seen sliding down it).
+        const strength = k.alpha * tone.alpha * smoothstep(0, 0.12, life) * (1 - smoothstep(0.82, 1, life));
+        if (strength < 0.01) return;
+        // Along the stream: s = 0 at the wall, 1 where it fades on the bottom. The head moves with the water.
+        const flow = wall === 0 ? life : 1 - life;
+        const span = k.len;
+        const head = flow * (1 + span) - (wall === 0 ? 0 : span);
+        const lo = Math.max(0, head - span);
+        const hi = Math.min(1, head);
+        if (hi - lo < 0.02) return;
+        const p1u = 0.05 + 0.08 * v0;
+        const p1v = 0.5 * v0;
+        const p2u = 0.16 + 0.18 * v0;
+        const p2v = end + 0.04;
         const upper: Array<[number, number]> = [];
         const lower: Array<[number, number]> = [];
-        const spine: Array<[number, number, number]> = [];
-        for (let k = 0; k <= steps; k += 1) {
-          const s = k / steps;
+        for (let i = 0; i <= steps; i += 1) {
+          const q = i / steps;
+          const s = lo + (hi - lo) * q;
           const m = 1 - s;
           const u = 3 * m * m * s * p1u + 3 * m * s * s * p2u + s * s * s * reach;
-          let v = m * m * m * vA + 3 * m * m * s * p1v + 3 * m * s * s * p2v + s * s * s * vEnd;
-          // A flutter running out along it, growing toward the loose end.
-          v += 0.04 * s * Math.sin(tau * 1.2 * s - tau * w.roll * 0.7 * t + ph);
-          // Its roll: the sheet turns slowly, thinning as it goes edge on (its edges never cross, which reads as string).
-          const turn = 0.62 + 0.38 * Math.cos(tau * 0.85 * s - tau * w.roll * t + ph * 2);
-          const half = (w.thick / 2) * Math.pow(m, 1.1) * (0.85 + 0.15 * Math.sin(tau * 2.2 * s - tau * 0.45 * t + ph)) + 0.004;
+          let v = m * m * m * v0 + 3 * m * m * s * p1v + 3 * m * s * s * p2v + s * s * s * end;
+          // The water is not still: a slow sway across the stream.
+          v += 0.025 * Math.sin(tau * (1.1 * s - 0.25 * t * sign) + k.seed);
+          const taper = Math.pow(Math.sin(Math.PI * q), 0.7);
+          const turn = 0.62 + 0.38 * Math.cos(tau * (0.85 * s - k.roll * t * sign) + k.seed);
+          const half = (k.thick / 2) * (1 - 0.65 * s) * taper * turn + 0.003;
           const x = from + sign * width * u;
-          upper.push([x, at(Math.max(0, v + half * turn))]);
-          lower.push([x, at(Math.max(0, v - half * turn))]);
-          spine.push([x, at(Math.max(0, v)), Math.abs(turn)]);
+          upper.push([x, at(Math.max(0, v + half))]);
+          lower.push([x, at(Math.max(0, v - half))]);
         }
-        const tipX = from + sign * width * reach;
+        // Fading as it nears the end of its stream.
+        const fadeEnd = wall === 0 ? 1 - Math.max(0, (hi - 0.7) / 0.3) * 0.7 : 1;
+        const a = strength * fadeEnd;
+        const x1 = upper[0][0];
+        const x2 = upper[upper.length - 1][0];
         const along = (rgb: Rgb, alpha: number) => {
-          const gr = ctx.createLinearGradient(from, 0, tipX, 0);
-          gr.addColorStop(0, rgba(rgb, alpha * 0.7));
-          gr.addColorStop(0.18, rgba(rgb, alpha));
-          gr.addColorStop(0.6, rgba(rgb, alpha * 0.6));
+          const gr = ctx.createLinearGradient(x1, 0, x2 === x1 ? x1 + 1 : x2, 0);
+          gr.addColorStop(0, rgba(rgb, 0));
+          gr.addColorStop(0.2, rgba(rgb, alpha));
+          gr.addColorStop(0.75, rgba(rgb, alpha));
           gr.addColorStop(1, rgba(rgb, 0));
           return gr;
         };
-        // The see-through body.
         ctx.beginPath();
-        upper.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-        for (let k = lower.length - 1; k >= 0; k -= 1) ctx.lineTo(lower[k][0], lower[k][1]);
+        upper.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        for (let n = lower.length - 1; n >= 0; n -= 1) ctx.lineTo(lower[n][0], lower[n][1]);
         ctx.closePath();
-        ctx.fillStyle = along(tone.body, 0.55 * strength);
+        ctx.fillStyle = along(tone.body, 0.55 * a);
         ctx.fill();
-        // The edges, denser than the body: a soft wide stroke under a fine one.
         for (const edge of [upper, lower]) {
-          for (const [wide, k] of [
+          for (const [wide, w] of [
             [7, 0.22],
             [3, 0.45],
           ] as const) {
             ctx.beginPath();
             edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-            ctx.strokeStyle = along(tone.edge, k * strength);
+            ctx.strokeStyle = along(tone.edge, w * a);
             ctx.lineWidth = wide * unit;
             ctx.stroke();
           }
-        }
-        // Where it turns edge on, a short dense streak along the spine.
-        for (let k = 1; k < spine.length; k += 1) {
-          const edgeOn = 1 - Math.min(spine[k][2], spine[k - 1][2]);
-          if (edgeOn < 0.5) continue;
-          const fadeOut = 1 - k / spine.length;
-          ctx.beginPath();
-          ctx.moveTo(spine[k - 1][0], spine[k - 1][1]);
-          ctx.lineTo(spine[k][0], spine[k][1]);
-          ctx.strokeStyle = rgba(tone.edge, ((edgeOn - 0.5) / 0.26) * 0.35 * strength * fadeOut);
-          ctx.lineWidth = 6 * unit;
-          ctx.stroke();
         }
       });
     });
