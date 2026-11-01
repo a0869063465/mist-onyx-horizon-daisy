@@ -2940,7 +2940,9 @@ function PlayPage() {
     const pendingChanged = duel.pending !== prev.pending;
     const armingGun = Boolean(duel.reel?.kind === "gun" && !prev.reel);
     const started = pendingChanged && duel.pending ? shotLook(duel, duel.pending) : null;
-    const finished = pendingChanged && !duel.pending && !armingGun ? shotLook(prev, prev.pending) : null;
+    // A skill stopped by Phục kích never goes off: no fire on the target (chủ game 01/11).
+    const stopped = Boolean(prev.hold?.ambush) || /Phục kích[^.]*chặn kỹ năng|chặn kỹ năng/.test(said);
+    const finished = pendingChanged && !duel.pending && !armingGun && !stopped ? shotLook(prev, prev.pending) : null;
     const stamped = !started && !finished && duel.skill && duel.fx !== prev.fx ? skillLook(duel.skill.id, duel.skill.index) : null;
     const fromSpell = spent ? spellFxLook(spent) : null;
     const boomSpell = prev.pending?.kind === "spell" && duel.pending?.kind !== "spell" ? prev.pending.cardId : "";
