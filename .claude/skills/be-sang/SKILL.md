@@ -22,3 +22,8 @@ Xanh: cạnh phẳng ~62,5%, bo xuống ~2,2% trong ~6% bề ngang. Đỏ: phẳ
 
 ## Thử
 `/tmp/clashtest/tank.mjs` (xanh, Test), `red.mjs` (đỏ, lượt máy). 390x844 và 390x740. Chụp cạnh khung video cùng mốc.
+
+## Số đo (01/11, khung 30 khung/giây, thước `blue = b - max(r,g)`, `red = r - max(g,b)`)
+Video: bể xanh đứng yên: thành đỉnh ~70 (sáng ~8 px, tàn ~20 px trên dải rộng ~470 px), đáy đỉnh ~47 (tăng dần từ ~45% độ sâu lên tới đáy), nội thất ~4-9; lúc mới bật thành ~78, đáy ~92. Màu đỉnh xanh (96,136,235). Bể đỏ: nội thất ~50, thành ~65, hàng sát đáy ~92 giảm về ~10 ở đầu hở; màu đỉnh (243,66,60); đặc hơn xanh khoảng 6-10 lần.
+Game sau T2e (cùng thước, vẽ canvas lên nền (165,160,135), vùng bể): xanh thành 74, đáy 43, nội thất 3,4; đỏ thành 79, đáy 97, nội thất 48. Hằng số trong `POOL` (turn-light.tsx). Kiểm: `/tmp/clashtest/meas.mjs` (mất khi hết phiên: dựng canvas lên nền xám, tính thước trên vùng bể, so với số trên).
+Hình: bể LoR nằm trong dải đá dưới sân; thành sáng dọc, đáy nhô nhẹ, dải lụa 2 tấm mỗi thành nghiêng ~24° xuống giữa đáy.

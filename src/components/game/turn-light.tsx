@@ -40,7 +40,12 @@ const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
 /** The ribbons and their fibres are this much of their first strength (chủ game 30/10: paler, so they do not pull the eye). */
-const PALE = 0.75;
+
+/** The pool's strengths per side, measured on the video: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the silk sheets and the bottom rim, each as a strength. */
+const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; silk: number; rim: number; bank: number }> = {
+  you: { haze: [0.14, 0.08, 0.03, 0], hazeDepth: 0.5, wall: 0.24, silk: 0.45, rim: 0.2, bank: 0.4 },
+  foe: { haze: [0.38, 0.35, 0.2, 0.07], hazeDepth: 1, wall: 0.03, silk: 0.5, rim: 0.1, bank: 0.25 },
+};
 
 /** Silk sheets: which wall each starts at, how high up the wall (parts of the depth), how thick at the wall, how far across it reaches, its strength. */
 type Silk = { left: boolean; top: number; thick: number; reach: number; alpha: number; rate: number; phase: number };
@@ -222,14 +227,14 @@ export class TurnLightArt {
     ctx.lineJoin = "round";
     const unit = Math.max(1, this.w / 412);
 
-    // The water: a glow rising off the bottom, thinning toward the open end and softly toward each wall (no edge).
-    const haze = ctx.createLinearGradient(0, base, 0, at(0.8));
-    haze.addColorStop(0, rgba(tone.mid, 0.42 * tone.gain));
-    haze.addColorStop(0.3, rgba(tone.mid, 0.2 * tone.gain));
-    haze.addColorStop(0.7, rgba(tone.mid, 0.06 * tone.gain));
-    haze.addColorStop(1, rgba(tone.mid, 0));
+    // Measured on the LoR video (01/11, see skill be-sang): the blue pool is nearly empty inside (mean ~4 of 100) with a bright edge down
+    // each wall (peak ~70) and a haze rising off the bottom (peak ~47, gone by ~45% of the depth); the red one is filled from the bottom
+    // (peak ~92 falling to ~10 at the open end, mean ~50) with a wall only a little brighter than its fill.
+    const spec = POOL[side];
+    const haze = ctx.createLinearGradient(0, base, 0, at(spec.hazeDepth));
+    spec.haze.forEach((alpha, i) => haze.addColorStop(i / (spec.haze.length - 1), rgba(tone.mid, alpha)));
     ctx.fillStyle = haze;
-    ctx.fillRect(x0, Math.min(base, at(0.8)), width, depth * 0.8);
+    ctx.fillRect(x0, Math.min(base, at(spec.hazeDepth)), width, depth * spec.hazeDepth);
     // The bottom runs on from the edge of the side's area with no gap: a band of the colour along it (chủ game 30/10).
     const [bankDepth, bankAlpha, bankLead] = tone.bank;
     const behind = base - dir * depth * bankLead;
@@ -237,17 +242,32 @@ export class TurnLightArt {
     const span = depth * (bankDepth + bankLead);
     const lead = (depth * bankLead) / span;
     if (lead > 0) bank.addColorStop(0, rgba(tone.mid, 0));
-    bank.addColorStop(lead, rgba(tone.mid, bankAlpha));
-    bank.addColorStop(lead + (1 - lead) * 0.5, rgba(tone.mid, bankAlpha * 0.6));
+    bank.addColorStop(lead, rgba(tone.mid, bankAlpha * spec.bank));
+    bank.addColorStop(lead + (1 - lead) * 0.5, rgba(tone.mid, bankAlpha * spec.bank * 0.6));
     bank.addColorStop(1, rgba(tone.mid, 0));
     ctx.fillStyle = bank;
     ctx.fillRect(x0, Math.min(behind, at(bankDepth)), width, span);
-    ctx.globalCompositeOperation = "source-over";
+    // The walls: a bright edge (about 2% of the width) with a soft glow (about 4.5%) fading toward the inside.
+    for (const [edge, inward] of [
+      [x0, 1],
+      [x1, -1],
+    ] as const) {
+      const glow = ctx.createLinearGradient(edge, 0, edge + inward * width * 0.045, 0);
+      glow.addColorStop(0, rgba(tone.mid, spec.wall));
+      glow.addColorStop(0.45, rgba(tone.mid, spec.wall * 0.7));
+      glow.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = glow;
+      ctx.fillRect(Math.min(edge, edge + inward * width * 0.045), Math.min(base, at(0.95)), width * 0.045, depth * 0.95);
+      const hot = ctx.createLinearGradient(edge, 0, edge + inward * width * 0.02, 0);
+      hot.addColorStop(0, rgba(tone.mid, Math.min(1, spec.wall * 1.15)));
+      hot.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = hot;
+      ctx.fillRect(Math.min(edge, edge + inward * width * 0.02), Math.min(base, at(0.95)), width * 0.02, depth * 0.95);
+    }
 
     // Silk sheets (video of 01/11): a few wide, see-through wedges, each starting thick at a wall and thinning as it slides
     // down toward the middle of the bottom, overlapping and swaying slowly. The red is denser than the blue.
     const t = now;
-    const lean = side === "foe" ? 1.7 : 1;
     SILKS[side].forEach((silk, i) => {
       const sway = Math.sin(t * Math.PI * 2 * silk.rate + silk.phase);
       const from = silk.left ? x0 : x1;
@@ -262,8 +282,8 @@ export class TurnLightArt {
       ctx.bezierCurveTo(tipX - sign * width * 0.3, tipY - dir * mouth * 0.45, from + sign * width * 0.3, top - dir * mouth * 0.8, from, top - dir * mouth);
       ctx.closePath();
       const fill = ctx.createLinearGradient(from, 0, tipX, 0);
-      fill.addColorStop(0, rgba(tone.mid, silk.alpha * lean * PALE * tone.gain));
-      fill.addColorStop(0.5, rgba(tone.mid, silk.alpha * 0.55 * lean * PALE * tone.gain));
+      fill.addColorStop(0, rgba(tone.mid, silk.alpha * spec.silk));
+      fill.addColorStop(0.5, rgba(tone.mid, silk.alpha * 0.55 * spec.silk));
       fill.addColorStop(1, rgba(tone.mid, 0));
       ctx.fillStyle = fill;
       ctx.fill();
@@ -275,7 +295,6 @@ export class TurnLightArt {
       const lift = this.h * EDGE_DIP;
       const wall = base - dir * lift;
       const corner = width * EDGE_CORNER[side];
-      const strong = side === "foe" ? 1.5 : 1;
       const flat = base + 0.0025 * this.h * Math.sin(now * 1.3);
       const rim = (up: number) => {
         ctx.beginPath();
@@ -293,13 +312,13 @@ export class TurnLightArt {
         [-dir * 2, 5, 0.7],
       ] as const) {
         rim(up * unit);
-        ctx.strokeStyle = rgba(tone.mid, alpha * strong * tone.gain);
+        ctx.strokeStyle = rgba(tone.mid, alpha * spec.rim);
         ctx.lineWidth = line * unit;
         ctx.stroke();
       }
       ctx.globalCompositeOperation = "lighter";
       rim(-dir * 2 * unit);
-      ctx.strokeStyle = rgba(tone.core, 0.45 * tone.gain);
+      ctx.strokeStyle = rgba(tone.core, 0.3 * spec.rim);
       ctx.lineWidth = 2 * unit;
       ctx.stroke();
       ctx.globalCompositeOperation = "source-over";
