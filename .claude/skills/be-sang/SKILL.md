@@ -41,3 +41,11 @@ Cách đo: tách khung video bằng ffmpeg rawvideo 30 khung/giây; game: gọi 
 
 ## Dòng chảy (T2k, 01/11, clip đỏ 20 s)
 Dải KHÔNG neo ở thành: cả bể là một dòng vòng, dọc thành trái chảy về đáy, dọc đáy sang phải, rời thành phải; dải đậm bị cuốn theo rồi tan, dải mới thay. Đo bằng tương quan dịch chuyển theo hàng (ngang) và cột (dọc) trên phần đổi (trừ trung bình theo thời gian): đỏ trái −0,05 độ sâu/s, phải +0,10, đáy +0,02..0,05 bề ngang/s; xanh trái −0,08, phải +0,04. Chu kỳ một chuyến ~9 s. Dải đi dọc đáy ở cao 0,12–0,32 độ sâu (không sát mép).
+
+## Nước bằng video (T2l, 01/11)
+
+Chủ game gửi video Grok `91cc8e9c` (dải lụa đỏ trên nền đen, 1168×784, 24 hình/giây, 15 s, khung đầu và cuối lệch trung bình 1,7/255 nên lặp liền). Nước trong bể giờ là chính video đó, không còn vẽ bằng code:
+- Dải nằm ở hàng 354–551; cắt 352–556, thu 780×136; mép sáng dưới cùng (đáy) ở hàng ~128 của bản thu.
+- Độ trong = độ sáng lớn nhất / 200; màu = màu gốc đẩy lên đủ sáng. Bản xanh: B = đỏ gốc, G = 0,42·đỏ + G, R = 0,12·đỏ + G.
+- `paintFilm` (turn-light.tsx) kéo khung video phủ bề ngang bể, hàng 128 về đáy, hàng 0 về miệng; bể đỏ lật dọc. Độ đậm `POOL.film`.
+- Làm lại file: script trong TIEP-TUC (mục T2l) mô tả các bước; dùng `ffmpeg -c:v libvpx-vp9 -pix_fmt yuva420p`.
