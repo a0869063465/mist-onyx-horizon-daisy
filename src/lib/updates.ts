@@ -825,7 +825,6 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng chuyển lượt: dải khói mềm từ hai thành toả về đáy, trôi và xoắn liên tục.",
   "Bể sáng không còn bị dẹp thành vạch khi màn ngắn (bàn bị cắt).",
   "Bể sáng chuyển lượt: dải màu trôi theo dòng nước rồi tan, dải mới thay, không còn treo ở thành bể.",
-  "Bể sáng chuyển lượt: nước trong bể là dải lụa chuyển động theo video mới.",
 ];
 
 function remarkOf(notes: string[]) {

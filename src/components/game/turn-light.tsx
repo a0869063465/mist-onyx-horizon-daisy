@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { fxUrl } from "@/lib/preload";
 
 /*
  * Dòng sáng của bên đang có lượt (chủ game 28/10, theo video Runeterra): mỗi bên như một bể cá dựng ở giữa sân. Đáy là
@@ -20,10 +19,12 @@ export type TankGeo = { x0: number; x1: number; base: number; open: number };
 export type TitleCue = { id: number; kind: "turn" | "round"; lines: string[] };
 
 type Rgb = [number, number, number];
-/** The colour of the walls and rim, and of the white cores laid over them. */
-const TONE: Record<TankSide, { mid: Rgb; core: Rgb }> = {
-  foe: { mid: [228, 40, 78], core: [255, 205, 218] },
-  you: { mid: [30, 105, 240], core: [205, 228, 255] },
+/** `gain`: how much stronger its water and ribbons show; `bank`: the band along the bottom, its depth in parts of the tank,
+ *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
+ *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
+const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
+  foe: { mid: [228, 40, 78], core: [255, 205, 218], gain: 1.2, bank: [0.34, 0.75, 0.14] },
+  you: { mid: [30, 105, 240], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
 /** Seconds: the sparkles before the light, its run across the tank, its fade, and the gap before the new side starts. */
@@ -38,22 +39,68 @@ const TITLE_IN = 0.24;
 const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
-/** The pool's strengths per side: the wall edge, the bottom rim, the deep corners and the filmed water inside. */
-const POOL: Record<TankSide, { wall: number; rim: number; corner: number; film: number }> = {
-  you: { wall: 0.6, rim: 0.5, corner: 0.35, film: 1 },
-  foe: { wall: 0.45, rim: 0.4, corner: 0.45, film: 1 },
+/** The pool's strengths per side: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the bottom rim and the bank. */
+const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; rim: number; bank: number; corner: number }> = {
+  you: { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, rim: 0.5, bank: 0.7, corner: 0.45 },
+  foe: { haze: [0.4, 0.22, 0.07, 0], hazeDepth: 0.75, wall: 0.45, rim: 0.4, bank: 0.5, corner: 0.6 },
 };
 
 /**
- * The water inside the tank is a filmed loop (chủ game 01/11, Grok video 91cc8e9c, 15 s, loops on itself): a band of red silk
- * on black, cut to the band (rows 352–556 of 1168×784), its brightness turned into see-through (alpha = brightness / 200)
- * and, for the blue tank, the red turned to blue. Its bottom edge (the bright line) sits on the tank's bottom, its top on
- * the open end; the red tank shows it upside down.
+ * Dye carried by the water (clips of 01/11, the 20 s red clip measured frame by frame with optical flow): each pool turns
+ * slowly like a conveyor, down its left wall toward the bottom (~0.1 of the depth a second), along the bottom to the right
+ * (~0.04 of the width a second) and back up its right wall; the dense streaks ride that current and leave, they are never
+ * pinned to a wall. A streak is born at a wall, slides along its stream (from the wall curving down onto the bottom), thins
+ * as it goes and fades; a new one, on a new stream, takes its place, so the pool never repeats itself.
  */
-const FILM: Record<TankSide, string> = { you: "/ui/tank-blue.webm?v=1", foe: "/ui/tank-red.webm?v=1" };
-/** Where the film's band sits in its own frame (136 rows): the open end at the top, the tank's bottom at this row. */
-const FILM_ROWS = 136;
-const FILM_BASE = 128;
+type Streak = {
+  /** Thickness at the wall (part of the depth), strength, length of the streak (part of its stream), its place in the cycle, the cycle in seconds, roll rate (Hz). */
+  thick: number;
+  alpha: number;
+  len: number;
+  phase: number;
+  period: number;
+  roll: number;
+  seed: number;
+};
+const STREAK_COUNT: Record<TankSide, number> = { you: 7, foe: 10 };
+/** Seconds for a streak to ride its stream (measured: about 9–10 s from the wall to where it fades along the bottom). */
+const STREAK_PERIOD: Record<TankSide, number> = { you: 4.5, foe: 6.5 };
+/** The right wall's streaks take this part of the left's time (measured: the red drains about twice as fast as it feeds, the blue the other way). */
+const DRAIN: Record<TankSide, number> = { you: 1.3, foe: 0.45 };
+/** Colours: the see-through body, the brighter edges; strength. */
+const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number }> = {
+  you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1 },
+  foe: { body: [232, 52, 104], edge: [255, 128, 172], alpha: 1.35 },
+};
+
+/** The streaks of one wall, evenly spread over the cycle so one leaves while another arrives. */
+function makeStreaks(side: TankSide, seed: number): Streak[] {
+  const rand = seeded(seed);
+  const n = STREAK_COUNT[side];
+  return Array.from({ length: n }, (_, i) => ({
+    thick: 0.14 + rand() * 0.14,
+    alpha: 0.7 + rand() * 0.4,
+    len: 0.6 + rand() * 0.3,
+    phase: (i + rand() * 0.6) / n,
+    period: STREAK_PERIOD[side] * (0.85 + rand() * 0.3),
+    roll: 0.2 + rand() * 0.15,
+    seed: Math.floor(rand() * 1e6),
+  }));
+}
+const STREAKS: Record<TankSide, [Streak[], Streak[]]> = {
+  you: [makeStreaks("you", 11), makeStreaks("you", 23)],
+  foe: [makeStreaks("foe", 37), makeStreaks("foe", 41)],
+};
+/** A number in [0, 1) from two integers: the stream a streak takes on a given trip. */
+function hash01(a: number, b: number) {
+  let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35);
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x27d4eb2d);
+  h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+}
+/** The wisps are drawn at this part of the full resolution and scaled up, which softens their edges like smoke. */
+const WISP_SCALE = 0.5;
 
 /** The court's edge on the new board (measured on board-full.jpg): flat across, then rounding away from the open end at each wall, by this much of the board's height. */
 const EDGE_DIP = 0.022;
@@ -91,7 +138,7 @@ export class TurnLightArt {
   private light: CanvasRenderingContext2D;
   private title: CanvasRenderingContext2D;
   private layer: Record<TankSide, CanvasRenderingContext2D>;
-  private films: Partial<Record<TankSide, HTMLVideoElement>> = {};
+  private smoke: CanvasRenderingContext2D;
   private tanks: Record<TankSide, Tank> = { foe: { mode: "off", at: 0 }, you: { mode: "off", at: 0 } };
   private sparks: Spark[] = [];
   private glints: Glint[] = [];
@@ -116,6 +163,7 @@ export class TurnLightArt {
       return canvas.getContext("2d")!;
     };
     this.layer = { foe: own(), you: own() };
+    this.smoke = own();
   }
 
   resize(w: number, h: number, dpr: number) {
@@ -126,6 +174,8 @@ export class TurnLightArt {
       ctx.canvas.width = Math.round(this.w * dpr);
       ctx.canvas.height = Math.round(this.h * dpr);
     }
+    this.smoke.canvas.width = Math.max(1, Math.round(this.w * dpr * WISP_SCALE));
+    this.smoke.canvas.height = Math.max(1, Math.round(this.h * dpr * WISP_SCALE));
   }
 
   /** Who holds the turn now; `instant` shows it without the hand-over (a page opened mid-match). */
@@ -221,9 +271,26 @@ export class TurnLightArt {
     ctx.lineJoin = "round";
     const unit = Math.max(1, this.w / 412);
 
+    // Measured on the LoR video (01/11, see skill be-sang): the blue pool is nearly empty inside (mean ~4 of 100) with a bright edge down
+    // each wall (peak ~70) and a haze rising off the bottom (peak ~47, gone by ~45% of the depth); the red one is filled from the bottom
+    // (peak ~92 falling to ~10 at the open end, mean ~50) with a wall only a little brighter than its fill.
     const spec = POOL[side];
-    this.paintFilm(side, ctx, x0, width, base, dir, depth, spec.film);
-
+    const haze = ctx.createLinearGradient(0, base, 0, at(spec.hazeDepth));
+    spec.haze.forEach((alpha, i) => haze.addColorStop(i / (spec.haze.length - 1), rgba(tone.mid, alpha)));
+    ctx.fillStyle = haze;
+    ctx.fillRect(x0, Math.min(base, at(spec.hazeDepth)), width, depth * spec.hazeDepth);
+    // The bottom runs on from the edge of the side's area with no gap: a band of the colour along it (chủ game 30/10).
+    const [bankDepth, bankAlpha, bankLead] = tone.bank;
+    const behind = base - dir * depth * bankLead;
+    const bank = ctx.createLinearGradient(0, behind, 0, at(bankDepth));
+    const span = depth * (bankDepth + bankLead);
+    const lead = (depth * bankLead) / span;
+    if (lead > 0) bank.addColorStop(0, rgba(tone.mid, 0));
+    bank.addColorStop(lead, rgba(tone.mid, bankAlpha * spec.bank));
+    bank.addColorStop(lead + (1 - lead) * 0.5, rgba(tone.mid, bankAlpha * spec.bank * 0.6));
+    bank.addColorStop(1, rgba(tone.mid, 0));
+    ctx.fillStyle = bank;
+    ctx.fillRect(x0, Math.min(behind, at(bankDepth)), width, span);
     // The walls: a bright edge (about 2% of the width) with a soft glow (about 4.5%) fading toward the inside.
     for (const [edge, inward] of [
       [x0, 1],
@@ -252,6 +319,11 @@ export class TurnLightArt {
       ctx.fillStyle = g;
       ctx.fillRect(cx - r, Math.min(base, at(1)), r * 2, depth);
     }
+
+    // Smoke wisps from both walls, drawn small and scaled up so their edges are soft.
+    this.paintWisps(side, now, x0, width, at);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(this.smoke.canvas, 0, 0, this.w, this.h);
 
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
     // covers the gold (the bottom keeps to the court's edge; the top is open).
@@ -306,31 +378,99 @@ export class TurnLightArt {
     ctx.globalCompositeOperation = "source-over";
   }
 
-  /** The filmed water (see `FILM`): its bottom row on the tank's bottom, its top on the open end, across the whole width. */
-  private paintFilm(side: TankSide, ctx: CanvasRenderingContext2D, x0: number, width: number, base: number, dir: number, depth: number, strength: number) {
-    if (typeof document === "undefined") return;
-    let film = this.films[side];
-    if (!film) {
-      film = document.createElement("video");
-      film.src = fxUrl(FILM[side]);
-      film.muted = true;
-      film.loop = true;
-      film.playsInline = true;
-      film.preload = "auto";
-      film.setAttribute("muted", "");
-      film.setAttribute("playsinline", "");
-      this.films[side] = film;
-    }
-    if (film.paused) void film.play().catch(() => undefined);
-    if (film.readyState < 2) return;
-    const scale = depth / FILM_BASE;
-    ctx.save();
-    ctx.globalAlpha = strength;
-    // From the film's row 0 (open end) to its bottom row: y grows toward the bottom for the blue tank, away from it for the red.
-    ctx.translate(x0, base + dir * depth);
-    ctx.scale(1, -dir * scale);
-    ctx.drawImage(film, 0, 0, width, FILM_ROWS);
-    ctx.restore();
+  /** The streaks of a tank into the small smoke canvas (see `Streak`). */
+  private paintWisps(side: TankSide, now: number, x0: number, width: number, at: (v: number) => number) {
+    const ctx = this.smoke;
+    const scale = this.dpr * WISP_SCALE;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const unit = Math.max(1, this.w / 412);
+    const tone = WISP_TONE[side];
+    const tau = Math.PI * 2;
+    const t = now;
+    const steps = 22;
+    STREAKS[side].forEach((streaks, wall) => {
+      // The left wall feeds the current (wall -> bottom), the right wall drains it (bottom -> wall).
+      const sign = wall === 0 ? 1 : -1;
+      const from = wall === 0 ? x0 : x0 + width;
+      streaks.forEach((k) => {
+        // Measured: the two walls run at different speeds (see DRAIN).
+        const run = t / (k.period * (wall === 0 ? 1 : DRAIN[side])) + k.phase;
+        const trip = Math.floor(run);
+        const life = run - trip;
+        // Each trip takes a new stream: where it meets the wall (part of the depth) and how far along the bottom it runs.
+        const v0 = 0.2 + 0.72 * hash01(k.seed, trip);
+        const reach = 0.36 + 0.16 * hash01(k.seed + 7, trip);
+        // Measured: the current runs along the bottom as a broad band (a fifth to a third of the depth up), not hugging the rim.
+        const end = 0.12 + 0.2 * hash01(k.seed + 13, trip);
+        // Present for nearly the whole trip: in quickly, out at the very end (the right wall's streaks are seen sliding down it).
+        const strength = k.alpha * tone.alpha * smoothstep(0, 0.12, life) * (1 - smoothstep(0.82, 1, life));
+        if (strength < 0.01) return;
+        // Along the stream: s = 0 at the wall, 1 where it fades on the bottom. The head moves with the water.
+        const flow = wall === 0 ? life : 1 - life;
+        const span = k.len;
+        const head = flow * (1 + span) - (wall === 0 ? 0 : span);
+        const lo = Math.max(0, head - span);
+        const hi = Math.min(1, head);
+        if (hi - lo < 0.02) return;
+        const p1u = 0.05 + 0.08 * v0;
+        const p1v = 0.5 * v0;
+        const p2u = 0.16 + 0.18 * v0;
+        const p2v = end + 0.04;
+        const upper: Array<[number, number]> = [];
+        const lower: Array<[number, number]> = [];
+        for (let i = 0; i <= steps; i += 1) {
+          const q = i / steps;
+          const s = lo + (hi - lo) * q;
+          const m = 1 - s;
+          const u = 3 * m * m * s * p1u + 3 * m * s * s * p2u + s * s * s * reach;
+          let v = m * m * m * v0 + 3 * m * m * s * p1v + 3 * m * s * s * p2v + s * s * s * end;
+          // The water is not still: a slow sway across the stream.
+          v += 0.025 * Math.sin(tau * (1.1 * s - 0.25 * t * sign) + k.seed);
+          const taper = Math.pow(Math.sin(Math.PI * q), 0.7);
+          const turn = 0.62 + 0.38 * Math.cos(tau * (0.85 * s - k.roll * t * sign) + k.seed);
+          const half = (k.thick / 2) * (1 - 0.65 * s) * taper * turn + 0.003;
+          const x = from + sign * width * u;
+          upper.push([x, at(Math.max(0, v + half))]);
+          lower.push([x, at(Math.max(0, v - half))]);
+        }
+        // Fading as it nears the end of its stream.
+        const fadeEnd = wall === 0 ? 1 - Math.max(0, (hi - 0.7) / 0.3) * 0.7 : 1;
+        const a = strength * fadeEnd;
+        const x1 = upper[0][0];
+        const x2 = upper[upper.length - 1][0];
+        const along = (rgb: Rgb, alpha: number) => {
+          const gr = ctx.createLinearGradient(x1, 0, x2 === x1 ? x1 + 1 : x2, 0);
+          gr.addColorStop(0, rgba(rgb, 0));
+          gr.addColorStop(0.2, rgba(rgb, alpha));
+          gr.addColorStop(0.75, rgba(rgb, alpha));
+          gr.addColorStop(1, rgba(rgb, 0));
+          return gr;
+        };
+        ctx.beginPath();
+        upper.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        for (let n = lower.length - 1; n >= 0; n -= 1) ctx.lineTo(lower[n][0], lower[n][1]);
+        ctx.closePath();
+        ctx.fillStyle = along(tone.body, 0.55 * a);
+        ctx.fill();
+        for (const edge of [upper, lower]) {
+          for (const [wide, w] of [
+            [7, 0.22],
+            [3, 0.45],
+          ] as const) {
+            ctx.beginPath();
+            edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+            ctx.strokeStyle = along(tone.edge, w * a);
+            ctx.lineWidth = wide * unit;
+            ctx.stroke();
+          }
+        }
+      });
+    });
   }
 
   /** Sparkles: a few before the light comes in, many at its head as it runs, a few drifting while it stays. */

@@ -60,8 +60,6 @@ export const FX_VIDEOS = [
   "/fx/hien-te-vong.mp4?v=2",
   "/ui/atk-you.webm?v=1",
   "/ui/atk-foe.webm?v=1",
-  "/ui/tank-blue.webm?v=1",
-  "/ui/tank-red.webm?v=1",
 ];
 
 const CORE_PICTURES = [
