@@ -19,12 +19,38 @@ export type TankGeo = { x0: number; x1: number; base: number; open: number };
 export type TitleCue = { id: number; kind: "turn" | "round"; lines: string[] };
 
 type Rgb = [number, number, number];
+/**
+ * Every colour of a tank comes from the colour of its own field (chủ game 01/11: "xanh phát triển sao thì đỏ như vậy"): the
+ * same hue and saturation as the floor, the water at the floor's own lightness, the wisps (the waves) lighter, their edges
+ * lighter again and the cores of the light runs nearly white. Measured on board-full.jpg (hue°, saturation %, lightness %).
+ */
+const FIELD_HSL: Record<TankSide, [number, number, number]> = { you: [215, 99, 47], foe: [6, 92, 40] };
+function hslRgb(h: number, s: number, l: number): Rgb {
+  const sat = Math.max(0, Math.min(1, s / 100));
+  const light = Math.max(0, Math.min(1, l / 100));
+  const a = sat * Math.min(light, 1 - light);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (light - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+  };
+  return [f(0), f(8), f(4)];
+}
+function fieldTone(side: TankSide) {
+  const [h, s, l] = FIELD_HSL[side];
+  return {
+    mid: hslRgb(h, s, l + 2),
+    body: hslRgb(h, s, l + 12),
+    edge: hslRgb(h, s, l + 24),
+    core: hslRgb(h, 100, l + 42),
+  };
+}
 /** `gain`: how much stronger its water and ribbons show; `bank`: the band along the bottom, its depth in parts of the tank,
- *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
- *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
+ *  its strength and how far it feathers out behind the bottom into the field's own colour. The red tank is the blue one
+ *  turned over (chủ game 01/11), so both take the blue's numbers. */
+const BLUE_BANK: [number, number, number] = [0.16, 0.5, 0];
 const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
-  foe: { mid: [226, 32, 10], core: [255, 205, 170], gain: 1.2, bank: [0.34, 0.75, 0.14] },
-  you: { mid: [30, 105, 240], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
+  foe: { mid: fieldTone("foe").mid, core: fieldTone("foe").core, gain: 1, bank: BLUE_BANK },
+  you: { mid: fieldTone("you").mid, core: fieldTone("you").core, gain: 1, bank: BLUE_BANK },
 };
 
 /** Seconds: the sparkles before the light, its run across the tank, its fade, and the gap before the new side starts. */
@@ -40,9 +66,10 @@ const TITLE_HOLD = 0.95;
 const TITLE_OUT = 0.45;
 
 /** The pool's strengths per side: the haze rising off the bottom (alphas along `hazeDepth` of the depth), the wall edge, the bottom rim and the bank. */
+const BLUE_POOL = { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, rim: 0.5, bank: 0.7, corner: 0.45 };
 const POOL: Record<TankSide, { haze: number[]; hazeDepth: number; wall: number; rim: number; bank: number; corner: number }> = {
-  you: { haze: [0.42, 0.26, 0.1, 0], hazeDepth: 0.6, wall: 0.6, rim: 0.5, bank: 0.7, corner: 0.45 },
-  foe: { haze: [0.4, 0.22, 0.07, 0], hazeDepth: 0.75, wall: 0.45, rim: 0.4, bank: 0.5, corner: 0.6 },
+  you: BLUE_POOL,
+  foe: BLUE_POOL,
 };
 
 /**
@@ -66,11 +93,11 @@ type Wisp = {
   fade: number;
   roll: number;
 };
-const WISP_COUNT: Record<TankSide, number> = { you: 5, foe: 7 };
+const WISP_COUNT: Record<TankSide, number> = { you: 5, foe: 5 };
 /** Colours: the see-through body, the brighter edges; strength; how fast it moves (the blue clip is calmer than the red). */
 const WISP_TONE: Record<TankSide, { body: Rgb; edge: Rgb; alpha: number; speed: number }> = {
-  you: { body: [60, 120, 250], edge: [110, 160, 255], alpha: 1.3, speed: 0.95 },
-  foe: { body: [226, 40, 14], edge: [255, 122, 74], alpha: 1.35, speed: 1.15 },
+  you: { body: fieldTone("you").body, edge: fieldTone("you").edge, alpha: 1.3, speed: 0.95 },
+  foe: { body: fieldTone("foe").body, edge: fieldTone("foe").edge, alpha: 1.3, speed: 0.95 },
 };
 
 /** A fixed set of wisps per wall, spread over the wall's height (lower ones shorter), drawn from a seeded source so every load looks alike. */
@@ -318,7 +345,7 @@ export class TurnLightArt {
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(this.smoke.canvas, 0, 0, this.w, this.h);
 
-    if (side === "you") this.paintCorners(ctx, now, x0, x1, base, dir, unit);
+    this.paintCorners(ctx, side, now, x0, x1, base, dir, unit);
 
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
     // covers the gold (the bottom keeps to the court's edge; the top is open).
@@ -374,16 +401,16 @@ export class TurnLightArt {
   }
 
   /**
-   * The two lower corners of the blue tank (chủ game 01/11): where the court's edge rounds off, a flow of its own with a deep
+   * The two corners at the foot of a tank (chủ game 01/11): where the court's edge rounds off, a flow of its own with a deep
    * bottom along the arc and a deep side wall only as tall as the arc, and a little light running round it. Same colour as the
-   * wall above so the two meet without a seam.
+   * wall above so the two meet without a seam. Both tanks use it (the red one is the blue one turned over).
    */
-  private paintCorners(ctx: CanvasRenderingContext2D, now: number, x0: number, x1: number, base: number, dir: number, unit: number) {
-    const tone = TONE.you;
+  private paintCorners(ctx: CanvasRenderingContext2D, side: TankSide, now: number, x0: number, x1: number, base: number, dir: number, unit: number) {
+    const tone = TONE[side];
     const lift = this.h * EDGE_DIP;
     const wall = base - dir * lift;
     const flat = base;
-    const corner = (x1 - x0) * EDGE_CORNER.you;
+    const corner = (x1 - x0) * EDGE_CORNER[side];
     for (const [edge, sign] of [
       [x0, 1],
       [x1, -1],
@@ -412,10 +439,10 @@ export class TurnLightArt {
       ctx.closePath();
       ctx.fill();
       // The deep side wall, as tall as the arc.
-      const side = ctx.createLinearGradient(edge, 0, edge + sign * 8 * unit, 0);
-      side.addColorStop(0, rgba(tone.mid, 0.85));
-      side.addColorStop(1, rgba(tone.mid, 0));
-      ctx.fillStyle = side;
+      const wallFill = ctx.createLinearGradient(edge, 0, edge + sign * 8 * unit, 0);
+      wallFill.addColorStop(0, rgba(tone.mid, 0.85));
+      wallFill.addColorStop(1, rgba(tone.mid, 0));
+      ctx.fillStyle = wallFill;
       ctx.fillRect(Math.min(edge, edge + sign * 8 * unit), Math.min(flat, wall), 8 * unit, Math.abs(wall - flat));
       // The deep bottom along the arc.
       ctx.lineCap = "round";

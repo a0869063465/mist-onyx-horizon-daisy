@@ -830,6 +830,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng chuyển lượt trả về kiểu dải khói từ hai thành (giữ màu đỏ cam bên địch).",
   "Bể sáng chuyển lượt thấp bằng khoảng một ô gạch ở mọi màn.",
   "Bể sáng xanh: hai góc dưới có dải sáng riêng, đáy và thành đậm bám theo đoạn bo của sân.",
+  "Bể sáng chuyển lượt: màu bể suy ra từ màu sân (xanh và đỏ cùng quy luật), bể đỏ là bể xanh lật úp.",
 ];
 
 function remarkOf(notes: string[]) {

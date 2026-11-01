@@ -41,3 +41,7 @@ Cách đo: tách khung video bằng ffmpeg rawvideo 30 khung/giây; game: gọi 
 
 ## Dòng chảy (T2k, 01/11, clip đỏ 20 s)
 Dải KHÔNG neo ở thành: cả bể là một dòng vòng, dọc thành trái chảy về đáy, dọc đáy sang phải, rời thành phải; dải đậm bị cuốn theo rồi tan, dải mới thay. Đo bằng tương quan dịch chuyển theo hàng (ngang) và cột (dọc) trên phần đổi (trừ trung bình theo thời gian): đỏ trái −0,05 độ sâu/s, phải +0,10, đáy +0,02..0,05 bề ngang/s; xanh trái −0,08, phải +0,04. Chu kỳ một chuyến ~9 s. Dải đi dọc đáy ở cao 0,12–0,32 độ sâu (không sát mép).
+
+## Quy luật màu bể (01/11, chủ game)
+
+Mọi màu của bể suy từ màu sân của bên đó, không nhập tay: cùng sắc độ và bão hoà với sân (xanh 215°/99%/47%, đỏ 6°/92%/40%), nền bể = màu sân, dải khói (sóng) sáng +12%, mép dải +24%, lõi vệt sáng +42% (bão hoà 100%). Đổi màu sân thì sửa `FIELD_HSL`. Bể đỏ = bể xanh lật úp (cùng số `POOL`, 5 dải, `paintCorners`), chỉ khác màu và độ rộng cung bo theo mép sân.
