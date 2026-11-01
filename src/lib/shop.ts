@@ -272,17 +272,69 @@ function bestOf(cards: Array<{ tier: Tier }>): Tier {
   return cards.reduce<Tier>((best, card) => (TIER_RANK[card.tier] > TIER_RANK[best] ? card.tier : best), "N");
 }
 
-/** The cards of `count` packs; a bundle of 10 with no UR gets one, in place of a lower card of a random pack. */
-export function drawPacks(count: number, rates: Rates, rng: () => number = Math.random): Drawn[][] {
+/** A UR is certain in the 30th pack since the last one (chủ game 01/11). */
+export const PITY_LIMIT = 30;
+const PITY_KEY = "clash-pack-pity";
+/** A bundle of 10 rolls SR 10% and UR 15% higher than a single pack, by ratio (SR 10% becomes 11%). */
+const BUNDLE_SR_BOOST = 1.1;
+const BUNDLE_UR_BOOST = 1.15;
+
+/** Packs opened since the last UR. */
+export function pityCount(): number {
+  const n = Math.floor(Number(read<unknown>(PITY_KEY, 0)));
+  return Number.isFinite(n) && n > 0 ? Math.min(n, PITY_LIMIT - 1) : 0;
+}
+
+/** Packs left before the UR pack: 1 means the next pack holds a UR. */
+export function packsToUr(): number {
+  return PITY_LIMIT - pityCount();
+}
+
+const pityListeners = new Set<(left: number) => void>();
+
+function setPity(count: number) {
+  write(PITY_KEY, count);
+  for (const listener of pityListeners) listener(PITY_LIMIT - count);
+}
+
+export function usePacksToUr(): number {
+  const [left, setLeft] = useState(PITY_LIMIT);
+  useEffect(() => {
+    setLeft(packsToUr());
+    pityListeners.add(setLeft);
+    return () => {
+      pityListeners.delete(setLeft);
+    };
+  }, []);
+  return left;
+}
+
+/** The rates of a bundle: SR and UR higher by ratio, Normal makes up the rest. */
+function bundleRates(rates: Rates): Rates {
+  const ur = Math.min(100, rates.tiers.UR * BUNDLE_UR_BOOST);
+  const sr = Math.min(100 - ur, rates.tiers.SR * BUNDLE_SR_BOOST);
+  return { ...rates, tiers: { UR: ur, SR: sr, N: Math.max(0, 100 - ur - sr) } };
+}
+
+/**
+ * The cards of `count` packs. `since` = packs opened since the last UR: the pack that makes 30 holds a UR, in place of
+ * a lower card; a pack with a UR starts the count again. Returns the packs and the count after them.
+ */
+export function drawPacks(count: number, rates: Rates, rng: () => number = Math.random, since = 0): { packs: Drawn[][]; since: number } {
   const pool = pools(rates);
-  const packs = Array.from({ length: count }, () => drawFrom(pool, rates, PACK_SIZE, rng));
-  if (count >= BUNDLE_SIZE && !packs.some((pack) => pack.some((card) => card.tier === "UR"))) {
-    const pack = packs[Math.floor(rng() * packs.length)];
-    const urs = { ...pool, UR: pool.UR.filter((card) => !pack.some((held) => held.id === card.id)) };
-    const [ur] = drawFrom(urs, rates, 1, rng, "UR");
-    if (ur && pack.length) pack[Math.floor(rng() * pack.length)] = ur;
-  }
-  return packs;
+  const roll = count >= BUNDLE_SIZE ? bundleRates(rates) : rates;
+  let run = since;
+  const packs = Array.from({ length: count }, () => {
+    const pack = drawFrom(pool, roll, PACK_SIZE, rng);
+    if (run + 1 >= PITY_LIMIT && !pack.some((card) => card.tier === "UR")) {
+      const urs = { ...pool, UR: pool.UR.filter((card) => !pack.some((held) => held.id === card.id)) };
+      const [ur] = drawFrom(urs, rates, 1, rng, "UR");
+      if (ur && pack.length) pack[Math.floor(rng() * pack.length)] = ur;
+    }
+    run = pack.some((card) => card.tier === "UR") ? 0 : run + 1;
+    return pack;
+  });
+  return { packs, since: run };
 }
 
 /**
@@ -296,7 +348,8 @@ export function buyPacks(count: 1 | 10, rng: () => number = Math.random): Purcha
   const owned = ownedIds();
   let refund = 0;
   let fresh = 0;
-  const packs: OpenedPack[] = drawPacks(count, loadRates(), rng).map((cards) => {
+  const drawn = drawPacks(count, loadRates(), rng, pityCount());
+  const packs: OpenedPack[] = drawn.packs.map((cards) => {
     const pulls = cards.map(({ id, kind, tier }) => {
       const isNew = !owned.has(id);
       if (isNew) {
@@ -309,6 +362,7 @@ export function buyPacks(count: 1 | 10, rng: () => number = Math.random): Purcha
   });
   write(OWNED_KEY, [...owned]);
   setStarCount(stars - price + refund);
+  setPity(Math.min(drawn.since, PITY_LIMIT - 1));
   return { packs, spent: price, refund, fresh };
 }
 

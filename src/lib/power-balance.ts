@@ -377,6 +377,33 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "down",
     notes: ["Chim chóc và rồng chỉ tăng 1 sát thương kỹ năng (2)"],
   },
+  {
+    id: "phu-thuy-ti-hon",
+    at: "2026-11-01",
+    wave: 31,
+    tone: "down",
+    notes: ["Sát thương gốc của Cầu sấm từ 3 xuống 2"],
+  },
+  {
+    id: "kizuran",
+    at: "2026-11-01",
+    wave: 31,
+    stats: { atk: { from: 3, to: 2 } },
+  },
+  {
+    id: "kazura",
+    at: "2026-11-01",
+    wave: 31,
+    stats: { atk: { from: 6, to: 5 }, hp: { from: 3, to: 2 } },
+  },
+  {
+    id: "ong-khong-lo",
+    at: "2026-11-01",
+    wave: 31,
+    tone: "shift",
+    stats: { atk: { from: 6, to: 4 }, hp: { from: 3, to: 1 } },
+    notes: ["Kim châm tê liệt còn gây thêm 2 sát thương phép"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

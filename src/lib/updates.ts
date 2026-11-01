@@ -836,6 +836,11 @@ export const PENDING_NOTES: string[] = [
   "Quái không chọn được khi tấn công, dùng skill hay phép có viền và glow đỏ.",
   "Skill bị Phục kích chặn không còn nổ hiệu ứng lửa trên mục tiêu.",
   "Hoa ăn thịt người chỉ hấp thụ được ở vòng tấn công của mình, không còn ăn quái địch trong vòng của đối thủ.",
+  "Cứ 30 gói chắc chắn có 1 UR. Cửa hàng ghi còn bao nhiêu gói nữa tới gói UR.",
+  "Mở 10 gói: tỉ lệ SR cao hơn 10%, UR cao hơn 15% so với mở 1 gói. Không còn \"10 gói chắc chắn có UR\".",
+  "Phù thuỷ tí hơn: Cầu sấm giảm sát thương gốc từ 3 xuống 2.",
+  "Kizuran giảm công từ 3 xuống 2. Kazura giảm công từ 6 xuống 5, máu từ 3 xuống 2.",
+  "Ong khổng lồ giảm công từ 6 xuống 4, máu từ 3 xuống 1. Kim châm tê liệt gây thêm 2 sát thương phép, chỉ dùng ở vòng tấn công của mình.",
 ];
 
 function remarkOf(notes: string[]) {

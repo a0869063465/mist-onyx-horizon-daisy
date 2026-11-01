@@ -2568,6 +2568,8 @@ export function harmSkill(cardId: string, index = 0) {
   if (cardId === "cuc-bong-ma-quai") return index === 0;
   // Hấp thụ cướp máu tối đa của quái địch (dame chuẩn): chỉ ở vòng tấn công của mình (chủ game 01/11).
   if (cardId === "hoa-an-thit-nguoi") return true;
+  // Kim châm gây thêm sát thương phép (chủ game 01/11).
+  if (cardId === "ong-khong-lo") return true;
   return false;
 }
 
@@ -5889,7 +5891,8 @@ function finishRebound(state: Duel): Duel {
     if (!paid) return note(clear, "Không đủ mana để phản đòn.");
     owner = paid;
     const turns = grabNums(skillText(caster.cardId), /(\d+)\s*lượt/gi)[0] ?? 5;
-    const stunAt = (mon: FieldMon) => (mon.uid === victim.uid ? { ...mon, stun: turns } : mon);
+    const sting = grabNums(skillText(caster.cardId), /(\d+)\s*sát thương phép/gi)[0] ?? 2;
+    const stunAt = (mon: FieldMon) => (mon.uid === victim.uid ? damageSpell({ ...mon, stun: turns }, sting, undefined, caster) : mon);
     let field = owner.field.map((mon) => (mon?.uid === caster.uid ? stunAt({ ...mon, dim: true }) : mon ? stunAt(mon) : mon));
     let next = patch(clear, ownerSide, { ...owner, field });
     if (ownerSide !== victimSide) {
@@ -7794,11 +7797,13 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const target = them.field.find((unit) => unit?.uid === targetUid) ?? null;
     if (!target) return note(state, "Chọn một quái đối thủ.");
     const turns = grabNums(skillText(mon.cardId), /(\d+)\s*lượt/gi)[0] ?? 5;
-    const foeField = them.field.map((unit) => (unit?.uid === target.uid ? { ...unit, stun: turns } : unit));
+    const sting = grabNums(skillText(mon.cardId), /(\d+)\s*sát thương phép/gi)[0] ?? 2;
+    const landed = spellLanded(target, sting, them.field, mon);
+    const foeField = them.field.map((unit) => (unit?.uid === target.uid ? damageSpell({ ...unit, stun: turns }, sting, them.field, mon) : unit));
     const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
     let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
-    next = patch(next, foe, { ...them, field: foeField });
-    return note(next, `${castName(mon.cardId, skillIndex)} trong ${turns} lượt.`);
+    next = patch(next, foe, dropDead({ ...them, field: foeField }));
+    return note(next, `${castName(mon.cardId, skillIndex)} trong ${turns} lượt, gây ${landed} sát thương phép.`, "spell");
   }
   if (mon.cardId === "rong-con" || mon.cardId === "rong-ngan-tuoi") {
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
@@ -8043,7 +8048,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     if (!paid) return note(state, "Cần 1 gem.");
     const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
     let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
-    const amount = Math.max(0, 3 + next.players[side].stars + (mon.skillUp ?? 0) - (mon.fake ? 1 : 0));
+    const amount = Math.max(0, 2 + next.players[side].stars + (mon.skillUp ?? 0) - (mon.fake ? 1 : 0));
     const them = next.players[foe];
     if (!targetUid) {
       const dealt = outgoing(mon, amount);

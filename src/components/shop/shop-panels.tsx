@@ -128,7 +128,7 @@ export function RatePanel({ editable, onClose }: { editable: boolean; onClose: (
           {tr("toàn Normal")} {percent(odds.best.N)}
         </span>
       </p>
-      <p className="rate-note">{tr("Số % cạnh mỗi lá là cơ hội lá đó có trong 1 gói. 10 gói luôn có ít nhất 1 UR.")}</p>
+      <p className="rate-note">{tr("Số % cạnh mỗi lá là cơ hội lá đó có trong 1 gói. Mở 10 gói thì SR cao hơn 10%, UR cao hơn 15%. Cứ 30 gói chắc chắn có 1 UR.")}</p>
       {editable ? <p className="rate-note">{tr("Bấm UR, SR, N cạnh một lá để đổi bậc lá đó. Chỉnh xong bấm Sao chép rồi gửi cho Claude.")}</p> : null}
       {copied === "manual" ? <textarea className="rate-copy" readOnly value={ratesText(rates)} onFocus={(event) => event.currentTarget.select()} /> : null}
       {TIERS.map((tier) => {

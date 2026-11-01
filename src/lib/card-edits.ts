@@ -194,6 +194,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["ngai-khong-lo", "Tiêu hao 1 mana gây 4 sát thương phép lên tất cả quái thú kẻ địch. Quái sống sót dính độc 1 sát thương chuẩn đầu mỗi lượt, kéo 3 lượt, không cộng dồn."],
   ["trai-tim-hai-long", "lên toàn bộ kẻ địch"],
   ["kazura", "Điểm số phía trên tôi là số máu ảo"],
+  ["phu-thuy-ti-hon", "bằng 3 cộng với số sao"],
   ["ke-giam-ho-linh-hon", "Chỉ số đã tăng thì không mất"],
   ["hiep-si-cua-vua", "Đòn đánh thứ 1 gây 2"],
   ["hiep-si-ho-ve", "75% sát thương khiên nuốt"],

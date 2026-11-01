@@ -15,6 +15,7 @@ import {
   clearOwned,
   PACK,
   PACK_PRICE,
+  usePacksToUr,
   useStars,
   type PackEntry,
   type Purchase,
@@ -35,6 +36,7 @@ function ShopPage() {
   useLang();
   const mode = useAppMode();
   const stars = useStars();
+  const toUr = usePacksToUr();
   const [booted, setBooted] = useState(false);
   const [view, setView] = useState<"list" | "pack">("list");
   const [panel, setPanel] = useState<"rates" | "cards" | null>(null);
@@ -130,6 +132,7 @@ function ShopPage() {
                 </div>
               </div>
             </div>
+            <p className="shop-pity">{toUr === 1 ? tr("Gói kế tiếp chắc chắn có UR") : `${tr("Còn")} ${toUr} ${tr("gói nữa tới gói UR")}`}</p>
             <div className="shop-buys">
               <button type="button" className="shop-buy" onClick={() => setAsking(1)}>
                 <b>
@@ -143,7 +146,7 @@ function ShopPage() {
                   <i aria-hidden="true">★</i>
                   {BUNDLE_PRICE}
                 </b>
-                <small>{tr("10 gói (chắc chắn có 1 UR)")}</small>
+                <small>{tr("10 gói (tỉ lệ SR, UR cao hơn)")}</small>
               </button>
             </div>
           </section>

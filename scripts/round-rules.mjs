@@ -669,6 +669,18 @@ test("Hoa ăn thịt người chỉ hấp thụ ở vòng tấn công của mìn
   assert.ok(at(own, 1, 0).maxHp < 6, own.live);
 });
 
+test("Ong khổng lồ: Kim châm tê liệt và gây thêm 2 sát thương phép; chỉ ở vòng của mình", () => {
+  const s = board({ 0: ["ong-khong-lo", { hp: 1, maxHp: 1 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10, mdef: 0 }] });
+  const off = { ...s, round: 1 };
+  const refused = D.useSkill(off, uid(off, 0, 0), uid(off, 1, 0), 0);
+  assert.equal(at(refused, 1, 0).stun, 0, refused.live);
+  assert.match(refused.live, /Chưa đến vòng/);
+  let fired = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  if (fired.step === "respond") fired = D.passResponse(fired);
+  assert.equal(at(fired, 1, 0).stun, 5, fired.live);
+  assert.equal(at(fired, 1, 0).hp, 8, fired.live);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
