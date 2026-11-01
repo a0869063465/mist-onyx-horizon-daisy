@@ -53,7 +53,9 @@ const RIBBONS: Array<{ a: number; b: number; c: number; d: number; w: number; ra
 ];
 
 /** The court's edge on the new board (measured on board-full.jpg): flat across, then rounding away from the open end at each wall, by this much of the board's height. */
-const EDGE_DIP = 0.028;
+const EDGE_DIP = 0.022;
+/** How far in from each wall the rounded corner of the court's edge reaches, in parts of the width (blue ~6%, red ~9%). */
+const EDGE_CORNER: Record<TankSide, number> = { you: 0.06, foe: 0.09 };
 
 type Mode = "off" | "in" | "on" | "out";
 type Tank = { mode: Mode; at: number };
@@ -306,18 +308,22 @@ export class TurnLightArt {
       const lift = this.h * EDGE_DIP;
       const wall = base - dir * lift;
       const sway = 0.0035 * this.h * Math.sin(now * 1.3);
+      const corner = width * EDGE_CORNER[side];
+      const flat = base + sway;
       const ends = (up: number) => {
+        // Down the rounded corner at each wall (steep at the wall, easing into the flat edge), as the court's gold rim does.
         ctx.beginPath();
         ctx.moveTo(x0, wall + up);
-        ctx.bezierCurveTo(x0 + width * 0.05, wall + up, x0 + width * 0.08, base + sway + up, x0 + width * 0.17, base + sway + up);
-        ctx.bezierCurveTo(x0 + width * 0.4, base + sway * 0.4 + up, x0 + width * 0.6, base + sway * 0.4 + up, x1 - width * 0.17, base + sway + up);
-        ctx.bezierCurveTo(x1 - width * 0.08, base + sway + up, x1 - width * 0.05, wall + up, x1, wall + up);
+        ctx.bezierCurveTo(x0 + corner * 0.2, wall + (flat - wall) * 0.55 + up, x0 + corner * 0.55, flat - (flat - wall) * 0.08 + up, x0 + corner, flat + up);
+        ctx.bezierCurveTo(x0 + width * 0.35, base + sway * 0.4 + up, x0 + width * 0.65, base + sway * 0.4 + up, x1 - corner, flat + up);
+        ctx.bezierCurveTo(x1 - corner * 0.55, flat - (flat - wall) * 0.08 + up, x1 - corner * 0.2, wall + (flat - wall) * 0.55 + up, x1, wall + up);
       };
       ctx.globalCompositeOperation = "source-over";
       for (const [up, line, alpha] of [
-        [0, 9, 0.22],
-        [0, 4.5, 0.4],
-        [-dir * 3, 2.2, 0.55],
+        [0, 15, 0.16],
+        [0, 9, 0.26],
+        [-dir * 1.5, 4.5, 0.42],
+        [-dir * 3, 2.2, 0.58],
       ] as const) {
         ends(up * unit);
         ctx.strokeStyle = rgba(tone.mid, alpha * tone.gain);
