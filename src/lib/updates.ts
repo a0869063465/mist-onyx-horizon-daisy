@@ -817,6 +817,7 @@ export const PENDING_NOTES: string[] = [
   "Bể sáng chuyển lượt: thêm dòng chảy cong theo mép viền sân, đỉnh sóng hai bên thấp hơn, dải sáng dày và rõ hơn.",
   "Bể sáng chuyển lượt làm lại theo video: gờ sáng ở đáy và hai thành, dải lụa rộng toả từ hai thành, bên đỏ đậm hơn.",
   "Bể sáng chuyển lượt: dải lụa trong mờ chồng nhau, mép đậm hơn, phồng và nhạt chậm.",
+  "Bể sáng chuyển lượt sáng hơn, đỏ chuyển sang crimson hợp màu sân.",
 ];
 
 function remarkOf(notes: string[]) {

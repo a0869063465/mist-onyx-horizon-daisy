@@ -23,8 +23,8 @@ type Rgb = [number, number, number];
  *  its strength and how far it feathers out behind the bottom into the field's own colour. The red is the orange red of its floor, which hides on the stone more than the blue does, so it is
  *  laid on stronger and its bank reaches over the grass at the edge of the red field (chủ game 30/10). */
 const TONE: Record<TankSide, { mid: Rgb; core: Rgb; gain: number; bank: [number, number, number] }> = {
-  foe: { mid: [226, 52, 40], core: [255, 206, 196], gain: 1.2, bank: [0.34, 0.75, 0.14] },
-  you: { mid: [44, 128, 255], core: [210, 234, 255], gain: 1, bank: [0.16, 0.5, 0] },
+  foe: { mid: [228, 40, 78], core: [255, 205, 218], gain: 1.2, bank: [0.34, 0.75, 0.14] },
+  you: { mid: [50, 125, 245], core: [205, 228, 255], gain: 1, bank: [0.16, 0.5, 0] },
 };
 
 /** Seconds: the sparkles before the light, its run across the tank, its fade, and the gap before the new side starts. */
@@ -292,7 +292,7 @@ export class TurnLightArt {
       }
       const tipX = from + sign * width * reach;
       // Thin ribbons are denser than thick ones.
-      const dense = rb.alpha * swell * spec.silk * (1 + Math.max(0, 0.3 - rb.w) * 1.6);
+      const dense = rb.alpha * 1.4 * swell * spec.silk * (1 + Math.max(0, 0.3 - rb.w) * 1.6);
       const along = (alpha: number, mid = 0.55) => {
         const gr = ctx.createLinearGradient(from, 0, tipX, 0);
         gr.addColorStop(0, rgba(tone.mid, alpha));
@@ -319,6 +319,20 @@ export class TurnLightArt {
           ctx.stroke();
         }
       }
+      // A pale core along the edges, added as light so the ribbon glows on the stone instead of sinking into it.
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createLinearGradient(from, 0, tipX, 0);
+      glow.addColorStop(0, rgba(tone.core, dense * 0.55));
+      glow.addColorStop(0.5, rgba(tone.core, dense * 0.3));
+      glow.addColorStop(1, rgba(tone.core, 0));
+      for (const edge of [upper, lower]) {
+        ctx.beginPath();
+        edge.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1.4 * unit;
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = "source-over";
     });
 
     // The rim: a bright edge down both walls and along the bottom, following the rounded corners of the court's rim so it
