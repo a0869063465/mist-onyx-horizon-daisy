@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { AlbumBook } from "@/components/collection/album-book";
 import { AlbumCover, CardsIcon } from "@/components/collection/album-parts";
 import {
-  albums,
   cardSets,
   claimedSets,
   claimSet,
@@ -11,6 +10,7 @@ import {
   loadAlbumSeen,
   markAlbumSeen,
   newCards,
+  shelfAlbums,
   type Album,
   type CardSet,
 } from "@/lib/collection";
@@ -23,18 +23,29 @@ import { ownedIds } from "@/lib/shop";
  * at yet. A cover opens its album like a book. Cards bought with stars and set rewards taken there are kept here too.
  */
 export function AlbumTab() {
-  const list = useMemo(() => albums(), []);
+  const list = useMemo(() => shelfAlbums(), []);
   const sets = useMemo(() => cardSets(), []);
   const [owned, setOwned] = useState(() => collectionOwned(ownedIds()));
   const [seen, setSeen] = useState(() => loadAlbumSeen());
   const [claimed, setClaimed] = useState(() => claimedSets());
-  const [open, setOpen] = useState<{ album: Album; from: DOMRect | null; fresh: string[] } | null>(null);
+  const [open, setOpen] = useState<{ album: Album; from: DOMRect | null; fresh: string[] } | null>(
+    null,
+  );
   const fresh = useMemo(() => newCards(owned, seen), [owned, seen]);
 
   // The album's new cards arrive as it opens, so they count as looked at from then on.
   function openAlbum(album: Album, from: DOMRect | null) {
-    setOpen({ album, from, fresh: album.cards.filter((card) => fresh.has(card.id)).map((card) => card.id) });
-    setSeen(markAlbumSeen(album.cards.filter((card) => owned.has(card.id)).map((card) => card.id)));
+    // A character album only gathers cards of the environment albums: it neither shows nor clears their new marks.
+    const own = album.group !== "char";
+    setOpen({
+      album,
+      from,
+      fresh: own ? album.cards.filter((card) => fresh.has(card.id)).map((card) => card.id) : [],
+    });
+    if (own)
+      setSeen(
+        markAlbumSeen(album.cards.filter((card) => owned.has(card.id)).map((card) => card.id)),
+      );
   }
 
   // A card bought in another album stays new there until that album is opened.
@@ -54,38 +65,59 @@ export function AlbumTab() {
   return (
     <>
       <div className="al-shelf">
-        <div className="al-grid">
-          {list.map((album) => {
-            const have = album.cards.filter((card) => owned.has(card.id)).length;
-            const done = have === album.cards.length;
-            return (
-              <button
-                key={album.id}
-                type="button"
-                className="al-item"
-                onClick={(event) => openAlbum(album, event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ?? null)}
-              >
-                <span className="al-name">{tr(album.name)}</span>
-                <span className="al-item-cover">
-                  <AlbumCover album={album} done={done} />
-                  {album.cards.some((card) => fresh.has(card.id)) ? (
-                    <i className="al-new" aria-label={tr("Có lá mới")}>
-                      !
-                    </i>
-                  ) : null}
-                </span>
-                {done ? (
-                  <b className="al-done">{tr("Hoàn thành!")}</b>
-                ) : (
-                  <span className="al-count">
-                    <CardsIcon />
-                    {have}/{album.cards.length}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {[
+          {
+            key: "env",
+            title: "Môi trường",
+            group: list.filter((album) => album.group !== "char"),
+          },
+          { key: "char", title: "Nhân vật", group: list.filter((album) => album.group === "char") },
+        ]
+          .filter((part) => part.group.length)
+          .map(({ key, title, group }) => (
+            <section key={key} className="al-section">
+              <h3 className="al-section-title">{tr(title)}</h3>
+              <div className="al-grid">
+                {group.map((album) => {
+                  const have = album.cards.filter((card) => owned.has(card.id)).length;
+                  const done = have === album.cards.length;
+                  return (
+                    <button
+                      key={album.id}
+                      type="button"
+                      className="al-item"
+                      onClick={(event) =>
+                        openAlbum(
+                          album,
+                          event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ??
+                            null,
+                        )
+                      }
+                    >
+                      <span className="al-name">{tr(album.name)}</span>
+                      <span className="al-item-cover">
+                        <AlbumCover album={album} done={done} />
+                        {album.group !== "char" &&
+                        album.cards.some((card) => fresh.has(card.id)) ? (
+                          <i className="al-new" aria-label={tr("Có lá mới")}>
+                            !
+                          </i>
+                        ) : null}
+                      </span>
+                      {done ? (
+                        <b className="al-done">{tr("Hoàn thành!")}</b>
+                      ) : (
+                        <span className="al-count">
+                          <CardsIcon />
+                          {have}/{album.cards.length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
       </div>
       {open ? (
         <AlbumBook

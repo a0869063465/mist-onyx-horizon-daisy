@@ -1,4 +1,4 @@
-import { useState, type Ref } from "react";
+import { useState, type CSSProperties, type Ref } from "react";
 import { AppraisePanel } from "@/components/collection/appraise-panel";
 import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
@@ -22,8 +22,8 @@ export function AlbumPic({ id, missing = false }: { id: string; missing?: boolea
 /** An album's cover: the environment card's picture in a binder with a ringed spine; gold once complete. */
 export function AlbumCover({ album, done, className = "", ref }: { album: Album; done: boolean; className?: string; ref?: Ref<HTMLSpanElement> }) {
   return (
-    <span ref={ref} className={`al-cover${done ? " is-done" : ""}${className ? ` ${className}` : ""}`}>
-      <span className="al-cover-art" style={{ backgroundImage: `url(${album.cover})` }} />
+    <span ref={ref} className={`al-cover${done ? " is-done" : ""}${album.group === "char" ? " is-char" : ""}${className ? ` ${className}` : ""}`}>
+      <span className="al-cover-art" style={album.group === "char" ? ({ "--char-art": `url(${album.cover})` } as CSSProperties) : { backgroundImage: `url(${album.cover})` }} />
     </span>
   );
 }

@@ -846,6 +846,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm 1 lần lá quái trên tay hiện hàng nút Triệu hồi, Hiến tế, Dung hợp. Bấm Triệu hồi thì hiện 2 mũi tên chọn hàng.",
   "Màn thấp dùng bàn đấu mới (khay đỏ nhỏ hơn), tay bài bên đỏ đặt lại theo khay mới.",
   "Số lá còn lại luôn hiện dưới xấp bài hai bên. Bấm đôi vào xấp bài của mình hiện hỏi Đầu hàng.",
+  "Kệ Album chia nhóm Môi trường và Nhân vật. Thêm album Yugi gồm 17 lá, đủ bộ nhận sao.",
 ];
 
 function remarkOf(notes: string[]) {

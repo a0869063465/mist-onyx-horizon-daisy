@@ -84,6 +84,7 @@ const CORE_PICTURES = [
   "/tutorial/nguoi-giu-khoa.webp",
   "/ui/fuse-swirl.webp",
   "/ui/cover-frame.png",
+  "/ui/yugi-cover.webp",
   "/ui/logo.webp",
   "/ui/logo-snake.webp",
   "/ui/pack.webp",

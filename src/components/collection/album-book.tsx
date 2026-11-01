@@ -63,7 +63,8 @@ export function AlbumBook({
   onClaim: (set: CardSet) => number;
   onClose: () => void;
 }) {
-  const pages = useMemo(() => albumPages(album, sets), [album, sets]);
+  // A character album shows its cards plainly: the sets framed in the environment albums are not repeated there.
+  const pages = useMemo(() => albumPages(album, album.group === "char" ? [] : sets), [album, sets]);
   const rates = useMemo(() => loadRates(), []);
   const numbered = useMemo(() => cardNumbers(), []);
   const here = useMemo(() => new Set(album.cards.map((card) => card.id)), [album]);
@@ -258,6 +259,11 @@ export function AlbumBook({
           <CardsIcon />
           {have}/{album.cards.length}
         </span>
+        {album.prize ? (
+          <span className="al-head-prize">
+            <SetPrize set={album.prize} complete={done} claimed={claimed.has(album.prize.id)} onClaim={claim} />
+          </span>
+        ) : null}
       </header>
       <div className="al-stage" onPointerDown={down} onPointerMove={move} onPointerUp={up}>
         <div ref={book} className={`al-book${turn ? " is-turning" : ""}`}>

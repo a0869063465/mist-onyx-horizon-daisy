@@ -57,7 +57,17 @@ const ALBUM_ENVS: Array<{ env: string; parts?: Part[] }> = [
 
 export type AlbumCard = { id: string; no: number; kind: "monster" | "spell"; part: string };
 /** `cover`: the picture on the album's cover, the environment card's (the spells: one spell's). */
-export type Album = { id: string; name: string; env: string | null; cover: string; cards: AlbumCard[] };
+export type Album = {
+  id: string;
+  name: string;
+  env: string | null;
+  cover: string;
+  cards: AlbumCard[];
+  /** "char" = an album of a character (owner 01/11): its cards keep the number of their environment album. */
+  group?: "env" | "char";
+  /** The prize set of a character album, taken with Nhận once all its cards are owned. */
+  prize?: CardSet;
+};
 export type CardSet = { id: string; name: string; ids: string[] };
 
 const forms = new Set(FORMS.map((card) => card.id));
@@ -142,6 +152,50 @@ export function albums(): Album[] {
     cards: spells.map((id, index) => ({ id, no: SPELL_START + index, kind: "spell", part: "" })),
   });
   return list;
+}
+
+/** The albums of characters (owner 01/11, after the Yugi picture): cards already in the game, keeping their numbers. */
+const CHAR_ALBUMS: Array<{ id: string; name: string; cover: string; ids: string[] }> = [
+  {
+    id: "yugi",
+    name: "Yugi",
+    cover: "/ui/yugi-cover.webp",
+    ids: [
+      "trieu-hoi-ac-ma", // Summoned Skull
+      "ky-si-bong-toi", // Gaia the Fierce Knight
+      "loi-nguyen-cua-rong", // Curse of Dragon
+      "rong-con", // Blackland Fire Dragon
+      "ke-giam-ho-linh-hon", // Celtic Guardian
+      "rong-phun-hoa-cau", // Winged Dragon, Guardian of the Fortress #1
+      "linh-chien-da-khong-lo", // Giant Soldier of Stone
+      "chien-si-gam-nham", // Beaver Warrior
+      "mo-voi-ma-mut", // Mammoth Graveyard
+      "yeu-tinh-chuc-phuc", // Mystical Elf
+      "cuc-bong-ma-quai", // Kuriboh
+      "mua-ma-thuat", // Makiu, the Magical Mist
+      "thanh-guom-anh-sang", // Swords of Revealing Light
+      "mu-ma-phap", // Magical Hats
+      "guong-phong-ho", // Mirror Force
+      "hoan-doi", // Shift
+      "vong-nguyen-rua-ac-ma", // Spellbinding Circle
+    ],
+  },
+];
+
+export function charAlbums(): Album[] {
+  const numbers = cardNumbers();
+  return CHAR_ALBUMS.map((row) => {
+    const ids = row.ids.filter((id) => numbers.has(id));
+    const cards: AlbumCard[] = ids
+      .map((id) => ({ id, no: numbers.get(id) ?? 0, kind: (monsterCard(id) ? "monster" : "spell") as "monster" | "spell", part: "" }))
+      .sort((a, b) => (a.kind === b.kind ? starsOf(b.id) - starsOf(a.id) || a.no - b.no : a.kind === "monster" ? -1 : 1));
+    return { id: row.id, name: row.name, env: null, cover: row.cover, cards, group: "char" as const, prize: { id: row.id, name: row.name, ids: cards.map((card) => card.id) } };
+  });
+}
+
+/** Every album of the shelf: environments and spells, then characters. */
+export function shelfAlbums(): Album[] {
+  return [...albums(), ...charAlbums()];
 }
 
 /** Every card's number. */
@@ -324,7 +378,7 @@ export type AlbumStat = { name: string; cover: string; have: number; total: numb
 
 /** Số lá có / tổng, tiến độ từng album (ảnh bìa + số lá) và các nhóm bài ngoài album, cho hồ sơ bạn bè. */
 export function collectionStat(owned: Set<string>): { have: number; total: number; albums: AlbumStat[]; sets: SetStat[] } {
-  const list = albums().filter((album) => album.cards.length > 0);
+  const list = shelfAlbums().filter((album) => album.cards.length > 0);
   const seen = new Set<string>();
   const rows = list.map((album) => {
     for (const card of album.cards) seen.add(card.id);
