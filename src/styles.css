@@ -6632,12 +6632,13 @@ button.watch-back {
   font-size: 0.85rem;
   font-weight: 900;
 }
-.msheet-skills { display: grid; gap: 0.4rem; margin: 0.1rem 1.8rem 0.65rem; }
-.msheet-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.35rem 0.5rem; }
+.msheet-skills { display: grid; gap: 0.4rem; margin: 0.1rem 1.1rem 0.65rem; }
+/* Four icons fit a row (chủ game 02/11): the rows are laid out in code, so they never wrap. */
+.msheet-row { display: flex; flex-wrap: nowrap; justify-content: center; gap: 0.35rem 0.4rem; }
 .sk3d {
   --ring: #3ec6ff;
   --deep: #0b2a4a;
-  width: 4.3rem;
+  width: 3.9rem;
   display: grid;
   justify-items: center;
   gap: 0.2rem;

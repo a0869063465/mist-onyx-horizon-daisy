@@ -313,9 +313,6 @@ export function MonsterSheet({
     if (skill.chain && groups.length) groups[groups.length - 1].push({ skill, index });
     else groups.push([{ skill, index }]);
   });
-  const isActive = (kind: SkillKind) => kind === "active" || kind === "risk" || kind === "spell";
-  const actives = groups.filter((group) => isActive(group[0].skill.kind));
-  const passives = groups.filter((group) => !isActive(group[0].skill.kind));
   const shown = picked.startsWith("s") ? skills[Number(picked.slice(1))] : undefined;
   const extra = picked.startsWith("x:") ? extras.find((item) => `x:${item.key}` === picked) : undefined;
   const cost = shown ? skillCost(shown.text) : "";
@@ -350,54 +347,78 @@ export function MonsterSheet({
       <span className="sk3d-name">{tr(item.name)}</span>
     </button>
   );
-  // At most 4 icons to a row (chủ game 02/11): single skills come first, then the chains (a long one wraps in even
-  // pieces, its link breaks between rows); the extra icons come last as singles. Units share a row while they fit.
-  const row = (list: typeof groups, withExtras: boolean) => {
-    type Unit = { key: string; items: typeof groups[number]; chain: boolean; extra?: SheetExtra };
-    const singles: Unit[] = list.filter((group) => group.length === 1).map((group) => ({ key: `s${group[0].index}`, items: group, chain: false }));
-    const chains: Unit[] = [];
-    for (const group of list.filter((item) => item.length > 1)) {
-      const rows = Math.ceil(group.length / MAX_ROW);
-      const size = Math.ceil(group.length / rows);
-      for (let at = 0; at < group.length; at += size) chains.push({ key: `c${group[at].index}`, items: group.slice(at, at + size), chain: true });
-    }
-    const tail: Unit[] = withExtras ? extras.map((item) => ({ key: `x${item.key}`, items: [], chain: false, extra: item })) : [];
-    const lines: Unit[][] = [];
-    let used = 0;
-    for (const unit of [...singles, ...chains, ...tail]) {
-      const n = unit.extra ? 1 : unit.items.length;
-      // A chain starts its own row, so a link never wraps; singles share rows.
-      const last = lines[lines.length - 1];
-      if (!last || used + n > MAX_ROW || unit.chain || last.some((other) => other.chain)) {
-        lines.push([]);
-        used = 0;
+  // At most 4 icons to a row, and no third row before 9 skills (chủ game 02/11). Skills of one colour sit together:
+  // singles first (by colour), then the chains, then the extra icons. A chain stays whole in a row when that costs no
+  // extra row; otherwise rows fill evenly and the metal bar breaks at the row's edge.
+  const rank: Record<SkillKind, number> = { active: 0, spell: 1, risk: 2, passive: 3, note: 4 };
+  type Piece = { item?: (typeof groups)[number][number]; extra?: SheetExtra; link: boolean };
+  const lay = (list: typeof groups, withExtras: boolean): Piece[][] => {
+    const kind = (group: (typeof groups)[number]) => rank[group[0].skill.kind];
+    const singles = list.filter((group) => group.length === 1).sort((a, b) => kind(a) - kind(b));
+    const chains = list.filter((group) => group.length > 1).sort((a, b) => kind(a) - kind(b));
+    const units: Piece[][] = [
+      ...singles.map((group) => [{ item: group[0], link: false }]),
+      ...chains.map((group) => group.map((item, at) => ({ item, link: at > 0 }))),
+      ...(withExtras ? extras.map((extra) => [{ extra, link: false }]) : []),
+    ];
+    const flat = units.flat();
+    if (flat.length === 0) return [];
+    const least = Math.ceil(flat.length / MAX_ROW);
+    // 1) whole units while they fit in a row.
+    const whole: Piece[][] = [];
+    let ok = true;
+    for (const unit of units) {
+      if (unit.length > MAX_ROW) {
+        ok = false;
+        break;
       }
-      lines[lines.length - 1].push(unit);
-      used += n;
+      const last = whole[whole.length - 1];
+      if (last && last.length + unit.length <= MAX_ROW) last.push(...unit);
+      else whole.push([...unit]);
     }
-    return lines.map((line, lineAt) => (
-      <div key={lineAt} className="msheet-row">
-        {line.map((unit) =>
-          unit.extra ? (
-            extraIcon(unit.extra)
-          ) : !unit.chain || unit.items.length === 1 ? (
-            icon(unit.items[0])
-          ) : (
-            <span key={unit.key} className="sk3d-chain">
-              {unit.items.map((item, at) => (
-                <Fragment key={item.index}>
-                  {at > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[unit.items[at - 1].skill.kind], "--to": RIM_TONE[item.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
-                  {icon(item)}
-                </Fragment>
-              ))}
-            </span>
-          ),
-        )}
-      </div>
-    ));
+    if (ok && whole.length <= least) return whole;
+    // 2) fill evenly, breaking chains at a row's edge.
+    const size = Math.ceil(flat.length / least);
+    const rows: Piece[][] = [];
+    for (let at = 0; at < flat.length; at += size) rows.push(flat.slice(at, at + size).map((piece, k) => (k === 0 ? { ...piece, link: false } : piece)));
+    return rows;
   };
-  // The extra icons sit at the right end of the first row of icons.
-  const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
+  const row = (list: typeof groups, withExtras: boolean) =>
+    lay(list, withExtras).map((line, lineAt) => {
+      // Pieces joined to the one before them share one chain span, so the bar sits between the icons.
+      const out: ReactNode[] = [];
+      for (let at = 0; at < line.length; at += 1) {
+        const piece = line[at];
+        if (piece.extra) {
+          out.push(extraIcon(piece.extra));
+          continue;
+        }
+        if (!piece.item) continue;
+        let end = at;
+        while (line[end + 1]?.link && line[end + 1]?.item) end += 1;
+        if (end === at) {
+          out.push(icon(piece.item));
+          continue;
+        }
+        const run = line.slice(at, end + 1);
+        out.push(
+          <span key={`chain-${piece.item.index}`} className="sk3d-chain">
+            {run.map((part, k) => (
+              <Fragment key={part.item!.index}>
+                {k > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[run[k - 1].item!.skill.kind], "--to": RIM_TONE[part.item!.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
+                {icon(part.item!)}
+              </Fragment>
+            ))}
+          </span>,
+        );
+        at = end;
+      }
+      return (
+        <div key={lineAt} className="msheet-row">
+          {out}
+        </div>
+      );
+    });
   return (
     <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()}>
       <GlyphDefs />
@@ -414,8 +435,7 @@ export function MonsterSheet({
         )}
         {skills.length || extras.length ? (
           <div className="msheet-skills">
-            {row(actives, extrasOnActives)}
-            {row(passives, extras.length > 0 && !extrasOnActives)}
+            {row(groups, true)}
           </div>
         ) : null}
         <div className="msheet-mid">
