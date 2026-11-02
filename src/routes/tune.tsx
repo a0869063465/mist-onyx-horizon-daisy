@@ -98,6 +98,8 @@ function exportChanges() {
   if (Object.keys(boards).length) out.boards = boards;
   if (!same(loadCard(), DEFAULT_CARD)) out.monster = loadCard();
   if (!same(loadSpell(), DEFAULT_SPELL)) out.spell = loadSpell();
+  if (!same(loadHand(), DEFAULT_HAND)) out.hand = loadHand();
+  if (!same(loadSpellHand(), DEFAULT_SPELL_HAND)) out.spellHand = loadSpellHand();
   if (!same(loadField(), DEFAULT_FIELD)) out.field = loadField();
   const sound = { on: soundOn(), fx: fxVolume(), tap: tapVolume() };
   if (!same(sound, { on: true, fx: 100, tap: 100 })) out.sound = sound;
@@ -116,7 +118,9 @@ function setupLine() {
     board: loadBoard(),
     boards: savedBoards(),
     monster: loadCard(),
+    hand: loadHand(),
     spell: loadSpell(),
+    spellHand: loadSpellHand(),
     field: loadField(),
     sound: { on: soundOn(), fx: fxVolume(), tap: tapVolume() },
   });
