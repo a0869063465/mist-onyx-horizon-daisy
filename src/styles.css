@@ -12264,7 +12264,7 @@ button.watch-back {
   position: absolute;
   left: 50%;
   top: calc(50% + var(--half));
-  transform: translate(-50%, -8%);
+  transform: translate(-50%, -50%);
   min-width: 1.5em;
   padding: 0.12em 0.4em;
   border-radius: 0.35em;
