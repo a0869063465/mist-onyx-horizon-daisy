@@ -16,6 +16,11 @@ import {
   BOARD_ACTS,
   BOARD_FACES,
   CARD_MARKS,
+  DEFAULT_HAND,
+  HAND_MARKS,
+  loadHand,
+  saveHand,
+  type HandKey,
   DEFAULT_BOARD_LAYOUT,
   DEFAULT_CARD,
   DEFAULT_FIELD,
@@ -840,8 +845,8 @@ function BoardTune({ onBack }: { onBack: () => void }) {
 function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => void }) {
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<string | null>(null);
-  const [layout, setLayout] = useState<Record<string, Spot>>(() => (kind === "monster" ? loadCard() : loadSpell()));
-  const marks = kind === "monster" ? CARD_MARKS : SPELL_MARKS;
+  const [layout, setLayout] = useState<Record<string, Spot>>(() => (kind === "monster" ? loadHand() : loadSpell()));
+  const marks: Array<{ key: string; label: string; sample: string; box: boolean }> = kind === "monster" ? HAND_MARKS : SPELL_MARKS;
   const [picked, setPicked] = useState(marks[0].key);
   const [saved, setSaved] = useState(false);
   const spot = layout[picked];
@@ -870,7 +875,7 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
       <p className="tuner-note">Mũi tên dịch số. Chữ, rộng và cao đổi ô đang chọn.</p>
       <div ref={stage} className="tune-stage tune-card">
         {kind === "monster" ? (
-          <CardFace monster={monsterCard("tho-den-tinh-nghich")} hideStats showNew layout={layout as Record<CardKey, Spot>} />
+          <CardFace monster={monsterCard("tho-den-tinh-nghich")} hand hideStats layout={{ ...loadCard(), ...(layout as Record<HandKey, Spot>) }} />
         ) : (
           <CardFace spellId="mua-ma-thuat" hideStats showNew spellLayout={layout as Record<SpellKey, Spot>} />
         )}
@@ -926,7 +931,7 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
         type="button"
         className="tuner-save"
         onClick={() => {
-          if (kind === "monster") saveCard(layout as Record<CardKey, Spot>);
+          if (kind === "monster") saveHand(layout as Record<HandKey, Spot>);
           else saveSpell(layout as Record<SpellKey, Spot>);
           setSaved(true);
         }}
@@ -937,9 +942,9 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
         type="button"
         className="pad-btn"
         onClick={() => {
-          const next = kind === "monster" ? DEFAULT_CARD : DEFAULT_SPELL;
+          const next = kind === "monster" ? DEFAULT_HAND : DEFAULT_SPELL;
           setLayout(next);
-          if (kind === "monster") saveCard(DEFAULT_CARD);
+          if (kind === "monster") saveHand(DEFAULT_HAND);
           else saveSpell(DEFAULT_SPELL);
           setSaved(true);
         }}

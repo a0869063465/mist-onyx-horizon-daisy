@@ -226,6 +226,7 @@ export function saveAlert(glow: number, border: number) {
 }
 const CARD_KEY = "clash-card-layout";
 const SPELL_KEY = "clash-spell-layout";
+const HAND_KEY = "clash-card-hand";
 const FIELD_KEY = "clash-field-card";
 const SPOT_VERSION = 4;
 
@@ -492,4 +493,16 @@ export function publishLayout() {
   localStorage.setItem("clash-vol-fx", "100");
   localStorage.setItem("clash-vol-tap", "100");
   localStorage.setItem(PUBLISH_KEY, PUBLISH_REV);
+}
+
+/** The figures on the monster card in the hand (new frame), tunable in Tuỳ chỉnh (chủ game 02/11). */
+export type HandKey = "stars" | "gems" | "def" | "mdef" | "atk" | "hp";
+export const HAND_MARKS: Array<{ key: HandKey; label: string; sample: string; box: boolean }> = CARD_MARKS.filter((mark) => mark.key !== "name" && mark.key !== "fresh") as Array<{ key: HandKey; label: string; sample: string; box: boolean }>;
+export const DEFAULT_HAND: Record<HandKey, Spot> = HAND_SPOTS;
+export function loadHand(): Record<HandKey, Spot> {
+  publishLayout();
+  return loadSpots(HAND_KEY, DEFAULT_HAND);
+}
+export function saveHand(layout: Record<HandKey, Spot>) {
+  saveSpots(HAND_KEY, layout);
 }

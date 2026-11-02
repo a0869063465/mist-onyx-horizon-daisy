@@ -859,6 +859,7 @@ export const PENDING_NOTES: string[] = [
   "Khung lá quái mới: các ô chỉ số (sao, gem, giáp, kháng phép, công, máu) có nền đặc, không còn lộ hình lá xuyên qua.",
   "Lá quái trên tay đổi sang khung mới, các ô chỉ số được đặt lại cho khớp.",
   "Lá quái trên tay: số sao sát cạnh ngôi sao, các số có màu sáng và nổi hơn.",
+  "Tuỳ chỉnh lại chỉnh được các chỉ số trên lá quái ở tay bài (khung mới); nhãn Mới tạm ẩn.",
 ];
 
 function remarkOf(notes: string[]) {
