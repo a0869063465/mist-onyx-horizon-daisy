@@ -850,6 +850,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm lá Hộp ma thuật (chưa dùng được) vào album Yugi.",
   "Hộp ma thuật dùng được (phép siêu tốc): đồng minh bị kỹ năng nhắm đổi chỗ ngay với 1 quái địch tới hết vòng.",
   "Bảng mô tả quái hiện số sao (đổi màu theo sao) cạnh tên.",
+  "Bảng quái xếp kỹ năng tối đa 4 icon một hàng: kỹ năng lẻ lên đầu, chuỗi liên kết dài tự xuống hàng.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -256,6 +256,9 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
  * top, passive skills (purple) and Lưu ý (yellow) under them; the card as it looks on the field with its name
  * and actions beside it; and the description of whichever icon was tapped, with its mana cost, below.
  */
+/** Most icons in one row of skills. */
+const MAX_ROW = 4;
+
 export function MonsterSheet({
   name,
   card,
@@ -347,26 +350,52 @@ export function MonsterSheet({
       <span className="sk3d-name">{tr(item.name)}</span>
     </button>
   );
-  const row = (list: typeof groups, withExtras: boolean) =>
-    list.length || withExtras ? (
-      <div className="msheet-row">
-        {list.map((group) =>
-          group.length === 1 ? (
-            icon(group[0])
+  // At most 4 icons to a row (chủ game 02/11): single skills come first, then the chains (a long one wraps in even
+  // pieces, its link breaks between rows); the extra icons come last as singles. Units share a row while they fit.
+  const row = (list: typeof groups, withExtras: boolean) => {
+    type Unit = { key: string; items: typeof groups[number]; chain: boolean; extra?: SheetExtra };
+    const singles: Unit[] = list.filter((group) => group.length === 1).map((group) => ({ key: `s${group[0].index}`, items: group, chain: false }));
+    const chains: Unit[] = [];
+    for (const group of list.filter((item) => item.length > 1)) {
+      const rows = Math.ceil(group.length / MAX_ROW);
+      const size = Math.ceil(group.length / rows);
+      for (let at = 0; at < group.length; at += size) chains.push({ key: `c${group[at].index}`, items: group.slice(at, at + size), chain: true });
+    }
+    const tail: Unit[] = withExtras ? extras.map((item) => ({ key: `x${item.key}`, items: [], chain: false, extra: item })) : [];
+    const lines: Unit[][] = [];
+    let used = 0;
+    for (const unit of [...singles, ...chains, ...tail]) {
+      const n = unit.extra ? 1 : unit.items.length;
+      // A chain starts its own row, so a link never wraps; singles share rows.
+      const last = lines[lines.length - 1];
+      if (!last || used + n > MAX_ROW || unit.chain || last.some((other) => other.chain)) {
+        lines.push([]);
+        used = 0;
+      }
+      lines[lines.length - 1].push(unit);
+      used += n;
+    }
+    return lines.map((line, lineAt) => (
+      <div key={lineAt} className="msheet-row">
+        {line.map((unit) =>
+          unit.extra ? (
+            extraIcon(unit.extra)
+          ) : !unit.chain || unit.items.length === 1 ? (
+            icon(unit.items[0])
           ) : (
-            <span key={`chain-${group[0].index}`} className="sk3d-chain">
-              {group.map((item, at) => (
+            <span key={unit.key} className="sk3d-chain">
+              {unit.items.map((item, at) => (
                 <Fragment key={item.index}>
-                  {at > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[group[at - 1].skill.kind], "--to": RIM_TONE[item.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
+                  {at > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[unit.items[at - 1].skill.kind], "--to": RIM_TONE[item.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
                   {icon(item)}
                 </Fragment>
               ))}
             </span>
           ),
         )}
-        {withExtras ? extras.map(extraIcon) : null}
       </div>
-    ) : null;
+    ));
+  };
   // The extra icons sit at the right end of the first row of icons.
   const extrasOnActives = extras.length > 0 && (actives.length > 0 || passives.length === 0);
   return (
