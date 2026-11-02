@@ -851,6 +851,7 @@ export const PENDING_NOTES: string[] = [
   "Hộp ma thuật dùng được (phép siêu tốc): đồng minh bị kỹ năng nhắm đổi chỗ ngay với 1 quái địch tới hết vòng.",
   "Bảng mô tả quái hiện số sao (đổi màu theo sao) cạnh tên.",
   "Bảng quái xếp kỹ năng tối đa 4 icon một hàng, không quá 2 hàng khi dưới 9 kỹ năng; cùng màu xếp gần nhau, kỹ năng lẻ lên đầu.",
+  "Bảng quái: chuỗi kỹ năng liên kết bị xuống hàng vẫn nối liền bằng thanh nối, các hàng căn trái thẳng cột.",
 ];
 
 function remarkOf(notes: string[]) {

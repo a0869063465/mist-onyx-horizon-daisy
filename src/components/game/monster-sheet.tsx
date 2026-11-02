@@ -380,11 +380,12 @@ export function MonsterSheet({
     // 2) fill evenly, breaking chains at a row's edge.
     const size = Math.ceil(flat.length / least);
     const rows: Piece[][] = [];
-    for (let at = 0; at < flat.length; at += size) rows.push(flat.slice(at, at + size).map((piece, k) => (k === 0 ? { ...piece, link: false } : piece)));
+    for (let at = 0; at < flat.length; at += size) rows.push(flat.slice(at, at + size));
     return rows;
   };
-  const row = (list: typeof groups, withExtras: boolean) =>
-    lay(list, withExtras).map((line, lineAt) => {
+  const row = (list: typeof groups, withExtras: boolean) => {
+    const lines = lay(list, withExtras);
+    return lines.map((line, lineAt) => {
       // Pieces joined to the one before them share one chain span, so the bar sits between the icons.
       const out: ReactNode[] = [];
       for (let at = 0; at < line.length; at += 1) {
@@ -396,20 +397,34 @@ export function MonsterSheet({
         if (!piece.item) continue;
         let end = at;
         while (line[end + 1]?.link && line[end + 1]?.item) end += 1;
+        // A chain that carries over from the row above: a bar drops from the icon above, in the same column.
+        const carried = at === 0 && lineAt > 0 && piece.link;
+        const prevLen = lineAt > 0 ? lines[lineAt - 1].length : 0;
+        const carry = (node: ReactNode) =>
+          carried ? (
+            <span key={`carry-${piece.item!.index}`} className="sk3d-carry" style={{ "--from": RIM_TONE[piece.item!.skill.kind], "--span": `${(prevLen - 1) * 4.3}rem` } as CSSProperties}>
+              <i className="sk3d-carry-end" aria-hidden="true" />
+              {node}
+            </span>
+          ) : (
+            node
+          );
         if (end === at) {
-          out.push(icon(piece.item));
+          out.push(carry(icon(piece.item)));
           continue;
         }
         const run = line.slice(at, end + 1);
         out.push(
-          <span key={`chain-${piece.item.index}`} className="sk3d-chain">
-            {run.map((part, k) => (
-              <Fragment key={part.item!.index}>
-                {k > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[run[k - 1].item!.skill.kind], "--to": RIM_TONE[part.item!.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
-                {icon(part.item!)}
-              </Fragment>
-            ))}
-          </span>,
+          carry(
+            <span key={`chain-${piece.item.index}`} className="sk3d-chain">
+              {run.map((part, k) => (
+                <Fragment key={part.item!.index}>
+                  {k > 0 ? <span className="sk3d-link" style={{ "--from": RIM_TONE[run[k - 1].item!.skill.kind], "--to": RIM_TONE[part.item!.skill.kind] } as CSSProperties} aria-hidden="true" /> : null}
+                  {icon(part.item!)}
+                </Fragment>
+              ))}
+            </span>,
+          ),
         );
         at = end;
       }
@@ -419,6 +434,7 @@ export function MonsterSheet({
         </div>
       );
     });
+  };
   return (
     <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()}>
       <GlyphDefs />

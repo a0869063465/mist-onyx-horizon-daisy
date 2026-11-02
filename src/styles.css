@@ -6632,9 +6632,25 @@ button.watch-back {
   font-size: 0.85rem;
   font-weight: 900;
 }
-.msheet-skills { display: grid; gap: 0.4rem; margin: 0.1rem 1.1rem 0.65rem; }
-/* Four icons fit a row (chủ game 02/11): the rows are laid out in code, so they never wrap. */
-.msheet-row { display: flex; flex-wrap: nowrap; justify-content: center; gap: 0.35rem 0.4rem; }
+.msheet-skills { display: grid; justify-content: center; justify-items: start; gap: 1.7rem; margin: 0.1rem 1.1rem 0.65rem; }
+/* Four icons fit a row (chủ game 02/11): the rows are laid out in code, so they never wrap. Rows are left-aligned so a chain that wraps stays in one column. */
+.msheet-row { display: flex; flex-wrap: nowrap; justify-content: flex-start; gap: 0.35rem 0.4rem; }
+.sk3d-carry { position: relative; display: block; }
+.sk3d-carry::before,
+.sk3d-carry::after,
+.sk3d-carry-end {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  background: var(--from);
+  box-shadow: 0 0.15rem 0.25rem rgba(0, 0, 0, 0.7);
+}
+/* Up from the first icon of the wrapped chain, across, and up into the last icon of the row above. */
+.sk3d-carry::after { left: calc(1.95rem - 0.31rem); top: -1.1rem; width: 0.62rem; height: 2.3rem; }
+.sk3d-carry::before { left: calc(1.95rem - 0.31rem); top: -1.1rem; width: calc(var(--span) + 0.62rem); height: 0.62rem; }
+.sk3d-carry-end { left: calc(1.95rem - 0.31rem + var(--span)); top: -1.5rem; width: 0.62rem; height: 0.8rem; }
+.sk3d-carry > * { position: relative; z-index: 1; }
 .sk3d {
   --ring: #3ec6ff;
   --deep: #0b2a4a;
