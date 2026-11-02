@@ -847,6 +847,7 @@ export const PENDING_NOTES: string[] = [
   "Màn thấp dùng bàn đấu mới (khay đỏ nhỏ hơn), tay bài bên đỏ đặt lại theo khay mới.",
   "Số lá còn lại luôn hiện dưới xấp bài hai bên. Bấm đôi vào xấp bài của mình hiện hỏi Đầu hàng.",
   "Kệ Album chia nhóm Môi trường và Nhân vật. Thêm album Yugi gồm 17 lá, đủ bộ nhận sao.",
+  "Thêm lá Hộp ma thuật (chưa dùng được) vào album Yugi.",
 ];
 
 function remarkOf(notes: string[]) {

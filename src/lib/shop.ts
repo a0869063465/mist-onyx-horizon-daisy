@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard } from "@/lib/catalog";
+import { FORMS, MONSTERS, SPELLS, WAITING_CARDS, monsterCard, spellCard } from "@/lib/catalog";
 import { spellKindRank } from "@/lib/spell-kinds";
 
 /**
@@ -54,7 +54,7 @@ export function packPool(): PackEntry[] {
   const monsters: PackEntry[] = MONSTERS.map((card) => monsterCard(card.id) ?? card)
     .filter((card) => !forms.has(card.id) && card.stars <= 4)
     .map((card) => ({ id: card.id, kind: "monster" }));
-  const spells: PackEntry[] = SPELLS.map((card) => ({ id: card.id, kind: "spell" }));
+  const spells: PackEntry[] = SPELLS.filter((card) => !WAITING_CARDS.has(card.id)).map((card) => ({ id: card.id, kind: "spell" }));
   return [...monsters, ...spells];
 }
 

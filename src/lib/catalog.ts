@@ -1065,8 +1065,18 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Cần có quái trên sân.\nTạo mũ che sân của bạn. Đối phương chỉ thấy mũ. Bạn vẫn thấy quái thật.\nMũ: 0 công, 0 thủ, 0 thủ phép, 1 máu. Không điều khiển. Không buff.\nMũ và quái đổi chỗ khi bạn triệu hồi, và khi bắt đầu lượt chung.\nĐòn, kỹ năng, phép trúng đúng ô quái thì vào quái. Trúng ô mũ thì mũ chịu.\nHết khi còn đúng 1 mũ che đúng 1 quái thật.",
     "picture": "spell:mu-ma-phap"
+  },
+  {
+    "id": "hop-ma-thuat",
+    "name": "Hộp ma thuật",
+    "gems": 0,
+    "effect": "Khi 1 quái thú đồng minh bị nhắm đến bởi kỹ năng của đối phương, hoán đổi vị trí của nó với 1 quái thú của đối phương, cho đến hết lượt đấu.",
+    "picture": "spell:hop-ma-thuat"
   }
 ];
+
+/** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
+export const WAITING_CARDS: ReadonlySet<string> = new Set(["hop-ma-thuat"]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map(SPELLS.map((card) => [card.id, card]));

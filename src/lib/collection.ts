@@ -178,6 +178,7 @@ const CHAR_ALBUMS: Array<{ id: string; name: string; cover: string; ids: string[
       "guong-phong-ho", // Mirror Force
       "hoan-doi", // Shift
       "vong-nguyen-rua-ac-ma", // Spellbinding Circle
+      "hop-ma-thuat", // Mystic Box
     ],
   },
 ];

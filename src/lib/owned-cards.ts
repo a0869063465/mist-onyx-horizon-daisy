@@ -1,5 +1,5 @@
 import { appMode } from "./app-mode.ts";
-import { DEFAULT_DECK } from "./catalog.ts";
+import { DEFAULT_DECK, WAITING_CARDS } from "./catalog.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
 const OWNED_KEY = "clash-owned";
@@ -10,6 +10,7 @@ const STARTER = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);
  * from packs; the publisher has every card. Kept on this phone with the rest of the shop.
  */
 export function canUseCard(id: string): boolean {
+  if (WAITING_CARDS.has(id)) return false;
   if (appMode() === "publisher" || STARTER.has(id)) return true;
   try {
     const raw = JSON.parse(localStorage.getItem(OWNED_KEY) ?? "[]") as unknown;
