@@ -5899,7 +5899,11 @@ function PlayPage() {
             </span>
           </p>
         )}
-        {tip ? <p key={tip.n} className="center-tip">{tip.text}</p> : null}
+        {tip ? (
+          <p key={tip.n} className="rx-hint" style={{ zIndex: 14 }}>
+            <NoticeText text={tip.text} />
+          </p>
+        ) : null}
         {lineOn ? (
           <ReactionLine
             orbs={chain}
