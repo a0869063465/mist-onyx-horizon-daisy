@@ -853,6 +853,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng quái xếp kỹ năng tối đa 4 icon một hàng, không quá 2 hàng khi dưới 9 kỹ năng; cùng màu xếp gần nhau, kỹ năng lẻ lên đầu.",
   "Bảng quái: chuỗi kỹ năng liên kết bị xuống hàng vẫn nối liền bằng thanh nối, các hàng căn trái thẳng cột.",
   "Lá phép trên tay bài đổi khung mới, có icon tốc độ dưới viên mana: tím chậm, hồng nhanh, xanh lam siêu tốc, xanh lá buff.",
+  "Bảng mô tả lá phép dùng khung vàng như Kho bài; số mana hiện cạnh tên bằng viên gem xanh; dưới mô tả hiện hình tốc độ to thay số mana.",
 ];
 
 function remarkOf(notes: string[]) {

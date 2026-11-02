@@ -6801,6 +6801,10 @@ button.watch-back {
 .msheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-right: 0.2rem; }
 .msheet-head .msheet-name { margin: 0 0 0.1rem 0; min-width: 0; }
 .msheet-tag { flex: none; padding-top: 0.05rem; }
+.tag-gems { display: inline-flex; align-items: center; gap: 0.3rem; }
+.tag-gem { height: 1.7rem; width: auto; filter: drop-shadow(0 0 4px rgba(62, 198, 255, 0.7)); }
+.tag-gems b { font-size: 1.7rem; line-height: 1; font-weight: 800; color: #4fc8ff; -webkit-text-stroke: 0.5px #052a4a; text-shadow: 0 1px 0 #052a4a, 0 0 8px rgba(62, 198, 255, 0.6); }
+.msheet-speed { display: inline-block; height: 2.6rem; width: auto; margin-left: 0.5rem; vertical-align: middle; filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.6)); }
 .tag-stars { display: inline-flex; align-items: center; gap: 0.3rem; }
 .tag-stars b {
   min-width: 0.9rem;

@@ -21,7 +21,7 @@ export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow)
  * spell sheet). It sits after the skills in the same 3D style: `ring`/`deep` colour the gem, `rim` names the rim
  * gradient (rim3d-<rim>), `body` is what the description shows when it is tapped.
  */
-export type SheetExtra = { key: string; name: string; emblem: ReactNode; rim: string; ring: string; deep: string; cost?: number | string; body: ReactNode };
+export type SheetExtra = { key: string; name: string; emblem: ReactNode; rim: string; ring: string; deep: string; cost?: number | string; /** A big speed picture in the title, in place of the cost (chủ game 02/11). */ speed?: string; body: ReactNode };
 
 /** `hex` mixed toward `to` by `t` (0 keeps hex, 1 gives to). */
 function mixHex(hex: string, to: string, t: number) {
@@ -291,7 +291,7 @@ export function MonsterSheet({
   /** On the card's top right corner (the collection's rarity tag). */
   badge?: ReactNode;
   /** Beside the name (chủ game 02/11): the stars (coloured by their number) and the gems the card costs, if any. */
-  tag?: { stars?: number };
+  tag?: { stars?: number; gems?: number | string };
   onClose: () => void;
   /** Tapping the card: the 3D fan of its related cards (owner, 19/10). Without it the card is only a picture. */
   onArt?: () => void;
@@ -476,6 +476,12 @@ export function MonsterSheet({
           <div className="msheet-side">
             <div className="msheet-head">
               <h2 className="msheet-name">{tr(name)}</h2>
+              {tag?.gems ? (
+                <span className="msheet-tag tag-gems">
+                  <img className="tag-gem" src="/ui/gem.webp" alt="" draggable={false} />
+                  <b>{tag.gems}</b>
+                </span>
+              ) : null}
               {tag?.stars ? (
                 <span className={`msheet-tag tag-stars is-s${Math.min(5, Math.max(1, tag.stars))}`}>
                   <i className="tag-star" />
@@ -516,7 +522,7 @@ export function MonsterSheet({
             <>
               <b className="msheet-desc-title is-extra" style={{ "--ring": extra.ring } as CSSProperties}>
                 {tr(extra.name)}
-                {extra.cost ? (
+                {extra.speed ? <img className="msheet-speed" src={extra.speed} alt="" draggable={false} /> : extra.cost ? (
                   <span className="act3d-cost">
                     <i className="mana-gem" />
                     <b>{extra.cost}</b>

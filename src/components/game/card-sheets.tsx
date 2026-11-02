@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { AlbumPic } from "@/components/collection/album-parts";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
@@ -10,7 +11,7 @@ import { loadField, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
-import { spellKind } from "@/lib/spell-kinds";
+import { spellKind, spellSpeed } from "@/lib/spell-kinds";
 
 /** The power balance notes of a card (Tăng, Giảm, Thay đổi lối chơi), newest first, as the deck page showed them. */
 export function BalanceLines({ id }: { id: string }) {
@@ -59,7 +60,7 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
     rim: `sp-${kind.key}`,
     ring: kind.tone,
     deep: "#14101c",
-    cost: gems ?? spell?.gems ?? 0,
+    speed: spellSpeed(id) ? `/ui/speed-${spellSpeed(id)}.webp` : undefined,
     body: (
       <>
         <p className="ink-spell">
@@ -222,8 +223,9 @@ export function SpellSheet({
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
       name={spell.name}
-      card={<CardFace spellId={id} gems={gems} />}
+      card={<AlbumPic id={id} />}
       count=""
+      tag={{ gems: gems ?? spell.gems }}
       skills={[]}
       extras={[spellKindExtra(id, gems, note), ...extras]}
       actions={actions}
