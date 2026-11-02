@@ -25,7 +25,8 @@ import { OracleOrb } from "@/components/game/oracle-orb";
 import { AimMark } from "@/components/game/aim-mark";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
-import { bookSkill, skillsOf } from "@/lib/skill-book";
+import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
+import { spellKind } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
@@ -1204,6 +1205,14 @@ function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (!offer || !pending) return false;
   if (offer === "lash") return pending.kind === "melee" && (duel.hold?.blocker ?? pending.defender) === mon.uid;
   return (pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell") && pending.target === mon.uid;
+}
+
+/** Glow colour of a monster's reaction skill: the rim colour of that skill (reaction skills are mostly the pink spell kind). */
+const SKILL_TONES: Record<string, string> = { active: "#2f9cf0", passive: "#a56cf0", risk: "#e8352c", spell: "#ff4fa6", note: "#e8c14a" };
+function reactTone(cardId: string): string {
+  const list = SKILL_BOOK[cardId] ?? [];
+  const pick = list.find((entry) => entry.kind === "spell") ?? list[0];
+  return SKILL_TONES[pick?.kind ?? "spell"];
 }
 
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
@@ -6678,6 +6687,7 @@ function PlayPage() {
               prime={!!mon && isPrime(duel, mon, viewer)}
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer))}
+              alertColor={mon ? reactTone(mon.cardId) : undefined}
               forecast={mon ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
               onUnit={onUnit}
@@ -6740,6 +6750,7 @@ function PlayPage() {
           type="button"
           className={`face-pile press${canDrawNow ? " is-ready" : ""}${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
           style={{
+            ...({ "--alert-color": "#ff4f93" } as CSSProperties),
             left: `${board.stack.x}%`,
             top: `${board.stack.y}%`,
             width: `${board.stack.width}%`,
@@ -6816,6 +6827,7 @@ function PlayPage() {
                       className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
+                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
                       onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}
                       onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                       onPointerMove={move}
@@ -6858,6 +6870,7 @@ function PlayPage() {
                   <button
                     type="button"
                     className={`hand-card press is-spell${open || picked ? " is-open" : ""}${ready ? " is-alert" : ""}${drag?.kind === "spell" && drag.index === index ? " is-ghosting" : ""}`}
+                    style={ready ? ({ "--alert-color": spellKind(id).tone } as CSSProperties) : undefined}
                     onClick={() => openHand("spell", index, id)}
                     onPointerDown={(event) => begin(event, { kind: "spell", index, spellId: id })}
                     onPointerMove={move}
@@ -7998,6 +8011,7 @@ function BoardSlot({
   prime = false,
   hpOverride,
   alert = false,
+  alertColor,
   veil = false,
   mask = false,
   decoy = false,
@@ -8035,6 +8049,7 @@ function BoardSlot({
   hpOverride?: number;
   prime?: boolean;
   alert?: boolean;
+  alertColor?: string;
   veil?: boolean;
   mask?: boolean;
   decoy?: boolean;
@@ -8051,7 +8066,7 @@ function BoardSlot({
   const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
-  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%` };
+  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}) };
   const slotProps = {
     "data-slot": `${side}-${index}`,
     "data-owner": side,

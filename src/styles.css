@@ -3377,9 +3377,20 @@ button.trail-dot.is-on {
   background: #1a1008;
 }
 .alert-preview .is-alert, .hand-card.is-alert, .face-pile.is-alert, .slot.is-alert {
-  outline: var(--alert-border, 2px) solid #ff8a00;
+  --alert-color: #ff4f93;
+  outline: var(--alert-border, 2px) solid var(--alert-color);
   outline-offset: 1px;
-  animation: alert-blink 0.7s ease-in-out infinite;
+  animation: alert-breathe 1.5s ease-in-out infinite;
+}
+@keyframes alert-breathe {
+  0%, 100% {
+    scale: 1;
+    box-shadow: 0 0 calc(var(--alert-size, 32px) * 0.3) color-mix(in srgb, var(--alert-color) 35%, transparent);
+  }
+  50% {
+    scale: 1.035;
+    box-shadow: 0 0 var(--alert-size, 32px) var(--alert-color), 0 0 calc(var(--alert-size, 32px) * 1.7) color-mix(in srgb, var(--alert-color) 55%, transparent);
+  }
 }
 @keyframes spell-wash {
   25% {

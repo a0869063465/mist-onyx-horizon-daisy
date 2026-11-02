@@ -870,6 +870,7 @@ export const PENDING_NOTES: string[] = [
   "Chưa rút bài mà bấm hoặc kéo quái 1 sao để triệu hồi: hiện lời nhắc giữa sân \"Hãy rút 1 lá bài để được triệu hồi quái 1 sao\".",
   "Lời nhắc giữa sân chỉ còn chữ trơn, không còn bảng.",
   "Lá phép nhanh trên tay có khung hồng mới.",
+  "Lá phép/skill phản ứng được: bỏ chớp cam, thay bằng viền và glow màu của phép/skill, lá thở nhẹ.",
 ];
 
 function remarkOf(notes: string[]) {
