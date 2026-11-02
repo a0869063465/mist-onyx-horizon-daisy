@@ -7,7 +7,7 @@ import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/compon
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, monsterCard, spellCard } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
-import { loadField, type FieldKey } from "@/lib/layouts";
+import { SHEET_SPOTS, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
@@ -76,11 +76,11 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
 export function FieldFace({ id }: { id: string }) {
   const card = monsterCard(id);
   if (!card) return null;
-  const layout = loadField();
+  const layout = SHEET_SPOTS;
   const spot = (key: FieldKey, value: number) =>
     value === 0 ? null : (
       <span
-        className="fstat"
+        className={`fstat is-${key}`}
         style={{
           left: `${layout[key].x}%`,
           top: `${layout[key].y}%`,
@@ -97,7 +97,7 @@ export function FieldFace({ id }: { id: string }) {
     <span className="sheet-unit">
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
-        <img className="frame" src="/field-frame.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-sheet.png" alt="" draggable={false} />
         {spot("def", card.def)}
         {spot("mdef", card.mdef)}
         {spot("atk", card.atk)}

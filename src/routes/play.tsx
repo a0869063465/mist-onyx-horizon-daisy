@@ -161,7 +161,7 @@ import {
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
-import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, SHEET_SPOTS, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
@@ -6778,7 +6778,7 @@ function PlayPage() {
                       onPointerMove={move}
                       onPointerUp={end}
                     >
-                      <CardFace monster={card} level={held.saved?.level ?? 1} live={live} gems={held.toll ? `${card.gems}+1` : undefined} fake={held.fake} selected={lit} />
+                      <CardFace monster={card} hand level={held.saved?.level ?? 1} live={live} gems={held.toll ? `${card.gems}+1` : undefined} fake={held.fake} selected={lit} />
                       {riteHand === index && !(drag?.kind === "summon" && drag.index === index) ? <RiteRing /> : null}
                     </button>
                     {picked && react ? (
@@ -7841,13 +7841,13 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
   const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
-        className={`fstat${value < 0 || cut ? " is-red" : blue ? " is-blue" : ""}`}
+        className={`fstat is-${key}${value < 0 || cut ? " is-red" : blue ? " is-blue" : ""}`}
         style={{
-          left: `${layout[key].x}%`,
-          top: `${layout[key].y}%`,
-          fontSize: cardText(layout[key].size, "cqmin"),
-          width: `${layout[key].width}%`,
-          height: `${layout[key].height}%`,
+          left: `${SHEET_SPOTS[key].x}%`,
+          top: `${SHEET_SPOTS[key].y}%`,
+          fontSize: cardText(SHEET_SPOTS[key].size, "cqmin"),
+          width: `${SHEET_SPOTS[key].width}%`,
+          height: `${SHEET_SPOTS[key].height}%`,
         }}
       >
         {value}
@@ -7858,7 +7858,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
     <span className="sheet-unit">
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
-        <img className="frame" src="/field-frame.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-sheet.png" alt="" draggable={false} />
         {spot("def", stats.def, stats.blueDef, fakeCut(mon, "def", stats.def))}
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}

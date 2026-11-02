@@ -2,7 +2,7 @@ import { spellSpeed } from "@/lib/spell-kinds";
 import { useLayoutEffect, useRef, useState } from "react";
 import { artSrc, fakeMonsterCard, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
-import { loadCard, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
+import { HAND_SPOTS, loadCard, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
 
 // Long names may shrink to 0.75 of the old size; card text is now 1.3x, so 0.75 / 1.3.
 const NAME_FLOOR = 0.58;
@@ -141,16 +141,16 @@ export function CardFace({
   const badge = mark ?? (showNew ? "new" : null);
   const spell = spellId ? spellCard(spellId) : undefined;
   useLang();
-  const spots = layout ?? loadCard();
+  const spots = layout ?? (hand && monster ? { ...loadCard(), ...HAND_SPOTS } : loadCard());
   const spellSpots = spellLayout ?? loadSpell();
   const tier = monster ? monsterTier(monster.stars) : spell ? spellTier(spell.gems) : "";
   const cut = monster && fake && !live ? fakeMonsterCard(monster) : monster;
-  const pin = (spot: Spot, value: string | number, name = false, key?: "atk" | "def" | "mdef" | "hp") =>
+  const pin = (spot: Spot, value: string | number, name = false, key?: "atk" | "def" | "mdef" | "hp" | "gems") =>
     hideStats || (!name && value === 0) ? null : name ? (
       <FittedName spot={spot} value={String(value)} />
     ) : (
       <span
-        className={`socket${fake && monster && key && typeof value === "number" && value < monster[key] ? " is-cut" : ""}`}
+        className={`socket${key ? ` is-${key}` : ""}${fake && monster && key && typeof value === "number" && key !== "gems" && value < monster[key] ? " is-cut" : ""}`}
         style={{
           left: `${spot.x}%`,
           top: `${spot.y}%`,
@@ -163,22 +163,32 @@ export function CardFace({
       </span>
     );
   return (
-    <div className={`card${spell ? " is-spell" : ""}${tier}${dim ? " is-dim" : ""}${selected ? " is-selected" : ""}`}>
+    <div className={`card${spell ? " is-spell" : ""}${hand && monster ? " is-framed" : ""}${tier}${dim ? " is-dim" : ""}${selected ? " is-selected" : ""}`}>
       {monster ? (
         artSrc(monster.id, level) ? <img className="art" src={artSrc(monster.id, level)} alt="" draggable={false} /> : null
       ) : spell ? (
         <img className="art" src={spellSrc(spell.id)} alt="" draggable={false} />
       ) : null}
-      <img className="frame" src={spell ? (hand ? "/spell-frame-hand.png" : "/spell-frame.png") : "/card-frame.png"} alt="" draggable={false} />
+      <img className="frame" src={spell ? (hand ? "/spell-frame-hand.png" : "/spell-frame.png") : hand ? "/ui/frame-hand.png" : "/card-frame.png"} alt="" draggable={false} />
       {monster ? (
         <>
-          {pin(spots.stars, monster.stars)}
-          {pin(spots.gems, gems ?? monster.gems)}
+          {hand ? (
+            <span
+              className={`pin-stars tag-stars is-s${Math.min(5, Math.max(1, monster.stars))}`}
+              style={{ left: `${spots.stars.x}%`, top: `${spots.stars.y}%`, fontSize: cardText(spots.stars.size) }}
+            >
+              <i className="tag-star" />
+              <b>{monster.stars}</b>
+            </span>
+          ) : (
+            pin(spots.stars, monster.stars)
+          )}
+          {pin(spots.gems, gems ?? monster.gems, false, hand ? "gems" : undefined)}
           {pin(spots.def, live?.def ?? cut?.def ?? monster.def, false, "def")}
           {pin(spots.mdef, live?.mdef ?? cut?.mdef ?? monster.mdef, false, "mdef")}
           {pin(spots.atk, live?.atk ?? cut?.atk ?? monster.atk, false, "atk")}
           {pin(spots.hp, live?.hp ?? cut?.hp ?? monster.hp, false, "hp")}
-          {hideName ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
+          {hideName || hand ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
           {badge ? <NewMark spot={spots.fresh} kind={badge} /> : null}
         </>
       ) : spell ? (

@@ -12959,3 +12959,35 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 }
 /* Without a row of skill icons the ✕ stands at the plaque's height: the head leaves room for it. */
 .msheet:not(:has(.msheet-skills)) .msheet-head { margin-top: 2.2rem; }
+
+/* ---- New monster frames (chủ game 02/11): every figure in the star's style, coloured per stat ---- */
+.socket.is-def, .fstat.is-def { --tier: #ffc83a; }
+.socket.is-mdef, .fstat.is-mdef { --tier: #c77dff; }
+.socket.is-atk, .fstat.is-atk { --tier: #ff6a4a; }
+.socket.is-hp, .fstat.is-hp { --tier: #ff6b8a; }
+.socket.is-gems { --tier: #3ec6ff; }
+.card .socket.is-def, .card .socket.is-mdef, .card .socket.is-atk, .card .socket.is-hp, .card .socket.is-gems,
+.sheet-unit .fstat.is-def, .sheet-unit .fstat.is-mdef, .sheet-unit .fstat.is-atk, .sheet-unit .fstat.is-hp {
+  color: color-mix(in srgb, var(--tier) 22%, white);
+  text-shadow: 0 0.05em 0 color-mix(in srgb, var(--tier) 40%, black), 0 0 0.25em var(--tier);
+  -webkit-text-stroke: 0.09em color-mix(in srgb, var(--tier) 22%, black);
+  paint-order: stroke fill;
+}
+.sheet-unit .fstat.is-red, .sheet-unit .fstat.is-blue { filter: none; }
+.sheet-unit .fstat.is-red { --tier: #ff3b30; color: #ff6a5e; }
+.sheet-unit .fstat.is-blue { --tier: #3ec6ff; color: #8fdcff; }
+.card .pin-stars {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  line-height: 1;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.card .pin-stars .tag-star { width: 1.05em; height: 1.05em; }
+.card .pin-stars b { font-size: 1em; }
+.card.is-framed::after { display: none !important; }
