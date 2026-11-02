@@ -873,6 +873,7 @@ export const PENDING_NOTES: string[] = [
   "Lá phép/skill phản ứng được: bỏ chớp cam, thay bằng viền và glow màu của phép/skill, lá thở nhẹ.",
   "Khung lá phép nhanh trên tay đổi sang khung hồng mới.",
   "Khung lá phép nhanh có mana và không mana canh khớp cùng cỡ.",
+  "Lá phép chậm trên tay có khung tím mới.",
 ];
 
 function remarkOf(notes: string[]) {
