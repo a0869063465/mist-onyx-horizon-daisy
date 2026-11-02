@@ -856,6 +856,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng mô tả lá phép dùng khung vàng như Kho bài; số mana hiện cạnh tên bằng viên gem xanh; dưới mô tả hiện hình tốc độ to thay số mana.",
   "Lá quái đổi khung mới: lá trong bảng mô tả và lá trên tay; bỏ tên, sao ở ô trên cùng, chỉ số giáp vàng, kháng phép tím, công đỏ, máu hồng theo kiểu số sao.",
   "Lá quái trên tay: số công, máu, giáp, kháng phép, sao to và rõ hơn, không còn bị cắt; mana \"n+1\" của phép thu nhỏ vừa viên gem.",
+  "Khung lá quái mới: các ô chỉ số (sao, gem, giáp, kháng phép, công, máu) có nền đặc, không còn lộ hình lá xuyên qua.",
 ];
 
 function remarkOf(notes: string[]) {

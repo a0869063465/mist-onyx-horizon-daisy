@@ -12995,3 +12995,4 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .card .pin-stars .tag-star { width: 1.15em; height: 1.15em; }
 .card .speed { left: 77.5%; top: 18%; width: 19%; height: 13%; }
 .card.is-spell .socket:not(.is-name) { font-size: min(var(--spell-gem, 100%), 100%); }
+.card.is-framed .frame, .sheet-unit .field-unit .frame { mix-blend-mode: normal; }
