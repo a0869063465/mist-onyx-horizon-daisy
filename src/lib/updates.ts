@@ -849,6 +849,7 @@ export const PENDING_NOTES: string[] = [
   "Kệ Album chia nhóm Môi trường và Nhân vật. Thêm album Yugi gồm 17 lá, đủ bộ nhận sao.",
   "Thêm lá Hộp ma thuật (chưa dùng được) vào album Yugi.",
   "Hộp ma thuật dùng được (phép siêu tốc): đồng minh bị kỹ năng nhắm đổi chỗ ngay với 1 quái địch tới hết vòng.",
+  "Bảng mô tả lá hiện số sao (đổi màu theo sao) và gem tiêu hao cạnh tên.",
 ];
 
 function remarkOf(notes: string[]) {

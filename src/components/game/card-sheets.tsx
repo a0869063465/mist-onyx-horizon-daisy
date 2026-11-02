@@ -177,6 +177,7 @@ export function CardMonsterSheet({
       aside={aside}
       note={note}
       badge={badge}
+      tag={{ stars: card.stars, gems: card.gems }}
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
@@ -228,6 +229,7 @@ export function SpellSheet({
       actions={actions}
       aside={aside}
       badge={badge}
+      tag={{ gems: gems ?? spell.gems }}
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}

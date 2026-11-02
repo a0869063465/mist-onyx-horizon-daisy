@@ -6769,6 +6769,28 @@ button.watch-back {
   text-shadow: 0 1px 0 #5a2600;
 }
 .msheet-side { display: grid; gap: 0.55rem; align-content: start; padding-top: 0.2rem; }
+/* The name and, at its right, the stars and gems the card costs (chủ game 02/11). */
+.msheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.35rem; margin-right: 1.9rem; }
+.msheet-head .msheet-name { margin: 0 0 0.1rem 0; min-width: 0; }
+.msheet-tag { display: grid; justify-items: end; gap: 0.18rem; flex: none; padding-top: 0.1rem; }
+.tag-stars, .tag-gems { display: inline-flex; align-items: center; gap: 0.22rem; }
+.tag-stars b, .tag-gems b { font-family: "Barlow Condensed", system-ui, sans-serif; font-size: 1.15rem; font-weight: 800; line-height: 1; }
+.tag-stars { --tier: #ffffff; }
+.tag-stars.is-s1 { --tier: #46e874; }
+.tag-stars.is-s2 { --tier: #ff9a2e; }
+.tag-stars.is-s3 { --tier: #ff4a3d; }
+.tag-stars.is-s4 { --tier: #c77dff; }
+.tag-stars.is-s5 { --tier: #ffffff; }
+.tag-stars b { color: var(--tier); text-shadow: 0 0 1px #000, 0 0 2px #000, 0 1px 1px #000, 0 0 7px var(--tier); }
+.tag-star {
+  width: 1.15rem;
+  height: 1.15rem;
+  background: radial-gradient(circle at 40% 30%, #ffffffaa 0%, var(--tier) 45%, var(--tier) 100%);
+  clip-path: polygon(50% 0%, 61.8% 35.4%, 98.1% 35.4%, 68.7% 57.3%, 79.4% 91.6%, 50% 70.8%, 20.6% 91.6%, 31.3% 57.3%, 1.9% 35.4%, 38.2% 35.4%);
+  filter: drop-shadow(0 1px 1px #000);
+}
+.tag-gems .mana-gem { width: 0.7rem; height: 0.7rem; margin: 0 0.1rem; }
+.tag-gems b { color: #9ef4ff; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
 .msheet-name {
   margin: 0 1.6rem 0.1rem 0;
   font-size: 1.25rem;

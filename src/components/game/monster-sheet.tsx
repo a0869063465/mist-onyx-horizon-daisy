@@ -266,6 +266,7 @@ export function MonsterSheet({
   aside,
   note,
   badge,
+  tag,
   onClose,
   onArt,
   onBack,
@@ -286,6 +287,8 @@ export function MonsterSheet({
   note?: string;
   /** On the card's top right corner (the collection's rarity tag). */
   badge?: ReactNode;
+  /** Beside the name (chủ game 02/11): the stars (coloured by their number) and the gems the card costs, if any. */
+  tag?: { stars?: number; gems?: number | string };
   onClose: () => void;
   /** Tapping the card: the 3D fan of its related cards (owner, 19/10). Without it the card is only a picture. */
   onArt?: () => void;
@@ -406,7 +409,25 @@ export function MonsterSheet({
             ) : null}
           </div>
           <div className="msheet-side">
-            <h2 className="msheet-name">{tr(name)}</h2>
+            <div className="msheet-head">
+              <h2 className="msheet-name">{tr(name)}</h2>
+              {tag && ((tag.stars ?? 0) > 0 || (tag.gems !== undefined && tag.gems !== 0 && tag.gems !== "0")) ? (
+                <span className="msheet-tag">
+                  {tag.stars ? (
+                    <span className={`tag-stars is-s${Math.min(5, Math.max(1, tag.stars))}`}>
+                      <i className="tag-star" />
+                      <b>{tag.stars}</b>
+                    </span>
+                  ) : null}
+                  {tag.gems !== undefined && tag.gems !== 0 && tag.gems !== "0" ? (
+                    <span className="tag-gems">
+                      <i className="mana-gem" />
+                      <b>{tag.gems}</b>
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+            </div>
             {aside}
             {actions.length ? (
               <div className="msheet-acts">
