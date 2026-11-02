@@ -186,12 +186,12 @@ export const SHEET_SPOTS: Record<FieldKey, FieldSpot> = {
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp", Spot> = {
-  stars: { x: 84.6, y: 5.4, size: 10.5, width: 26, height: 8 },
-  gems: { x: 92.6, y: 15, size: 11, width: 9, height: 8 },
-  def: { x: 18.6, y: 52.6, size: 17, width: 10, height: 6 },
-  mdef: { x: 18.6, y: 64.7, size: 17, width: 10, height: 6 },
-  atk: { x: 37.9, y: 86.6, size: 18, width: 14, height: 9 },
-  hp: { x: 86.1, y: 86.6, size: 18, width: 14, height: 9 },
+  stars: { x: 80.2, y: 8.4, size: 13, width: 34, height: 11 },
+  gems: { x: 77, y: 19.2, size: 12, width: 14, height: 12 },
+  def: { x: 22, y: 47.6, size: 18, width: 12, height: 8 },
+  mdef: { x: 22, y: 63.3, size: 18, width: 12, height: 8 },
+  atk: { x: 37.7, y: 86.8, size: 19, width: 14, height: 9 },
+  hp: { x: 85.4, y: 86.5, size: 19, width: 14, height: 9 },
 };
 
 const BOARD_KEY = "clash-board-layout-v11";
@@ -226,7 +226,7 @@ export function saveAlert(glow: number, border: number) {
 }
 const CARD_KEY = "clash-card-layout";
 const SPELL_KEY = "clash-spell-layout";
-const HAND_KEY = "clash-card-hand";
+const HAND_KEY = "clash-card-hand-v2";
 const FIELD_KEY = "clash-field-card";
 const SPOT_VERSION = 4;
 
