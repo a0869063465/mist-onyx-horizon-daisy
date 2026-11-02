@@ -6769,28 +6769,52 @@ button.watch-back {
   text-shadow: 0 1px 0 #5a2600;
 }
 .msheet-side { display: grid; gap: 0.55rem; align-content: start; padding-top: 0.2rem; }
-/* The name and, at its right, the stars and gems the card costs (chủ game 02/11). */
-.msheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.35rem; margin-right: 1.9rem; }
+/* The name and, at its right, a plaque with the stars and the gems the card costs (chủ game 02/11). */
+.msheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-right: 0.2rem; }
 .msheet-head .msheet-name { margin: 0 0 0.1rem 0; min-width: 0; }
-.msheet-tag { display: grid; justify-items: end; gap: 0.18rem; flex: none; padding-top: 0.1rem; }
-.tag-stars, .tag-gems { display: inline-flex; align-items: center; gap: 0.22rem; }
-.tag-stars b, .tag-gems b { font-family: "Barlow Condensed", system-ui, sans-serif; font-size: 1.15rem; font-weight: 800; line-height: 1; }
+.msheet-tag {
+  display: grid;
+  justify-items: end;
+  gap: 0.1rem;
+  flex: none;
+  padding: 0.28rem 0.6rem 0.3rem 0.5rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, rgba(10, 14, 24, 0.9), rgba(4, 7, 14, 0.92));
+  box-shadow: inset 0 0 0 1px rgba(233, 196, 106, 0.55), inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 3px 8px rgba(0, 0, 0, 0.55);
+}
+.tag-stars, .tag-gems { display: inline-flex; align-items: center; gap: 0.3rem; }
+.tag-stars b, .tag-gems b {
+  min-width: 0.9rem;
+  text-align: center;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  -webkit-text-stroke: 1.2px #05070c;
+  paint-order: stroke fill;
+}
 .tag-stars { --tier: #ffffff; }
 .tag-stars.is-s1 { --tier: #46e874; }
 .tag-stars.is-s2 { --tier: #ff9a2e; }
 .tag-stars.is-s3 { --tier: #ff4a3d; }
 .tag-stars.is-s4 { --tier: #c77dff; }
 .tag-stars.is-s5 { --tier: #ffffff; }
-.tag-stars b { color: var(--tier); text-shadow: 0 0 1px #000, 0 0 2px #000, 0 1px 1px #000, 0 0 7px var(--tier); }
-.tag-star {
-  width: 1.15rem;
-  height: 1.15rem;
-  background: radial-gradient(circle at 40% 30%, #ffffffaa 0%, var(--tier) 45%, var(--tier) 100%);
-  clip-path: polygon(50% 0%, 61.8% 35.4%, 98.1% 35.4%, 68.7% 57.3%, 79.4% 91.6%, 50% 70.8%, 20.6% 91.6%, 31.3% 57.3%, 1.9% 35.4%, 38.2% 35.4%);
-  filter: drop-shadow(0 1px 1px #000);
+.tag-stars b {
+  color: color-mix(in srgb, var(--tier) 80%, white);
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--tier) 45%, black), 0 0 10px var(--tier), 0 0 3px var(--tier);
 }
-.tag-gems .mana-gem { width: 0.7rem; height: 0.7rem; margin: 0 0.1rem; }
-.tag-gems b { color: #9ef4ff; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
+/* The star is faceted in two tones of its colour, like the star picture: light and dark wedges round the middle. */
+.tag-star {
+  width: 2rem;
+  height: 2rem;
+  --hi: color-mix(in srgb, var(--tier) 70%, white);
+  --lo: color-mix(in srgb, var(--tier) 78%, black);
+  background: conic-gradient(from 0deg at 50% 54%, var(--hi) 0 36deg, var(--lo) 36deg 72deg, var(--hi) 72deg 108deg, var(--lo) 108deg 144deg, var(--hi) 144deg 180deg, var(--lo) 180deg 216deg, var(--hi) 216deg 252deg, var(--lo) 252deg 288deg, var(--hi) 288deg 324deg, var(--lo) 324deg 360deg);
+  clip-path: polygon(50% 0%, 61.8% 35.4%, 98.1% 35.4%, 68.7% 57.3%, 79.4% 91.6%, 50% 70.8%, 20.6% 91.6%, 31.3% 57.3%, 1.9% 35.4%, 38.2% 35.4%);
+}
+.tag-stars { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)); }
+.tag-gems .mana-gem { width: 1rem; height: 1rem; margin: 0 0.45rem 0 0.4rem; border-radius: 0.16rem; }
+.tag-gems b { color: #c9f8ff; text-shadow: 0 2px 0 #0a3b66, 0 0 10px #3ec6ff, 0 0 3px #3ec6ff; }
 .msheet-name {
   margin: 0 1.6rem 0.1rem 0;
   font-size: 1.25rem;
@@ -12912,3 +12936,5 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   object-fit: fill;
   max-width: none;
 }
+/* Without a row of skill icons the ✕ stands at the plaque's height: the head leaves room for it. */
+.msheet:not(:has(.msheet-skills)) .msheet-head { margin-top: 2.2rem; }
