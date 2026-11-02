@@ -863,6 +863,7 @@ export const PENDING_NOTES: string[] = [
   "Lá quái trên tay đổi khung mới có ô sao và gem to hơn; lá không tốn gem dùng khung không có ô gem. Lá phép trên tay không còn tên. Các ô chỉ số đặt lại, chỉnh được trong Tuỳ chỉnh.",
   "Lá quái trên tay: cắt phần hình lá dư ra ngoài mép trên bên trái.",
   "Lá trên tay: sao to trồi khỏi lá không còn bị cắt; lá khởi đầu dùng khung mới; nhấp đôi quái trên sân để xem thông tin; thêm Tuỳ chỉnh lá phép trên tay (gem, icon tốc độ).",
+  "Nút Triệu hồi trên tay nhỏ lại; số lá còn trong xấp của mình cùng kiểu số xấp đối thủ, bỏ số lá trên tay đối thủ; quái triệu hồi được có viền và glow xanh lá; chưa rút bài mà bấm quái thì nhắc \"Hãy rút 1 lá bài để được triệu hồi quái N sao\".",
 ];
 
 function remarkOf(notes: string[]) {

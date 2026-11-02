@@ -3946,6 +3946,11 @@ function PlayPage() {
       return;
     }
     lastTap.current = { pile, index, at: Date.now() };
+    if (pile === "reserve" && duel && canPlay) {
+      const wanted = monsterCard(id);
+      const mine = duel.players[viewer];
+      if (wanted && mine.stars < wanted.stars && mine.stars + 1 >= wanted.stars && mine.draws < 1 && pileLeft(mine) > 0) holdNotice(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
+    }
     setInspect(null);
     setHandPick((current) => (current?.pile === pile && current.index === index ? null : { pile, index, id }));
   }
@@ -5769,7 +5774,7 @@ function PlayPage() {
           if (gemKey && gemOwner.stars >= 4) return null;
           const always = orbKey || starKey || Boolean(tutView?.show?.includes(key));
           // Số xấp địch nay nằm dưới xấp (DeckPile); số tay bài địch luôn hiện (chủ game 01/11).
-          if (key === "foeHand") return null;
+          if (key === "foeHand" || (key === "foeReserve" && !tutView?.show?.includes(key))) return null;
           if (marks[key].hidden || (value === 0 && !always)) return null;
           const sideOrb = key.startsWith("you") ? tutView?.youOrb ?? you.orb : tutView?.foeOrb ?? foe.orb;
           const starLit = starFlash !== null && ((starFlash === viewer && key === "youStars") || (starFlash !== viewer && key === "foeStars"));
@@ -6773,6 +6778,8 @@ function PlayPage() {
                 const picked = handPick?.pile === "reserve" && handPick.index === index && handPick.id === id;
                 const lit = open || picked || (aim?.kind === "summon" && aim.index === index);
                 const swapCard = swapBench(held);
+                const summonPlace = summonAt(index);
+                const summonable = canPlay && !(id === "cuc-bong-ma-quai" && cotton.hand) && !(id === "the-than-cua-shien" && standHand) && (rowSlot("front", summonPlace) !== null || rowSlot("back", summonPlace) !== null);
                 const cottonCard = id === "cuc-bong-ma-quai" && cotton.hand;
                 const standCard = id === "the-than-cua-shien" && standHand;
                 // A monster flashing orange uses its skill from the hand: tap the card, then the skill (Bông mềm, Thế thân).
@@ -6782,7 +6789,7 @@ function PlayPage() {
                   <div key={`${id}-${index}`} className="hand-pick" data-hand={`r:${index}`}>
                     <button
                       type="button"
-                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
+                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
                       onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}

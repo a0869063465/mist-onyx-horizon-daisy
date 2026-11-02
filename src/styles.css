@@ -13026,3 +13026,28 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .stage .hand.is-strip > * { pointer-events: auto; }
 .tune-card { overflow: visible; }
 
+/* V5 nút Triệu hồi/Hiến tế/Dung hợp trên tay nhỏ lại (chủ game 02/11). */
+.hand-acts { gap: 0.3rem; }
+.hand-acts .act3d.is-mini { min-width: 2.9rem; min-height: 3rem; padding: 0.2rem 0.25rem; }
+.hand-acts .act3d.is-mini .act3d-ico { width: 1.7rem; height: 1.7rem; }
+.hand-acts .act3d.is-mini .act3d-ico.is-crystal { width: 1.8rem; height: 2rem; }
+.hand-acts .act3d.is-mini .act3d-label { font-size: 0.5rem; }
+/* V6 số xấp bài của mình cùng kiểu số xấp đối thủ, treo dưới đáy xấp. */
+.face-pile .deck-left {
+  font-size: 3cqw;
+  min-width: 1.5em;
+  height: auto;
+  padding: 0.12em 0.4em;
+  border-radius: 0.35em;
+  background: linear-gradient(180deg, #3b4a66 0%, #1b2436 55%, #0d1220 100%);
+  color: #ffe9a6;
+  border: 0.07em solid #f4d27a;
+  box-shadow: 0 0.1em 0 #6b430c, 0 0.18em 0.3em rgba(0, 0, 0, 0.65);
+  text-shadow: 0 1px 2px #000;
+  display: block;
+}
+/* V7 quái triệu hồi được: viền + glow xanh lá. */
+.stage .hand-card.is-summonable > .card {
+  filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));
+}
+
