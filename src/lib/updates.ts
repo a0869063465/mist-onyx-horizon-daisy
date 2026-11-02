@@ -858,6 +858,7 @@ export const PENDING_NOTES: string[] = [
   "Lá quái trên tay: số công, máu, giáp, kháng phép, sao to và rõ hơn, không còn bị cắt; mana \"n+1\" của phép thu nhỏ vừa viên gem.",
   "Khung lá quái mới: các ô chỉ số (sao, gem, giáp, kháng phép, công, máu) có nền đặc, không còn lộ hình lá xuyên qua.",
   "Lá quái trên tay đổi sang khung mới, các ô chỉ số được đặt lại cho khớp.",
+  "Lá quái trên tay: số sao sát cạnh ngôi sao, các số có màu sáng và nổi hơn.",
 ];
 
 function remarkOf(notes: string[]) {

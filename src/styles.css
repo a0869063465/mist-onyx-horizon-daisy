@@ -12996,3 +12996,19 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .card .speed { left: 77.5%; top: 18%; width: 19%; height: 13%; }
 .card.is-spell .socket:not(.is-name) { font-size: min(var(--spell-gem, 100%), 100%); }
 .card.is-framed .frame, .sheet-unit .field-unit .frame { mix-blend-mode: normal; }
+/* Sao trên tay: số sát cạnh sao; số có màu sáng hơn, nổi hơn (chủ game 02/11) */
+.card .pin-stars { gap: 0.05em; }
+.card .pin-stars b {
+  min-width: 0;
+  font-size: 1em;
+  color: color-mix(in srgb, var(--tier) 30%, white);
+  -webkit-text-stroke: 0.14em color-mix(in srgb, var(--tier) 25%, black);
+  paint-order: stroke fill;
+  text-shadow: 0 0 0.28em var(--tier), 0 0 0.12em var(--tier);
+}
+.card .pin-stars .tag-star { filter: brightness(1.25) saturate(1.15); }
+.card .socket.is-def, .card .socket.is-mdef, .card .socket.is-atk, .card .socket.is-hp, .card .socket.is-gems,
+.sheet-unit .fstat.is-def, .sheet-unit .fstat.is-mdef, .sheet-unit .fstat.is-atk, .sheet-unit .fstat.is-hp {
+  color: color-mix(in srgb, var(--tier) 8%, white);
+  text-shadow: 0 0.04em 0 color-mix(in srgb, var(--tier) 45%, black), 0 0 0.3em var(--tier), 0 0 0.14em var(--tier);
+}
