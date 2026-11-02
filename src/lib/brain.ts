@@ -394,7 +394,7 @@ function finishSwap(cast: Duel, list: Move[], base: Duel, index: number, target:
   if (!swap || swap.side !== ME || !swap.locked) return;
   const me = cast.players[ME];
   const tokens = [
-    ...live(me.field).map((mon) => `f:${mon.uid}`),
+    ...live(me.field).filter((mon) => mon.abroad === undefined).map((mon) => `f:${mon.uid}`),
     ...me.reserve.map((_, at) => `r:${at}`),
   ].filter((token) => token !== swap.locked);
   for (const token of tokens) tryMove(list, base, ["swap", index, target, token]);

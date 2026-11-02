@@ -693,17 +693,16 @@ const roundOver = (s) => {
   return s;
 };
 
-test("Hộp ma thuật chờ trong chuỗi, đổi chỗ 2 sân, kỹ năng trúng quái địch; hết vòng về chỗ", () => {
+test("Hộp ma thuật siêu tốc: đổi chỗ 2 sân ngay, kỹ năng trúng quái địch; hết vòng về chỗ", () => {
   const s = boxBoard();
   const ally = uid(s, 1, 0);
   const enemy = uid(s, 0, 1);
   const breath = D.declareSkill(s, uid(s, 0, 0), ally, 0);
   assert.equal(breath.step, "respond", breath.live);
-  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), enemy);
-  assert.deepEqual(waiting.hold?.box, { ally, foe: enemy }, waiting.live);
-  assert.equal(waiting.hold?.priority, 0, "quyền sang bên dùng kỹ năng");
-  assert.equal(at(waiting, 1, 0).uid, ally, "chưa đổi khi còn chờ");
-  const landed = D.passResponse(waiting);
+  const swapped = D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), enemy);
+  assert.equal(at(swapped, 1, 0).uid, enemy, "đổi ngay lúc dùng");
+  assert.equal(swapped.step, "respond", "kỹ năng vẫn chờ");
+  const landed = D.passResponse(swapped);
   assert.equal(at(landed, 1, 0).uid, enemy, landed.live);
   assert.equal(at(landed, 1, 0).abroad, 0);
   assert.equal(at(landed, 0, 1).uid, ally);
@@ -785,9 +784,9 @@ test("Hộp ma thuật với kỹ năng nhiều mục tiêu: chọn 1 đồng mi
   const enemy = uid(s, 0, 2);
   const tried = D.castSpell(sure, sure.players[1].hand.indexOf("hop-ma-thuat"), enemy);
   assert.match(tried.live, /Chọn đồng minh/, "nhiều đồng minh thì phải chọn");
-  const waiting = D.castSpell(sure, sure.players[1].hand.indexOf("hop-ma-thuat"), enemy, false, pick);
-  assert.deepEqual(waiting.hold?.box, { ally: pick, foe: enemy }, waiting.live);
-  const landed = D.passResponse(waiting);
+  const swapped = D.castSpell(sure, sure.players[1].hand.indexOf("hop-ma-thuat"), enemy, false, pick);
+  assert.ok(swapped.players[0].field.some((m) => m?.uid === pick), swapped.live);
+  const landed = D.passResponse(swapped);
   const moved = landed.players[0].field.find((m) => m?.uid === pick);
   assert.ok(moved, `${landed.live} | ${rows(landed).join(" | ")} | ${hits}`);
   assert.equal(moved.hp, 40, "đồng minh đã sang sân kia không trúng");

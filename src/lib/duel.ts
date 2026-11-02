@@ -217,9 +217,6 @@ export type Hold = {
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
-  /** Hộp ma thuật (nhanh, chủ game 02/11): it waits in the chain; once the chain lands `ally` (targeted by the skill)
-   *  and `foe` (an enemy monster) trade slots across the two fields until the round ends, and the skill falls on `foe`. */
-  box?: { ally: string; foe: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3804,11 +3801,6 @@ function passResponseCore(state: Duel): Duel {
     const cleared = { ...(rewound ?? state), hold: { ...hold, rewind: undefined } };
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
-  if (hold.box) {
-    // Hộp ma thuật lands now: the two trade slots, then the skill falls on whoever stands where it aimed.
-    const { ally, foe: enemy } = hold.box;
-    return passResponseCore(boxSwap({ ...state, hold: { ...hold, box: undefined } }, ally, enemy));
-  }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
@@ -6377,8 +6369,8 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const ally = boxAlly ? next.players[side].field.find((mon) => mon?.uid === boxAlly) ?? null : null;
     const enemy = targetUid ? next.players[foe].field.find((mon) => mon?.uid === targetUid) ?? null : null;
     if (!next.hold || !ally || !enemy) return note(next, "Hộp ma thuật không đổi được chỗ.");
-    // A fast spell: it waits in the chain, the other side may answer, and the two trade slots once it lands.
-    return keep(note({ ...next, hold: { ...next.hold, box: { ally: ally.uid, foe: enemy.uid } } }, `Hộp ma thuật chờ đổi chỗ ${cardOf(ally).name} với ${cardOf(enemy).name}.`, "spell"));
+    // Phép siêu tốc như Hoán đổi (chủ game 02/11): the two trade slots at once; the skill then falls on the enemy.
+    return boxSwap(next, ally.uid, enemy.uid);
   }
   if (card.id === "co-may-thoi-gian") {
     const ally = targetUid ? next.players[side].field.find((mon) => mon?.uid === targetUid) ?? null : null;
@@ -6586,7 +6578,7 @@ function redirectAim(state: Duel, fromUid: string | null, toUid: string | null):
  */
 export function boxAllies(state: Duel, side: Side): string[] {
   const pending = state.pending;
-  if (state.step !== "respond" || !state.hold || state.hold.box || state.box) return [];
+  if (state.step !== "respond" || !state.hold || state.box) return [];
   if (!pending || (pending.kind !== "beam" && pending.kind !== "gnaw-skill") || (pending.kind === "beam" && pending.back)) return [];
   if (ownerSide(state, pending.caster) !== ((1 - side) as Side)) return [];
   const mine = (uid: string | null | undefined) => Boolean(uid && state.players[side].field.some((mon) => mon?.uid === uid && mon.hp > 0 && mon.abroad === undefined));
@@ -6767,7 +6759,7 @@ function lockedSwapToken(state: Duel, side: Side): string | null {
   const uid = aimedId(state);
   if (!uid) return null;
   const mon = state.players[side].field.find((unit) => unit?.uid === uid);
-  if (!mon || mon.copy || mon.cardId === "chan-ken" || mon.cardId === "ken-ngai") return null;
+  if (!mon || mon.copy || mon.cardId === "chan-ken" || mon.cardId === "ken-ngai" || mon.abroad !== undefined) return null;
   return `f:${uid}`;
 }
 
@@ -6803,7 +6795,7 @@ export function pickSwap(state: Duel, token: string): Duel {
   const reserve = [...you.reserve];
   const takeField = (uid: string) => {
     const mon = field.find((unit) => unit?.uid === uid) ?? null;
-    if (!mon || mon.copy || mon.cardId === "chan-ken" || mon.cardId === "ken-ngai") return null;
+    if (!mon || mon.copy || mon.cardId === "chan-ken" || mon.cardId === "ken-ngai" || mon.abroad !== undefined) return null;
     return mon;
   };
   if (first.kind === "field" && second.kind === "field") {
