@@ -193,7 +193,7 @@ export function CardFace({
         </>
       ) : spell ? (
         <>
-          {pin(spellSpots.gems, gems ?? spell.gems)}
+          {pin(hand && String(gems ?? spell.gems).length > 1 ? { ...spellSpots.gems, size: spellSpots.gems.size * 0.55 } : spellSpots.gems, gems ?? spell.gems)}
           {hideName ? null : pin(spellSpots.name, tr(spell.name), true)}
           {hand && spellSpeed(spell.id) ? <img className={`speed speed-${spellSpeed(spell.id)}`} src={`/ui/speed-${spellSpeed(spell.id)}.webp`} alt="" draggable={false} /> : null}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}

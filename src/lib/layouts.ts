@@ -186,12 +186,12 @@ export const SHEET_SPOTS: Record<FieldKey, FieldSpot> = {
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp", Spot> = {
-  stars: { x: 84.2, y: 5.8, size: 8.5, width: 26, height: 8 },
-  gems: { x: 92.8, y: 14.3, size: 9, width: 9, height: 8 },
-  def: { x: 18.6, y: 52.9, size: 14, width: 10, height: 6 },
-  mdef: { x: 18.6, y: 65, size: 14, width: 10, height: 6 },
-  atk: { x: 37.9, y: 88.5, size: 20, width: 14, height: 9 },
-  hp: { x: 86.1, y: 88.5, size: 20, width: 14, height: 9 },
+  stars: { x: 84.6, y: 5.4, size: 10.5, width: 26, height: 8 },
+  gems: { x: 92.6, y: 15, size: 11, width: 9, height: 8 },
+  def: { x: 18.6, y: 52.6, size: 17, width: 10, height: 6 },
+  mdef: { x: 18.6, y: 64.7, size: 17, width: 10, height: 6 },
+  atk: { x: 37.9, y: 86.6, size: 18, width: 14, height: 9 },
+  hp: { x: 86.1, y: 86.6, size: 18, width: 14, height: 9 },
 };
 
 const BOARD_KEY = "clash-board-layout-v11";
