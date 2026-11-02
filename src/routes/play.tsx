@@ -5004,7 +5004,7 @@ function PlayPage() {
   const formOf = (mon: FieldMon) =>
     mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
-  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string, stay = false, tagGems?: number | string) => (
+  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string, stay = false) => (
     <RelatedFlow
       id={formOf(mon)}
       onClose={onClose}
@@ -5013,7 +5013,7 @@ function PlayPage() {
           name={fieldName(mon)}
           card={<SheetCard mon={mon} allies={allies} layout={fieldLayout} />}
           count={sheetCount(mon, allies)}
-          tag={{ stars: monsterCard(formOf(mon))?.stars, gems: tagGems ?? monsterCard(formOf(mon))?.gems }}
+          tag={{ stars: monsterCard(formOf(mon))?.stars }}
           skills={skillsOf(formOf(mon), monsterCard(formOf(mon))?.skill ?? "")}
           actions={actions}
           note={note}
@@ -5026,7 +5026,7 @@ function PlayPage() {
     />
   );
   const handMon = inspect?.pile === "reserve" && reserveHeld ? previewMon(duel, viewer, reserveHeld) : null;
-  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null), undefined, undefined, false, reserveToll && reserveHeld ? `${monsterCard(reserveHeld.id)?.gems ?? 0}+1` : undefined) : null;
+  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null)) : null;
   const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
   const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
   const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined, look?.skill) : null;

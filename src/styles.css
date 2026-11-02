@@ -6772,22 +6772,13 @@ button.watch-back {
 /* The name and, at its right, a plaque with the stars and the gems the card costs (chủ game 02/11). */
 .msheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-right: 0.2rem; }
 .msheet-head .msheet-name { margin: 0 0 0.1rem 0; min-width: 0; }
-.msheet-tag {
-  display: grid;
-  justify-items: end;
-  gap: 0.1rem;
-  flex: none;
-  padding: 0.28rem 0.6rem 0.3rem 0.5rem;
-  border-radius: 0.8rem;
-  background: linear-gradient(180deg, rgba(10, 14, 24, 0.9), rgba(4, 7, 14, 0.92));
-  box-shadow: inset 0 0 0 1px rgba(233, 196, 106, 0.55), inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 3px 8px rgba(0, 0, 0, 0.55);
-}
-.tag-stars, .tag-gems { display: inline-flex; align-items: center; gap: 0.3rem; }
-.tag-stars b, .tag-gems b {
+.msheet-tag { flex: none; padding-top: 0.05rem; }
+.tag-stars { display: inline-flex; align-items: center; gap: 0.3rem; }
+.tag-stars b {
   min-width: 0.9rem;
   text-align: center;
   font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   font-weight: 800;
   line-height: 1;
   -webkit-text-stroke: 1.2px #05070c;
@@ -6805,16 +6796,14 @@ button.watch-back {
 }
 /* The star is faceted in two tones of its colour, like the star picture: light and dark wedges round the middle. */
 .tag-star {
-  width: 2rem;
-  height: 2rem;
+  width: 2.3rem;
+  height: 2.3rem;
   --hi: color-mix(in srgb, var(--tier) 70%, white);
   --lo: color-mix(in srgb, var(--tier) 78%, black);
   background: conic-gradient(from 0deg at 50% 54%, var(--hi) 0 36deg, var(--lo) 36deg 72deg, var(--hi) 72deg 108deg, var(--lo) 108deg 144deg, var(--hi) 144deg 180deg, var(--lo) 180deg 216deg, var(--hi) 216deg 252deg, var(--lo) 252deg 288deg, var(--hi) 288deg 324deg, var(--lo) 324deg 360deg);
   clip-path: polygon(50% 0%, 61.8% 35.4%, 98.1% 35.4%, 68.7% 57.3%, 79.4% 91.6%, 50% 70.8%, 20.6% 91.6%, 31.3% 57.3%, 1.9% 35.4%, 38.2% 35.4%);
 }
 .tag-stars { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)); }
-.tag-gems .mana-gem { width: 1rem; height: 1rem; margin: 0 0.45rem 0 0.4rem; border-radius: 0.16rem; }
-.tag-gems b { color: #c9f8ff; text-shadow: 0 2px 0 #0a3b66, 0 0 10px #3ec6ff, 0 0 3px #3ec6ff; }
 .msheet-name {
   margin: 0 1.6rem 0.1rem 0;
   font-size: 1.25rem;
