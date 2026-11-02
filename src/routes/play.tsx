@@ -5900,7 +5900,7 @@ function PlayPage() {
           </p>
         )}
         {tip ? (
-          <p key={tip.n} className="rx-hint" style={{ zIndex: 14 }}>
+          <p key={tip.n} className="mid-tip" style={{ zIndex: 14 }}>
             <NoticeText text={tip.text} />
           </p>
         ) : null}

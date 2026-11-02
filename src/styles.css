@@ -13052,3 +13052,23 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 }
 
 
+
+/* Lời nhắc giữa sân: chữ trơn như chữ của phép đang chọn mục tiêu, không bảng. */
+.mid-tip {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: max-content;
+  max-width: 76%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 3.6cqw;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  white-space: pre-line;
+  text-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.9), 0 1px 2px #000;
+  pointer-events: none;
+  animation: rx-hint 3.2s ease both;
+}
