@@ -1851,6 +1851,14 @@ function PlayPage() {
   const laserTimers = useRef<number[]>([]);
   const skillPan = useRef<{ id: number; y: number; top: number } | null>(null);
   const suppressClick = useRef(false);
+  /** Lời nhắc giữa sân (chủ game 02/11): bảng thông báo đã ẩn nên các nhắc thao tác hiện ở đây vài giây. */
+  const [tip, setTip] = useState<{ text: string; n: number } | null>(null);
+  const tipTimer = useRef(0);
+  function showTip(text: string) {
+    window.clearTimeout(tipTimer.current);
+    setTip({ text, n: Date.now() });
+    tipTimer.current = window.setTimeout(() => setTip(null), 3200);
+  }
   /** Last tap on a monster of the field: a second tap within DOUBLE_TAP opens its sheet (chủ game 02/11). */
   const fieldTap = useRef<{ uid: string; at: number } | null>(null);
   const scratch = useRef<Scratch>(freshScratch());
@@ -3936,6 +3944,13 @@ function PlayPage() {
   }
 
   // One tap picks the card (its row arrows or its use icon show), a second tap soon after opens its sheet.
+  /** Chưa rút bài nên thiếu đúng 1 sao để triệu hồi quái này: rút 1 lá là đủ. */
+  function needsDraw(stars: number) {
+    if (!duel || !canPlay) return false;
+    const mine = duel.players[viewer];
+    return mine.stars < stars && mine.stars + 1 >= stars && mine.draws < 1 && pileLeft(mine) > 0;
+  }
+
   function openHand(pile: "reserve" | "spell", index: number, id: string) {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -3949,7 +3964,7 @@ function PlayPage() {
     if (pile === "reserve" && duel && canPlay) {
       const wanted = monsterCard(id);
       const mine = duel.players[viewer];
-      if (wanted && mine.stars < wanted.stars && mine.stars + 1 >= wanted.stars && mine.draws < 1 && pileLeft(mine) > 0) holdNotice(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
+      if (wanted && needsDraw(wanted.stars)) showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
     }
     setInspect(null);
     setHandPick((current) => (current?.pile === pile && current.index === index ? null : { pile, index, id }));
@@ -4278,6 +4293,10 @@ function PlayPage() {
       const armed = riteHand === payload.index;
       if (canPlay && cap > 0 && slotEl && owner === viewer && index >= 0 && index < FIELD_SLOTS && (armed || full)) {
         setVowAsk({ index: payload.index, slot: index as Slot, picks: [] });
+        return;
+      }
+      if (needsDraw(payload.card.stars)) {
+        showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${payload.card.stars} sao`);
         return;
       }
       if (!canPlay || !slotEl || owner !== viewer || slotEl.dataset.empty !== "1" || index < 0 || index >= FIELD_SLOTS) {
@@ -5880,6 +5899,7 @@ function PlayPage() {
             </span>
           </p>
         )}
+        {tip ? <p key={tip.n} className="center-tip">{tip.text}</p> : null}
         {lineOn ? (
           <ReactionLine
             orbs={chain}

@@ -867,6 +867,7 @@ export const PENDING_NOTES: string[] = [
   "Số lá còn trong xấp bài nằm đè ngay giữa mép dưới xấp.",
   "Tuỳ chỉnh: nút xuất giờ gồm cả bố cục lá quái và lá phép trên tay.",
   "Lá quái trên tay: số sao, gem, thủ, thủ phép, công, máu đặt theo bố cục bạn chỉnh.",
+  "Chưa rút bài mà bấm hoặc kéo quái 1 sao để triệu hồi: hiện lời nhắc giữa sân \"Hãy rút 1 lá bài để được triệu hồi quái 1 sao\".",
 ];
 
 function remarkOf(notes: string[]) {

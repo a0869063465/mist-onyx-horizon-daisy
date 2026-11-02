@@ -13051,3 +13051,28 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));
 }
 
+/* Lời nhắc giữa sân (bảng thông báo đã ẩn). */
+.center-tip {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 40;
+  width: max-content;
+  max-width: 86%;
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid #f4d27a;
+  border-radius: 0.7rem;
+  background: rgba(12, 18, 34, 0.9);
+  color: #ffe9a6;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: center-tip 3.2s ease both;
+}
+@keyframes center-tip { 0% { opacity: 0; } 8%, 82% { opacity: 1; } 100% { opacity: 0; } }
+
