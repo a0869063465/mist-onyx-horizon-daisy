@@ -41,6 +41,7 @@ import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
 import { AttackEmblem } from "@/components/game/attack-emblem";
+import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
 import { DeckPile } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
 import { brainStep, runAct } from "@/lib/brain";
@@ -128,6 +129,8 @@ import {
   testReset,
   canCastSwap,
   shelterPicks,
+  boxAllies,
+  boxFoes,
   virusTargets,
   slowWaiting,
   answerSide,
@@ -860,7 +863,7 @@ const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguye
 const SLOW_AIM = new Set(["soi-xich-dia-nguc", "phan-nguyen"]);
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu"]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat"]);
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1034,6 +1037,7 @@ const ANSWER_SPELLS = new Set([
   "co-may-thoi-gian",
   "giap-co-khi",
   "phan-nguyen",
+  "hop-ma-thuat",
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1051,12 +1055,13 @@ const GUARD_SPELLS = new Set([
   "vong-nguyen-rua-ac-ma",
   "hoan-doi",
   "hap-thu-ma-phap",
+  "hop-ma-thuat",
 ]);
 
 function spellCanAnswer(id: string, duel: Duel): boolean {
   if (duel.step !== "respond" || !ANSWER_SPELLS.has(id)) return false;
   // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
-  if (slowWaiting(duel)) return id === "hap-thu-ma-phap";
+  if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
   const horn = hornPending(duel);
@@ -1086,6 +1091,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
     return (pending?.kind === "face" && Boolean(pending.skill)) || (pending?.kind === "melee" && Boolean(fieldMon(duel, pending.attacker)?.horn));
   }
   if (id === "hoan-doi") return attacked || skilled || pending?.kind === "face";
+  // Hộp ma thuật (chủ game 02/11): an ally struck by the other side's skill, one aim or a branch of several.
+  if (id === "hop-ma-thuat") return duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0;
   if (id === "co-may-thoi-gian") {
     const side = duel.hold?.priority;
     const uid = aimedUid(duel);
@@ -1140,7 +1147,7 @@ function answerPayoff(id: string, duel: Duel, viewer: Side) {
   if (id === "phuc-kich") {
     return duel.players[viewer].field.some((unit) => unit && unit.stun === 0 && (unit.chain ?? 0) === 0 && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai");
   }
-  if (id === "la-chan-phan-don" || id === "ngan-chan-phong-ngu") return foeAlive(duel, viewer);
+  if (id === "la-chan-phan-don" || id === "ngan-chan-phong-ngu" || id === "hop-ma-thuat") return foeAlive(duel, viewer);
   return true;
 }
 
@@ -1769,6 +1776,8 @@ function PlayPage() {
   /** Hoán đổi (chủ game 30/10): the monster that goes back into a hand flies there as a ghost of its card. */
   const [swapGhost, setSwapGhost] = useState<{ key: number; mon: FieldMon; rect: { left: number; top: number; width: number; height: number }; to: { x: number; y: number } } | null>(null);
   const swapSeen = useRef<Duel | null>(null);
+  const boxSeen = useRef<Duel | null>(null);
+  const [boxShow, setBoxShow] = useState<{ key: number; host: HTMLElement; spots: BoxSpot[] } | null>(null);
   const [recallPick, setRecallPick] = useState<number[]>([]);
   const [reflectPick, setReflectPick] = useState<{ index: number; uid: string | null } | null>(null);
   const [ambushPick, setAmbushPick] = useState<{ index: number; uid: string | null } | null>(null);
@@ -2279,6 +2288,52 @@ function PlayPage() {
           if (oldMon) setSwapGhost({ key: Date.now(), mon: oldMon, rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, to: hand });
         }
       }
+    }
+  }, [duel]);
+
+  // Hộp ma thuật (chủ game 02/11): a cabinet over each of the two slots that traded, the old card showing until the
+  // doors close; when they come home (the round ends, or one falls) the cards slide back.
+  useLayoutEffect(() => {
+    const before = boxSeen.current;
+    boxSeen.current = duel;
+    if (!duel || !before || before.mid !== duel.mid) return;
+    const host = document.querySelector<HTMLElement>(".board");
+    const slotEl = (side: number, index: number) => document.querySelector<HTMLElement>(`[data-slot="${side}-${index}"]`);
+    const unitEl = (uid: string) => document.querySelector<HTMLElement>(`[data-slot][data-uid="${uid}"]`);
+    const calm = typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    const box = duel.box;
+    if (host && box && box.pair.length === 2 && before.box?.seq !== box.seq && !calm) {
+      const frame = host.getBoundingClientRect();
+      const spots = box.pair.flatMap((row): BoxSpot[] => {
+        const el = slotEl(row.side, row.slot);
+        if (!el) return [];
+        const rect = el.getBoundingClientRect();
+        return [{ rect: { left: rect.left - frame.left, top: rect.top - frame.top, width: rect.width, height: rect.height }, ghost: unitEl(row.uid) }];
+      });
+      if (spots.length) setBoxShow({ key: box.seq, host, spots });
+      return;
+    }
+    const was = before.box?.pair ?? [];
+    const kept = new Set((box?.pair ?? []).map((row) => row.uid));
+    for (const row of was) {
+      if (kept.has(row.uid)) continue;
+      const from = ([0, 1] as const).flatMap((side) => {
+        const index = before.players[side].field.findIndex((mon) => mon?.uid === row.uid);
+        return index >= 0 ? [{ side, index }] : [];
+      })[0];
+      const now = unitEl(row.uid);
+      const old = from ? slotEl(from.side, from.index) : null;
+      if (!from || !now || !old || from.side === row.side) continue;
+      const a = old.getBoundingClientRect();
+      const b = now.getBoundingClientRect();
+      now.style.zIndex = "40";
+      const run = now.animate(
+        [{ translate: `${a.left + a.width / 2 - (b.left + b.width / 2)}px ${a.top + a.height / 2 - (b.top + b.height / 2)}px` }, { translate: "0px 0px" }],
+        { duration: calm ? 1 : 620, easing: "cubic-bezier(.3,.7,.3,1)" },
+      );
+      run.onfinish = () => {
+        now.style.zIndex = "";
+      };
     }
   }, [duel]);
 
@@ -3476,6 +3531,18 @@ function PlayPage() {
   // X (chủ game 31/10): opens as soon as a skill, an attack or a target choice is under way, and cancels that choice, not
   // only what stands in the queue.
   const picking = Boolean((aim && aim.kind !== "unit" && aim.kind !== "menu" && aim.kind !== "skill-info" && aim.kind !== "cast" && aim.kind !== "innate") || vowAsk || hornAsk || knightAsk || chronoAsk || digPick);
+  /** Hộp ma thuật: the card becomes an icon in the middle; pick the ally struck (when several are), then the enemy. */
+  function startBox(index: number) {
+    if (!duel) return;
+    const allies = boxAllies(duel, viewer);
+    if (allies.length === 0) {
+      holdNotice("Chưa có đồng minh nào bị kỹ năng nhắm.");
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: "hop-ma-thuat", ...(allies.length === 1 ? { from: allies[0] } : {}) });
+    holdNotice(allies.length === 1 ? "Chọn quái đối thủ để đổi chỗ." : "Chọn đồng minh đang bị nhắm.");
+  }
   function cancelPick() {
     setAim(null);
     setVowAsk(null);
@@ -4240,6 +4307,18 @@ function PlayPage() {
         setAim({ kind: "spell", index: payload.index, spellId: payload.spellId });
         return;
       }
+      // Hộp ma thuật: dropped on an enemy with one ally struck, it is cast; elsewhere it waits as an icon.
+      if (payload.spellId === "hop-ma-thuat") {
+        if (hit?.closest(".hand")) return;
+        const allies = boxAllies(duel, viewer);
+        const mark = slotEl && owner !== viewer ? foe.field.find((mon) => mon?.uid === slotEl.dataset.uid) ?? null : null;
+        if (allies.length === 1 && mark && boxFoes(duel, viewer).includes(mark.uid)) {
+          apply(castSpell(duel, payload.index, mark.uid, false, allies[0]));
+          return;
+        }
+        startBox(payload.index);
+        return;
+      }
       // Ngăn chặn phòng ngự: dropped on a monster it can take, it is cast; elsewhere on the board it waits as an icon.
       if (payload.spellId === "ngan-chan-phong-ngu") {
         if (hit?.closest(".hand")) return;
@@ -4549,6 +4628,20 @@ function PlayPage() {
         return;
       }
       if (side !== viewer) {
+        apply(castSpell(duel, aim.index, mon.uid, false, aim.from));
+        setAim(null);
+      }
+      return;
+    }
+    if (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat") {
+      if (!aim.from) {
+        if (side === viewer && boxAllies(duel, viewer).includes(mon.uid)) {
+          setAim({ ...aim, from: mon.uid });
+          holdNotice("Chọn quái đối thủ để đổi chỗ.");
+        }
+        return;
+      }
+      if (side !== viewer && boxFoes(duel, viewer).includes(mon.uid)) {
         apply(castSpell(duel, aim.index, mon.uid, false, aim.from));
         setAim(null);
       }
@@ -5996,6 +6089,7 @@ function PlayPage() {
           </div>
         ) : null}
         {swapGhost ? <SwapGhost key={swapGhost.key} ghost={swapGhost} onDone={() => setSwapGhost(null)} /> : null}
+        {boxShow ? <BoxFx key={boxShow.key} host={boxShow.host} spots={boxShow.spots} onDone={() => setBoxShow(null)} /> : null}
         {reflectPick ? (
           <div className="overlay is-ask">
             <div className="ask-card">
@@ -6442,7 +6536,7 @@ function PlayPage() {
           const allyAim = aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id);
           const curseStep = aim?.kind === "spell" && aim.spellId === "phan-nguyen" ? (aim.from ? "foe" : "ally") : drag?.kind === "spell" && drag.spellId === "phan-nguyen" ? "ally" : null;
           const witchFoe = aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian";
-          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && aim.spellId !== "ngan-chan-phong-ngu" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu" && shelterPicks(duel).includes(mon.uid)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
+          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && aim.spellId !== "ngan-chan-phong-ngu" && aim.spellId !== "hop-ma-thuat" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu" && shelterPicks(duel).includes(mon.uid)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && Boolean(aim.from) && boxFoes(duel, viewer).includes(mon.uid)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
           const covered =
             !!mon &&
             mon.cardId === "kazura" &&
@@ -6453,7 +6547,7 @@ function PlayPage() {
           const foeSpell =
             curseStep === "foe" ||
             (drag?.kind === "spell" && !["sung-loi-pha", "phan-nguyen", "hoan-doi", "ke-dao-mo", "soi-xich-dia-nguc"].includes(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
-            (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || spellDragLive(aim.spellId, duel, viewer, aim.index)));
+            (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || (aim.spellId === "hop-ma-thuat" ? Boolean(aim.from) : spellDragLive(aim.spellId, duel, viewer, aim.index))));
           const foeBlocked = !!mon && !frozen && !foeHot && (plan ? plan.foe : foeSpell);
           return (
             <BoardSlot
@@ -6506,11 +6600,11 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
+          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
           const plan = targetPlan();
           const youSpell =
             (drag?.kind === "spell" && drag.spellId === "sung-loi-pha" && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
-            (aim?.kind === "spell" && (aim.spellId === "sung-loi-pha" || aim.spellId === "phuc-kich" || (aim.spellId === "phan-nguyen" && !aim.from))) ||
+            (aim?.kind === "spell" && (aim.spellId === "sung-loi-pha" || aim.spellId === "phuc-kich" || ((aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat") && !aim.from))) ||
             Boolean(swapAsk);
           const youBlocked =
             !!mon && !frozen && mon.uid !== plan?.caster && !(plan ? plan.keys.has(`${viewer}-${index}`) : youHot) && (plan ? plan.you : youSpell);
@@ -6795,6 +6889,10 @@ function PlayPage() {
                             setAim({ kind: "spell", index, spellId: id });
                             return;
                           }
+                          if (id === "hop-ma-thuat") {
+                            startBox(index);
+                            return;
+                          }
                           if (id === "phuc-kich") {
                             // Chọn mục tiêu theo video chủ game (30/10): icon giữa sân + dòng mô tả, đồng minh dùng được sáng viền.
                             if (!you.field.some((unit) => unit && ambushReady(unit))) {
@@ -7040,6 +7138,11 @@ function PlayPage() {
                           if (shownSpell.id === "ke-dao-mo") {
                             setInspect(null);
                             openDig(index);
+                            return;
+                          }
+                          if (shownSpell.id === "hop-ma-thuat") {
+                            setInspect(null);
+                            startBox(index);
                             return;
                           }
                           if (shownSpell.id === "ngan-chan-phong-ngu") {

@@ -244,6 +244,8 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Chặn kỹ năng", `Một đồng minh ra đòn (+${num(e, /tăng\s*(\d+)\s*công/, 2)} công)`];
       case "hoan-doi":
         return ["Đổi chỗ quái bị nhắm với quái khác"];
+      case "hop-ma-thuat":
+        return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
       case "vong-xoay-bao-ho":
         return ["Chặn đòn", "Đối thủ kết thúc lượt ngay"];
       case "ngan-chan-phong-ngu":

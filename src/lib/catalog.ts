@@ -1076,7 +1076,7 @@ export const SPELLS: SpellCard[] = [
 ];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set(["hop-ma-thuat"]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map(SPELLS.map((card) => [card.id, card]));

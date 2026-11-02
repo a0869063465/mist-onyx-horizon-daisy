@@ -564,6 +564,8 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   const wall = glass ?? lurk;
   // Cỗ máy thời gian waiting in the chain: its icon and its pink light round the ally stay until the chain lands.
   const rewinding = live && next.hold?.rewind ? [...list].reverse().find((orb) => orb.spell === "co-may-thoi-gian") ?? null : null;
+  // Hộp ma thuật waits in the chain like Cỗ máy thời gian: its icon and its pink flow to the enemy stay until it lands.
+  const boxing = live && next.hold?.box ? [...list].reverse().find((orb) => orb.spell === "hop-ma-thuat") ?? null : null;
   if (live) {
     // Who stands in front of it: its block icon (made once per blocker), into which its smoke is drawn.
     const guard = guardOf(next, live.aim);
@@ -648,7 +650,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   list = list.map((orb) => {
     if (orb.kind === "block") return orb;
     // The mirror stands until the attack it stops is over.
-    if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
+    if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id) || (boxing && orb.id === boxing.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.

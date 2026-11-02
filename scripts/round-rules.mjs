@@ -681,6 +681,118 @@ test("Ong khổng lồ: Kim châm tê liệt và gây thêm 2 sát thương phé
   assert.equal(at(fired, 1, 0).hp, 8, fired.live);
 });
 
+// Hộp ma thuật (chủ game 02/11)
+function boxBoard(foeStats = {}) {
+  const tough = { hp: 20, maxHp: 20, def: 0, mdef: 0 };
+  let s = board({ 0: ["rong-con", { ...tough }], 1: ["may-chem", { ...tough, ...foeStats }] }, { 0: ["khong-lo-mot-mat", { ...tough }] });
+  s = D.testGrant(s, 1, "hop-ma-thuat", false);
+  return { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+}
+const roundOver = (s) => {
+  for (let i = 0; i < 6 && s.box; i += 1) s = D.endTurn(s);
+  return s;
+};
+
+test("Hộp ma thuật chờ trong chuỗi, đổi chỗ 2 sân, kỹ năng trúng quái địch; hết vòng về chỗ", () => {
+  const s = boxBoard();
+  const ally = uid(s, 1, 0);
+  const enemy = uid(s, 0, 1);
+  const breath = D.declareSkill(s, uid(s, 0, 0), ally, 0);
+  assert.equal(breath.step, "respond", breath.live);
+  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), enemy);
+  assert.deepEqual(waiting.hold?.box, { ally, foe: enemy }, waiting.live);
+  assert.equal(waiting.hold?.priority, 0, "quyền sang bên dùng kỹ năng");
+  assert.equal(at(waiting, 1, 0).uid, ally, "chưa đổi khi còn chờ");
+  const landed = D.passResponse(waiting);
+  assert.equal(at(landed, 1, 0).uid, enemy, landed.live);
+  assert.equal(at(landed, 1, 0).abroad, 0);
+  assert.equal(at(landed, 0, 1).uid, ally);
+  assert.equal(at(landed, 0, 1).abroad, 1);
+  assert.ok(at(landed, 1, 0).hp < 20, "kỹ năng trúng quái địch ở ô đó");
+  assert.equal(at(landed, 0, 1).hp, 20, "đồng minh không trúng");
+  const home = roundOver({ ...landed, step: "main", pending: null, hold: null });
+  assert.equal(home.box, null, home.live);
+  assert.equal(at(home, 1, 0).uid, ally, rows(home).join(" | "));
+  assert.equal(at(home, 0, 1).uid, enemy);
+  assert.equal(at(home, 1, 0).abroad, undefined);
+});
+
+test("Hộp ma thuật không dùng với đòn đánh thường", () => {
+  const s = boxBoard();
+  const hit = D.attackMonster(s, uid(s, 0, 1), uid(s, 1, 0));
+  assert.equal(hit.step, "respond", hit.live);
+  const tried = D.castSpell(hit, hit.players[1].hand.indexOf("hop-ma-thuat"), uid(s, 0, 0));
+  assert.ok(!tried.hold?.box, tried.live);
+  assert.match(tried.live, /Hộp ma thuật chỉ dùng/);
+});
+
+test("Quái ở sân lạ không tấn công, không dùng kỹ năng, không bị hiến tế", () => {
+  const s = boxBoard();
+  const ally = uid(s, 1, 0);
+  const enemy = uid(s, 0, 1);
+  const breath = D.declareSkill(s, uid(s, 0, 0), ally, 0);
+  const landed = D.passResponse(D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), enemy));
+  const mine = { ...landed, step: "main", pending: null, hold: null, turn: 0, round: 0 };
+  const swing = D.attackFace(mine, ally);
+  assert.ok(!swing.pending, "quái của đối thủ đứng ở sân mình không tấn công được");
+  const theirs = { ...landed, step: "main", pending: null, hold: null, turn: 1, round: 1 };
+  const own = D.attackFace(theirs, enemy);
+  assert.ok(!own.pending, "quái của mình ở sân bên kia không tấn công được");
+  const skill = D.useSkill(mine, ally, null, 0);
+  assert.equal(skill.players, mine.players, skill.live);
+});
+
+test("Một con chết: con kia về ô cũ, ô bên kia khoá tới hết vòng", () => {
+  const s = boxBoard({ hp: 1, maxHp: 1 });
+  const ally = uid(s, 1, 0);
+  const enemy = uid(s, 0, 1);
+  const breath = D.declareSkill(s, uid(s, 0, 0), ally, 0);
+  const landed = D.passResponse(D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), enemy));
+  assert.equal(at(landed, 1, 0)?.uid, ally, `${landed.live} | ${rows(landed).join(" | ")}`);
+  assert.equal(at(landed, 1, 0).abroad, undefined);
+  assert.equal(at(landed, 0, 1), null, "ô bên kia trống");
+  assert.deepEqual(landed.box?.shut, { side: 0, slot: 1 });
+  let mine = D.testGrant({ ...landed, step: "main", pending: null, hold: null, turn: 0, round: 0 }, 0, "may-chem", false);
+  mine = { ...mine, players: mine.players.map((p) => ({ ...p, stars: 5, summons: 0 })) };
+  const refused = D.summon(mine, mine.players[0].reserve.length - 1, 1);
+  assert.equal(at(refused, 0, 1), null);
+  assert.match(refused.live, /khoá tới hết vòng/);
+  const after = roundOver(mine);
+  assert.equal(after.box, null, "hết vòng mở ô");
+});
+
+test("Hộp ma thuật chọn chính quái dùng kỹ năng: kỹ năng trúng lại nó", () => {
+  const s = boxBoard();
+  const ally = uid(s, 1, 0);
+  const caster = uid(s, 0, 0);
+  const breath = D.declareSkill(s, caster, ally, 0);
+  const landed = D.passResponse(D.castSpell(breath, breath.players[1].hand.indexOf("hop-ma-thuat"), caster));
+  assert.equal(at(landed, 1, 0).uid, caster, landed.live);
+  assert.ok(at(landed, 1, 0).hp < 20, "kỹ năng trúng lại kẻ dùng");
+  assert.equal(at(landed, 0, 0).hp, 20);
+});
+
+test("Hộp ma thuật với kỹ năng nhiều mục tiêu: chọn 1 đồng minh bị trúng, nhánh đó sang quái địch", () => {
+  const tough = { hp: 40, maxHp: 40, def: 0, mdef: 0 };
+  let s = board({ 1: ["trai-tim-hai-long", { hp: 30, maxHp: 30, def: 0 }], 2: ["may-chem", tough] }, { 0: ["khong-lo-mot-mat", tough], 1: ["may-chem", tough], 3: ["kazura", tough] });
+  s = D.testGrant(s, 1, "hop-ma-thuat", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const staged = D.stageHold(D.declareSkill(s, uid(s, 0, 1), uid(s, 1, 3), 1));
+  const { sure, hits } = spreadWith(staged, (row) => row.filter((id) => !id.startsWith("face")).length >= 2);
+  const allies = D.boxAllies(sure, 1);
+  assert.ok(allies.length >= 2, String(allies));
+  const pick = allies[0];
+  const enemy = uid(s, 0, 2);
+  const tried = D.castSpell(sure, sure.players[1].hand.indexOf("hop-ma-thuat"), enemy);
+  assert.match(tried.live, /Chọn đồng minh/, "nhiều đồng minh thì phải chọn");
+  const waiting = D.castSpell(sure, sure.players[1].hand.indexOf("hop-ma-thuat"), enemy, false, pick);
+  assert.deepEqual(waiting.hold?.box, { ally: pick, foe: enemy }, waiting.live);
+  const landed = D.passResponse(waiting);
+  const moved = landed.players[0].field.find((m) => m?.uid === pick);
+  assert.ok(moved, `${landed.live} | ${rows(landed).join(" | ")} | ${hits}`);
+  assert.equal(moved.hp, 40, "đồng minh đã sang sân kia không trúng");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

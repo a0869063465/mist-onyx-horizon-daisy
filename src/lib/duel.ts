@@ -128,6 +128,8 @@ export type FieldMon = {
   used?: boolean;
   /** Chỉ trong lúc giáp lá cà: quái này không đánh trả ngay mà được Trả đòn riêng sau đòn (`afterBlow`). */
   waitCounter?: boolean;
+  /** Hộp ma thuật (chủ game 02/11): đứng ở sân của bên kia tới hết vòng; giá trị là bên chủ thật. Không ai điều khiển. */
+  abroad?: Side;
 };
 
 export type PileKind = "monster" | "spell";
@@ -215,6 +217,9 @@ export type Hold = {
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
+  /** Hộp ma thuật (nhanh, chủ game 02/11): it waits in the chain; once the chain lands `ally` (targeted by the skill)
+   *  and `foe` (an enemy monster) trade slots across the two fields until the round ends, and the skill falls on `foe`. */
+  box?: { ally: string; foe: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -283,6 +288,9 @@ export type Duel = {
   legs?: string | null;
   mends?: { uid: string; n: number }[] | null;
   swap?: { first: string | null; side: Side; locked?: string | null } | null;
+  /** Hộp ma thuật: the two monsters standing on each other's field until the round ends (`side` = real owner, `slot` =
+   *  their own slot), and once one falls the slot it left on the foreign field, shut until the round ends. */
+  box?: { pair: Array<{ uid: string; side: Side; slot: Slot }>; shut?: { side: Side; slot: Slot } | null; seq: number } | null;
   virusArm?: { owner: Side; uid: string } | null;
   virus?: { owner: Side } | null;
   /** Bites of Virus ăn mòn held back while the side it eats holds a card that breaks it (Hấp thụ ma pháp): each waits
@@ -901,7 +909,8 @@ function buildLook(before: Duel, after: Duel, event: TraceEvent): DecisionLook |
   };
 }
 
-function traced(before: Duel, after: Duel, event: TraceEvent): Duel {
+function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
+  const after = settleBox(rawAfter);
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -1873,8 +1882,13 @@ function isSea(id: string) {
   return SEA_IDS.has(id);
 }
 
-function held(mon: FieldMon) {
+function stuck(mon: FieldMon) {
   return mon.stun > 0 || (mon.chain ?? 0) > 0;
+}
+
+/** Không hành động được: khống chế, hoặc đang đứng ở sân bên kia vì Hộp ma thuật (không ai điều khiển). */
+function held(mon: FieldMon) {
+  return stuck(mon) || mon.abroad !== undefined;
 }
 
 function canIntercept(mon: FieldMon | null, committed = false): mon is FieldMon {
@@ -2813,6 +2827,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
   } else if (player.summons >= 1) return note(state, "Mỗi vòng chỉ triệu hồi 1 lần.");
   if (player.field[slot]) return note(state, "Ô này đã có quái.");
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
+  if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   const short = player.stars < card.stars;
   const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
   const forced = short && cardId === "trieu-hoi-ac-ma";
@@ -2874,7 +2889,7 @@ export function summonVow(state: Duel, reserveIndex: number, slot: Slot, picks: 
 
 function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: string[]): Duel {
   const side = state.turn;
-  const unique = [...new Set(picks)].filter((uid) => state.players[side].field.some((mon) => mon?.uid === uid && mon.hp > 0));
+  const unique = [...new Set(picks)].filter((uid) => state.players[side].field.some((mon) => mon?.uid === uid && mon.hp > 0 && mon.abroad === undefined));
   if (unique.length === 0 && !state.players[side].field[slot]) return summonCore(state, reserveIndex, slot);
   const locked = talkLock(state);
   if (locked) return locked;
@@ -2903,6 +2918,7 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: str
     land = freed[Math.floor(Math.random() * freed.length)] as Slot;
   }
   if ((player.locked?.[land] ?? 0) > 0 && !player.field[land]) return note(state, "Ô này đang ngập, chưa dùng được");
+  if (boxShut(state, side, land) && !player.field[land]) return note(state, "Ô này bị khoá tới hết vòng.");
   const stars = cardStars(cardId, held.saved?.level ?? 1);
   const short = player.stars < stars;
   const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
@@ -2999,9 +3015,9 @@ function fuseCore(state: Duel, reserveIndex: number, fieldUid: string, slot: Slo
   const side = state.turn;
   const player = state.players[side];
   const held = player.reserve[reserveIndex];
-  const host = player.field.find((mon) => mon?.uid === fieldUid) ?? null;
+  const host = player.field.find((mon) => mon?.uid === fieldUid && mon.abroad === undefined) ?? null;
   if (!held || !host) return state;
-  const ids = player.field.filter((mon): mon is FieldMon => Boolean(mon)).map((mon) => mon.cardId);
+  const ids = player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.abroad === undefined)).map((mon) => mon.cardId);
   const knight = findKnightFusion(held.id, host.cardId, ids);
   const recipe = findFusion(held.id, host.cardId);
   const resultId = knight?.result ?? recipe?.result;
@@ -3010,9 +3026,10 @@ function fuseCore(state: Duel, reserveIndex: number, fieldUid: string, slot: Slo
   if ((!recipe && !knight) || !handCard || !result) return note(state, "Không hợp nhất được.");
   if (player.field[slot] && player.field[slot]?.uid !== fieldUid && !(knight && player.field[slot]?.cardId && ["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"].includes(player.field[slot]?.cardId ?? ""))) return note(state, "Ô này đã có quái.");
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
+  if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   const born = place({ ...state, seq: state.seq + 1 }, side, result.id);
   const knights = new Set(["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"]);
-  const field = player.field.map((mon) => (knight && mon && knights.has(mon.cardId) ? null : mon?.uid === fieldUid ? null : mon)) as Player["field"];
+  const field = player.field.map((mon) => (knight && mon && !mon.abroad && knights.has(mon.cardId) ? null : mon?.uid === fieldUid ? null : mon)) as Player["field"];
   field[slot] = born;
   const reserve = player.reserve.filter((_, index) => index !== reserveIndex);
   const placed = { ...player, field, reserve, spent: [...(player.spent ?? []), held.id, ...(knight ? ids.filter((id) => knights.has(id) && id !== held.id) : [])] };
@@ -3527,7 +3544,7 @@ function answersLater(attacker: FieldMon, defender: FieldMon, meleeBlow: boolean
 
 function frontCounter(victim: FieldMon | null, attacker: FieldMon | null): victim is FieldMon {
   if (!victim || !attacker || victim.hp <= 0 || attacker.hp <= 0) return false;
-  if (victim.row === "back" || attacker.row === "back") return false;
+  if (victim.row === "back" || attacker.row === "back" || victim.abroad !== undefined) return false;
   if (victim.stun > 0 || victim.cage || (victim.chain ?? 0) > 0 || (victim.path ?? 0) > 0 || hexLocked(victim)) return false;
   return true;
 }
@@ -3786,6 +3803,11 @@ function passResponseCore(state: Duel): Duel {
     const rewound = side === null ? null : rewindAlly(state, side, ally);
     const cleared = { ...(rewound ?? state), hold: { ...hold, rewind: undefined } };
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
+  }
+  if (hold.box) {
+    // Hộp ma thuật lands now: the two trade slots, then the skill falls on whoever stands where it aimed.
+    const { ally, foe: enemy } = hold.box;
+    return passResponseCore(boxSwap({ ...state, hold: { ...hold, box: undefined } }, ally, enemy));
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
@@ -6089,6 +6111,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     "virus-an-mon",
     "co-may-thoi-gian",
     "giap-co-khi",
+    "hop-ma-thuat",
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
   ]);
   if (!replay && card.id === "hoan-doi") {
@@ -6096,7 +6119,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       return note(state, swapRows(player).length < 2 ? "Không đủ quái để hoán đổi." : "Hoán đổi chỉ dùng khi có quái bị nhắm.");
     }
   }
-  if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap") {
+  if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap" && card.id !== "hop-ma-thuat") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được kỹ năng này.");
   }
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state)) {
@@ -6121,6 +6144,18 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
       return note(state, "Giáp cơ khí chỉ dùng khi kỹ năng đối phương nhắm một đồng minh.");
     }
   }
+  // Hộp ma thuật: the ally the skill strikes (picked when several are) and the enemy it trades slots with.
+  const boxAlly = card.id === "hop-ma-thuat"
+    ? (() => {
+        const allies = boxAllies(state, side);
+        return sourceUid && allies.includes(sourceUid) ? sourceUid : allies.length === 1 ? allies[0]! : null;
+      })()
+    : null;
+  if (!replay && card.id === "hop-ma-thuat") {
+    if (state.step !== "respond" || boxAllies(state, side).length === 0) return note(state, "Hộp ma thuật chỉ dùng khi kỹ năng đối phương nhắm đồng minh.");
+    if (!boxAlly) return note(state, "Chọn đồng minh đang bị nhắm.");
+    if (!targetUid || !boxFoes(state, side).includes(targetUid)) return note(state, "Chọn một quái đối thủ để đổi chỗ.");
+  }
   if (!replay && card.id === "mu-ma-phap" && !player.field.some((mon) => mon && mon.cardId !== "mu")) {
     return note(state, "Cần có quái trên sân.");
   }
@@ -6142,7 +6177,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     }
   }
   if (!replay && state.step === "respond" && !response.has(card.id)) return note(state, "Phép này không ứng biến được.");
-  const guards = ["guong-phong-ho", "la-chan-phan-don", "vong-xoay-bao-ho", "phuc-kich", "vong-nguyen-rua-ac-ma", "hoan-doi", "hap-thu-ma-phap"];
+  const guards = ["guong-phong-ho", "la-chan-phan-don", "vong-xoay-bao-ho", "phuc-kich", "vong-nguyen-rua-ac-ma", "hoan-doi", "hap-thu-ma-phap", "hop-ma-thuat"];
   if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side) {
     return note(state, `${card.name} chỉ dùng khi phe bạn bị nhắm.`);
   }
@@ -6338,6 +6373,13 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     const field = next.players[side].field.map((mon) => (mon && isSea(mon.cardId) ? { ...mon, wet: 99 } : mon));
     return note(patch(next, side, shuffleSea({ ...next.players[side], sea: true, field })), "Biển sâu nuốt quái biển. Đối thủ không thấy chỉ số", "spell");
   }
+  if (card.id === "hop-ma-thuat") {
+    const ally = boxAlly ? next.players[side].field.find((mon) => mon?.uid === boxAlly) ?? null : null;
+    const enemy = targetUid ? next.players[foe].field.find((mon) => mon?.uid === targetUid) ?? null : null;
+    if (!next.hold || !ally || !enemy) return note(next, "Hộp ma thuật không đổi được chỗ.");
+    // A fast spell: it waits in the chain, the other side may answer, and the two trade slots once it lands.
+    return keep(note({ ...next, hold: { ...next.hold, box: { ally: ally.uid, foe: enemy.uid } } }, `Hộp ma thuật chờ đổi chỗ ${cardOf(ally).name} với ${cardOf(enemy).name}.`, "spell"));
+  }
   if (card.id === "co-may-thoi-gian") {
     const ally = targetUid ? next.players[side].field.find((mon) => mon?.uid === targetUid) ?? null : null;
     if (!ally) return note(next, "Không có đồng minh đang bị nhắm.");
@@ -6419,7 +6461,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
             : null
         : null;
     if (!skillAt) return note(state, "Phục kích chỉ chặn kỹ năng gây sát thương nhắm vào bạn.");
-    const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
+    const ready = next.players[side].field.filter((mon) => mon && mon.stun === 0 && (mon.chain ?? 0) === 0 && mon.abroad === undefined && mon.cardId !== "chan-ken" && mon.cardId !== "ken-ngai" && mon.cardId !== "hoa-an-thit-nguoi");
     const fighter = targetUid ? ready.find((mon) => mon?.uid === targetUid) ?? null : null;
     const attacker = next.players[foe].field.find((mon) => mon?.uid === skillAt) ?? null;
     if (!fighter || !attacker) return note(state, "Chọn quái để phục kích.");
@@ -6537,6 +6579,151 @@ function redirectAim(state: Duel, fromUid: string | null, toUid: string | null):
   const hold = state.hold?.blocker === fromUid && state.hold ? { ...state.hold, blocker: toUid } : state.hold;
   return { ...state, pending: nextPending, hold };
 }
+
+/**
+ * Hộp ma thuật (chủ game 02/11): the allies of `side` the other side's skill waiting in the chain is about to strike,
+ * the one it aims at and, for a skill that lands on several, each one a branch falls on.
+ */
+export function boxAllies(state: Duel, side: Side): string[] {
+  const pending = state.pending;
+  if (state.step !== "respond" || !state.hold || state.hold.box || state.box) return [];
+  if (!pending || (pending.kind !== "beam" && pending.kind !== "gnaw-skill") || (pending.kind === "beam" && pending.back)) return [];
+  if (ownerSide(state, pending.caster) !== ((1 - side) as Side)) return [];
+  const mine = (uid: string | null | undefined) => Boolean(uid && state.players[side].field.some((mon) => mon?.uid === uid && mon.hp > 0 && mon.abroad === undefined));
+  const out = new Set<string>();
+  const aimed = aimedId(state);
+  if (mine(aimed)) out.add(aimed!);
+  if (pending.kind === "beam") for (const uid of spreadHits(state) ?? []) if (mine(uid)) out.add(uid);
+  return [...out];
+}
+
+/** The enemy monsters Hộp ma thuật may trade an ally with: any of them, 5 stars and the caster too (chủ game 02/11). */
+export function boxFoes(state: Duel, side: Side): string[] {
+  return state.players[(1 - side) as Side].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.abroad === undefined)).map((mon) => mon.uid);
+}
+
+/** A monster leaving a field drops what that field's environment gave it; the field it lands on gives its own. */
+function shedEnv(mon: FieldMon): FieldMon {
+  let next: FieldMon = { ...mon };
+  if (next.envArmor) {
+    if (next.armor) next = { ...next, def: Math.max(0, next.def - next.armor), armor: undefined, raised: markRaised(next, { def: -next.armor }) };
+    next = { ...next, envArmor: undefined };
+  }
+  if (next.envHp) {
+    const maxHp = Math.max(1, (next.maxHp || next.hp) - 2);
+    next = { ...next, maxHp, hp: Math.max(1, Math.min(maxHp, next.hp - 2)), raised: markRaised(next, { hp: -2 }), envHp: undefined };
+  }
+  if (next.envSkill) next = { ...next, skillUp: Math.max(0, (next.skillUp ?? 0) - 1), envSkill: undefined };
+  return next;
+}
+
+/** Puts `mon` into `slot` of `side` (or takes it out with null) without counting it as gone from that field. */
+function setSlots(state: Duel, moves: Array<{ side: Side; slot: number; mon: FieldMon | null }>): Duel {
+  const players = [...state.players] as [Player, Player];
+  for (const side of [0, 1] as const) {
+    const own = moves.filter((row) => row.side === side);
+    if (own.length === 0) continue;
+    const field = [...players[side].field] as Player["field"];
+    for (const row of own) field[row.slot] = row.mon;
+    players[side] = envBoost(withRows({ ...players[side], field }));
+  }
+  return { ...state, players };
+}
+
+/** Hộp ma thuật lands: `ally` and `foe` trade slots across the two fields, and the skill falls on `foe`. */
+function boxSwap(state: Duel, allyUid: string, foeUid: string): Duel {
+  const a = ownerSide(state, allyUid);
+  const b = ownerSide(state, foeUid);
+  if (a === null || b === null || a === b) return note(state, "Hộp ma thuật không đổi được chỗ.", "spell");
+  const ia = state.players[a].field.findIndex((mon) => mon?.uid === allyUid);
+  const ib = state.players[b].field.findIndex((mon) => mon?.uid === foeUid);
+  const ally = state.players[a].field[ia]!;
+  const foe = state.players[b].field[ib]!;
+  let next = setSlots(state, [
+    { side: a, slot: ia, mon: { ...shedEnv(foe), abroad: b } },
+    { side: b, slot: ib, mon: { ...shedEnv(ally), abroad: a } },
+  ]);
+  next = {
+    ...next,
+    box: { pair: [{ uid: allyUid, side: a, slot: ia as Slot }, { uid: foeUid, side: b, slot: ib as Slot }], shut: null, seq: state.stepNo + 1 },
+  };
+  next = redirectAim(next, allyUid, foeUid);
+  if (next.hold?.covers?.some((row) => row.target === allyUid)) {
+    next = { ...next, hold: { ...next.hold, covers: next.hold.covers.map((row) => (row.target === allyUid ? { ...row, target: foeUid } : row)) } };
+  }
+  return note(next, `Hộp ma thuật đổi chỗ ${cardOf(ally).name} với ${cardOf(foe).name} tới hết vòng.`, "spell");
+}
+
+/** The slot Hộp ma thuật shut once one of its pair fell, so nothing is summoned there until the round ends. */
+function boxShut(state: Duel, side: Side, slot: number): boolean {
+  const shut = state.box?.shut;
+  return Boolean(shut && shut.side === side && shut.slot === slot);
+}
+
+/**
+ * One of the pair Hộp ma thuật traded fell (or left the field): the other goes back to its own slot, and the slot it
+ * left on the other field stays shut until the round ends (chủ game 02/11).
+ */
+function settleBox(state: Duel): Duel {
+  const box = state.box;
+  if (!box || box.pair.length === 0) return state;
+  const here = (uid: string) => ownerSide(state, uid);
+  const gone = box.pair.filter((row) => here(row.uid) === null);
+  if (gone.length === 0) return state;
+  const stay = box.pair.filter((row) => here(row.uid) !== null);
+  let next: Duel = { ...state, box: { ...box, pair: [] } };
+  for (const row of stay) {
+    const at = here(row.uid)!;
+    const slot = next.players[at].field.findIndex((mon) => mon?.uid === row.uid);
+    const mon = next.players[at].field[slot]!;
+    if (at === row.side) {
+      next = setSlots(next, [{ side: at, slot, mon: { ...mon, abroad: undefined } }]);
+      continue;
+    }
+    const home = homeSlot(next, row.side, row.slot);
+    if (home === null) continue;
+    next = setSlots(next, [
+      { side: at, slot, mon: null },
+      { side: row.side, slot: home, mon: { ...shedEnv(mon), abroad: undefined } },
+    ]);
+    next = { ...next, box: { ...next.box!, shut: { side: at, slot: slot as Slot } } };
+    next = note(next, `${cardOf(mon).name} trở về sân.`, "spell");
+  }
+  if (!next.box?.shut) next = { ...next, box: null };
+  return next;
+}
+
+/** The slot a monster coming back goes to: its own, or the nearest free one in the same row. */
+function homeSlot(state: Duel, side: Side, slot: number): number | null {
+  const field = state.players[side].field;
+  if (!field[slot]) return slot;
+  const row = backSlot(slot as Slot) ? [3, 4, 5] : [0, 1, 2];
+  const free = row.filter((at) => !field[at]).sort((x, y) => Math.abs(x - slot) - Math.abs(y - slot));
+  if (free.length) return free[0]!;
+  const any = ALL_SLOTS.filter((at) => !field[at]);
+  return any.length ? any[0]! : null;
+}
+
+/** The round ends: whoever Hộp ma thuật carried across goes back home, and the shut slot opens. */
+function boxHome(state: Duel): Duel {
+  const box = state.box;
+  if (!box) return state;
+  let next: Duel = { ...state, box: null };
+  const rows = box.pair
+    .map((row) => ({ row, at: ownerSide(next, row.uid) }))
+    .filter((entry): entry is { row: (typeof box.pair)[number]; at: Side } => entry.at !== null);
+  const lifted = rows.map(({ row, at }) => {
+    const slot = next.players[at].field.findIndex((mon) => mon?.uid === row.uid);
+    return { row, at, slot, mon: next.players[at].field[slot]! };
+  });
+  next = setSlots(next, lifted.map(({ at, slot }) => ({ side: at, slot, mon: null })));
+  for (const { row, at, mon } of lifted) {
+    const home = homeSlot(next, row.side, row.slot);
+    if (home === null) continue;
+    next = setSlots(next, [{ side: row.side, slot: home, mon: { ...(at === row.side ? mon : shedEnv(mon)), abroad: undefined } }]);
+  }
+  return lifted.length ? note(next, "Hộp ma thuật mở ra, quái trở về chỗ cũ.", "spell") : next;
+}
 function swapToken(player: Player, token: string): { kind: "field"; uid: string } | { kind: "reserve"; index: number } | null {
   if (token.startsWith("f:")) {
     const uid = token.slice(2);
@@ -6568,7 +6755,7 @@ function demonGate(player: Player, held: PileMon): { player: Player; fresh: bool
 function swapRows(player: Player): string[] {
   const tokens: string[] = [];
   for (const unit of player.field) {
-    if (unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai") tokens.push(`f:${unit.uid}`);
+    if (unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined) tokens.push(`f:${unit.uid}`);
   }
   player.reserve.forEach((card, index) => {
     if (canBring(player, card.id)) tokens.push(`r:${index}`);
@@ -7436,6 +7623,9 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   const run = (from: Duel) => lavaSkill(from, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
   if (silent) return run(state);
+  if (state.players.some((player) => player.field.some((unit) => unit?.uid === uid && unit.abroad !== undefined))) {
+    return note(state, "Quái đang ở sân bên kia, không ai điều khiển được.");
+  }
   if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   // These wait in the chain now (chủ game 30/10), from any caller.
   const caster = state.step === "main" ? state.players[state.turn].field.find((unit) => unit?.uid === uid) ?? null : null;
@@ -7521,10 +7711,11 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   const side = state.turn;
   const foe = (1 - side) as Side;
   const you = state.players[side];
-  const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
+  // Hộp ma thuật may have carried the caster itself onto the other field: its skill still lands once the chain ends.
+  const mon = you.field.find((unit) => unit?.uid === uid) ?? state.players[foe].field.find((unit) => unit?.uid === uid && unit.abroad === side) ?? null;
   if (mon?.cardId === "sat-nhan-bat-giu") return castSeize(state, side, mon, targetUid);
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
-  if (!mon || held(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
+  if (!mon || stuck(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
   if (mon.cardId === "mat-xanh-huy-diet") {
     if (mon.gaze) return note(state, "Cầu sấm ánh sáng đã nạp cho đòn tiếp theo.");
     const before = you.stars;
@@ -9186,7 +9377,7 @@ export function endTurn(state: Duel): Duel {
  */
 function finishRound(state: Duel): Duel {
   const owner = attackRound(state);
-  const from: Duel = { ...state, turn: owner };
+  const from: Duel = { ...boxHome(settleBox(state)), turn: owner };
   const next = endTurnCore(from);
   if (next === from || (next.turn === from.turn && next.winner === from.winner && next.step === from.step)) {
     return next === from ? state : { ...next, turn: state.turn };

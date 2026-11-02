@@ -12874,3 +12874,19 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .al-head-prize { margin-left: 0.4rem; display: inline-flex; align-items: center; }
+
+/* Hộp ma thuật (chủ game 02/11): tủ chạy trên 2 ô vừa đổi chỗ; lá cũ hiện tới lúc cửa đóng kín. */
+.box-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.box-fx-ghost {
+  position: absolute;
+}
+.box-fx-video {
+  position: absolute;
+  object-fit: fill;
+  max-width: none;
+}
