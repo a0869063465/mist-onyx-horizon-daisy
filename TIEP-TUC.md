@@ -627,3 +627,5 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - LỜI NHẮC GIỮA SÂN ĐỔI KIỂU 02/11 (chủ game: "Xoá bảng đó đi, hiển thị như lúc kéo skill ra hàng chờ"; Sonnet low, ĐÃ LÀM): bỏ `.center-tip`, lời nhắc `tip` dùng đúng kiểu `.rx-hint` của ReactionLine (chữ `NoticeText`, giữa sân, mờ dần 3,4 giây). Bấm và kéo thả đều ra, thử `/tmp/clashtest/box/tip.mjs`.
 
 - LỜI NHẮC GIỮA SÂN CHỈ CÒN CHỮ 02/11 (chủ game: "đâu có hiện bảng như vậy"; Sonnet low, ĐÃ LÀM, nhánh `ccr-6ec5ff6c-vl497v`, CHƯA áp `main`): play.tsx `tip` dùng class `.mid-tip` (styles.css: chữ trắng đậm, bóng chữ, không nền không viền, giữa sân, mờ dần 3,2 giây) thay `.rx-hint`.
+
+- KHUNG LÁ PHÉP NHANH HỒNG 02/11 (chủ game gửi 2 ảnh; Sonnet low, ĐÃ LÀM, nhánh `ccr-6ec5ff6c-vl497v`, CHƯA áp `main`): `public/ui/spell-frame-fast.png` (có viên mana) / `spell-frame-fast-nogem.png`, `card-face.tsx` chọn khi lá phép trên tay có `spellSpeed` = fast. Hồng khung gần trùng hồng game (#ff4fa6) nên không đổi màu. Chậm/siêu tốc/buff giữ khung cũ, chờ ảnh. Ô gem/icon tốc độ dùng `DEFAULT_SPELL_HAND` (chưa đo lại, kiểm bằng mắt).
