@@ -871,6 +871,7 @@ export const PENDING_NOTES: string[] = [
   "Lời nhắc giữa sân chỉ còn chữ trơn, không còn bảng.",
   "Lá phép nhanh trên tay có khung hồng mới.",
   "Lá phép/skill phản ứng được: bỏ chớp cam, thay bằng viền và glow màu của phép/skill, lá thở nhẹ.",
+  "Khung lá phép nhanh trên tay đổi sang khung hồng mới.",
 ];
 
 function remarkOf(notes: string[]) {
