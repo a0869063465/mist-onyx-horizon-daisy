@@ -1,3 +1,4 @@
+import { spellSpeed } from "@/lib/spell-kinds";
 import { useLayoutEffect, useRef, useState } from "react";
 import { artSrc, fakeMonsterCard, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
@@ -116,6 +117,7 @@ export function CardFace({
   live,
   gems,
   fake = false,
+  hand = false,
 }: {
   monster?: MonsterCard | null;
   spellId?: string;
@@ -133,6 +135,8 @@ export function CardFace({
   gems?: number | string;
   /** A fake card (the starter deck's weaker copy): shows its cut stats, in red where below the real card's. */
   fake?: boolean;
+  /** A spell in the hand: the new frame, with its speed icon under the mana gem. */
+  hand?: boolean;
 }) {
   const badge = mark ?? (showNew ? "new" : null);
   const spell = spellId ? spellCard(spellId) : undefined;
@@ -165,7 +169,7 @@ export function CardFace({
       ) : spell ? (
         <img className="art" src={spellSrc(spell.id)} alt="" draggable={false} />
       ) : null}
-      <img className="frame" src={spell ? "/spell-frame.png" : "/card-frame.png"} alt="" draggable={false} />
+      <img className="frame" src={spell ? (hand ? "/spell-frame-hand.png" : "/spell-frame.png") : "/card-frame.png"} alt="" draggable={false} />
       {monster ? (
         <>
           {pin(spots.stars, monster.stars)}
@@ -181,6 +185,7 @@ export function CardFace({
         <>
           {pin(spellSpots.gems, gems ?? spell.gems)}
           {hideName ? null : pin(spellSpots.name, tr(spell.name), true)}
+          {hand && spellSpeed(spell.id) ? <img className={`speed speed-${spellSpeed(spell.id)}`} src={`/ui/speed-${spellSpeed(spell.id)}.webp`} alt="" draggable={false} /> : null}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}
         </>
       ) : null}

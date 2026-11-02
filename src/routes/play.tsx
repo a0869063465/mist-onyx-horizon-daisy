@@ -6820,7 +6820,7 @@ function PlayPage() {
                     onPointerMove={move}
                     onPointerUp={end}
                   >
-                    <CardFace spellId={id} gems={tolled ? `${spellCard(id)?.gems ?? 0}+1` : undefined} selected={open || picked} />
+                    <CardFace spellId={id} hand gems={tolled ? `${spellCard(id)?.gems ?? 0}+1` : undefined} selected={open || picked} />
                   </button>
                 );
                 // One tap on a spell that can be used now shows its use icon (chủ game 28/10: "Bấm 1 lần hiện icon dùng phép").

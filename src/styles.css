@@ -3521,6 +3521,17 @@ button.trail-dot.is-on {
   object-fit: contain;
   pointer-events: none;
 }
+.card .speed {
+  position: absolute;
+  z-index: 3;
+  left: 78.5%;
+  top: 18.5%;
+  width: 17.5%;
+  height: 11.5%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6));
+}
 .card.is-spell .socket:not(.is-name) {
   color: #fff;
   text-shadow: 0 1px 1px #08345c;
