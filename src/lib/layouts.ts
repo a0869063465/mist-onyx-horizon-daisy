@@ -506,3 +506,22 @@ export function loadHand(): Record<HandKey, Spot> {
 export function saveHand(layout: Record<HandKey, Spot>) {
   saveSpots(HAND_KEY, layout);
 }
+
+/** The figures on the spell card in the hand (new frame): mana gem and speed icon, tunable in Tuỳ chỉnh (chủ game 02/11). Centres, like every Spot. */
+export type SpellHandKey = "gems" | "speed";
+export const SPELL_HAND_MARKS: Array<{ key: SpellHandKey; label: string; sample: string; box: boolean }> = [
+  { key: "gems", label: "Gem", sample: "1", box: false },
+  { key: "speed", label: "Icon tốc độ", sample: "", box: true },
+];
+export const DEFAULT_SPELL_HAND: Record<SpellHandKey, Spot> = {
+  gems: { x: 84.8, y: 10.5, size: 18, width: 14, height: 12 },
+  speed: { x: 87, y: 24.5, size: 10, width: 19, height: 13 },
+};
+const SPELL_HAND_KEY = "clash-spell-hand-v1";
+export function loadSpellHand(): Record<SpellHandKey, Spot> {
+  publishLayout();
+  return loadSpots(SPELL_HAND_KEY, DEFAULT_SPELL_HAND);
+}
+export function saveSpellHand(layout: Record<SpellHandKey, Spot>) {
+  saveSpots(SPELL_HAND_KEY, layout);
+}

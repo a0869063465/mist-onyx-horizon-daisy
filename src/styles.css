@@ -13016,3 +13016,13 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .card.is-framed .art { clip-path: polygon(0 5.2%, 54.5% 5.2%, 55.8% 4.6%, 58.3% 3.9%, 60.8% 3.1%, 62.1% 2.4%, 63.3% 1.8%, 64.6% 1.2%, 65.8% 0.7%, 67.1% 0.4%, 68% 0, 100% 0, 100% 100%, 0 100%); }
 
 .stage .hand.is-strip .hand-pick:has(.card.is-framed)::before { display: none; }
+/* Tay bài: chừa chỗ phía trên để sao/gem to trồi khỏi lá không bị cắt (chủ game 02/11). */
+.stage .hand.is-strip {
+  --hand-up: 7cqw;
+  box-sizing: border-box;
+  padding-top: var(--hand-up);
+  pointer-events: none;
+}
+.stage .hand.is-strip > * { pointer-events: auto; }
+.tune-card { overflow: visible; }
+

@@ -1851,6 +1851,8 @@ function PlayPage() {
   const laserTimers = useRef<number[]>([]);
   const skillPan = useRef<{ id: number; y: number; top: number } | null>(null);
   const suppressClick = useRef(false);
+  /** Last tap on a monster of the field: a second tap within DOUBLE_TAP opens its sheet (chủ game 02/11). */
+  const fieldTap = useRef<{ uid: string; at: number } | null>(null);
   const scratch = useRef<Scratch>(freshScratch());
   const matchRef = useRef<{ id: string; startedAt: number; decks: OpeningDecks | null; saved: boolean } | null>(null);
   const starTimer = useRef(0);
@@ -4726,6 +4728,16 @@ function PlayPage() {
       );
       return;
     }
+    const lastTap = fieldTap.current;
+    fieldTap.current = { uid: mon.uid, at: Date.now() };
+    if (lastTap && lastTap.uid === mon.uid && Date.now() - lastTap.at < DOUBLE_TAP && (!aim || aim.kind === "menu")) {
+      fieldTap.current = null;
+      const holder = side === viewer ? you : foe;
+      setAim(null);
+      const hidden = side !== viewer && holder.sea && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken");
+      setLook(hidden ? { name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." } : { ...fieldLook(mon, holder.stars), uid: mon.uid });
+      return;
+    }
     const ready = side === viewer && gnawReady(duel, mon, side);
     const coverReady =
       side === viewer &&
@@ -5466,11 +5478,11 @@ function PlayPage() {
       const card = monsterCard(held.id);
       return {
         key: `m${index}:${held.id}`,
-        face: card ? <CardFace monster={card} level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null,
+        face: card ? <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null,
         can: pileLeft(you) > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
+    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
@@ -6726,7 +6738,7 @@ function PlayPage() {
         </button>
         )}
         <div
-          style={{ top: `${ry(88.6)}%`, height: `${rh(11.4)}%` }}
+          style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))` }}
           className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onScroll={() => setHandPick(null)}

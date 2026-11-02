@@ -33,6 +33,11 @@ import {
   loadCard,
   loadField,
   loadSpell,
+  loadSpellHand,
+  saveSpellHand,
+  DEFAULT_SPELL_HAND,
+  SPELL_HAND_MARKS,
+  type SpellHandKey,
   saveBoard,
   clearBoard,
   savedBoards,
@@ -52,7 +57,7 @@ import { DEFAULT_BOARD_ART, ENV_BOARDS } from "@/lib/env-boards";
 
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
-type Screen = "menu" | "code" | "board" | "monster" | "spell" | "field" | "text" | "sound" | "fx" | "cardfx";
+type Screen = "menu" | "code" | "board" | "monster" | "spell" | "spellHand" | "field" | "text" | "sound" | "fx" | "cardfx";
 type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
 type SpotPick = "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
 const SPOT_KEYS = new Set<string>(["stack", "env", "envFoe", "wall", "wallFoe", ...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
@@ -71,6 +76,7 @@ function TunePage() {
   if (screen === "board") return <BoardTune onBack={() => setScreen("menu")} />;
   if (screen === "monster") return <SpotTune kind="monster" onBack={() => setScreen("menu")} />;
   if (screen === "spell") return <SpotTune kind="spell" onBack={() => setScreen("menu")} />;
+  if (screen === "spellHand") return <SpotTune kind="spellHand" onBack={() => setScreen("menu")} />;
   if (screen === "text") return <CardTextTune onBack={() => setScreen("menu")} />;
   if (screen === "sound") return <SoundTune onBack={() => setScreen("menu")} />;
   if (screen === "fx") return <FxLab onBack={() => setScreen("menu")} />;
@@ -149,8 +155,11 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
           <button type="button" className="tuner-save alt" onClick={() => onPick("monster")}>
             {tr("Điều chỉnh lá quái trên tay")}
           </button>
-          <button type="button" className="tuner-save alt" onClick={() => onPick("spell")}>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("spellHand")}>
             {tr("Điều chỉnh lá phép trên tay")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("spell")}>
+            {tr("Điều chỉnh lá phép (kho bài, bảng)")}
           </button>
           <button type="button" className="tuner-save alt" onClick={() => onPick("field")}>
             {tr("Điều chỉnh lá trên sân")}
@@ -842,11 +851,11 @@ function BoardTune({ onBack }: { onBack: () => void }) {
   );
 }
 
-function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => void }) {
+function SpotTune({ kind, onBack }: { kind: "monster" | "spell" | "spellHand"; onBack: () => void }) {
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<string | null>(null);
-  const [layout, setLayout] = useState<Record<string, Spot>>(() => (kind === "monster" ? loadHand() : loadSpell()));
-  const marks: Array<{ key: string; label: string; sample: string; box: boolean }> = kind === "monster" ? HAND_MARKS : SPELL_MARKS;
+  const [layout, setLayout] = useState<Record<string, Spot>>(() => (kind === "monster" ? loadHand() : kind === "spellHand" ? loadSpellHand() : loadSpell()));
+  const marks: Array<{ key: string; label: string; sample: string; box: boolean }> = kind === "monster" ? HAND_MARKS : kind === "spellHand" ? SPELL_HAND_MARKS : SPELL_MARKS;
   const [picked, setPicked] = useState(marks[0].key);
   const [saved, setSaved] = useState(false);
   const spot = layout[picked];
@@ -871,11 +880,13 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
       <button type="button" className="tuner-back" onClick={onBack}>
         Về tuỳ chỉnh
       </button>
-      <h1>{kind === "monster" ? "Chỉnh lá quái trên tay" : "Chỉnh lá phép trên tay"}</h1>
+      <h1>{kind === "monster" ? "Chỉnh lá quái trên tay" : kind === "spellHand" ? "Chỉnh lá phép trên tay" : "Chỉnh lá phép (kho bài, bảng)"}</h1>
       <p className="tuner-note">Mũi tên dịch số. Chữ, rộng và cao đổi ô đang chọn.</p>
       <div ref={stage} className="tune-stage tune-card">
         {kind === "monster" ? (
           <CardFace monster={monsterCard("tho-den-tinh-nghich")} hand hideStats layout={{ ...loadCard(), ...(layout as Record<HandKey, Spot>) }} />
+        ) : kind === "spellHand" ? (
+          <CardFace spellId="soi-xich-dia-nguc" hand hideStats spellHandLayout={layout as Record<SpellHandKey, Spot>} />
         ) : (
           <CardFace spellId="mua-ma-thuat" hideStats showNew spellLayout={layout as Record<SpellKey, Spot>} />
         )}
@@ -932,6 +943,7 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
         className="tuner-save"
         onClick={() => {
           if (kind === "monster") saveHand(layout as Record<HandKey, Spot>);
+          else if (kind === "spellHand") saveSpellHand(layout as Record<SpellHandKey, Spot>);
           else saveSpell(layout as Record<SpellKey, Spot>);
           setSaved(true);
         }}
@@ -942,9 +954,10 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell"; onBack: () => v
         type="button"
         className="pad-btn"
         onClick={() => {
-          const next = kind === "monster" ? DEFAULT_HAND : DEFAULT_SPELL;
+          const next = kind === "monster" ? DEFAULT_HAND : kind === "spellHand" ? DEFAULT_SPELL_HAND : DEFAULT_SPELL;
           setLayout(next);
           if (kind === "monster") saveHand(DEFAULT_HAND);
+          else if (kind === "spellHand") saveSpellHand(DEFAULT_SPELL_HAND);
           else saveSpell(DEFAULT_SPELL);
           setSaved(true);
         }}

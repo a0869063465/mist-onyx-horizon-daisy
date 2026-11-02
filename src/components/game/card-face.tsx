@@ -2,7 +2,7 @@ import { spellSpeed } from "@/lib/spell-kinds";
 import { useLayoutEffect, useRef, useState } from "react";
 import { artSrc, fakeMonsterCard, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
-import { loadCard, loadHand, loadSpell, type CardKey, type SpellKey, type Spot } from "@/lib/layouts";
+import { loadCard, loadHand, loadSpell, loadSpellHand, type CardKey, type SpellHandKey, type SpellKey, type Spot } from "@/lib/layouts";
 
 // Long names may shrink to 0.75 of the old size; card text is now 1.3x, so 0.75 / 1.3.
 const NAME_FLOOR = 0.58;
@@ -114,6 +114,7 @@ export function CardFace({
   mark = null,
   layout,
   spellLayout,
+  spellHandLayout,
   live,
   gems,
   fake = false,
@@ -131,6 +132,8 @@ export function CardFace({
   mark?: "new" | "up" | "down" | null;
   layout?: Record<CardKey, Spot>;
   spellLayout?: Record<SpellKey, Spot>;
+  /** Gem and speed icon of a spell in the hand (Tuỳ chỉnh). */
+  spellHandLayout?: Record<SpellHandKey, Spot>;
   live?: { name: string; atk: number; def: number; mdef: number; hp: number };
   gems?: number | string;
   /** A fake card (the starter deck's weaker copy): shows its cut stats, in red where below the real card's. */
@@ -143,6 +146,7 @@ export function CardFace({
   useLang();
   const spots = layout ?? (hand && monster ? { ...loadCard(), ...loadHand() } : loadCard());
   const spellSpots = spellLayout ?? loadSpell();
+  const handSpell = hand && spell ? (spellHandLayout ?? loadSpellHand()) : null;
   const tier = monster ? monsterTier(monster.stars) : spell ? spellTier(spell.gems) : "";
   const cut = monster && fake && !live ? fakeMonsterCard(monster) : monster;
   const pin = (spot: Spot, value: string | number, name = false, key?: "atk" | "def" | "mdef" | "hp" | "gems") =>
@@ -193,9 +197,17 @@ export function CardFace({
         </>
       ) : spell ? (
         <>
-          {pin(hand && String(gems ?? spell.gems).length > 1 ? { ...spellSpots.gems, size: spellSpots.gems.size * 0.55 } : spellSpots.gems, gems ?? spell.gems)}
+          {pin(handSpell ? (String(gems ?? spell.gems).length > 1 ? { ...handSpell.gems, size: handSpell.gems.size * 0.55 } : handSpell.gems) : spellSpots.gems, gems ?? spell.gems)}
           {hideName || hand ? null : pin(spellSpots.name, tr(spell.name), true)}
-          {hand && spellSpeed(spell.id) ? <img className={`speed speed-${spellSpeed(spell.id)}`} src={`/ui/speed-${spellSpeed(spell.id)}.webp`} alt="" draggable={false} /> : null}
+          {hand && handSpell && spellSpeed(spell.id) ? (
+            <img
+              className={`speed speed-${spellSpeed(spell.id)}`}
+              style={{ left: `${handSpell.speed.x - handSpell.speed.width / 2}%`, top: `${handSpell.speed.y - handSpell.speed.height / 2}%`, width: `${handSpell.speed.width}%`, height: `${handSpell.speed.height}%` }}
+              src={`/ui/speed-${spellSpeed(spell.id)}.webp`}
+              alt=""
+              draggable={false}
+            />
+          ) : null}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}
         </>
       ) : null}
