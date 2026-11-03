@@ -13030,6 +13030,8 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   --hand-up: 7cqw;
   box-sizing: border-box;
   padding-top: var(--hand-up);
+  /* Chừa chỗ hai bên để glow lá đầu và lá cuối không bị dải cắt (chủ game 03/11). */
+  padding-inline: 2.4cqw;
   pointer-events: none;
 }
 .stage .hand.is-strip > * { pointer-events: auto; }
@@ -13057,7 +13059,7 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 }
 /* V7 quái triệu hồi được: viền + glow xanh lá. */
 .stage .hand-card.is-summonable > .card {
-  filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));
+  filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 4px rgba(70, 232, 116, 0.9));
 }
 
 
