@@ -45,7 +45,7 @@ const SPEEDS: Record<SpellSpeed, string[]> = {
   slow: ["sam-set-tan-the", "soi-xich-dia-nguc", "thanh-guom-anh-sang", "mu-ma-phap", "phan-nguyen"],
   fast: ["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "hap-thu-ma-phap", "phuc-kich", "vong-xoay-bao-ho", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"],
   super: ["hoan-doi", "hop-ma-thuat"],
-  buff: ["sung-loi-pha", "mua-ma-thuat"],
+  buff: ["sung-loi-pha", "mua-ma-thuat", "ke-dao-mo", "thu-hoi-quai-thu"],
 };
 export function spellSpeed(id: string): SpellSpeed | null {
   return (Object.keys(SPEEDS) as SpellSpeed[]).find((key) => SPEEDS[key].includes(id)) ?? null;
