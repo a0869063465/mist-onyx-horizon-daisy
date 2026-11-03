@@ -890,6 +890,7 @@ export const PENDING_NOTES: string[] = [
   "Thiếu sao mà cố triệu hồi quái 3 lần thì hiện gợi ý một lần: vùng liên quan sáng lên, nói rõ cần bao nhiêu mana trong mộ. Bấm >> để đóng. Bấm mộ mana hoặc ô sao thì thấy còn bao nhiêu mana nữa tới sao kế.",
   "Phép chậm đổi khung sang đỏ rượu vang, kim loại bóng như các khung khác.",
   "Lá phép trên tay bỏ vạch màu dưới đáy (che khung), số mana trong viên nhỏ lại cho vừa.",
+  "Lá phép trên tay cùng dạng lá quái: bỏ viền dưới đáy, số mana trắng có glow xanh. Khung phép chậm dùng bản đỏ thẫm, lá không mana cũng có viên mana.",
 ];
 
 function remarkOf(notes: string[]) {

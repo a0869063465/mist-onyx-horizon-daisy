@@ -13212,3 +13212,13 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .hint-s4 { color: #b57bff; }
 .hint-text .mana-gem { display: inline-block; width: 0.8rem; height: 0.8rem; vertical-align: -0.1em; margin: 0 0.35em; }
 .mark.is-tap { pointer-events: auto; cursor: pointer; padding: 0.35em 0.5em; }
+
+/* Lá phép trên tay cùng dạng lá quái (chủ game 03/11): bỏ viền sẫm dưới đáy; số mana luôn trắng (màu dành cho bậc), chỉ glow xanh sáng + viền tối cho nổi trên lá nhỏ. */
+.stage .hand.is-strip .hand-pick:has(.card.is-hand-spell)::before { display: none; }
+.card.is-hand-spell .socket.is-gems {
+  color: #fff;
+  line-height: 0.8;
+  -webkit-text-stroke: 0.14em #06203a;
+  paint-order: stroke fill;
+  text-shadow: 0 0 0.3em #8fdcff, 0 0 0.16em #fff, 0 0 0.5em #3ec6ff;
+}
