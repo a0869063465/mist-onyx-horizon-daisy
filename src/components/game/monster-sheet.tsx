@@ -444,8 +444,11 @@ export function MonsterSheet({
       const wraps = lineAt > 0 && !!first?.link && !!first?.item;
       const prevLen = lineAt > 0 ? lines[lineAt - 1].length : 0;
       const shift = wraps ? Math.max(prevLen - line.length, 0) : 0;
+      // A shorter row is centred over the longest one, so two icons sit staggered between the three below (chủ game 03/11).
+      const widest = Math.max(...lines.map((l) => l.length));
+      const stagger = !wraps && lines.length > 1 ? (widest - line.length) / 2 : 0;
       return (
-        <div key={lineAt} className="msheet-row" style={shift ? { marginLeft: `${shift * 4.3}rem` } : undefined}>
+        <div key={lineAt} className="msheet-row" style={shift || stagger ? { marginLeft: `${(shift || stagger) * 4.3}rem` } : undefined}>
           {wraps ? <i className="sk3d-drop" style={{ "--from": RIM_TONE[first.item!.skill.kind], left: `${(prevLen - 1 - shift) * 4.3 + 1.95 - 0.31}rem` } as CSSProperties} aria-hidden="true" /> : null}
           {out}
         </div>
