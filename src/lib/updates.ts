@@ -881,7 +881,7 @@ export const PENDING_NOTES: string[] = [
   "Sửa dải trong suốt ở bụng lá bài trên tay, phía trên ô công và máu.",
   "Bảng quái xếp icon kỹ năng theo màu: cùng màu một hàng, icon lưu ý nằm cuối hàng (ví dụ Mỹ điểu nhân).",
   "Bảng quái: hàng icon ít hơn xếp so le giữa các icon của hàng dưới.",
-  "Tay bài chừa lề hai bên để glow lá đầu và lá cuối không bị cắt.",
+  "Tay bài mở rộng hai bên để glow lá đầu và lá cuối không bị cắt, lá giữ nguyên chỗ.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -13030,8 +13030,10 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   --hand-up: 7cqw;
   box-sizing: border-box;
   padding-top: var(--hand-up);
-  /* Chừa chỗ hai bên để glow lá đầu và lá cuối không bị dải cắt (chủ game 03/11). */
-  padding-inline: 2.4cqw;
+  /* Dải rộng ra 2,4% mỗi bên và chừa đúng chừng đó làm lề, nên lá đứng nguyên chỗ cũ mà glow lá đầu, lá cuối không bị cắt (chủ game 03/11). */
+  left: calc(21% - 2.4%);
+  width: calc(58% + 4.8%);
+  padding-inline: 2.4%;
   pointer-events: none;
 }
 .stage .hand.is-strip > * { pointer-events: auto; }
