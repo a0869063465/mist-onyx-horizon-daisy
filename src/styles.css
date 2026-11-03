@@ -2084,6 +2084,12 @@
   background: color-mix(in srgb, #ff8a00 42%, transparent);
   outline-color: #ff8a00;
 }
+/* V2 (chủ game 03/11): kéo/chọn triệu hồi, ô trống chỉ viền mảnh, không tô mảng; ô gần ngón sáng xanh ngọc bích. */
+.slot.is-hot.is-summon {
+  background: transparent;
+  outline: 1.5px dashed color-mix(in srgb, #2fe0b5 55%, transparent);
+  outline-offset: 1px;
+}
 .slot.is-hot.is-skill {
   background: color-mix(in srgb, #d6f25a 46%, transparent);
   outline-color: #d6f25a;
@@ -2095,13 +2101,29 @@
   border-radius: 0.6rem;
 }
 /* Chọn mục tiêu thông minh (chủ game 31/10): the slot or the player a drag will land on, brighter than the others. */
-.slot.is-snap,
 .face-drop.is-snap {
   outline: 3px solid #fff3b0;
   outline-offset: 2px;
   border-radius: 0.6rem;
   box-shadow: 0 0 0.9rem 0.25rem color-mix(in srgb, #ffd54a 70%, transparent);
   animation: snap-glow 0.9s ease-in-out infinite alternate;
+}
+/* V1/V2: ô được chọn = viền sáng kẹp 2 đường tối để đọc được trên sân đỏ; kéo triệu hồi thì xanh ngọc bích. */
+.slot.is-snap {
+  background: transparent;
+  border-radius: 0.6rem;
+  outline: 0;
+  box-shadow: 0 0 0 2px #1a0d00, 0 0 0 4.5px #fff3b0, 0 0 0 6px #1a0d00, 0 0 1rem 0.35rem color-mix(in srgb, #ffd54a 75%, transparent);
+  animation: snap-glow 0.9s ease-in-out infinite alternate;
+}
+.slot.is-snap.is-summon {
+  background: color-mix(in srgb, #2fe0b5 22%, transparent);
+  box-shadow: 0 0 0 2px #001a14, 0 0 0 4.5px #7dffdc, 0 0 0 6px #001a14, 0 0 1rem 0.35rem color-mix(in srgb, #2fe0b5 80%, transparent);
+  animation: snap-glow-jade 0.9s ease-in-out infinite alternate;
+}
+@keyframes snap-glow-jade {
+  from { box-shadow: 0 0 0 2px #001a14, 0 0 0 4.5px #7dffdc, 0 0 0 6px #001a14, 0 0 0.6rem 0.2rem color-mix(in srgb, #2fe0b5 55%, transparent); }
+  to { box-shadow: 0 0 0 2px #001a14, 0 0 0 4.5px #b8ffec, 0 0 0 6px #001a14, 0 0 1.3rem 0.5rem color-mix(in srgb, #2fe0b5 90%, transparent); }
 }
 /* T2 (chủ game 01/11): a monster the current attack, skill or spell cannot pick. */
 .slot.is-blocked {
@@ -2372,6 +2394,8 @@
   background: color-mix(in srgb, #ff8a00 42%, transparent);
   border-radius: 0.7rem;
 }
+/* V3 (chủ game 03/11): quái dùng được mà đang được chọn thì không nền cam, chỉ glow xanh lá thở. */
+.hand-card.is-open.is-monster.is-summonable { background: transparent; }
 .hand-card.is-open.is-spell {
   background: color-mix(in srgb, #ff4f93 42%, transparent);
   border-radius: 0.7rem;
@@ -13062,6 +13086,11 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   text-shadow: 0 1px 2px #000;
   display: block;
 }
+@keyframes summon-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 2px #7dffa0) drop-shadow(0 0 8px #46e874) drop-shadow(0 0 16px rgba(70, 232, 116, 0.95)); }
+}
+.stage .hand-card.is-open.is-summonable > .card { animation: summon-breathe 1.5s ease-in-out infinite; }
 /* V7 quái triệu hồi được: viền + glow xanh lá. */
 .stage .hand-card.is-summonable > .card {
   filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));

@@ -6690,7 +6690,7 @@ function PlayPage() {
               blocked={youBlocked}
               fuse={Boolean(mon && ((fuseOn && fuseUids.has(mon.uid)) || (drag?.kind === "summon" && (findFusion(drag.card.id, mon.cardId) || findKnightFusion(drag.card.id, mon.cardId, you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId))))))}
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
-              tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
+              tone={drag?.kind === "summon" || aim?.kind === "summon" ? "summon" : drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               snapped={snap === `${viewer}-${index}`}
               attack={false}
@@ -8052,7 +8052,7 @@ function BoardSlot({
   blocked?: boolean;
   fuse?: boolean;
   fuseHide?: boolean;
-  tone?: "monster" | "skill";
+  tone?: "monster" | "skill" | "summon";
   picked?: boolean;
   /** Chọn mục tiêu thông minh: the target a drag will land on. */
   snapped?: boolean;
