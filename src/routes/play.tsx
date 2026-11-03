@@ -1881,38 +1881,48 @@ function PlayPage() {
   const laserTimers = useRef<number[]>([]);
   const skillPan = useRef<{ id: number; y: number; top: number } | null>(null);
   const suppressClick = useRef(false);
-  /** Lời nhắc giữa sân (chủ game 02/11): bảng thông báo đã ẩn nên các nhắc thao tác hiện ở đây vài giây. */
-  const [tip, setTip] = useState<{ text: string; n: number } | null>(null);
-  const tipTimer = useRef(0);
-  function showTip(text: string) {
-    window.clearTimeout(tipTimer.current);
-    setTip({ text, n: Date.now() });
-    tipTimer.current = window.setTimeout(() => setTip(null), 3200);
+  /** Khung gợi ý kiểu Hướng dẫn (chủ game 03/11): lặp 3 lần cùng hành vi mới hiện, mỗi gợi ý một lần. */
+  const [hint, setHint] = useState<{ targets: string[]; body: ReactNode } | null>(null);
+  function hintOk() {
+    return Boolean(duel) && !tutorial && !trial && !replay && (duel?.mode === "ai" || duel?.mode === "net");
   }
-  /** Khung gợi ý khi gặp vấn đề (chủ game 03/11): lặp 3 lần mới hiện, mỗi gợi ý một lần. */
-  const [hint, setHint] = useState<{ targets: string[]; body: ReactNode; auto: boolean } | null>(null);
-  function stuckHint(kind: "draw" | "stars", cardStars: number) {
-    if (!duel || tutorial || trial || replay || (duel.mode !== "ai" && duel.mode !== "net")) return;
-    if (!countHint(kind)) return;
+  /** Lượt 1: mọi hành động lặp lại (nhấp lá, kéo quái, bấm quái) nhắc người chơi bước tiếp theo. */
+  function turnOneHint() {
+    if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1) return;
     const mine = duel.players[viewer];
-    const star = <b className={`hint-s${Math.min(4, Math.max(1, cardStars))}`}>{cardStars} sao</b>;
-    if (kind === "draw") {
-      setHint({
-        targets: [".face-pile"],
-        auto: true,
-        body: (
-          <p>
-            Quái {star} cần đủ <b className="hint-gem">mana</b> trong mộ để <b className="hint-sum">triệu hồi</b>. Hãy bấm xấp bài để rút 1 lá trước.
-          </p>
-        ),
-      });
+    const one = <b className="hint-s1">1 sao</b>;
+    const drawn = mine.draws >= 1 || pileLeft(mine) < 1;
+    if (!drawn) {
+      const has = mine.reserve.some((held) => monsterCard(held.id)?.stars === 1);
+      if (!countHint(has ? "t1-draw1" : "t1-draw0")) return;
+      setHint(
+        has
+          ? { targets: [".face-pile"], body: <p>Hãy rút 1 lá bài để được triệu hồi quái {one}</p> }
+          : { targets: [".face-pile", ".hand.is-strip"], body: <p>Hãy rút bài đã.<br />Để có thể <b className="hint-sum">triệu hồi</b> quái {one}.</p> },
+      );
       return;
     }
+    const usable = mine.reserve.some((held) => (monsterCard(held.id)?.stars ?? 9) <= mine.stars);
+    if (duel.round !== undefined && duel.round !== viewer) {
+      if (!countHint("t1-more")) return;
+      setHint({ targets: [".medal-act"], body: <p>Hãy tiếp tục bấm chuyển</p> });
+      return;
+    }
+    if (!usable && mine.field.every((mon) => !mon)) {
+      if (!countHint("t1-pass")) return;
+      setHint({ targets: [".hand.is-strip", ".medal-act"], body: <p>Bạn không có quái {one} nào trên tay.<br />Hãy bấm chuyển</p> });
+    }
+  }
+  /** Thiếu sao (không phải chuyện rút bài): bảng mana cần thêm. */
+  function stuckHint(cardStars: number) {
+    if (!duel || !hintOk()) return;
+    if (!countHint("stars")) return;
+    const mine = duel.players[viewer];
+    const star = <b className={`hint-s${Math.min(4, Math.max(1, cardStars))}`}>{cardStars} sao</b>;
     const total = starPrice(cardStars);
     const have = starPrice(mine.stars) + mine.starGems;
     setHint({
       targets: ['[data-tut="youGems"]', '[data-tut="youStars"]'],
-      auto: true,
       body: (
         <p>
           Quái {star} cần đủ <b className="hint-gem">{total} mana</b> trong mộ để <b className="hint-sum">triệu hồi</b>.
@@ -1929,7 +1939,6 @@ function PlayPage() {
     const next = mine.stars + 1;
     setHint({
       targets: ['[data-tut="youGems"]', '[data-tut="youStars"]'],
-      auto: true,
       body:
         mine.stars >= STAR_COST.length ? (
           <p>
@@ -4048,11 +4057,9 @@ function PlayPage() {
     if (pile === "reserve" && duel && canPlay) {
       const wanted = monsterCard(id);
       const mine = duel.players[viewer];
-      if (wanted && needsDraw(wanted.stars)) {
-        showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
-        stuckHint("draw", wanted.stars);
-      } else if (wanted && mine.stars < wanted.stars && wanted.id !== "trieu-hoi-ac-ma") stuckHint("stars", wanted.stars);
+      if (wanted && !needsDraw(wanted.stars) && mine.stars < wanted.stars && wanted.id !== "trieu-hoi-ac-ma" && mine.draws >= 1) stuckHint(wanted.stars);
     }
+    turnOneHint();
     setInspect(null);
     setHandPick((current) => (current?.pile === pile && current.index === index ? null : { pile, index, id }));
   }
@@ -4383,12 +4390,9 @@ function PlayPage() {
         setVowAsk({ index: payload.index, slot: index as Slot, picks: [] });
         return;
       }
-      if (needsDraw(payload.card.stars)) {
-        showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${payload.card.stars} sao`);
-        stuckHint("draw", payload.card.stars);
-        return;
-      }
-      if (canPlay && duel.players[viewer].stars < payload.card.stars && payload.card.id !== "trieu-hoi-ac-ma") stuckHint("stars", payload.card.stars);
+      turnOneHint();
+      if (needsDraw(payload.card.stars)) return;
+      if (canPlay && duel.players[viewer].stars < payload.card.stars && payload.card.id !== "trieu-hoi-ac-ma" && duel.players[viewer].draws >= 1) stuckHint(payload.card.stars);
       if (!canPlay || !slotEl || owner !== viewer || slotEl.dataset.empty !== "1" || index < 0 || index >= FIELD_SLOTS) {
         holdNotice("Thả quái vào ô trống của bạn.");
         return;
@@ -4715,6 +4719,7 @@ function PlayPage() {
       return;
     }
     if (!mine || !duel) return;
+    if (side === viewer) turnOneHint();
     // Hoán đổi: tap a glowing ally to trade places with the monster aimed at.
     if (swapAsk) {
       if (side === viewer && swapFit(mon)) apply(confirmSwap(duel, swapAsk.locked!, `f:${mon.uid}`));
@@ -5990,14 +5995,9 @@ function PlayPage() {
           </p>
         )}
         {hint ? (
-          <HintCard targets={hint.targets} auto={hint.auto} onClose={() => setHint(null)}>
+          <HintCard targets={hint.targets} onClose={() => setHint(null)}>
             {hint.body}
           </HintCard>
-        ) : null}
-        {tip ? (
-          <p key={tip.n} className="mid-tip" style={{ zIndex: 14 }}>
-            <NoticeText text={tip.text} />
-          </p>
         ) : null}
         {lineOn ? (
           <ReactionLine
@@ -7329,6 +7329,7 @@ function PlayPage() {
               </div>
             </>
           ) : null)}
+        {drag && snap ? <SnapTop keyName={snap} x={drag.x} y={drag.y} /> : null}
         {drag ? (
           <div className="ghost" style={{ left: drag.x, top: drag.y }}>
             {drag.kind === "spell" ? (
@@ -8075,6 +8076,14 @@ function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
       />
     </>
   );
+}
+
+/** V6 (chủ game 03/11): viền neon của ô đang chọn nằm TRÊN lá đang kéo, không bị lá che. */
+function SnapTop({ keyName }: { keyName: string; x: number; y: number }) {
+  const el = document.querySelector<HTMLElement>(keyName === "face" ? ".face-drop" : `[data-slot="${keyName}"]`);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return <div className={`snap-top${keyName === "face" ? " is-face" : ""}`} style={{ left: r.left, top: r.top, width: r.width, height: r.height }} />;
 }
 
 function BoardSlot({

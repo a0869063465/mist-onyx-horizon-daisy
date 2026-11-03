@@ -896,6 +896,8 @@ export const PENDING_NOTES: string[] = [
   "Skill nguy hiểm (Hiến Tế, Hoá Kén…) đổi viền sang cam đất để khác đỏ của skill chậm.",
   "Đổi hình nền lá Mắt xanh huỷ diệt.",
   "Tên skill trên bảng quái cùng màu với viền icon. Hiến Tế của Kỵ sĩ bóng tối đổi icon thành hai kiếm đan trên chiếc khiên.",
+  "Khung gợi ý đầu trận làm như Hướng dẫn: nền tối, vùng sáng viền vàng chớp, Người giữ khoá nói, bấm » mới đóng. Nhắc rút bài, nhắc bấm chuyển.",
+  "Kéo quái lên sân: viền neon ô được chọn nằm trên lá đang kéo.",
 ];
 
 function remarkOf(notes: string[]) {
