@@ -8148,6 +8148,7 @@ function BoardSlot({
       <span
         className={`field-unit${mask ? "" : `${mon.dim || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
+        <span className="fu-body">
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
@@ -8191,6 +8192,7 @@ function BoardSlot({
           </span>
         ) : null}
         {!mask && !debtOn && countShown ? spot("count", countShown, false, false) : null}
+        </span>
       </span>
     </button>
   );

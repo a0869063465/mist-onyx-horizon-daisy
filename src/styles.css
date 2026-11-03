@@ -13100,7 +13100,7 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .field-unit .fstat.is-red { --tier: #ff3b30; color: #ff6a5e; }
 .field-unit .fstat.is-blue { --tier: #3ec6ff; color: #8fdcff; }
 /* Lá sân cắt hình y như lá trên tay: hình cao 84%, bo góc, cắt phần nhô qua ô sao (chủ game 03/11). */
-.slot .field-unit > .art {
+.slot .field-unit .fu-body > .art {
   inset: auto;
   left: 0;
   top: 0;
@@ -13110,4 +13110,11 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   border-radius: 0.7rem;
   background: #120c08;
   clip-path: polygon(0 4.83%, 54.5% 4.83%, 55.8% 4.27%, 58.3% 3.62%, 60.8% 2.88%, 62.1% 2.23%, 63.3% 1.67%, 64.6% 1.11%, 65.8% 0.65%, 67.1% 0.37%, 68% 0, 100% 0, 100% 100%, 0 100%);
+}
+/* Khung mới có ô nhô góc trên phải: canh phần thân lá trùng khung cũ (ngang 1% → 98,8%, dọc 1% → 98,7%), ô nhô nhô lên trên mép ô (chủ game 03/11). */
+.slot .field-unit .fu-body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transform: translate(0.9%, -2.46%) scale(0.981, 1.0166);
 }
