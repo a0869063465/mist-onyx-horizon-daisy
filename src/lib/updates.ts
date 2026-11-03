@@ -877,6 +877,8 @@ export const PENDING_NOTES: string[] = [
   "Lá phép siêu tốc và buff trên tay có khung xanh dương, xanh lá; bỏ icon loại phép trên tay.",
   "Khung xanh lá của phép buff dịu lại, hợp với các khung khác.",
   "Lá phép Kẻ đào mộ và Thu hồi quái thú dùng khung xanh lá.",
+  "Sửa đường nối kỹ năng của lá Máy quay thưởng: một thanh ngắn nối hàng trên xuống hàng dưới.",
+  "Sửa dải trong suốt ở bụng lá bài trên tay, phía trên ô công và máu.",
 ];
 
 function remarkOf(notes: string[]) {

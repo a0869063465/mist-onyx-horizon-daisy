@@ -6657,22 +6657,19 @@ button.watch-back {
 .msheet-skills { display: grid; justify-content: center; justify-items: start; gap: 1.7rem; margin: 0.1rem 1.1rem 0.65rem; }
 /* Four icons fit a row (chủ game 02/11): the rows are laid out in code, so they never wrap. Rows are left-aligned so a chain that wraps stays in one column. */
 .msheet-row { display: flex; flex-wrap: nowrap; justify-content: flex-start; gap: 0.35rem 0.4rem; }
-.sk3d-carry { position: relative; display: block; }
-.sk3d-carry::before,
-.sk3d-carry::after,
-.sk3d-carry-end {
-  content: "";
+.msheet-row { position: relative; }
+/* One short bar across the gap, from the icon above down into the icon below it. */
+.sk3d-drop {
   position: absolute;
   z-index: 0;
+  top: -1.7rem;
+  width: 0.62rem;
+  height: 2.1rem;
   border: 1px solid rgba(0, 0, 0, 0.7);
   background: var(--from);
   box-shadow: 0 0.15rem 0.25rem rgba(0, 0, 0, 0.7);
 }
-/* Up from the first icon of the wrapped chain, across, and up into the last icon of the row above. */
-.sk3d-carry::after { left: calc(1.95rem - 0.31rem); top: -1.1rem; width: 0.62rem; height: 2.3rem; }
-.sk3d-carry::before { left: calc(1.95rem - 0.31rem); top: -1.1rem; width: calc(var(--span) + 0.62rem); height: 0.62rem; }
-.sk3d-carry-end { left: calc(1.95rem - 0.31rem + var(--span)); top: -1.5rem; width: 0.62rem; height: 0.8rem; }
-.sk3d-carry > * { position: relative; z-index: 1; }
+.msheet-row > .sk3d, .msheet-row > .sk3d-chain { position: relative; z-index: 1; }
 .sk3d {
   --ring: #3ec6ff;
   --deep: #0b2a4a;
@@ -13024,7 +13021,8 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   text-shadow: 0 0.04em 0 color-mix(in srgb, var(--tier) 45%, black), 0 0 0.3em var(--tier), 0 0 0.14em var(--tier);
 }
 /* Khung lá tay: viền trên bên trái thấp hơn góc phải, cắt phần hình lá dư ra ngoài mép trên trái. */
-.card.is-framed .art { clip-path: polygon(0 5.2%, 54.5% 5.2%, 55.8% 4.6%, 58.3% 3.9%, 60.8% 3.1%, 62.1% 2.4%, 63.3% 1.8%, 64.6% 1.2%, 65.8% 0.7%, 67.1% 0.4%, 68% 0, 100% 0, 100% 100%, 0 100%); }
+/* The picture runs down behind the stat bar (84% of the card, was 78%) so no transparent band shows above attack and health (chủ game 03/11); the cut's percentages follow the taller box. */
+.card.is-framed .art { height: 84%; clip-path: polygon(0 4.83%, 54.5% 4.83%, 55.8% 4.27%, 58.3% 3.62%, 60.8% 2.88%, 62.1% 2.23%, 63.3% 1.67%, 64.6% 1.11%, 65.8% 0.65%, 67.1% 0.37%, 68% 0, 100% 0, 100% 100%, 0 100%); }
 
 .stage .hand.is-strip .hand-pick:has(.card.is-framed)::before { display: none; }
 /* Tay bài: chừa chỗ phía trên để sao/gem to trồi khỏi lá không bị cắt (chủ game 02/11). */

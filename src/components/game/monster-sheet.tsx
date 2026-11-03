@@ -397,18 +397,7 @@ export function MonsterSheet({
         if (!piece.item) continue;
         let end = at;
         while (line[end + 1]?.link && line[end + 1]?.item) end += 1;
-        // A chain that carries over from the row above: a bar drops from the icon above, in the same column.
-        const carried = at === 0 && lineAt > 0 && piece.link;
-        const prevLen = lineAt > 0 ? lines[lineAt - 1].length : 0;
-        const carry = (node: ReactNode) =>
-          carried ? (
-            <span key={`carry-${piece.item!.index}`} className="sk3d-carry" style={{ "--from": RIM_TONE[piece.item!.skill.kind], "--span": `${(prevLen - 1) * 4.3}rem` } as CSSProperties}>
-              <i className="sk3d-carry-end" aria-hidden="true" />
-              {node}
-            </span>
-          ) : (
-            node
-          );
+        const carry = (node: ReactNode) => node;
         if (end === at) {
           out.push(carry(icon(piece.item)));
           continue;
@@ -428,8 +417,15 @@ export function MonsterSheet({
         );
         at = end;
       }
+      // A chain that wraps: the row sits under the one above so its last icon is in the same column as the icon above's last,
+      // joined by one short bar across the gap (chủ game 03/11).
+      const first = line[0];
+      const wraps = lineAt > 0 && !!first?.link && !!first?.item;
+      const prevLen = lineAt > 0 ? lines[lineAt - 1].length : 0;
+      const shift = wraps ? Math.max(prevLen - line.length, 0) : 0;
       return (
-        <div key={lineAt} className="msheet-row">
+        <div key={lineAt} className="msheet-row" style={shift ? { marginLeft: `${shift * 4.3}rem` } : undefined}>
+          {wraps ? <i className="sk3d-drop" style={{ "--from": RIM_TONE[first.item!.skill.kind], left: `${(prevLen - 1 - shift) * 4.3 + 1.95 - 0.31}rem` } as CSSProperties} aria-hidden="true" /> : null}
           {out}
         </div>
       );
