@@ -8106,7 +8106,7 @@ function BoardSlot({
     const red = !shift && ((typeof value === "number" && value < 0) || cut);
     return (
     <span
-      className={`fstat${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && !shift && blue ? " is-blue" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`}
+      className={`fstat${key === "def" || key === "mdef" || key === "atk" || key === "hp" ? ` is-${key}` : ""}${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && !shift && blue ? " is-blue" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`}
       style={{
         left: `${layout[key].x}%`,
         top: `${layout[key].y}%`,
@@ -8169,7 +8169,7 @@ function BoardSlot({
           {mon.cage ? <i>Khoá</i> : null}
         </span>
         )}
-        {veil || (decoy ? false : !mask && hideName) ? null : spot("name", decoy ? "Thế thân" : mask ? "Mũ" : fieldName(mon))}
+        {/* Lá sân không ghi tên (chủ game 03/11), giống lá trên tay. */}
         {veil || mask || decoy ? null : spot("def", stats.def, stats.blueDef, false, fakeCut(mon, "def", stats.def))}
         {veil || mask || decoy ? null : spot("mdef", stats.mdef, stats.blueMdef, false, fakeCut(mon, "mdef", stats.mdef))}
         {veil || mask || decoy ? null : spot("atk", stats.atk, stats.blueAtk, false, fakeCut(mon, "atk", stats.atk))}

@@ -13088,3 +13088,14 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   pointer-events: none;
   animation: rx-hint 3.2s ease both;
 }
+
+/* Lá quái trên sân: số chỉ số cùng kiểu lá trên tay (chủ game 03/11). */
+.field-unit .fstat.is-def, .field-unit .fstat.is-mdef, .field-unit .fstat.is-atk, .field-unit .fstat.is-hp {
+  color: color-mix(in srgb, var(--tier) 8%, white);
+  text-shadow: 0 0.04em 0 color-mix(in srgb, var(--tier) 45%, black), 0 0 0.3em var(--tier), 0 0 0.14em var(--tier);
+  -webkit-text-stroke: 0.14em color-mix(in srgb, var(--tier) 20%, black);
+  paint-order: stroke fill;
+  line-height: 0.8;
+}
+.field-unit .fstat.is-red { --tier: #ff3b30; color: #ff6a5e; }
+.field-unit .fstat.is-blue { --tier: #3ec6ff; color: #8fdcff; }
