@@ -167,7 +167,7 @@ export function CardFace({
       </span>
     );
   return (
-    <div className={`card${spell ? " is-spell" : ""}${hand && monster ? " is-framed" : ""}${tier}${dim ? " is-dim" : ""}${selected ? " is-selected" : ""}`}>
+    <div className={`card${spell ? " is-spell" : ""}${hand && monster ? " is-framed" : ""}${hand && spell ? " is-hand-spell" : ""}${tier}${dim ? " is-dim" : ""}${selected ? " is-selected" : ""}`}>
       {monster ? (
         artSrc(monster.id, level) ? <img className="art" src={artSrc(monster.id, level)} alt="" draggable={false} /> : null
       ) : spell ? (

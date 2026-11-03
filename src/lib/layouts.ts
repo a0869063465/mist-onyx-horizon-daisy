@@ -146,7 +146,7 @@ export const SPELL_MARKS: Array<{ key: SpellKey; label: string; sample: string; 
 ];
 
 export const DEFAULT_SPELL: Record<SpellKey, Spot> = {
-  gems: { x: 84.8, y: 10.5, size: 18, width: 14, height: 12 },
+  gems: { x: 84.8, y: 10.5, size: 12.5, width: 14, height: 12 },
   name: { x: 50, y: 80.4, size: 13, width: 78, height: 25 },
   fresh: { x: 13.4, y: 3.4, size: 12, width: 54, height: 32 },
 };
