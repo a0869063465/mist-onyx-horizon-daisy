@@ -879,6 +879,7 @@ export const PENDING_NOTES: string[] = [
   "Lá phép Kẻ đào mộ và Thu hồi quái thú dùng khung xanh lá.",
   "Sửa đường nối kỹ năng của lá Máy quay thưởng: một thanh ngắn nối hàng trên xuống hàng dưới.",
   "Sửa dải trong suốt ở bụng lá bài trên tay, phía trên ô công và máu.",
+  "Bảng quái xếp icon kỹ năng theo màu: cùng màu một hàng, icon lưu ý nằm cuối hàng (ví dụ Mỹ điểu nhân).",
 ];
 
 function remarkOf(notes: string[]) {

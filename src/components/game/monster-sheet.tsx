@@ -364,6 +364,27 @@ export function MonsterSheet({
     const flat = units.flat();
     if (flat.length === 0) return [];
     const least = Math.ceil(flat.length / MAX_ROW);
+    // 0) colour sections (chủ game 03/11): two or more icons of one colour start a row of their own, a lone icon (a note,
+    // an extra) takes the next free slot of the row before it. Used only when it costs no extra row.
+    const sections: Piece[][] = [];
+    for (const unit of units) {
+      const prev = sections[sections.length - 1];
+      const same = prev && !unit[0].link && !prev[0].link && !!prev[0].item && !!unit[0].item && prev[0].item.skill.kind === unit[0].item.skill.kind;
+      if (same) prev.push(...unit);
+      else sections.push([...unit]);
+    }
+    const tidy: Piece[][] = [];
+    let tidyOk = true;
+    for (const section of sections) {
+      if (section.length > MAX_ROW) {
+        tidyOk = false;
+        break;
+      }
+      const last = tidy[tidy.length - 1];
+      if (section.length === 1 && last && last.length < MAX_ROW) last.push(...section);
+      else tidy.push([...section]);
+    }
+    if (tidyOk && tidy.length <= least) return tidy;
     // 1) whole units while they fit in a row.
     const whole: Piece[][] = [];
     let ok = true;
