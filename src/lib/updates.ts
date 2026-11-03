@@ -894,6 +894,7 @@ export const PENDING_NOTES: string[] = [
   "Phép chậm đổi khung sang đỏ thuần. Phép siêu tốc và giải trừ (Hấp thụ ma pháp, Vòng xoáy bảo hộ, Mưa ma thuật) dùng khung trắng bạc.",
   "Skill chậm (Lão hoá, Dòng chảy thời gian, Nguyền rủa của Mộ voi ma mút, Thổi bay, Mê hoặc, Dụ dỗ, Gió xoáy) có viền icon đỏ trên bảng quái.",
   "Skill nguy hiểm (Hiến Tế, Hoá Kén…) đổi viền sang cam đất để khác đỏ của skill chậm.",
+  "Đổi hình nền lá Mắt xanh huỷ diệt.",
 ];
 
 function remarkOf(notes: string[]) {
