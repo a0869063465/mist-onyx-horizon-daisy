@@ -893,6 +893,7 @@ export const PENDING_NOTES: string[] = [
   "Lá phép trên tay cùng dạng lá quái: bỏ viền dưới đáy, số mana trắng có glow xanh. Khung phép chậm dùng bản đỏ thẫm, lá không mana cũng có viên mana.",
   "Phép chậm đổi khung sang đỏ thuần. Phép siêu tốc và giải trừ (Hấp thụ ma pháp, Vòng xoáy bảo hộ, Mưa ma thuật) dùng khung trắng bạc.",
   "Skill chậm (Lão hoá, Dòng chảy thời gian, Nguyền rủa của Mộ voi ma mút, Thổi bay, Mê hoặc, Dụ dỗ, Gió xoáy) có viền icon đỏ trên bảng quái.",
+  "Skill nguy hiểm (Hiến Tế, Hoá Kén…) đổi viền sang cam đất để khác đỏ của skill chậm.",
 ];
 
 function remarkOf(notes: string[]) {

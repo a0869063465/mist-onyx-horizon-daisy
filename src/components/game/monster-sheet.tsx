@@ -97,11 +97,11 @@ export function GlyphDefs() {
           <stop offset="1" stopColor="#ff5a4e" />
         </linearGradient>
         <linearGradient id="rim3d-risk" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ffe8e2" />
-          <stop offset="0.3" stopColor="#e0402a" />
-          <stop offset="0.5" stopColor="#ffd6cc" />
-          <stop offset="0.75" stopColor="#6a0c04" />
-          <stop offset="1" stopColor="#ff7a5c" />
+          <stop offset="0" stopColor="#ffe9d6" />
+          <stop offset="0.3" stopColor="#e36c1c" />
+          <stop offset="0.5" stopColor="#ffd5b0" />
+          <stop offset="0.75" stopColor="#6a2c04" />
+          <stop offset="1" stopColor="#ff9a5a" />
         </linearGradient>
         <linearGradient id="rim3d-spell" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffe8f2" />
@@ -160,7 +160,7 @@ export function GlyphDefs() {
 export type UnitActKind = SkillKind | "attack";
 
 /** Mid tone of each rim's metal, for the bar that joins skills that come together. */
-const RIM_TONE: Record<SkillKind, string> = { active: "#4f9fe8", passive: "#9a5fe0", risk: "#e0402a", spell: "#ff4f93", note: "#e8b828" };
+const RIM_TONE: Record<SkillKind, string> = { active: "#4f9fe8", passive: "#9a5fe0", risk: "#e36c1c", spell: "#ff4f93", note: "#e8b828" };
 
 /** Metal rim with four diamond studs over a round skill emblem, in the colour of the skill's kind. */
 export function Rim({ kind }: { kind: UnitActKind | string }) {
@@ -529,7 +529,7 @@ export function MonsterSheet({
         <div className="msheet-desc">
           {shown ? (
             <>
-              <b className={`msheet-desc-title is-${shown.kind}`}>
+              <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">

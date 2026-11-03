@@ -6718,7 +6718,7 @@ button.watch-back {
   background: none;
 }
 .sk3d.is-passive { --ring: #b45cff; --deep: #2a0d4a; }
-.sk3d.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.sk3d.is-risk { --ring: #e36c1c; --deep: #4a2004; }
 .sk3d.is-spell { --ring: #ff4f93; --deep: #4a0622; }
 .sk3d.is-note { --ring: #ffd23c; --deep: #4a3400; }
 .sk3d.is-slow { --ring: #e0201c; --deep: #4a0606; }
@@ -7009,7 +7009,8 @@ button.watch-back {
   text-shadow: 0 2px 0 #021426, 0 0 8px rgba(62, 198, 255, 0.55);
 }
 .msheet-desc-title.is-passive { color: #dcb2ff; text-shadow: 0 2px 0 #1a0632, 0 0 8px rgba(180, 92, 255, 0.55); }
-.msheet-desc-title.is-risk { color: #ff9a86; text-shadow: 0 2px 0 #3a0602, 0 0 8px rgba(255, 74, 53, 0.55); }
+.msheet-desc-title.is-risk { color: #ffb98a; text-shadow: 0 2px 0 #3a1a02, 0 0 8px rgba(227, 108, 28, 0.55); }
+.msheet-desc-title.is-slow { color: #ff9a92; text-shadow: 0 2px 0 #3a0602, 0 0 8px rgba(224, 32, 28, 0.55); }
 .msheet-desc-title.is-spell { color: #ff9cc4; text-shadow: 0 2px 0 #3a0418, 0 0 8px rgba(255, 79, 147, 0.55); }
 .msheet-desc-title.is-note { color: #ffe27a; text-shadow: 0 2px 0 #3a2a00, 0 0 8px rgba(255, 210, 60, 0.55); }
 .msheet-desc-title { display: flex; align-items: center; gap: 0.35rem; }
@@ -7374,7 +7375,7 @@ button.watch-back {
 .unit-act:nth-child(4) { animation-delay: 120ms; }
 @keyframes unit-act-in { from { opacity: 0; transform: translateY(6px) scale(0.92); } }
 .unit-act:active { transform: scale(0.95); filter: brightness(1.2); }
-.unit-act.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.unit-act.is-risk { --ring: #e36c1c; --deep: #4a2004; }
 .unit-act.is-spell { --ring: #ff4f93; --deep: #4a0622; }
 .unit-act.is-attack { --ring: #ff8a00; --deep: #4a2000; }
 .unit-act-ico {
@@ -10807,7 +10808,7 @@ button.watch-back {
   box-shadow: 0 0 2.2cqw 0.4cqw color-mix(in srgb, var(--ring) 70%, transparent), 0 0.8cqw 1.2cqw rgb(0 0 0 / 0.65);
 }
 .rx-gem.is-passive { --ring: #b45cff; --deep: #2a0d4a; }
-.rx-gem.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.rx-gem.is-risk { --ring: #e36c1c; --deep: #4a2004; }
 .rx-gem.is-spell { --ring: #ff4f93; --deep: #4a0622; }
 .rx-gem-core {
   position: absolute;
@@ -11992,7 +11993,7 @@ button.watch-back {
   animation: hand-use-in 200ms cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
 }
 .hand-use.is-active { --ring: #3ec6ff; --deep: #0b2a4a; }
-.hand-use.is-risk { --ring: #ff4a35; --deep: #4a0804; }
+.hand-use.is-risk { --ring: #e36c1c; --deep: #4a2004; }
 .hand-use .unit-act-ico {
   width: 100%;
   height: 100%;
