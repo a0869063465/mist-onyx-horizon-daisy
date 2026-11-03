@@ -7333,12 +7333,12 @@ function PlayPage() {
         {drag ? (
           <div className="ghost" style={{ left: drag.x, top: drag.y }}>
             {drag.kind === "spell" ? (
-              <CardFace spellId={drag.spellId} />
+              <CardFace spellId={drag.spellId} hand gems={you.tolls?.[drag.index] ? `${spellCard(drag.spellId)?.gems ?? 0}+1` : undefined} />
             ) : drag.kind === "unit" ? (
               <CardFace monster={drag.card} level={drag.live.level} live={drag.live} />
             ) : (
               <>
-                <CardFace monster={drag.card} />
+                <CardFace monster={drag.card} hand level={you.reserve[drag.index]?.saved?.level ?? 1} live={you.reserve[drag.index] ? reserveLive(you.reserve[drag.index], drag.card) : undefined} fake={you.reserve[drag.index]?.fake} />
                 {drag.kind === "summon" && riteHand === drag.index ? <RiteRing /> : null}
               </>
             )}

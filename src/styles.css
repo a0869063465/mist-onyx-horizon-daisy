@@ -12343,14 +12343,14 @@ button.watch-back {
 /* Xấp của mình to hơn một chút cho dễ nhìn (xấp địch giữ 12,6cqw). */
 .face-pile .deck-pile img { width: 14.1cqw; }
 /* Chưa rút bài: viền và glow sáng quanh lá trên cùng, thở nhẹ. */
-.deck-pile.is-ready img:last-child {
+.deck-pile.is-ready img:last-of-type {
   filter: drop-shadow(0 0 0.1em #fff) drop-shadow(0 0 0.15em #fff) drop-shadow(0 0 0.5em #b4ecff) drop-shadow(0 0 1.1em #4fb4ff);
   animation: deck-ready 1.6s ease-in-out infinite;
 }
 @keyframes deck-ready {
   50% { filter: drop-shadow(0 0 0.14em #fff) drop-shadow(0 0 0.3em #fff) drop-shadow(0 0 0.8em #c8f1ff) drop-shadow(0 0 1.7em #62c2ff); }
 }
-@media (prefers-reduced-motion: reduce) { .deck-pile.is-ready img:last-child { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .deck-pile.is-ready img:last-of-type { animation: none; } }
 
 /* Hộp thư (chủ game 31/10), made over after LoR's: four tabs (Thư, Báo vi phạm, Thư quà, Tin tức), flat rows, a letter
    opens as a page that slides in. Night blue with a double gold line and gems at the corners; each tab has its own
