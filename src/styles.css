@@ -2113,13 +2113,13 @@
   background: transparent;
   border-radius: 0.6rem;
   outline: 0;
-  box-shadow: 0 0 0 2px #1a0d00, 0 0 0 4.5px #fff3b0, 0 0 0 6px #1a0d00, 0 0 1rem 0.35rem color-mix(in srgb, #ffd54a 75%, transparent);
-  animation: snap-glow 0.9s ease-in-out infinite alternate;
+  box-shadow: 0 0 0 2px #1a0d00, 0 0 0 5px #fff3b0, 0 0 0 7px #1a0d00, 0 0 1.4rem 0.6rem #ffd54a, 0 0 2.6rem 1rem color-mix(in srgb, #ffd54a 70%, transparent);
+  animation: none;
 }
 .slot.is-snap.is-summon {
   background: color-mix(in srgb, #2fe0b5 22%, transparent);
-  box-shadow: 0 0 0 2px #001a14, 0 0 0 4.5px #7dffdc, 0 0 0 6px #001a14, 0 0 1rem 0.35rem color-mix(in srgb, #2fe0b5 80%, transparent);
-  animation: snap-glow-jade 0.9s ease-in-out infinite alternate;
+  box-shadow: 0 0 0 2px #001a14, 0 0 0 5px #7dffdc, 0 0 0 7px #001a14, 0 0 1.4rem 0.6rem #2fe0b5, 0 0 2.6rem 1rem color-mix(in srgb, #2fe0b5 70%, transparent);
+  animation: none;
 }
 @keyframes snap-glow-jade {
   from { box-shadow: 0 0 0 2px #001a14, 0 0 0 4.5px #7dffdc, 0 0 0 6px #001a14, 0 0 0.6rem 0.2rem color-mix(in srgb, #2fe0b5 55%, transparent); }
@@ -2394,8 +2394,6 @@
   background: color-mix(in srgb, #ff8a00 42%, transparent);
   border-radius: 0.7rem;
 }
-/* V3 (chủ game 03/11): quái dùng được mà đang được chọn thì không nền cam, chỉ glow xanh lá thở. */
-.hand-card.is-open.is-monster.is-summonable { background: transparent; }
 .hand-card.is-open.is-spell {
   background: color-mix(in srgb, #ff4f93 42%, transparent);
   border-radius: 0.7rem;
@@ -3415,6 +3413,19 @@ button.trail-dot.is-on {
     scale: 1.035;
     box-shadow: 0 0 var(--alert-size, 32px) var(--alert-color), 0 0 calc(var(--alert-size, 32px) * 1.7) color-mix(in srgb, var(--alert-color) 55%, transparent);
   }
+}
+/* Phản ứng (chủ game 03/11): khi điều kiện đúng, lá phát glow bám theo hình lá + thở, không viền vuông (kiểu glow lá quái triệu hồi được). */
+.hand-card.is-alert, .face-pile.is-alert, .slot.is-alert {
+  outline: 0;
+  box-shadow: none;
+  animation: none;
+}
+.hand-card.is-alert > .card, .face-pile.is-alert > img, .face-pile.is-alert > .deck-pile, .slot.is-alert {
+  animation: react-breathe 1.5s ease-in-out infinite;
+}
+@keyframes react-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--alert-color) 80%, transparent)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 2px var(--alert-color)) drop-shadow(0 0 8px var(--alert-color)) drop-shadow(0 0 16px color-mix(in srgb, var(--alert-color) 95%, transparent)); }
 }
 @keyframes spell-wash {
   25% {
@@ -13088,9 +13099,9 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 }
 @keyframes summon-breathe {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
-  50% { scale: 1.035; filter: drop-shadow(0 0 2px #7dffa0) drop-shadow(0 0 8px #46e874) drop-shadow(0 0 16px rgba(70, 232, 116, 0.95)); }
+  50% { scale: 1.07; filter: drop-shadow(0 0 3px #b8ffd0) drop-shadow(0 0 12px #46e874) drop-shadow(0 0 26px #46e874) drop-shadow(0 0 34px rgba(70, 232, 116, 0.9)); }
 }
-.stage .hand-card.is-open.is-summonable > .card { animation: summon-breathe 1.5s ease-in-out infinite; }
+.stage .hand-card.is-open.is-summonable > .card { animation: summon-breathe 1.2s ease-in-out infinite; }
 /* V7 quái triệu hồi được: viền + glow xanh lá. */
 .stage .hand-card.is-summonable > .card {
   filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));

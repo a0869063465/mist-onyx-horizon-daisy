@@ -4173,14 +4173,15 @@ function PlayPage() {
     const hit = under(x, y);
     if (hit?.closest(".hand")) return null;
     const direct = (hit?.closest("[data-slot]") as HTMLElement | null)?.dataset.slot ?? (hit?.closest(".face-drop") ? "face" : null);
-    if (direct && keys.has(direct) && payload.kind !== "unit") return direct;
+    if (direct && keys.has(direct) && payload.kind !== "unit" && payload.kind !== "summon") return direct;
     if (payload.kind === "summon") {
       // Your own monster under the finger: fusion or a sacrifice, as before.
       if (direct && direct.startsWith(`${viewer}-`) && you.field[Number(direct.split("-")[1])]) return null;
       // Kéo triệu hồi kiểu đèn pin (chủ game 01/11): cùng cách kéo đánh, mục tiêu = các ô trống của sân mình.
     }
     if (!torch.current) torch.current = lightTorch(origin.current.x, origin.current.y);
-    return aimTorch(torch.current, torchBoxes(keys), x, y, direct && keys.has(direct) ? direct : null);
+    // Kéo triệu hồi: nhích nhẹ theo hướng là đổi ô như kéo skill, không cần kéo đúng ô (chủ game 03/11).
+    return aimTorch(torch.current, torchBoxes(keys), x, y, payload.kind === "summon" ? null : direct && keys.has(direct) ? direct : null);
   }
 
   /**

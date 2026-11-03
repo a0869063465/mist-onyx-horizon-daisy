@@ -884,7 +884,8 @@ export const PENDING_NOTES: string[] = [
   "Tay bài mở rộng hai bên để glow lá đầu và lá cuối không bị cắt; lá trượt ra khỏi 3 lá thì mờ dần, glow lá ở mép không bị cắt.",
   "Lá quái trên sân đổi khung mới: ô thủ, thủ phép, công, máu theo biểu tượng; ô tối góc trên bên phải giữ số cam của quái.",
   "Lá quái trên sân bỏ tên, số thủ, thủ phép, công, máu viết cùng kiểu lá trên tay.",
-  "Kéo triệu hồi: ô đang chọn sáng xanh ngọc bích, các ô trống khác chỉ viền mảnh. Kéo đánh quái địch có viền sáng rõ hơn. Quái trên tay dùng được và đang chọn thì thở glow xanh lá.",
+  "Kéo triệu hồi: nhích tay nhẹ theo hướng là đổi ô, ô đang chọn sáng xanh ngọc bích, các ô trống khác chỉ viền mảnh. Kéo đánh quái địch có viền neon sáng như người chơi. Quái trên tay dùng được và đang chọn thì thở glow xanh lá rõ hơn.",
+  "Lá phản ứng dùng được phát glow bám theo hình lá và thở, không còn viền vuông.",
 ];
 
 function remarkOf(notes: string[]) {
