@@ -173,7 +173,7 @@ export function CardFace({
       ) : spell ? (
         <img className="art" src={spellSrc(spell.id)} alt="" draggable={false} />
       ) : null}
-      <img className="frame" src={spell ? (hand ? (spellSpeed(spell.id) === "fast" || spellSpeed(spell.id) === "slow" ? `/ui/spell-frame-${spellSpeed(spell.id)}${parseInt(String(gems ?? spell.gems), 10) > 0 ? "" : "-nogem"}.png` : "/spell-frame-hand.png") : "/spell-frame.png") : hand ? (Number(gems ?? monster?.gems ?? 0) > 0 ? "/ui/frame-hand.png" : "/ui/frame-hand-nogem.png") : "/card-frame.png"} alt="" draggable={false} />
+      <img className="frame" src={spell ? (hand ? (spellSpeed(spell.id) ? `/ui/spell-frame-${spellSpeed(spell.id)}${parseInt(String(gems ?? spell.gems), 10) > 0 ? "" : "-nogem"}.png` : "/spell-frame-hand.png") : "/spell-frame.png") : hand ? (Number(gems ?? monster?.gems ?? 0) > 0 ? "/ui/frame-hand.png" : "/ui/frame-hand-nogem.png") : "/card-frame.png"} alt="" draggable={false} />
       {monster ? (
         <>
           {hand && !hideStats ? (
@@ -199,15 +199,6 @@ export function CardFace({
         <>
           {pin(handSpell ? (String(gems ?? spell.gems).length > 1 ? { ...handSpell.gems, size: handSpell.gems.size * 0.55 } : handSpell.gems) : spellSpots.gems, gems ?? spell.gems)}
           {hideName || hand ? null : pin(spellSpots.name, tr(spell.name), true)}
-          {hand && handSpell && spellSpeed(spell.id) ? (
-            <img
-              className={`speed speed-${spellSpeed(spell.id)}`}
-              style={{ left: `${handSpell.speed.x - handSpell.speed.width / 2}%`, top: `${handSpell.speed.y - handSpell.speed.height / 2}%`, width: `${handSpell.speed.width}%`, height: `${handSpell.speed.height}%` }}
-              src={`/ui/speed-${spellSpeed(spell.id)}.webp`}
-              alt=""
-              draggable={false}
-            />
-          ) : null}
           {badge ? <NewMark spot={spellSpots.fresh} kind={badge} /> : null}
         </>
       ) : null}
