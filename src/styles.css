@@ -13032,10 +13032,17 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   padding-top: var(--hand-up);
   /* Dải rộng ra 2,4% mỗi bên và chừa đúng chừng đó làm lề, nên lá đứng nguyên chỗ cũ mà glow lá đầu, lá cuối không bị cắt (chủ game 03/11). */
   left: calc(21% - 2.4%);
-  width: calc(58% + 1.2%);
+  width: calc(58% + 2.4% + 0.8%);
   padding-inline: 2.4% 0.8%;
+  /* Lá trượt ra khỏi mép tay thì mờ dần, chỉ ở phía còn bài để cuộn (chủ game 03/11). */
+  --fade-l: 0px;
+  --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
   pointer-events: none;
 }
+.stage .hand.is-strip[data-fade-l] { --fade-l: 3.2cqw; }
+.stage .hand.is-strip[data-fade-r] { --fade-r: 3.2cqw; }
 .stage .hand.is-strip > * { pointer-events: auto; }
 .tune-card { overflow: visible; }
 

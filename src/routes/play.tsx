@@ -1855,6 +1855,15 @@ function PlayPage() {
   const fuseHold = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const origin = useRef({ x: 0, y: 0, moved: false, t: 0, pan: false, lastX: 0 });
   const handStrip = useRef<HTMLDivElement | null>(null);
+  // The hand fades at an edge only where more cards wait to be scrolled to (chủ game 03/11).
+  const fadeEdges = (strip: HTMLElement) => {
+    const more = strip.scrollWidth - strip.clientWidth;
+    if (more > 4 && strip.scrollLeft > 4) strip.setAttribute("data-fade-l", ""); else strip.removeAttribute("data-fade-l");
+    if (more > 4 && strip.scrollLeft < more - 4) strip.setAttribute("data-fade-r", ""); else strip.removeAttribute("data-fade-r");
+  };
+  useLayoutEffect(() => {
+    if (handStrip.current) fadeEdges(handStrip.current);
+  });
   const noticeRef = useRef<HTMLParagraphElement | null>(null);
   const noticePan = useRef<{ id: number; y: number; top: number } | null>(null);
   const laserTimers = useRef<number[]>([]);
@@ -6781,7 +6790,10 @@ function PlayPage() {
           style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))` }}
           className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
-          onScroll={() => setHandPick(null)}
+          onScroll={(event) => {
+            setHandPick(null);
+            fadeEdges(event.currentTarget);
+          }}
           onPointerDown={(event) => {
             if ((event.target as HTMLElement).closest("button")) return;
             origin.current = { x: event.clientX, y: event.clientY, moved: false, t: Date.now(), pan: true, lastX: event.clientX };
