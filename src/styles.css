@@ -3766,8 +3766,9 @@ button.trail-dot.is-on {
   object-fit: cover;
   pointer-events: none;
 }
+.tune-field .frame { mix-blend-mode: screen; }
 .field-unit .frame {
-  mix-blend-mode: screen;
+  mix-blend-mode: normal;
   object-fit: fill;
 }
 .field-unit.is-dim .art, .field-unit.is-dim .fname {

@@ -162,7 +162,7 @@ import {
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
-import { COUNT_MARKS, loadAlertLook, loadField, markScale, matchBoard, SHEET_SPOTS, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, FIELD_SPOTS, loadAlertLook, loadField, markScale, matchBoard, SHEET_SPOTS, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
@@ -8010,7 +8010,7 @@ function BoardSlot({
   mon,
   side,
   index,
-  layout,
+  layout: _layout,
   near,
   hot,
   blocked = false,
@@ -8096,6 +8096,7 @@ function BoardSlot({
     return <button type="button" className={cls} style={place} aria-label={`Ô ${index + 1}`} {...slotProps} onClick={() => onSlot(side, index)} />;
   }
   const tokenName = (monsterCard(mon.cardId)?.stars ?? 1) <= 0;
+  const layout = FIELD_SPOTS;
   const stats = visibleStats(mon, allies);
   const spot = (key: FieldKey, value: string | number, blue = false, hold = false, cut = false) => {
     // Con mắt: a number the queue changes shows as it will be, red when it falls, green when it rises (0 included).
@@ -8148,7 +8149,7 @@ function BoardSlot({
         className={`field-unit${mask ? "" : `${mon.dim || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
-        <img className="frame" src="/field-frame.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-field.png" alt="" draggable={false} />
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
         <span className="badges">
           {bind > 0 ? <i className="is-hold">{bind >= 90 ? "∞" : bind}</i> : null}
