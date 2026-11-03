@@ -1855,11 +1855,17 @@ function PlayPage() {
   const fuseHold = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const origin = useRef({ x: 0, y: 0, moved: false, t: 0, pan: false, lastX: 0 });
   const handStrip = useRef<HTMLDivElement | null>(null);
-  // The hand fades at an edge only where more cards wait to be scrolled to (chủ game 03/11).
+  // Cards past the three-card window fade out the further they sit beyond it, so nothing is cut and the glow of the edge cards stays free (chủ game 03/11).
   const fadeEdges = (strip: HTMLElement) => {
-    const more = strip.scrollWidth - strip.clientWidth;
-    if (more > 4 && strip.scrollLeft > 4) strip.setAttribute("data-fade-l", ""); else strip.removeAttribute("data-fade-l");
-    if (more > 4 && strip.scrollLeft < more - 4) strip.setAttribute("data-fade-r", ""); else strip.removeAttribute("data-fade-r");
+    const box = strip.getBoundingClientRect();
+    const style = getComputedStyle(strip);
+    const left = box.left + (parseFloat(style.paddingLeft) || 0);
+    const right = box.right - (parseFloat(style.paddingRight) || 0);
+    strip.querySelectorAll<HTMLElement>(".hand-pick").forEach((pick) => {
+      const rect = pick.getBoundingClientRect();
+      const over = Math.max(rect.right - right, left - rect.left, 0);
+      pick.style.setProperty("--edge", String(Math.max(0, Math.min(1, 1 - over / 30))));
+    });
   };
   useLayoutEffect(() => {
     if (handStrip.current) fadeEdges(handStrip.current);
