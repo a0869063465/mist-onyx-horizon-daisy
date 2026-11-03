@@ -185,15 +185,6 @@ export const SHEET_SPOTS: Record<FieldKey, FieldSpot> = {
   hp: { x: 86.1, y: 88.3, size: 20, width: 14, height: 9 },
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
-/** Fixed spots for the monster card on the field (frame-field.png: orange count in the top-right panel). */
-export const FIELD_SPOTS: Record<FieldKey, FieldSpot> = {
-  name: DEFAULT_FIELD.name,
-  def: { x: 23.5, y: 48.5, size: 17, width: 18, height: 15 },
-  mdef: { x: 23.5, y: 63.8, size: 17, width: 18, height: 15 },
-  atk: { x: 36, y: 88.4, size: 21, width: 20, height: 20 },
-  hp: { x: 85.5, y: 88.3, size: 21, width: 20, height: 20 },
-  count: { x: 80, y: 6, size: 24, width: 24, height: 9 },
-};
 export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp", Spot> = {
   stars: { x: 81, y: 4.8, size: 17, width: 40, height: 15 },
   gems: { x: 89.1, y: 18.9, size: 16, width: 18, height: 16 },
@@ -533,4 +524,17 @@ export function loadSpellHand(): Record<SpellHandKey, Spot> {
 }
 export function saveSpellHand(layout: Record<SpellHandKey, Spot>) {
   saveSpots(SPELL_HAND_KEY, layout);
+}
+
+/** Lá quái trên sân dùng đúng khung và vị trí số của lá trên tay (chủ game 03/11); số cam vào ô tối góc trên phải (chỗ ô sao). */
+export function fieldSpots(): Record<FieldKey, FieldSpot> {
+  const h = loadHand();
+  return {
+    name: DEFAULT_FIELD.name,
+    def: h.def,
+    mdef: h.mdef,
+    atk: h.atk,
+    hp: h.hp,
+    count: { x: h.stars.x, y: h.stars.y, size: h.stars.size, width: 30, height: h.stars.height },
+  };
 }

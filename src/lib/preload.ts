@@ -78,7 +78,6 @@ const CORE_PICTURES = [
   "/card-frame.png",
   "/spell-frame.png",
   "/field-frame.png",
-  "/ui/frame-field.png",
   "/mark-tang.png",
   "/mark-giam.png",
   "/mark-moi.png",
