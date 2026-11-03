@@ -886,6 +886,7 @@ export const PENDING_NOTES: string[] = [
   "Lá quái trên sân bỏ tên, số thủ, thủ phép, công, máu viết cùng kiểu lá trên tay.",
   "Kéo triệu hồi: nhích tay nhẹ theo hướng là đổi ô, ô đang chọn sáng xanh ngọc bích, các ô trống khác chỉ viền mảnh. Kéo đánh quái địch có viền neon sáng như người chơi. Quái trên tay dùng được và đang chọn thì thở glow xanh lá rõ hơn.",
   "Lá phản ứng dùng được phát glow bám theo hình lá và thở, không còn viền vuông.",
+  "Đánh vào bên có Gương phòng hộ đứng sẵn: đòn vào hàng chờ như thường, bấm X là huỷ, bấm xác nhận gương mới dựng lên.",
 ];
 
 function remarkOf(notes: string[]) {

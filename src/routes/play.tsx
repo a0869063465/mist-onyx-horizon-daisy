@@ -3680,7 +3680,8 @@ function PlayPage() {
       prev.countering == null &&
       next.countering == null &&
       next.step === "respond" &&
-      Boolean(next.hold && !next.hold.stage && next.hold.priority !== viewer) &&
+      // A standing Gương phòng hộ keeps the reply with the attacker, yet the attack still waits in the queue (chủ game 03/11).
+      Boolean(next.hold && !next.hold.stage && (next.hold.priority !== viewer || next.hold.mirror === "up")) &&
       // Mũ ma pháp only covers this side's own field, so it is not an action at the opponent.
       !(next.pending?.kind === "spell" && next.pending.cardId === "mu-ma-phap");
     if (declared) return { next: stageHold(next), kind: "act" };
