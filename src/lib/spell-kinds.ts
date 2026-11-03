@@ -50,3 +50,10 @@ const SPEEDS: Record<SpellSpeed, string[]> = {
 export function spellSpeed(id: string): SpellSpeed | null {
   return (Object.keys(SPEEDS) as SpellSpeed[]).find((key) => SPEEDS[key].includes(id)) ?? null;
 }
+
+/** Màu viền/glow của lá phép theo tốc độ (chủ game 03/11): chậm đỏ, nhanh hồng, siêu tốc trắng, buff xanh lá. */
+export const SPEED_TONES: Record<SpellSpeed, string> = { slow: "#e0201c", fast: "#ff4fa6", super: "#e9f3ff", buff: "#2fd072" };
+export function speedTone(id: string): string {
+  const speed = spellSpeed(id);
+  return speed ? SPEED_TONES[speed] : spellKind(id).tone;
+}

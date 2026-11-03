@@ -898,6 +898,8 @@ export const PENDING_NOTES: string[] = [
   "Tên skill trên bảng quái cùng màu với viền icon. Hiến Tế của Kỵ sĩ bóng tối đổi icon thành hai kiếm đan trên chiếc khiên.",
   "Khung gợi ý đầu trận làm như Hướng dẫn: nền tối, vùng sáng viền vàng chớp, Người giữ khoá nói, bấm » mới đóng. Nhắc rút bài, nhắc bấm chuyển.",
   "Kéo quái lên sân: viền neon ô được chọn nằm trên lá đang kéo.",
+  "Xấp bài có glow xanh khi rút được. Lá phép dùng được có viền và glow theo màu tốc độ: nhanh và siêu tốc thở mạnh, phép khác sáng đứng yên.",
+  "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
 ];
 
 function remarkOf(notes: string[]) {

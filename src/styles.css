@@ -3436,6 +3436,10 @@ button.trail-dot.is-on {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--alert-color) 80%, transparent)); }
   50% { scale: 1.035; filter: drop-shadow(0 0 2px var(--alert-color)) drop-shadow(0 0 8px var(--alert-color)) drop-shadow(0 0 16px color-mix(in srgb, var(--alert-color) 95%, transparent)); }
 }
+/* V8C: lá phép dùng được nhưng không phải phép phản ứng: viền + glow sáng đứng yên, không thở. */
+.hand-card.is-castable > .card {
+  filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 11px color-mix(in srgb, var(--alert-color) 85%, transparent));
+}
 @keyframes spell-wash {
   25% {
     box-shadow: inset 0 0 54px color-mix(in srgb, var(--color-gold) 70%, transparent);

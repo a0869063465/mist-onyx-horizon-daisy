@@ -32,7 +32,7 @@ import { AimMark } from "@/components/game/aim-mark";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
-import { spellKind } from "@/lib/spell-kinds";
+import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
@@ -1076,7 +1076,11 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   const skilled = pending?.kind === "beam" || pending?.kind === "gnaw-skill" || horn;
   if (id === "vong-xoay-bao-ho" || id === "guong-phong-ho") return attacked;
   if (id === "la-chan-phan-don") return skilled && !bindBeam(duel);
-  if (id === "hap-thu-ma-phap") return pending?.kind === "spell" || pending?.kind === "lash";
+  if (id === "hap-thu-ma-phap") {
+    // Roi sấm đã nạp trên đòn đánh: luật cũng cho nuốt (duel.ts chargedWhip), nên nút phải dùng được (chủ game 03/11, V3).
+    const whipped = (pending?.kind === "melee" || pending?.kind === "face") && [0, 1].some((side) => duel.players[side].field.some((unit) => unit?.uid === pending.attacker && unit.bolt));
+    return pending?.kind === "spell" || pending?.kind === "lash" || whipped;
+  }
   // Phản nguyền turns a bite of Virus ăn mòn that waits on its owner back (chủ game 30/10).
   if (id === "phan-nguyen") return pending?.kind === "spell" && Boolean(pending.corrode);
   // Only the attacking side may use it, to stop a foe from blocking (owner, 21/10).
@@ -1217,6 +1221,8 @@ function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
 const SKILL_TONES: Record<string, string> = { active: "#2f9cf0", passive: "#a56cf0", risk: "#e8352c", spell: "#ff4fa6", note: "#e8c14a" };
 function reactTone(cardId: string): string {
   const list = SKILL_BOOK[cardId] ?? [];
+  // Thế thân là skill siêu tốc (chủ game 03/11): glow trắng.
+  if (cardId === "the-than-cua-shien") return "#e9f3ff";
   const pick = list.find((entry) => entry.kind === "spell") ?? list[0];
   return SKILL_TONES[pick?.kind ?? "spell"];
 }
@@ -6916,7 +6922,7 @@ function PlayPage() {
                       className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
-                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
+                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": standCard ? "#e9f3ff" : SKILL_TONES.spell } as CSSProperties) : undefined}
                       onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}
                       onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                       onPointerMove={move}
@@ -6948,7 +6954,9 @@ function PlayPage() {
                 const tolled = Boolean(you.tolls?.[index]);
                 const payable = tollOk(spellCard(id)?.gems ?? 0, tolled, you.orb, you.flask);
                 const usable = mine && answerUsable(id, duel, viewer, index);
-                const ready = usable;
+                const ready = usable && (spellSpeed(id) === "fast" || spellSpeed(id) === "super");
+                // V8C: đủ điều kiện thi triển thì viền + glow sáng đứng yên; phép nhanh/siêu tốc đủ điều kiện thì thở mạnh (V8D).
+                const castable = Boolean(mine) && !ready && (usable || spellDragLive(id, duel, viewer, index));
                 const slowUse = canPlay && slowUsable(id, duel, viewer) && payable;
                 const using =
                   (aim?.kind === "spell" && aim.spellId === id && aim.index === index) ||
@@ -6958,8 +6966,8 @@ function PlayPage() {
                 const card = (
                   <button
                     type="button"
-                    className={`hand-card press is-spell${open || picked ? " is-open" : ""}${ready ? " is-alert" : ""}${drag?.kind === "spell" && drag.index === index ? " is-ghosting" : ""}`}
-                    style={ready ? ({ "--alert-color": spellKind(id).tone } as CSSProperties) : undefined}
+                    className={`hand-card press is-spell${open || picked ? " is-open" : ""}${ready ? " is-alert" : ""}${castable ? " is-castable" : ""}${drag?.kind === "spell" && drag.index === index ? " is-ghosting" : ""}`}
+                    style={ready || castable ? ({ "--alert-color": speedTone(id) } as CSSProperties) : undefined}
                     onClick={() => openHand("spell", index, id)}
                     onPointerDown={(event) => begin(event, { kind: "spell", index, spellId: id })}
                     onPointerMove={move}
