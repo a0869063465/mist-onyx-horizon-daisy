@@ -891,7 +891,7 @@ export const PENDING_NOTES: string[] = [
   "Phép chậm đổi khung sang đỏ rượu vang, kim loại bóng như các khung khác.",
   "Lá phép trên tay bỏ vạch màu dưới đáy (che khung), số mana trong viên nhỏ lại cho vừa.",
   "Lá phép trên tay cùng dạng lá quái: bỏ viền dưới đáy, số mana trắng có glow xanh. Khung phép chậm dùng bản đỏ thẫm, lá không mana cũng có viên mana.",
-  "Phép chậm đổi khung sang đỏ ngả cam. Phép siêu tốc và giải trừ (Hấp thụ ma pháp, Vòng xoáy bảo hộ, Mưa ma thuật) dùng khung trắng bạc.",
+  "Phép chậm đổi khung sang đỏ thuần. Phép siêu tốc và giải trừ (Hấp thụ ma pháp, Vòng xoáy bảo hộ, Mưa ma thuật) dùng khung trắng bạc.",
 ];
 
 function remarkOf(notes: string[]) {
