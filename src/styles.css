@@ -6721,6 +6721,7 @@ button.watch-back {
 .sk3d.is-risk { --ring: #ff4a35; --deep: #4a0804; }
 .sk3d.is-spell { --ring: #ff4f93; --deep: #4a0622; }
 .sk3d.is-note { --ring: #ffd23c; --deep: #4a3400; }
+.sk3d.is-slow { --ring: #e0201c; --deep: #4a0606; }
 /* Extra icons (sheet extras): a spell's kind in its reaction bar colour. */
 .sk3d-react {
   position: relative;

@@ -89,6 +89,13 @@ export function GlyphDefs() {
           <stop offset="0.75" stopColor="#40156e" />
           <stop offset="1" stopColor="#c69cff" />
         </linearGradient>
+        <linearGradient id="rim3d-slow" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffd9d4" />
+          <stop offset="0.3" stopColor="#e0201c" />
+          <stop offset="0.5" stopColor="#ffb4ac" />
+          <stop offset="0.75" stopColor="#5a0606" />
+          <stop offset="1" stopColor="#ff5a4e" />
+        </linearGradient>
         <linearGradient id="rim3d-risk" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffe8e2" />
           <stop offset="0.3" stopColor="#e0402a" />
@@ -320,14 +327,14 @@ export function MonsterSheet({
     <button
       key={`${skill.name}-${index}`}
       type="button"
-      className={`sk3d is-${skill.kind}${`s${index}` === picked ? " on" : ""}`}
+      className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${`s${index}` === picked ? " on" : ""}`}
       onClick={() => setPicked(`s${index}`)}
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
           <Glyph name={skill.icon} />
         </span>
-        <Rim kind={skill.kind} />
+        <Rim kind={skill.slow ? "slow" : skill.kind} />
       </span>
       <span className="sk3d-name">{tr(skill.name)}</span>
     </button>

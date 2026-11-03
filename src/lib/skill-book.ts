@@ -16,7 +16,7 @@ export type SkillKind = "active" | "risk" | "spell" | "passive" | "note";
  * words (with their indented follow-on lines). Used when one heading holds several small skills, e.g. Khiên
  * Ân Huệ holds the blessings of the knight, the king and the queen.
  */
-export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[]; chain?: boolean };
+export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[]; chain?: boolean; slow?: boolean };
 export type SkillShown = SkillEntry & { text: string };
 
 const A = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "active", icon, head });
@@ -32,6 +32,8 @@ const SP = (name: string, icon: string, ...pick: string[]): SkillEntry => ({ nam
  * joined by a metal bar.
  */
 const joined = (entry: SkillEntry): SkillEntry => ({ ...entry, chain: true });
+/** A slow skill: only on its owner's main round, never as a reaction. Its rim is the dark red one (chủ game 03/11). */
+const slow = (entry: SkillEntry): SkillEntry => ({ ...entry, slow: true });
 /** Lưu ý: the lines of the card text that are notes for the whole skill set. */
 const NOTE = (...pick: string[]): SkillEntry => ({ name: "Lưu ý", kind: "note", icon: "info", pick });
 const KNIGHT = PP("Lời chúc của kỵ sĩ", "black-knight-helm", "lời chúc của kỵ sĩ");
@@ -39,7 +41,7 @@ const KING = PP("Lời chúc của vua", "imperial-crown", "lời chúc của vu
 const QUEEN = PP("Lời chúc của hậu", "queen-crown", "lời chúc của hậu");
 
 export const SKILL_BOOK: Record<string, SkillEntry[]> = {
-  "phu-thuy-thoi-gian": [A("Lão hoá", "hourglass"), P("Cường hoá Lão Hoá", "anticlockwise-rotation"), A("Dòng chảy thời gian", "clockwork")],
+  "phu-thuy-thoi-gian": [slow(A("Lão hoá", "hourglass")), P("Cường hoá Lão Hoá", "anticlockwise-rotation"), slow(A("Dòng chảy thời gian", "clockwork"))],
   "rong-phun-hoa-cau": [A("Lộ diện", "all-seeing-eye"), A("Hoả cầu", "fireball")],
   "chien-si-gam-nham": [S("Khiên thú sĩ", "wolf-head")],
   "kiem-si-lua-thieng": [A("Vệt lửa", "fire-dash"), joined(R("Truy cùng diệt tận", "flame-spin")), joined(R("Hoả thần long", "dragon-head"))],
@@ -47,7 +49,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "trieu-hoi-ac-ma": [P("Khế ước ác ma", "pentagram-rose"), A("Sấm địa ngục", "lightning-flame")],
   "ky-si-bong-toi": [PP("Kỵ pháp", "mounted-knight", "khi giáp lá cà"), joined(PP("Chiến ý", "sword-brandish", "chiến ý")), R("Hiến Tế", "sacrificial-dagger")],
   "yeu-tinh-chuc-phuc": [P("Lời chúc phúc của tinh linh", "fairy-wand"), A("Hỗ công", "crossed-swords"), S("Hộ thủ", "checked-shield")],
-  "mo-voi-ma-mut": [R("Nguyền rủa", "animal-skull"), P("Ác linh", "ghost")],
+  "mo-voi-ma-mut": [slow(R("Nguyền rủa", "animal-skull")), P("Ác linh", "ghost")],
   "ong-khong-lo": [A("Kim châm tê liệt", "bee")],
   "linh-chien-da-khong-lo": [S("Tường thành", "stone-wall")],
   "khung-long-vay-kiem": [P("Vãy phá giáp", "stegosaurus-scales")],
@@ -105,9 +107,9 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
   "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
-  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
-  "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), A("Thổi bay", "whirlwind"), A("Mê hoặc", "charm"), A("Dụ dỗ", "lips"), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
-  "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), A("Gió xoáy", "tornado"), A("Dụ dỗ", "lips"), A("Roi sấm", "lightning-branches")],
+  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
+  "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), slow(A("Dụ dỗ", "lips")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
+  "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), slow(A("Gió xoáy", "tornado")), slow(A("Dụ dỗ", "lips")), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],
   "phu-thuy-rung-den": [A("Nguyền rủa", "witch-face")],
   "ky-si-cuoi-rong": [P("Mũi thương bị nguyền rủa", "barbed-spear"), P("Lửa địa ngục", "flame-tunnel")],
