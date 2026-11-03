@@ -888,6 +888,7 @@ export const PENDING_NOTES: string[] = [
   "Lá phản ứng dùng được phát glow bám theo hình lá và thở, không còn viền vuông.",
   "Đánh vào bên có Gương phòng hộ đứng sẵn: đòn vào hàng chờ như thường, bấm X là huỷ, bấm xác nhận gương mới dựng lên.",
   "Thiếu sao mà cố triệu hồi quái 3 lần thì hiện gợi ý một lần: vùng liên quan sáng lên, nói rõ cần bao nhiêu mana trong mộ. Bấm >> để đóng. Bấm mộ mana hoặc ô sao thì thấy còn bao nhiêu mana nữa tới sao kế.",
+  "Phép chậm đổi khung sang đỏ rượu vang, kim loại bóng như các khung khác.",
 ];
 
 function remarkOf(notes: string[]) {
