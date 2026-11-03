@@ -875,6 +875,7 @@ export const PENDING_NOTES: string[] = [
   "Khung lá phép nhanh có mana và không mana canh khớp cùng cỡ.",
   "Lá phép chậm trên tay có khung tím mới.",
   "Lá phép siêu tốc và buff trên tay có khung xanh dương, xanh lá; bỏ icon loại phép trên tay.",
+  "Khung xanh lá của phép buff dịu lại, hợp với các khung khác.",
 ];
 
 function remarkOf(notes: string[]) {
