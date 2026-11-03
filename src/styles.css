@@ -6789,10 +6789,17 @@ button.watch-back {
   font-weight: 800;
   line-height: 1.1;
   text-align: center;
-  color: #eaf6ff;
+  color: var(--tone, #eaf6ff);
   text-shadow: 0 1px 0 #000, 0 2px 3px rgba(0, 0, 0, 0.85);
 }
-.sk3d.on .sk3d-name { color: color-mix(in srgb, var(--ring) 45%, #ffffff); }
+/* The name takes the colour of its icon's rim (chủ game 03/11). */
+.sk3d.is-active { --tone: #4f9fe8; }
+.sk3d.is-passive { --tone: #9a5fe0; }
+.sk3d.is-risk { --tone: #e36c1c; }
+.sk3d.is-spell { --tone: #ff4f93; }
+.sk3d.is-note { --tone: #e8b828; }
+.sk3d.is-slow { --tone: #e0201c; }
+.sk3d.on .sk3d-name { color: color-mix(in srgb, var(--tone, var(--ring)) 70%, #ffffff); }
 /* Skills that come together (Hoá Kén with Chân kén and Nở): one group joined by a bar of the rims' metal. */
 .sk3d-chain { display: flex; align-items: flex-start; }
 .sk3d-chain .sk3d { position: relative; z-index: 1; }

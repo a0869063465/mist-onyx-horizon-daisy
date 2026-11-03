@@ -47,7 +47,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "kiem-si-lua-thieng": [A("Vệt lửa", "fire-dash"), joined(R("Truy cùng diệt tận", "flame-spin")), joined(R("Hoả thần long", "dragon-head"))],
   "dau-si-bo-tot": [P("Chiến lợi phẩm", "charging-bull")],
   "trieu-hoi-ac-ma": [P("Khế ước ác ma", "pentagram-rose"), A("Sấm địa ngục", "lightning-flame")],
-  "ky-si-bong-toi": [PP("Kỵ pháp", "mounted-knight", "khi giáp lá cà"), joined(PP("Chiến ý", "sword-brandish", "chiến ý")), R("Hiến Tế", "sacrificial-dagger")],
+  "ky-si-bong-toi": [PP("Kỵ pháp", "mounted-knight", "khi giáp lá cà"), joined(PP("Chiến ý", "sword-brandish", "chiến ý")), R("Hiến Tế", "swords-shield")],
   "yeu-tinh-chuc-phuc": [P("Lời chúc phúc của tinh linh", "fairy-wand"), A("Hỗ công", "crossed-swords"), S("Hộ thủ", "checked-shield")],
   "mo-voi-ma-mut": [slow(R("Nguyền rủa", "animal-skull")), P("Ác linh", "ghost")],
   "ong-khong-lo": [A("Kim châm tê liệt", "bee")],

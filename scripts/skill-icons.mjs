@@ -14,6 +14,9 @@ for (const extra of ["candle-skull", "info", "broadsword", "card-draw", "spell-b
 for (const extra of ["magnifying-glass", "wolf-head", "save", "histogram", "funnel", "scales", "mountains", "card-joker", "spiky-explosion", "crossed-swords", "checked-shield", "three-friends", "growth"]) names.add(extra);
 // Chọn bộ bài: favourite, edit, delete, tutorial, new deck, and the game modes.
 for (const extra of ["round-star", "quill-ink", "trash-can", "help", "card-play", "robot-golem", "shaking-hands", "test-tubes", "padlock", "portrait"]) names.add(extra);
+// Icons the sheet composes from others (swords-shield = crossed-swords over checked-shield).
+names.delete("swords-shield");
+for (const extra of ["crossed-swords", "checked-shield"]) names.add(extra);
 const out = {};
 for (const name of [...names].sort()) {
   const icon = set.icons[name];

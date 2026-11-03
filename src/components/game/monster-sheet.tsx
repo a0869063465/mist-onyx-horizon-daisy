@@ -40,7 +40,12 @@ function rimStops(tone: string): string[] {
 
 /** A game-icons glyph painted with the shared bevel gradient, so it reads as a raised 3D emblem. */
 export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?: string }) {
-  const body = (SKILL_ICONS[name] ?? SKILL_ICONS["info"] ?? "").replaceAll('fill="currentColor"', `fill="${fill}"`);
+  // Hiến Tế of Kỵ sĩ bóng tối: two crossed swords over a shield (chủ game 03/11).
+  const raw =
+    name === "swords-shield"
+      ? `<g opacity="0.5">${SKILL_ICONS["checked-shield"] ?? ""}</g><g transform="translate(76.8 76.8) scale(0.7)" stroke="rgba(0,0,0,0.75)" stroke-width="14" paint-order="stroke">${SKILL_ICONS["crossed-swords"] ?? ""}</g>`
+      : (SKILL_ICONS[name] ?? SKILL_ICONS["info"] ?? "");
+  const body = raw.replaceAll('fill="currentColor"', `fill="${fill}"`);
   return <svg className="glyph3d" viewBox="0 0 512 512" aria-hidden="true" dangerouslySetInnerHTML={{ __html: body }} />;
 }
 

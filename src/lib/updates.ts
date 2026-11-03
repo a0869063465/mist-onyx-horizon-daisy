@@ -895,6 +895,7 @@ export const PENDING_NOTES: string[] = [
   "Skill chậm (Lão hoá, Dòng chảy thời gian, Nguyền rủa của Mộ voi ma mút, Thổi bay, Mê hoặc, Dụ dỗ, Gió xoáy) có viền icon đỏ trên bảng quái.",
   "Skill nguy hiểm (Hiến Tế, Hoá Kén…) đổi viền sang cam đất để khác đỏ của skill chậm.",
   "Đổi hình nền lá Mắt xanh huỷ diệt.",
+  "Tên skill trên bảng quái cùng màu với viền icon. Hiến Tế của Kỵ sĩ bóng tối đổi icon thành hai kiếm đan trên chiếc khiên.",
 ];
 
 function remarkOf(notes: string[]) {
