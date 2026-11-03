@@ -11,6 +11,7 @@ import { askDraft, attackLabel, chipDraft, MONSTER_ASKS, MONSTER_CHIPS, resetMon
 import { ailmentHolds, defaultFxPrefs, defaultLooks, loadActivePack, loadFxPrefs, loadLooks } from "@/lib/fx-prefs";
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { useAppMode } from "@/lib/app-mode";
+import { resetHints } from "@/lib/hints";
 import { fxVolume, musicVolume, playCue, playUi, setFxVolume, setMusicVolume, setSound, setTapVolume, soundOn, tapVolume } from "@/lib/sfx";
 import {
   BOARD_ACTS,
@@ -187,6 +188,9 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
           </button>
           <button type="button" className="tuner-save alt" onClick={() => onPick("cardfx")}>
             {tr("Hiệu ứng lá bài")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={resetHints}>
+            {tr("Đặt lại gợi ý")}
           </button>
           <a className="tuner-save alt" href="/clash-lite.zip" download>
             {tr("Tải gói nhẹ")}

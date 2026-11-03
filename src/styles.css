@@ -13158,3 +13158,57 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
   transform-origin: 0 0;
   transform: translate(0.9%, -2.46%) scale(0.981, 1.0166);
 }
+
+/* Khung gợi ý khi gặp vấn đề (chủ game 03/11): nền tối, vùng sáng vàng, bảng nhỏ gần đó. */
+.hint-card { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
+.hint-dim { position: absolute; inset: 0; pointer-events: auto; }
+.hint-ring { stroke: #ffd84a; stroke-width: 2.5; filter: drop-shadow(0 0 6px rgba(255, 210, 60, 0.9)); animation: hint-glow 1.4s ease-in-out infinite alternate; }
+@keyframes hint-glow { from { opacity: 0.65; } to { opacity: 1; } }
+.hint-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, rgba(28, 34, 48, 0.97), rgba(12, 15, 22, 0.97));
+  border: 1px solid rgba(244, 210, 122, 0.6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: auto;
+}
+.hint-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #fff6de;
+  text-shadow: 0 1px 0 #3a2a06, 0 2px 0 #1a1203, 0 3px 6px rgba(0, 0, 0, 0.85);
+  animation: dk-tip-sway 2.6s ease-in-out infinite;
+}
+.hint-mark { flex: none; font-style: normal; font-size: 1.5rem; font-weight: 900; color: #ffd84a; text-shadow: 0 1px 0 #6b4a00, 0 2px 0 #3a2800, 0 0 8px rgba(255, 210, 60, 0.75); animation: dk-tip-hop 2.6s ease-in-out infinite; }
+.hint-text p { margin: 0; }
+.hint-next {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #2a1a00;
+  background: linear-gradient(180deg, #ffe58a, #e9a82a);
+  border: 1px solid #fff0b0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 210, 60, 0.5);
+}
+.hint-o { color: #ff9a2e; }
+.hint-gem { color: #5ab8ff; }
+.hint-sum { color: #f4d27a; }
+.hint-s1 { color: #5be37a; }
+.hint-s2 { color: #ff9a2e; }
+.hint-s3 { color: #ff5a4a; }
+.hint-s4 { color: #b57bff; }
+.hint-text .mana-gem { display: inline-block; width: 0.8rem; height: 0.8rem; vertical-align: -0.1em; margin: 0 0.35em; }
+.mark.is-tap { pointer-events: auto; cursor: pointer; padding: 0.35em 0.5em; }

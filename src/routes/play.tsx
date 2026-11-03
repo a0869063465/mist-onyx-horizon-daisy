@@ -22,6 +22,12 @@ import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, ty
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
+import { HintCard } from "@/components/game/hint-card";
+import { countHint } from "@/lib/hints";
+import { STAR_COST } from "@/lib/duel";
+
+/** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
+const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
 import { AimMark } from "@/components/game/aim-mark";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
@@ -1882,6 +1888,59 @@ function PlayPage() {
     window.clearTimeout(tipTimer.current);
     setTip({ text, n: Date.now() });
     tipTimer.current = window.setTimeout(() => setTip(null), 3200);
+  }
+  /** Khung gợi ý khi gặp vấn đề (chủ game 03/11): lặp 3 lần mới hiện, mỗi gợi ý một lần. */
+  const [hint, setHint] = useState<{ targets: string[]; body: ReactNode; auto: boolean } | null>(null);
+  function stuckHint(kind: "draw" | "stars", cardStars: number) {
+    if (!duel || tutorial || trial || replay || (duel.mode !== "ai" && duel.mode !== "net")) return;
+    if (!countHint(kind)) return;
+    const mine = duel.players[viewer];
+    const star = <b className={`hint-s${Math.min(4, Math.max(1, cardStars))}`}>{cardStars} sao</b>;
+    if (kind === "draw") {
+      setHint({
+        targets: [".face-pile"],
+        auto: true,
+        body: (
+          <p>
+            Quái {star} cần đủ <b className="hint-gem">mana</b> trong mộ để <b className="hint-sum">triệu hồi</b>. Hãy bấm xấp bài để rút 1 lá trước.
+          </p>
+        ),
+      });
+      return;
+    }
+    const total = starPrice(cardStars);
+    const have = starPrice(mine.stars) + mine.starGems;
+    setHint({
+      targets: ['[data-tut="youGems"]', '[data-tut="youStars"]'],
+      auto: true,
+      body: (
+        <p>
+          Quái {star} cần đủ <b className="hint-gem">{total} mana</b> trong mộ để <b className="hint-sum">triệu hồi</b>.
+          <br />
+          Cần tiêu thêm <b className="hint-gem">{Math.max(1, total - have)} mana</b> nữa.
+        </p>
+      ),
+    });
+  }
+  /** Bấm mộ mana hoặc ô sao: còn bao nhiêu mana nữa tới sao kế. */
+  function starGapHint() {
+    if (!duel || tutorial || replay) return;
+    const mine = duel.players[viewer];
+    const next = mine.stars + 1;
+    setHint({
+      targets: ['[data-tut="youGems"]', '[data-tut="youStars"]'],
+      auto: true,
+      body:
+        mine.stars >= STAR_COST.length ? (
+          <p>
+            Bạn đã đủ <b className="hint-s4">{STAR_COST.length} sao</b>.
+          </p>
+        ) : (
+          <p>
+            <b className="hint-gem">{STAR_COST[mine.stars] - mine.starGems}</b> <i className="mana-gem" aria-hidden="true" /> → <b className={`hint-s${Math.min(4, next)}`}>{next} ★</b>
+          </p>
+        ),
+    });
   }
   /** Last tap on a monster of the field: a second tap within DOUBLE_TAP opens its sheet (chủ game 02/11). */
   const fieldTap = useRef<{ uid: string; at: number } | null>(null);
@@ -3989,7 +4048,10 @@ function PlayPage() {
     if (pile === "reserve" && duel && canPlay) {
       const wanted = monsterCard(id);
       const mine = duel.players[viewer];
-      if (wanted && needsDraw(wanted.stars)) showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
+      if (wanted && needsDraw(wanted.stars)) {
+        showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${wanted.stars} sao`);
+        stuckHint("draw", wanted.stars);
+      } else if (wanted && mine.stars < wanted.stars && wanted.id !== "trieu-hoi-ac-ma") stuckHint("stars", wanted.stars);
     }
     setInspect(null);
     setHandPick((current) => (current?.pile === pile && current.index === index ? null : { pile, index, id }));
@@ -4323,8 +4385,10 @@ function PlayPage() {
       }
       if (needsDraw(payload.card.stars)) {
         showTip(`Hãy rút 1 lá bài để được triệu hồi quái ${payload.card.stars} sao`);
+        stuckHint("draw", payload.card.stars);
         return;
       }
+      if (canPlay && duel.players[viewer].stars < payload.card.stars && payload.card.id !== "trieu-hoi-ac-ma") stuckHint("stars", payload.card.stars);
       if (!canPlay || !slotEl || owner !== viewer || slotEl.dataset.empty !== "1" || index < 0 || index >= FIELD_SLOTS) {
         holdNotice("Thả quái vào ô trống của bạn.");
         return;
@@ -5841,7 +5905,7 @@ function PlayPage() {
           const seen = hpSide !== null && sight ? sight.hp[hpSide] : null;
           const shift = seen !== null && hpSide !== null ? seen - duel.players[hpSide].hp : 0;
           return (
-            <div key={key} data-tut={key} className={`mark${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color: shift ? undefined : color }}>
+            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color: shift ? undefined : color }}>
               <b>{shift ? seen : value}</b>
             </div>
           );
@@ -5925,6 +5989,11 @@ function PlayPage() {
             </span>
           </p>
         )}
+        {hint ? (
+          <HintCard targets={hint.targets} auto={hint.auto} onClose={() => setHint(null)}>
+            {hint.body}
+          </HintCard>
+        ) : null}
         {tip ? (
           <p key={tip.n} className="mid-tip" style={{ zIndex: 14 }}>
             <NoticeText text={tip.text} />

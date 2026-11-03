@@ -887,6 +887,7 @@ export const PENDING_NOTES: string[] = [
   "Kéo triệu hồi: nhích tay nhẹ theo hướng là đổi ô, ô đang chọn sáng xanh ngọc bích, các ô trống khác chỉ viền mảnh. Kéo đánh quái địch có viền neon sáng như người chơi. Quái trên tay dùng được và đang chọn thì thở glow xanh lá rõ hơn.",
   "Lá phản ứng dùng được phát glow bám theo hình lá và thở, không còn viền vuông.",
   "Đánh vào bên có Gương phòng hộ đứng sẵn: đòn vào hàng chờ như thường, bấm X là huỷ, bấm xác nhận gương mới dựng lên.",
+  "Thiếu sao mà cố triệu hồi quái 3 lần thì hiện gợi ý một lần: vùng liên quan sáng lên, nói rõ cần bao nhiêu mana trong mộ. Bấm >> để đóng. Bấm mộ mana hoặc ô sao thì thấy còn bao nhiêu mana nữa tới sao kế.",
 ];
 
 function remarkOf(notes: string[]) {

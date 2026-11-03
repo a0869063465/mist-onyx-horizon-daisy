@@ -340,7 +340,7 @@ export type Duel = {
   } | null;
 };
 
-const STAR_COST = [1, 3, 6, 10];
+export const STAR_COST = [1, 3, 6, 10];
 
 function shuffle<T>(list: T[]): T[] {
   const next = [...list];
