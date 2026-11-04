@@ -695,4 +695,4 @@ Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
 4. Nghiên cứu "TS" online (chưa rõ TS là gì, hỏi lại).
 
 Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
-Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
+Đề xuất mô hình và nỗ lực: luật mê cung, bảo vật và AI: Opus 5.5 high; giao diện và chữ: Sonnet 5.5 medium. Chờ chủ game duyệt.
