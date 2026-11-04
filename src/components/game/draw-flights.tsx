@@ -17,10 +17,15 @@ const PERSPECTIVE = "perspective(700px)";
 function bringIntoView(card: HTMLElement) {
   const strip = card.closest<HTMLElement>(".hand");
   if (!strip) return;
+  // Measured inside the strip's padding (the same window `fadeEdges` in play.tsx uses), or a card that stops in the
+  // padding lands half faded (chủ game 04/11, V4).
   const box = strip.getBoundingClientRect();
+  const style = getComputedStyle(strip);
+  const left = box.left + (parseFloat(style.paddingLeft) || 0);
+  const right = box.right - (parseFloat(style.paddingRight) || 0);
   const at = card.getBoundingClientRect();
-  if (at.right > box.right) strip.scrollLeft += at.right - box.right;
-  else if (at.left < box.left) strip.scrollLeft -= box.left - at.left;
+  if (at.right > right) strip.scrollLeft += at.right - right;
+  else if (at.left < left) strip.scrollLeft -= left - at.left;
 }
 
 function MyFlight({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) => void }) {

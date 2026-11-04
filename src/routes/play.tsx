@@ -1223,6 +1223,8 @@ function reactTone(cardId: string): string {
   const list = SKILL_BOOK[cardId] ?? [];
   // Thế thân là skill siêu tốc (chủ game 03/11): glow trắng.
   if (cardId === "the-than-cua-shien") return "#e9f3ff";
+  // Khiên thú sĩ cũng là skill siêu tốc (chủ game 04/11): glow trắng.
+  if (cardId === "chien-si-gam-nham") return "#e9f3ff";
   const pick = list.find((entry) => entry.kind === "spell") ?? list[0];
   return SKILL_TONES[pick?.kind ?? "spell"];
 }

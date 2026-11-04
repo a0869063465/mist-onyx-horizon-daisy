@@ -553,7 +553,36 @@ export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
     hand: player.hand.filter((_, index) => !outSpells.has(index)),
     tolls: tolls.filter((_, index) => !outSpells.has(index)),
   };
+  const keptReserve = kept.reserve;
+  const keptHand = kept.hand;
   for (let n = 0; n < backMonsters.length + backSpells.length; n += 1) kept = takeTop(kept)?.player ?? kept;
+  // Lá mới đứng đúng chỗ lá bị đổi, các lá còn lại giữ nguyên chỗ (chủ game 04/11, V2); lá nào khác loại thì xuống cuối.
+  const newMonsters = kept.reserve.slice(keptReserve.length);
+  const newSpells = kept.hand.slice(keptHand.length);
+  const newTolls = (kept.tolls ?? []).slice(keptHand.length);
+  let nextMonster = 0;
+  const reserve: typeof kept.reserve = [];
+  player.reserve.forEach((held, index) => {
+    if (!outMonsters.has(index)) reserve.push(held);
+    else if (nextMonster < newMonsters.length) reserve.push(newMonsters[nextMonster++]);
+  });
+  reserve.push(...newMonsters.slice(nextMonster));
+  let nextSpell = 0;
+  const hand: string[] = [];
+  const handTollsNow: boolean[] = [];
+  player.hand.forEach((id, index) => {
+    if (!outSpells.has(index)) {
+      hand.push(id);
+      handTollsNow.push(tolls[index]);
+    } else if (nextSpell < newSpells.length) {
+      hand.push(newSpells[nextSpell]);
+      handTollsNow.push(newTolls[nextSpell]);
+      nextSpell += 1;
+    }
+  });
+  hand.push(...newSpells.slice(nextSpell));
+  handTollsNow.push(...newTolls.slice(nextSpell));
+  kept = { ...kept, reserve, hand, tolls: handTollsNow };
   const spellPile = shuffle([...kept.spellDeck.map((id, index): [string, boolean] => [id, kept.spellTax?.[index] ?? false]), ...backSpells]);
   const monsterDeck = shuffle([...kept.monsterDeck, ...backMonsters]);
   const swapped: Player = {
