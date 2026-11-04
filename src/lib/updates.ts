@@ -901,6 +901,7 @@ export const PENDING_NOTES: string[] = [
   "Xấp bài có glow xanh khi rút được. Lá phép dùng được có viền và glow theo màu tốc độ: nhanh và siêu tốc thở mạnh, phép khác sáng đứng yên.",
   "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
   "Nhiệm vụ có trang riêng với 2 tab Ngày và Tuần, giao diện giống Tin tức và Bạn bè. Nhiệm vụ Tuần sắp có. Khung hàng nhiệm vụ đổi cùng kiểu.",
+  "Trang Nhiệm vụ đổi giao diện mới. Nhiệm vụ Ngày gồm Chơi 3, 10, 20 trận, Thắng 6 và 10 trận PvP. Nhiệm vụ Tuần và nhóm Xếp hạng sắp có.",
 ];
 
 function remarkOf(notes: string[]) {
