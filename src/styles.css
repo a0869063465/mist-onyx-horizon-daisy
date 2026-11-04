@@ -13211,19 +13211,31 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mp .mx-plist { --u: calc(min(100vw - 2rem, 26rem) / 748); width: calc(var(--u) * 748); gap: calc(var(--u) * 14); max-height: calc(100dvh - 14rem); overflow-y: auto; scrollbar-width: none; align-content: start; }
 .mp .mx-plist::-webkit-scrollbar { display: none; }
 /* Hàng Ngày y hệt thiết kế (04/11): khung, ô sao, ống, icon là ảnh của chủ game */
-.mx-card.is-daily { height: calc(var(--u) * 144); font-family: var(--cond); }
+.mx-card.is-daily { height: calc(var(--u) * 144); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif; }
 .mx-list:has(.is-daily) { gap: calc(var(--u) * 10); }
 .mx-tpl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .mx-ico { position: absolute; left: calc(var(--u) * 30); top: 50%; width: calc(var(--u) * 146); height: calc(var(--u) * 126); transform: translateY(-50%); object-fit: contain; pointer-events: none; filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) rgba(0, 0, 0, 0.45)); }
-.mx-name { position: absolute; left: calc(var(--u) * 208); top: calc(var(--u) * 14); width: calc(var(--u) * 340); height: calc(var(--u) * 70); margin: 0; display: flex; align-items: center; font-size: calc(var(--u) * 31); font-weight: 700; line-height: 1.08; color: #fff; text-shadow: 0 calc(var(--u) * 2) 0 rgba(0, 0, 0, 0.6), 0 0 calc(var(--u) * 3) rgba(0, 0, 0, 0.5); }
+.mx-name { position: absolute; left: calc(var(--u) * 208); top: calc(var(--u) * 14); width: calc(var(--u) * 340); height: calc(var(--u) * 70); margin: 0; display: flex; align-items: center; font-size: calc(var(--u) * 29.4); font-weight: 700; line-height: 1.07; color: #fff; -webkit-text-stroke: calc(var(--u) * 2.8) #120c06; paint-order: stroke fill; text-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 2) rgba(0, 0, 0, 0.55); }
 .mx-prog { position: absolute; left: calc(var(--u) * 208); top: calc(var(--u) * 96); width: calc(var(--u) * 330); height: calc(var(--u) * 30); display: flex; align-items: center; gap: calc(var(--u) * 10); }
-.mx-prog em { flex: none; min-width: calc(var(--u) * 88); font-style: normal; font-size: calc(var(--u) * 32); font-weight: 700; line-height: 1; color: #fff; text-shadow: 0 calc(var(--u) * 2) 0 rgba(0, 0, 0, 0.7); white-space: nowrap; }
+.mx-prog em { flex: none; min-width: calc(var(--u) * 88); font-style: normal; font-size: calc(var(--u) * 34); font-weight: 700; line-height: 1; color: #fff; -webkit-text-stroke: calc(var(--u) * 2.8) #120c06; paint-order: stroke fill; text-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 2) rgba(0, 0, 0, 0.55); white-space: nowrap; }
 .mx-tube { position: relative; flex: 1; height: calc(var(--u) * 26); }
 .mx-tube::before { content: ""; position: absolute; inset: 0; border-style: solid; border-width: 0 calc(var(--u) * 11); border-image: url("/ui/mission/bar-track.webp") 0 22 0 22 fill / 0 calc(var(--u) * 11) 0 calc(var(--u) * 11) stretch; }
 .mx-tube i { position: absolute; left: 0; top: 0; bottom: 0; width: max(calc(var(--u) * 26), calc(100% * var(--p))); border-style: solid; border-width: 0 calc(var(--u) * 12) 0 calc(var(--u) * 10); border-image: url("/ui/mission/bar-fill.webp") 0 28 0 18 fill / 0 calc(var(--u) * 12) 0 calc(var(--u) * 10) stretch; transition: width 620ms cubic-bezier(0.25, 0.8, 0.3, 1); }
-.mx-tube.is-full i { width: 100%; border-image-source: url("/ui/mission/bar-green.webp"); border-image-slice: 0 36 0 18 fill; }
+.mx-tube.is-full i { width: 100%; border-width: 0 calc(var(--u) * 8.5); border-image: url("/ui/mission/bar-gold.webp") 0 34 0 34 fill / 0 calc(var(--u) * 8.5) 0 calc(var(--u) * 8.5) stretch; }
 .mx-star { position: absolute; right: calc(var(--u) * 14); top: 50%; width: calc(var(--u) * 176); transform: translateY(-50%); pointer-events: none; }
 .mx-star.is-glow { right: calc(var(--u) * -6); width: calc(var(--u) * 212); }
 .mx-prize-spot { position: absolute; right: calc(var(--u) * 14); top: 50%; width: calc(var(--u) * 170); height: calc(var(--u) * 100); transform: translateY(-50%); pointer-events: none; }
 .mx-card.is-daily.is-locked .mx-tpl, .mx-card.is-daily.is-locked .mx-ico, .mx-card.is-daily.is-locked .mx-star { filter: saturate(0.3) brightness(0.8); }
 .mx-card.is-daily .mx-soon { left: calc(var(--u) * 208); bottom: calc(var(--u) * 12); right: auto; top: auto; }
+
+/* Tab Tuần (chủ game 04/11): khung tím + ô sao x2; vị trí chữ/số/ống đo trên hàng vàng mẫu của chủ game (cùng tỉ lệ 0,35 u/px). */
+.mx-card.is-wk .mx-name { left: calc(var(--u) * 222); top: calc(var(--u) * 18.5); width: calc(var(--u) * 310); height: auto; display: block; line-height: 1.17; }
+.mx-card.is-wk .mx-prog { left: calc(var(--u) * 222); top: calc(var(--u) * 97); width: calc(var(--u) * 318); height: calc(var(--u) * 32); }
+.mx-card.is-wk .mx-prog em { position: relative; top: calc(var(--u) * -3.5); min-width: calc(var(--u) * 56); padding: calc(var(--u) * 3) calc(var(--u) * 8); margin-left: calc(var(--u) * 3); }
+.mx-card.is-wk .mx-prog em::before { content: ""; position: absolute; z-index: -1; inset: calc(var(--u) * -3) calc(var(--u) * -10) calc(var(--u) * -3) calc(var(--u) * -14); border-radius: calc(var(--u) * 18); background: rgba(24, 14, 0, 0.4); filter: blur(calc(var(--u) * 2)); }
+.mx-card.is-wk .mx-star { width: calc(var(--u) * 176); }
+.mx-card.is-wk .mx-star.is-glow { width: calc(var(--u) * 212); }
+.mx-card.is-wk.is-locked .mx-tpl, .mx-card.is-wk.is-locked .mx-ico, .mx-card.is-wk.is-locked .mx-star { filter: saturate(0.3) brightness(0.8); }
+.mx-card.is-wk .mx-soon { left: calc(var(--u) * 222); }
+.mx-card.is-wk .mx-prog { isolation: isolate; }
+.mx-card.is-daily .mx-name, .mx-card.is-daily .mx-prog em, .mx-card.is-daily .mx-soon { font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif; }

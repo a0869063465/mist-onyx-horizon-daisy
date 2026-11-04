@@ -16,13 +16,15 @@ const DAILY_ICON = ["cal-check", "swords", "fan", "fan", "trophy", "trophy", "sh
 
 /** Hàng Ngày y hệt thiết kế: xanh dương đang làm, vàng sáng vừa xong, xanh lá đã nhận. Khung, ô sao, ống tiến độ là ảnh của chủ game; chữ và số do code vẽ. */
 function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; done: number; at: number; flash: boolean; chip?: (el: HTMLElement | null) => void; full: boolean }) {
-  const state = flash ? "gold" : full ? "green" : "blue";
+  const weekly = row.row.startsWith("rw");
+  const state = flash ? "gold" : full ? "green" : weekly ? "purple" : "blue";
   const shown = Math.min(done, row.goal);
   const n = Number(row.row.slice(2));
-  const icon = n === 0 && state === "blue" ? "cal-clock" : DAILY_ICON[n] ?? "swords";
+  const icon = weekly ? `w-${row.icon ?? "swords"}` : n === 0 && state === "blue" ? "cal-clock" : DAILY_ICON[n] ?? "swords";
+  const star = weekly ? "star2" : "star";
   return (
     <li
-      className={`mx-card is-daily is-${state}${row.locked ? " is-locked" : ""}${flash ? " is-flash" : ""}`}
+      className={`mx-card is-daily${weekly ? " is-wk" : ""} is-${state}${row.locked ? " is-locked" : ""}${flash ? " is-flash" : ""}`}
       style={{ "--i": at } as CSSProperties}
       aria-label={`${tr(row.title)} ${shown} / ${row.goal}`}
     >
@@ -36,7 +38,7 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
           <em>
             {shown} / {row.goal}
           </em>
-          {state === "blue" ? (
+          {state === "blue" || state === "purple" ? (
             <span className="mx-tube" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
               <i />
             </span>
@@ -47,7 +49,7 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
           )}
         </div>
       )}
-      {state === "green" ? null : <img className={`mx-star${state === "gold" ? " is-glow" : ""}`} src={`/ui/mission/star-${state === "gold" ? "glow" : "small"}.webp`} alt="" draggable={false} />}
+      {state === "green" ? null : <img className={`mx-star${state === "gold" ? " is-glow" : ""}`} src={`/ui/mission/${star}-${state === "gold" ? "glow" : "small"}.webp`} alt="" draggable={false} />}
       <span ref={chip} className="mx-prize-spot" aria-hidden="true" />
     </li>
   );
@@ -57,7 +59,7 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
 export function MissionCard({ row, done, at, flash = false, chip }: { row: ListedMission; done: number; at: number; flash?: boolean; chip?: (el: HTMLElement | null) => void }) {
   const full = !row.locked && done >= row.goal;
   const bar = row.bar;
-  if (row.row.startsWith("rd")) return <DailyCard row={row} done={done} at={at} flash={flash} chip={chip} full={full} />;
+  if (row.row.startsWith("rd") || row.row.startsWith("rw")) return <DailyCard row={row} done={done} at={at} flash={flash} chip={chip} full={full} />;
   return (
     <li
       className={`mx-card${row.locked ? " is-locked" : ""}${full ? " is-done" : ""}${flash ? " is-flash" : ""}`}

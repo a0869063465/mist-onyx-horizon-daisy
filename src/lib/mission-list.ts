@@ -12,6 +12,8 @@ export type ListedMission = {
   row: string;
   /** Ảnh bảo vật thay icon trong hàng (nếu có). */
   relic?: string;
+  /** Tên icon (tab Tuần), `ic-w-<icon>.webp`. */
+  icon?: string;
   locked?: boolean;
   /** Đếm gì (nhiệm vụ không khoá). */
   count?: "play" | "pvp";
@@ -31,11 +33,12 @@ export const DAILY_LIST: ListedMission[] = [
 ];
 
 export const WEEKLY_LIST: ListedMission[] = [
-  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "rw0", locked: true },
-  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "rw1", locked: true },
-  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "rw2", relic: "t-puzzle", locked: true },
-  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "rw3", relic: "t-ring", locked: true },
-  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "rw4", locked: true },
-  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "rw5", locked: true },
-  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "rw6", locked: true },
+  { id: "w-dungeon", title: "Hoàn thành 1 hầm ngục PVE (X3)", goal: 3, stars: 2, row: "rw7", icon: "portal", locked: true },
+  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "rw0", icon: "crest", locked: true },
+  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "rw1", icon: "swords", locked: true },
+  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "rw2", icon: "relic", locked: true },
+  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "rw3", icon: "relic2", locked: true },
+  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "rw4", icon: "cards", locked: true },
+  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "rw5", icon: "cards2", locked: true },
+  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "rw6", icon: "srur", locked: true },
 ];
