@@ -13180,6 +13180,8 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 @keyframes mx-in { from { opacity: 0; transform: translateY(calc(var(--u) * 14)); } }
 .mx-row { display: block; width: 100%; height: 100%; }
 .mx-card.is-locked .mx-row { filter: saturate(0.45) brightness(0.8); }
+/* Thanh tiến độ: tô vàng lên đúng rãnh của ảnh, chữ trắng trong ảnh vẫn đọc được (lighten). */
+.mx-fill { position: absolute; left: calc(var(--u) * 208); bottom: calc(var(--u) * 16); width: calc(var(--u) * 318 * var(--p)); height: calc(var(--u) * 22); border-radius: calc(var(--u) * 11); background: linear-gradient(180deg, #ffe79a, #f0a929); mix-blend-mode: lighten; pointer-events: none; }
 /* Ô thưởng: phủ ngôi sao của chủ game lên ô trống của khung. */
 .mx-prize { position: absolute; left: calc(var(--u) * 571); top: 50%; transform: translateY(-50%); width: calc(var(--u) * 163); height: calc(var(--u) * 94); display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 10); border-radius: calc(var(--u) * 6); background: linear-gradient(180deg, var(--box-a), var(--box-b)); font-family: var(--cond); }
 .mx-prize img { width: calc(var(--u) * 70); height: calc(var(--u) * 70); object-fit: contain; filter: drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(0, 0, 0, 0.55)); }
@@ -13190,55 +13192,3 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-relic { position: absolute; left: calc(var(--u) * 8); top: 50%; transform: translateY(-50%); width: calc(var(--u) * 204); height: calc(var(--u) * 144); display: grid; place-items: center; background: radial-gradient(closest-side, #4c2394 0%, #34176e 72%, #2b1457 100%); -webkit-mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); }
 .mx-relic img { height: 84%; width: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 0 calc(var(--u) * 8) rgba(255, 190, 60, 0.7)); }
 .mx-soon { position: absolute; right: calc(var(--u) * 190); top: calc(var(--u) * 5); padding: 0 calc(var(--u) * 12); border-radius: calc(var(--u) * 12); font-size: calc(var(--u) * 22); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.62); }
-
-/* Thanh tiến độ vẽ đè đúng chỗ thanh trong ảnh hàng GPT (chủ game 04/11): viền bạc, nền xanh đêm, chữ "n / goal" ở mũ trái, vàng khi chạy. */
-.mx-bar { --cut-l: calc(var(--u) * 10); --cut-r: calc(var(--u) * 13); position: absolute; left: calc(var(--u) * 203); top: calc(var(--u) * (var(--top) - 2)); width: calc(var(--u) * 326); height: calc(var(--u) * (var(--high) + 4)); background: linear-gradient(180deg, #e4eefc, #9fbde6 55%, #d6e5fa); clip-path: polygon(0 50%, var(--cut-l) 0, calc(100% - var(--cut-r)) 0, 100% 50%, calc(100% - var(--cut-r)) 100%, var(--cut-l) 100%); pointer-events: none; }
-.mx-bar::before { content: ""; position: absolute; inset: calc(var(--u) * 2.2); background: linear-gradient(180deg, #050d27, #0b1a42); clip-path: polygon(0 50%, var(--cut-l) 0, calc(100% - var(--cut-r)) 0, 100% 50%, calc(100% - var(--cut-r)) 100%, var(--cut-l) 100%); }
-.mx-bar { display: flex; align-items: center; padding: 0 calc(var(--cut-r) + var(--u) * 3) 0 calc(var(--cut-l) + var(--u) * 2); }
-.mx-bar em { position: relative; flex: none; padding-right: calc(var(--u) * 8); font-family: var(--cond); font-style: normal; font-size: calc(var(--u) * 27); font-weight: 700; line-height: 1; color: #fff; text-shadow: 0 calc(var(--u) * 1.5) 0 rgba(0, 0, 0, 0.75); white-space: nowrap; }
-.mx-track { position: relative; flex: 1; align-self: stretch; margin: calc(var(--u) * 5) 0; border-left: calc(var(--u) * 1.5) solid rgba(170, 200, 240, 0.55); }
-.mx-track i { position: absolute; left: calc(var(--u) * 2); top: 0; bottom: 0; width: calc((100% - var(--u) * 2) * var(--p)); border-radius: calc(var(--u) * 3); background: linear-gradient(180deg, #fff2b8, #f6c443 45%, #d98a16); box-shadow: 0 0 calc(var(--u) * 8) rgba(255, 200, 80, 0.7); transition: width 620ms cubic-bezier(0.25, 0.8, 0.3, 1); }
-.mx-card.is-done .mx-bar em { color: #ffe9a8; }
-.mx-got { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 5); text-align: center; font-family: var(--cond); font-size: calc(var(--u) * 19); font-weight: 700; letter-spacing: 0.06em; color: #9ff0bc; text-shadow: 0 calc(var(--u) * 1.5) 0 rgba(0, 0, 0, 0.8); }
-.mx-prize { box-sizing: border-box; }
-.mx-card.is-done .mx-prize { padding-bottom: calc(var(--u) * 20); }
-.mx-card.is-done .mx-prize img { width: calc(var(--u) * 54); height: calc(var(--u) * 54); }
-.mx-card.is-done .mx-prize b { font-size: calc(var(--u) * 40); }
-.mx-card.is-done .mx-prize { box-shadow: 0 0 calc(var(--u) * 14) rgba(255, 214, 110, 0.75); }
-.mx-card.is-flash::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: calc(var(--u) * 14); background: linear-gradient(105deg, transparent 35%, rgba(255, 236, 170, 0.6) 50%, transparent 65%) -100% 0 / 200% 100% no-repeat; animation: mx-sweep 700ms ease-out both; }
-@keyframes mx-sweep { 70% { opacity: 1; } to { background-position: 100% 0; opacity: 0; } }
-/* Bảng sau trận: cùng hàng GPT, cỡ theo bề ngang bảng. */
-.mp .mx-plist { --u: calc(min(100vw - 2rem, 26rem) / 748); width: calc(var(--u) * 748); gap: calc(var(--u) * 14); max-height: calc(100dvh - 14rem); overflow-y: auto; scrollbar-width: none; align-content: start; }
-.mp .mx-plist::-webkit-scrollbar { display: none; }
-/* Hàng Ngày y hệt thiết kế (04/11): khung, ô sao, ống, icon là ảnh của chủ game */
-.mx-card.is-daily { height: calc(var(--u) * 144); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", system-ui, sans-serif; }
-.mx-list:has(.is-daily) { gap: calc(var(--u) * 10); }
-.mx-tpl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.mx-ico { position: absolute; left: calc(var(--u) * 30); top: 50%; width: calc(var(--u) * 146); height: calc(var(--u) * 126); transform: translateY(-50%); object-fit: contain; pointer-events: none; filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) rgba(0, 0, 0, 0.45)); }
-.mx-name { position: absolute; left: calc(var(--u) * 208); top: calc(var(--u) * 14); width: calc(var(--u) * 340); height: calc(var(--u) * 70); margin: 0; display: flex; align-items: center; font-size: calc(var(--u) * 29.4); font-weight: 700; line-height: 1.07; color: #fff; -webkit-text-stroke: calc(var(--u) * 2.8) #120c06; paint-order: stroke fill; text-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 2) rgba(0, 0, 0, 0.55); }
-.mx-prog { position: absolute; left: calc(var(--u) * 208); top: calc(var(--u) * 96); width: calc(var(--u) * 330); height: calc(var(--u) * 30); display: flex; align-items: center; gap: calc(var(--u) * 10); }
-.mx-prog em { flex: none; min-width: calc(var(--u) * 88); font-style: normal; font-size: calc(var(--u) * 34); font-weight: 700; line-height: 1; color: #fff; -webkit-text-stroke: calc(var(--u) * 2.8) #120c06; paint-order: stroke fill; text-shadow: 0 calc(var(--u) * 1.5) calc(var(--u) * 2) rgba(0, 0, 0, 0.55); white-space: nowrap; }
-.mx-tube { position: relative; flex: 1; height: calc(var(--u) * 26); }
-.mx-tube::before { content: ""; position: absolute; inset: 0; border-style: solid; border-width: 0 calc(var(--u) * 11); border-image: url("/ui/mission/bar-track.webp") 0 22 0 22 fill / 0 calc(var(--u) * 11) 0 calc(var(--u) * 11) stretch; }
-.mx-tube i { position: absolute; left: 0; top: 0; bottom: 0; width: max(calc(var(--u) * 26), calc(100% * var(--p))); border-style: solid; border-width: 0 calc(var(--u) * 12) 0 calc(var(--u) * 10); border-image: url("/ui/mission/bar-fill.webp") 0 28 0 18 fill / 0 calc(var(--u) * 12) 0 calc(var(--u) * 10) stretch; transition: width 620ms cubic-bezier(0.25, 0.8, 0.3, 1); }
-.mx-tube.is-full i { width: 100%; border-width: 0 calc(var(--u) * 8.5); border-image: url("/ui/mission/bar-gold.webp") 0 34 0 34 fill / 0 calc(var(--u) * 8.5) 0 calc(var(--u) * 8.5) stretch; }
-.mx-star { position: absolute; right: calc(var(--u) * 14); top: 50%; width: calc(var(--u) * 176); transform: translateY(-50%); pointer-events: none; }
-.mx-star.is-glow { right: calc(var(--u) * -6); width: calc(var(--u) * 212); }
-.mx-prize-spot { position: absolute; right: calc(var(--u) * 14); top: 50%; width: calc(var(--u) * 170); height: calc(var(--u) * 100); transform: translateY(-50%); pointer-events: none; }
-.mx-card.is-daily.is-locked .mx-tpl, .mx-card.is-daily.is-locked .mx-ico, .mx-card.is-daily.is-locked .mx-star { filter: saturate(0.3) brightness(0.8); }
-.mx-card.is-daily .mx-soon { left: calc(var(--u) * 208); bottom: calc(var(--u) * 12); right: auto; top: auto; }
-
-/* Tab Tuần (chủ game 04/11): mọi vị trí/kích thước đo trên hàng vàng mẫu của chủ game (đơn vị u = 1/748 bề ngang khung, ~2,885 px mẫu). Chiều dọc tính từ mép trên khung ×0,9775. */
-.mx-card.is-wk .mx-name { left: calc(var(--u) * 220.6); top: calc(var(--u) * 25.5); width: calc(var(--u) * 310); height: auto; display: block; font-size: calc(var(--u) * 28.4); line-height: 1.1555; letter-spacing: 0.0145em; }
-.mx-card.is-wk .mx-prog { inset: 0; width: auto; height: auto; display: block; isolation: isolate; }
-.mx-card.is-wk .mx-prog em { position: absolute; left: calc(var(--u) * 222.3); top: calc(var(--u) * 103.1); min-width: 0; margin: 0; padding: 0; font-family: Roboto, "Roboto Condensed", sans-serif; font-size: calc(var(--u) * 33.4 * var(--k, 1)); line-height: 1; }
-.mx-card.is-wk .mx-prog em::before { content: ""; position: absolute; z-index: -1; left: calc(var(--u) * -10); top: calc(var(--u) * -0.7); width: calc(var(--u) * 86.7); height: calc(var(--u) * 31.2); border-radius: calc(var(--u) * 14); background: rgba(24, 14, 0, 0.42); filter: blur(calc(var(--u) * 2)); }
-.mx-card.is-wk .mx-tube { position: absolute; left: calc(var(--u) * 300.9); top: calc(var(--u) * 108.48); width: calc(var(--u) * 249.2); height: calc(var(--u) * 29.1); flex: none; }
-.mx-card.is-wk .mx-tube::before { border-width: 0 calc(var(--u) * 12.3); border-image-width: 0 calc(var(--u) * 12.3) 0 calc(var(--u) * 12.3); }
-.mx-card.is-wk .mx-tube i { border-width: 0 calc(var(--u) * 13.4) 0 calc(var(--u) * 11.2); border-image-width: 0 calc(var(--u) * 13.4) 0 calc(var(--u) * 11.2); }
-.mx-card.is-wk .mx-tube.is-full i { border-width: 0 calc(var(--u) * 12.4); border-image-width: 0 calc(var(--u) * 12.4); }
-.mx-card.is-wk .mx-ico { left: calc(var(--u) * 39.15); top: calc(var(--u) * 21.15); width: calc(var(--u) * 134); height: calc(var(--u) * 119.5); transform: none; }
-.mx-card.is-wk .mx-star { left: calc(var(--u) * 562.8); right: auto; top: calc(var(--u) * 25.96); width: calc(var(--u) * 181); transform: none; }
-.mx-card.is-wk .mx-star.is-glow { left: calc(var(--u) * 568.8); top: calc(var(--u) * 26.06); width: calc(var(--u) * 179.5); }
-.mx-card.is-wk.is-locked .mx-tpl, .mx-card.is-wk.is-locked .mx-ico, .mx-card.is-wk.is-locked .mx-star { filter: saturate(0.3) brightness(0.8); }
-.mx-card.is-wk .mx-soon { left: calc(var(--u) * 222); }

@@ -1,100 +1,19 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Burst } from "@/components/shop/pack-opening";
+import { AlbumPic } from "@/components/collection/album-parts";
+import { Badges, Burst, CARD_BACK, Face } from "@/components/shop/pack-opening";
 import { tr } from "@/lib/i18n";
-import type { ListedMission } from "@/lib/mission-list";
-import type { MatchReward } from "@/lib/missions";
-import { playReward } from "@/lib/sfx";
+import type { MatchReward, MissionRow } from "@/lib/missions";
+import { playPack, playReward } from "@/lib/sfx";
+import type { Pull } from "@/lib/shop";
 
 /**
- * Nhiệm vụ (chủ game 04/11): mỗi hàng là đúng ảnh hàng GPT của chủ game (`rd*` / `rw*`), code chỉ vẽ đè thanh tiến
- * độ (nhiệm vụ đang đếm), ô thưởng (ngôi sao của chủ game) và bảo vật. Sau trận, thanh chạy lần lượt; nhiệm vụ vừa
- * xong loé và sao bay vào ô tổng, số đếm lên.
+ * Nhiệm vụ (chủ game 22/10), after LoR's quest screen (T12): each mission a row with its medal, a bar and its prize.
+ * After a won match the bars fill one by one; a mission done flashes and its stars fly as a gold streak into the star
+ * total, which counts up; a card prize drops face down and is flipped like a pack card. The menu opens the same rows,
+ * standing still.
  */
-
-/** Icon từng nhiệm vụ Ngày (bộ icon của chủ game): hàng 0 lịch, 1 kiếm, 2-3 quạt kiếm, 4-5 cúp, 6 khiên xanh, 7 khiên tím. */
-const DAILY_ICON = ["cal-check", "swords", "fan", "fan", "trophy", "trophy", "shield-b", "shield-p"];
-
-/** Hàng Ngày y hệt thiết kế: xanh dương đang làm, vàng sáng vừa xong, xanh lá đã nhận. Khung, ô sao, ống tiến độ là ảnh của chủ game; chữ và số do code vẽ. */
-function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; done: number; at: number; flash: boolean; chip?: (el: HTMLElement | null) => void; full: boolean }) {
-  const weekly = row.row.startsWith("rw");
-  const state = flash ? "gold" : full ? "green" : weekly ? "purple" : "blue";
-  const shown = Math.min(done, row.goal);
-  const n = Number(row.row.slice(2));
-  const icon = weekly ? `w-${row.icon ?? "swords"}` : n === 0 && state === "blue" ? "cal-clock" : DAILY_ICON[n] ?? "swords";
-  const star = weekly ? "star2" : "star";
-  return (
-    <li
-      className={`mx-card is-daily${weekly ? " is-wk" : ""} is-${state}${row.locked ? " is-locked" : ""}${flash ? " is-flash" : ""}`}
-      style={{ "--i": at } as CSSProperties}
-      aria-label={`${tr(row.title)} ${shown} / ${row.goal}`}
-    >
-      <img className="mx-tpl" src={`/ui/mission/r-${state}.webp`} alt="" draggable={false} />
-      <img className="mx-ico" src={`/ui/mission/ic-${icon === "trophy" && state !== "green" ? "trophy-b" : icon}.webp`} alt="" draggable={false} />
-      <p className="mx-name">{tr(row.title)}</p>
-      {row.locked ? (
-        <span className="mx-soon">{tr("Sắp có")}</span>
-      ) : state === "green" ? null : (
-        <div className="mx-prog" aria-hidden="true">
-          <em style={{ "--k": Math.min(1, 5.2 / `${shown} / ${row.goal}`.length) } as CSSProperties}>
-            {shown} / {row.goal}
-          </em>
-          {state === "blue" || state === "purple" ? (
-            <span className="mx-tube" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
-              <i />
-            </span>
-          ) : (
-            <span className="mx-tube is-full">
-              <i />
-            </span>
-          )}
-        </div>
-      )}
-      {state === "green" ? null : <img className={`mx-star${state === "gold" ? " is-glow" : ""}`} src={`/ui/mission/${star}-${state === "gold" ? "glow" : "small"}.webp`} alt="" draggable={false} />}
-      <span ref={chip} className="mx-prize-spot" aria-hidden="true" />
-    </li>
-  );
-}
-
-/** Một hàng nhiệm vụ; `chip` nhận ô thưởng để sao bay ra từ đó. */
-export function MissionCard({ row, done, at, flash = false, chip }: { row: ListedMission; done: number; at: number; flash?: boolean; chip?: (el: HTMLElement | null) => void }) {
-  const full = !row.locked && done >= row.goal;
-  const bar = row.bar;
-  if (row.row.startsWith("rd") || row.row.startsWith("rw")) return <DailyCard row={row} done={done} at={at} flash={flash} chip={chip} full={full} />;
-  return (
-    <li
-      className={`mx-card${row.locked ? " is-locked" : ""}${full ? " is-done" : ""}${flash ? " is-flash" : ""}`}
-      style={{ "--i": at } as CSSProperties}
-      aria-label={`${tr(row.title)} ${done} / ${row.goal}`}
-    >
-      <img className="mx-row" src={`/ui/mission/${row.row}.webp`} alt="" draggable={false} />
-      {bar && !row.locked ? (
-        <span
-          className="mx-bar"
-          style={{ "--top": bar[0], "--high": bar[1] - bar[0], "--p": Math.min(1, done / row.goal) } as CSSProperties}
-          aria-hidden="true"
-        >
-          <em>
-            {Math.min(done, row.goal)} / {row.goal}
-          </em>
-          <span className="mx-track">
-            <i />
-          </span>
-        </span>
-      ) : null}
-      {row.relic ? (
-        <span className="mx-relic" aria-hidden="true">
-          <img src={`/ui/mission/${row.relic}.webp`} alt="" draggable={false} />
-        </span>
-      ) : null}
-      <span ref={chip} className="mx-prize" aria-hidden="true">
-        <img src="/ui/star.webp" alt="" draggable={false} />
-        <b>×{row.stars}</b>
-        {full ? <small className="mx-got">{tr("ĐÃ NHẬN")}</small> : null}
-      </span>
-      {row.locked ? <span className="mx-soon">{tr("Sắp có")}</span> : null}
-    </li>
-  );
-}
+const PIC: Record<string, string> = { first: "hiep-si-cua-hau", more: "hiep-si-ho-ve" };
+const picOf = (row: MissionRow) => PIC[row.id] ?? "thuong-quan-long";
 
 /** The trail of a streak: the head first, then smaller and fainter sparks a little behind it. */
 const TRAIL = [
@@ -105,8 +24,65 @@ const TRAIL = [
   { s: 8, o: 0.32, d: 104 },
   { s: 6, o: 0.2, d: 130 },
 ];
+const FLY_MS = 640;
 
 type Streak = { key: number; x0: number; y0: number; x1: number; y1: number; amount: number; then: () => void };
+
+function Coin({ small = false }: { small?: boolean }) {
+  return <span className={`mp-coin${small ? " is-small" : ""}`} aria-hidden="true" />;
+}
+
+function Prize({ row }: { row: MissionRow }) {
+  const prize = row.prize;
+  if ("pack" in prize) {
+    return (
+      <>
+        <img src={CARD_BACK.N} alt="" draggable={false} />
+        <b>{tr("1 lá")}</b>
+      </>
+    );
+  }
+  return (
+    <>
+      <Coin />
+      <b>
+        ×{prize.stars}
+        {prize.each ? <small>{tr("/trận")}</small> : null}
+      </b>
+    </>
+  );
+}
+
+/** One mission (chủ game 04/11): angled blue card with a gold edge, a square medal tile, a skewed bar and a reward tile. */
+export function Row({ row, at, done, flash, chip }: { row: MissionRow; at: number; done: number; flash: boolean; chip: (el: HTMLElement | null) => void }) {
+  const full = done >= row.goal;
+  return (
+    <li className={`mq-card${full ? " is-done" : ""}${flash ? " is-flash" : ""}`} style={{ "--i": at } as CSSProperties}>
+      <span className="mq-icon">
+        <AlbumPic id={picOf(row)} />
+        {full ? <i className="mq-check">✓</i> : null}
+      </span>
+      <span className="mq-body">
+        <span className="mq-top">
+          <b className="mq-title">{tr(row.title)}</b>
+          <b className="mq-count">
+            {Math.min(done, row.goal)}/{row.goal}
+          </b>
+        </span>
+        <span className="mq-track">
+          <span className="mq-fill" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties} />
+        </span>
+        <small className="mq-note">{row.note && full ? tr(row.note) : "pack" in row.prize ? tr(`1 lá ${row.prize.pack}`) : " "}</small>
+      </span>
+      <span className="mq-reward">
+        <span ref={chip} className="mq-prize">
+          <Prize row={row} />
+        </span>
+        <small>{full ? tr("ĐÃ NHẬN") : " "}</small>
+      </span>
+    </li>
+  );
+}
 
 /** The star total; a new value counts up from the old one, and each landing streak makes it bump. */
 function Total({ value, bump, target }: { value: number; bump: number; target: (el: HTMLElement | null) => void }) {
@@ -156,7 +132,62 @@ function Frame({ total, children, foot }: { total: ReactNode; children: ReactNod
   );
 }
 
-/** After a match that moved a mission: the bars fill in turn and each mission just done pays its stars. */
+/** The card a mission pays: it drops face down, a tap turns it over (SR jumps, UR comes forward in a ring of light). */
+function CardReveal({ pull, onDone }: { pull: Pull; onDone: (from: DOMRect | null) => void }) {
+  const [step, setStep] = useState<"drop" | "ready" | "open">("drop");
+  const card = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    playPack("deal");
+    const timer = window.setTimeout(() => setStep("ready"), 720);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const flip = () => {
+    if (step !== "ready") return;
+    setStep("open");
+    playPack(pull.tier === "UR" ? "flipUR" : pull.tier === "SR" ? "flipSR" : "flip");
+  };
+  return (
+    <div className={`mp-reveal is-${pull.tier}`} onClick={flip}>
+      <h3>{tr("PHẦN THƯỞNG")}</h3>
+      <div className="mp-stage">
+        {step === "open" && pull.tier === "UR" ? <span className="po-bubble" aria-hidden="true" /> : null}
+        <button
+          ref={card}
+          type="button"
+          className={`mp-rcard is-${pull.tier}${step === "open" ? " is-flipped" : ""}${step === "open" && pull.tier !== "N" ? " is-pop" : ""}${pull.fresh ? "" : " is-owned"}`}
+          aria-label={step === "open" ? undefined : tr("Lật lá")}
+        >
+          <span className="mp-rcard-inner">
+            <span className="mp-rcard-back">
+              <img src={CARD_BACK[pull.tier]} alt="" draggable={false} />
+            </span>
+            <span className="mp-rcard-front">
+              <Face pull={pull} />
+            </span>
+          </span>
+          {step === "open" ? <Badges pull={pull} /> : null}
+        </button>
+        {step === "open" && pull.tier !== "N" ? <Burst count={pull.tier === "UR" ? 26 : 16} rainbow={pull.tier === "UR"} /> : null}
+      </div>
+      {step === "open" ? (
+        <button
+          type="button"
+          className="mp-go"
+          onClick={(event) => {
+            event.stopPropagation();
+            onDone(card.current?.getBoundingClientRect() ?? null);
+          }}
+        >
+          {tr("OK")}
+        </button>
+      ) : (
+        <p className="mp-hint">{step === "ready" ? tr("Chạm để lật") : " "}</p>
+      )}
+    </div>
+  );
+}
+
+/** After a won match that moved a mission: the bars fill in turn and the prizes are paid out. */
 export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: () => void }) {
   const rows = reward.after;
   const [shown, setShown] = useState(() => reward.before.map((row) => row.done));
@@ -164,13 +195,15 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
   const [total, setTotal] = useState(reward.total[0]);
   const [bump, setBump] = useState(0);
   const [streaks, setStreaks] = useState<Streak[]>([]);
+  const [card, setCard] = useState<Pull | null>(null);
   const [end, setEnd] = useState(false);
   const chips = useRef<(HTMLElement | null)[]>([]);
   const totalBox = useRef<HTMLElement | null>(null);
+  const resume = useRef<(() => void) | null>(null);
   const timers = useRef<number[]>([]);
   const seq = useRef(0);
 
-  /** A gold streak from a prize into the coin of the star total. */
+  /** A gold streak from a prize (or the reward card) into the coin of the star total. */
   const launch = (from: DOMRect | null | undefined, amount: number, then: () => void) => {
     const to = totalBox.current?.querySelector(".mp-coin")?.getBoundingClientRect();
     if (!from || !to || amount <= 0) {
@@ -187,8 +220,15 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
 
   useEffect(() => {
     const later = (ms: number, run: () => void) => timers.current.push(window.setTimeout(run, ms));
-    const changed = rows.map((row, at) => row.done !== reward.before[at]?.done);
-    const pays = (at: number) => changed[at] && rows[at].done >= rows[at].goal && (reward.before[at]?.done ?? 0) < rows[at].goal;
+    const changed = rows.map((row, at) => row.done !== reward.before[at]?.done || row.note !== reward.before[at]?.note);
+    const firstPaid = changed[rows.findIndex((row) => row.id === "first")] ?? false;
+    const pays = (at: number): "stars" | "card" | null => {
+      const row = rows[at];
+      if (row.id === "first" && changed[at] && reward.stars > 0) return "stars";
+      if (row.id === "more" && changed[at] && !firstPaid && reward.stars > 0) return "stars";
+      if ("pack" in row.prize && changed[at] && reward.card) return "card";
+      return null;
+    };
     const finish = () => {
       setTotal(reward.total[1]);
       setEnd(true);
@@ -196,14 +236,21 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
     const step = (from: number) => {
       const at = rows.findIndex((_, index) => index >= from && changed[index]);
       if (at < 0) return later(200, finish);
-      chips.current[at]?.closest("li")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       setShown((now) => now.map((value, index) => (index === at ? rows[at].done : value)));
       playReward("rise");
-      later(700, () => {
-        if (!pays(at)) return later(120, () => step(at + 1));
+      later(780, () => {
+        const pay = pays(at);
+        if (!pay) return later(160, () => step(at + 1));
         setFlash(at);
         playReward("done");
-        later(240, () => launch(chips.current[at]?.getBoundingClientRect(), rows[at].stars, () => later(240, () => step(at + 1))));
+        if (pay === "stars") {
+          later(240, () => launch(chips.current[at]?.getBoundingClientRect(), reward.stars, () => later(260, () => step(at + 1))));
+          return;
+        }
+        later(520, () => {
+          resume.current = () => step(at + 1);
+          setCard(reward.card);
+        });
       });
     };
     later(700, () => step(0));
@@ -233,9 +280,9 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
           ) : null
         }
       >
-        <ol className="mp-list mx-plist">
+        <ol className="mp-list">
           {rows.map((row, at) => (
-            <MissionCard key={row.id} row={row} at={at} done={shown[at] ?? row.done} flash={flash === at} chip={(el) => (chips.current[at] = el)} />
+            <Row key={row.id} row={row} at={at} done={shown[at] ?? row.done} flash={flash === at} chip={(el) => (chips.current[at] = el)} />
           ))}
         </ol>
       </Frame>
@@ -255,6 +302,22 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
           ))}
         </span>
       ))}
+      {card ? (
+        <CardReveal
+          pull={card}
+          onDone={(from) => {
+            setCard(null);
+            const next = () => {
+              const run = resume.current;
+              resume.current = null;
+              run?.();
+            };
+            // A card already owned pays 1 star back, flying from the card into the total.
+            if (card.refund) launch(from, card.refund, next);
+            else next();
+          }}
+        />
+      ) : null}
     </>
   );
 }

@@ -902,8 +902,6 @@ export const PENDING_NOTES: string[] = [
   "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
   "Nhiệm vụ có trang riêng với 2 tab Ngày và Tuần, giao diện giống Tin tức và Bạn bè. Nhiệm vụ Tuần sắp có. Khung hàng nhiệm vụ đổi cùng kiểu.",
   "Trang Nhiệm vụ đổi giao diện mới. Nhiệm vụ Ngày gồm Chơi 3, 10, 20 trận, Thắng 6 và 10 trận PvP. Nhiệm vụ Tuần và nhóm Xếp hạng sắp có.",
-  "Nhiệm vụ Ngày đã tính thật: mỗi trận kết thúc ở Vs Máy, Đánh thường, Tuỳ chọn được tính, thắng Đánh thường tính vào PvP. Xong là tự nhận sao. Bảng nhiệm vụ sau trận đổi khung mới, hiện cả khi thua.",
-  "Hàng nhiệm vụ Ngày đổi giao diện theo 3 trạng thái: xanh dương đang làm, vàng vừa xong, xanh lá đã nhận.",  "Nhiệm vụ Tuần có giao diện mới (khung tím, ô sao x2, thêm nhiệm vụ Hoàn thành 1 hầm ngục PVE); chữ nhiệm vụ đổi kiểu mới, ống tiến độ vàng khi vừa xong.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -36,7 +36,7 @@ import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
-import { settleMatch, type MatchReward } from "@/lib/missions";
+import { settleWin, type MatchReward } from "@/lib/missions";
 import { MissionPanel } from "@/components/game/mission-panel";
 import { EndScene } from "@/components/game/end-scene";
 import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
@@ -2570,7 +2570,7 @@ function PlayPage() {
       .catch(() => undefined);
   }
 
-  // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions the match
+  // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions a win
   // moved (paid once), then the old panel. Elsewhere only the old panel.
   const ended = duel?.winner ?? null;
   useEffect(() => {
@@ -2597,15 +2597,12 @@ function PlayPage() {
       });
       sendReplay(duel);
     }
-    // Nhiệm vụ (chủ game 04/11): mọi trận kết thúc ở Vs Máy, Đánh thường, Tuỳ chọn (thắng hay thua) là 1 trận "Chơi";
-    // trận thắng Đánh thường là 1 trận "Thắng PvP".
-    const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && Boolean(duel.mid);
+    const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
     if (earns && duel.mid) {
       if (paidMatch.current?.mid === duel.mid) paid = paidMatch.current.reward;
       else {
-        const quick = duel.mode === "net" && Boolean((net as { quick?: boolean } | null)?.quick);
-        paid = settleMatch(duel.mid, quick && duel.winner === mine);
+        paid = settleWin(duel.mid, duel.mode === "ai" ? duel.machine : null);
         paidMatch.current = { mid: duel.mid, reward: paid };
       }
     }
