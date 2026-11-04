@@ -32,11 +32,7 @@ const FLY_MS = 640;
 type Streak = { key: number; x0: number; y0: number; x1: number; y1: number; amount: number; then: () => void };
 
 function Coin({ small = false }: { small?: boolean }) {
-  return (
-    <span className={`mp-coin${small ? " is-small" : ""}`} aria-hidden="true">
-      ★
-    </span>
-  );
+  return <span className={`mp-coin${small ? " is-small" : ""}`} aria-hidden="true" />;
 }
 
 function Prize({ row }: { row: MissionRow }) {
@@ -45,42 +41,50 @@ function Prize({ row }: { row: MissionRow }) {
     return (
       <>
         <img src={CARD_BACK.N} alt="" draggable={false} />
-        <span>{tr("1 lá")}</span>
+        <b>{tr("1 lá")}</b>
       </>
     );
   }
   return (
     <>
-      <Coin small />
-      <span>{prize.stars}</span>
-      {prize.each ? <small>{tr("/trận")}</small> : null}
+      <Coin />
+      <b>
+        ×{prize.stars}
+        {prize.each ? <small>{tr("/trận")}</small> : null}
+      </b>
     </>
   );
 }
 
+/** One mission (chủ game 04/11): angled blue card with a gold edge, a square medal tile, a skewed bar and a reward tile. */
 export function Row({ row, at, done, flash, chip }: { row: MissionRow; at: number; done: number; flash: boolean; chip: (el: HTMLElement | null) => void }) {
   const full = done >= row.goal;
   const look = lookOf(row);
   return (
-    <li className={`mp-row${full ? " is-done" : ""}${flash ? " is-flash" : ""}`} style={{ "--i": at } as CSSProperties}>
-      <span className="mp-medal">
-        <Medal tone={look.tone} icon={look.icon} />
-        {full ? <i className="mp-check">✓</i> : null}
-      </span>
-      <span className="mp-body">
-        <b className="mp-title">{tr(row.title)}</b>
-        <span className="mp-track">
-          <span className="mp-fill" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties} />
+    <li className={`mq-card${full ? " is-done" : ""}${flash ? " is-flash" : ""}`} style={{ "--i": at } as CSSProperties}>
+      <span className="mq-icon">
+        <span className="mq-medal">
+          <Medal tone={look.tone} icon={look.icon} />
         </span>
-        {row.note && full ? <small className="mp-note">{tr(row.note)}</small> : <small className="mp-note">{"pack" in row.prize ? tr(`1 lá ${row.prize.pack}`) : " "}</small>}
+        {full ? <i className="mq-check">✓</i> : null}
       </span>
-      <span className="mp-side">
-        <b className="mp-count">
-          {Math.min(done, row.goal)}/{row.goal}
-        </b>
-        <span ref={chip} className="mp-prize">
+      <span className="mq-body">
+        <span className="mq-top">
+          <b className="mq-title">{tr(row.title)}</b>
+          <b className="mq-count">
+            {Math.min(done, row.goal)}/{row.goal}
+          </b>
+        </span>
+        <span className="mq-track">
+          <span className="mq-fill" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties} />
+        </span>
+        <small className="mq-note">{row.note && full ? tr(row.note) : "pack" in row.prize ? tr(`1 lá ${row.prize.pack}`) : " "}</small>
+      </span>
+      <span className="mq-reward">
+        <span ref={chip} className="mq-prize">
           <Prize row={row} />
         </span>
+        <small>{full ? tr("ĐÃ NHẬN") : " "}</small>
       </span>
     </li>
   );
@@ -105,9 +109,7 @@ function Total({ value, bump, target }: { value: number; bump: number; target: (
   }, [value]);
   return (
     <div ref={target} className="mp-total">
-      <span key={`c${bump}`} className={`mp-coin${bump ? " is-bump" : ""}`} aria-hidden="true">
-        ★
-      </span>
+      <span key={`c${bump}`} className={`mp-coin${bump ? " is-bump" : ""}`} aria-hidden="true" />
       <b key={`n${bump}`} className={bump ? "is-bump" : undefined}>
         {shown}
       </b>

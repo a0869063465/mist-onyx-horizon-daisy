@@ -29,10 +29,23 @@ function MissionsPage() {
   const stars = useStars();
   // Đọc từ máy sau khi trang gắn, để trang dựng sẵn và trang trên máy khớp nhau.
   const [daily, setDaily] = useState<MissionRow[]>([]);
+  const [left, setLeft] = useState("");
   useEffect(() => setDaily(missionRows()), []);
-  const weekly: MissionRow[] = [];
-  const rows = tab === "daily" ? daily : weekly;
+  // Còn bao lâu tới 0 giờ (làm mới nhiệm vụ ngày).
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
+      const sec = Math.max(0, Math.floor((next - now.getTime()) / 1000));
+      const pad = (n: number) => String(n).padStart(2, "0");
+      setLeft(`${pad(Math.floor(sec / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`);
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const index = TABS.findIndex((one) => one.key === tab);
+  const finished = daily.filter((row) => row.done >= row.goal).length;
 
   const pick = (next: Tab) => {
     playUi("select");
@@ -41,10 +54,6 @@ function MissionsPage() {
 
   return (
     <main className="ml mi" data-tab="news">
-      <i className="ml-corner is-tl" aria-hidden="true" />
-      <i className="ml-corner is-tr" aria-hidden="true" />
-      <i className="ml-corner is-bl" aria-hidden="true" />
-      <i className="ml-corner is-br" aria-hidden="true" />
       <header className="ml-head">
         <Link to="/" className="ml-back" aria-label={tr("Trở về")} data-sfx onPointerDown={() => playUi("soft")}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -53,7 +62,7 @@ function MissionsPage() {
         </Link>
         <h1>{tr("NHIỆM VỤ")}</h1>
         <span className="ml-wallet" aria-label={tr("Sao của bạn")}>
-          <i aria-hidden="true">★</i>
+          <span className="mp-coin is-small" aria-hidden="true" />
           <b>{stars}</b>
         </span>
       </header>
@@ -71,14 +80,27 @@ function MissionsPage() {
             <p>{tr("Nhiệm vụ tuần sắp có.")}</p>
           </div>
         ) : (
-          <ol className="mp-list mi-list">
-            {rows.map((row, at) => (
-              <Row key={row.id} row={row} at={at} done={row.done} flash={false} chip={() => undefined} />
-            ))}
-          </ol>
+          <>
+            <div className="mi-sum">
+              <span>
+                <small>{tr("Hoàn thành")}</small>
+                <b>
+                  <em>{finished}</em>/{daily.length}
+                </b>
+              </span>
+              <span>
+                <small>{tr("Làm mới sau")}</small>
+                <b>{left || "--:--:--"}</b>
+              </span>
+            </div>
+            <ol className="mp-list mi-list">
+              {daily.map((row, at) => (
+                <Row key={row.id} row={row} at={at} done={row.done} flash={false} chip={() => undefined} />
+              ))}
+            </ol>
+          </>
         )}
       </section>
-      <footer className="mi-foot">{tab === "daily" ? tr("Làm mới lúc 0 giờ mỗi ngày") : ""}</footer>
     </main>
   );
 }
