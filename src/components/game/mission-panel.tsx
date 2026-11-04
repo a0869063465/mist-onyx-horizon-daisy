@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Medal, type MedalTone } from "@/components/game/medal";
+import { AlbumPic } from "@/components/collection/album-parts";
 import { Badges, Burst, CARD_BACK, Face } from "@/components/shop/pack-opening";
 import { tr } from "@/lib/i18n";
 import type { MatchReward, MissionRow } from "@/lib/missions";
@@ -12,11 +12,8 @@ import type { Pull } from "@/lib/shop";
  * total, which counts up; a card prize drops face down and is flipped like a pack card. The menu opens the same rows,
  * standing still.
  */
-const LOOK: Record<string, { tone: MedalTone; icon: string }> = {
-  first: { tone: "gold", icon: "laurel-crown" },
-  more: { tone: "orange", icon: "crossed-swords" },
-};
-const lookOf = (row: MissionRow) => LOOK[row.id] ?? { tone: "blue" as MedalTone, icon: "robot-golem" };
+const PIC: Record<string, string> = { first: "hiep-si-cua-hau", more: "hiep-si-ho-ve" };
+const picOf = (row: MissionRow) => PIC[row.id] ?? "thuong-quan-long";
 
 /** The trail of a streak: the head first, then smaller and fainter sparks a little behind it. */
 const TRAIL = [
@@ -59,13 +56,10 @@ function Prize({ row }: { row: MissionRow }) {
 /** One mission (chủ game 04/11): angled blue card with a gold edge, a square medal tile, a skewed bar and a reward tile. */
 export function Row({ row, at, done, flash, chip }: { row: MissionRow; at: number; done: number; flash: boolean; chip: (el: HTMLElement | null) => void }) {
   const full = done >= row.goal;
-  const look = lookOf(row);
   return (
     <li className={`mq-card${full ? " is-done" : ""}${flash ? " is-flash" : ""}`} style={{ "--i": at } as CSSProperties}>
       <span className="mq-icon">
-        <span className="mq-medal">
-          <Medal tone={look.tone} icon={look.icon} />
-        </span>
+        <AlbumPic id={picOf(row)} />
         {full ? <i className="mq-check">✓</i> : null}
       </span>
       <span className="mq-body">
