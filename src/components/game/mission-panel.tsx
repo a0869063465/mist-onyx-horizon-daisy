@@ -11,10 +11,47 @@ import { playReward } from "@/lib/sfx";
  * xong loé và sao bay vào ô tổng, số đếm lên.
  */
 
+/** Hàng Ngày dựng từ hàng GPT: xanh dương đang làm, vàng sáng vừa xong, xanh lá đã nhận. Chữ và ống do code vẽ. */
+function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; done: number; at: number; flash: boolean; chip?: (el: HTMLElement | null) => void; full: boolean }) {
+  const state = flash ? "gold" : full ? "green" : "blue";
+  const shown = Math.min(done, row.goal);
+  return (
+    <li
+      className={`mx-card is-daily is-${state}${row.locked ? " is-locked" : ""}${flash ? " is-flash" : ""}`}
+      style={{ "--i": at } as CSSProperties}
+      aria-label={`${tr(row.title)} ${shown} / ${row.goal}`}
+    >
+      <img className="mx-tpl" src={`/ui/mission/r-${state}.webp`} alt="" draggable={false} />
+      <img className="mx-ico" src={`/ui/mission/i-d${row.row.slice(2)}.webp`} alt="" draggable={false} />
+      <p className="mx-name">{tr(row.title)}</p>
+      {row.locked ? (
+        <span className="mx-soon">{tr("Sắp có")}</span>
+      ) : state === "green" ? (
+        <div className="mx-got" aria-hidden="true">
+          ✓ {tr("Đã nhận")}
+        </div>
+      ) : (
+        <div className="mx-prog" aria-hidden="true">
+          <em>
+            {shown} / {row.goal}
+          </em>
+          {state === "blue" ? (
+            <span className="mx-tube" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
+              <i />
+            </span>
+          ) : null}
+        </div>
+      )}
+      <span ref={chip} className="mx-prize-spot" aria-hidden="true" />
+    </li>
+  );
+}
+
 /** Một hàng nhiệm vụ; `chip` nhận ô thưởng để sao bay ra từ đó. */
 export function MissionCard({ row, done, at, flash = false, chip }: { row: ListedMission; done: number; at: number; flash?: boolean; chip?: (el: HTMLElement | null) => void }) {
   const full = !row.locked && done >= row.goal;
   const bar = row.bar;
+  if (row.row.startsWith("rd")) return <DailyCard row={row} done={done} at={at} flash={flash} chip={chip} full={full} />;
   return (
     <li
       className={`mx-card${row.locked ? " is-locked" : ""}${full ? " is-done" : ""}${flash ? " is-flash" : ""}`}
