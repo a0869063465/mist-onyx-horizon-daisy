@@ -720,6 +720,8 @@ export function Spectacle() {
   return <canvas ref={ref} className="spectacle" aria-hidden style={{ pointerEvents: "none" }} />;
 }
 
+export const TIDE_WAVE = "/fx/dai-hong-thuy.webm?v=1";
+
 export function WaterBurst() {
   const [clips, setClips] = useState<{ id: number; rank: "small" | "mid" | "big"; x: number; y: number }[]>([]);
   useEffect(() => {
@@ -732,7 +734,7 @@ export function WaterBurst() {
       const timer = window.setTimeout(() => {
         timers.delete(timer);
         setClips((list) => list.filter((item) => item.id !== id));
-      }, 900);
+      }, event.rank === "big" ? 4200 : 900);
       timers.add(timer);
     });
     return () => {
@@ -743,7 +745,20 @@ export function WaterBurst() {
   const src = { small: "/fx/nuoc-nho.png?v=2", mid: "/fx/nuoc-vua.png?v=2", big: "/fx/nuoc-lon.png?v=3" };
   return (
     <>
-      {clips.map((clip) => (
+      {clips.map((clip) =>
+        clip.rank === "big" ? (
+          // Đại hồng thuỷ huỷ diệt: video sóng của chủ game (04/11), dâng từ chân hàng bị đánh, phủ cả hàng.
+          <video
+            key={clip.id}
+            className="tide-wave"
+            src={fxUrl(TIDE_WAVE)}
+            autoPlay
+            muted
+            playsInline
+            style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
+            onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+          />
+        ) : (
         <img
           key={clip.id}
           className={`tide-blast is-${clip.rank}`}
@@ -752,7 +767,8 @@ export function WaterBurst() {
           draggable={false}
           style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
         />
-      ))}
+        ),
+      )}
     </>
   );
 }

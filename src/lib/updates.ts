@@ -900,6 +900,8 @@ export const PENDING_NOTES: string[] = [
   "Kéo quái lên sân: viền neon ô được chọn nằm trên lá đang kéo.",
   "Xấp bài có glow xanh khi rút được. Lá phép dùng được có viền và glow theo màu tốc độ: nhanh và siêu tốc thở mạnh, phép khác sáng đứng yên.",
   "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
+  "Đại hồng thuỷ huỷ diệt chỉ đánh cả hàng của quái được chọn, không còn đánh mọi kẻ địch.",
+  "Đại hồng thuỷ huỷ diệt có hiệu ứng sóng lớn dâng lên phủ cả hàng bị đánh.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -696,3 +696,8 @@ Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
 
 Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
 Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
+
+## Nhánh VFX `ccr-ede12b11-gjcyr2` (04/11)
+
+- ĐẠI HỒNG THUỶ 1 HÀNG + SÓNG VIDEO ĐÃ LÀM 04/11 (Opus high, chủ game gửi video sóng `fb195226`; CHƯA áp `main`): duel.ts nhánh `all` của Trái tim hải long: chọn 1 quái, victims = quái sống cùng hàng (`backSlot`) với nó; sát thương, mana, Ngập lụt, chặn (quái hàng trước che nhánh vào hàng sau) giữ như cũ. icon-briefs "lên cả hàng của mục tiêu". Hình: `public/fx/dai-hong-thuy.webm` (video chủ game bỏ 0,36 giây đen đầu, 512 px, VP9 alpha = 3×max(r,g,b), 1,1 MB; trộn screen bị mất màu trên sân xanh nên bỏ), `WaterBurst` rank big phát video (`.tide-wave` rộng 78%, đáy ở chân hàng `translate(-50%,-86%)`), play.tsx gom điểm trúng theo hàng (`SLOT_BOX`) nên 1 sóng mỗi hàng. Đo video: 0,38 s sóng lên, đỉnh 1,5–2,4 s, tan hết 3,9 s. Số sát thương hiện ngay lúc sóng bắt đầu (sóng đổ ~1 giây sau), chưa canh khớp. Chữ mô tả lá vẫn "lên tất cả kẻ địch": chờ chủ game viết lại. Thử: round-rules 48/48 (thêm 1 bài), Chromium trận Test 390×844 và 740 (scratchpad `wave/mk.mjs`, `run.mjs`). Chưa thử Vs Máy (sóng ở sân đỏ phía trên), Safari không có alpha webm.
+- KẾ: hiệu ứng khói độc Thổi độc theo video `03aa4a8f` (Sonnet medium, chủ game chốt làm sau).

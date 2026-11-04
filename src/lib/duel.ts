@@ -8503,8 +8503,11 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const living = them.field.filter((unit) => unit && unit.hp > 0);
     let victims: string[] = [];
     if (all) {
-      if (!them.field.some((unit) => unit?.uid === targetUid && unit.hp > 0)) return note(state, "Chọn một quái đối thủ.");
-      victims = living.map((unit) => unit!.uid);
+      // Đại hồng thuỷ huỷ diệt: chọn 1 quái, cả hàng của nó (trước hoặc sau) đều dính (chủ game 04/11).
+      const at = them.field.findIndex((unit) => unit?.uid === targetUid && unit.hp > 0);
+      if (at < 0) return note(state, "Chọn một quái đối thủ.");
+      const back = backSlot(at);
+      victims = them.field.flatMap((unit, index) => (unit && unit.hp > 0 && backSlot(index) === back ? [unit.uid] : []));
     } else {
       const target = them.field.find((unit) => unit?.uid === targetUid) ?? null;
       if (!target) return note(state, "Chọn một quái đối thủ");

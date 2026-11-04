@@ -165,6 +165,7 @@ import {
   type Slot,
   confirmStage,
   stageHold,
+  backSlot,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
@@ -3283,7 +3284,29 @@ function PlayPage() {
         const multi = look === "tide-mid" || look === "tide-big";
         if (!(opening && multi)) {
           const rank = look === "tide-big" ? "big" : look === "tide-mid" ? "mid" : "small";
-          for (const hit of hits) emitFx({ t: "tide", rank, x: hit.x, y: hit.y });
+          if (rank === "big") {
+            // Sóng lớn: một con sóng mỗi hàng bị trúng, giữa hàng, đáy ở chân hàng (chủ game 04/11).
+            const rows = new Map<string, { x: number; y: number }>();
+            for (const hit of hits) {
+              let best: { key: string; x: number; y: number; d: number } | null = null;
+              for (const screen of [0, 1] as const) {
+                for (const back of [false, true]) {
+                  const boxes = SLOT_BOX[screen].filter((_, index) => backSlot(index) === back);
+                  const mid = boxes.reduce((sum, box) => sum + box.y + box.h / 2, 0) / boxes.length;
+                  const d = Math.abs(mid - hit.y);
+                  if (!best || d < best.d) {
+                    const left = Math.min(...boxes.map((box) => box.x));
+                    const right = Math.max(...boxes.map((box) => box.x + box.w));
+                    const foot = Math.max(...boxes.map((box) => box.y + box.h));
+                    best = { key: `${screen}-${back}`, x: (left + right) / 2, y: foot, d };
+                  }
+                }
+              }
+              if (best && best.d < 9) rows.set(best.key, { x: best.x, y: best.y });
+              else rows.set(`${hit.x}-${hit.y}`, { x: hit.x, y: hit.y });
+            }
+            for (const row of rows.values()) emitFx({ t: "tide", rank, x: row.x, y: row.y });
+          } else for (const hit of hits) emitFx({ t: "tide", rank, x: hit.x, y: hit.y });
         }
       } else if (look === "fire" || look === "gun") {
         const opening = look === "gun" ? openingGun : openingFire;

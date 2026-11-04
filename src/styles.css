@@ -5725,6 +5725,15 @@ button.watch-back {
   mix-blend-mode: screen;
   animation: tide-blast 0.85s ease-out forwards;
 }
+/* Đại hồng thuỷ huỷ diệt: video sóng (webm trong suốt theo độ sáng), đáy đặt ở chân hàng bị đánh, phủ cả hàng (chủ game 04/11). */
+.tide-wave {
+  position: absolute;
+  z-index: 13;
+  width: 78%;
+  transform: translate(-50%, -86%);
+  pointer-events: none;
+  object-fit: contain;
+}
 .tide-blast.is-small {
   width: 13%;
 }
