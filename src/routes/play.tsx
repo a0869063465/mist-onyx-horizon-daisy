@@ -104,6 +104,7 @@ import {
   passResponse,
   harpyOffer,
   harpyWard,
+  eatFor,
   harpyLash,
   answerPlume,
   answerPrey,
@@ -1067,6 +1068,8 @@ const GUARD_SPELLS = new Set([
 
 function spellCanAnswer(id: string, duel: Duel): boolean {
   if (duel.step !== "respond" || !ANSWER_SPELLS.has(id)) return false;
+  // Hấp thụ ma pháp nuốt phép nhanh và skill dạng phép vừa đáp trong chuỗi (chủ game 04/11).
+  if (id === "hap-thu-ma-phap" && duel.hold && eatFor(duel, duel.hold.priority)) return true;
   // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;

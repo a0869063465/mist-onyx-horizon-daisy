@@ -217,6 +217,15 @@ export type Hold = {
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
+  /** Giáp và Vuốt (chủ game 04/11): it waits in the chain like Phục kích; once the chain lands the skill or spell on
+   *  `bird` is stopped and the bird grows. */
+  ward?: { bird: string };
+  /**
+   * Hấp thụ ma pháp nuốt được phép chậm, phép nhanh và skill dạng phép (chủ game 04/11). The last fast answer in the
+   * chain keeps the board as it was just before it took effect (its card already paid), so the answer can be swallowed
+   * and the chain goes on from there.
+   */
+  eat?: { card: string; side: Side; back: Duel };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -3831,6 +3840,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
+  if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
@@ -6071,11 +6081,42 @@ function chargedWhip(state: Duel) {
   return null;
 }
 
+/** A spell card paid and gone from the hand, nothing else done yet. */
+function payHand(state: Duel, side: Side, handIndex: number): Duel | null {
+  const player = state.players[side];
+  const card = spellCard(player.hand[handIndex] ?? "");
+  if (!card) return null;
+  const before = player.stars;
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  if (playBill(card.gems, tolled, player.orb, player.flask)) return null;
+  const paid = payPlayed(player, card.gems, tolled);
+  if (!paid) return null;
+  const dropped = dropHandCard(paid, handIndex);
+  const buried = { ...dropped, spent: [...(dropped.spent ?? paid.spent ?? []), card.id] };
+  return pingStars(patch(state, side, buried), side, before, buried.stars);
+}
+
+/** There is an answer of the other side that Hấp thụ ma pháp of `side` may swallow now. */
+export function eatFor(state: Duel, side: Side): boolean {
+  if (state.step !== "respond" || !state.hold || state.hold.stage) return false;
+  if (state.hold.eat && state.hold.eat.side !== side) return true;
+  return state.hold.mirror === "up" && state.hold.priority === side && !state.hold.eat;
+}
+
+/** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
+const EATABLE = new Set(["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
+
+/** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
+function restoreEaten(now: Duel, back: Duel): Duel {
+  return { ...back, log: now.log, events: now.events, live: now.live, stepNo: now.stepNo, seq: Math.max(now.seq, back.seq), fx: now.fx };
+}
+
 export function castSpell(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
-  const next = castSpellCore(state, handIndex, targetUid, replay, sourceUid);
-  if (replay || next === state) return next;
   const side = (state.step === "main" ? state.turn : (state.hold?.priority ?? ((1 - state.turn) as Side))) as Side;
   const cardId = state.players[side].hand[handIndex] ?? null;
+  const snap = !replay && state.step === "respond" && cardId && EATABLE.has(cardId) ? payHand(state, side, handIndex) : null;
+  const next = castSpellCore(state, handIndex, targetUid, replay, sourceUid);
+  if (replay || next === state) return next;
   const held = next.pending?.kind === "spell" && next.pending.cardId === cardId;
   const removed = cardId !== null && handCopies(state.players[side].hand, cardId) > handCopies(next.players[side].hand, cardId);
   const ok = held || removed;
@@ -6096,6 +6137,7 @@ export function castSpell(state: Duel, handIndex: number, targetUid: string | nu
   if (state.step === "main") return yieldTurn(done);
   // Phép phản ứng kết thúc luôn đòn đang chờ (Phục kích, Gương phòng hộ…): đòn coi như đã xong, quyền sang bên bị đánh.
   if (state.step === "respond" && done.step === "main" && !done.pending) return yieldTurn(done);
+  if (snap && cardId && done.step === "respond" && done.hold && done.pending) return { ...done, hold: { ...done.hold, eat: { card: cardId, side, back: snap } } };
   return done;
 }
 
@@ -6143,7 +6185,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap" && card.id !== "hop-ma-thuat") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được kỹ năng này.");
   }
-  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state)) {
+  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
   if (!replay && card.id === "virus-an-mon") {
@@ -6199,7 +6241,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && state.step === "respond" && !response.has(card.id)) return note(state, "Phép này không ứng biến được.");
   const guards = ["guong-phong-ho", "la-chan-phan-don", "vong-xoay-bao-ho", "phuc-kich", "vong-nguyen-rua-ac-ma", "hoan-doi", "hap-thu-ma-phap", "hop-ma-thuat"];
-  if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side) {
+  if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side && !(card.id === "hap-thu-ma-phap" && eatFor(state, side))) {
     return note(state, `${card.name} chỉ dùng khi phe bạn bị nhắm.`);
   }
   if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && side !== state.turn) {
@@ -6435,6 +6477,25 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     };
   }
   if (card.id === "hap-thu-ma-phap") {
+    const eat = state.hold?.eat;
+    if (!replay && eat && eat.side === foe) {
+      // The last fast answer is swallowed: the board goes back to just before it (its card stays spent), and the chain
+      // goes on with its other side to answer again (chủ game 04/11, như LoR: Hấp thụ nổ trước, đòn vẫn vào).
+      const back = eat.back;
+      const at = back.players[side].hand[handIndex] === card.id ? handIndex : back.players[side].hand.indexOf(card.id);
+      const paid = at >= 0 ? payHand(back, side, at) : null;
+      if (paid && paid.hold) {
+        const eaten = eat.card === "giap-va-vuot" ? "Giáp và Vuốt" : spellCard(eat.card)?.name ?? eat.card;
+        const restored = restoreEaten(next, paid);
+        return note({ ...restored, step: "respond", hold: { ...paid.hold, priority: foe, passed: [false, false] } }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
+      }
+    }
+    if (!replay && state.hold?.mirror === "up" && !eat) {
+      // A mirror that stood up by itself (dựng sẵn): swallowed, it stops nothing and is gone (chủ game 21/10 G2).
+      const owner = next.players[foe];
+      const kept = { ...patch(next, foe, { ...owner, mirror: 0 }), step: "respond" as const };
+      return note({ ...kept, hold: { ...state.hold, mirror: undefined, priority: foe, passed: [false, false] } }, "Hấp thụ ma pháp nuốt Gương phòng hộ.", "spell");
+    }
     if (state.pending?.kind === "lash") {
       return note({ ...next, step: "main", pending: null, hold: null }, "Hấp thụ ma pháp nuốt Roi điện.", "spell");
     }
@@ -7310,6 +7371,7 @@ export function harpyOffer(state: Duel, side: Side): "armor" | "lash" | null {
     if (bird && !shedOf(bird).includes("lash") && owner.orb >= harpyKit(bird.cardId).lash) return "lash";
     return null;
   }
+  if (state.hold.ward) return null;
   const uid = pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.target : pending.kind === "spell" ? pending.target : null;
   const bird = harpyBird(state, side, uid);
   if (bird && !shedOf(bird).includes("armor") && owner.orb >= harpyKit(bird.cardId).armor) return "armor";
@@ -7327,18 +7389,34 @@ export function harpyWard(state: Duel): Duel {
   const kit = bird ? harpyKit(bird.cardId) : null;
   const paid = bird && kit ? pay(you, kit.armor) : null;
   if (!bird || !kit || !paid) return note(state, "Cần 2 mana.");
-  const grown = growHarpy(bird, { def: kit.def, mdef: kit.mdef, hp: kit.hp }, "armor");
-  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit));
   let what = "đòn";
   if (pending.kind === "spell") what = spellCard(pending.cardId)?.name ?? "phép";
-  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
-    const caster = state.players[0].field.find((unit) => unit?.uid === pending.caster) ?? state.players[1].field.find((unit) => unit?.uid === pending.caster);
-    what = castName(caster?.cardId ?? "", pending.index);
-  }
+  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") what = castName(ownerCard(state, pending.caster), pending.index);
+  // Skill dạng phép (chủ game 04/11): it waits in the chain like a fast spell, so Hấp thụ ma pháp may swallow it; once
+  // the chain lands (`landWard`) the skill or spell on the bird is stopped and the bird grows. The feather is spent now.
+  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? { ...unit, shed: [...shedOf(unit), "armor"] } : unit));
+  const waiting = patch(state, side, { ...paid, field });
+  const held = keep(note({ ...waiting, hold: { ...state.hold, ward: { bird: bird.uid } } }, `Giáp và Vuốt chờ huỷ ${what} nhắm vào ${cardOf(bird).name}`, "spell"));
+  return held.hold ? { ...held, hold: { ...held.hold, eat: { card: "giap-va-vuot", side, back: waiting } } } : held;
+}
+
+/** Giáp và Vuốt lands once the chain does: the skill or spell on the bird is stopped, the bird grows for good. */
+function landWard(state: Duel, birdUid: string): Duel {
+  const pending = state.pending;
+  const side = ownerSide(state, birdUid);
+  const bird = side === null ? null : state.players[side].field.find((unit) => unit?.uid === birdUid) ?? null;
+  const open = { ...state, step: "main" as const, pending: null, hold: null };
+  if (side === null || !bird || !pending) return open;
+  const kit = harpyKit(bird.cardId);
+  const grown = growHarpy({ ...bird, shed: shedOf(bird).filter((key) => key !== "armor") }, { def: kit.def, mdef: kit.mdef, hp: kit.hp }, "armor");
+  const owner = state.players[side];
+  const field = owner.field.map((unit) => (unit?.uid === bird.uid ? grown : unit));
+  let what = "đòn";
+  if (pending.kind === "spell") what = spellCard(pending.cardId)?.name ?? "phép";
+  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") what = castName(ownerCard(state, pending.caster), pending.index);
   const gain = kit.mdef > 0 ? `tăng vĩnh viễn ${kit.mdef} thủ phép và ${kit.hp} máu` : `tăng vĩnh viễn ${kit.def} thủ và ${kit.hp} máu`;
   const line = actNotice("Giáp và Vuốt", [`huỷ ${what} nhắm vào ${cardOf(bird).name}`, gain]);
-  const sealed = sealHarpy(patch(state, side, { ...paid, field }), side, bird.uid, line, "spell");
-  return { ...sealed, step: "main", pending: null, hold: null };
+  return sealHarpy(patch(open, side, { ...owner, field }), side, bird.uid, line, "spell");
 }
 
 function openLash(state: Duel, owner: Side, bird: string, foe: string, stun: boolean, line: string): Duel {

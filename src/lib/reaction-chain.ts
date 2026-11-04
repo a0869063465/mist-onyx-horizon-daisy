@@ -531,6 +531,22 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
         if (strike) list.push(strike);
       }
     }
+    // Hấp thụ ma pháp swallowed the last answer (chủ game 04/11): its white light wraps that answer's icon, the answer
+    // fizzles (with the ally Phục kích sent), and the waiting action flows again to what it was aimed at.
+    const eat = prev.hold?.eat ?? (prev.hold?.mirror === "up" ? { card: "guong-phong-ho", side: (1 - prev.hold.priority) as Side } : null);
+    const ate = eat && playedSpells(prev, next).some((play) => play.id === "hap-thu-ma-phap" && play.side !== eat.side);
+    if (eat && ate) {
+      const hap = [...list].reverse().find((orb) => orb.spell === "hap-thu-ma-phap" && !orb.done) ?? null;
+      const eaten = [...list].reverse().find((orb) => orb !== hap && orb.spell === eat.card && !orb.done) ?? null;
+      const fresh = open ? pendingOrb(next) : null;
+      list = list.map((orb) => {
+        if (hap && orb.id === hap.id && eaten) return { ...orb, to: [{ end: { orb: eaten.id }, tone: "white", wrap: true }] };
+        if (eaten && (orb.id === eaten.id || (orb.sent && orb.by === eaten.id))) return { ...orb, done: true, end: "fizzle", stops: null };
+        if (eaten && orb.sent && eat.card === "phuc-kich") return { ...orb, done: true, end: "fizzle" };
+        if (fresh && orb.base === fresh.base && orb.kind !== "block" && !orb.done) return { ...orb, to: fresh.to };
+        return orb;
+      });
+    }
     // What a spell stops runs into its icon now, surging against it (Gương phòng hộ ends the wait at once, so this
     // shows as the attack fades; Vòng nguyền rủa ác ma holds it while the curse waits).
     for (const stopper of list) {

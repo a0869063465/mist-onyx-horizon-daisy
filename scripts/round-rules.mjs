@@ -792,6 +792,90 @@ test("Hộp ma thuật với kỹ năng nhiều mục tiêu: chọn 1 đồng mi
   assert.equal(moved.hp, 40, "đồng minh đã sang sân kia không trúng");
 });
 
+// V3 (chủ game 04/11): Hấp thụ ma pháp nuốt phép nhanh và skill dạng phép vừa đáp; việc gốc chạy tiếp.
+const withHand = (s, side, ids) => ids.reduce((acc, id) => D.testGrant(acc, side, id, false), s);
+const rich = (s) => ({ ...s, players: s.players.map((p) => ({ ...p, orb: 8 })) });
+
+test("Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 0, mdef: 0, atk: 3 }] });
+  s = rich(withHand(withHand(s, 1, ["phuc-kich"]), 0, ["hap-thu-ma-phap"]));
+  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("phuc-kich"), uid(s, 1, 0));
+  assert.equal(waiting.hold?.priority, 0);
+  assert.ok(D.eatFor(waiting, 0), "bên dùng kỹ năng nuốt được Phục kích");
+  const eaten = D.castSpell(waiting, waiting.players[0].hand.indexOf("hap-thu-ma-phap"));
+  assert.equal(eaten.pending?.kind, "beam", eaten.live);
+  assert.equal(eaten.hold?.ambush, undefined, "Phục kích mất");
+  assert.equal(eaten.hold?.priority, 1, "bên bị đánh được đáp lại");
+  assert.ok(!eaten.players[1].hand.includes("phuc-kich"), "lá Phục kích vẫn mất");
+  assert.ok(!eaten.players[0].hand.includes("hap-thu-ma-phap"));
+  const done = D.passResponse(eaten);
+  assert.ok(at(done, 1, 0).hp < 20, `kỹ năng vào: ${done.live}`);
+  assert.equal(at(done, 0, 0).hp, 20, "không bị đánh trả");
+});
+
+test("Hấp thụ ma pháp nuốt Gương phòng hộ (từ tay và dựng sẵn): đòn đánh vẫn vào", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 2, mdef: 2, hp: 10, maxHp: 10 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, def: 0 }] });
+  s = rich(withHand(withHand(s, 1, ["guong-phong-ho"]), 0, ["hap-thu-ma-phap"]));
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const cast = D.castSpell(swung, swung.players[1].hand.indexOf("guong-phong-ho"));
+  const eaten = D.castSpell(cast, cast.players[0].hand.indexOf("hap-thu-ma-phap"));
+  assert.equal(eaten.hold?.mirror, undefined, eaten.live);
+  assert.equal(eaten.players[1].mirror ?? 0, 0, "không còn gương 3 lượt");
+  const done = D.passResponse(eaten);
+  assert.ok(at(done, 1, 0).hp < 20, done.live);
+  assert.ok(at(done, 0, 0).atk > 2, "kẻ đánh không mất nửa công");
+  // Gương dựng sẵn.
+  let t = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, mirror: 2 } : p)) };
+  const up = D.attackMonster(t, uid(t, 0, 0), uid(t, 1, 0));
+  assert.equal(up.hold?.mirror, "up");
+  const gone = D.castSpell(up, up.players[0].hand.indexOf("hap-thu-ma-phap"));
+  assert.equal(gone.hold?.mirror, undefined, gone.live);
+  assert.equal(gone.players[1].mirror, 0);
+  const hit = D.passResponse(gone);
+  assert.ok(at(hit, 1, 0).hp < 20, hit.live);
+});
+
+test("Hấp thụ ma pháp nuốt Vòng nguyền rủa ác ma: đòn đánh tiếp tục, kẻ đánh không bị nguyền", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 2, mdef: 2, hp: 10, maxHp: 10 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, def: 0 }] });
+  s = rich(withHand(withHand(s, 1, ["vong-nguyen-rua-ac-ma"]), 0, ["hap-thu-ma-phap"]));
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const cursed = D.castSpell(swung, swung.players[1].hand.indexOf("vong-nguyen-rua-ac-ma"));
+  const eaten = D.castSpell(cursed, cursed.players[0].hand.indexOf("hap-thu-ma-phap"));
+  assert.equal(eaten.pending?.kind, "melee", eaten.live);
+  const done = D.passResponse(eaten);
+  assert.ok(at(done, 1, 0).hp < 20, done.live);
+  assert.ok(!at(done, 0, 0).curse, "không bị nguyền");
+});
+
+test("Giáp và Vuốt chờ trong chuỗi: không ai nuốt thì huỷ kỹ năng; Hấp thụ ma pháp nuốt thì kỹ năng vào", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+  s = rich(withHand(s, 0, ["hap-thu-ma-phap"]));
+  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  assert.equal(D.harpyOffer(breath, 1), "armor", breath.live);
+  const ward = D.harpyWard(breath);
+  assert.equal(ward.pending?.kind, "beam", "chưa nổ");
+  assert.equal(ward.hold?.priority, 0);
+  const kept = D.passResponse(ward);
+  assert.equal(at(kept, 1, 0).hp, at(ward, 1, 0).hp + (at(kept, 1, 0).hp - at(ward, 1, 0).hp), kept.live);
+  assert.ok(at(kept, 1, 0).maxHp > 20, "chim lớn lên");
+  assert.equal(at(kept, 1, 0).hp >= 20, true, "kỹ năng bị huỷ");
+  const eaten = D.castSpell(ward, ward.players[0].hand.indexOf("hap-thu-ma-phap"));
+  assert.equal(eaten.hold?.ward, undefined, eaten.live);
+  const done = D.passResponse(eaten);
+  assert.ok(at(done, 1, 0).hp < 20, `kỹ năng vào: ${done.live}`);
+  assert.equal(at(done, 1, 0).maxHp, 20, "chim không lớn");
+});
+
+test("Hấp thụ ma pháp không dùng được khi không có gì để nuốt (đòn đánh thường)", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = rich(withHand(s, 1, ["hap-thu-ma-phap"]));
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.ok(!D.eatFor(swung, 1));
+  const tried = D.castSpell(swung, swung.players[1].hand.indexOf("hap-thu-ma-phap"));
+  assert.ok(tried.players[1].hand.includes("hap-thu-ma-phap"), "lá còn trên tay");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
