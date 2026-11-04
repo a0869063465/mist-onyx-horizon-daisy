@@ -700,3 +700,19 @@ Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại n
 ## NHÁNH LỐI CHƠI TO VÀ NHỎ (04/11/2026, chủ game ghi)
 
 Nhánh này chuyên cập nhật các lối chơi to và nhỏ. Chưa rõ "to" và "nhỏ" là chế độ lớn/nhỏ hay mức độ nội dung: chờ chủ game chốt trước khi làm.
+
+### Danh sách lối chơi LoR (chủ game kể, 04/11/2026; LoR có hơn 1000 lá, mỗi lá thuộc đúng 1 lối chơi)
+
+1. **Demacia**: buff khiên, chỉ số to, chơi theo đội hình. (3 ý)
+2. **Noxus**: tấn công áp đảo (LỚN, chủ game bảo phải phân ra nữa):
+   - 2a. Agro: dàn nhiều quân nhỏ.
+   - 2b. Buff công vũ bão: lá chuyên buff vào công.
+   - 2c. Gây thiệt hại cả hai bên, địch chịu nhiều hơn.
+   - 2d. Bỏ bài đổi lấy quân mạnh về công.
+3. **Ionia**: chuyên phản ứng: phản phép siêu tốc (như hiện nay) và phép phản ứng khi đối thủ tấn công.
+4. **Freljord**: chuyên khống chế và vô hiệu hoá đối thủ.
+5. **Piltover**: chuyên gây sát thương, lối sáng tạo (tàng hình, biến hình, gài bom, vài bộ bài).
+6. **Shurima**: siêu tiến hoá; tiên đoán; làm suy kiệt; hồi sinh theo nghi thức (NHỎ, không phải lối chính).
+7. **Bilgewater**: cướp bài; cường hoá khi gây sát thương; cường hoá khi biến đổi bộ bài; triệu hồi và nuôi 1 quái (xúc tu).
+8. **Targon**: lá mạnh ở bộ bài riêng bên ngoài; mỗi lá tạo lá bên ngoài có chức năng riêng; quân cường hoá trong 1 lượt, theo nhóm Rạng đông và Hoàng hôn.
+9. **Shadow Isles**: hồi sinh; huỷ diệt bài trên sân để lấy sức mạnh.
