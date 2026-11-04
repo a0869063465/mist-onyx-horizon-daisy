@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { Badges, Burst, CARD_BACK, Face } from "@/components/shop/pack-opening";
 import { tr } from "@/lib/i18n";
-import { missionRows, type MatchReward, type MissionRow } from "@/lib/missions";
+import type { MatchReward, MissionRow } from "@/lib/missions";
 import { playPack, playReward } from "@/lib/sfx";
-import { starCount, type Pull } from "@/lib/shop";
+import type { Pull } from "@/lib/shop";
 
 /**
  * Nhiệm vụ (chủ game 22/10), after LoR's quest screen (T12): each mission a row with its medal, a bar and its prize.
@@ -58,7 +58,7 @@ function Prize({ row }: { row: MissionRow }) {
   );
 }
 
-function Row({ row, at, done, flash, chip }: { row: MissionRow; at: number; done: number; flash: boolean; chip: (el: HTMLElement | null) => void }) {
+export function Row({ row, at, done, flash, chip }: { row: MissionRow; at: number; done: number; flash: boolean; chip: (el: HTMLElement | null) => void }) {
   const full = done >= row.goal;
   const look = lookOf(row);
   return (
@@ -323,27 +323,5 @@ export function MissionPanel({ reward, onDone }: { reward: MatchReward; onDone: 
         />
       ) : null}
     </>
-  );
-}
-
-/** The menu's Nhiệm vụ: the same rows as they stand today. */
-export function MissionBoard({ onClose }: { onClose: () => void }) {
-  const rows = useMemo(() => missionRows(), []);
-  const total = useMemo(() => starCount(), []);
-  return (
-    <Frame
-      total={<Total value={total} bump={0} target={() => undefined} />}
-      foot={
-        <button type="button" className="mp-go" onClick={onClose}>
-          {tr("Đóng")}
-        </button>
-      }
-    >
-      <ol className="mp-list">
-        {rows.map((row, at) => (
-          <Row key={row.id} row={row} at={at} done={row.done} flash={false} chip={() => undefined} />
-        ))}
-      </ol>
-    </Frame>
   );
 }

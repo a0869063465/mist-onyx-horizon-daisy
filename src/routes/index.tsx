@@ -5,7 +5,6 @@ import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
-import { MissionBoard } from "@/components/game/mission-panel";
 import { useMail } from "@/lib/mail-box";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
@@ -23,11 +22,10 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends"; go?: () => void; dot?: boolean };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends" | "/missions"; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
-  const [missions, setMissions] = useState(false);
   // Hồ sơ của mình (chủ game 31/10): bấm ảnh đại diện ở khung hồ sơ; về từ màn xem lại trận thì mở lại.
   const [mine, setMine] = useState<string | null>(null);
   useEffect(() => {
@@ -48,7 +46,7 @@ function Home() {
   const left: Tab[] = [
     { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
     { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", go: () => setMissions(true) },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", to: "/missions" },
     { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
   ];
   const right: Tab[] = [
@@ -132,7 +130,6 @@ function Home() {
           </div>
         </div>
       </div>
-      {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
       {mine ? <FriendProfile friend={mine} onClose={() => setMine(null)} /> : null}
     </main>
   );
