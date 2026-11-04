@@ -1,29 +1,22 @@
-import { machineGroup, machineOf, MACHINES } from "./machines.ts";
-import { addStars, drawReward, PACK, starCount, type Pull } from "./shop.ts";
+import { DAILY_LIST, type ListedMission } from "./mission-list.ts";
+import { addStars, starCount } from "./shop.ts";
 
 /**
- * Nhiệm vụ (chủ game 22/10), kept on the phone. Each day the first win pays 2 stars, the 2nd and 3rd 1 star each, in
- * Vs Máy, Đánh thường and Tuỳ chọn. Winning against the same machine 3 times (not in a row, the count is not reset
- * by the day) pays 1 card of that machine's pack, then counts again from 0; each machine pays once a day, and wins
- * after that on the same day do not count. A match pays once (its id is kept).
+ * Nhiệm vụ Ngày (chủ game 04/11), giữ trên máy. "Chơi" đếm mọi trận kết thúc ở Vs Máy, Đánh thường, Tuỳ chọn
+ * (thắng, thua hay đầu hàng); "Thắng PvP" đếm trận thắng Đánh thường. 0 giờ đếm lại. Mỗi trận tính 1 lần (giữ mã
+ * trận). Đủ mục tiêu thì tự cộng sao, mỗi nhiệm vụ 1 lần mỗi ngày. Nhiệm vụ khoá (Xếp hạng, cả tab Tuần) chưa đếm.
  */
-export const WIN_STARS = [2, 1, 1];
-const MACHINE_WINS = 3;
-const KEY = "clash-missions";
+const KEY = "clash-missions-v2";
 
-type Tally = { wins: number; paidDay?: string };
-type Store = { day: string; wins: number; machines: Record<string, Tally>; paid: string[] };
+type Store = { day: string; played: number; pvp: number; claimed: string[]; paid: string[] };
 
-/** What a mission pays: stars (each = per win, for the 2nd and 3rd win of the day) or a card of a pack. */
-export type MissionPrize = { stars: number; each?: boolean } | { pack: string };
-export type MissionRow = { id: string; title: string; done: number; goal: number; prize: MissionPrize; note?: string };
+export type MissionRow = ListedMission & { done: number };
 export type MatchReward = {
   before: MissionRow[];
   after: MissionRow[];
-  /** Stars won by the match (the card's refund star is not in it). */
+  /** Sao trận này trả. */
   stars: number;
-  card: Pull | null;
-  /** The star count before and after everything this match paid. */
+  /** Số sao trước và sau trận. */
   total: [number, number];
   changed: boolean;
 };
@@ -41,11 +34,13 @@ function load(): Store {
   } catch {
     raw = {};
   }
-  const sameDay = raw.day === today;
+  const same = raw.day === today;
+  const num = (v: unknown) => (same && typeof v === "number" && v >= 0 ? v : 0);
   return {
     day: today,
-    wins: sameDay && typeof raw.wins === "number" ? raw.wins : 0,
-    machines: raw.machines && typeof raw.machines === "object" ? raw.machines : {},
+    played: num(raw.played),
+    pvp: num(raw.pvp),
+    claimed: same && Array.isArray(raw.claimed) ? raw.claimed : [],
     paid: Array.isArray(raw.paid) ? raw.paid : [],
   };
 }
@@ -58,55 +53,34 @@ function save(store: Store) {
   }
 }
 
-const packName = (id: string) => (id === PACK.id ? PACK.name : id);
-
-/** The missions and how far each one is, for the menu and the panel after a match. */
-export function missionRows(store: Store = load()): MissionRow[] {
-  const rows: MissionRow[] = [
-    { id: "first", title: "Thắng trận đầu tiên trong ngày", done: Math.min(store.wins, 1), goal: 1, prize: { stars: WIN_STARS[0] } },
-    { id: "more", title: "Thắng thêm 2 trận trong ngày", done: Math.max(0, Math.min(store.wins - 1, 2)), goal: 2, prize: { stars: WIN_STARS[1], each: true } },
-  ];
-  for (const machine of MACHINES) {
-    const tally = store.machines[machine.id] ?? { wins: 0 };
-    const paidToday = tally.paidDay === store.day;
-    rows.push({
-      id: `machine:${machine.id}`,
-      title: `Thắng máy ${machineGroup(machine)} ${MACHINE_WINS} trận`,
-      done: paidToday ? MACHINE_WINS : Math.min(tally.wins, MACHINE_WINS),
-      goal: MACHINE_WINS,
-      prize: { pack: packName(machine.pack) },
-      note: paidToday ? "Đã nhận hôm nay, mai đếm tiếp" : undefined,
-    });
-  }
-  return rows;
+function doneOf(store: Store, row: ListedMission): number {
+  if (row.locked || !row.count) return 0;
+  return Math.min(row.goal, row.count === "play" ? store.played : store.pvp);
 }
 
-/** Pays a won match once (Vs Máy, Đánh thường, Tuỳ chọn); null when this match was paid already. */
-export function settleWin(mid: string, machineId: string | null | undefined): MatchReward | null {
+/** Nhiệm vụ Ngày và tiến độ hôm nay, cho trang Nhiệm vụ và bảng sau trận. */
+export function dailyRows(store: Store = load()): MissionRow[] {
+  return DAILY_LIST.map((row) => ({ ...row, done: doneOf(store, row) }));
+}
+
+/** Ghi một trận đã kết thúc (một lần mỗi trận); null khi trận này đã được ghi. */
+export function settleMatch(mid: string, pvpWin: boolean): MatchReward | null {
   const store = load();
   if (store.paid.includes(mid)) return null;
-  const before = missionRows(store);
+  const before = dailyRows(store);
   const starsBefore = starCount();
-  const stars = WIN_STARS[store.wins] ?? 0;
-  store.wins += 1;
-  let card: Pull | null = null;
-  const machine = machineOf(machineId);
-  if (machine) {
-    const tally: Tally = { ...(store.machines[machine.id] ?? { wins: 0 }) };
-    if (tally.paidDay !== store.day) {
-      tally.wins += 1;
-      if (tally.wins >= MACHINE_WINS) {
-        card = drawReward();
-        tally.wins = 0;
-        tally.paidDay = store.day;
-      }
-    }
-    store.machines[machine.id] = tally;
+  store.played += 1;
+  if (pvpWin) store.pvp += 1;
+  let stars = 0;
+  for (const row of DAILY_LIST) {
+    if (row.locked || store.claimed.includes(row.id) || doneOf(store, row) < row.goal) continue;
+    store.claimed = [...store.claimed, row.id];
+    stars += row.stars;
   }
   store.paid = [...store.paid, mid].slice(-40);
   save(store);
   if (stars) addStars(stars);
-  const after = missionRows(store);
-  const changed = after.some((row, at) => row.done !== before[at]?.done || row.note !== before[at]?.note);
-  return { before, after, stars, card, total: [starsBefore, starCount()], changed };
+  const after = dailyRows(store);
+  const changed = after.some((row, at) => row.done !== before[at]?.done);
+  return { before, after, stars, total: [starsBefore, starCount()], changed };
 }

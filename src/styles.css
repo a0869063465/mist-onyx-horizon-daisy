@@ -13180,8 +13180,6 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 @keyframes mx-in { from { opacity: 0; transform: translateY(calc(var(--u) * 14)); } }
 .mx-row { display: block; width: 100%; height: 100%; }
 .mx-card.is-locked .mx-row { filter: saturate(0.45) brightness(0.8); }
-/* Thanh tiến độ: tô vàng lên đúng rãnh của ảnh, chữ trắng trong ảnh vẫn đọc được (lighten). */
-.mx-fill { position: absolute; left: calc(var(--u) * 208); bottom: calc(var(--u) * 16); width: calc(var(--u) * 318 * var(--p)); height: calc(var(--u) * 22); border-radius: calc(var(--u) * 11); background: linear-gradient(180deg, #ffe79a, #f0a929); mix-blend-mode: lighten; pointer-events: none; }
 /* Ô thưởng: phủ ngôi sao của chủ game lên ô trống của khung. */
 .mx-prize { position: absolute; left: calc(var(--u) * 571); top: 50%; transform: translateY(-50%); width: calc(var(--u) * 163); height: calc(var(--u) * 94); display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 10); border-radius: calc(var(--u) * 6); background: linear-gradient(180deg, var(--box-a), var(--box-b)); font-family: var(--cond); }
 .mx-prize img { width: calc(var(--u) * 70); height: calc(var(--u) * 70); object-fit: contain; filter: drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(0, 0, 0, 0.55)); }
@@ -13192,3 +13190,23 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-relic { position: absolute; left: calc(var(--u) * 8); top: 50%; transform: translateY(-50%); width: calc(var(--u) * 204); height: calc(var(--u) * 144); display: grid; place-items: center; background: radial-gradient(closest-side, #4c2394 0%, #34176e 72%, #2b1457 100%); -webkit-mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); }
 .mx-relic img { height: 84%; width: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 0 calc(var(--u) * 8) rgba(255, 190, 60, 0.7)); }
 .mx-soon { position: absolute; right: calc(var(--u) * 190); top: calc(var(--u) * 5); padding: 0 calc(var(--u) * 12); border-radius: calc(var(--u) * 12); font-size: calc(var(--u) * 22); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.62); }
+
+/* Thanh tiến độ vẽ đè đúng chỗ thanh trong ảnh hàng GPT (chủ game 04/11): viền bạc, nền xanh đêm, chữ "n / goal" ở mũ trái, vàng khi chạy. */
+.mx-bar { --cut-l: calc(var(--u) * 10); --cut-r: calc(var(--u) * 13); position: absolute; left: calc(var(--u) * 203); top: calc(var(--u) * (var(--top) - 2)); width: calc(var(--u) * 326); height: calc(var(--u) * (var(--high) + 4)); background: linear-gradient(180deg, #e4eefc, #9fbde6 55%, #d6e5fa); clip-path: polygon(0 50%, var(--cut-l) 0, calc(100% - var(--cut-r)) 0, 100% 50%, calc(100% - var(--cut-r)) 100%, var(--cut-l) 100%); pointer-events: none; }
+.mx-bar::before { content: ""; position: absolute; inset: calc(var(--u) * 2.2); background: linear-gradient(180deg, #050d27, #0b1a42); clip-path: polygon(0 50%, var(--cut-l) 0, calc(100% - var(--cut-r)) 0, 100% 50%, calc(100% - var(--cut-r)) 100%, var(--cut-l) 100%); }
+.mx-bar { display: flex; align-items: center; padding: 0 calc(var(--cut-r) + var(--u) * 3) 0 calc(var(--cut-l) + var(--u) * 2); }
+.mx-bar em { position: relative; flex: none; padding-right: calc(var(--u) * 8); font-family: var(--cond); font-style: normal; font-size: calc(var(--u) * 27); font-weight: 700; line-height: 1; color: #fff; text-shadow: 0 calc(var(--u) * 1.5) 0 rgba(0, 0, 0, 0.75); white-space: nowrap; }
+.mx-track { position: relative; flex: 1; align-self: stretch; margin: calc(var(--u) * 5) 0; border-left: calc(var(--u) * 1.5) solid rgba(170, 200, 240, 0.55); }
+.mx-track i { position: absolute; left: calc(var(--u) * 2); top: 0; bottom: 0; width: calc((100% - var(--u) * 2) * var(--p)); border-radius: calc(var(--u) * 3); background: linear-gradient(180deg, #fff2b8, #f6c443 45%, #d98a16); box-shadow: 0 0 calc(var(--u) * 8) rgba(255, 200, 80, 0.7); transition: width 620ms cubic-bezier(0.25, 0.8, 0.3, 1); }
+.mx-card.is-done .mx-bar em { color: #ffe9a8; }
+.mx-got { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 5); text-align: center; font-family: var(--cond); font-size: calc(var(--u) * 19); font-weight: 700; letter-spacing: 0.06em; color: #9ff0bc; text-shadow: 0 calc(var(--u) * 1.5) 0 rgba(0, 0, 0, 0.8); }
+.mx-prize { box-sizing: border-box; }
+.mx-card.is-done .mx-prize { padding-bottom: calc(var(--u) * 20); }
+.mx-card.is-done .mx-prize img { width: calc(var(--u) * 54); height: calc(var(--u) * 54); }
+.mx-card.is-done .mx-prize b { font-size: calc(var(--u) * 40); }
+.mx-card.is-done .mx-prize { box-shadow: 0 0 calc(var(--u) * 14) rgba(255, 214, 110, 0.75); }
+.mx-card.is-flash::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: calc(var(--u) * 14); background: linear-gradient(105deg, transparent 35%, rgba(255, 236, 170, 0.6) 50%, transparent 65%) -100% 0 / 200% 100% no-repeat; animation: mx-sweep 700ms ease-out both; }
+@keyframes mx-sweep { 70% { opacity: 1; } to { background-position: 100% 0; opacity: 0; } }
+/* Bảng sau trận: cùng hàng GPT, cỡ theo bề ngang bảng. */
+.mp .mx-plist { --u: calc(min(100vw - 2rem, 26rem) / 748); width: calc(var(--u) * 748); gap: calc(var(--u) * 14); max-height: calc(100dvh - 14rem); overflow-y: auto; scrollbar-width: none; align-content: start; }
+.mp .mx-plist::-webkit-scrollbar { display: none; }

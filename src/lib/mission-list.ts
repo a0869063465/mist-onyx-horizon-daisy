@@ -1,6 +1,6 @@
 /**
  * Danh sách nhiệm vụ Ngày / Tuần (chủ game 04/11, theo ảnh thiết kế).
- * Hiện chỉ để hiển thị: luật đếm trận, reset ngày/tuần và trả thưởng làm ở bước sau.
+ * Luật đếm ở `missions.ts`: "play" = mọi trận kết thúc ở Vs Máy, Đánh thường, Tuỳ chọn; "pvp" = trận thắng Đánh thường.
  * `locked` = cơ chế chưa có trong game (Xếp hạng, bảo vật, thu thập lá bài): thẻ xám, ghi "Sắp có".
  */
 export type ListedMission = {
@@ -13,15 +13,19 @@ export type ListedMission = {
   /** Ảnh bảo vật thay icon trong hàng (nếu có). */
   relic?: string;
   locked?: boolean;
+  /** Đếm gì (nhiệm vụ không khoá). */
+  count?: "play" | "pvp";
+  /** Mép trên và mép dưới của thanh tiến độ vẽ sẵn trong ảnh hàng (px ảnh), để vẽ đè thanh thật. */
+  bar?: [number, number];
 };
 
 export const DAILY_LIST: ListedMission[] = [
-  { id: "d-first", title: "Chơi trận đầu tiên trong ngày", goal: 1, stars: 1, row: "rd0" },
-  { id: "d-play3", title: "Chơi 3 trận", goal: 3, stars: 1, row: "rd1" },
-  { id: "d-play10", title: "Chơi 10 trận", goal: 10, stars: 1, row: "rd2" },
-  { id: "d-play20", title: "Chơi 20 trận", goal: 20, stars: 1, row: "rd3" },
-  { id: "d-pvp6", title: "Thắng 6 trận PvP", goal: 6, stars: 1, row: "rd4" },
-  { id: "d-pvp10", title: "Thắng 10 trận PvP", goal: 10, stars: 1, row: "rd5" },
+  { id: "d-first", title: "Chơi trận đầu tiên trong ngày", goal: 1, stars: 1, row: "rd0", count: "play", bar: [97, 120] },
+  { id: "d-play3", title: "Chơi 3 trận", goal: 3, stars: 1, row: "rd1", count: "play", bar: [92, 116] },
+  { id: "d-play10", title: "Chơi 10 trận", goal: 10, stars: 1, row: "rd2", count: "play", bar: [93, 116] },
+  { id: "d-play20", title: "Chơi 20 trận", goal: 20, stars: 1, row: "rd3", count: "play", bar: [93, 116] },
+  { id: "d-pvp6", title: "Thắng 6 trận PvP", goal: 6, stars: 1, row: "rd4", count: "pvp", bar: [95, 119] },
+  { id: "d-pvp10", title: "Thắng 10 trận PvP", goal: 10, stars: 1, row: "rd5", count: "pvp", bar: [95, 118] },
   { id: "d-rank5", title: "Chơi 5 trận Xếp hạng", goal: 5, stars: 1, row: "rd6", locked: true },
   { id: "d-rankwin3", title: "Thắng 3 trận Xếp hạng", goal: 3, stars: 1, row: "rd7", locked: true },
 ];
