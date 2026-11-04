@@ -35,7 +35,7 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
         <span className="mx-soon">{tr("Sắp có")}</span>
       ) : state === "green" ? null : (
         <div className="mx-prog" aria-hidden="true">
-          <em>
+          <em style={{ "--k": Math.min(1, 5.2 / `${shown} / ${row.goal}`.length) } as CSSProperties}>
             {shown} / {row.goal}
           </em>
           {state === "blue" || state === "purple" ? (
