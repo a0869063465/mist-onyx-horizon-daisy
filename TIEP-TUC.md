@@ -696,3 +696,7 @@ Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
 
 Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
 Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
+
+## NHÁNH LỐI CHƠI TO VÀ NHỎ (04/11/2026, chủ game ghi)
+
+Nhánh này chuyên cập nhật các lối chơi to và nhỏ. Chưa rõ "to" và "nhỏ" là chế độ lớn/nhỏ hay mức độ nội dung: chờ chủ game chốt trước khi làm.
