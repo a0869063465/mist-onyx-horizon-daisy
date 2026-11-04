@@ -903,6 +903,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ có trang riêng với 2 tab Ngày và Tuần, giao diện giống Tin tức và Bạn bè. Nhiệm vụ Tuần sắp có. Khung hàng nhiệm vụ đổi cùng kiểu.",
   "Trang Nhiệm vụ đổi giao diện mới. Nhiệm vụ Ngày gồm Chơi 3, 10, 20 trận, Thắng 6 và 10 trận PvP. Nhiệm vụ Tuần và nhóm Xếp hạng sắp có.",
   "Nhiệm vụ Ngày đã tính thật: mỗi trận kết thúc ở Vs Máy, Đánh thường, Tuỳ chọn được tính, thắng Đánh thường tính vào PvP. Xong là tự nhận sao. Bảng nhiệm vụ sau trận đổi khung mới, hiện cả khi thua.",
+  "Hàng nhiệm vụ đổi giao diện: khung xanh dương khi đang làm, xanh lá và ô sao bạc khi đã nhận, thanh tiến độ và số nằm cạnh nhau.",
 ];
 
 function remarkOf(notes: string[]) {

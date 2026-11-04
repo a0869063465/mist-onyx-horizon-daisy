@@ -11,42 +11,49 @@ import { playReward } from "@/lib/sfx";
  * xong loé và sao bay vào ô tổng, số đếm lên.
  */
 
-/** Một hàng nhiệm vụ; `chip` nhận ô thưởng để sao bay ra từ đó. */
+/** Một hàng nhiệm vụ; `chip` nhận ô thưởng để sao bay ra từ đó. Khung theo trạng thái: xanh dương/tím đang làm, vàng sáng vừa xong, xanh lá đã nhận. */
 export function MissionCard({ row, done, at, flash = false, chip }: { row: ListedMission; done: number; at: number; flash?: boolean; chip?: (el: HTMLElement | null) => void }) {
   const full = !row.locked && done >= row.goal;
-  const bar = row.bar;
+  const weekly = row.row.startsWith("rw");
+  const frame = flash ? "glow" : full ? "green" : weekly ? "purple" : "blue";
+  const shown = Math.min(done, row.goal);
   return (
     <li
-      className={`mx-card${row.locked ? " is-locked" : ""}${full ? " is-done" : ""}${flash ? " is-flash" : ""}`}
+      className={`mx-card is-${frame}${row.locked ? " is-locked" : ""}${full ? " is-full" : ""}${flash ? " is-flash" : ""}`}
       style={{ "--i": at } as CSSProperties}
-      aria-label={`${tr(row.title)} ${done} / ${row.goal}`}
+      aria-label={`${tr(row.title)} ${shown} / ${row.goal}`}
     >
-      <img className="mx-row" src={`/ui/mission/${row.row}.webp`} alt="" draggable={false} />
-      {bar && !row.locked ? (
-        <span
-          className="mx-bar"
-          style={{ "--top": bar[0], "--high": bar[1] - bar[0], "--p": Math.min(1, done / row.goal) } as CSSProperties}
-          aria-hidden="true"
-        >
-          <em>
-            {Math.min(done, row.goal)} / {row.goal}
-          </em>
-          <span className="mx-track">
-            <i />
-          </span>
-        </span>
-      ) : null}
+      <img className="mx-frame" src={`/ui/mission/f-${frame}.webp`} alt="" draggable={false} />
       {row.relic ? (
         <span className="mx-relic" aria-hidden="true">
           <img src={`/ui/mission/${row.relic}.webp`} alt="" draggable={false} />
         </span>
-      ) : null}
+      ) : (
+        <img className="mx-icon" src={`/ui/mission/i-${row.row.slice(1)}.webp`} alt="" draggable={false} />
+      )}
+      <p className="mx-title">{tr(row.title)}</p>
+      {row.locked ? (
+        <span className="mx-soon">{tr("Sắp có")}</span>
+      ) : (
+        <div className="mx-prog" aria-hidden="true">
+          {full && !flash ? (
+            <b className="mx-got">✓ {tr("Đã nhận")}</b>
+          ) : (
+            <>
+              <em>
+                {shown} / {row.goal}
+              </em>
+              <span className="mx-track" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
+                <i />
+              </span>
+            </>
+          )}
+        </div>
+      )}
       <span ref={chip} className="mx-prize" aria-hidden="true">
-        <img src="/ui/star.webp" alt="" draggable={false} />
+        <img src={`/ui/mission/star-${full && !flash ? "silver" : "gold"}.webp`} alt="" draggable={false} />
         <b>×{row.stars}</b>
-        {full ? <small className="mx-got">{tr("ĐÃ NHẬN")}</small> : null}
       </span>
-      {row.locked ? <span className="mx-soon">{tr("Sắp có")}</span> : null}
     </li>
   );
 }
