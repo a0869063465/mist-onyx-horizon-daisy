@@ -11,12 +11,10 @@ export const Route = createFileRoute("/missions")({
   component: MissionsPage,
 });
 
-const ART = (name: string) => `/ui/mission/${name}.webp`;
-
 /**
  * Nhiệm vụ (chủ game 04/11): nền, tiêu đề và hai nút tab cắt từ ảnh thiết kế của chủ game (`bg-day` / `bg-week`),
- * các hàng do code vẽ. Mọi toạ độ tính theo ảnh gốc 841×1870 (đơn vị `--u`), nên khớp ở mọi cỡ màn.
- * Tiến độ hiện chưa đếm (luật đếm làm sau), sao là ngôi sao của chủ game.
+ * các hàng là khung GPT của chủ game (`rd*` / `rw*`), chỉ phủ lên ngôi sao + số thưởng (sao của chủ game) và bảo vật. Mọi toạ độ tính theo ảnh gốc 841×1870 (đơn vị `--u`), nên khớp ở mọi cỡ màn.
+ * Tiến độ hiện chưa đếm (luật đếm làm sau): chữ và thanh trong ảnh đang là 0 / n.
  */
 function MissionsPage() {
   useLang();
@@ -50,22 +48,16 @@ function MissionsPage() {
 
 function Card({ row, at }: { row: ListedMission; at: number }) {
   const done = 0;
-  const treasure = row.art.startsWith("t-");
   return (
-    <li className={`mx-card${row.locked ? " is-locked" : ""}`} style={{ "--i": at } as CSSProperties}>
-      <span className={`mx-art${treasure ? " is-treasure" : ""}`}>
-        <img src={ART(row.art)} alt="" draggable={false} />
-      </span>
-      <span className="mx-body">
-        <b className="mx-title">{tr(row.title)}</b>
-        <span className="mx-bar" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
-          <i />
-          <em>
-            {done} / {row.goal}
-          </em>
+    <li className={`mx-card${row.locked ? " is-locked" : ""}`} style={{ "--i": at, "--p": Math.min(1, done / row.goal) } as CSSProperties} aria-label={`${tr(row.title)} ${done} / ${row.goal}`}>
+      <img className="mx-row" src={`/ui/mission/${row.row}.webp`} alt="" draggable={false} />
+      <i className="mx-fill" aria-hidden="true" />
+      {row.relic ? (
+        <span className="mx-relic" aria-hidden="true">
+          <img src={`/ui/mission/${row.relic}.webp`} alt="" draggable={false} />
         </span>
-      </span>
-      <span className="mx-prize">
+      ) : null}
+      <span className="mx-prize" aria-hidden="true">
         <img src="/ui/star.webp" alt="" draggable={false} />
         <b>×{row.stars}</b>
       </span>
