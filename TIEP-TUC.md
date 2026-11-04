@@ -677,3 +677,22 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
   - Cách thử: `npm ci` (nếu thiếu node_modules), `npm run dev` (cổng 8080, KHÔNG `pkill -f vite`), Playwright Chromium 412×915: `/modes` → bấm bộ bài → "CHƠI NGAY" → chờ ~14 giây → bấm OK (206,628) ở bảng Bài khởi đầu. Preset gợi ý đã hiện: localStorage `clash-hints` {n:{...},seen:{...}}. `tsc` 7 lỗi cũ, `node scripts/round-rules.mjs` 47/47.
 - ĐÃ ÁP `main` 03/11 (chủ game: "Nhập vào main luôn"): đẩy thẳng nhánh `ccr-35f3cdfd-q9c3rl` lên `main` (fast-forward, không ép), commit beef813, gồm V1/V5/V6/V7/V8A/V8C/V8D/V3 ở mục DỪNG GIỮA CHỪNG ngay trên (V7, V8C/D, V3 chưa chụp bằng mắt). V2, V4, V8B vẫn CHƯA LÀM. Các mục ghi "CHƯA áp `main`" ở trên là CŨ.
 - ẢNH CHO VIỆC DỞ 03/11 (chủ game gửi, đã chép vào repo `docs/anh-tiep-tuc/`): `v4-la-rut-bi-mo.jpg` = tay bài, lá thứ 3 (Sợi xích địa ngục) mờ/trong suốt chồng lên khung lúc rút (V4); `v3-hap-thu-khong-dung-duoc.jpg` = Bò tót địch lao lên đánh (icon skill + icon tấn công đỏ, dòng chảy tới quái mình), tay có lá xoáy tím (Hấp thụ ma pháp) KHÔNG sáng, không dùng được (V3; chưa rõ đòn nào, hỏi chủ game một câu mô tả); `v8a-keo-phep-tranh-cu.jpg` = kéo Sợi xích địa ngục lên sân vẫn dùng khung và tranh cũ, vùng hồng giữa sân chưa chỉ đúng mục tiêu (V8A/V8B; V8A đã sửa, V8B chưa).
+
+## KẾ HOẠCH MÊ CUNG PVE (04/11/2026, chủ game lập; CHƯA LÀM, chờ trả lời câu hỏi)
+
+Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
+
+1. Bảo vật ngàn năm (mỗi món một cơ chế):
+   - Trò chơi: rút 2 lá được chọn trong bộ bài.
+   - Dây chuyền: có nút, nguy hiểm, chỉ đường, quái (chọn cấp), rương.
+   - Cân: giám định rương bằng số sao, tăng chỉ số nhận được.
+   - Trượng: dùng 1 lần, điều khiển quái tránh khỏi đường.
+   - Mắt: hút quái vào lá bài.
+   - Vòng cổ: xem trước tương lai.
+   - Chìa khoá: mở dungeon và rương.
+2. AI bố trí quái hợp lý; quái mạnh buộc người chơi phải nâng sức mạnh mới qua được.
+3. Trang bị: sâu, mất khi xong dungeon.
+4. Nghiên cứu "TS" online (chưa rõ TS là gì, hỏi lại).
+
+Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
+Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
