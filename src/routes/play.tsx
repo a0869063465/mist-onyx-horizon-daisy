@@ -869,6 +869,18 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
 const SLOW_AIM = new Set(["soi-xich-dia-nguc", "phan-nguyen"]);
+/** Phép có mục tiêu (chủ game 03/11, V8B): the side whose monsters it picks; kéo lá hay bấm Use rồi rê, mục tiêu dùng
+ *  được sáng neon như chọn skill. Phản nguyền and Hộp ma thuật pick an ally first, then an enemy. */
+const SPELL_AIMS: Record<string, "foe" | "ally"> = {
+  "soi-xich-dia-nguc": "foe",
+  "sung-loi-pha": "ally",
+  "giap-co-khi": "ally",
+  "co-may-thoi-gian": "ally",
+  "virus-an-mon": "ally",
+  "phuc-kich": "ally",
+  "ngan-chan-phong-ngu": "foe",
+  "la-chan-phan-don": "foe",
+};
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
 const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat"]);
@@ -4122,6 +4134,7 @@ function PlayPage() {
   /** The targets this drag can land on, by the match's own rules: empty slots it can be summoned into, enemies it can attack. */
   function snapKeys(payload: Grab): Set<string> {
     const keys = new Set<string>();
+    if (payload.kind === "spell") return SPELL_AIMS[payload.spellId] ? spellKeys(payload.spellId, payload.index) : keys;
     if (!duel || !canPlay || responding || duel.step !== "main" || queue) return keys;
     if (payload.kind === "summon") {
       if (riteHand === payload.index) return keys;
@@ -4147,6 +4160,49 @@ function PlayPage() {
     const face = attackFace(duel, uid);
     if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
     return keys;
+  }
+
+  /**
+   * The monsters a spell with a target can take now (V8B, chủ game 03/11), by its own rule; for Phản nguyền and Hộp ma
+   * thuật, the ally first (`from` unset) then the enemy.
+   */
+  function spellKeys(id: string, index: number, from?: string): Set<string> {
+    const keys = new Set<string>();
+    if (!duel || !mine || duel.hold?.stage || !spellDragLive(id, duel, viewer, index)) return keys;
+    const foeSide = (1 - viewer) as Side;
+    const each = (side: Side, take: (mon: FieldMon) => boolean) =>
+      duel.players[side].field.forEach((mon, slot) => {
+        if (mon && mon.cardId !== "mu" && take(mon)) keys.add(`${side}-${slot}`);
+      });
+    if (id === "phan-nguyen") {
+      if (from) each(foeSide, () => true);
+      else each(viewer, (mon) => harmShift(mon));
+      return keys;
+    }
+    if (id === "hop-ma-thuat") {
+      if (from) each(foeSide, (mon) => boxFoes(duel, viewer).includes(mon.uid));
+      else each(viewer, (mon) => boxAllies(duel, viewer).includes(mon.uid));
+      return keys;
+    }
+    const aims = SPELL_AIMS[id];
+    if (!aims) return keys;
+    const cards = duel.players[viewer].hand.length;
+    each(aims === "foe" ? foeSide : viewer, (mon) => {
+      if (id === "soi-xich-dia-nguc") return true;
+      if (id === "sung-loi-pha") return hornFit(mon.cardId);
+      if (id === "phuc-kich") return ambushReady(mon);
+      if (id === "ngan-chan-phong-ngu") return shelterPicks(duel).includes(mon.uid);
+      // The others by the rule itself: the card leaves the hand only on a target it takes.
+      return castSpell(duel, index, mon.uid).players[viewer].hand.length < cards;
+    });
+    return keys;
+  }
+
+  /** The spell being aimed now (dragged, or picked with Use), if it takes a target. */
+  function spellAim(): { id: string; index: number; from?: string } | null {
+    if (drag?.kind === "spell") return SPELL_AIMS[drag.spellId] ? { id: drag.spellId, index: drag.index } : null;
+    if (aim?.kind === "spell" && (SPELL_AIMS[aim.spellId] || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat")) return { id: aim.spellId, index: aim.index, from: aim.from };
+    return null;
   }
 
   /**
@@ -4194,10 +4250,12 @@ function PlayPage() {
    */
   function startPress(event: ReactPointerEvent) {
     if (!duel || event.button > 0 || drag || grab.current) return;
-    if (aim?.kind !== "attack" && !(aim?.kind === "skill" && !aim.also)) return;
+    const cast = aim?.kind === "spell" ? spellAim() : null;
+    if (aim?.kind !== "attack" && !(aim?.kind === "skill" && !aim.also) && !cast) return;
     const target = event.target as HTMLElement;
     if (target.closest(".unit-acts, .hand, .act, .aim-mark, .rp-bar") || (target.closest("button") && !target.closest(".slot, .face-drop"))) return;
-    const keys = aim.kind === "attack" ? attackKeys(aim.uid) : slideKeys({ kind: "skill", uid: aim.uid, index: aim.index });
+    // Bấm Use rồi rê trên sân (V8B): a spell with a target lights its targets the same way.
+    const keys = cast ? spellKeys(cast.id, cast.index, cast.from) : aim?.kind === "attack" ? attackKeys(aim.uid) : aim?.kind === "skill" ? slideKeys({ kind: "skill", uid: aim.uid, index: aim.index }) : new Set<string>();
     if (keys.size === 0) return;
     const lamp = lightTorch(event.clientX, event.clientY);
     torch.current = lamp;
@@ -4270,10 +4328,20 @@ function PlayPage() {
    * cannot pick glow red (chủ game 01/11, T2). Kept until the match, the aim or the dragged monster changes.
    */
   function targetPlan(): TargetPlan | null {
-    if (!duel || !canPlay || responding || duel.step !== "main" || queue) return null;
-    const uid = drag?.kind === "unit" ? drag.uid : null;
+    if (!duel) return null;
+    const cast = spellAim();
+    const uid = drag?.kind === "unit" ? drag.uid : cast ? `spell:${cast.id}:${cast.index}:${cast.from ?? ""}` : null;
     const cache = planCache.current;
     if (cache.duel === duel && cache.aim === aim && cache.uid === uid) return cache.plan;
+    if (cast) {
+      // Phép có mục tiêu (V8B): only the monsters it can take glow; the others on its side are marked as not pickable.
+      const keys = spellKeys(cast.id, cast.index, cast.from);
+      const onFoe = cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : SPELL_AIMS[cast.id] === "foe";
+      const plan = { keys, foe: onFoe, you: !onFoe, caster: "" };
+      planCache.current = { duel, aim, uid, plan };
+      return plan;
+    }
+    if (!canPlay || responding || duel.step !== "main" || queue) return null;
     let plan: TargetPlan | null = null;
     if (uid && !aim) plan = { keys: attackKeys(uid), foe: true, you: false, caster: uid };
     else if (aim?.kind === "attack") plan = { keys: attackKeys(aim.uid), foe: true, you: false, caster: aim.uid };
@@ -5765,7 +5833,7 @@ function PlayPage() {
         />
       ) : null}
       <section
-        className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
+        className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && !SPELL_AIMS[drag.spellId] && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
         style={{ "--board-v": cut.v, "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={(event) => {
@@ -6711,7 +6779,7 @@ function PlayPage() {
               hot={foeHot}
               blocked={foeBlocked}
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
-              attack={foeHot && drag?.kind !== "spell" && !(aim?.kind === "spell" && aim.spellId === "soi-xich-dia-nguc")}
+              attack={foeHot && drag?.kind !== "spell" && aim?.kind !== "spell"}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
               snapped={snap === `${side}-${index}`}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
@@ -6768,7 +6836,7 @@ function PlayPage() {
               near
               index={index}
               layout={fieldLayout}
-              hot={youHot}
+              hot={spellAim() && plan ? plan.keys.has(`${viewer}-${index}`) : youHot}
               blocked={youBlocked}
               fuse={Boolean(mon && ((fuseOn && fuseUids.has(mon.uid)) || (drag?.kind === "summon" && (findFusion(drag.card.id, mon.cardId) || findKnightFusion(drag.card.id, mon.cardId, you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId))))))}
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
@@ -7036,7 +7104,9 @@ function PlayPage() {
                             return;
                           }
                           if (id === "la-chan-phan-don") {
-                            setReflectPick({ index, uid: null });
+                            // Như mọi phép có mục tiêu (V8B): bấm hoặc rê trên sân tới kẻ địch sáng neon.
+                            setAim({ kind: "spell", index, spellId: id });
+                            holdNotice("Chọn một kẻ địch để phản đòn.");
                             return;
                           }
                           if (id === "ngan-chan-phong-ngu") {

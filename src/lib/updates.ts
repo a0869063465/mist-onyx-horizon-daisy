@@ -903,6 +903,9 @@ export const PENDING_NOTES: string[] = [
   "Lá rút từ xấp không còn bị mờ lúc hạ cánh.",
   "Đổi bài đầu trận: lá mới bay vào đúng ô lá vừa đổi, các lá còn lại đứng yên.",
   "Chiến sĩ gặm nhắm chớp glow trắng khi dùng được Khiên thú sĩ.",
+  "Hấp thụ ma pháp nuốt được Phục kích, Gương phòng hộ, Vòng nguyền rủa ác ma, Lá chắn phản đòn, Giáp cơ khí, Cỗ máy thời gian, Ngăn chặn phòng ngự, Virus ăn mòn và Giáp và Vuốt. Đòn bị chặn vẫn đánh vào.",
+  "Giáp và Vuốt chờ trong chuỗi như phép nhanh, đối thủ đáp lại được.",
+  "Kéo lá phép có mục tiêu: chỉ mục tiêu dùng được sáng, rê ngón để chọn. Bấm Use rồi rê trên sân cũng chọn được.",
 ];
 
 function remarkOf(notes: string[]) {
