@@ -22,16 +22,16 @@ export const DAILY_LIST: ListedMission[] = [
   { id: "d-play20", title: "Chơi 20 trận", goal: 20, stars: 1, row: "rd3" },
   { id: "d-pvp6", title: "Thắng 6 trận PvP", goal: 6, stars: 1, row: "rd4" },
   { id: "d-pvp10", title: "Thắng 10 trận PvP", goal: 10, stars: 1, row: "rd5" },
-  { id: "d-rank5", title: "Chơi 5 trận Xếp hạng", goal: 5, stars: 1, row: "rd6", locked: true },
-  { id: "d-rankwin3", title: "Thắng 3 trận Xếp hạng", goal: 3, stars: 1, row: "rd7", locked: true },
+  { id: "d-rank5", title: "Chơi 5 trận Xếp hạng", goal: 5, stars: 1, row: "rd6" },
+  { id: "d-rankwin3", title: "Thắng 3 trận Xếp hạng", goal: 3, stars: 1, row: "rd7" },
 ];
 
 export const WEEKLY_LIST: ListedMission[] = [
-  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "rw0", locked: true },
-  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "rw1", locked: true },
-  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "rw2", relic: "t-puzzle", locked: true },
-  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "rw3", relic: "t-ring", locked: true },
-  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "rw4", locked: true },
-  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "rw5", locked: true },
-  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "rw6", locked: true },
+  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "rw0" },
+  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "rw1" },
+  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "rw2", relic: "t-puzzle" },
+  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "rw3", relic: "t-ring" },
+  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "rw4" },
+  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "rw5" },
+  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "rw6" },
 ];
