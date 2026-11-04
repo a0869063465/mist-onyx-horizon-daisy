@@ -11,10 +11,15 @@ import { playReward } from "@/lib/sfx";
  * xong loé và sao bay vào ô tổng, số đếm lên.
  */
 
-/** Hàng Ngày dựng từ hàng GPT: xanh dương đang làm, vàng sáng vừa xong, xanh lá đã nhận. Chữ và ống do code vẽ. */
+/** Icon từng nhiệm vụ Ngày (bộ icon của chủ game): hàng 0 lịch, 1 kiếm, 2-3 quạt kiếm, 4-5 cúp, 6 khiên xanh, 7 khiên tím. */
+const DAILY_ICON = ["cal-check", "swords", "fan", "fan", "trophy", "trophy", "shield-b", "shield-p"];
+
+/** Hàng Ngày y hệt thiết kế: xanh dương đang làm, vàng sáng vừa xong, xanh lá đã nhận. Khung, ô sao, ống tiến độ là ảnh của chủ game; chữ và số do code vẽ. */
 function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; done: number; at: number; flash: boolean; chip?: (el: HTMLElement | null) => void; full: boolean }) {
   const state = flash ? "gold" : full ? "green" : "blue";
   const shown = Math.min(done, row.goal);
+  const n = Number(row.row.slice(2));
+  const icon = n === 0 && state === "blue" ? "cal-clock" : DAILY_ICON[n] ?? "swords";
   return (
     <li
       className={`mx-card is-daily is-${state}${row.locked ? " is-locked" : ""}${flash ? " is-flash" : ""}`}
@@ -22,15 +27,11 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
       aria-label={`${tr(row.title)} ${shown} / ${row.goal}`}
     >
       <img className="mx-tpl" src={`/ui/mission/r-${state}.webp`} alt="" draggable={false} />
-      <img className="mx-ico" src={`/ui/mission/i-d${row.row.slice(2)}.webp`} alt="" draggable={false} />
+      <img className="mx-ico" src={`/ui/mission/ic-${icon === "trophy" && state !== "green" ? "trophy-b" : icon}.webp`} alt="" draggable={false} />
       <p className="mx-name">{tr(row.title)}</p>
       {row.locked ? (
         <span className="mx-soon">{tr("Sắp có")}</span>
-      ) : state === "green" ? (
-        <div className="mx-got" aria-hidden="true">
-          ✓ {tr("Đã nhận")}
-        </div>
-      ) : (
+      ) : state === "green" ? null : (
         <div className="mx-prog" aria-hidden="true">
           <em>
             {shown} / {row.goal}
@@ -39,9 +40,14 @@ function DailyCard({ row, done, at, flash, chip, full }: { row: ListedMission; d
             <span className="mx-tube" style={{ "--p": Math.min(1, done / row.goal) } as CSSProperties}>
               <i />
             </span>
-          ) : null}
+          ) : (
+            <span className="mx-tube is-full">
+              <i />
+            </span>
+          )}
         </div>
       )}
+      {state === "green" ? null : <img className={`mx-star${state === "gold" ? " is-glow" : ""}`} src={`/ui/mission/star-${state === "gold" ? "glow" : "small"}.webp`} alt="" draggable={false} />}
       <span ref={chip} className="mx-prize-spot" aria-hidden="true" />
     </li>
   );
