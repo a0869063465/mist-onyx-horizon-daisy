@@ -701,18 +701,51 @@ Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại n
 
 Nhánh này chuyên cập nhật các lối chơi to và nhỏ. Chưa rõ "to" và "nhỏ" là chế độ lớn/nhỏ hay mức độ nội dung: chờ chủ game chốt trước khi làm.
 
-### Danh sách lối chơi LoR (chủ game kể, 04/11/2026; LoR có hơn 1000 lá, mỗi lá thuộc đúng 1 lối chơi)
+### Danh sách lối chơi LoR (chủ game kể, 04/11/2026; mỗi dấu phẩy / ý là 1 lối chơi tách ra; LoR có hơn 1000 lá, mỗi lá thuộc đúng 1 lối chơi)
 
-1. **Demacia**: buff khiên, chỉ số to, chơi theo đội hình. (3 ý)
-2. **Noxus**: tấn công áp đảo (LỚN, chủ game bảo phải phân ra nữa):
-   - 2a. Agro: dàn nhiều quân nhỏ.
-   - 2b. Buff công vũ bão: lá chuyên buff vào công.
-   - 2c. Gây thiệt hại cả hai bên, địch chịu nhiều hơn.
-   - 2d. Bỏ bài đổi lấy quân mạnh về công.
-3. **Ionia**: chuyên phản ứng: phản phép siêu tốc (như hiện nay) và phép phản ứng khi đối thủ tấn công.
-4. **Freljord**: chuyên khống chế và vô hiệu hoá đối thủ.
-5. **Piltover**: chuyên gây sát thương, lối sáng tạo (tàng hình, biến hình, gài bom, vài bộ bài).
-6. **Shurima**: siêu tiến hoá; tiên đoán; làm suy kiệt; hồi sinh theo nghi thức (NHỎ, không phải lối chính).
-7. **Bilgewater**: cướp bài; cường hoá khi gây sát thương; cường hoá khi biến đổi bộ bài; triệu hồi và nuôi 1 quái (xúc tu).
-8. **Targon**: lá mạnh ở bộ bài riêng bên ngoài; mỗi lá tạo lá bên ngoài có chức năng riêng; quân cường hoá trong 1 lượt, theo nhóm Rạng đông và Hoàng hôn.
-9. **Shadow Isles**: hồi sinh; huỷ diệt bài trên sân để lấy sức mạnh.
+Demacia
+1. Buff khiên
+2. Chỉ số to
+3. Chơi theo đội hình
+
+Noxus (tấn công áp đảo, chia nhỏ)
+4. Agro: dàn nhiều quân nhỏ
+5. Buff công vũ bão: lá chuyên buff vào công
+6. Gây thiệt hại cả hai bên, địch chịu nhiều hơn
+7. Bỏ bài đổi lấy quân mạnh về công
+
+Ionia
+8. Phản phép siêu tốc
+9. Phép phản ứng khi đối thủ tấn công
+
+Freljord
+10. Khống chế và vô hiệu hoá đối thủ
+
+Piltover
+11. Gây sát thương
+12. Sáng tạo (làm đủ mọi trò)
+13. Tàng hình
+14. Biến hình
+15. Gài bom (chưa rõ "vài deck bài")
+
+Shurima
+16. Siêu tiến hoá
+17. Hồi sinh theo nghi thức (NHỎ, không phải lối chính)
+18. Tiên đoán
+19. Làm suy kiệt
+
+Bilgewater
+20. Cướp bài
+21. Cường hoá khi gây sát thương
+22. Cường hoá khi biến đổi bộ bài
+23. Triệu hồi và nuôi 1 quái (xúc tu)
+
+Targon
+24. Dùng lá mạnh ở bộ bài riêng bên ngoài
+25. Mỗi lá tạo lá bên ngoài có chức năng riêng
+26. Quân được cường hoá và khoẻ trong 1 lượt
+27. Theo nhóm Rạng đông / Hoàng hôn (chưa rõ tách 2 nhóm hay gộp)
+
+Shadow Isles
+28. Hồi sinh
+29. Huỷ diệt bài trên sân lấy sức mạnh
