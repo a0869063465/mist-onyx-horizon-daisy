@@ -848,3 +848,9 @@ Thấu thị (xem bài đối thủ):
 - Chủ game trả lời Lang nha bạc / Sói con (05/11): (a) Sói con CÓ skill (nội dung chưa ghi); (b) 3 lượt của Thủ lĩnh tính theo lượt chung; (c) so sánh theo công hiện tại; (d) Sói con dùng được ngay khi gọi ra; (e) Tiếng hú gọi bầy chỉ dùng được khi sân còn tối thiểu 2 ô trống (theo câu hỏi của chủ game, cần xác nhận lại).
 - Còn chờ: nội dung skill của Sói con; ý "còn sống" trong câu hỏi trước (quái được buff phải còn sống đến hết 3 lượt không, hay chỉ cần còn trên sân khi buff hết?).
 - Chủ game trả lời (05/11): buff của Thủ lĩnh duy trì đúng 3 lượt, KHÔNG cần quái được buff còn sống đến hết 3 lượt (câu hỏi trước là mình hỏi thừa). Sói con KHÔNG có skill.
+
+### Lá mới 05/11/2026: Sư Ưng (グリフォール, Griffore; CHƯA code, CHỜ ĐỔI TÊN)
+- Chủ game: tên "Sư Ưng" không đúng ngoại hình, cần sửa lại; tên mới chưa chốt (tên tạm: Tê giáp có cánh).
+- Sao 1, 0 mana. Công 1, thủ 1, thủ phép 1, máu 2.
+- Skill Siêu giáp: tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần.
+- Chờ chủ game chốt: (a) "tất cả các chỉ số" gồm những gì (công, thủ, thủ phép, máu)? (b) "tối đa 3 lần" tính cho mỗi quái hay cho cả trận/cả bộ? (c) tốc độ của skill và của lá (chưa ghi); (d) tên mới của lá.
