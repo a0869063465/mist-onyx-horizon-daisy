@@ -849,8 +849,9 @@ Thấu thị (xem bài đối thủ):
 - Còn chờ: nội dung skill của Sói con; ý "còn sống" trong câu hỏi trước (quái được buff phải còn sống đến hết 3 lượt không, hay chỉ cần còn trên sân khi buff hết?).
 - Chủ game trả lời (05/11): buff của Thủ lĩnh duy trì đúng 3 lượt, KHÔNG cần quái được buff còn sống đến hết 3 lượt (câu hỏi trước là mình hỏi thừa). Sói con KHÔNG có skill.
 
-### Lá mới 05/11/2026: Sư Ưng (グリフォール, Griffore; CHƯA code, CHỜ ĐỔI TÊN)
-- Chủ game: tên "Sư Ưng" không đúng ngoại hình, cần sửa lại; tên mới chưa chốt (tên tạm: Tê giáp có cánh).
+### Lá mới 05/11/2026: Tê giáp có cánh (グリフォール, Griffore; CHƯA code)
+- Tên Việt: Tê giáp có cánh (thay "Sư Ưng", chủ game chốt 05/11).
 - Sao 1, 0 mana. Công 1, thủ 1, thủ phép 1, máu 2.
 - Skill Siêu giáp: tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần.
 - Chờ chủ game chốt: (a) "tất cả các chỉ số" gồm những gì (công, thủ, thủ phép, máu)? (b) "tối đa 3 lần" tính cho mỗi quái hay cho cả trận/cả bộ? (c) tốc độ của skill và của lá (chưa ghi); (d) tên mới của lá.
+- Chủ game trả lời (05/11): (1) giữ tên Tê giáp có cánh; (2) "tất cả các chỉ số" gồm công, thủ, thủ phép, máu; (3) giới hạn 3 lần tính cho từng quái (quái tự cường hoá chính nó); (4) tốc độ: BUFF (xanh lá).
