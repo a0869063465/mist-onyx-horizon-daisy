@@ -65,8 +65,8 @@ function Home() {
   return (
     <main className="home">
       <div className="home-stage">
-        <img className="home-art" src="/home-bg.jpg" alt="Clash of the Beasts" draggable={false} />
-        <video className="home-art home-video" src="/home-bg.mp4" poster="/home-bg.jpg" autoPlay loop muted playsInline preload="auto" aria-hidden="true" />
+        <img className="home-art" src="/home-bg-video.jpg" alt="Clash of the Beasts" draggable={false} />
+        <video className="home-art home-video" src="/home-bg.mp4" poster="/home-bg-video.jpg" autoPlay loop muted playsInline preload="auto" aria-hidden="true" />
         <div className="home-shade" aria-hidden="true" />
         <div className="home-embers" aria-hidden="true">
           {EMBERS.map((ember, index) => (
