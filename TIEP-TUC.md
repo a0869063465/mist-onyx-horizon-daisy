@@ -791,3 +791,5 @@ Cơ chế tường thành (CHƯA làm, chờ chủ game trả lời):
 Thấu thị (xem bài đối thủ):
 - Đề xuất: chỉ hiện tay bài đối thủ xoè úp-lật (lá lật mặt, cập nhật theo trạng thái), không mô phỏng lại hiệu ứng rút và đánh bài. Lý do: ít tốn công nhất, đủ để người chơi biết bài.
 - Lưu ý: online cần xác nhận client có nhận được tay đối thủ không; hiện chưa kiểm.
+
+- Câu hỏi 05/11 (chủ game): khi dùng Nhãn Quan Chân Thực, có cho thấy hiệu ứng hàng chờ của đối thủ như thể người dùng đang thi triển không? Tôi khuyên: chỉ mở tay bài (xoè, lật mặt), KHÔNG mở hàng chờ đối thủ (họ chưa tick xác nhận, đó là thông tin ẩn của phần hàng chờ). CHƯA làm, chờ chủ game chốt.
