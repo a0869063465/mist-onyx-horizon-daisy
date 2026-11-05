@@ -845,3 +845,5 @@ Thấu thị (xem bài đối thủ):
 - Skill Tiếng hú gọi bầy (CHẬM): tiêu hao 2 mana, gọi ra 2 Sói con (ưu tiên hàng trước), sau đó dùng skill Thủ lĩnh (không tốn thêm mana).
 - Sói con: 1 sao. Công 1, thủ 0, thủ phép 0, máu 1.
 - Chờ chủ game chốt: (a) "Thú" là nhóm/hệ nào (Sói con, Rồng con... có thuộc Thú không)? (b) 3 lượt của Thủ lĩnh tính theo lượt chung hay lượt của mình; (c) "công nhỏ hơn nó" tính theo công hiện tại hay công gốc, và quái được hưởng 50% có cần còn sống đến hết 3 lượt không; (d) Sói con gọi ra có dùng được ngay không (đang không bị "đã hành động"); (e) nếu sân không đủ ô thì gọi được mấy con; (f) Sói con có skill không.
+- Chủ game trả lời Lang nha bạc / Sói con (05/11): (a) Sói con CÓ skill (nội dung chưa ghi); (b) 3 lượt của Thủ lĩnh tính theo lượt chung; (c) so sánh theo công hiện tại; (d) Sói con dùng được ngay khi gọi ra; (e) Tiếng hú gọi bầy chỉ dùng được khi sân còn tối thiểu 2 ô trống (theo câu hỏi của chủ game, cần xác nhận lại).
+- Còn chờ: nội dung skill của Sói con; ý "còn sống" trong câu hỏi trước (quái được buff phải còn sống đến hết 3 lượt không, hay chỉ cần còn trên sân khi buff hết?).
