@@ -909,6 +909,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ tính thật: mỗi trận Vs Máy, Đánh thường, Tuỳ chọn kết thúc là 1 trận đã chơi, thắng Đánh thường là thắng PvP. Lá nhận được (mở gói, đổi sao, quà) tính vào Thu thập lá bài, SR 1 điểm, UR 2 điểm. Bỏ 3 nhiệm vụ cũ sau trận. Thẻ Nhiệm vụ có chấm đỏ khi có thưởng chờ nhận.",
   "Sau mỗi trận hiện bảng Nhiệm vụ ngày: các nhiệm vụ vừa tăng tiến độ chạy thanh lần lượt, nhiệm vụ đủ thì bấm ô sao nhận ngay.",
   "Nhiệm vụ tuần: hàng vàng làm lại theo ảnh mới, dùng khung sao ×1 như tab Ngày, nút nhận cắt bo góc bát giác.",
+  "Nhiệm vụ tuần: nút tab Tuần đổi sang banner neon tím.",
 ];
 
 function remarkOf(notes: string[]) {

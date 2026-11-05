@@ -38,6 +38,7 @@ function MissionsPage() {
     <main className="mx-page">
       <div className={`mx is-${tab}`} style={{ backgroundImage: `url(/ui/mission/${tab === "weekly" ? "bg-week" : "bg-day"}.webp)` }}>
         <Link to="/" className="mx-back" aria-label={tr("Trở về")} data-sfx onPointerDown={() => playUi("soft")} />
+        {tab === "weekly" ? <img className="mx-neon" src="/ui/mission/tab-week-neon.webp" alt="" draggable={false} /> : null}
         <div className="mx-tabs" role="tablist">
           <button type="button" role="tab" aria-selected={tab === "daily"} aria-label={tr("Nhiệm vụ ngày")} className="mx-tab is-day" onClick={() => pick("daily")} />
           <button type="button" role="tab" aria-selected={tab === "weekly"} aria-label={tr("Nhiệm vụ tuần")} className="mx-tab is-week" onClick={() => pick("weekly")} />

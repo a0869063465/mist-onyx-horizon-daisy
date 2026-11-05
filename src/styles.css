@@ -13170,6 +13170,7 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-page { min-height: 100dvh; display: flex; justify-content: center; align-items: flex-start; background: #070d24; overflow-x: hidden; }
 .mx { --w: min(100vw, calc(100dvh * 841 / 1870)); --u: calc(var(--w) / 841); position: relative; width: var(--w); height: calc(var(--u) * 1870); flex: none; background: center / 100% 100% no-repeat; font-family: var(--cond); }
 .mx-back { position: absolute; left: calc(var(--u) * 26); top: calc(var(--u) * 68); width: calc(var(--u) * 104); height: calc(var(--u) * 104); border-radius: 50%; }
+.mx-neon { position: absolute; left: calc(var(--u) * 412); top: calc(var(--u) * 307); width: calc(var(--u) * 424); height: auto; pointer-events: none; z-index: 1; }
 .mx-tab { position: absolute; top: calc(var(--u) * 332); height: calc(var(--u) * 118); background: transparent; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mx-tab.is-day { left: calc(var(--u) * 22); width: calc(var(--u) * 402); }
 .mx-tab.is-week { left: calc(var(--u) * 424); width: calc(var(--u) * 396); }
