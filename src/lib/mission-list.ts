@@ -15,6 +15,8 @@ export type ListedMission = {
   locked?: boolean;
   /** Đếm theo gì (nhiệm vụ ngày): mọi trận đã chơi, hoặc trận thắng PvP. Không có = chưa có chế độ để đếm. */
   count?: "play" | "pvp";
+  /** Nhiệm vụ tuần làm lại được (X3: nhận xong đếm lại, còn X2, X1); không có = 1 lần. */
+  repeat?: number;
 };
 
 export const DAILY_LIST: ListedMission[] = [
@@ -29,11 +31,11 @@ export const DAILY_LIST: ListedMission[] = [
 ];
 
 export const WEEKLY_LIST: ListedMission[] = [
-  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "rw0" },
-  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "rw1" },
-  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "rw2", relic: "t-puzzle" },
-  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "rw3", relic: "t-ring" },
-  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "rw4" },
-  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "rw5" },
-  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "rw6" },
+  { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "w0", repeat: 3 },
+  { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "w1", repeat: 3 },
+  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "w2" },
+  { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "w3" },
+  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "w4" },
+  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "w5" },
+  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "w6" },
 ];
