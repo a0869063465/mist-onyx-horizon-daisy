@@ -13,15 +13,17 @@ export type ListedMission = {
   /** Ảnh bảo vật thay icon trong hàng (nếu có). */
   relic?: string;
   locked?: boolean;
+  /** Đếm theo gì (nhiệm vụ ngày): mọi trận đã chơi, hoặc trận thắng PvP. Không có = chưa có chế độ để đếm. */
+  count?: "play" | "pvp";
 };
 
 export const DAILY_LIST: ListedMission[] = [
-  { id: "d-first", title: "Chơi trận đầu tiên trong ngày", goal: 1, stars: 1, row: "rd0" },
-  { id: "d-play3", title: "Chơi 3 trận", goal: 3, stars: 1, row: "rd1" },
-  { id: "d-play10", title: "Chơi 10 trận", goal: 10, stars: 1, row: "rd2" },
-  { id: "d-play20", title: "Chơi 20 trận", goal: 20, stars: 1, row: "rd3" },
-  { id: "d-pvp6", title: "Thắng 6 trận PvP", goal: 6, stars: 1, row: "rd4" },
-  { id: "d-pvp10", title: "Thắng 10 trận PvP", goal: 10, stars: 1, row: "rd5" },
+  { id: "d-first", title: "Chơi trận đầu tiên trong ngày", goal: 1, stars: 1, row: "rd0", count: "play" },
+  { id: "d-play3", title: "Chơi 3 trận", goal: 3, stars: 1, row: "rd1", count: "play" },
+  { id: "d-play10", title: "Chơi 10 trận", goal: 10, stars: 1, row: "rd2", count: "play" },
+  { id: "d-play20", title: "Chơi 20 trận", goal: 20, stars: 1, row: "rd3", count: "play" },
+  { id: "d-pvp6", title: "Thắng 6 trận PvP", goal: 6, stars: 1, row: "rd4", count: "pvp" },
+  { id: "d-pvp10", title: "Thắng 10 trận PvP", goal: 10, stars: 1, row: "rd5", count: "pvp" },
   { id: "d-rank5", title: "Chơi 5 trận Xếp hạng", goal: 5, stars: 1, row: "rd6" },
   { id: "d-rankwin3", title: "Thắng 3 trận Xếp hạng", goal: 3, stars: 1, row: "rd7" },
 ];

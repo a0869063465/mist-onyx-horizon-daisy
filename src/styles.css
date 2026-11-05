@@ -13192,3 +13192,23 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-relic { position: absolute; left: calc(var(--u) * 8); top: 50%; transform: translateY(-50%); width: calc(var(--u) * 204); height: calc(var(--u) * 144); display: grid; place-items: center; background: radial-gradient(closest-side, #4c2394 0%, #34176e 72%, #2b1457 100%); -webkit-mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); mask-image: radial-gradient(closest-side, #000 90%, transparent 100%); }
 .mx-relic img { height: 84%; width: auto; max-width: 80%; object-fit: contain; filter: drop-shadow(0 0 calc(var(--u) * 8) rgba(255, 190, 60, 0.7)); }
 .mx-soon { position: absolute; right: calc(var(--u) * 190); top: calc(var(--u) * 5); padding: 0 calc(var(--u) * 12); border-radius: calc(var(--u) * 12); font-size: calc(var(--u) * 22); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, 0.62); }
+
+/* Nhiệm vụ ngày (chủ game 05/11): hàng cắt nguyên từ ảnh thiết kế, 3 trạng thái, hàng nằm sát nhau như trong ảnh. */
+.mx-list:has(.is-q) { gap: 0; left: calc(var(--u) * 36); top: calc(var(--u) * 470); width: calc(var(--u) * 771); height: calc(var(--u) * 1190); }
+.mx-card.is-q { container-type: inline-size; height: auto; width: 100%; overflow: visible; }
+.mx-q { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; user-select: none; }
+.mx-q.is-in { animation: mx-fade-in 620ms ease both; }
+.mx-q.is-under { z-index: 0; }
+@keyframes mx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.mx-card.is-q .mx-fill { position: absolute; z-index: 1; border-style: solid; border-color: transparent; border-width: 0; border-image: url(/ui/mission/q-fill.webp) 0 10 0 10 fill / 0 1.02cqw 0 1.02cqw stretch; min-width: 2.04cqw; border-radius: 0; background: none; mix-blend-mode: normal; transition: width 520ms cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
+.mx-num { position: absolute; z-index: 2; transform: translateY(-50%); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", sans-serif; font-weight: 700; font-size: 4.38cqw; line-height: 1; color: #fff; white-space: nowrap; letter-spacing: 0.01em; -webkit-text-stroke: 0.3cqw rgba(0, 14, 48, 0.92); paint-order: stroke fill; text-shadow: 0 0.25cqw 0.35cqw rgba(0, 0, 0, 0.55); font-variant-numeric: tabular-nums; pointer-events: none; }
+/* Nút nhận thưởng: bản sao đúng ô sao của hàng vàng (cùng điểm ảnh), nhún khi bấm. */
+.mx-claim { position: absolute; z-index: 3; left: 72%; width: 27%; top: 6%; height: 88%; padding: 0; border: 0; border-radius: 4%; cursor: pointer; background-repeat: no-repeat; background-size: calc(100% / 0.27) calc(100% / 0.88); background-position: 98.6% 50%; -webkit-tap-highlight-color: transparent; animation: mx-ready 1.6s ease-in-out infinite; }
+.mx-claim:active { transform: scale(0.94); filter: brightness(1.3); animation: none; }
+@keyframes mx-ready { 50% { transform: scale(1.035); filter: brightness(1.18) drop-shadow(0 0 1.2cqw rgba(255, 210, 90, 0.9)); } }
+.mx-pop { position: absolute; z-index: 4; left: 86%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.mx-pop .po-burst { left: 0; top: 0; --k: 1.4; }
+.mx-pop em { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-style: normal; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 7cqw; color: #ffe27a; -webkit-text-stroke: 0.4cqw rgba(60, 30, 0, 0.9); paint-order: stroke fill; white-space: nowrap; animation: mx-gain 1.1s ease-out forwards; }
+@keyframes mx-gain { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); } 20% { opacity: 1; transform: translate(-50%, -90%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .mx-claim { animation: none; } .mx-q.is-in { animation-duration: 1ms; } }
+.mx-num.is-long { font-size: 3.7cqw; letter-spacing: -0.015em; }
