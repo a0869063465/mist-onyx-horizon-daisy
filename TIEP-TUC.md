@@ -723,3 +723,4 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - NHẠC MENU THÊM 5 BÀI 05/11 (Sonnet 5.5 low): `public/music/` hoa-tau-1, hoa-tau-2, unknown-1, warm-card-motif, chien-binh-card (.mp3, ~19 MB), thêm vào `TRACKS` (music.ts), menu giờ 7 bài ngẫu nhiên; nhạc trận không đổi. Commit nhánh, CHƯA áp `main`.
 - ĐÃ ÁP `main` 05/11 lần 3 (chủ game: "Áp lên main"): đẩy thẳng nhánh `ccr-4a6b9076-s9p3aq` lên `main` (fast-forward, không ép), gồm nền menu video + 5 bài nhạc menu mới.
 - NỀN MENU HẾT GIẬT 05/11 (chủ game báo giật khi về menu; Sonnet 5.5 low, nhánh `ccr-4a6b9076-s9p3aq`, CHƯA áp `main`): nguyên nhân = lớp ảnh `.home-art` chạy lại `home-art-in` (phóng 1,08→1) mỗi lần vào menu. Bỏ cả `home-art-in` lẫn `home-art-drift` cho `.home-art`, ảnh dùng cùng `object-position` 48,6% như video.
+- ĐÃ ÁP `main` 05/11 lần 4 (chủ game: "Áp lại lên main"): đẩy thẳng nhánh `ccr-4a6b9076-s9p3aq` lên `main` (fast-forward, không ép), gồm sửa nền menu hết giật.
