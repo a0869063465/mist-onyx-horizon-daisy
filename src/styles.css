@@ -13225,3 +13225,10 @@ button.mx-box:active { transform: translate(-50%, -50%) scale(0.94); filter: bri
 .mx-dig.is-d { -webkit-text-stroke-color: rgba(0, 40, 0, 0.9); }
 @keyframes mx-readyc { 50% { transform: translate(-50%, -50%) scale(1.035); filter: brightness(1.18) drop-shadow(0 0 1.2cqw rgba(255, 210, 90, 0.9)); } }
 .mx-num.is-wkn { font-size: 4.05cqw; letter-spacing: 0; word-spacing: 0; }
+
+/* Bảng nhiệm vụ sau trận (chủ game 05/11) */
+.ma { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(2, 6, 18, 0.78); animation: mx-fade-in 360ms ease both; }
+.ma-box { width: min(94vw, 26rem); max-height: 92dvh; overflow-y: auto; display: grid; gap: 0.6rem; justify-items: center; }
+.ma-box h2 { margin: 0; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.04em; color: #ffe27a; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7); }
+.ma-list { width: 100%; margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
+.ma-go { margin-top: 0.4rem; padding: 0.7rem 2.6rem; border: 0; border-radius: 0.6rem; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.2rem; color: #2a1a00; background: linear-gradient(180deg, #ffe79a, #f0a929); cursor: pointer; }

@@ -97,20 +97,23 @@ export function weekDone(store: WeekStore, row: ListedMission): number {
 
 /**
  * Một trận đã kết thúc (Vs Máy, Đánh thường, Tuỳ chọn; thắng, thua hay đầu hàng đều là đã chơi).
- * `pvpWin` = thắng Đánh thường. Trận đã tính rồi thì bỏ qua; trả true khi vừa ghi.
+ * `pvpWin` = thắng Đánh thường. Trận đã tính rồi thì bỏ qua; trả tiến độ trước và sau khi vừa ghi, null nếu đã tính rồi.
  */
-export function noteMatch(mid: string, pvpWin: boolean): boolean {
+export type MatchGain = { play: [number, number]; pvp: [number, number] };
+
+export function noteMatch(mid: string, pvpWin: boolean): MatchGain | null {
   const raw = read(MIDS_KEY);
   const seen = Array.isArray(raw.mids) ? raw.mids.filter((one): one is string => typeof one === "string") : [];
-  if (!mid || seen.includes(mid)) return false;
+  if (!mid || seen.includes(mid)) return null;
   write(MIDS_KEY, { mids: [...seen, mid].slice(-MIDS_KEPT) });
   const day = loadDay();
+  const gain: MatchGain = { play: [day.played, day.played + 1], pvp: [day.pvp, day.pvp + (pvpWin ? 1 : 0)] };
   day.played += 1;
   if (pvpWin) day.pvp += 1;
   saveDay(day);
   // Tuần: chưa có trận xếp hạng, nên chỉ giữ cho mốc 7 ngày bắt đầu từ trận đầu tiên.
   saveWeek(loadWeek());
-  return true;
+  return gain;
 }
 
 /** Bậc của một lá nhận được, cho "Thu thập 4 điểm SR hoặc UR": SR 1 điểm, UR 2 điểm (chủ game 05/11). */
