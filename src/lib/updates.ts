@@ -905,6 +905,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ Ngày hiện 3 trạng thái: xanh dương khi đang làm, vàng khi đủ để nhận, xanh lá khi đã nhận. Bấm ô sao ở hàng vàng để nhận thưởng.",
   "Nhiệm vụ Tuần cũng có 3 trạng thái: tím khi đang làm, vàng khi đủ để nhận, xanh lá khi đã nhận. Nhiệm vụ xếp hạng (X3) nhận xong đếm lại, còn X2 rồi X1.",
   "Nhiệm vụ Tuần: Sử dụng 1 bảo vật và Thu thập 10 lá bài thưởng 1 sao, các nhiệm vụ còn lại 2 sao. Hàng vàng dùng ảnh mới, ống đúng cỡ và ô sao sáng không còn viền đen.",
+  "Ô sao sáng của nhiệm vụ Tuần có đủ quầng sáng quanh khung, hoà vào khung hàng.",
 ];
 
 function remarkOf(notes: string[]) {
