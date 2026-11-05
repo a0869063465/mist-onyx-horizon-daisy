@@ -81,4 +81,9 @@ Lá đứng yên là lá không đánh hoặc không chặn vì cơ chế in s�
 
 Quái 5 sao là trường hợp đặc biệt. Cơ chế mới mà người chơi không đề cập tới quái 5 sao thì quái 5 sao không có cơ chế đó. Chỉ áp dụng tối đa đến quái 4 sao.
 
-Cộng sát thương kỹ năng (chủ game nêu, ghi để agent nhớ). Buff sát thương kỹ năng chỉ cộng vào sát thương của kỹ năng, không cộng vào đòn đánh thường. Lá tăng sát thương kỹ năng (vĩnh viễn) theo mô tả: skill đa mục tiêu +1 cho mỗi mục tiêu; skill nhiều đợt +1 mỗi đợt, tối đa 3 đợt; skill vừa đa mục tiêu vừa nhiều đợt thì ưu tiên nhiều đợt; skill đơn mục tiêu tăng gấp đôi (+2). Chưa chốt, chờ chủ game: Hỗ công (+3 sát thương phép) lên quái rồi quái đó dùng Cầu sấm ánh sáng hay Cầu lửa địa ngục thì có được cộng không, và buff có bị tiêu khi chỉ trả mana nạp Cầu sấm không.
+Cộng sát thương kỹ năng (chủ game nêu, 05/11). Buff sát thương kỹ năng chỉ cộng vào sát thương của kỹ năng, không cộng vào đòn đánh thường.
+- Phân bổ theo loại sát thương của kỹ năng. Kỹ năng hỗn hợp: ưu tiên sát thương phép, rồi vật lý, rồi chuẩn. Ví dụ: tăng 3 sát thương kỹ năng lên Mắt đỏ tàn phá (có cả phép, vật lý, chuẩn) thì cộng vào phần phép. Kỹ năng chỉ chuẩn (Mắt xanh huỷ diệt): +3 sát thương chuẩn.
+- Kỹ năng diện rộng: chỉ cộng vào mục tiêu chính (mục tiêu chọn khi bấm skill). Vẫn theo quy tắc ưu tiên trên.
+- Sát thương liên thanh (nhiều đợt): chỉ cộng vào đợt cuối.
+- Lá tăng sát thương kỹ năng (vĩnh viễn) theo mô tả: skill đa mục tiêu +1 cho mỗi mục tiêu; skill nhiều đợt +1 mỗi đợt, tối đa 3 đợt; skill vừa đa mục tiêu vừa nhiều đợt thì ưu tiên nhiều đợt; skill đơn mục tiêu tăng gấp đôi (+2).
+- Chưa chốt, chờ chủ game: Hỗ công (+3 sát thương phép) lên quái rồi quái đó dùng Cầu sấm ánh sáng hay Cầu lửa địa ngục thì có được cộng không, và buff có bị tiêu khi chỉ trả mana nạp Cầu sấm không.
