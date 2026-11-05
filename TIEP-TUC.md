@@ -855,3 +855,8 @@ Thấu thị (xem bài đối thủ):
 - Skill Siêu giáp: tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần.
 - Chờ chủ game chốt: (a) "tất cả các chỉ số" gồm những gì (công, thủ, thủ phép, máu)? (b) "tối đa 3 lần" tính cho mỗi quái hay cho cả trận/cả bộ? (c) tốc độ của skill và của lá (chưa ghi); (d) tên mới của lá.
 - Chủ game trả lời (05/11): (1) giữ tên Tê giáp có cánh; (2) "tất cả các chỉ số" gồm công, thủ, thủ phép, máu; (3) giới hạn 3 lần tính cho từng quái (quái tự cường hoá chính nó); (4) tốc độ: BUFF (xanh lá).
+
+### Lá mới 05/11/2026: Tiểu quỷ Gremlin (グレムリン, Gremlin; CHƯA code)
+- Sao 2, mana 1. Công 3, thủ 0, thủ phép 0, máu 2.
+- Skill Ma mãnh (nội tại): mỗi 1 hành động của đối phương (rút bài, tấn công, chặn đòn, dùng phép, dùng skill) đều nằm trong tầm ngắm của nó. Mỗi hành động có 15% xác suất dính bẫy: nó ngẫu nhiên tấn công siêu tốc 1 mục tiêu của địch mà không bị trả đòn. Không có hàng đợi, cũng không phản ứng được.
+- Chờ chủ game chốt: (a) mục tiêu ngẫu nhiên gồm cả người chơi địch, hay chỉ quái địch? (b) sát thương bằng công của Gremlin, sát thương phép hay chuẩn; (c) "dính bẫy" của đối phương có đưa vào hàng chờ hay chạy ngay; (d) có tính cả hành động của mình không (chỉ đối phương)?
