@@ -795,3 +795,4 @@ Thấu thị (xem bài đối thủ):
 - Câu hỏi 05/11 (chủ game): khi dùng Nhãn Quan Chân Thực, có cho thấy hiệu ứng hàng chờ của đối thủ như thể người dùng đang thi triển không? Tôi khuyên: chỉ mở tay bài (xoè, lật mặt), KHÔNG mở hàng chờ đối thủ (họ chưa tick xác nhận, đó là thông tin ẩn của phần hàng chờ). CHƯA làm, chờ chủ game chốt.
 
 - Nhãn Quan Chân Thực (chủ game 05/11, THAY mô tả cũ): mana 1. Xem tay bài của đối thủ. Sau đó rút 1 lá bài không tiêu hao mana (tự động). CHƯA làm, chờ chủ game chốt: rút từ xấp nào (xấp chung/xấp của mình), và nếu xấp rỗng thì sao.
+- Nhãn Quan (chủ game 05/11): rút 1 lá từ xấp của CHÍNH MÌNH (không phải tay đối thủ). Còn chờ: xấp rỗng thì sao (chưa chốt).
