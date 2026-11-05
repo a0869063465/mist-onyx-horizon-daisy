@@ -827,3 +827,5 @@ Thấu thị (xem bài đối thủ):
 - 0 mana. Tăng 1 sát thương skill vĩnh viễn cho các sát thương đa mục tiêu (+1 cho mỗi mục tiêu) và nhiều đợt (+1 mỗi đợt, tối đa 3 đợt). Nếu vừa đa mục tiêu vừa nhiều đợt (như Súng phóng lựu hình nhện) thì ưu tiên nhiều đợt.
 - Tăng gấp đôi nếu là quái đơn mục tiêu.
 - Chờ chủ game chốt: (a) tốc độ (chưa ghi); (b) lá này chọn quái nào để tăng (quái của mình hay bất kỳ, và có nhắm mục tiêu không); (c) "tăng gấp đôi" áp lên phần tăng (+1 thành +2) hay lên cả sát thương.
+- Chủ game trả lời (05/11): sửa lại là skill ĐƠN MỤC TIÊU (không phải quái đơn mục tiêu). Tốc độ: BUFF (xanh lá). Lá nhắm bất kỳ quái nào; sau đó tuỳ theo skill mà +. Đơn mục tiêu: tăng thành +2.
+- Còn chưa rõ: "tuỳ theo skill mà +" nghĩa là số tăng phụ thuộc loại skill nào, hay chỉ là chữ mô tả; chờ chủ game chốt.
