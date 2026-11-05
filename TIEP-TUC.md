@@ -776,3 +776,18 @@ Phép:
 13. 魂の解放: Giải Phóng Linh Hồn (Soul Release)
 14. 魔法解除: Giải Trừ Ma Pháp (Dispel Magic; trước là "Mũi tên phá phép", CHƯA chốt)
 15. 真実の眼: Nhãn Quan Chân Thực (Eye of Truth)
+
+### Cập nhật 05/11/2026 (chủ game)
+
+- Nguyên tắc: tên lá giữ theo tên tiếng Nhật gốc, tên tiếng Việt đi kèm.
+- Đã chốt: #4 Tiểu Quỷ Gremlin; #14 Giải Trừ Ma Pháp (Dispel Magic).
+- #15 Nhãn Quan Chân Thực (真実の眼): mana 1. Xem bài trên tay đối thủ đến hết lượt đấu kế tiếp.
+
+Cơ chế tường thành (CHƯA làm, chờ chủ game trả lời):
+- Phép dùng xong tự bay xuống sân như tường thành, đếm lượt, hết lượt thì mất.
+- Vị trí: lá 1 ở ô môi trường (nếu không có môi trường thì ở chỗ đó); lá 2 đặt phía trên; lá 3 đặt cạnh về phía giữa sân; lá 4 đặt trên nữa; cứ thế tiếp.
+- Hỏi: (a) những phép nào dùng cơ chế này (Gương phòng hộ đã có tường thành, có phải cùng loại?); (b) số lượt đếm của từng phép; (c) với bên đối thủ, "phía trên" và "về phía giữa" có đảo chiều không.
+
+Thấu thị (xem bài đối thủ):
+- Đề xuất: chỉ hiện tay bài đối thủ xoè úp-lật (lá lật mặt, cập nhật theo trạng thái), không mô phỏng lại hiệu ứng rút và đánh bài. Lý do: ít tốn công nhất, đủ để người chơi biết bài.
+- Lưu ý: online cần xác nhận client có nhận được tay đối thủ không; hiện chưa kiểm.
