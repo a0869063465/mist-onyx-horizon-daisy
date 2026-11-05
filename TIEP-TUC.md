@@ -306,6 +306,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## Quy tắc làm việc với chủ game
 
+- GHI VIỆC SẮP LÀM NGẮN (chủ game 05/11, nhắc lại, TUYỆT ĐỐI TUÂN THEO): mỗi việc sắp làm viết DƯỚI 4 DÒNG, trong tin nhắn trả lời, file kế hoạch và file này. Không bảng dài, không liệt kê chi tiết. Dài hơn thì chủ game không đọc. Chi tiết kỹ thuật chỉ ghi ngắn vào TIEP-TUC.md sau khi làm xong.
 - SAI MÔ HÌNH THÌ KHÔNG LÀM (chủ game 01/11): mỗi việc có mô hình + nỗ lực đã chốt với chủ game. Nếu mô hình/nỗ lực đang chạy khác chốt thì DỪNG, báo, chờ chủ game đổi, kể cả khi đã được cấp quyền sửa. Xong phần được duyệt thì DỪNG, không tự sang bước kế (01/11 đã tự sang T2d sau khi chỉ được duyệt bước 1 là sai).
 - BÁO KẾ HOẠCH NGẮN (chủ game 01/11, nhắc lại nhiều lần): giữa chừng chỉ nói HIỆN TRẠNG (vừa xong phần nào, hoặc lỗi là gì) rồi HƯỚNG LÀM, kèm MÔ HÌNH. Vài dòng, không dài. File kế hoạch cũng giữ ngắn.
 - LÀM THEO VIDEO (chủ game 01/11): xem kỹ cả video bằng số liệu và chụp cận, dựng game cạnh khung video để so; không làm theo trí nhớ. Chi tiết ở skill `hoc-tu-video`, `be-sang`.
