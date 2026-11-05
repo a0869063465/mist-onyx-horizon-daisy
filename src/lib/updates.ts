@@ -910,6 +910,7 @@ export const PENDING_NOTES: string[] = [
   "Sau mỗi trận hiện bảng Nhiệm vụ ngày: các nhiệm vụ vừa tăng tiến độ chạy thanh lần lượt, nhiệm vụ đủ thì bấm ô sao nhận ngay.",
   "Nhiệm vụ tuần: hàng vàng làm lại theo ảnh mới, dùng khung sao ×1 như tab Ngày, nút nhận cắt bo góc bát giác.",
   "Nhiệm vụ tuần: nút tab Tuần đổi sang banner neon tím.",
+  "Menu chính: đổi hình nền mới.",
 ];
 
 function remarkOf(notes: string[]) {
