@@ -792,6 +792,44 @@ test("Hộp ma thuật với kỹ năng nhiều mục tiêu: chọn 1 đồng mi
   assert.equal(moved.hp, 40, "đồng minh đã sang sân kia không trúng");
 });
 
+test("Hỗ công +3 sát thương phép vào Cầu lửa địa ngục (phần phép)", () => {
+  const run = (blessed) => {
+    let s = board({ 0: ["mat-do-tan-pha"], 1: ["yeu-tinh-chuc-phuc"] }, { 0: ["khong-lo-mot-mat", { hp: 30, maxHp: 30 }] });
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 9, stars: 4 })) };
+    if (blessed) s = D.useSkill(s, uid(s, 0, 1), uid(s, 0, 0), 1);
+    s = D.useSkill({ ...s, turn: 0, step: "main" }, uid(s, 0, 0), uid(s, 1, 0), 0);
+    return at(s, 1, 0).hp;
+  };
+  assert.equal(run(false) - run(true), 3);
+});
+
+test("Hỗ công giữ qua lúc nạp Cầu sấm: phát bắn +3 sát thương chuẩn", () => {
+  const run = (blessed) => {
+    let s = board({ 0: ["mat-xanh-huy-diet"], 1: ["yeu-tinh-chuc-phuc"] }, {});
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 9, stars: 4 })) };
+    if (blessed) s = D.useSkill(s, uid(s, 0, 1), uid(s, 0, 0), 1);
+    s = D.useSkill({ ...s, turn: 0, step: "main" }, uid(s, 0, 0), null, 0);
+    s = { ...s, turn: 0, step: "main", players: s.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, used: false, dim: false } : m)) })) };
+    const hp = s.players[1].hp;
+    let t = D.attackFace(s, uid(s, 0, 0));
+    for (let i = 0; i < 6 && (t.hold || t.pending); i++) t = D.passResponse(t);
+    return hp - t.players[1].hp;
+  };
+  assert.equal(run(true) - run(false), 3);
+});
+
+test("Hỗ công hết khi hết vòng, cả bên không giữ token", () => {
+  for (const holder of [0, 1]) {
+    let s = board({ 0: ["rong-con"], 1: ["yeu-tinh-chuc-phuc"] }, {}, { round: holder, turn: 0 });
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 9, stars: 4 })) };
+    s = D.useSkill(s, uid(s, 0, 1), uid(s, 0, 0), 1);
+    assert.equal(at(s, 0, 0).blessDmg, 3);
+    for (let i = 0; i < 4 && s.round === holder; i++) s = D.endTurn(s);
+    assert.notEqual(s.round, holder, "vòng đã sang");
+    assert.equal(at(s, 0, 0).blessDmg ?? 0, 0);
+  }
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

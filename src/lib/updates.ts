@@ -899,7 +899,7 @@ export const PENDING_NOTES: string[] = [
   "Khung gợi ý đầu trận làm như Hướng dẫn: nền tối, vùng sáng viền vàng chớp, Người giữ khoá nói, bấm » mới đóng. Nhắc rút bài, nhắc bấm chuyển.",
   "Kéo quái lên sân: viền neon ô được chọn nằm trên lá đang kéo.",
   "Xấp bài có glow xanh khi rút được. Lá phép dùng được có viền và glow theo màu tốc độ: nhanh và siêu tốc thở mạnh, phép khác sáng đứng yên.",
-  "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
+  "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",  "Hỗ công của Yêu tinh chúc phúc cộng +3 sát thương phép vào Cầu lửa địa ngục, và +3 sát thương chuẩn vào phát bắn Cầu sấm ánh sáng. Hết vòng thì buff mất.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -86,4 +86,4 @@ Cộng sát thương kỹ năng (chủ game nêu, 05/11). Buff sát thương k�
 - Kỹ năng diện rộng: chỉ cộng vào mục tiêu chính (mục tiêu chọn khi bấm skill). Vẫn theo quy tắc ưu tiên trên.
 - Sát thương liên thanh (nhiều đợt): chỉ cộng vào đợt cuối.
 - Lá tăng sát thương kỹ năng (vĩnh viễn) theo mô tả: skill đa mục tiêu +1 cho mỗi mục tiêu; skill nhiều đợt +1 mỗi đợt, tối đa 3 đợt; skill vừa đa mục tiêu vừa nhiều đợt thì ưu tiên nhiều đợt; skill đơn mục tiêu tăng gấp đôi (+2).
-- Chưa chốt, chờ chủ game: Hỗ công (+3 sát thương phép) lên quái rồi quái đó dùng Cầu sấm ánh sáng hay Cầu lửa địa ngục thì có được cộng không, và buff có bị tiêu khi chỉ trả mana nạp Cầu sấm không.
+- Buff của Yêu tinh (Hỗ công) là buff trong lượt: quái dùng skill thì cộng sát thương theo quy tắc trên; hết lượt thì mất dù có dùng skill hay không. Kỹ năng nạp (Cầu sấm ánh sáng) giữ phần cộng tới lúc bắn.

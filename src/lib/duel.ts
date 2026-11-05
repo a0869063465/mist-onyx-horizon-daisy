@@ -76,6 +76,8 @@ export type FieldMon = {
   horn?: "plain" | "splash" | "plus";
   hornNew?: boolean;
   gaze?: boolean;
+  /** Sát thương kỹ năng cộng thêm (vd Hỗ công) lúc nạp Cầu sấm ánh sáng: cộng vào phát bắn chuẩn. */
+  gazeBonus?: number;
   bolt?: boolean;
   host?: string;
   cover?: boolean;
@@ -1631,6 +1633,7 @@ function plainHat(mon: FieldMon): FieldMon {
     buff: undefined,
     horn: undefined,
     gaze: undefined,
+    gazeBonus: undefined,
     clash: undefined,
     glass: undefined,
   };
@@ -1909,9 +1912,14 @@ function auraGuard(allies: Array<FieldMon | null> | undefined, mon: FieldMon) {
   return parsed > 0 ? parsed : 1;
 }
 
+/** Phần cộng thêm của phát bắn Cầu sấm ánh sáng (đã nạp kèm buff sát thương kỹ năng). */
+function gazeExtra(mon: FieldMon): number {
+  return mon.gaze && !mon.horn ? mon.gazeBonus ?? 0 : 0;
+}
+
 function dullHorn(mon: FieldMon, mode: FieldMon["horn"]): FieldMon {
   const next = mode === "splash" || mode === "plus" ? { ...mon, horn: "plain" as const } : mon;
-  return next.gaze ? { ...next, gaze: undefined } : next;
+  return next.gaze ? { ...next, gaze: undefined, gazeBonus: undefined } : next;
 }
 
 const NOT_BEAST = new Set([
@@ -3078,6 +3086,7 @@ function becomeLegend(mon: FieldMon): FieldMon {
     fed,
     clash: undefined,
     gaze: undefined,
+    gazeBonus: undefined,
     raised: fed > 0 ? { atk: fed, def: fed, mdef: fed, hp: fed } : undefined,
   });
 }
@@ -3252,7 +3261,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   if (gazeTrue) {
     if (defenderDodged) defenderBody = defender;
     else {
-      const hit = landTrue(defender, outgoing(attacker, atk), alliesB);
+      const hit = landTrue(defender, outgoing(attacker, atk + (hiddenTrue ? 0 : gazeExtra(attacker))), alliesB);
       defenderBody = hit.mon;
       bite = hit.bite;
       surplus = hit.surplus;
@@ -4541,6 +4550,18 @@ function hellCount(text: string, word: string, fallback: number) {
   return brief ? Number(brief[1]) : fallback;
 }
 
+/**
+ * Buff sát thương kỹ năng (charmDamage, vd Hỗ công) lên kỹ năng hỗn hợp (chủ game 05/11):
+ * cộng cả vào một phần, ưu tiên phép, rồi vật lý, rồi chuẩn.
+ */
+function charmPack(figures: { phys: number; spell: number; tru: number }) {
+  if (charmDamage <= 0) return figures;
+  if (figures.spell > 0) figures.spell += charmDamage;
+  else if (figures.phys > 0) figures.phys += charmDamage;
+  else figures.tru += charmDamage;
+  return figures;
+}
+
 export function hellFigures(id: string) {
   const text = skillText(id);
   const spill = /từ\s*(\d+)\s*trở lên/i.exec(text);
@@ -4652,6 +4673,7 @@ function resolveHell(state: Duel, attacker: FieldMon, defender: FieldMon): Duel 
   const releaseHex = bindSkillHex(attacker);
   const figures = hellFigures(attacker.cardId);
   if (attacker.skillUp) figures.spell += attacker.skillUp;
+  charmPack(figures);
   const shaved = shaveHex(attacker, figures);
   const shot: HellPack = {
     phys: outgoing(attacker, shaved.phys),
@@ -5152,7 +5174,7 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   let wornD = awardD.mon;
   const hornRaw = attacker.horn === "plus" ? Math.min(8, liveAtk(attacker)) : attacker.horn === "splash" ? Math.min(4, liveAtk(attacker)) : liveAtk(attacker);
   const hornDealt = attacker.horn && !rabbitDodge(defender, attacker) ? spellLanded(defender, hornRaw, them.field, attacker) : attacker.horn ? 0 : 0;
-  const gazeDealt = attacker.gaze && !attacker.horn && !rabbitDodge(defender, attacker) ? truLanded(defender, liveAtk(attacker), them.field, attacker) : 0;
+  const gazeDealt = attacker.gaze && !attacker.horn && !rabbitDodge(defender, attacker) ? truLanded(defender, liveAtk(attacker) + gazeExtra(attacker), them.field, attacker) : 0;
   const hiddenStrike = shadeHidden(attacker) && !attacker.horn && !attacker.gaze && !attacker.bolt;
   const hiddenDealt = hiddenStrike && !rabbitDodge(defender, attacker) ? truLanded(defender, liveAtk(attacker), them.field, attacker) : 0;
   let splashLine = "";
@@ -5507,6 +5529,7 @@ function resolveHellFace(state: Duel, attacker: FieldMon, blocker: FieldMon | nu
   const releaseHex = bindSkillHex(caster);
   const figures = hellFigures(attacker.cardId);
   if (attacker.skillUp) figures.spell += attacker.skillUp;
+  charmPack(figures);
   const shaved = shaveHex(attacker, figures);
   const shot = {
     phys: outgoing(caster, shaved.phys),
@@ -5598,7 +5621,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
             attacker,
           )
       : (gazeOnly || hiddenOnly) && !rabbitDodge(body, attacker)
-        ? truLanded(body, liveAtk(attacker), guarding.field, attacker)
+        ? truLanded(body, liveAtk(attacker) + (gazeOnly ? gazeExtra(attacker) : 0), guarding.field, attacker)
         : 0;
     const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly || hiddenOnly ? `, chịu ${taken} sát thương chuẩn` : "";
     const blocked = releaseLegend({
@@ -5627,7 +5650,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   const dealt = attacker.cardId === PERFECT
     ? outgoing(attacker, bolt ? raw + plate.p + plate.s : raw + plate.p + plate.s)
     : attacker.horn || attacker.gaze
-      ? outgoing(attacker, raw)
+      ? outgoing(attacker, raw + gazeExtra(attacker))
       : attacker.cardId === RIDER
         ? outgoing(attacker, Math.max(raw, skillFigure(RIDER, "dmg", 4)))
         : raw;
@@ -5968,11 +5991,11 @@ function finishRebound(state: Duel): Duel {
     return note(next, `${castName(caster.cardId, pending.index)} bị phản vào ${cardOf(victim).name}, gây ${lost} sát thương chuẩn.`, "hit");
   }
   if (caster.gaze && !caster.horn) {
-    const amount = outgoing(caster, liveAtk(caster));
+    const amount = outgoing(caster, liveAtk(caster) + gazeExtra(caster));
     const field = owner.field.map((mon) => {
       if (!mon) return mon;
       if (mon.uid === caster.uid) {
-        const spent = { ...mon, dim: true, gaze: undefined };
+        const spent = { ...mon, dim: true, gaze: undefined, gazeBonus: undefined };
         return mon.uid === victim.uid ? landTrue(spent, amount, owner.field).mon : spent;
       }
       return mon.uid === victim.uid ? landTrue(mon, amount, owner.field).mon : mon;
@@ -5989,7 +6012,7 @@ function finishRebound(state: Duel): Duel {
     const field = owner.field.map((mon) => {
       if (!mon) return mon;
       if (mon.uid === caster.uid) {
-        const spent = { ...mon, dim: true, gaze: undefined, horn: mon.horn === "plain" || !mon.horn ? mon.horn : ("plain" as const) };
+        const spent = { ...mon, dim: true, gaze: undefined, gazeBonus: undefined, horn: mon.horn === "plain" || !mon.horn ? mon.horn : ("plain" as const) };
         return mon.uid === victim.uid ? damageSpell(spent, amount, owner.field) : spent;
       }
       return mon.uid === victim.uid ? damageSpell(mon, amount, owner.field) : mon;
@@ -7713,7 +7736,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const before = you.stars;
     const paid = pay(you, 1);
     if (!paid) return note(state, "Cần 1 gem.");
-    const field = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, gaze: true } : unit));
+    const field = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, gaze: true, gazeBonus: charmDamage > 0 ? charmDamage : undefined } : unit));
     const armed = note(pingStars(patch(state, side, { ...paid, field }), side, before, paid.stars), `${cardOf(mon).name} nạp tia sáng huỷ diệt. Đòn tiếp theo là sát thương chuẩn bằng công.`, "heal");
     return { ...armed, mends: [{ uid: mon.uid, n: 0 }] };
   }
@@ -7891,6 +7914,7 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     if (!target) {
       const figures = hellFigures(mon.cardId);
       if (caster.skillUp) figures.spell += caster.skillUp;
+      charmPack(figures);
       const shaved = shaveHex(caster, figures);
       const shot = {
         phys: outgoing(caster, shaved.phys),
@@ -9484,6 +9508,9 @@ function endTurnCore(state: Duel): Duel {
         safe: Math.max(0, (mon.safe ?? 0) - 1),
         wet: mon.wet && mon.wet < 90 ? Math.max(0, mon.wet - 1) : mon.wet,
         spun: false,
+        blessAtk: 0,
+        blessDmg: 0,
+        nextDef: 0,
         tempGuard: 0,
         noCover: undefined,
       });
