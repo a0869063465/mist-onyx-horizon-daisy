@@ -119,10 +119,17 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
           className="mx-box is-glow"
           aria-label={tr("Nhận thưởng")}
           onClick={press}
-          style={{ left: `${star.star[0]}%`, top: `${star.star[1]}%`, width: `${star.starW * 1.0}%` }}
-        >
-          <img src={row.stars === 1 ? "/ui/mission/wk-glow1.webp" : "/ui/mission/wk-glow2.webp"} alt="" draggable={false} />
-        </button>
+          style={{
+            left: `${star.star[0]}%`,
+            top: `${star.star[1]}%`,
+            width: `${star.starW}%`,
+            aspectRatio: `${(star.starW * 900) / (star.starH * 196)}`,
+            backgroundImage: `url(/ui/mission/w-g${at}.webp)`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: `${10000 / star.starW}% ${10000 / star.starH}%`,
+            backgroundPosition: `${((star.star[0] - star.starW / 2) / (100 - star.starW)) * 100}% ${((star.star[1] - star.starH / 2) / (100 - star.starH)) * 100}%`,
+          }}
+        />
       ) : null}
       {digit ? (
         <b
