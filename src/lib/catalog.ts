@@ -681,6 +681,19 @@ export const MONSTERS: MonsterCard[] = [
     "hp": 4,
     "art": "phu-thuy-rung-den",
     "since": "2026-10-14"
+  },
+  {
+    "id": "te-giap-co-canh",
+    "name": "Tê giáp có cánh",
+    "stars": 1,
+    "gems": 0,
+    "skill": "__**Siêu giáp**__: Tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần.",
+    "atk": 1,
+    "def": 1,
+    "mdef": 1,
+    "hp": 2,
+    "art": "te-giap-co-canh",
+    "since": "2026-11-05"
   }
 ];
 

@@ -83,6 +83,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số cam:", "điểm do kazura kiếm được")],
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
   "mat-xanh-huy-diet": [A("Cầu sấm ánh sáng", "bolt-eye")],
+  "te-giap-co-canh": [A("Siêu giáp", "growth")],
   "mat-do-tan-pha": [A("Cầu lửa địa ngục", "burning-eye")],
   "hoa-an-thit-nguoi": [A("Hấp thụ", "carnivorous-plant"), NOTE("không đánh thường")],
   "thuong-quan-long": [A("Cò quay", "revolver")],

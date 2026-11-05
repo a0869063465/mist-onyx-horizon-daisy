@@ -78,6 +78,8 @@ export type FieldMon = {
   gaze?: boolean;
   /** Sát thương kỹ năng cộng thêm (vd Hỗ công) lúc nạp Cầu sấm ánh sáng: cộng vào phát bắn chuẩn. */
   gazeBonus?: number;
+  /** Tê giáp có cánh: số lần đã dùng Siêu giáp (tối đa 3). */
+  grown?: number;
   bolt?: boolean;
   host?: string;
   cover?: boolean;
@@ -7755,6 +7757,27 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     });
     const label = kind === "phys" ? "khiên vật lý" : "khiên phép";
     return note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng Thiên thần hộ mệnh, tạo ${label} cho ${cardOf(ally).name}.`, "heal");
+  }
+  if (mon.cardId === "te-giap-co-canh") {
+    if ((mon.grown ?? 0) >= 3) return note(state, "Siêu giáp đã dùng đủ 3 lần.");
+    const before = you.stars;
+    const paid = pay(you, 1);
+    if (!paid) return note(state, "Cần 1 gem.");
+    const field = paid.field.map((unit): FieldMon | null => {
+      if (unit?.uid !== uid) return unit;
+      return {
+        ...unit,
+        atk: unit.atk + 1,
+        def: unit.def + 1,
+        mdef: unit.mdef + 1,
+        hp: unit.hp + 1,
+        maxHp: (unit.maxHp || unit.hp) + 1,
+        grown: (unit.grown ?? 0) + 1,
+        dim: true,
+        raised: markRaised(unit, { atk: 1, def: 1, mdef: 1, hp: 1 }),
+      };
+    });
+    return note(pingStars(patch(state, side, { ...paid, field }), side, before, paid.stars), `${cardOf(mon).name} cường hoá Siêu giáp: +1 mọi chỉ số vĩnh viễn.`, "heal");
   }
   if (mon.cardId === PERFECT) return castPerfect(state, side, mon, skillIndex, targetUid, extra);
   if (mon.cardId === QUEEN && skillIndex === 3) return castLure(state, side, mon, extra, targetUid);

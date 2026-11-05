@@ -174,6 +174,7 @@ const CHAR_ALBUMS: Array<{ id: string; name: string; cover: string; ids: string[
       "cuc-bong-ma-quai", // Kuriboh
       "mua-ma-thuat", // Makiu, the Magical Mist
       "thanh-guom-anh-sang", // Swords of Revealing Light
+      "te-giap-co-canh", // Griffore
       "mu-ma-phap", // Magical Hats
       "guong-phong-ho", // Mirror Force
       "hoan-doi", // Shift
