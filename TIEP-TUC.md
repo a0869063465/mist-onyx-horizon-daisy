@@ -861,3 +861,9 @@ Thấu thị (xem bài đối thủ):
 - Skill Ma mãnh (nội tại): mỗi 1 hành động của đối phương (rút bài, tấn công, chặn đòn, dùng phép, dùng skill) đều nằm trong tầm ngắm của nó. Mỗi hành động có 15% xác suất dính bẫy: nó ngẫu nhiên tấn công siêu tốc 1 mục tiêu của địch mà không bị trả đòn. Không có hàng đợi, cũng không phản ứng được.
 - Chờ chủ game chốt: (a) mục tiêu ngẫu nhiên gồm cả người chơi địch, hay chỉ quái địch? (b) sát thương bằng công của Gremlin, sát thương phép hay chuẩn; (c) "dính bẫy" của đối phương có đưa vào hàng chờ hay chạy ngay; (d) có tính cả hành động của mình không (chỉ đối phương)?
 - Chủ game trả lời Gremlin (05/11): (1) mục tiêu ngẫu nhiên gồm TẤT CẢ (quái địch và người chơi địch); (2) sát thương vật lý (bằng công); (3) dính bẫy thì đánh NGAY (không vào hàng chờ); (4) Gremlin không tạo hàng chờ hay chặn hành động của ai: đối phương vẫn hành động bình thường; chỉ sau hành động của đối phương, nếu dính bẫy thì Gremlin tự lao lên tấn công (có đầy đủ hiệu ứng lao vào đánh) rồi rút về.
+
+### Lá mới 05/11/2026: Mũi tên phá phép (CHƯA code; KHÁC Giải Trừ Ma Pháp, không phải lá đã có)
+- Mana 0. Phép phản ứng (chủ game 05/11).
+- Phát động khi bị phép phản ứng kích hoạt. Hướng mũi giáo tấn công về mục tiêu khả dĩ bất kỳ bên phía đối phương.
+- Ví dụ (chủ game): Lá chắn phản đòn đẩy đòn về, ta kích hoạt Mũi tên phá phép, đòn đó quay lại mục tiêu ta muốn (ví dụ phản kích: quái lao lên tấn công ta, ta hướng đòn công đó về quái địch khác). Nó không thể tự đánh chính nó, nhưng quái khác và người chơi thì được. Gương phòng hộ làm giảm chỉ số, và hướng giảm đó vào quái địch ta chọn.
+- Chờ chủ game chốt: (a) "mục tiêu khả dĩ bất kỳ bên phía đối phương" gồm cả người chơi địch không; (b) hướng lại có đánh được quái đang bị đánh (kẻ đã đánh mình) không; (c) tốc độ.
