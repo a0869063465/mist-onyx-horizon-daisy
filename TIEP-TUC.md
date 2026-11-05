@@ -804,3 +804,8 @@ Thấu thị (xem bài đối thủ):
 - Còn hỏi: phạm vi là hiệu ứng do quái đã chết tạo ra ở CẢ HAI bên, hay chỉ hiệu ứng do quái bên đối thủ tạo ra?
 - Chủ game trả lời (05/11): phạm vi chỉ gồm hiệu ứng do quái thú của ĐỐI THỦ gây ra (lên mình) hoặc buff do quái đối thủ tạo cho quái đối thủ. Hiệu ứng do quái của mình tạo ra không bị xoá.
 - Chủ game xác nhận phạm vi trên (05/11): ĐÚNG. Chờ làm (chưa code, chưa có lệnh).
+
+### Lá mới 05/11/2026: Hồi Sinh Tử Thi (死者蘇生, Monster Reborn; CHƯA code)
+- 1 mana. Hồi sinh quái thú đã chết, bất kể bên nào, trong 4 lượt đấu.
+- Ghi chú chủ game: đây là lá TƯỜNG THÀNH. Mỗi lần có phép kiểu này, nhắc chủ game nếu quên; khi tường thành bị phá thì lá mất tác dụng.
+- Chờ chủ game chốt: (a) hồi sinh ngay khi dùng, hay chọn quái trong mộ? Nếu chọn: chọn quái của bên nào và vào ô nào; (b) 4 lượt đếm từ lúc dùng và hết thì lá mất (quái đã hồi sinh có ở lại không?); (c) tường thành bị phá bằng cách nào; (d) đã thống nhất cơ chế tường thành (xem mục trên) chưa.
