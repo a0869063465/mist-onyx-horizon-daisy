@@ -755,3 +755,24 @@ Shadow Isles
 - Rồng dơi (tức "Rồng quỷ" chủ game gửi trước; là 1 trong 7 quái của 16 lá mới; tên gốc tiếng Nhật: CHƯA RÕ, chờ chủ game gửi): 2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 3.
   - Skill: Ngọn lửa quỷ (tên gốc tiếng Nhật: CHƯA RÕ): gây 2 sát thương phép lên 1 quái thú địch; ở đầu mỗi lượt trong 2 lượt tiếp theo, quái đó lại nhận 2 sát thương phép (như độc, nổ đầu mỗi lượt, cùng 1 mục tiêu).
   - Chờ chủ game: tên gốc tiếng Nhật, rồi dịch sang tiếng Việt; có làm ngay không.
+
+### Tên gốc tiếng Nhật 15 lá Yugi còn lại (05/11/2026, chủ game gửi; CHƯA code)
+
+Quái thú:
+1. マジシャン・オブ・ブラックカオス: Pháp sư Hắc Hỗn Mang (Magician of Black Chaos)
+2. ブラック・マジシャン: Pháp sư Bóng Tối (Black Magician; ghi trước là "Nhà ảo thuật bóng tối", chủ game dùng Pháp sư Bóng Tối)
+3. ダーク・バット: Dơi Hắc Ám (Dark Bat; trước là "Rồng dơi / Rồng quỷ", chủ game xác nhận Rồng quỷ = Rồng dơi, cần kiểm lại tên)
+4. グレムリン: Tiểu Quỷ Gremlin (Gremlin; trước là "Quỷ nhỏ hoang dã", CHƯA chốt tên Việt)
+5. グリフォール: Sư Ưng (Griffore)
+6. シルバー・フォング: Lang Nha Bạc (Silver Fang)
+7. カタパルト・タートル: Rùa Máy Bắn Đá (Catapult Turtle)
+
+Phép:
+8. カオス－黒魔術の儀式: Nghi Thức Hắc Ma Thuật (Chaos - Black Magic Ritual)
+9. 魔法の教科書: Bí Điển Ma Thuật (Book of Secret Arts)
+10. 催眠術: Thuật Thôi Miên (Mesmeric Control)
+11. 一角獣のホーン: Sừng Kỳ Lân (Horn of the Unicorn)
+12. 死者蘇生: Hồi Sinh Tử Thi (Monster Reborn)
+13. 魂の解放: Giải Phóng Linh Hồn (Soul Release)
+14. 魔法解除: Giải Trừ Ma Pháp (Dispel Magic; trước là "Mũi tên phá phép", CHƯA chốt)
+15. 真実の眼: Nhãn Quan Chân Thực (Eye of Truth)
