@@ -809,3 +809,4 @@ Thấu thị (xem bài đối thủ):
 - 1 mana. Hồi sinh quái thú đã chết, bất kể bên nào, trong 4 lượt đấu.
 - Ghi chú chủ game: đây là lá TƯỜNG THÀNH. Mỗi lần có phép kiểu này, nhắc chủ game nếu quên; khi tường thành bị phá thì lá mất tác dụng.
 - Chờ chủ game chốt: (a) hồi sinh ngay khi dùng, hay chọn quái trong mộ? Nếu chọn: chọn quái của bên nào và vào ô nào; (b) 4 lượt đếm từ lúc dùng và hết thì lá mất (quái đã hồi sinh có ở lại không?); (c) tường thành bị phá bằng cách nào; (d) đã thống nhất cơ chế tường thành (xem mục trên) chưa.
+- Tốc độ (chủ game 05/11): Hồi Sinh Tử Thi = BUFF (xanh lá). Nhãn Quan Chân Thực = BUFF (xanh lá). Giải Thoát Linh Hồn = SIÊU TỐC. Áp vào `SPEEDS` (spell-kinds.ts) khi làm lá (các lá này chưa có code).
