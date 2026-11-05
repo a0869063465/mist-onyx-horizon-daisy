@@ -811,3 +811,9 @@ Thấu thị (xem bài đối thủ):
 - Chờ chủ game chốt: (a) hồi sinh ngay khi dùng, hay chọn quái trong mộ? Nếu chọn: chọn quái của bên nào và vào ô nào; (b) 4 lượt đếm từ lúc dùng và hết thì lá mất (quái đã hồi sinh có ở lại không?); (c) tường thành bị phá bằng cách nào; (d) đã thống nhất cơ chế tường thành (xem mục trên) chưa.
 - Tốc độ (chủ game 05/11): Hồi Sinh Tử Thi = BUFF (xanh lá). Nhãn Quan Chân Thực = BUFF (xanh lá). Giải Thoát Linh Hồn = SIÊU TỐC. Áp vào `SPEEDS` (spell-kinds.ts) khi làm lá (các lá này chưa có code).
 - Sừng Kỳ Lân (一角獣のホーン, Horn of the Unicorn) = SỪNG LÔI PHÁ (lá đã có trong game). KHÔNG làm lá mới; bỏ khỏi danh sách 15 lá còn lại (còn 14).
+
+### Lá mới 05/11/2026: Thuật Thôi Miên (催眠術, Mesmeric Control; CHƯA code)
+- 3 mana. Tốc độ: BUFF (xanh lá).
+- Chiếm quyền điều khiển 1 quái thú đối thủ trong lượt này.
+- Quái thú từ 3 sao trở lên không thể làm nguyên liệu để triệu hồi (hiến tế hoặc dung hợp).
+- Chờ chủ game chốt: (a) quái bị điều khiển có đánh/dùng skill được không, và đánh ai (đối thủ hay quái đối thủ khác)? (b) "trong lượt này" là lượt của mình hay lượt chung? Hết lượt thì quái trả về bên đối thủ? (c) quái bị điều khiển có chịu hiệu ứng bất lợi của bên mình không?
