@@ -800,3 +800,5 @@ Thấu thị (xem bài đối thủ):
 ### Lá mới 05/11/2026: Giải Thoát Linh Hồn (魂の解放, Soul Release; CHƯA code)
 - 0 mana. Giải phóng linh hồn tất cả các quái thú từng chết trên sân; xoá bỏ tất cả hiệu ứng có lợi từ quái thú đã chết ở phía đối thủ.
 - Chờ chủ game chốt: (a) "giải phóng linh hồn" nghĩa là gì trong game (xoá khỏi mộ / hiệu ứng nào)? (b) "hiệu ứng có lợi từ quái đã chết" là những buff nào (ví dụ buff từ quái đã chết còn giữ trên quái sống)? (c) mộ có dùng cho Hồi sinh tử thi hay các lá khác không?
+- Chủ game trả lời (05/11): C1 xoá tất cả quái đã chết khỏi mộ. C2 xoá cả bất lợi cho mình (ví dụ nguyền rủa của Mộ voi ma mút, tê liệt của Ong khổng lồ), bất kể buff hay debuff; điều kiện: quái đã tạo ra hiệu ứng đó không còn trên sân.
+- Còn hỏi: phạm vi là hiệu ứng do quái đã chết tạo ra ở CẢ HAI bên, hay chỉ hiệu ứng do quái bên đối thủ tạo ra?
