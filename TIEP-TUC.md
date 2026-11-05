@@ -704,3 +704,13 @@ Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại n
 - Cách 2: vùng thả/chạm của cả lá rộng hơn, không đổi cách khoá.
 - Kiểm thử đề xuất: trận Test 390×844, kéo tới lá hàng trước và hàng sau.
 - Đề xuất mô hình và nỗ lực: Sonnet 5.5, medium.
+
+## KẾ HOẠCH: Gameplay đang nghèo nàn (05/11/2026, nhánh vfx; CHƯA code, chờ chủ game chốt)
+
+Chủ game nêu 3 bước:
+1. Tập trung gameplay: sửa lối chơi từng cụm ban đầu cho mượt, rồi mở ra.
+2. Sau khi mượt, phát triển từng chiến lược lên nhiều hơn.
+3. Áp các chiến lược khác (dựa trên cách chơi của LoR) vào chiến lược xây dựng từ đầu.
+
+Câu hỏi còn mở: "cụm" là nhóm lá theo hệ hay theo chiến thuật? "Mở ra" là mở khoá cho người chơi hay mở rộng bộ lá? LoR nào là mẫu chính (archetype nào)?
+Đề xuất mô hình và nỗ lực: bước 1 Opus 5.5 high (luật và cân bằng), bước 2 Opus 5.5 high, bước 3 Opus 5.5 high. Chưa định Sonnet cho phần giao diện.
