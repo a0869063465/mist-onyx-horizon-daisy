@@ -696,3 +696,11 @@ Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
 
 Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
 Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
+
+## KẾ HOẠCH: Kéo và đánh, vùng tâm rộng hơn (05/11/2026, nhánh vfx; CHƯA code, chờ chủ game chọn)
+
+- Mục tiêu: khi kéo quái đánh / skill, vùng chọn ở tâm lá rộng hơn.
+- Cách 1 (đề xuất): `src/lib/torch.ts`, nới ngưỡng băng qua tia tâm và vùng bắt lá quanh tia tâm khoảng 30–40%.
+- Cách 2: vùng thả/chạm của cả lá rộng hơn, không đổi cách khoá.
+- Kiểm thử đề xuất: trận Test 390×844, kéo tới lá hàng trước và hàng sau.
+- Đề xuất mô hình và nỗ lực: Sonnet 5.5, medium.
