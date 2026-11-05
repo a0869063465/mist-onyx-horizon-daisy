@@ -869,3 +869,5 @@ Thấu thị (xem bài đối thủ):
 - Chờ chủ game chốt: (a) "mục tiêu khả dĩ bất kỳ bên phía đối phương" gồm cả người chơi địch không; (b) hướng lại có đánh được quái đang bị đánh (kẻ đã đánh mình) không; (c) tốc độ.
 - Chủ game trả lời Mũi tên phá phép (05/11): (1) có, gồm cả người chơi địch, NHƯNG chỉ khi phép bị phản cho phép (phụ thuộc vào phép ta phản); (2) không đánh lại được quái đã đánh mình; (3) tốc độ NHANH (phép phản ứng).
 - Chủ game xác nhận (05/11): Gọi quái thú trở về = Thu hồi quái thú (đã có trong game, không làm lá mới). Hấp thụ ma pháp là phép SIÊU TỐC hút phép (đã có trong game).
+- Chủ game xác nhận (05/11): Giải Trừ Ma Pháp = Hấp thụ ma pháp (đã có). Nghi Thức Hắc Ma Thuật đã bỏ khỏi danh sách.
+- TỔNG KẾT ALBUM YUGI (05/11): mô tả đủ. Lá mới còn phải làm (13): quái 7 (Pháp sư Hắc Hỗn Mang, Pháp sư Bóng Tối, Dơi Hắc Ám, Tiểu quỷ Gremlin, Tê giáp có cánh, Lang nha bạc, Rùa máy bắn đá); phép 6 (Bí Điển Ma Thuật, Thuật thôi miên, Hồi sinh tử thi, Giải thoát linh hồn, Mũi tên phá phép, Nhãn quan chân thực). Đã có sẵn: Hộp ma thuật (đã code), Sừng kỳ lân = Sừng lôi phá, Thu hồi quái thú (= Gọi quái thú trở về), Hấp thụ ma pháp (= Giải trừ ma pháp).
