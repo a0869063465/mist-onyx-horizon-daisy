@@ -912,6 +912,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ tuần: nút tab Tuần đổi sang banner neon tím.",
   "Menu chính: đổi hình nền mới.",
   "Menu chính: hình nền thành video chuyển động.",
+  "Nhạc menu: thêm 5 bản nhạc mới, phát ngẫu nhiên.",
 ];
 
 function remarkOf(notes: string[]) {

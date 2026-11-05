@@ -1,5 +1,13 @@
 /** The owner's two outside-a-match tracks (18/10): one of them at random, then another at random when it ends. */
-export const TRACKS = ["/music/vong-lap-thu-bai-1.m4a", "/music/vong-lap-thu-bai-2.m4a"];
+export const TRACKS = [
+  "/music/vong-lap-thu-bai-1.m4a",
+  "/music/vong-lap-thu-bai-2.m4a",
+  "/music/hoa-tau-1.mp3",
+  "/music/hoa-tau-2.mp3",
+  "/music/unknown-1.mp3",
+  "/music/warm-card-motif.mp3",
+  "/music/chien-binh-card.mp3",
+];
 /** The owner's match track (19/10), played over and over. */
 export const MATCH_TRACKS = ["/music/vong-lan-card.mp3"];
 
