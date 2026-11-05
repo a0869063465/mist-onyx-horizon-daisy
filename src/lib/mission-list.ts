@@ -33,9 +33,9 @@ export const DAILY_LIST: ListedMission[] = [
 export const WEEKLY_LIST: ListedMission[] = [
   { id: "w-rank15", title: "Chơi 15 trận xếp hạng (X3)", goal: 15, stars: 2, row: "w0", repeat: 3 },
   { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "w1", repeat: 3 },
-  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 2, row: "w2" },
+  { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 1, row: "w2" },
   { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "w3" },
-  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 2, row: "w4" },
+  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 1, row: "w4" },
   { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "w5" },
   { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "w6" },
 ];

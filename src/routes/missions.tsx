@@ -187,7 +187,7 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
           <b className="mx-num is-wkn" style={{ left: `${pg.num?.[0] ?? 29.7}%`, top: `${mid}%` }}>
             {text}
           </b>
-          <img className="mx-box" src="/ui/mission/wk-star.webp" alt="" draggable={false} style={{ left: `${star.star[0]}%`, top: `${star.star[1]}%`, width: `${star.starW * 1.0}%` }} />
+          <img className="mx-box" src={row.stars === 1 ? "/ui/mission/wk-star1.webp" : "/ui/mission/wk-star.webp"} alt="" draggable={false} style={{ left: `${star.star[0]}%`, top: `${star.star[1]}%`, width: `${star.starW * 1.0}%` }} />
         </>
       ) : null}
       {view === "g" ? (
@@ -198,7 +198,7 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
           onClick={press}
           style={{ left: `${star.star[0]}%`, top: `${star.star[1]}%`, width: `${star.starW * 1.0}%` }}
         >
-          <img src="/ui/mission/wk-glow.webp" alt="" draggable={false} />
+          <img src={row.stars === 1 ? "/ui/mission/wk-glow1.webp" : "/ui/mission/wk-glow2.webp"} alt="" draggable={false} />
         </button>
       ) : null}
       {digit ? (

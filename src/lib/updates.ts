@@ -904,6 +904,7 @@ export const PENDING_NOTES: string[] = [
   "Trang Nhiệm vụ đổi giao diện mới. Nhiệm vụ Ngày gồm Chơi 3, 10, 20 trận, Thắng 6 và 10 trận PvP. Nhiệm vụ Tuần và nhóm Xếp hạng sắp có.",
   "Nhiệm vụ Ngày hiện 3 trạng thái: xanh dương khi đang làm, vàng khi đủ để nhận, xanh lá khi đã nhận. Bấm ô sao ở hàng vàng để nhận thưởng.",
   "Nhiệm vụ Tuần cũng có 3 trạng thái: tím khi đang làm, vàng khi đủ để nhận, xanh lá khi đã nhận. Nhiệm vụ xếp hạng (X3) nhận xong đếm lại, còn X2 rồi X1.",
+  "Nhiệm vụ Tuần: Sử dụng 1 bảo vật và Thu thập 10 lá bài thưởng 1 sao, các nhiệm vụ còn lại 2 sao. Hàng vàng dùng ảnh mới, ống đúng cỡ và ô sao sáng không còn viền đen.",
 ];
 
 function remarkOf(notes: string[]) {
