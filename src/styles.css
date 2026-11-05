@@ -782,10 +782,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: 48.6% top;
   user-select: none;
   -webkit-user-drag: none;
-  animation: home-art-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both, home-art-drift 22s ease-in-out 1.4s infinite alternate;
   z-index: -2;
 }
 .home-art.home-video {
