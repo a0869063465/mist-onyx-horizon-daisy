@@ -867,3 +867,4 @@ Thấu thị (xem bài đối thủ):
 - Phát động khi bị phép phản ứng kích hoạt. Hướng mũi giáo tấn công về mục tiêu khả dĩ bất kỳ bên phía đối phương.
 - Ví dụ (chủ game): Lá chắn phản đòn đẩy đòn về, ta kích hoạt Mũi tên phá phép, đòn đó quay lại mục tiêu ta muốn (ví dụ phản kích: quái lao lên tấn công ta, ta hướng đòn công đó về quái địch khác). Nó không thể tự đánh chính nó, nhưng quái khác và người chơi thì được. Gương phòng hộ làm giảm chỉ số, và hướng giảm đó vào quái địch ta chọn.
 - Chờ chủ game chốt: (a) "mục tiêu khả dĩ bất kỳ bên phía đối phương" gồm cả người chơi địch không; (b) hướng lại có đánh được quái đang bị đánh (kẻ đã đánh mình) không; (c) tốc độ.
+- Chủ game trả lời Mũi tên phá phép (05/11): (1) có, gồm cả người chơi địch, NHƯNG chỉ khi phép bị phản cho phép (phụ thuộc vào phép ta phản); (2) không đánh lại được quái đã đánh mình; (3) tốc độ NHANH (phép phản ứng).
