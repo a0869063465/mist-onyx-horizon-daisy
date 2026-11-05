@@ -752,6 +752,6 @@ Shadow Isles
 
 ### Lá Yugi mới, chưa làm (05/11/2026, chủ game gửi; CHƯA code)
 
-- Rồng quỷ (tên gốc: CHƯA RÕ): 2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 3. Không nằm trong 16 lá đã liệt kê.
-  - Skill: Ngọn lửa quỷ (tên gốc: CHƯA RÕ): gây 2 sát thương phép lên 1 quái thú địch, tiếp tục gây 2 sát thương phép ở đầu 2 lượt.
-  - Chờ chủ game: tên gốc, album, mục tiêu của "tiếp tục" (cùng quái hay quái khác), có làm ngay không.
+- Rồng dơi (tức "Rồng quỷ" chủ game gửi trước; là 1 trong 7 quái của 16 lá mới; tên gốc tiếng Nhật: CHƯA RÕ, chờ chủ game gửi): 2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 3.
+  - Skill: Ngọn lửa quỷ (tên gốc tiếng Nhật: CHƯA RÕ): gây 2 sát thương phép lên 1 quái thú địch; ở đầu mỗi lượt trong 2 lượt tiếp theo, quái đó lại nhận 2 sát thương phép (như độc, nổ đầu mỗi lượt, cùng 1 mục tiêu).
+  - Chờ chủ game: tên gốc tiếng Nhật, rồi dịch sang tiếng Việt; có làm ngay không.
