@@ -788,6 +788,11 @@
   animation: home-art-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both, home-art-drift 22s ease-in-out 1.4s infinite alternate;
   z-index: -2;
 }
+.home-art.home-video {
+  object-position: 48.6% top;
+  animation: none;
+  z-index: -2;
+}
 .home-shade {
   position: absolute;
   inset: 0;
@@ -1928,6 +1933,7 @@
   .stage .banner.is-react .act.ok { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .home-video { display: none; }
   .home-art,
   .home-play,
   .home-play::after,

@@ -911,6 +911,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ tuần: hàng vàng làm lại theo ảnh mới, dùng khung sao ×1 như tab Ngày, nút nhận cắt bo góc bát giác.",
   "Nhiệm vụ tuần: nút tab Tuần đổi sang banner neon tím.",
   "Menu chính: đổi hình nền mới.",
+  "Menu chính: hình nền thành video chuyển động.",
 ];
 
 function remarkOf(notes: string[]) {
