@@ -831,3 +831,9 @@ Thấu thị (xem bài đối thủ):
 - Quy tắc theo mô tả (chốt 05/11): skill đa mục tiêu +1 cho mỗi mục tiêu; skill nhiều đợt +1 mỗi đợt, tối đa 3 đợt; skill vừa đa mục tiêu vừa nhiều đợt thì ưu tiên nhiều đợt; skill đơn mục tiêu thì tăng gấp đôi (+2).
 
 - HỖ CÔNG CỘNG VÀO SKILL 05/11 (Opus high, nhánh `ccr-902b4e60-v4q179`, CHƯA áp `main`): lỗi = Cầu lửa địa ngục (`resolveHell`, nhánh đánh người chơi) không đọc `charmDamage` nên +3 bị mất; Cầu sấm ánh sáng nạp xong thì buff bị xoá. Sửa duel.ts: `charmPack` (cộng hết vào phần phép, rồi vật lý, rồi chuẩn) cho Cầu lửa/Hoả cầu địa ngục; `FieldMon.gazeBonus` giữ phần cộng lúc nạp Cầu sấm, `gazeExtra` cộng vào phát bắn chuẩn (đánh quái, bị chặn, đánh người chơi, bị phản); buff Hỗ công hết ở cuối vòng cho cả bên không giữ token. Đòn lan của Cầu lửa lấy từ phần dư của mục tiêu chính nên có thể mang theo phần cộng (chưa hỏi chủ game). Chưa rà các skill khác có đọc `charmDamage` hay không. round-rules 50/50 (thêm 3 bài), tsc 7 lỗi cũ. Thử: scratchpad `bless/probe.mjs`, `probe2.mjs`.
+
+### Lá mới 05/11/2026: Rùa máy bắn đá (カタパルト・タートル, Catapult Turtle; CHƯA code)
+- Quái 2 sao. Công 1, thủ 3, thủ phép 3, máu 2.
+- Skill Pháo kích (CHẬM): tiêu hao 1 mana, hiến tế 1 quái thú đồng minh. Pháo kích vào 1 mục tiêu địch, gây sát thương chuẩn bằng 200% số sao của quái thú đã hiến tế. Khi đòn pháo kích thành công, người chơi cũng mất máu bằng số sao của quái thú đó.
+- Nếu pháo kích gây ra lên 1 lá tường thành, phá huỷ nó.
+- Chờ chủ game chốt: (a) "1 quái thú đồng minh" hiến tế có cần sao tối thiểu không, và quái đang trên sân hay trên tay đều được; (b) mục tiêu địch là quái hay người chơi (sát thương chuẩn lên người chơi có được không); (c) "thành công" nghĩa là gì (mục tiêu chết? hay trúng mục tiêu có máu); (d) lá tường thành nào bị phá (Gương phòng hộ, Hồi sinh tử thi, Vùng hỗn mang?); (e) người chơi mất máu tính theo số sao trước hay sau khi nhân 200%.
