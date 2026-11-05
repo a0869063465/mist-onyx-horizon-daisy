@@ -822,3 +822,8 @@ Thấu thị (xem bài đối thủ):
   - Quái bị điều khiển đánh và dùng skill bình thường.
   - C2: dùng phép trong lượt nào thì quái trả lại cuối lượt đó (lượt của người dùng phép).
   - C3: quái được coi là quái của mình ngay khi lấy về.
+
+### Lá mới 05/11/2026: Bí Điển Ma Thuật (魔法の教科書, Book of Secret Arts; CHƯA code)
+- 0 mana. Tăng 1 sát thương skill vĩnh viễn cho các sát thương đa mục tiêu (+1 cho mỗi mục tiêu) và nhiều đợt (+1 mỗi đợt, tối đa 3 đợt). Nếu vừa đa mục tiêu vừa nhiều đợt (như Súng phóng lựu hình nhện) thì ưu tiên nhiều đợt.
+- Tăng gấp đôi nếu là quái đơn mục tiêu.
+- Chờ chủ game chốt: (a) tốc độ (chưa ghi); (b) lá này chọn quái nào để tăng (quái của mình hay bất kỳ, và có nhắm mục tiêu không); (c) "tăng gấp đôi" áp lên phần tăng (+1 thành +2) hay lên cả sát thương.
