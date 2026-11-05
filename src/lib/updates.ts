@@ -906,6 +906,7 @@ export const PENDING_NOTES: string[] = [
   "Nhiệm vụ Tuần cũng có 3 trạng thái: tím khi đang làm, vàng khi đủ để nhận, xanh lá khi đã nhận. Nhiệm vụ xếp hạng (X3) nhận xong đếm lại, còn X2 rồi X1.",
   "Nhiệm vụ Tuần: Sử dụng 1 bảo vật và Thu thập 10 lá bài thưởng 1 sao, các nhiệm vụ còn lại 2 sao. Hàng vàng dùng ảnh mới, ống đúng cỡ và ô sao sáng không còn viền đen.",
   "Ô sao sáng của nhiệm vụ Tuần có đủ quầng sáng quanh khung, hoà vào khung hàng.",
+  "Nhiệm vụ tính thật: mỗi trận Vs Máy, Đánh thường, Tuỳ chọn kết thúc là 1 trận đã chơi, thắng Đánh thường là thắng PvP. Lá nhận được (mở gói, đổi sao, quà) tính vào Thu thập lá bài, SR 1 điểm, UR 2 điểm. Bỏ 3 nhiệm vụ cũ sau trận. Thẻ Nhiệm vụ có chấm đỏ khi có thưởng chờ nhận.",
 ];
 
 function remarkOf(notes: string[]) {

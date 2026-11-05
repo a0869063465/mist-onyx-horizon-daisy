@@ -1,7 +1,6 @@
 /**
  * Danh sách nhiệm vụ Ngày / Tuần (chủ game 04/11, theo ảnh thiết kế).
- * Hiện chỉ để hiển thị: luật đếm trận, reset ngày/tuần và trả thưởng làm ở bước sau.
- * `locked` = cơ chế chưa có trong game (Xếp hạng, bảo vật, thu thập lá bài): thẻ xám, ghi "Sắp có".
+ * Tiến độ ghi ở mission-store.ts. Hàng không có `count` (Xếp hạng, bảo vật) chưa có hệ thống nên giữ 0.
  */
 export type ListedMission = {
   id: string;
@@ -13,8 +12,8 @@ export type ListedMission = {
   /** Ảnh bảo vật thay icon trong hàng (nếu có). */
   relic?: string;
   locked?: boolean;
-  /** Đếm theo gì (nhiệm vụ ngày): mọi trận đã chơi, hoặc trận thắng PvP. Không có = chưa có chế độ để đếm. */
-  count?: "play" | "pvp";
+  /** Đếm theo gì: mọi trận đã chơi, trận thắng PvP, mỗi lá nhận được, điểm SR/UR (SR 1, UR 2). Không có = chưa có hệ thống để đếm. */
+  count?: "play" | "pvp" | "cards" | "rare";
   /** Nhiệm vụ tuần làm lại được (X3: nhận xong đếm lại, còn X2, X1); không có = 1 lần. */
   repeat?: number;
 };
@@ -35,7 +34,7 @@ export const WEEKLY_LIST: ListedMission[] = [
   { id: "w-rankwin6", title: "Thắng 6 trận xếp hạng (X3)", goal: 6, stars: 2, row: "w1", repeat: 3 },
   { id: "w-relic1", title: "Sử dụng 1 bảo vật", goal: 1, stars: 1, row: "w2" },
   { id: "w-relic3", title: "Sử dụng 3 bảo vật", goal: 3, stars: 2, row: "w3" },
-  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 1, row: "w4" },
-  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "w5" },
-  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "w6" },
+  { id: "w-cards10", title: "Thu thập 10 lá bài", goal: 10, stars: 1, row: "w4", count: "cards" },
+  { id: "w-cards30", title: "Thu thập 30 lá bài", goal: 30, stars: 2, row: "w5", count: "cards" },
+  { id: "w-rare4", title: "Thu thập 4 điểm SR hoặc UR", goal: 4, stars: 2, row: "w6", count: "rare" },
 ];

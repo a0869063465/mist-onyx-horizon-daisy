@@ -6,6 +6,7 @@ import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
 import { useMail } from "@/lib/mail-box";
+import { missionsReady, onMissions } from "@/lib/mission-store";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
 
@@ -36,6 +37,12 @@ function Home() {
   useLang();
   const mails = useMail();
   const friends = usePulse();
+  // Chấm đỏ thẻ Nhiệm vụ: có nhiệm vụ Ngày hoặc Tuần đã đủ mà chưa nhận.
+  const [quests, setQuests] = useState(false);
+  useEffect(() => {
+    setQuests(missionsReady());
+    return onMissions(() => setQuests(missionsReady()));
+  }, []);
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
     const book = loadBook();
@@ -46,7 +53,7 @@ function Home() {
   const left: Tab[] = [
     { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
     { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", to: "/missions" },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", to: "/missions", dot: quests },
     { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
   ];
   const right: Tab[] = [
