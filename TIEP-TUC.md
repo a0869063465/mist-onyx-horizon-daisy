@@ -817,3 +817,8 @@ Thấu thị (xem bài đối thủ):
 - Chiếm quyền điều khiển 1 quái thú đối thủ trong lượt này.
 - Quái thú từ 3 sao trở lên không thể làm nguyên liệu để triệu hồi (hiến tế hoặc dung hợp).
 - Chờ chủ game chốt: (a) quái bị điều khiển có đánh/dùng skill được không, và đánh ai (đối thủ hay quái đối thủ khác)? (b) "trong lượt này" là lượt của mình hay lượt chung? Hết lượt thì quái trả về bên đối thủ? (c) quái bị điều khiển có chịu hiệu ứng bất lợi của bên mình không?
+- Chủ game trả lời Thuật Thôi Miên (05/11):
+  - C1: lấy quái đó về sân MÌNH, ưu tiên hàng trước; không còn ô trống thì không dùng được.
+  - Quái bị điều khiển đánh và dùng skill bình thường.
+  - C2: dùng phép trong lượt nào thì quái trả lại cuối lượt đó (lượt của người dùng phép).
+  - C3: quái được coi là quái của mình ngay khi lấy về.
