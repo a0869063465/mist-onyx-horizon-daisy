@@ -838,3 +838,10 @@ Thấu thị (xem bài đối thủ):
 - Nếu pháo kích gây ra lên 1 lá tường thành, phá huỷ nó.
 - Chờ chủ game chốt: (a) "1 quái thú đồng minh" hiến tế có cần sao tối thiểu không, và quái đang trên sân hay trên tay đều được; (b) mục tiêu địch là quái hay người chơi (sát thương chuẩn lên người chơi có được không); (c) "thành công" nghĩa là gì (mục tiêu chết? hay trúng mục tiêu có máu); (d) lá tường thành nào bị phá (Gương phòng hộ, Hồi sinh tử thi, Vùng hỗn mang?); (e) người chơi mất máu tính theo số sao trước hay sau khi nhân 200%.
 - Chủ game trả lời Rùa máy bắn đá (05/11): (a) chỉ hiến tế quái thú đang trên sân; (b) pháo được cả quái và người chơi địch; sát thương lên người là chuẩn (vật lý hay phép đều như nhau); (c) "thành công" = đòn được thi triển, không bị phá giải; (d) mọi lá tường thành đều bị phá; (e) người điều khiển mất máu bằng đúng số sao của quái đã hiến tế (100%).
+
+### Lá mới 05/11/2026: Lang nha bạc (シルバー・フォング, Silver Fang; CHƯA code)
+- Quái 2 sao, 0 mana. Công 2, thủ 0, thủ phép 0, máu 3.
+- Skill Thủ lĩnh (BUFF, xanh lá): tiêu hao 1 mana, tăng cho bản thân 2 công trong 3 lượt. Lúc đó, các quái thú Thú đồng minh có công nhỏ hơn nó cũng được hưởng hiệu ứng 50% (+1 công).
+- Skill Tiếng hú gọi bầy (CHẬM): tiêu hao 2 mana, gọi ra 2 Sói con (ưu tiên hàng trước), sau đó dùng skill Thủ lĩnh (không tốn thêm mana).
+- Sói con: 1 sao. Công 1, thủ 0, thủ phép 0, máu 1.
+- Chờ chủ game chốt: (a) "Thú" là nhóm/hệ nào (Sói con, Rồng con... có thuộc Thú không)? (b) 3 lượt của Thủ lĩnh tính theo lượt chung hay lượt của mình; (c) "công nhỏ hơn nó" tính theo công hiện tại hay công gốc, và quái được hưởng 50% có cần còn sống đến hết 3 lượt không; (d) Sói con gọi ra có dùng được ngay không (đang không bị "đã hành động"); (e) nếu sân không đủ ô thì gọi được mấy con; (f) Sói con có skill không.
