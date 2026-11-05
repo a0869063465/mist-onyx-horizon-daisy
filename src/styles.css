@@ -13220,6 +13220,8 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 button.mx-box { padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; z-index: 3; -webkit-tap-highlight-color: transparent; animation: mx-readyc 1.6s ease-in-out infinite; }
 
 button.mx-box:active { transform: translate(-50%, -50%) scale(0.94); filter: brightness(1.3); animation: none; }
+button.mx-box.is-glow { animation-name: mx-readyg; clip-path: polygon(13.2% 3.5%, 87% 3.5%, 98.6% 23.2%, 98.6% 79.1%, 87% 98.8%, 13.2% 98.8%, 1.6% 79.1%, 1.6% 23.2%); }
+@keyframes mx-readyg { 50% { transform: translate(-50%, -50%) scale(1.035); filter: brightness(1.22); } }
 .mx-dig { position: absolute; z-index: 2; transform: translate(-50%, -50%); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", sans-serif; font-weight: 700; line-height: 1; color: #f3f3f6; -webkit-text-stroke: 0.3cqw rgba(8, 0, 40, 0.9); paint-order: stroke fill; text-shadow: 0 0.2cqw 0.35cqw rgba(0, 0, 0, 0.55); pointer-events: none; }
 .mx-dig.is-g { -webkit-text-stroke-color: rgba(60, 20, 0, 0.9); }
 .mx-dig.is-d { -webkit-text-stroke-color: rgba(0, 40, 0, 0.9); }
