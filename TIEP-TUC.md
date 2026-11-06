@@ -748,3 +748,4 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V19 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Sự kiện: Vua bài ma thuật.
 - Chưa rõ thể thức sự kiện, thời gian, phần thưởng và cách mở. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
+- Bổ sung (chủ game, 06/11): người chơi nhận được danh hiệu và tiền khi tham gia sự kiện. Chưa rõ danh hiệu và tiền là gì, nhận theo điều kiện nào.
