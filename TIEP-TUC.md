@@ -750,3 +750,11 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Chưa rõ thể thức sự kiện, thời gian, phần thưởng và cách mở. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
 - Bổ sung (chủ game, 06/11): người chơi nhận được danh hiệu và tiền khi tham gia sự kiện. Chưa rõ danh hiệu và tiền là gì, nhận theo điều kiện nào.
 - Bổ sung tiếp (chủ game, 06/11): không thể trốn chạy. Thua hoặc đầu hàng sẽ mất sao hay bị phạt. Chưa rõ mất sao hay phạt cụ thể thế nào, và có áp dụng cho Đánh thường như luật sao hiện có không.
+
+## V20 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Skill các nhân vật:
+  - Yugi: rút bài mình muốn; vẽ luật (chưa rõ luật vẽ).
+  - Joey: may mắn tăng 40%.
+  - Kaiba: cường hoá quái thú.
+  - Pegasus: nhìn bài trên tay (của đối thủ, chưa rõ).
+- Chưa rõ "rút bài mình muốn" (chọn từ xấp hay chọn lá cụ thể), "vẽ luật", "may mắn" áp dụng cho việc gì, và "nhìn bài" có phải tay đối thủ không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
