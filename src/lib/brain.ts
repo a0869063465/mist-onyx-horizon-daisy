@@ -11,6 +11,7 @@ import {
   canTargetFoe,
   canWall,
   confirmSwap,
+  swapRows,
   castSpell,
   cottonCover,
   cottonOffer,
@@ -301,6 +302,8 @@ type Move = { act: Act; s: Duel; leaf?: boolean };
 
 function tryMove(list: Move[], state: Duel, act: Act, leaf = false) {
   const next = runAct(state, act);
+  // A swap still waiting for its second monster is a refused pick, not a move.
+  if (act[0] === "swap" && next.swap) return;
   if (moved(state, next) && next.winner !== FOE) list.push({ act, s: next, leaf });
 }
 
@@ -392,11 +395,8 @@ function faceSkill(id: string, index: number) {
 function finishSwap(cast: Duel, list: Move[], base: Duel, index: number, target: string | null) {
   const swap = cast.swap;
   if (!swap || swap.side !== ME || !swap.locked) return;
-  const me = cast.players[ME];
-  const tokens = [
-    ...live(me.field).filter((mon) => mon.abroad === undefined).map((mon) => `f:${mon.uid}`),
-    ...me.reserve.map((_, at) => `r:${at}`),
-  ].filter((token) => token !== swap.locked);
+  // Only the monsters and bench cards the rule lets in (chủ game 06/11: a refused pick froze the duel).
+  const tokens = swapRows(cast.players[ME]).filter((token) => token !== swap.locked);
   for (const token of tokens) tryMove(list, base, ["swap", index, target, token]);
 }
 
@@ -407,7 +407,9 @@ function spellMoves(state: Duel, list: Move[]) {
   me.hand.forEach((id, index) => {
     if (seen.has(id) || !spellCard(id)) return;
     seen.add(id);
-    for (const target of targets) {
+    // Hoán đổi only swaps the machine's own monster, so a monster of the other side is never its target.
+    const aims = id === "hoan-doi" ? targets.filter((uid) => uid === null || live(state.players[ME].field).some((mon) => mon.uid === uid)) : targets;
+    for (const target of aims) {
       const next = castSpell(state, index, target);
       if (next.swap) finishSwap(next, list, state, index, target);
       else if (moved(state, next) && next.winner !== FOE) list.push({ act: ["spell", index, target], s: next });

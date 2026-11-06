@@ -3827,7 +3827,9 @@ function yieldResolved(before: Duel, after: Duel): Duel {
 
 function passResponseCore(state: Duel): Duel {
   if (state.step !== "respond" || !state.hold || !state.pending || state.winner) return state;
-  if (state.swap) return note(state, state.swap.locked ? "Hãy chọn 1 quái để hoán đổi." : "Hãy chọn hai quái để hoán đổi.");
+  // A swap with no locked monster can never be finished (nothing shows the picker), so it is dropped, not kept (chủ game 06/11).
+  if (state.swap && !state.swap.locked) return passResponseCore({ ...state, swap: null });
+  if (state.swap) return note(state, "Hãy chọn 1 quái để hoán đổi.");
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
@@ -6809,7 +6811,7 @@ function boxHome(state: Duel): Duel {
 function swapToken(player: Player, token: string): { kind: "field"; uid: string } | { kind: "reserve"; index: number } | null {
   if (token.startsWith("f:")) {
     const uid = token.slice(2);
-    return player.field.some((mon) => mon?.uid === uid) ? { kind: "field", uid } : null;
+    return player.field.some((mon) => mon?.uid === uid && mon.abroad === undefined) ? { kind: "field", uid } : null;
   }
   if (token.startsWith("r:")) {
     const index = Number(token.slice(2));
@@ -6834,7 +6836,7 @@ function demonGate(player: Player, held: PileMon): { player: Player; fresh: bool
   return { player: paid, fresh: true };
 }
 
-function swapRows(player: Player): string[] {
+export function swapRows(player: Player): string[] {
   const tokens: string[] = [];
   for (const unit of player.field) {
     if (unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined) tokens.push(`f:${unit.uid}`);
@@ -6867,7 +6869,8 @@ export function confirmSwap(state: Duel, firstToken: string, secondToken: string
   if (!state.swap.locked || firstToken !== state.swap.locked) return note(state, "Hoán đổi chỉ đổi quái đang bị nhắm.");
   const side = state.swap.side;
   const done = pickSwap({ ...state, swap: { first: firstToken, side } }, secondToken);
-  if (done.swap) return { ...done, swap: { first: null, side } };
+  // A refused second pick leaves the ask as it was (with its locked monster), or the duel froze (chủ game 06/11).
+  if (done.swap) return { ...done, swap: state.swap };
   return done;
 }
 

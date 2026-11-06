@@ -3642,10 +3642,12 @@ function PlayPage() {
   const aimMark = aim?.kind === "spell" && AIM_MARK.has(aim.spellId) ? aim : null;
   /** Hoán đổi (siêu tốc, chủ game 30/10): the monster aimed at is locked; the others that can trade glow, tap one. */
   const swapAsk = duel.swap && duel.swap.side === viewer && duel.swap.locked ? duel.swap : null;
-  const swapFit = (unit: FieldMon | null | undefined) => Boolean(swapAsk && unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && `f:${unit.uid}` !== swapAsk.locked);
+  const swapFit = (unit: FieldMon | null | undefined) => Boolean(swapAsk && unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined && `f:${unit.uid}` !== swapAsk.locked);
   const swapBench = (held: (typeof you.reserve)[number]) => {
     const card = monsterCard(held.id);
-    return Boolean(swapAsk && card && card.stars !== 0 && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
+    // The Triệu hồi ác ma also needs its 1 mana when it comes out at exactly 3 stars (a refused pick used to freeze the swap).
+    const fresh = held.id === "trieu-hoi-ac-ma" && you.stars === 3 && !held.saved?.seen && you.orb < 1;
+    return Boolean(swapAsk && card && card.stars !== 0 && !fresh && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
   };
   const markId = aimMark?.spellId ?? (swapAsk ? "hoan-doi" : null);
   // X (chủ game 31/10): opens as soon as a skill, an attack or a target choice is under way, and cancels that choice, not
