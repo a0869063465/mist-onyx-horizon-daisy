@@ -526,6 +526,37 @@ export function saveSpellHand(layout: Record<SpellHandKey, Spot>) {
   saveSpots(SPELL_HAND_KEY, layout);
 }
 
+/** Vị trí và cỡ icon của 8 thẻ menu chính, chỉnh tay trong Tuỳ chỉnh (chủ game 06/11). dx/dy = độ lệch (rem) so với chỗ mặc định, size = chiều cao (rem). */
+export type MenuIconKey = "album" | "events" | "ranks" | "shop" | "gifts" | "missions" | "friends" | "mail";
+export type MenuIcon = { dx: number; dy: number; size: number };
+export const MENU_ICON_MARKS: Array<{ key: MenuIconKey; label: string }> = [
+  { key: "album", label: "Bộ sưu tập" },
+  { key: "events", label: "Sự kiện" },
+  { key: "ranks", label: "Bảng xếp hạng" },
+  { key: "shop", label: "Cửa hàng" },
+  { key: "gifts", label: "Phần thưởng" },
+  { key: "missions", label: "Nhiệm vụ" },
+  { key: "friends", label: "Bạn bè" },
+  { key: "mail", label: "Thư" },
+];
+export const DEFAULT_MENU_ICON: MenuIcon = { dx: 0, dy: 0, size: 3.5 };
+export const DEFAULT_MENU_ICONS = Object.fromEntries(MENU_ICON_MARKS.map((mark) => [mark.key, { ...DEFAULT_MENU_ICON }])) as Record<MenuIconKey, MenuIcon>;
+const MENU_ICON_KEY = "clash-menu-icons-v1";
+function asMenuIcon(value: unknown): MenuIcon {
+  const raw = (value ?? {}) as Partial<MenuIcon>;
+  const num = (item: unknown, fallback: number) => (typeof item === "number" && Number.isFinite(item) ? item : fallback);
+  return { dx: num(raw.dx, 0), dy: num(raw.dy, 0), size: Math.min(8, Math.max(1.5, num(raw.size, DEFAULT_MENU_ICON.size))) };
+}
+export function loadMenuIcons(): Record<MenuIconKey, MenuIcon> {
+  const raw = read(MENU_ICON_KEY) as Partial<Record<MenuIconKey, unknown>> | null;
+  const next = {} as Record<MenuIconKey, MenuIcon>;
+  for (const mark of MENU_ICON_MARKS) next[mark.key] = asMenuIcon(raw?.[mark.key]);
+  return next;
+}
+export function saveMenuIcons(layout: Record<MenuIconKey, MenuIcon>) {
+  localStorage.setItem(MENU_ICON_KEY, JSON.stringify(layout));
+}
+
 /** Lá quái trên sân dùng đúng khung và vị trí số của lá trên tay (chủ game 03/11); số cam vào ô tối góc trên phải (chỗ ô sao). */
 export function fieldSpots(): Record<FieldKey, FieldSpot> {
   const h = loadHand();

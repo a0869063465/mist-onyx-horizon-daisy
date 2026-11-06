@@ -9,6 +9,8 @@ import { useMail } from "@/lib/mail-box";
 import { missionsReady, onMissions } from "@/lib/mission-store";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
+import { LEFT_TABS, LockIcon, RIGHT_TABS, SideTab } from "@/components/home-tab";
+import { DEFAULT_MENU_ICONS, loadMenuIcons } from "@/lib/layouts";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -23,8 +25,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; pic: string; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends" | "/missions"; go?: () => void; dot?: boolean };
-
 function Home() {
   const [wins, setWins] = useState(0);
   // Hồ sơ của mình (chủ game 31/10): bấm ảnh đại diện ở khung hồ sơ; về từ màn xem lại trận thì mở lại.
@@ -34,6 +34,9 @@ function Home() {
     if (back) setMine(back);
   }, []);
   const [face, setFace] = useState<string | null>(null);
+  // Vị trí icon thẻ do chủ game chỉnh trong Tuỳ chỉnh (đọc sau khi gắn trang để khỏi lệch với bản dựng trên máy chủ).
+  const [icons, setIcons] = useState(DEFAULT_MENU_ICONS);
+  useEffect(() => setIcons(loadMenuIcons()), []);
   useLang();
   const mails = useMail();
   const friends = usePulse();
@@ -52,18 +55,9 @@ function Home() {
   // Menu chính (chủ game 31/10): 4 thẻ bình hành mỗi bên, lú nửa ra từ mép màn hình; thẻ chưa có tính năng thì khoá.
   // Menu chính (chủ game 06/11): trái Bộ sưu tập, Sự kiện, Bảng xếp hạng, Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.
   // Tin tức nằm trong tab Tin tức của Thư. Bảng xếp hạng làm sau nên đang khoá.
-  const left: Tab[] = [
-    { key: "album", label: "Bộ sưu tập", pic: "album", bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
-    { key: "events", label: "Sự kiện", pic: "events", bg: "/art/rong-ac-ma.jpg" },
-    { key: "ranks", label: "Bảng xếp hạng", pic: "ranks", bg: "/art/phu-thuy-rung-den.jpg" },
-    { key: "shop", label: "Cửa hàng", pic: "shop", bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
-  ];
-  const right: Tab[] = [
-    { key: "gifts", label: "Phần thưởng", pic: "gifts", bg: "/art/thien-su.jpg" },
-    { key: "missions", label: "Nhiệm vụ", pic: "missions", bg: "/art/hiep-si-cua-hau.jpg", to: "/missions", dot: quests },
-    { key: "friends", label: "Bạn bè", pic: "friends", bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
-    { key: "mail", label: "Thư", pic: "mail", bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
-  ];
+  const left = LEFT_TABS;
+  const dots: Record<string, boolean> = { missions: quests, friends: friends.asks > 0, mail: mails.some((row) => !row.read || row.owing) };
+  const right = RIGHT_TABS.map((tab) => ({ ...tab, dot: dots[tab.key] }));
   return (
     <main className="home">
       <div className="home-stage">
@@ -101,12 +95,12 @@ function Home() {
         </Link>
         <nav className="home-tabs is-left" aria-label="Menu trái">
           {left.map((tab, index) => (
-            <SideTab key={tab.key} tab={tab} side="left" index={index} />
+            <SideTab key={tab.key} tab={tab} side="left" index={index} icon={icons[tab.pic]} />
           ))}
         </nav>
         <nav className="home-tabs is-right" aria-label="Menu phải">
           {right.map((tab, index) => (
-            <SideTab key={tab.key} tab={tab} side="right" index={index} />
+            <SideTab key={tab.key} tab={tab} side="right" index={index} icon={icons[tab.pic]} />
           ))}
         </nav>
         <div className="home-base">
@@ -145,49 +139,5 @@ function Home() {
       </div>
       {mine ? <FriendProfile friend={mine} onClose={() => setMine(null)} /> : null}
     </main>
-  );
-}
-
-function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index: number }) {
-  const shut = !tab.to && !tab.go;
-  const inner = (
-    <>
-      <span className="home-tab-art" style={{ backgroundImage: `url(${tab.bg})` }} aria-hidden="true" />
-      <img className="home-tab-icon" src={`/ui/menu/ic-${tab.pic}.webp`} alt={tr(tab.label)} draggable={false} />
-      {shut ? <LockIcon /> : null}
-      {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
-    </>
-  );
-  const className = `home-tab is-${side}${shut ? " is-shut" : ""}`;
-  const style = { animationDelay: `${0.3 + index * 0.08}s` };
-  if (tab.to) {
-    return (
-      <Link to={tab.to} className={className} style={style} data-sfx onPointerDown={() => playUi("select")}>
-        {inner}
-      </Link>
-    );
-  }
-  return (
-    <button
-      type="button"
-      className={className}
-      style={style}
-      disabled={shut}
-      aria-disabled={shut}
-      data-sfx={shut ? undefined : true}
-      onPointerDown={shut ? undefined : () => playUi("select")}
-      onClick={tab.go}
-    >
-      {inner}
-    </button>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="9" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
   );
 }

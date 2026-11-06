@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CodeEntry } from "@/components/code-entry";
+import { LEFT_TABS, RIGHT_TABS, SideTab, type IconDrag } from "@/components/home-tab";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyEdit } from "@/components/game/copy-text";
@@ -38,6 +39,12 @@ import {
   saveSpellHand,
   DEFAULT_SPELL_HAND,
   SPELL_HAND_MARKS,
+  DEFAULT_MENU_ICONS,
+  loadMenuIcons,
+  MENU_ICON_MARKS,
+  saveMenuIcons,
+  type MenuIcon,
+  type MenuIconKey,
   type SpellHandKey,
   saveBoard,
   clearBoard,
@@ -58,7 +65,7 @@ import { DEFAULT_BOARD_ART, ENV_BOARDS } from "@/lib/env-boards";
 
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
-type Screen = "menu" | "code" | "board" | "monster" | "spell" | "spellHand" | "field" | "text" | "sound" | "fx" | "cardfx";
+type Screen = "menu" | "code" | "board" | "monster" | "spell" | "spellHand" | "menuIcons" | "field" | "text" | "sound" | "fx" | "cardfx";
 type BoardPick = HudKey | "notice" | "trail" | "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
 type SpotPick = "stack" | "env" | "envFoe" | "wall" | "wallFoe" | ActKey | FaceKey;
 const SPOT_KEYS = new Set<string>(["stack", "env", "envFoe", "wall", "wallFoe", ...BOARD_ACTS.map((item) => item.key), ...BOARD_FACES.map((item) => item.key)]);
@@ -78,6 +85,7 @@ function TunePage() {
   if (screen === "monster") return <SpotTune kind="monster" onBack={() => setScreen("menu")} />;
   if (screen === "spell") return <SpotTune kind="spell" onBack={() => setScreen("menu")} />;
   if (screen === "spellHand") return <SpotTune kind="spellHand" onBack={() => setScreen("menu")} />;
+  if (screen === "menuIcons") return <MenuIconTune onBack={() => setScreen("menu")} />;
   if (screen === "text") return <CardTextTune onBack={() => setScreen("menu")} />;
   if (screen === "sound") return <SoundTune onBack={() => setScreen("menu")} />;
   if (screen === "fx") return <FxLab onBack={() => setScreen("menu")} />;
@@ -102,6 +110,7 @@ function exportChanges() {
   if (!same(loadHand(), DEFAULT_HAND)) out.hand = loadHand();
   if (!same(loadSpellHand(), DEFAULT_SPELL_HAND)) out.spellHand = loadSpellHand();
   if (!same(loadField(), DEFAULT_FIELD)) out.field = loadField();
+  if (!same(loadMenuIcons(), DEFAULT_MENU_ICONS)) out.menuIcons = loadMenuIcons();
   const sound = { on: soundOn(), fx: fxVolume(), tap: tapVolume() };
   if (!same(sound, { on: true, fx: 100, tap: 100 })) out.sound = sound;
   const cards = JSON.parse(exportNumbers()) as { monsters: unknown[]; spells: unknown[]; attack?: string };
@@ -123,6 +132,7 @@ function setupLine() {
     spell: loadSpell(),
     spellHand: loadSpellHand(),
     field: loadField(),
+    menuIcons: loadMenuIcons(),
     sound: { on: soundOn(), fx: fxVolume(), tap: tapVolume() },
   });
 }
@@ -168,6 +178,9 @@ function Menu({ onPick }: { onPick: (screen: Screen) => void }) {
           </button>
           <button type="button" className="tuner-save alt" onClick={() => onPick("field")}>
             {tr("Điều chỉnh lá trên sân")}
+          </button>
+          <button type="button" className="tuner-save alt" onClick={() => onPick("menuIcons")}>
+            {tr("Điều chỉnh icon menu chính")}
           </button>
           <button type="button" className="tuner-save alt" onClick={() => onPick("text")}>
             {tr("Điều chỉnh nội dung lá bài")}
@@ -973,6 +986,96 @@ function SpotTune({ kind, onBack }: { kind: "monster" | "spell" | "spellHand"; o
         Trả về mặc định
       </button>
       {saved ? <p className="tuner-note">Đã lưu. Vào chơi để xem.</p> : null}
+    </main>
+  );
+}
+
+function MenuIconTune({ onBack }: { onBack: () => void }) {
+  const [layout, setLayout] = useState<Record<MenuIconKey, MenuIcon>>(loadMenuIcons);
+  const [picked, setPicked] = useState<MenuIconKey>("album");
+  const [saved, setSaved] = useState(false);
+  const hold = useRef<{ key: MenuIconKey; x: number; y: number; dx: number; dy: number; rem: number } | null>(null);
+  const spot = layout[picked];
+
+  function patch(key: MenuIconKey, next: Partial<MenuIcon>) {
+    setSaved(false);
+    setLayout((current) => ({ ...current, [key]: { ...current[key], ...next } }));
+  }
+
+  const drag: IconDrag = {
+    picked,
+    down: (key, event) => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      hold.current = { key, x: event.clientX, y: event.clientY, dx: layout[key].dx, dy: layout[key].dy, rem };
+      setPicked(key);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    move: (event) => {
+      const start = hold.current;
+      if (!start) return;
+      patch(start.key, { dx: clamp(start.dx + (event.clientX - start.x) / start.rem, -8, 8), dy: clamp(start.dy + (event.clientY - start.y) / start.rem, -8, 8) });
+    },
+    up: () => {
+      hold.current = null;
+    },
+  };
+
+  return (
+    <main className="tuner menu-page is-sub">
+      <button type="button" className="tuner-back" onClick={onBack}>
+        Về tuỳ chỉnh
+      </button>
+      <h1>Chỉnh icon menu chính</h1>
+      <p className="tuner-note">Kéo icon hoặc dùng mũi tên. "Icon to hơn" đổi cỡ icon đang chọn.</p>
+      <div className="tune-menu-stage">
+        <nav className="home-tabs is-left">
+          {LEFT_TABS.map((tab, index) => (
+            <SideTab key={tab.key} tab={tab} side="left" index={index} icon={layout[tab.pic]} drag={drag} />
+          ))}
+        </nav>
+        <nav className="home-tabs is-right">
+          {RIGHT_TABS.map((tab, index) => (
+            <SideTab key={tab.key} tab={tab} side="right" index={index} icon={layout[tab.pic]} drag={drag} />
+          ))}
+        </nav>
+      </div>
+      <p className="tuner-note">Đang chọn: {MENU_ICON_MARKS.find((mark) => mark.key === picked)?.label}</p>
+      <Pad
+        fontStep={0.2}
+        fontUp="Icon to hơn"
+        fontDown="Icon nhỏ hơn"
+        onNudge={(dx, dy) => patch(picked, { dx: clamp(spot.dx + dx, -8, 8), dy: clamp(spot.dy + dy, -8, 8) })}
+        onFont={(delta) => patch(picked, { size: clamp(spot.size + delta, 1.5, 8) })}
+      />
+      <div className="tuner-list">
+        {MENU_ICON_MARKS.map((mark) => (
+          <button key={mark.key} type="button" className={`tuner-item${picked === mark.key ? " on" : ""}`} onClick={() => setPicked(mark.key)}>
+            {mark.label} · lệch {layout[mark.key].dx}, {layout[mark.key].dy} · cỡ {layout[mark.key].size}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="tuner-save"
+        onClick={() => {
+          saveMenuIcons(layout);
+          setSaved(true);
+        }}
+      >
+        Lưu
+      </button>
+      <button
+        type="button"
+        className="pad-btn"
+        onClick={() => {
+          setLayout(DEFAULT_MENU_ICONS);
+          saveMenuIcons(DEFAULT_MENU_ICONS);
+          setSaved(true);
+        }}
+      >
+        Trả về mặc định
+      </button>
+      {saved ? <p className="tuner-note">Đã lưu. Về menu để xem.</p> : null}
     </main>
   );
 }

@@ -1115,14 +1115,36 @@
 /* Icon thay chữ (chủ game 06/11): ảnh nhô ra trên và dưới thẻ, nằm giữa phần nhìn thấy. */
 .home-tab-icon {
   position: absolute;
-  top: calc(60% - 3.5rem);
+  top: calc(60% - var(--ih, 3.5rem));
   width: auto;
-  height: 3.5rem;
-  max-width: 4.4rem;
+  height: var(--ih, 3.5rem);
+  max-width: calc(var(--ih, 3.5rem) * 1.26);
   object-fit: contain;
+  transform: translate(var(--ix, 0rem), var(--iy, 0rem));
   pointer-events: none;
   filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
   z-index: 2;
+}
+/* Xem trước trong Tuỳ chỉnh: icon kéo được (chủ game 06/11). */
+.home-tab-icon.is-live {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+.home-tab-icon.is-picked {
+  outline: 2px dashed #ffd05c;
+  outline-offset: 2px;
+}
+.tune-menu-stage {
+  position: relative;
+  height: 22rem;
+  margin: 0.6rem 0;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background: #1b2f55 url("/home-bg-video.jpg") center / cover no-repeat;
+}
+.tune-menu-stage .home-tabs {
+  bottom: 0.8rem;
 }
 .home-tab.is-left .home-tab-icon {
   right: 0.5rem;

@@ -925,6 +925,7 @@ export const PENDING_NOTES: string[] = [
   "Hộp thư: 4 mục Thư, Tin tức (vàng), Thư quà (xanh), Báo vi phạm. Tin tức hiện ngay trong Hộp thư.",
   "Menu chính: trái Bộ sưu tập, Sự kiện, Bảng xếp hạng (sắp có), Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.",
   "Menu chính: các thẻ chỉ còn hình, bỏ chữ. Hình lớn nhô ra ngoài thẻ.",
+  "Cài đặt có mục chỉnh vị trí và cỡ icon của 8 thẻ menu chính.",
 ];
 
 function remarkOf(notes: string[]) {
