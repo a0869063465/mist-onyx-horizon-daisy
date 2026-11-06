@@ -942,6 +942,7 @@ export const PENDING_NOTES: string[] = [
   "Vuốt trái/phải trong bảng mô tả lá để đổi sang lá kế (Kho bài, Chỉnh sửa bộ bài, Album).",
   "Vuốt trái/phải trong bảng mô tả lá đổi sang lá kế ở tay bài, sân, môi trường, tường thành và icon phản ứng.",
   "Menu chính: icon Phần thưởng đổi sang hộp quà tím nơ đỏ mới.",
+  "Nhạc trong trận: thêm bài Chiến binh card, thay phiên ngẫu nhiên với bài cũ (bài này không còn ở nhạc menu).",
 ];
 
 function remarkOf(notes: string[]) {

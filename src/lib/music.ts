@@ -6,10 +6,9 @@ export const TRACKS = [
   "/music/hoa-tau-2.mp3",
   "/music/unknown-1.mp3",
   "/music/warm-card-motif.mp3",
-  "/music/chien-binh-card.mp3",
 ];
-/** The owner's match track (19/10), played over and over. */
-export const MATCH_TRACKS = ["/music/vong-lan-card.mp3"];
+/** The owner's match tracks (19/10, Chiến binh card added 06/11): one at random, then another at random when it ends. */
+export const MATCH_TRACKS = ["/music/vong-lan-card.mp3", "/music/chien-binh-card.mp3"];
 
 export const pickTrack = (list: string[]) => list[Math.floor(Math.random() * list.length)];
 
