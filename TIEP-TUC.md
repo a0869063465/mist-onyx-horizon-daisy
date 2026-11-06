@@ -719,6 +719,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V13 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Côn trùng sơ cấp, 1 sao.
 - Chưa rõ lá côn trùng sơ cấp cụ thể (chỉ số, skill) và lá có sẵn hay mới, chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
+- Bổ sung (chủ game, 06/11): quái không có công, thủ. Chỉ kích hoạt skill và bắn laser. Mạnh nhất khi quái đối thủ bị khống chế.
 
 ## V14 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Cuồng phong bắt giữ: bộ bài rừng chuyên hệ gió. Tham khảo skill phong trên mạng.
