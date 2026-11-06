@@ -9,12 +9,13 @@ import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { cardName, useStars } from "@/lib/shop";
 import { playReward, playUi } from "@/lib/sfx";
+import { NewsBoard } from "@/components/news-board";
 
 const TABS: Array<{ key: MailKind; label: string; empty: string }> = [
   { key: "mail", label: "Thư", empty: "Chưa có thư." },
-  { key: "warn", label: "Báo vi phạm", empty: "Không có báo cáo vi phạm." },
-  { key: "gift", label: "Thư quà", empty: "Chưa có thư quà." },
   { key: "news", label: "Tin tức", empty: "Chưa có tin tức." },
+  { key: "gift", label: "Thư quà", empty: "Chưa có thư quà." },
+  { key: "warn", label: "Báo vi phạm", empty: "Không có báo cáo vi phạm." },
 ];
 
 export const Route = createFileRoute("/mail")({
@@ -94,6 +95,11 @@ function MailPage() {
         ))}
         <i className="ml-ink" aria-hidden="true" />
       </nav>
+      {tab === "news" ? (
+        <div className="ml-news">
+          <NewsBoard />
+        </div>
+      ) : (
       <section className="ml-pane" key={tab}>
         {here.length === 0 ? (
           <div className="ml-empty">
@@ -101,7 +107,7 @@ function MailPage() {
             <p>{tr(info.empty)}</p>
           </div>
         ) : (
-          <ul className={`ml-list${tab === "news" ? " is-news" : ""}`}>
+          <ul className="ml-list">
             {here.map((row, order) => (
               <li key={row.mail.id} style={{ ["--i" as string]: order }}>
                 <Row row={row} open={openId === row.mail.id} onOpen={() => show(row)} />
@@ -110,6 +116,7 @@ function MailPage() {
           </ul>
         )}
       </section>
+      )}
       {tab !== "news" || mode === "publisher" ? (
         <footer className="ml-foot">
           {mode === "publisher" ? (

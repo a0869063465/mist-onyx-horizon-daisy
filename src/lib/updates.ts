@@ -907,6 +907,8 @@ export const PENDING_NOTES: string[] = [
   "Giáp và Vuốt chờ trong chuỗi như phép nhanh, đối thủ đáp lại được.",
   "Kéo lá phép có mục tiêu: chỉ mục tiêu dùng được sáng, rê ngón để chọn. Bấm Use rồi rê trên sân cũng chọn được.",
   "Menu chính: bấm vào thẻ hồ sơ (phần bên trái, trừ đầu bên phải sát nút PvE) là mở hồ sơ, không cần bấm đúng ảnh tròn.",
+  "Hộp thư: 4 mục Thư, Tin tức (vàng), Thư quà (xanh), Báo vi phạm. Tin tức hiện ngay trong Hộp thư.",
+  "Menu chính: trái Bộ sưu tập, Sự kiện, Bảng xếp hạng (sắp có), Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.",
 ];
 
 function remarkOf(notes: string[]) {

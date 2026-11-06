@@ -45,17 +45,19 @@ function Home() {
     setFace(entry ? coverOf(entry) : null);
   }, []);
   // Menu chính (chủ game 31/10): 4 thẻ bình hành mỗi bên, lú nửa ra từ mép màn hình; thẻ chưa có tính năng thì khoá.
+  // Menu chính (chủ game 06/11): trái Bộ sưu tập, Sự kiện, Bảng xếp hạng, Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.
+  // Tin tức nằm trong tab Tin tức của Thư. Bảng xếp hạng làm sau nên đang khoá.
   const left: Tab[] = [
-    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
-    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", go: () => setMissions(true) },
     { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
+    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
+    { key: "ranks", label: "Bảng xếp hạng", icon: <RankIcon />, bg: "/art/phu-thuy-rung-den.jpg" },
+    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
   ];
   const right: Tab[] = [
     { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
-    { key: "news", label: "Tin tức", icon: <NewsIcon />, bg: "/art/phu-thuy-rung-den.jpg", to: "/news", dot: mails.some((row) => row.kind === "news" && !row.read) },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", go: () => setMissions(true) },
     { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
-    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => row.kind !== "news" && (!row.read || row.owing)) },
+    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
   ];
   return (
     <main className="home">
@@ -223,11 +225,10 @@ function GiftIcon() {
   );
 }
 
-function NewsIcon() {
+function RankIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <path d="M8 9h8M8 13h8M8 17h5" />
+      <path d="M3 20h18M5 20v-6h4v6M10 20V9h4v11M15 20v-8h4v8M12 3l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 5.1l2-.3z" />
     </svg>
   );
 }

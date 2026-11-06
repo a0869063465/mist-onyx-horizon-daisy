@@ -12381,8 +12381,8 @@ button.watch-back {
   font-family: "Be Vietnam Pro", system-ui, sans-serif;
 }
 .ml[data-tab="warn"] { --ac: #ff6b6b; --ac-rgb: 255, 107, 107; }
-.ml[data-tab="gift"] { --ac: #ffd05c; --ac-rgb: 255, 208, 92; }
-.ml[data-tab="news"] { --ac: #78a4ff; --ac-rgb: 120, 164, 255; }
+.ml[data-tab="gift"] { --ac: #78a4ff; --ac-rgb: 120, 164, 255; }
+.ml[data-tab="news"] { --ac: #ffd05c; --ac-rgb: 255, 208, 92; }
 .ml::before {
   content: "";
   position: absolute;
@@ -12442,8 +12442,8 @@ button.watch-back {
 .ml-tabs > button.on { color: #fff; }
 .ml-tabs > button[data-kind="mail"].on .ml-ico { stroke: #5cc8ff; }
 .ml-tabs > button[data-kind="warn"].on .ml-ico { stroke: #ff6b6b; }
-.ml-tabs > button[data-kind="gift"].on .ml-ico { stroke: #ffd05c; }
-.ml-tabs > button[data-kind="news"].on .ml-ico { stroke: #78a4ff; }
+.ml-tabs > button[data-kind="gift"].on .ml-ico { stroke: #78a4ff; }
+.ml-tabs > button[data-kind="news"].on .ml-ico { stroke: #ffd05c; }
 .ml-tabs > button.on .ml-ico { filter: drop-shadow(0 0 5px rgba(var(--ac-rgb), 0.7)); transform: translateY(-1px) scale(1.08); }
 .ml-tabs > button:active { transform: scale(0.95); }
 .ml-ico { width: 1.75rem; height: 1.75rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.25s, filter 0.25s; }
@@ -12474,7 +12474,7 @@ button.watch-back {
 .ml-txt b { font-size: 0.98rem; font-weight: 500; color: rgba(233, 238, 252, 0.68); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ml-row.is-new .ml-txt b { color: #fff; font-weight: 700; }
 .ml-txt i { font-style: normal; font-size: 0.74rem; letter-spacing: 0.03em; color: rgba(233, 238, 252, 0.46); }
-.ml-clip { flex: none; width: 1.5rem; height: 1.5rem; color: #ffd05c; }
+.ml-clip { flex: none; width: 1.5rem; height: 1.5rem; color: #78a4ff; }
 .ml-clip svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .ml-tag { flex: none; font-style: normal; font-family: var(--cond); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.12em; padding: 0.12rem 0.5rem; color: #fff; background: linear-gradient(#ff6b6b, #b02222); clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
 .ml-dot { flex: none; width: 0.6rem; height: 0.6rem; margin-right: 0.3rem; border-radius: 50%; background: #ff4040; box-shadow: 0 0 8px #ff4040; animation: ml-breathe 1.8s ease-in-out infinite; }
@@ -12514,8 +12514,8 @@ button.watch-back {
 }
 .ml-detail.is-mail { --ac: #5cc8ff; --ac-rgb: 92, 200, 255; }
 .ml-detail.is-warn { --ac: #ff6b6b; --ac-rgb: 255, 107, 107; }
-.ml-detail.is-gift { --ac: #ffd05c; --ac-rgb: 255, 208, 92; }
-.ml-detail.is-news { --ac: #78a4ff; --ac-rgb: 120, 164, 255; }
+.ml-detail.is-gift { --ac: #78a4ff; --ac-rgb: 120, 164, 255; }
+.ml-detail.is-news { --ac: #ffd05c; --ac-rgb: 255, 208, 92; }
 @keyframes ml-slide { from { transform: translateX(100%); } }
 .ml-dhead { flex: none; display: flex; align-items: center; gap: 0.8rem; padding: 0.55rem 1.1rem 0.7rem; }
 .ml-dhead span { font-family: var(--cond); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ac); text-shadow: 0 0 10px rgba(var(--ac-rgb), 0.5); }
@@ -12595,6 +12595,9 @@ button.watch-back {
 }
 /* Tin tức (chủ game 31/10): the News page, on the shell of Hộp thư. */
 .nw-tabs { grid-template-columns: repeat(2, 1fr); }
+/* Tin tức trong Hộp thư (chủ game 06/11): lưới tin nằm dưới hàng 4 tab. */
+.ml-news { position: relative; z-index: 2; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ml-news .nw-tabs { margin-top: 0.4rem; }
 .nw-tabs > button { padding: 0.85rem 0.3rem 0.8rem; }
 .nw-tabs > button span { font-size: 0.8rem; letter-spacing: 0.08em; white-space: normal; text-align: center; line-height: 1.15; padding: 0 1.3rem; }
 .nw-tabs .ml-ink { width: 50%; }
