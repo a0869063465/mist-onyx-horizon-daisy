@@ -540,17 +540,27 @@ export const MENU_ICON_MARKS: Array<{ key: MenuIconKey; label: string }> = [
   { key: "mail", label: "Thư" },
 ];
 export const DEFAULT_MENU_ICON: MenuIcon = { dx: 0, dy: 0, size: 3.5 };
-export const DEFAULT_MENU_ICONS = Object.fromEntries(MENU_ICON_MARKS.map((mark) => [mark.key, { ...DEFAULT_MENU_ICON }])) as Record<MenuIconKey, MenuIcon>;
+// Mặc định = số chủ game chỉnh tay rồi chụp lại (06/11): dx, dy (rem, lệch so với chỗ gốc), size (rem).
+export const DEFAULT_MENU_ICONS: Record<MenuIconKey, MenuIcon> = {
+  album: { dx: -1.3, dy: 0.1, size: 3.9 },
+  events: { dx: -0.9, dy: 0.4, size: 3.9 },
+  ranks: { dx: -1.1, dy: 0.4, size: 4.1 },
+  shop: { dx: -0.8, dy: 0.6, size: 3.7 },
+  gifts: { dx: 1.1, dy: 0.7, size: 3.9 },
+  missions: { dx: 1.3, dy: 0.7, size: 3.9 },
+  friends: { dx: 1.3, dy: 0.7, size: 3.7 },
+  mail: { dx: 1.4, dy: 0.4, size: 3.7 },
+};
 const MENU_ICON_KEY = "clash-menu-icons-v1";
-function asMenuIcon(value: unknown): MenuIcon {
+function asMenuIcon(value: unknown, base: MenuIcon): MenuIcon {
   const raw = (value ?? {}) as Partial<MenuIcon>;
   const num = (item: unknown, fallback: number) => (typeof item === "number" && Number.isFinite(item) ? item : fallback);
-  return { dx: num(raw.dx, 0), dy: num(raw.dy, 0), size: Math.min(8, Math.max(1.5, num(raw.size, DEFAULT_MENU_ICON.size))) };
+  return { dx: num(raw.dx, base.dx), dy: num(raw.dy, base.dy), size: Math.min(8, Math.max(1.5, num(raw.size, base.size))) };
 }
 export function loadMenuIcons(): Record<MenuIconKey, MenuIcon> {
   const raw = read(MENU_ICON_KEY) as Partial<Record<MenuIconKey, unknown>> | null;
   const next = {} as Record<MenuIconKey, MenuIcon>;
-  for (const mark of MENU_ICON_MARKS) next[mark.key] = asMenuIcon(raw?.[mark.key]);
+  for (const mark of MENU_ICON_MARKS) next[mark.key] = asMenuIcon(raw?.[mark.key], DEFAULT_MENU_ICONS[mark.key]);
   return next;
 }
 export function saveMenuIcons(layout: Record<MenuIconKey, MenuIcon>) {
