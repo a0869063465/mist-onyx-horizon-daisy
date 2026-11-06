@@ -13239,3 +13239,18 @@ button.mx-box.is-glow { animation-name: mx-readyg; clip-path: polygon(13.2% 3.5%
 .ma-box h2 { margin: 0; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.04em; color: #ffe27a; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7); }
 .ma-list { width: 100%; margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
 .ma-go { margin-top: 0.4rem; padding: 0.7rem 2.6rem; border: 0; border-radius: 0.6rem; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.2rem; color: #2a1a00; background: linear-gradient(180deg, #ffe79a, #f0a929); cursor: pointer; }
+
+/* Chặn thao tác của web khi chơi (chủ game 06/11): phóng to, chọn/copy chữ khi giữ, menu giữ, kéo ảnh, kéo làm mới/nảy mép. Ô nhập chữ vẫn chọn được. */
+html, body {
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-x pan-y;
+}
+input, textarea, [contenteditable="true"], .allow-select, .allow-select * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
