@@ -760,3 +760,8 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Chưa rõ "rút bài mình muốn" (chọn từ xấp hay chọn lá cụ thể), "vẽ luật", "may mắn" áp dụng cho việc gì, và "nhìn bài" có phải tay đối thủ không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
 - Bổ sung (chủ game, 06/11), Pegasus: mọi thao tác của mình đều được đối thủ thấy dưới dạng đèn neon. Hoặc tay bài đổi như game Yugi PS1.
 - Chưa rõ chọn một trong hai (đèn neon hay đổi tay bài kiểu PS1), và neon hiện những thao tác nào. Chờ chủ game chọn.
+
+## V21 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Pháp sư không mặt: tạo 1 lá phép trên tay, ngăn chặn đòn hiện tại.
+- Phát động ngay khi quái thú khác tấn công. Trả lại đòn (chưa rõ "trả còn đó vào nó") cho nó trước khi đòn công thi triển.
+- Chưa rõ lá phép được tạo là lá nào, "trả" nghĩa là đổi hướng đòn hay hoàn đòn lại, và có tốn mana không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
