@@ -692,3 +692,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Gã hề: khả năng tích luỹ và phát động ngay.
 - Kỵ sĩ gai A: khả năng xuyên giáp.
 - Chưa rõ "Kỵ sĩ gai A" là lá nào, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V8 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Người đá #2: có sức công tương đối. Hơi thở sự sống: biến những quái thú cao biến mất.
+- Chưa rõ "người đá #2" là lá nào và "quái thú cao" là quái có sao/chỉ số nào, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
