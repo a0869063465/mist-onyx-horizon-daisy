@@ -871,3 +871,14 @@ Thấu thị (xem bài đối thủ):
 - Chủ game xác nhận (05/11): Gọi quái thú trở về = Thu hồi quái thú (đã có trong game, không làm lá mới). Hấp thụ ma pháp là phép SIÊU TỐC hút phép (đã có trong game).
 - Chủ game xác nhận (05/11): Giải Trừ Ma Pháp = Hấp thụ ma pháp (đã có). Nghi Thức Hắc Ma Thuật đã bỏ khỏi danh sách.
 - TỔNG KẾT ALBUM YUGI (05/11): mô tả đủ. Lá mới còn phải làm (13): quái 7 (Pháp sư Hắc Hỗn Mang, Pháp sư Bóng Tối, Dơi Hắc Ám, Tiểu quỷ Gremlin, Tê giáp có cánh, Lang nha bạc, Rùa máy bắn đá); phép 6 (Bí Điển Ma Thuật, Thuật thôi miên, Hồi sinh tử thi, Giải thoát linh hồn, Mũi tên phá phép, Nhãn quan chân thực). Đã có sẵn: Hộp ma thuật (đã code), Sừng kỳ lân = Sừng lôi phá, Thu hồi quái thú (= Gọi quái thú trở về), Hấp thụ ma pháp (= Giải trừ ma pháp).
+
+## Lá mới từ zip Grok (06/11/2026, chưa làm, chờ chủ game chọn)
+
+Nguồn: `/root/.claude/uploads/bf26c4b1-5947-5ae4-905d-b1703fb12740/fbca19f6-clash-changes_1.zip` (`new/src/lib/catalog.ts`, ảnh `images-18-10/`). Bản Grok 18–20/10, chưa có trong repo.
+
+- **Thánh thuật sư** (1★, 0 mana; công 0, thủ 1, thủ phép 2, máu 4; ảnh có). Kỹ năng Thánh thuật: tiêu 1 mana, gỡ trạng thái xấu của 1 quái đồng minh, trả chỉ số bị cướp, hồi 4 máu. Lên người chơi thì chỉ hồi 4 máu.
+- **Kẻ trộm áo trắng** (1★, 1 mana; công 1, thủ 0, thủ phép 0, máu 2; ảnh có). Kẻ trộm: khi đánh trúng người chơi, trộm ngẫu nhiên 1 quái hoặc 1 phép trên tay họ. Lẫn trốn: 65% né đòn đánh và phép gây sát thương.
+- **Chiến binh xương** (2★, 1 mana; công 4, thủ 2, thủ phép 3, máu 2; CHƯA có ảnh). Linh hoạt: dùng 1 mana để né đòn đánh thường của đối thủ và trả đòn.
+
+Chưa tìm thấy: "Quái sọ", "Nữ thuật sư".
+Cần chủ game chốt: lá nào làm trước; ảnh Chiến binh xương; có phải đây là đợt bạn nói không.
