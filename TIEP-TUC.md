@@ -696,3 +696,9 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V8 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Người đá #2: có sức công tương đối. Hơi thở sự sống: biến những quái thú cao biến mất.
 - Chưa rõ "người đá #2" là lá nào và "quái thú cao" là quái có sao/chỉ số nào, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V9 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Chế độ Test: lúc mới vào chỉ có 2 mana như đầu lượt.
+- Bấm vào tay mình hoặc tay đối thủ thì lá đầu tiên của xấp bài được rút (vào tay của bên đó).
+- Thêm nút +1 mana bên dưới thanh chính.
+- Chưa rõ "thanh chính" và cách rút khi bấm tay đối thủ (rút cho đối thủ hay cho mình), chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
