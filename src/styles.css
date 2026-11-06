@@ -13240,3 +13240,17 @@ button.mx-box.is-glow { animation-name: mx-readyg; clip-path: polygon(13.2% 3.5%
 .ma-box h2 { margin: 0; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.04em; color: #ffe27a; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7); }
 .ma-list { width: 100%; margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
 .ma-go { margin-top: 0.4rem; padding: 0.7rem 2.6rem; border: 0; border-radius: 0.6rem; font-family: "Roboto Condensed", "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.2rem; color: #2a1a00; background: linear-gradient(180deg, #ffe79a, #f0a929); cursor: pointer; }
+
+/* Nhiệm vụ: nút và khung phản hồi khi chạm (chủ game 06/11), dù không có việc gì xảy ra */
+.mx-card.is-q { cursor: pointer; transition: scale 130ms ease-out, filter 130ms ease-out; -webkit-tap-highlight-color: transparent; user-select: none; }
+.mx-card.is-q:active { scale: 0.965; filter: brightness(1.16); }
+.mx-sweep { position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: 4%; background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.5) 50%, transparent 62%) 130% 0 / 260% 100% no-repeat; opacity: 0; }
+.mx-sweep.is-on { animation: mx-sweep 520ms ease-out; }
+@keyframes mx-sweep { 0% { background-position: 130% 0; opacity: 1; } 85% { opacity: 1; } 100% { background-position: -30% 0; opacity: 0; } }
+.mx-card.is-q[data-tap]:not([data-tap="0"]) img.mx-box:not(.is-glow) { animation: mx-bump 320ms ease-out; }
+@keyframes mx-bump { 0% { transform: translate(-50%, -50%) scale(1); } 40% { transform: translate(-50%, -50%) scale(1.14); } 100% { transform: translate(-50%, -50%) scale(1); } }
+.mx-tab, .mx-back { transition: background-color 120ms, box-shadow 120ms, scale 120ms; -webkit-tap-highlight-color: transparent; }
+.mx-tab { border-radius: calc(var(--u) * 24); }
+.mx-tab:active, .mx-back:active { scale: 0.95; background-color: rgba(150, 215, 255, 0.28); box-shadow: 0 0 calc(var(--u) * 26) rgba(130, 205, 255, 0.75), inset 0 0 calc(var(--u) * 22) rgba(190, 235, 255, 0.55); }
+@media (hover: hover) { .mx-tab:hover, .mx-back:hover { background-color: rgba(150, 215, 255, 0.12); } .mx-card.is-q:hover { filter: brightness(1.08); } }
+@media (prefers-reduced-motion: reduce) { .mx-sweep.is-on, .mx-card.is-q img.mx-box { animation: none !important; } }

@@ -915,6 +915,7 @@ export const PENDING_NOTES: string[] = [
   "Nhạc menu: thêm 5 bản nhạc mới, phát ngẫu nhiên.",
   "Menu chính: hết giật hình nền khi quay về.",
   "Menu chính: sửa nền nhảy hình khi quay về menu.",
+  "Nhiệm vụ: nút và khung bấm vào có phản hồi (lún, sáng, tiếng bấm).",
 ];
 
 function remarkOf(notes: string[]) {
