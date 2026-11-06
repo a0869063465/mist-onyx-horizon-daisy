@@ -732,6 +732,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## V16 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Hũ nhốt linh hồn: skill xuất trận, bắt nhốt 2 quái thú khi có điều kiện nhất định, ví dụ dơi ác quỷ.
+- Bổ sung (chủ game, 06/11): bắt nhốt cần 1 mana. Gọi (triệu hồi) cần 1 mana. Không có sức phòng thủ và tự vệ.
 - Chưa rõ điều kiện nhốt cụ thể, nhốt xong thì có tác dụng gì, và lá có sẵn hay mới. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
 
 ## V17 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
