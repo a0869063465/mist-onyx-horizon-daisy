@@ -1112,41 +1112,31 @@
 .home-tab.is-shut .home-tab-art {
   filter: grayscale(1) brightness(0.8);
 }
-.home-tab-label {
+/* Icon thay chữ (chủ game 06/11): ảnh nhô ra trên và dưới thẻ, nằm giữa phần nhìn thấy. */
+.home-tab-icon {
   position: absolute;
   top: 50%;
+  width: auto;
+  height: 4.5rem;
+  max-width: 5rem;
+  object-fit: contain;
   transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  max-width: 4.6rem;
-  font-size: 0.72rem;
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 3px #000, 0 0 6px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
+  z-index: 2;
 }
-.home-tab.is-left .home-tab-label {
-  right: 1.2rem;
-  align-items: flex-end;
-  text-align: right;
+.home-tab.is-left .home-tab-icon {
+  right: 0.5rem;
 }
-.home-tab.is-right .home-tab-label {
-  left: 1.2rem;
-  align-items: flex-start;
-  text-align: left;
+.home-tab.is-right .home-tab-icon {
+  left: 0.5rem;
 }
-.home-tab-label svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: none;
-  stroke: #bfe0ff;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.home-tab.is-shut .home-tab-icon {
+  filter: grayscale(0.85) brightness(0.8) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
 }
 .home-tab .home-lock {
   position: absolute;
+  z-index: 3;
   top: 0.5rem;
   width: 0.85rem;
   height: 0.85rem;

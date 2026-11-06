@@ -924,6 +924,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: bấm vào thẻ hồ sơ (phần bên trái, trừ đầu bên phải sát nút PvE) là mở hồ sơ, không cần bấm đúng ảnh tròn.",
   "Hộp thư: 4 mục Thư, Tin tức (vàng), Thư quà (xanh), Báo vi phạm. Tin tức hiện ngay trong Hộp thư.",
   "Menu chính: trái Bộ sưu tập, Sự kiện, Bảng xếp hạng (sắp có), Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.",
+  "Menu chính: các thẻ chỉ còn hình, bỏ chữ. Hình lớn nhô ra ngoài thẻ.",
 ];
 
 function remarkOf(notes: string[]) {

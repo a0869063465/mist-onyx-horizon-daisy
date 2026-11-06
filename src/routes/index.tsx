@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { tr, useLang } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends" | "/missions"; go?: () => void; dot?: boolean };
+type Tab = { key: string; label: string; pic: string; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends" | "/missions"; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
@@ -53,16 +53,16 @@ function Home() {
   // Menu chính (chủ game 06/11): trái Bộ sưu tập, Sự kiện, Bảng xếp hạng, Cửa hàng; phải Phần thưởng, Nhiệm vụ, Bạn bè, Thư.
   // Tin tức nằm trong tab Tin tức của Thư. Bảng xếp hạng làm sau nên đang khoá.
   const left: Tab[] = [
-    { key: "album", label: "Bộ sưu tập", icon: <AlbumIcon />, bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
-    { key: "events", label: "Sự kiện", icon: <FlagIcon />, bg: "/art/rong-ac-ma.jpg" },
-    { key: "ranks", label: "Bảng xếp hạng", icon: <RankIcon />, bg: "/art/phu-thuy-rung-den.jpg" },
-    { key: "shop", label: "Cửa hàng", icon: <ShopIcon />, bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
+    { key: "album", label: "Bộ sưu tập", pic: "album", bg: "/art/ky-si-cuoi-rong.jpg", to: "/collection" },
+    { key: "events", label: "Sự kiện", pic: "events", bg: "/art/rong-ac-ma.jpg" },
+    { key: "ranks", label: "Bảng xếp hạng", pic: "ranks", bg: "/art/phu-thuy-rung-den.jpg" },
+    { key: "shop", label: "Cửa hàng", pic: "shop", bg: "/art/khong-lo-mot-mat.jpg", to: "/shop" },
   ];
   const right: Tab[] = [
-    { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", to: "/missions", dot: quests },
-    { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
-    { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
+    { key: "gifts", label: "Phần thưởng", pic: "gifts", bg: "/art/thien-su.jpg" },
+    { key: "missions", label: "Nhiệm vụ", pic: "missions", bg: "/art/hiep-si-cua-hau.jpg", to: "/missions", dot: quests },
+    { key: "friends", label: "Bạn bè", pic: "friends", bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
+    { key: "mail", label: "Thư", pic: "mail", bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
   ];
   return (
     <main className="home">
@@ -153,10 +153,7 @@ function SideTab({ tab, side, index }: { tab: Tab; side: "left" | "right"; index
   const inner = (
     <>
       <span className="home-tab-art" style={{ backgroundImage: `url(${tab.bg})` }} aria-hidden="true" />
-      <span className="home-tab-label">
-        {tab.icon}
-        <span>{tr(tab.label)}</span>
-      </span>
+      <img className="home-tab-icon" src={`/ui/menu/ic-${tab.pic}.webp`} alt={tr(tab.label)} draggable={false} />
       {shut ? <LockIcon /> : null}
       {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
     </>
@@ -191,78 +188,6 @@ function LockIcon() {
     <svg className="home-lock" viewBox="0 0 24 24" aria-hidden="true">
       <rect x="5" y="11" width="14" height="9" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
-}
-
-function FlagIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
-    </svg>
-  );
-}
-
-function ScrollIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 3.5h10.5a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-3 0v-1.5H4.5V5.5a2 2 0 0 1 2-2" />
-      <path d="M8 8l1.2 1.2L11.5 7M8 12.5l1.2 1.2 2.3-2.2M13.5 8.2h3M13.5 12.7h3" />
-    </svg>
-  );
-}
-
-function AlbumIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="8" y="4" width="11" height="15" rx="1.8" />
-      <path d="M5.5 7.5v11A2.5 2.5 0 0 0 8 21h8.5" />
-    </svg>
-  );
-}
-
-function GiftIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="9" width="16" height="11" rx="1.5" />
-      <path d="M3 9h18M12 9v11M12 9c-1.5-4-6-4-5 0M12 9c1.5-4 6-4 5 0" />
-    </svg>
-  );
-}
-
-function RankIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 20h18M5 20v-6h4v6M10 20V9h4v11M15 20v-8h4v8M12 3l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 5.1l2-.3z" />
-    </svg>
-  );
-}
-
-function FriendsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="9" cy="8.5" r="3" />
-      <circle cx="16.5" cy="9.5" r="2.4" />
-      <path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15a4.5 4.5 0 0 1 6 4" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M4 7l8 6 8-6" />
-    </svg>
-  );
-}
-
-function ShopIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 9l1.6-5h14.8L21 9" />
-      <path d="M3 9a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0" />
-      <path d="M5 11.6V20h14v-8.4M10 20v-5h4v5" />
     </svg>
   );
 }
