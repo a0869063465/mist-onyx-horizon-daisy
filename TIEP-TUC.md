@@ -738,3 +738,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V17 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Dơi ác quỷ: quái 1 sao, máu 1, mạnh về một khoản chưa rõ (chủ game sẽ bổ sung).
 - Chờ chủ game xác nhận khoản mạnh và lá có sẵn hay mới. Mô hình/nỗ lực: chưa chốt.
+
+## V18 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Sói bạc: cần trăng tròn để tăng sức mạnh.
+- Chưa rõ trăng tròn là điều kiện gì trong trận (vòng, môi trường hay lá nào), mức tăng bao nhiêu, và lá có sẵn hay mới. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
