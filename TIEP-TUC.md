@@ -771,3 +771,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Quy tắc cuộc sống: không được mắc (lỗi/việc sai) nữa.
 - Ngủ: bật video. Ngủ sau 8 rưỡi.
 - Chưa rõ "ngủ bật video" là bật video để ngủ hay không được bật video khi ngủ, và "ngủ sau 8 rưỡi" là giờ ngủ hay giờ bắt đầu. Chờ chủ game xác nhận. Mô hình/nỗ lực: không áp dụng (việc ngoài code).
+
+## V23 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Lá quái phòng ngự: trả đòn tự động, hoặc như JSX (chưa rõ "JSX" là gì: có thể là tên lá, tên skill hay cách viết mô tả).
+- Chưa rõ lá phòng ngự cụ thể và kiểu trả đòn tự động mong muốn. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
