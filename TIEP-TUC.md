@@ -744,3 +744,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V18 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Sói bạc: cần trăng tròn để tăng sức mạnh.
 - Chưa rõ trăng tròn là điều kiện gì trong trận (vòng, môi trường hay lá nào), mức tăng bao nhiêu, và lá có sẵn hay mới. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
+
+## V19 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Sự kiện: Vua bài ma thuật.
+- Chưa rõ thể thức sự kiện, thời gian, phần thưởng và cách mở. Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
