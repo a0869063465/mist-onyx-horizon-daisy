@@ -545,7 +545,7 @@ export const DEFAULT_MENU_ICONS: Record<MenuIconKey, MenuIcon> = {
   album: { dx: -2.5, dy: 0.1, size: 3.1 },
   events: { dx: -2.1, dy: 0.4, size: 3.1 },
   ranks: { dx: -1.9, dy: 0.4, size: 3.3 },
-  shop: { dx: -1.6, dy: 0.6, size: 3.1 },
+  shop: { dx: -2.0, dy: 0.6, size: 3.1 },
   gifts: { dx: 1.9, dy: 0.7, size: 3.1 },
   missions: { dx: 2.1, dy: 0.7, size: 3.1 },
   friends: { dx: 1.7, dy: 0.7, size: 3.1 },
