@@ -765,3 +765,4 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Pháp sư không mặt: tạo 1 lá phép trên tay, ngăn chặn đòn hiện tại.
 - Phát động ngay khi quái thú khác tấn công. Trả lại đòn (chưa rõ "trả còn đó vào nó") cho nó trước khi đòn công thi triển.
 - Chưa rõ lá phép được tạo là lá nào, "trả" nghĩa là đổi hướng đòn hay hoàn đòn lại, và có tốn mana không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+- Bổ sung (chủ game, 06/11): lá phép này chỉ tạo lại mỗi 2 lượt sau khi sử dụng. Số cam hiển thị số lượt còn lại (theo cách ghi số cam của game).
