@@ -540,16 +540,16 @@ export const MENU_ICON_MARKS: Array<{ key: MenuIconKey; label: string }> = [
   { key: "mail", label: "Thư" },
 ];
 export const DEFAULT_MENU_ICON: MenuIcon = { dx: 0, dy: 0, size: 3.5 };
-// Mặc định = số chủ game chỉnh tay rồi chụp lại (06/11): dx, dy (rem, lệch so với chỗ gốc), size (rem).
+// Mặc định = số chủ game chỉnh tay rồi chụp lại (06/11, lần 2): dx, dy (rem, lệch so với chỗ gốc), size (rem).
 export const DEFAULT_MENU_ICONS: Record<MenuIconKey, MenuIcon> = {
-  album: { dx: -1.3, dy: 0.1, size: 3.9 },
-  events: { dx: -0.9, dy: 0.4, size: 3.9 },
-  ranks: { dx: -1.1, dy: 0.4, size: 4.1 },
-  shop: { dx: -0.8, dy: 0.6, size: 3.7 },
-  gifts: { dx: 1.1, dy: 0.7, size: 3.9 },
-  missions: { dx: 1.3, dy: 0.7, size: 3.9 },
-  friends: { dx: 1.3, dy: 0.7, size: 3.7 },
-  mail: { dx: 1.4, dy: 0.4, size: 3.7 },
+  album: { dx: -2.5, dy: 0.1, size: 3.1 },
+  events: { dx: -2.1, dy: 0.4, size: 3.1 },
+  ranks: { dx: -1.9, dy: 0.4, size: 3.3 },
+  shop: { dx: -1.6, dy: 0.6, size: 3.1 },
+  gifts: { dx: 1.9, dy: 0.7, size: 3.1 },
+  missions: { dx: 2.1, dy: 0.7, size: 3.1 },
+  friends: { dx: 1.7, dy: 0.7, size: 3.1 },
+  mail: { dx: 1.8, dy: 0.4, size: 3.1 },
 };
 const MENU_ICON_KEY = "clash-menu-icons-v1";
 function asMenuIcon(value: unknown, base: MenuIcon): MenuIcon {
