@@ -5,6 +5,7 @@ import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
 import { tr } from "@/lib/i18n";
+import { useSwipe } from "@/lib/swipe";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
 export type SheetTone = "gold" | "red" | "purple" | "fuse";
@@ -287,6 +288,7 @@ export function MonsterSheet({
   onBack,
   startSkill,
   stay = false,
+  onSwipe,
 }: {
   name: string;
   card: ReactNode;
@@ -313,7 +315,15 @@ export function MonsterSheet({
   startSkill?: string;
   /** No ✕ and no tap outside to close (chủ game 28/10: a fused monster must be summoned, the fusion cannot be undone). */
   stay?: boolean;
+  /** Vuốt ngang đổi sang lá kế (chủ game 06/11): +1 = vuốt trái. Trả false khi không còn lá để đổi. */
+  onSwipe?: (dir: 1 | -1) => boolean | void;
 }) {
+  const [slide, setSlide] = useState<0 | 1 | -1>(0);
+  const swipe = useSwipe((dir) => {
+    if (!onSwipe) return false;
+    if (onSwipe(dir) === false) return false;
+    setSlide(dir);
+  }, true);
   const wanted = startSkill?.trim().toLowerCase() ?? "";
   const startAt = wanted ? skills.findIndex((skill) => skill.name.toLowerCase() === wanted || wanted.startsWith(skill.name.toLowerCase())) : -1;
   const first = startAt >= 0 ? `s${startAt}` : skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
@@ -468,9 +478,9 @@ export function MonsterSheet({
     });
   };
   return (
-    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()}>
+    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()} {...(onSwipe ? swipe : {})}>
       <GlyphDefs />
-      <div className="msheet" role="dialog" aria-label={name}>
+      <div key={slide ? name : undefined} className={`msheet${slide ? ` is-slide-${slide > 0 ? "l" : "r"}` : ""}`} role="dialog" aria-label={name}>
         {onBack ? (
           <button type="button" className="msheet-up" aria-label={tr("Trở về")} onClick={onBack}>
             {"<<"}

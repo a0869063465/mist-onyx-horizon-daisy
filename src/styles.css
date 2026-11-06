@@ -13254,3 +13254,9 @@ input, textarea, [contenteditable="true"], .allow-select, .allow-select * {
   -webkit-touch-callout: default;
 }
 img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
+
+/* Vuốt đổi lá trong bảng mô tả (chủ game 06/11): lá mới trượt vào từ phía ngón vuốt tới. */
+.msheet.is-slide-l { animation: msheet-slide-l 220ms cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+.msheet.is-slide-r { animation: msheet-slide-r 220ms cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+@keyframes msheet-slide-l { from { opacity: 0; transform: translateX(2.2rem); } }
+@keyframes msheet-slide-r { from { opacity: 0; transform: translateX(-2.2rem); } }

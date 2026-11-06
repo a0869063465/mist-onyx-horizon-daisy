@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { fakeIds } from "@/lib/owned-cards";
 import { AlbumPic, AppraiseBox, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { neighbour } from "@/lib/swipe";
 import { Glyph } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
@@ -65,6 +66,11 @@ export function CardVault() {
       rows.push({ id: card.id, kind: "spell", name: card.name, stars: 0, form: false, owned: owned.has(card.id), tier: rarityOf(card.id, rates) });
     }
   }
+  const swipeSheet = (dir: 1 | -1) => {
+    const next = neighbour(shown, (row) => row.id === sheet?.id, dir);
+    if (!next) return false;
+    setSheet(next);
+  };
   const shown = (filter.tiers.length ? rows.filter((row) => filter.tiers.includes(row.tier)) : rows).sort((a, b) => order(a, b, sort));
 
   const filterCount = filter.types.length + filter.stars.length + filter.kinds.length + filter.tiers.length + (filter.monsters && filter.spells ? 0 : 1);
@@ -232,9 +238,9 @@ export function CardVault() {
 
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
     </section>

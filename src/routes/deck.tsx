@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import { DeckRow } from "@/components/deck-row";
 import { CardFace } from "@/components/game/card-face";
 import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
@@ -44,6 +45,8 @@ function DeckPage() {
   const [filter, setFilter] = useState<PoolFilter>(NO_FILTER);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sheet, setSheet] = useState<Pick | null>(null);
+  // Where the open sheet came from: a swipe on it steps through that list (the pool, or the deck's own list).
+  const sheetFrom = useRef<"pool" | "list">("pool");
   const [saved, setSaved] = useState(false);
   const [naming, setNaming] = useState<string | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
@@ -229,12 +232,23 @@ function DeckPage() {
     .sort(byMana);
 
   // The sheet opens on the click, after the finger is up, so that same tap cannot land on the sheet's backdrop.
-  function tap(pick: Pick) {
+  function tap(pick: Pick, from: "pool" | "list") {
     if (skipTap.current) {
       skipTap.current = false;
       return;
     }
+    sheetFrom.current = from;
     setSheet(pick);
+  }
+
+  function swipeSheet(dir: 1 | -1) {
+    const order: Pick[] =
+      sheetFrom.current === "pool"
+        ? [...poolMonsters.map((card) => ({ id: card.id, kind: "monster" as const })), ...poolSpells.map((card) => ({ id: card.id, kind: "spell" as const }))]
+        : [...pickedMonsters.map((card) => ({ id: card.id, kind: "monster" as const })), ...pickedSpells.map((card) => ({ id: card.id, kind: "spell" as const }))];
+    const next = neighbour(order, (one) => one.id === sheet?.id, dir);
+    if (!next) return false;
+    setSheet(next);
   }
 
   function save() {
@@ -304,7 +318,7 @@ function DeckPage() {
               tabIndex={0}
               className={`dk-card${inDeck.has(card.id) ? " is-in" : ""}${locked.has(card.id) ? " is-locked" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
               onPointerDown={(event) => press(event, { id: card.id, kind: "monster" }, "pool", !inDeck.has(card.id) && !locked.has(card.id))}
-              onClick={() => tap({ id: card.id, kind: "monster" })}
+              onClick={() => tap({ id: card.id, kind: "monster" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
               <CardFace monster={card} hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
@@ -322,7 +336,7 @@ function DeckPage() {
               tabIndex={0}
               className={`dk-card is-spell${inDeck.has(card.id) ? " is-in" : ""}${locked.has(card.id) ? " is-locked" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
               onPointerDown={(event) => press(event, { id: card.id, kind: "spell" }, "pool", !inDeck.has(card.id) && !locked.has(card.id))}
-              onClick={() => tap({ id: card.id, kind: "spell" })}
+              onClick={() => tap({ id: card.id, kind: "spell" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
               <CardFace spellId={card.id} hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
@@ -346,7 +360,7 @@ function DeckPage() {
                 kind="monster"
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
-                onTap={() => tap({ id: card.id, kind: "monster" })}
+                onTap={() => tap({ id: card.id, kind: "monster" }, "list")}
               />
             ))}
             {pickedSpells.map((card) => (
@@ -356,7 +370,7 @@ function DeckPage() {
                 kind="spell"
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
-                onTap={() => tap({ id: card.id, kind: "spell" })}
+                onTap={() => tap({ id: card.id, kind: "spell" }, "list")}
               />
             ))}
             {total === 0 ? <p className="dk-rows-empty">{tr("Kéo lá từ kho xuống đây.")}</p> : null}
@@ -437,9 +451,9 @@ function DeckPage() {
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
       {covering ? (

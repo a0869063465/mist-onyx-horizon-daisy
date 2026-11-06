@@ -939,6 +939,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: icon thẻ giảm bão hoà thêm cho hợp màu nền.",
   "Khoá thao tác của web khi chơi: không phóng to bằng hai ngón, không chọn chữ khi giữ, không hiện menu giữ, không kéo nảy mép.",
   "Vuốt ngang đổi tab ở Nhiệm vụ, Hộp thư, Bạn bè, Tin tức, Hồ sơ và Bộ sưu tập.",
+  "Vuốt trái/phải trong bảng mô tả lá để đổi sang lá kế (Kho bài, Chỉnh sửa bộ bài, Album).",
 ];
 
 function remarkOf(notes: string[]) {

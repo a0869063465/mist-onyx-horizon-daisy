@@ -109,7 +109,7 @@ export function FieldFace({ id }: { id: string }) {
 
 /** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
 /** `badgeFor`: drawn on the corner of a card's picture on its sheet (the collection's rarity tag). */
-export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode };
+export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode; onSwipe?: (dir: 1 | -1) => boolean | void };
 
 /**
  * A card's sheet with its related cards (owner, 19/10): tapping the card on the sheet opens the 3D fan of its family;
@@ -154,6 +154,7 @@ export function CardMonsterSheet({
   asideFor,
   noteFor,
   badgeFor,
+  onSwipe,
 }: {
   id: string;
   extras?: SheetExtra[];
@@ -182,6 +183,7 @@ export function CardMonsterSheet({
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
+      onSwipe={onBack ? undefined : onSwipe}
     />
   );
   // A sheet opened from the fan does not open another fan: its card goes back to the one it came from.
@@ -206,6 +208,7 @@ export function SpellSheet({
   asideFor,
   noteFor,
   badgeFor,
+  onSwipe,
 }: {
   id: string;
   gems?: number | string;
@@ -234,6 +237,7 @@ export function SpellSheet({
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
+      onSwipe={onBack ? undefined : onSwipe}
     />
   );
   if (onBack) return sheet(onBack);

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
 import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { neighbour } from "@/lib/swipe";
 import { FORMS, monsterCard } from "@/lib/catalog";
 import { albumPages, awaitsAppraisal, cardName, cardNumbers, formatNo, rarityOf, setsOf, type Album, type AlbumCard, type CardSet, type PageItem } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
@@ -173,6 +174,12 @@ export function AlbumBook({
     later(CLOSE_MS, onClose);
   }
 
+  function swipeSheet(dir: 1 | -1) {
+    const next = neighbour(album.cards, (card) => card.id === sheet, dir);
+    if (!next) return false;
+    setSheet(next.id);
+  }
+
   function tap(card: AlbumCard, linked: boolean, rect: DOMRect) {
     if (swipe.current?.moved || turn || burst || busy) return;
     if (!linked) {
@@ -289,9 +296,9 @@ export function AlbumBook({
       ) : null}
       {sheet ? (
         monsterCard(sheet) ? (
-          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
       {ask ? <ExchangeAsk id={ask} albums={albums} onCancel={() => setAsk(null)} onConfirm={() => buy(ask)} /> : null}
