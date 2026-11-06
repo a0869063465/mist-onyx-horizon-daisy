@@ -706,3 +706,8 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V10 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Bổ sung các phép mạnh và skill hiệu ứng.
 - Chưa rõ danh sách phép/skill cụ thể và hiệu ứng mong muốn, chờ chủ game chỉ rõ. Mô hình/nỗ lực: chưa chốt.
+
+## V11 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Côn trùng: tập trung vào trang bị.
+- Khủng long: chiến đấu bền bỉ và công cao.
+- Chưa rõ lá côn trùng và lá khủng long cụ thể, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
