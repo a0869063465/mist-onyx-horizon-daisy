@@ -711,3 +711,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Côn trùng: tập trung vào trang bị.
 - Khủng long: chiến đấu bền bỉ và công cao.
 - Chưa rõ lá côn trùng và lá khủng long cụ thể, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V12 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Khủng long 2 đầu: quái 2 sao, quái trung bình, đặc trưng của khủng long.
+- Chưa rõ đặc trưng cụ thể (chỉ số, skill) và lá có sẵn hay mới, chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
