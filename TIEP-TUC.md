@@ -686,3 +686,9 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - V5: gã hề, làm hiệu ứng VFX cho vùng số cam.
 - Mô hình/nỗ lực: chưa chốt, chờ chủ game.
 - V6 (chủ game, 06/11): mỗi nhân vật sẽ có 1 skill riêng. Chưa rõ "nhân vật" là nhóm lá nào, chờ chủ game chỉ rõ. Chưa làm.
+
+## V7 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Rồng canh thành: khả năng phun lửa phép.
+- Gã hề: khả năng tích luỹ và phát động ngay.
+- Kỵ sĩ gai A: khả năng xuyên giáp.
+- Chưa rõ "Kỵ sĩ gai A" là lá nào, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
