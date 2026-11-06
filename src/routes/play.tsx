@@ -336,7 +336,7 @@ function boardSpot(el: Element | null, fallback: BoardSpot): BoardSpot {
   const box = el.getBoundingClientRect();
   return { x: ((box.left + box.width / 2 - board.left) / board.width) * 100, y: ((box.top + box.height / 2 - board.top) / board.height) * 100, w: (box.width / board.width) * 100 };
 }
-type Inspect = { pile: "reserve" | "spell"; index: number } | { pile: "env"; id: string };
+type Inspect = { pile: "reserve" | "spell"; index: number } | { pile: "env"; id: string; from?: "chain" };
 type BlockChoice = { uid: string; skill: boolean | null; buff: boolean | null };
 type FuseAsk = {
   id: number;
@@ -1767,7 +1767,7 @@ function PlayPage() {
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
   const [inspect, setInspect] = useState<Inspect | null>(null);
   const [strike, setStrike] = useState<Strike | null>(null);
-  const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string } | null>(null);
+  const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string; from?: "chain" } | null>(null);
   const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
@@ -5205,11 +5205,64 @@ function PlayPage() {
     apply(summon(duel, index, slot));
   }
 
+  // Vuốt đổi lá trong bảng mô tả (chủ game 06/11), đi vòng tròn: tay bài (quái dự bị rồi phép); sân theo thứ tự quái hàng trước rồi hàng sau,
+  // rồi lá môi trường và tường thành, của mình trước rồi sang sân địch; icon phản ứng thì chỉ đi qua các lá đang tham gia phản ứng.
+  const browse = (dir: 1 | -1): boolean | void => {
+    const turn = <T,>(list: T[], at: number): T | null => (list.length > 1 && at >= 0 ? list[(at + dir + list.length) % list.length] : null);
+    const fromChain = (inspect?.pile === "env" && inspect.from === "chain") || look?.from === "chain";
+    if (fromChain) {
+      const cards = chain.filter((orb) => (orb.kind === "spell" && orb.spell) || orb.strike === "horn" || (((orb.kind === "skill" && orb.source) || orb.strike === "gaze") && orb.source && !hiddenMon(orb) && fieldMon(duel, orb.source)));
+      const at = cards.findIndex((orb) => {
+        if (orb.kind === "spell" && orb.spell) return inspect?.pile === "env" && inspect.id === orb.spell;
+        if (orb.strike === "horn") return inspect?.pile === "env" && inspect.id === "sung-loi-pha";
+        const mon = orb.source ? fieldMon(duel, orb.source) : null;
+        return !!mon && look?.uid === mon.uid && look?.skill === iconSkill(orb)?.name;
+      });
+      const next = turn(cards, at);
+      if (!next) return false;
+      setInspect(null);
+      setLook(null);
+      openIcon(next);
+      return;
+    }
+    if (inspect && inspect.pile !== "env") {
+      const hand: Array<{ pile: "reserve" | "spell"; index: number }> = [
+        ...you.reserve.map((_, index) => ({ pile: "reserve" as const, index })),
+        ...you.hand.map((_, index) => ({ pile: "spell" as const, index })),
+      ];
+      const next = turn(hand, hand.findIndex((card) => card.pile === inspect.pile && card.index === inspect.index));
+      if (!next) return false;
+      setInspect({ pile: next.pile, index: next.index });
+      return;
+    }
+    const ring: Array<{ uid: string; side: Side } | { env: string }> = [];
+    for (const side of [viewer, foeSide] as Side[]) {
+      const holder = side === viewer ? you : foe;
+      holder.field.forEach((mon) => {
+        if (mon && !seaVeiled(duel, viewer, mon.uid) && !(side !== viewer && holder.hats && mon.cardId !== "mu")) ring.push({ uid: mon.uid, side });
+      });
+      const spot = side === viewer ? board_env_spot(true) : board_env_spot(false);
+      if (holder.env && !spot.hidden && spellCard(holder.env)) ring.push({ env: holder.env });
+      wallCards(side).forEach((wall) => ring.push({ env: wall.id }));
+    }
+    const here = look?.uid ?? null;
+    const at = ring.findIndex((one) => ("uid" in one ? one.uid === here : !here && inspect?.pile === "env" && one.env === inspect.id));
+    const next = turn(ring, at);
+    if (!next) return false;
+    setInspect(null);
+    setLook(null);
+    if ("uid" in next) {
+      const mon = fieldMon(duel, next.uid);
+      if (mon) setLook({ ...fieldLook(mon, duel.players[next.side].stars), uid: mon.uid });
+    } else setInspect({ pile: "env", id: next.env });
+  };
+  const board_env_spot = (mine: boolean) => (mine ? board.env : board.envFoe);
+
   /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
   const formOf = (mon: FieldMon) =>
     mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
-  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string, stay = false) => (
+  const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string, stay = false, onSwipe?: (dir: 1 | -1) => boolean | void) => (
     <RelatedFlow
       id={formOf(mon)}
       onClose={onClose}
@@ -5226,15 +5279,16 @@ function PlayPage() {
           onArt={onArt}
           startSkill={startSkill}
           stay={stay}
+          onSwipe={stay ? undefined : onSwipe}
         />
       )}
     />
   );
   const handMon = inspect?.pile === "reserve" && reserveHeld ? previewMon(duel, viewer, reserveHeld) : null;
-  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null)) : null;
+  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null), undefined, undefined, false, browse) : null;
   const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
   const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
-  const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined, look?.skill) : null;
+  const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined, look?.skill, false, browse) : null;
 
   // Icon phản ứng (chủ game 23/10): where each icon stands and where its smoke lands, from the viewer's seat. An icon
   // stands at the middle of its card's edge that faces the middle (under a card of the top row, over one of the
@@ -5594,11 +5648,11 @@ function PlayPage() {
   // Two quick taps on an icon: its card. A skill's sheet opens on that skill (chủ game 23/10).
   const openIcon = (orb: ChainOrb) => {
     if (orb.kind === "spell" && orb.spell) {
-      setInspect({ pile: "env", id: orb.spell });
+      setInspect({ pile: "env", id: orb.spell, from: "chain" });
       return;
     }
     if (orb.strike === "horn") {
-      setInspect({ pile: "env", id: "sung-loi-pha" });
+      setInspect({ pile: "env", id: "sung-loi-pha", from: "chain" });
       return;
     }
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
@@ -5609,7 +5663,7 @@ function PlayPage() {
       return;
     }
     const skill = orb.kind === "skill" || orb.strike === "gaze" ? iconSkill(orb)?.name : undefined;
-    setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid, skill });
+    setLook({ ...fieldLook(mon, duel.players[side].stars), uid: mon.uid, skill, from: "chain" });
   };
   // The big card as a spell or a skill lands on the line: the spell, or the monster with its skill's name. A monster
   // hidden by Biển sâu or under a hat shows none.
@@ -7391,6 +7445,7 @@ function PlayPage() {
                   : []
               }
               onClose={() => setInspect(null)}
+              onSwipe={browse}
             />
           ) : inspect && shownMonster ? (
             <>
