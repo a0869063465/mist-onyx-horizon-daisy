@@ -766,3 +766,8 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Phát động ngay khi quái thú khác tấn công. Trả lại đòn (chưa rõ "trả còn đó vào nó") cho nó trước khi đòn công thi triển.
 - Chưa rõ lá phép được tạo là lá nào, "trả" nghĩa là đổi hướng đòn hay hoàn đòn lại, và có tốn mana không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
 - Bổ sung (chủ game, 06/11): lá phép này chỉ tạo lại mỗi 4 lượt sau khi sử dụng (sửa từ 2 lượt). Số cam hiển thị số lượt còn lại (theo cách ghi số cam của game).
+
+## V22 (chủ game, 06/11): CHƯA LÀM, chỉ lưu (việc ngoài game)
+- Quy tắc cuộc sống: không được mắc (lỗi/việc sai) nữa.
+- Ngủ: bật video. Ngủ sau 8 rưỡi.
+- Chưa rõ "ngủ bật video" là bật video để ngủ hay không được bật video khi ngủ, và "ngủ sau 8 rưỡi" là giờ ngủ hay giờ bắt đầu. Chờ chủ game xác nhận. Mô hình/nỗ lực: không áp dụng (việc ngoài code).
