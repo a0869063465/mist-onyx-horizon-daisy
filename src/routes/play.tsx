@@ -3367,7 +3367,8 @@ function PlayPage() {
         emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
         for (let i = 1; i < count; i += 1) playCue("spellBoom", i * 0.42);
       } else if (!started && (hits.length > 0 || finished || stamped || look === "spell")) {
-        if (duel.skill?.id === "con-thinh-no-cua-hai-vuong" && hits.length > 0) {
+        const rageCast = duel.skill?.id === "con-thinh-no-cua-hai-vuong" || (prev.pending?.kind === "beam" && fieldMon(prev, prev.pending.caster)?.cardId === "con-thinh-no-cua-hai-vuong");
+        if (rageCast && hits.length > 0) {
           // Cơn thịnh nộ của hải thần: video xoáy nước thay nổ đỏ (chủ game 06/11).
           for (const hit of hits) emitFx({ t: "tide", rank: "rage", x: hit.x, y: hit.y });
         } else {
