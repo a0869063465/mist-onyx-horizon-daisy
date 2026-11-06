@@ -45,11 +45,10 @@ export function SideTab({ tab, side, index, icon, drag }: { tab: Tab; side: "lef
         draggable={false}
         {...live}
       />
-      {shut ? <LockIcon /> : null}
       {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
     </>
   );
-  const className = `home-tab is-${side}${shut ? " is-shut" : ""}`;
+  const className = `home-tab is-${side}`;
   const style = { animationDelay: `${0.3 + index * 0.08}s` };
   if (drag) {
     return (

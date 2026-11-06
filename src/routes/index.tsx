@@ -9,7 +9,7 @@ import { useMail } from "@/lib/mail-box";
 import { missionsReady, onMissions } from "@/lib/mission-store";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
-import { LEFT_TABS, LockIcon, RIGHT_TABS, SideTab } from "@/components/home-tab";
+import { LEFT_TABS, RIGHT_TABS, SideTab } from "@/components/home-tab";
 import { DEFAULT_MENU_ICONS, loadMenuIcons } from "@/lib/layouts";
 
 const EMBERS = Array.from({ length: 14 }, (_, i) => ({
@@ -128,7 +128,6 @@ function Home() {
             <button type="button" className="home-pill is-pve" disabled aria-disabled="true" aria-label="PvE">
               <img src="/ui/menu-play-pve.webp" alt="" draggable={false} />
               <b>PvE</b>
-              <LockIcon />
             </button>
             <Link to="/modes" className="home-pill is-pvp" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvP">
               <img src="/ui/menu-play-pvp.webp" alt="" draggable={false} />
