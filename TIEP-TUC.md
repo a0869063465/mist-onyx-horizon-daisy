@@ -725,3 +725,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Cuồng phong bắt giữ: bộ bài rừng chuyên hệ gió. Tham khảo skill phong trên mạng.
 - Bắt giữ 1 quái thú và làm nó suy yếu. Kích hoạt khi nó đánh thường.
 - Chưa rõ "suy yếu" cụ thể (giảm chỉ số nào, bao nhiêu lượt), và lá có sẵn hay mới, chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V15 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Giải đấu Bát hùng: ai thắng được cúp.
+- Chưa rõ thể thức giải (số người, cách xếp, cách trao cúp, phần thưởng). Chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
