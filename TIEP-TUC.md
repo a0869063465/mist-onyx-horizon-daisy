@@ -702,3 +702,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - Bấm vào tay mình hoặc tay đối thủ thì lá đầu tiên của xấp bài được rút (vào tay của bên đó).
 - Thêm nút +1 mana bên dưới thanh chính.
 - Chưa rõ "thanh chính" và cách rút khi bấm tay đối thủ (rút cho đối thủ hay cho mình), chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V10 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Bổ sung các phép mạnh và skill hiệu ứng.
+- Chưa rõ danh sách phép/skill cụ thể và hiệu ứng mong muốn, chờ chủ game chỉ rõ. Mô hình/nỗ lực: chưa chốt.
