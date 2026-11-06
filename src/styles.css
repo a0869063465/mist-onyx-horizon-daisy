@@ -1048,10 +1048,10 @@
   gap: 0.35rem;
 }
 .home-tabs.is-left {
-  left: -5.2rem;
+  left: -6.3rem;
 }
 .home-tabs.is-right {
-  right: -5.2rem;
+  right: -6.3rem;
   align-items: flex-end;
 }
 /* Thẻ hình bình hành kính (chủ game 31/10): tranh nền cắt theo khung, một tranh nhô ra ngoài khung; xanh mở, trắng khoá. */
@@ -1083,7 +1083,6 @@
   position: absolute;
   inset: 0;
   background: url("/ui/menu-tab-blue.webp") center / 100% 100% no-repeat;
-  transform: scaleX(-1);
 }
 .home-tab.is-right.is-shut::before {
   background-image: url("/ui/menu-tab-white.webp");
@@ -1106,21 +1105,24 @@
   opacity: 0.55;
   clip-path: polygon(19% 8%, 98% 8%, 81% 92%, 2% 92%);
 }
-.home-tab.is-right .home-tab-art {
-  clip-path: polygon(2% 8%, 81% 8%, 98% 92%, 19% 92%);
-}
 .home-tab.is-shut .home-tab-art {
   filter: grayscale(1) brightness(0.8);
 }
-/* Icon thay chữ (chủ game 06/11): ảnh nhô ra trên và dưới thẻ, nằm giữa phần nhìn thấy. */
-.home-tab-icon {
+/* Icon thay chữ (chủ game 06/11): ảnh nhô ra trên và dưới thẻ, nằm giữa phần nhìn thấy; chấm đỏ báo mới gắn vào góc icon. */
+.home-tab-pic {
   position: absolute;
   top: calc(60% - var(--ih, 3.5rem));
-  width: auto;
   height: var(--ih, 3.5rem);
+  transform: translate(var(--ix, 0rem), var(--iy, 0rem));
+  pointer-events: none;
+  z-index: 2;
+}
+.home-tab-icon {
+  display: block;
+  width: auto;
+  height: 100%;
   max-width: calc(var(--ih, 3.5rem) * 1.26);
   object-fit: contain;
-  transform: translate(var(--ix, 0rem), var(--iy, 0rem));
   pointer-events: none;
   /* Làm dịu icon cho hợp phông (chủ game 06/11): giảm chói + bão hoà, chỉnh bằng --dim-b / --dim-s. */
   filter: brightness(var(--dim-b, 0.8)) saturate(var(--dim-s, 0.76)) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
@@ -1147,11 +1149,11 @@
 .tune-menu-stage .home-tabs {
   bottom: 0.8rem;
 }
-.home-tab.is-left .home-tab-icon {
-  right: 0.5rem;
+.home-tab.is-left .home-tab-pic {
+  right: -0.6rem;
 }
-.home-tab.is-right .home-tab-icon {
-  left: 0.5rem;
+.home-tab.is-right .home-tab-pic {
+  left: -0.6rem;
 }
 .home-tab.is-shut .home-tab-icon {
   filter: grayscale(0.85) brightness(0.8) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
@@ -12530,9 +12532,9 @@ button.watch-back {
 .nw-title { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 4rem; padding: 0.6rem 0.65rem 0.7rem; font-size: 0.9rem; font-weight: 600; line-height: 1.3; color: rgba(233, 238, 252, 0.88); }
 .nw-card.is-new .nw-title { color: #fff; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .nw-grid > li { animation: none; } }
-.home-tab-dot { position: absolute; top: 0.2rem; z-index: 3; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #ff3d3d; border: 1.5px solid #fff; box-shadow: 0 0 6px #ff3d3d; }
-.home-tab.is-left .home-tab-dot { right: 1rem; }
-.home-tab.is-right .home-tab-dot { left: 1rem; }
+.home-tab-dot { position: absolute; top: 0.15rem; z-index: 3; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #ff3d3d; border: 1.5px solid #fff; box-shadow: 0 0 6px #ff3d3d; }
+.home-tab.is-left .home-tab-dot { right: 0.1rem; }
+.home-tab.is-right .home-tab-dot { left: 0.1rem; }
 
 /* Bạn bè (chủ game 31/10): cùng khung với Hộp thư. */
 .ml.fr { --ac: #5cc8ff; --ac-rgb: 92, 200, 255; }

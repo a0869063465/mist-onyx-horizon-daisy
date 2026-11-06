@@ -932,6 +932,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: vị trí và cỡ 8 icon thẻ đặt lại theo bản chủ game đã chỉnh.",
   "Menu chính: đổi hình icon Sự kiện, Bảng xếp hạng, Bộ sưu tập, Cửa hàng; icon dịu màu hơn một chút.",
   "Menu chính: vị trí và cỡ icon thẻ đặt lại theo bản chủ game chỉnh mới.",
+  "Menu chính: thẻ bên phải đổi hướng, thẻ hai bên kéo ra khớp vị trí icon, chấm đỏ báo mới gắn lên icon.",
 ];
 
 function remarkOf(notes: string[]) {

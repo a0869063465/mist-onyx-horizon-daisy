@@ -37,15 +37,16 @@ export function SideTab({ tab, side, index, icon, drag }: { tab: Tab; side: "lef
   const inner = (
     <>
       <span className="home-tab-art" style={{ backgroundImage: `url(${tab.bg})` }} aria-hidden="true" />
-      <img
-        className={`home-tab-icon${drag ? " is-live" : ""}${drag?.picked === tab.pic ? " is-picked" : ""}`}
-        src={`/ui/menu/ic-${tab.pic}.webp`}
-        style={iconStyle}
-        alt={tr(tab.label)}
-        draggable={false}
-        {...live}
-      />
-      {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
+      <span className="home-tab-pic" style={iconStyle}>
+        <img
+          className={`home-tab-icon${drag ? " is-live" : ""}${drag?.picked === tab.pic ? " is-picked" : ""}`}
+          src={`/ui/menu/ic-${tab.pic}.webp`}
+          alt={tr(tab.label)}
+          draggable={false}
+          {...live}
+        />
+        {tab.dot ? <span className="home-tab-dot" aria-hidden="true" /> : null}
+      </span>
     </>
   );
   const className = `home-tab is-${side}`;
