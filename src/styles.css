@@ -5735,6 +5735,17 @@ button.watch-back {
   pointer-events: none;
   object-fit: contain;
 }
+/* Video nước (06/11): vòng sóng ở đáy khung nên đặt tâm vòng (~78% chiều cao) vào điểm trúng. */
+.tide-vid {
+  position: absolute;
+  z-index: 13;
+  transform: translate(-50%, -78%);
+  pointer-events: none;
+  object-fit: contain;
+}
+.tide-vid.is-small { width: 30%; }
+.tide-vid.is-mid { width: 34%; }
+.tide-vid.is-rage { width: 32%; }
 .tide-wave {
   position: absolute;
   z-index: 13;

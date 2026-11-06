@@ -903,6 +903,7 @@ export const PENDING_NOTES: string[] = [
   "Đại hồng thuỷ huỷ diệt chỉ đánh cả hàng của quái được chọn, không còn đánh mọi kẻ địch.",
   "Đại hồng thuỷ huỷ diệt có hiệu ứng sóng lớn dâng lên phủ cả hàng bị đánh.",
   "Hiệu ứng hồi máu, buff và tự tăng chỉ số đổi sang video vòng sáng xanh lục. Tăng máu tối đa giữ hiệu ứng cũ.",
+  "Triều lên có cột nước rơi, Con nước lớn tàn phá có nổ nước, Cơn thịnh nộ của hải thần có xoáy nước thay hiệu ứng cũ.",
 ];
 
 function remarkOf(notes: string[]) {

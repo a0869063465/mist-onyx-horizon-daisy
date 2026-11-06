@@ -721,20 +721,23 @@ export function Spectacle() {
 }
 
 export const TIDE_WAVE = "/fx/dai-hong-thuy.webm?v=1";
+const TIDE_RISE = "/fx/thuy-tru.webm?v=1";
+const TIDE_BURST = "/fx/thuy-no.webm?v=1";
+const TIDE_SWIRL = "/fx/thuy-xoay.webm?v=1";
 
 export function WaterBurst() {
-  const [clips, setClips] = useState<{ id: number; rank: "small" | "mid" | "big"; x: number; y: number }[]>([]);
+  const [clips, setClips] = useState<{ id: number; rank: "small" | "mid" | "big" | "rage"; x: number; y: number }[]>([]);
   useEffect(() => {
     const timers = new Set<number>();
     const stop = subscribeFx((event) => {
-      if (event.t !== "tide" || !tideOn(event.rank)) return;
+      if (event.t !== "tide" || (event.rank !== "rage" && !tideOn(event.rank))) return;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
       setClips((list) => [...list.slice(-4), { id, rank: event.rank, x: event.x, y: event.y }]);
       const timer = window.setTimeout(() => {
         timers.delete(timer);
         setClips((list) => list.filter((item) => item.id !== id));
-      }, event.rank === "big" ? 4200 : 900);
+      }, 4200);
       timers.add(timer);
     });
     return () => {
@@ -742,7 +745,8 @@ export function WaterBurst() {
       for (const timer of timers) window.clearTimeout(timer);
     };
   }, []);
-  const src = { small: "/fx/nuoc-nho.png?v=2", mid: "/fx/nuoc-vua.png?v=2", big: "/fx/nuoc-lon.png?v=3" };
+  // Video nước của chủ game (06/11): Triều lên = cột nước rơi, Con nước lớn tàn phá = nổ nước, Cơn thịnh nộ của hải thần = xoáy nước.
+  const clipOf = { small: TIDE_RISE, mid: TIDE_BURST, rage: TIDE_SWIRL } as const;
   return (
     <>
       {clips.map((clip) =>
@@ -759,14 +763,16 @@ export function WaterBurst() {
             onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
           />
         ) : (
-        <img
-          key={clip.id}
-          className={`tide-blast is-${clip.rank}`}
-          src={src[clip.rank]}
-          alt=""
-          draggable={false}
-          style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
-        />
+          <video
+            key={clip.id}
+            className={`tide-vid is-${clip.rank}`}
+            src={fxUrl(clipOf[clip.rank])}
+            autoPlay
+            muted
+            playsInline
+            style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
+            onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+          />
         ),
       )}
     </>

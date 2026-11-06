@@ -3367,8 +3367,13 @@ function PlayPage() {
         emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
         for (let i = 1; i < count; i += 1) playCue("spellBoom", i * 0.42);
       } else if (!started && (hits.length > 0 || finished || stamped || look === "spell")) {
-        for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
-        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+        if (duel.skill?.id === "con-thinh-no-cua-hai-vuong" && hits.length > 0) {
+          // Cơn thịnh nộ của hải thần: video xoáy nước thay nổ đỏ (chủ game 06/11).
+          for (const hit of hits) emitFx({ t: "tide", rank: "rage", x: hit.x, y: hit.y });
+        } else {
+          for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
+          emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+        }
       }
     }
     const beamDrops = laserDrops(prev, duel, viewerNow);
