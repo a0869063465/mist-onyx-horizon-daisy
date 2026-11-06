@@ -103,11 +103,14 @@ function Home() {
         </nav>
         <div className="home-base">
           {/* Hồ sơ: khung tạm, chưa có luật cấp và hạng (chủ game 31/10). */}
-          <div className="home-profile">
-            <button type="button" className="home-avatar" aria-label={tr("Hồ sơ")} onClick={() => {
-              playUi("select");
-              setMine(playerId());
-            }}>
+          {/* Bấm vào 4/5 thẻ hồ sơ tính từ trái là mở hồ sơ; 1/5 phải bỏ trống để khỏi bấm nhầm PvE (chủ game 06/11). */}
+          <div className="home-profile" onClick={(event) => {
+            const box = event.currentTarget.getBoundingClientRect();
+            if (event.clientX - box.left > box.width * 0.8) return;
+            playUi("select");
+            setMine(playerId());
+          }}>
+            <button type="button" className="home-avatar" aria-label={tr("Hồ sơ")}>
               {face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}
             </button>
             <span className="home-ranks">

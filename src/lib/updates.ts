@@ -906,6 +906,7 @@ export const PENDING_NOTES: string[] = [
   "Hấp thụ ma pháp nuốt được Phục kích, Gương phòng hộ, Vòng nguyền rủa ác ma, Lá chắn phản đòn, Giáp cơ khí, Cỗ máy thời gian, Ngăn chặn phòng ngự, Virus ăn mòn và Giáp và Vuốt. Đòn bị chặn vẫn đánh vào.",
   "Giáp và Vuốt chờ trong chuỗi như phép nhanh, đối thủ đáp lại được.",
   "Kéo lá phép có mục tiêu: chỉ mục tiêu dùng được sáng, rê ngón để chọn. Bấm Use rồi rê trên sân cũng chọn được.",
+  "Menu chính: bấm vào thẻ hồ sơ (phần bên trái, trừ đầu bên phải sát nút PvE) là mở hồ sơ, không cần bấm đúng ảnh tròn.",
 ];
 
 function remarkOf(notes: string[]) {

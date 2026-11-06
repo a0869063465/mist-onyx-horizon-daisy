@@ -1195,6 +1195,7 @@
   border-image: url("/ui/menu-profile.webp") 0 150 0 340 fill / 0 1.7rem 0 3.9rem stretch;
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.5));
   animation: home-rise 0.7s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  cursor: pointer;
 }
 .home-avatar {
   position: absolute;
