@@ -934,6 +934,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: vị trí và cỡ icon thẻ đặt lại theo bản chủ game chỉnh mới.",
   "Menu chính: thẻ bên phải đổi hướng, thẻ hai bên kéo ra khớp vị trí icon, chấm đỏ báo mới gắn lên icon.",
   "Menu chính: nút PvE đổi sang màu cam, viền đỏ cam, tách rõ với nút PvP vàng.",
+  "Menu chính: icon Cửa hàng đổi sang hình gói bài vàng mới.",
 ];
 
 function remarkOf(notes: string[]) {
