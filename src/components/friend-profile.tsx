@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { stepTab, useSwipe } from "@/lib/swipe";
 import { tr } from "@/lib/i18n";
 import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
@@ -78,9 +79,14 @@ export function FriendProfile({ friend, onClose }: { friend: string; onClose: ()
   const sets = col?.sets ?? [];
   const set = sets[Math.min(pick, Math.max(0, sets.length - 1))];
   const setHave = set ? set.cards.filter((card) => card.own).length : 0;
+  const swipe = useSwipe((dir) => {
+    const next = stepTab(TABS.map((one) => one.key), tab, dir);
+    if (!next) return false;
+    setTab(next);
+  });
 
   return (
-    <div className={`fp is-${tab}`} role="dialog" aria-label={tr(PLAYER_NAME)}>
+    <div className={`fp is-${tab}`} role="dialog" aria-label={tr(PLAYER_NAME)} {...swipe}>
       <div className="fp-bg" style={bg ? { backgroundImage: `url(${bg})` } : undefined} aria-hidden="true" />
       <header className="fp-bar">
         <button type="button" className="fp-back" aria-label={tr("Trở về")} onClick={onClose}>

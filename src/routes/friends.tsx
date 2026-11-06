@@ -6,6 +6,7 @@ import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { playUi } from "@/lib/sfx";
 import { addFriend, answerFriend, cleanId, friendList, ID_LENGTH, removeFriend, type AskRow, type FriendRow } from "@/lib/friends";
 import { FriendProfile } from "@/components/friend-profile";
+import { stepTab, useSwipe } from "@/lib/swipe";
 import { MODE_LABELS, PLAYER_NAME, playerId, readPulse, setFriendMatch, setPulse, takeProfileBack, usePulse } from "@/lib/friend-state";
 
 type Tab = "friends" | "asks" | "sent";
@@ -86,6 +87,12 @@ function FriendsPage() {
     void navigate({ to: "/friends", search: next === "friends" ? {} : { tab: next }, replace: true });
   };
 
+  const swipe = useSwipe((dir) => {
+    const next = stepTab<Tab>(["friends", "asks", "sent"], tab, dir);
+    if (!next) return false;
+    pick(next);
+  });
+
   async function copy() {
     try {
       await navigator.clipboard.writeText(me);
@@ -165,7 +172,7 @@ function FriendsPage() {
   ];
 
   return (
-    <main className="ml fr" onClick={() => setMenu(null)}>
+    <main className="ml fr" onClick={() => setMenu(null)} {...swipe}>
       <i className="ml-corner is-tl" aria-hidden="true" />
       <i className="ml-corner is-tr" aria-hidden="true" />
       <i className="ml-corner is-bl" aria-hidden="true" />

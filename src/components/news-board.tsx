@@ -3,6 +3,7 @@ import { artSrc } from "@/lib/catalog";
 import { markRead, mailDay, useMail, type MailRow } from "@/lib/mail-box";
 import { tr } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
+import { useSwipe } from "@/lib/swipe";
 
 type Filter = "new" | "update";
 
@@ -15,8 +16,15 @@ export function NewsBoard() {
   const open = rows.find((row) => row.mail.id === openId) ?? null;
   const fresh = (list: MailRow[]) => list.filter((row) => !row.read).length;
 
+  const swipe = useSwipe((dir) => {
+    const next: Filter = dir > 0 ? "update" : "new";
+    if (next === filter) return false;
+    playUi("select");
+    setFilter(next);
+  });
+
   return (
-    <>
+    <div className="nw-swipe" {...swipe}>
       <nav className="ml-tabs nw-tabs" role="tablist" style={{ ["--at" as string]: filter === "new" ? 0 : 1 }}>
         <button type="button" role="tab" aria-selected={filter === "new"} className={filter === "new" ? "on" : ""} onClick={() => { playUi("select"); setFilter("new"); }}>
           <span>{tr("MỚI ĐÂY")}</span>
@@ -77,6 +85,6 @@ export function NewsBoard() {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

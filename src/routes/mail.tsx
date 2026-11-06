@@ -10,6 +10,7 @@ import { tr, useLang } from "@/lib/i18n";
 import { cardName, useStars } from "@/lib/shop";
 import { playReward, playUi } from "@/lib/sfx";
 import { NewsBoard } from "@/components/news-board";
+import { stepTab, useSwipe } from "@/lib/swipe";
 
 const TABS: Array<{ key: MailKind; label: string; empty: string }> = [
   { key: "mail", label: "Thư", empty: "Chưa có thư." },
@@ -54,6 +55,12 @@ function MailPage() {
     void navigate({ search: { tab: key }, replace: true });
   };
 
+  const swipe = useSwipe((dir) => {
+    const next = stepTab(TABS.map((one) => one.key), tab, dir);
+    if (!next) return false;
+    pick(next);
+  });
+
   const claimed = (id: string | null, result: Claimed | null) => {
     if (!result) return;
     playReward("done");
@@ -68,7 +75,7 @@ function MailPage() {
   };
 
   return (
-    <main className="ml" data-tab={tab}>
+    <main className="ml" data-tab={tab} {...swipe}>
       <i className="ml-corner is-tl" aria-hidden="true" />
       <i className="ml-corner is-tr" aria-hidden="true" />
       <i className="ml-corner is-bl" aria-hidden="true" />

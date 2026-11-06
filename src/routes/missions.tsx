@@ -7,6 +7,7 @@ import { WEEK_GEO } from "@/lib/weekly-geo";
 import { DAILY_LIST, WEEKLY_LIST, type ListedMission } from "@/lib/mission-list";
 import { tr, useLang } from "@/lib/i18n";
 import { playReward, playUi } from "@/lib/sfx";
+import { stepTab, useSwipe } from "@/lib/swipe";
 
 type Tab = "daily" | "weekly";
 
@@ -34,8 +35,14 @@ function MissionsPage() {
     void navigate({ to: "/missions", search: next === "daily" ? {} : { tab: next }, replace: true });
   };
 
+  const swipe = useSwipe((dir) => {
+    const next = stepTab<Tab>(["daily", "weekly"], tab, dir);
+    if (!next) return false;
+    pick(next);
+  });
+
   return (
-    <main className="mx-page">
+    <main className="mx-page" {...swipe}>
       <div className={`mx is-${tab}`} style={{ backgroundImage: `url(/ui/mission/${tab === "weekly" ? "bg-week" : "bg-day"}.webp)` }}>
         <Link to="/" className="mx-back" aria-label={tr("Trở về")} data-sfx onPointerDown={() => playUi("soft")} />
         {tab === "weekly" ? <img className="mx-neon" src="/ui/mission/tab-week-neon.webp" alt="" draggable={false} /> : null}

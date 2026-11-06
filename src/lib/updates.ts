@@ -938,6 +938,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: icon Cửa hàng dịch sang trái một chút, nút PvE dịu màu cam bớt chói.",
   "Menu chính: icon thẻ giảm bão hoà thêm cho hợp màu nền.",
   "Khoá thao tác của web khi chơi: không phóng to bằng hai ngón, không chọn chữ khi giữ, không hiện menu giữ, không kéo nảy mép.",
+  "Vuốt ngang đổi tab ở Nhiệm vụ, Hộp thư, Bạn bè, Tin tức, Hồ sơ và Bộ sưu tập.",
 ];
 
 function remarkOf(notes: string[]) {
