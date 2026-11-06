@@ -758,3 +758,5 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
   - Kaiba: cường hoá quái thú.
   - Pegasus: nhìn bài trên tay (của đối thủ, chưa rõ).
 - Chưa rõ "rút bài mình muốn" (chọn từ xấp hay chọn lá cụ thể), "vẽ luật", "may mắn" áp dụng cho việc gì, và "nhìn bài" có phải tay đối thủ không. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+- Bổ sung (chủ game, 06/11), Pegasus: mọi thao tác của mình đều được đối thủ thấy dưới dạng đèn neon. Hoặc tay bài đổi như game Yugi PS1.
+- Chưa rõ chọn một trong hai (đèn neon hay đổi tay bài kiểu PS1), và neon hiện những thao tác nào. Chờ chủ game chọn.
