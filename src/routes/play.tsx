@@ -36,8 +36,8 @@ import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
-import { settleWin, type MatchReward } from "@/lib/missions";
-import { MissionPanel } from "@/components/game/mission-panel";
+import { noteMatch, type MatchGain } from "@/lib/mission-store";
+import { MissionAfter, missionRowsOf } from "@/components/game/mission-after";
 import { EndScene } from "@/components/game/end-scene";
 import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
 import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/trial";
@@ -1757,12 +1757,11 @@ function PlayPage() {
   /** Thực chiến of a Giám định: the card and level being played. */
   const [trial, setTrial] = useState<{ id: string; level: number } | null>(null);
   const [trialPaid, setTrialPaid] = useState(false);
-  /** Nhiệm vụ after a won match (chủ game 22/10): what it paid, and whether the end panels are past. */
-  const [reward, setReward] = useState<MatchReward | null>(null);
-  const [endStep, setEndStep] = useState<"wait" | "scene" | "rewards" | "done">("wait");
+  /** Hết trận: whether the end scene is past. */
+  const [endStep, setEndStep] = useState<"wait" | "scene" | "missions" | "done">("wait");
+  const [gain, setGain] = useState<MatchGain | null>(null);
   /** Hết trận (chủ game 22/10): the losing side's HP on screen, where the end scene bursts it. */
   const [scene, setScene] = useState<{ win: boolean; at: { x: number; y: number }; tone: "red" | "blue" } | null>(null);
-  const paidMatch = useRef<{ mid: string; reward: MatchReward | null } | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
@@ -2587,13 +2586,13 @@ function PlayPage() {
       .catch(() => undefined);
   }
 
-  // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the missions a win
-  // moved (paid once), then the old panel. Elsewhere only the old panel.
+  // The end of a match in Vs Máy, Đánh thường or Tuỳ chọn: the end scene (chủ game 22/10), then the summary.
+  // Elsewhere only the old panel.
   const ended = duel?.winner ?? null;
   useEffect(() => {
     if (!duel || duel.winner === null) {
       setEndStep("wait");
-      setReward(null);
+      setGain(null);
       setScene(null);
       againRef.current = false;
       setAgain(false);
@@ -2614,16 +2613,12 @@ function PlayPage() {
       });
       sendReplay(duel);
     }
-    const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
-    let paid: MatchReward | null = null;
-    if (earns && duel.mid) {
-      if (paidMatch.current?.mid === duel.mid) paid = paidMatch.current.reward;
-      else {
-        paid = settleWin(duel.mid, duel.mode === "ai" ? duel.machine : null);
-        paidMatch.current = { mid: duel.mid, reward: paid };
-      }
+    // Nhiệm vụ (chủ game 05/11): mọi trận Vs Máy, Đánh thường, Tuỳ chọn đã kết thúc (thua, đầu hàng cũng tính) là đã chơi;
+    // thắng Đánh thường là thắng PvP. Mỗi trận tính 1 lần (theo mid), chưa hiện bảng sau trận.
+    if ((duel.mode === "ai" || duel.mode === "net") && duel.mid && !tutorial && !trial) {
+      const got = noteMatch(duel.mid, duel.mode === "net" && Boolean((net as { quick?: boolean } | null)?.quick) && duel.winner === mine);
+      if (got && missionRowsOf(got).length) setGain(got);
     }
-    if (paid?.changed) setReward(paid);
     const staged = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net");
     if (!staged) {
       setEndStep("done");
@@ -7579,9 +7574,9 @@ function PlayPage() {
           </div>
         ) : null}
         {duel.winner !== null && endStep === "scene" && scene ? (
-          <EndScene win={scene.win} at={scene.at} tone={scene.tone} onDone={() => setEndStep(paidMatch.current?.reward?.changed ? "rewards" : "done")} />
+          <EndScene win={scene.win} at={scene.at} tone={scene.tone} onDone={() => setEndStep(gain ? "missions" : "done")} />
         ) : null}
-        {duel.winner !== null && endStep === "rewards" && reward ? <MissionPanel reward={reward} onDone={() => setEndStep("done")} /> : null}
+        {duel.winner !== null && endStep === "missions" && gain ? <MissionAfter gain={gain} onDone={() => setEndStep("done")} /> : null}
         {duel.winner !== null && endStep === "done" && summed ? (
           <MatchSummary
             win={duel.winner === viewer}

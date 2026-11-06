@@ -64,7 +64,7 @@ export const FX_VIDEOS = [
 ];
 
 const CORE_PICTURES = [
-  "/home-bg.jpg",
+  "/home-bg-video.jpg",
   "/title.png",
   DEFAULT_BOARD_ART,
   "/board-floor.jpg",

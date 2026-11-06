@@ -711,6 +711,11 @@ const PAIRS: Array<[string, string]> = [
   // Nhiệm vụ (chủ game 22/10)
   ["Nhiệm vụ", "Missions"],
   ["NHIỆM VỤ", "MISSIONS"],
+  ["NGÀY", "DAILY"],
+  ["TUẦN", "WEEKLY"],
+  ["Nhiệm vụ tuần sắp có.", "Weekly missions are coming soon."],
+  ["Làm mới sau", "Resets in"],
+  ["ĐÃ NHẬN", "CLAIMED"],
   ["Làm mới lúc 0 giờ mỗi ngày", "Resets at midnight every day"],
   ["Thắng trận đầu tiên trong ngày", "Win your first match of the day"],
   ["Thắng thêm 2 trận trong ngày", "Win 2 more matches today"],

@@ -5,8 +5,8 @@ import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
-import { MissionBoard } from "@/components/game/mission-panel";
 import { useMail } from "@/lib/mail-box";
+import { missionsReady, onMissions } from "@/lib/mission-store";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
 
@@ -23,11 +23,10 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends"; go?: () => void; dot?: boolean };
+type Tab = { key: string; label: string; icon: ReactNode; bg: string; to?: "/shop" | "/collection" | "/mail" | "/news" | "/friends" | "/missions"; go?: () => void; dot?: boolean };
 
 function Home() {
   const [wins, setWins] = useState(0);
-  const [missions, setMissions] = useState(false);
   // Hồ sơ của mình (chủ game 31/10): bấm ảnh đại diện ở khung hồ sơ; về từ màn xem lại trận thì mở lại.
   const [mine, setMine] = useState<string | null>(null);
   useEffect(() => {
@@ -38,6 +37,12 @@ function Home() {
   useLang();
   const mails = useMail();
   const friends = usePulse();
+  // Chấm đỏ thẻ Nhiệm vụ: có nhiệm vụ Ngày hoặc Tuần đã đủ mà chưa nhận.
+  const [quests, setQuests] = useState(false);
+  useEffect(() => {
+    setQuests(missionsReady());
+    return onMissions(() => setQuests(missionsReady()));
+  }, []);
   useEffect(() => {
     setWins(Number(localStorage.getItem("clash-wins") ?? "0") || 0);
     const book = loadBook();
@@ -55,14 +60,15 @@ function Home() {
   ];
   const right: Tab[] = [
     { key: "gifts", label: "Phần thưởng", icon: <GiftIcon />, bg: "/art/thien-su.jpg" },
-    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", go: () => setMissions(true) },
+    { key: "missions", label: "Nhiệm vụ", icon: <ScrollIcon />, bg: "/art/hiep-si-cua-hau.jpg", to: "/missions", dot: quests },
     { key: "friends", label: "Bạn bè", icon: <FriendsIcon />, bg: "/art/kizuran.jpg", to: "/friends", dot: friends.asks > 0 },
     { key: "mail", label: "Thư", icon: <MailIcon />, bg: "/art/my-dieu-nhan.jpg", to: "/mail", dot: mails.some((row) => !row.read || row.owing) },
   ];
   return (
     <main className="home">
       <div className="home-stage">
-        <img className="home-art" src="/home-bg.jpg" alt="Clash of the Beasts" draggable={false} />
+        <img className="home-art" src="/home-bg-video.jpg" alt="Clash of the Beasts" draggable={false} />
+        <video className="home-art home-video" src="/home-bg.mp4" poster="/home-bg-video.jpg" autoPlay loop muted playsInline preload="auto" aria-hidden="true" />
         <div className="home-shade" aria-hidden="true" />
         <div className="home-embers" aria-hidden="true">
           {EMBERS.map((ember, index) => (
@@ -137,7 +143,6 @@ function Home() {
           </div>
         </div>
       </div>
-      {missions ? <MissionBoard onClose={() => setMissions(false)} /> : null}
       {mine ? <FriendProfile friend={mine} onClose={() => setMine(null)} /> : null}
     </main>
   );

@@ -2,6 +2,7 @@ import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc
 import { ENV_KINDS } from "./env-kinds.ts";
 import { fakeIds } from "./owned-cards.ts";
 import { addOwned, addStars, loadRates, naturalTier, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
+import { noteCards } from "./mission-store.ts";
 import { spellKindRank } from "./spell-kinds.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
@@ -354,6 +355,7 @@ export function exchangeCard(id: string): boolean {
   if (collectionOwned(ownedIds()).has(id) || !cardNumbers().has(id) || starCount() < price) return false;
   addOwned(id);
   addStars(-price);
+  noteCards([{ id, tier: rarityOf(id) }]);
   return true;
 }
 

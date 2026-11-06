@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FORMS, MONSTERS, SPELLS, WAITING_CARDS, monsterCard, spellCard } from "@/lib/catalog";
 import { spellKindRank } from "@/lib/spell-kinds";
+import { noteCards } from "@/lib/mission-store";
 
 /**
  * Cửa hàng (owner, 19/10): packs bought with stars. A pack holds 3 different cards (owner: 3, not 5).
@@ -363,6 +364,7 @@ export function buyPacks(count: 1 | 10, rng: () => number = Math.random): Purcha
   write(OWNED_KEY, [...owned]);
   setStarCount(stars - price + refund);
   setPity(Math.min(drawn.since, PITY_LIMIT - 1));
+  noteCards(packs.flatMap((pack) => pack.pulls.map(({ id, tier }) => ({ id, tier }))));
   return { packs, spent: price, refund, fresh };
 }
 

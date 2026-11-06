@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { MAILS, MAIL_DAYS, type Mail, type MailKind } from "@/lib/mails";
+import { rarityOf } from "@/lib/collection";
+import { noteCards } from "@/lib/mission-store";
 import { addOwned, addStars, ownedIds } from "@/lib/shop";
 
 /**
@@ -107,6 +109,8 @@ function take(row: MailRow, box: Box, into: Claimed) {
       into.cards.push({ id: gift.id, fresh: true });
     }
   }
+  // Lá trong quà (cả lá trùng) tính vào nhiệm vụ tuần Thu thập lá bài / điểm SR, UR.
+  noteCards((row.mail.gifts ?? []).flatMap((gift) => (gift.kind === "card" ? [{ id: gift.id, tier: rarityOf(gift.id) }] : [])));
   box[row.mail.id].claimed = true;
   box[row.mail.id].read = true;
 }
