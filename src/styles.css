@@ -1048,10 +1048,10 @@
   gap: 0.35rem;
 }
 .home-tabs.is-left {
-  left: -6.3rem;
+  left: -5.7rem;
 }
 .home-tabs.is-right {
-  right: -6.3rem;
+  right: -5.7rem;
   align-items: flex-end;
 }
 /* Thẻ hình bình hành kính (chủ game 31/10): tranh nền cắt theo khung, một tranh nhô ra ngoài khung; xanh mở, trắng khoá. */
@@ -1150,10 +1150,10 @@
   bottom: 0.8rem;
 }
 .home-tab.is-left .home-tab-pic {
-  right: -0.6rem;
+  right: 0;
 }
 .home-tab.is-right .home-tab-pic {
-  left: -0.6rem;
+  left: 0;
 }
 .home-tab.is-shut .home-tab-icon {
   filter: grayscale(0.85) brightness(0.8) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
