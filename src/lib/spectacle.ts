@@ -9,6 +9,8 @@ export type FxEvent =
   | { t: "shake"; act: "shake"; spot: "center"; power: number; pack?: FxPack }
   | { t: "ailments"; act: "ailment"; pack?: FxPack; marks: { id: string; x: number; y: number; spot: "self" | "target" }[] }
   | { t: "fire"; x: number; y: number; pack?: FxPack }
+  /** Hồi máu, buff và tự tăng chỉ số (video hồi máu, chủ game 06/11). */
+  | { t: "heal"; act: "heal"; spot: FxSpot; x: number; y: number; pack?: FxPack }
   | { t: "bolt"; rank: "small" | "big"; x: number; y: number; self?: boolean; pack?: FxPack }
   | { t: "laser"; x1: number; y1: number; x2: number; y2: number; pack?: FxPack }
   | { t: "tide"; rank: "small" | "mid" | "big"; x: number; y: number; pack?: FxPack }

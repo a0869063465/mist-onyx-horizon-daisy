@@ -773,6 +773,37 @@ export function WaterBurst() {
   );
 }
 
+export function HealBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "heal") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-4), { id, x: event.x, y: event.y }]);
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="heal-blast"
+          src={fxUrl("/fx/hoi-mau.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
 export function FireBurst() {
   const [clips, setClips] = useState<{ id: number; x: number; y: number }[]>([]);
   useEffect(() => {

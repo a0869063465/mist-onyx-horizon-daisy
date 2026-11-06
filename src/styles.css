@@ -5726,6 +5726,15 @@ button.watch-back {
   animation: tide-blast 0.85s ease-out forwards;
 }
 /* Đại hồng thuỷ huỷ diệt: video sóng (webm trong suốt theo độ sáng), đáy đặt ở chân hàng bị đánh, phủ cả hàng (chủ game 04/11). */
+/* Hồi máu: video vòng sáng + dấu cộng (chủ game 06/11), đáy ở điểm hồi, trong suốt theo độ sáng. */
+.heal-blast {
+  position: absolute;
+  z-index: 13;
+  width: 26%;
+  transform: translate(-50%, -62%);
+  pointer-events: none;
+  object-fit: contain;
+}
 .tide-wave {
   position: absolute;
   z-index: 13;

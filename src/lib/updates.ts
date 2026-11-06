@@ -902,6 +902,7 @@ export const PENDING_NOTES: string[] = [
   "Lá phép và lá quái đang kéo dùng khung lá mới. Hấp thụ ma pháp dùng được để nuốt Roi sấm đã nạp.",
   "Đại hồng thuỷ huỷ diệt chỉ đánh cả hàng của quái được chọn, không còn đánh mọi kẻ địch.",
   "Đại hồng thuỷ huỷ diệt có hiệu ứng sóng lớn dâng lên phủ cả hàng bị đánh.",
+  "Hiệu ứng hồi máu, buff và tự tăng chỉ số đổi sang video vòng sáng xanh lục. Tăng máu tối đa giữ hiệu ứng cũ.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -55,6 +55,7 @@ function font(): Promise<unknown> {
 export const FX_VIDEOS = [
   "/fx/lua-no.mp4?v=2",
   "/fx/dai-hong-thuy.webm?v=1",
+  "/fx/hoi-mau.webm?v=1",
   "/fx/laser.mp4?v=2",
   "/fx/set-dien.mp4?v=1",
   "/fx/set-to.mp4?v=1",

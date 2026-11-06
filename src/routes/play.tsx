@@ -4,7 +4,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -359,7 +359,7 @@ type Grab =
   | { kind: "unit"; uid: string; card: MonsterCard; live: { name: string; atk: number; def: number; mdef: number; hp: number; level: number } };
 
 type Drag = Grab & { x: number; y: number };
-type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number };
+type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean };
 
 function floaterStyle(item: Floater) {
   return {
@@ -1354,13 +1354,15 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
         const rose = was.cardId === "ky-si-bong-toi" && now.cardId === "chien-binh-huyen-thoai";
         if (beam) floaters.push(...laserTicks(beam));
         else if (!(rose && delta < 0) && !(bombOn && bombHits.includes(was.uid)) && !(danOn && danHits.includes(was.uid)) && !riderIds.has(was.uid)) {
-          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where });
+          // grow: the rise came with a max-HP rise (tăng máu tối đa), which keeps its old ring.
+          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp });
           if (delta < 0 && !(next.skill && skillLook(next.skill.id, next.skill.index))) hits.push(now.uid);
         }
       }
       const mendN = was && now && now.uid === was.uid ? (next.mends ?? []).find((row) => row.uid === now.uid)?.n ?? 0 : 0;
       if (mendN > 0 && was && now && now.hp - was.hp !== mendN) {
-        floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${mendN}`, heal: true, spot: where });
+        // The mend's own video is played by the loop over duel.mends; no second one here.
+        floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${mendN}`, heal: true, spot: where, hush: true });
       }
       const rain = /Mưa ma thuật hồi (\d+)/.exec(next.live);
       if (was && now && now.uid === was.uid && rain && harmShift(was) && !harmShift(now) && now.hp === was.hp) {
@@ -3177,15 +3179,7 @@ function PlayPage() {
             if (index < 0) continue;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
             if (!spot) continue;
-            emitFx({
-              t: "ring",
-              act: "heal",
-              spot: side === viewerNow ? "self" : "target",
-              x: spot.x,
-              y: spot.y,
-              color: "#3ec6ff",
-              power: 1.05,
-            });
+            emitFx({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
           }
         }
       }
@@ -3194,7 +3188,10 @@ function PlayPage() {
         if (grouped && !item.heal && item.text !== "Hạ") continue;
         // The HP a landing blow hits gets its own flash when the lightning reaches it.
         if (orbLate.has(item.id)) continue;
-        if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
+        // Hồi máu, buff và tự tăng chỉ số dùng video hồi máu (chủ game 06/11); tăng máu tối đa giữ vòng cũ.
+        if (item.hush) continue;
+        if (item.heal && !item.grow) emitFx({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
+        else if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
         else {
           emitFx({
             t: "burst",
@@ -7563,6 +7560,7 @@ function PlayPage() {
         <Spectacle />
         <ArenaFx />
         <FireBurst />
+        <HealBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
