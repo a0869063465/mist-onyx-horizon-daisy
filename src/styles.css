@@ -1123,7 +1123,7 @@
   transform: translate(var(--ix, 0rem), var(--iy, 0rem));
   pointer-events: none;
   /* Làm dịu icon cho hợp phông (chủ game 06/11): giảm chói + bão hoà, chỉnh bằng --dim-b / --dim-s. */
-  filter: brightness(var(--dim-b, 0.86)) saturate(var(--dim-s, 0.82)) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
+  filter: brightness(var(--dim-b, 0.8)) saturate(var(--dim-s, 0.76)) drop-shadow(0 3px 5px rgb(0 0 0 / 0.5));
   z-index: 2;
 }
 /* Xem trước trong Tuỳ chỉnh: icon kéo được (chủ game 06/11). */

@@ -930,6 +930,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: mọi thẻ và nút PvE hiện như đã mở khoá (chưa có tính năng thì chưa bấm được).",
   "Menu chính: icon thẻ dịu màu hơn cho hợp phông, quầng sáng màu vẫn giữ.",
   "Menu chính: vị trí và cỡ 8 icon thẻ đặt lại theo bản chủ game đã chỉnh.",
+  "Menu chính: đổi hình icon Sự kiện, Bảng xếp hạng, Bộ sưu tập, Cửa hàng; icon dịu màu hơn một chút.",
 ];
 
 function remarkOf(notes: string[]) {
