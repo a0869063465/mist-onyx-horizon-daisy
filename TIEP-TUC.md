@@ -715,3 +715,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V12 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Khủng long 2 đầu: quái 2 sao, quái trung bình, đặc trưng của khủng long.
 - Chưa rõ đặc trưng cụ thể (chỉ số, skill) và lá có sẵn hay mới, chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
+
+## V13 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
+- Côn trùng sơ cấp, 1 sao.
+- Chưa rõ lá côn trùng sơ cấp cụ thể (chỉ số, skill) và lá có sẵn hay mới, chờ chủ game mô tả. Mô hình/nỗ lực: chưa chốt.
