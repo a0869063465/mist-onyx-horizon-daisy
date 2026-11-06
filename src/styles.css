@@ -5745,7 +5745,8 @@ button.watch-back {
 }
 .tide-vid.is-small { width: 30%; }
 .tide-vid.is-mid { width: 34%; }
-.tide-vid.is-rage { width: 32%; }
+/* Điểm phát lực (đốm trắng nóng nhất, đo ~63%,51% khung video lúc 1,1–1,5 giây) đặt đúng tâm lá. */
+.tide-vid.is-rage { width: 32%; transform: translate(-63%, -51%); }
 .tide-wave {
   position: absolute;
   z-index: 13;

@@ -5,6 +5,7 @@ import { actPack, ailmentHolds, fxOn, tideOn } from "@/lib/fx-prefs";
 import { fxStyle } from "@/lib/fx-kinds";
 import { subscribeFx, type FxEvent, type FxPack, type FxSpot } from "@/lib/spectacle";
 import { fxUrl } from "@/lib/preload";
+import { playCue } from "@/lib/sfx";
 
 type Chunk = {
   x: number;
@@ -725,6 +726,8 @@ const TIDE_RISE = "/fx/thuy-tru.webm?v=1";
 const TIDE_BURST = "/fx/thuy-no.webm?v=1";
 const TIDE_SWIRL = "/fx/thuy-xoay.webm?v=1";
 
+let lastTideSound = 0;
+
 export function WaterBurst() {
   const [clips, setClips] = useState<{ id: number; rank: "small" | "mid" | "big" | "rage"; x: number; y: number }[]>([]);
   useEffect(() => {
@@ -734,6 +737,13 @@ export function WaterBurst() {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
       setClips((list) => [...list.slice(-4), { id, rank: event.rank, x: event.x, y: event.y }]);
+      // Âm của chính video (chủ game 06/11), phát cùng lúc video bắt đầu.
+      // Nhiều mục tiêu cùng lúc: chỉ phát âm một lần.
+      const now = performance.now();
+      if (now - lastTideSound > 350) {
+        lastTideSound = now;
+        playCue(event.rank === "big" ? "tideWave" : event.rank === "mid" ? "tideBurst" : event.rank === "rage" ? "tideSwirl" : "tideRise");
+      }
       const timer = window.setTimeout(() => {
         timers.delete(timer);
         setClips((list) => list.filter((item) => item.id !== id));
@@ -779,6 +789,8 @@ export function WaterBurst() {
   );
 }
 
+let lastHealSound = 0;
+
 export function HealBlast() {
   const [clips, setClips] = useState<{ id: number; x: number; y: number }[]>([]);
   useEffect(() => {
@@ -787,6 +799,12 @@ export function HealBlast() {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
       setClips((list) => [...list.slice(-4), { id, x: event.x, y: event.y }]);
+      // Nhiều quái cùng hồi một lúc: chỉ phát âm một lần.
+      const now = performance.now();
+      if (now - lastHealSound > 350) {
+        lastHealSound = now;
+        playCue("heal");
+      }
     });
     return () => {
       stop();

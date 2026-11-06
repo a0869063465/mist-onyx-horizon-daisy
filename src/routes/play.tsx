@@ -2852,7 +2852,13 @@ function PlayPage() {
         (beamCaster === "kiem-si-lua-thieng" || beamCaster === "mat-do-tan-pha" || beamCaster === "loi-nguyen-cua-rong" || beamCaster === "rong-ac-ma" || (beamCaster === "rong-phun-hoa-cau" && duel.pending.index === 1))) ||
       hellFace;
     const beamIndex = beam && duel.pending?.kind === "beam" ? duel.pending.index : -1;
-    const damageStart = beam && damageShot(beamCaster, beamIndex) && !firePrep && !beamKill && skillLook(beamCaster, beamIndex) !== "gun";
+    // Skill nước có video riêng kèm âm của video (chủ game 06/11): bỏ âm nổ cũ.
+    const waterIds = ["trai-tim-hai-long", "con-thinh-no-cua-hai-vuong"];
+    const waterCast =
+      waterIds.includes(beamCaster) ||
+      waterIds.includes(duel.skill?.id ?? "") ||
+      (prev.pending?.kind === "beam" && waterIds.includes(fieldMon(prev, prev.pending.caster)?.cardId ?? ""));
+    const damageStart = beam && damageShot(beamCaster, beamIndex) && !firePrep && !beamKill && !waterCast && skillLook(beamCaster, beamIndex) !== "gun";
     const beeBind = beam && beamCaster === "ong-khong-lo";
     const beeLand = prev.pending?.kind !== "beam" && /Ong khổng lồ gây tê liệt/.test(said);
     const wasHorn = Boolean(attackWas && !attackNow && fieldMon(prev, attackWas.attacker)?.horn);
@@ -3080,7 +3086,7 @@ function PlayPage() {
       if (!wasHorn) playCue("boltPrep");
       playCue("boltSmall", wasHorn ? 0 : 0.24);
     }
-    else if (!quiet && monsterKill && !whipNow && !whipBoom && !/Sấm lôi phá/.test(said) && !/Sấm sét tận thế/.test(said) && !/Roi điện/.test(said) && !/Roi sấm/.test(said) && !(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun") && !/cường hoá và tiêu diệt/.test(said) && !/quét cả sân/.test(said)) {
+    else if (!quiet && monsterKill && !waterCast && !whipNow && !whipBoom && !/Sấm lôi phá/.test(said) && !/Sấm sét tận thế/.test(said) && !/Roi điện/.test(said) && !/Roi sấm/.test(said) && !(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun") && !/cường hoá và tiêu diệt/.test(said) && !/quét cả sân/.test(said)) {
       if (!cameFromBeam) playCue("spellRise");
       playCue("spellBoom");
     } else if (!quiet && curseBoom) playCue("swordBoom");
