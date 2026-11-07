@@ -775,3 +775,8 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## V23 (chủ game, 06/11): CHƯA LÀM, chỉ lưu
 - Lá quái phòng ngự: trả đòn tự động, hoặc như JSX (chưa rõ "JSX" là gì: có thể là tên lá, tên skill hay cách viết mô tả).
 - Chưa rõ lá phòng ngự cụ thể và kiểu trả đòn tự động mong muốn. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
+
+## V24 (chủ game, 07/11): CHƯA LÀM, chỉ lưu
+- Lá chắn phản đòn: phản lên tất cả quái cùng hàng.
+- Tăng lên 2 mana.
+- Chưa rõ "phản" có nghĩa là phản đòn của kẻ tấn công lên mọi quái cùng hàng (kể cả đồng minh của mình) hay chỉ quái địch, và "tăng lên 2 mana" là chi phí dùng lá hay chỉ số mana của chính lá. Chờ chủ game xác nhận. Mô hình/nỗ lực: chưa chốt.
