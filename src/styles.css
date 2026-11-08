@@ -9893,8 +9893,12 @@ button.watch-back {
 .cv-tag.is-SR { background: linear-gradient(90deg, #ff5a0a 0%, #ff8a14 45%, #ffc21f 85%, #ffe14a 100%); text-shadow: 0 1px 1px #8a3000; }
 .cv-tag.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
 /* Fake cards (chủ game 22/10): F in red where they would be N, FK in red-orange where they would be SR. */
-.cv-tag.is-FN, .al-rarity.is-FN { background: linear-gradient(90deg, #a80f0f, #e53030); text-shadow: 0 1px 1px #3a0000; }
-.cv-tag.is-FK, .al-rarity.is-FK { background: linear-gradient(90deg, #d8330a, #ff6a1f); text-shadow: 0 1px 1px #5a1400; }
+.cv-tag.is-FN, .al-rarity.is-FN, .cv-tag.is-FK, .al-rarity.is-FK { background: linear-gradient(270deg, #8a0612 0%, #c4121f 55%, #ff3b3b 100%); text-shadow: 0 1px 1px #2a0004; }
+/* Lá dùng thử: nhãn hạn ở góc đối diện nhãn UR/SR, đuôi nhọn quay vào trong (chủ game 08/11). */
+.cv-tag.is-FN, .cv-tag.is-FK { left: auto; right: -0.25rem; padding: 0.1rem 0.3rem 0.1rem 0.5rem; clip-path: polygon(0 0, 100% 0, 100% 100%, 24% 100%); }
+.cx .cv-tag.is-FN, .cx .cv-tag.is-FK { left: auto; right: -0.4cqw; padding: 0 1.5cqw 0 0; justify-content: flex-end; }
+.al-rarity.is-FN, .al-rarity.is-FK { clip-path: polygon(0 0, 82% 0, 100% 100%, 0 100%); padding: 0.1rem 0.75rem 0.1rem 0.55rem; }
+.ml-slot.is-card .al-rarity.is-FN, .ml-slot.is-card .al-rarity.is-FK { left: auto; right: 0.2rem; }
 .cv-empty { margin: 2.5rem 0; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.65); }
 
 /* A card's sheet and its 3D roll dim the whole page, the header and tabs too. */
@@ -10728,6 +10732,8 @@ button.watch-back {
 .msheet-rarity { position: absolute; top: -0.5rem; left: -0.45rem; z-index: 4; font-style: normal; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
 /* A spell's mana sits top right of the picture, so its rarity goes left (owner 22/10); a monster's own number keeps the old place. */
 .msheet-card:has(.msheet-count) .msheet-rarity { left: auto; right: -0.45rem; }
+.msheet-card:has(.al-rarity.is-FN, .al-rarity.is-FK) .msheet-rarity { left: auto; right: -0.45rem; }
+.msheet-card:has(.msheet-count):has(.al-rarity.is-FN, .al-rarity.is-FK) .msheet-rarity { right: auto; left: -0.45rem; }
 /* Giám định: the lock box as a button. */
 .al-appraise { width: 100%; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 0 10px rgba(255, 200, 70, 0.25); }
 .al-appraise:active { transform: scale(0.97); }

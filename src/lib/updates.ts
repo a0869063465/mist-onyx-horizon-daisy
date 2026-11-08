@@ -960,6 +960,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng mô tả lá quái: số công và máu nhích lên đúng vào giữa ô.",
   "Bỏ lá fake, thay bằng lá dùng thử chỉ số đầy đủ, đổi bộ thử mỗi 0 giờ thứ Hai. Nhãn hạn (7D, 6H) đặt đúng chỗ nhãn F/FK cũ và trên hộp bộ bài có hơn 16 lá thử. Sang tuần mới, bộ có hơn 16 lá thử được thay bằng bộ thử mới; bộ khác giữ lá hết hạn in mờ, dấu ! đỏ, bấm lá để Đổi sao hoặc tới Cửa hàng.",
   "Chỉnh sửa bộ bài: bỏ nút Lưu, thoát trang là tự lưu (bộ không hợp lệ thì về lại bộ lúc vào trang). Bên phải mỗi lá trong danh sách có x1, x2, bấm để thêm bản sao. Bấm dòng hướng dẫn để xem cách thêm bản. Nút thống kê màu xanh lá, lá trong kho hiện kiểu lá trên tay.",
+  "Nhãn hạn dùng thử đổi sang góc đối diện nhãn UR và SR, đuôi nhọn quay vào trong, màu đỏ thẫm sáng.",
 ];
 
 function remarkOf(notes: string[]) {
