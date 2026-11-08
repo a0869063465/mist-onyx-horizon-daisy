@@ -3,14 +3,14 @@ import { AppraisePanel } from "@/components/collection/appraise-panel";
 import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { rarityOf, rarityTag, type Album } from "@/lib/collection";
-import { fakeIds } from "@/lib/owned-cards";
+import { trialTag } from "@/lib/owned-cards";
 import { tr } from "@/lib/i18n";
 
 /** A card in an album: its art in the gold frame of Đổi hình nền, no figures, no name; grey while not owned. */
 export function AlbumPic({ id, missing = false, vault = false }: { id: string; missing?: boolean; vault?: boolean }) {
   const art = monsterCard(id) ? artSrc(id, 1) : spellSrc(id);
-  // A fake card (the starter deck's cut copy) shows in colour (owner 22/10) but is still not owned.
-  const fake = missing && fakeIds([id]).length > 0;
+  // A trial card (lent this week, chủ game 08/11) shows in colour but is still not owned.
+  const fake = missing && trialTag(id) !== null;
   return (
     <span className={`al-pic${vault ? " is-vault" : ""}${fake ? " is-fake" : missing ? " is-missing" : ""}`}>
       <span className="al-pic-art" style={{ backgroundImage: `url(${art})` }} />

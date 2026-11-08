@@ -9,7 +9,7 @@ import { spellKind } from "@/lib/spell-kinds";
  * One row of the deck list: the stars (monster) or mana (spell, blank at 0) on the left, the name over a strip
  * of the card's art, and on the right the summoning mana crystal (monster, hidden at 0) or the spell's kind icon.
  */
-export function DeckRow({ id, kind, count = 1, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; count?: number; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
+export function DeckRow({ id, kind, count = 1, off = false, trial = null, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; count?: number; off?: boolean; trial?: string | null; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
   const monster = kind === "monster" ? monsterCard(id) : undefined;
   const spell = kind === "spell" ? spellCard(id) : undefined;
   if (!monster && !spell) return null;
@@ -19,7 +19,7 @@ export function DeckRow({ id, kind, count = 1, lifted = false, onPress, onTap }:
     <div
       role="button"
       tabIndex={0}
-      className={`dk-row is-${kind}${lifted ? " is-lifted" : ""}`}
+      className={`dk-row is-${kind}${lifted ? " is-lifted" : ""}${off ? " is-off" : ""}`}
       onPointerDown={onPress}
       onClick={onTap}
       onContextMenu={(event) => event.preventDefault()}
@@ -39,6 +39,7 @@ export function DeckRow({ id, kind, count = 1, lifted = false, onPress, onTap }:
       </span>
       <span className="dk-row-name">{tr(monster?.name ?? spell?.name ?? "")}</span>
       <span className="dk-row-end">
+        {trial ? <b className="dk-row-trial">{trial}</b> : null}
         {count > 1 ? <b className="dk-row-count">×{count}</b> : null}
         {monster ? (
           monster.gems > 0 ? (

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { DeckRow } from "@/components/deck-row";
 import { CardFace } from "@/components/game/card-face";
@@ -6,7 +6,10 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canReachForm, canUseCard, copiesOf, fakeIds, usableCopies } from "@/lib/owned-cards";
+import { canReachForm, canUseCard, copiesOf, fakeIds, trialTag, usableCopies } from "@/lib/owned-cards";
+import { ExchangeAsk } from "@/components/collection/album-panels";
+import { albums, cardNumbers, exchangeCard, exchangePrice } from "@/lib/collection";
+import { SHOP_PACK_KEY } from "@/lib/shop";
 import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
@@ -52,6 +55,10 @@ function DeckPage() {
   const [plansOpen, setPlansOpen] = useState(false);
   const [covering, setCovering] = useState(false);
   const [ghost, setGhost] = useState<Ghost | null>(null);
+  // Đổi sao lấy lá from the deck builder (a card not owned, or a trial card whose week is over); `owns` re-reads copies.
+  const [trade, setTrade] = useState<string | null>(null);
+  const [owns, setOwns] = useState(0);
+  const navigate = useNavigate();
   const grab = useRef<Grab | null>(null);
   // A press that turned into a drag or a swipe is not a tap: its click (if the browser sends one) is ignored.
   const skipTap = useRef(false);
@@ -206,7 +213,32 @@ function DeckPage() {
   for (const id of [...deck.monsters, ...deck.spells]) used.set(id, (used.get(id) ?? 0) + 1);
   const room = booted ? copiesOf([...MONSTERS, ...SPELLS].map((card) => card.id)) : new Map<string, number>();
   const inDeck = new Set([...used].filter(([id, n]) => n >= (room.get(id) ?? 1)).map(([id]) => id));
-  const copies = (id: string) => (room.get(id) ?? 0) > 1 ? <b className="dk-copies">{used.get(id) ?? 0}/{room.get(id)}</b> : null;
+  const copies = (id: string) => (
+    <>
+      {(room.get(id) ?? 0) > 1 ? <b className="dk-copies">{used.get(id) ?? 0}/{room.get(id)}</b> : null}
+      {booted && trialTag(id) ? <b className="dk-trial">{trialTag(id)}</b> : null}
+    </>
+  );
+  // Copies in the deck it may not use (not owned, or a trial week over): the row is dimmed (chủ game 08/11).
+  const lacks = (id: string) => (used.get(id) ?? 0) > (room.get(id) ?? 0);
+  void owns;
+  const tradeBox = (id: string) =>
+    booted && (used.get(id) ?? 0) > 0 && lacks(id) ? (
+      <TradeBox
+        id={id}
+        onTrade={cardNumbers().has(id) ? () => setTrade(id) : undefined}
+        onShop={() => {
+          sessionStorage.setItem(SHOP_PACK_KEY, "1");
+          void navigate({ to: "/shop" });
+        }}
+      />
+    ) : null;
+  const asideOf = (id: string) => (
+    <>
+      {tradeBox(id)}
+      <BalanceBox id={id} />
+    </>
+  );
   // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
   const fakes = new Set(booted ? fakeIds([...MONSTERS, ...SPELLS].map((card) => card.id)) : []);
   // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
@@ -369,6 +401,8 @@ function DeckPage() {
                 id={card.id}
                 kind="monster"
                 count={used.get(card.id) ?? 1}
+                off={booted && lacks(card.id)}
+                trial={booted ? trialTag(card.id) : null}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "monster" }, "list")}
@@ -380,6 +414,8 @@ function DeckPage() {
                 id={card.id}
                 kind="spell"
                 count={used.get(card.id) ?? 1}
+                off={booted && lacks(card.id)}
+                trial={booted ? trialTag(card.id) : null}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "spell" }, "list")}
@@ -463,10 +499,22 @@ function DeckPage() {
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <CardMonsterSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <SpellSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
+      ) : null}
+      {trade ? (
+        <ExchangeAsk
+          id={trade}
+          albums={albums()}
+          onCancel={() => setTrade(null)}
+          onConfirm={() => {
+            exchangeCard(trade);
+            setTrade(null);
+            setOwns((n) => n + 1);
+          }}
+        />
       ) : null}
       {covering ? (
         <CoverPicker
@@ -522,6 +570,28 @@ function DragTip() {
         ?
       </span>
     </button>
+  );
+}
+
+/**
+ * A card of the deck it may not use (chủ game 08/11): not owned, or its trial week over. Đổi buys it for its price in
+ * stars; Cửa hàng opens the pack page (1 pack or 10).
+ */
+function TradeBox({ id, onTrade, onShop }: { id: string; onTrade?: () => void; onShop: () => void }) {
+  return (
+    <section className="cv-lockbox dk-trade">
+      <b>{tr("Chưa có đủ bản lá này")}</b>
+      <span className="dk-trade-btns">
+        {onTrade ? (
+          <button type="button" className="al-panel-view" onClick={onTrade}>
+            {tr("Đổi")} <i>★{exchangePrice(id)}</i>
+          </button>
+        ) : null}
+        <button type="button" className="al-panel-view" onClick={onShop}>
+          {tr("Cửa hàng")}
+        </button>
+      </span>
+    </section>
   );
 }
 

@@ -15,6 +15,7 @@ import {
   clearOwned,
   PACK,
   PACK_PRICE,
+  SHOP_PACK_KEY,
   usePacksToUr,
   useStars,
   type PackEntry,
@@ -45,7 +46,13 @@ function ShopPage() {
   const [sheet, setSheet] = useState<PackEntry | null>(null);
   const [notice, setNotice] = useState("");
 
-  useEffect(() => setBooted(true), []);
+  useEffect(() => {
+    setBooted(true);
+    if (sessionStorage.getItem(SHOP_PACK_KEY)) {
+      sessionStorage.removeItem(SHOP_PACK_KEY);
+      setView("pack");
+    }
+  }, []);
   useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(""), 2200);

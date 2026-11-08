@@ -1,9 +1,9 @@
 import { appMode } from "./app-mode.ts";
-import { copyCap, DEFAULT_DECK, WAITING_CARDS } from "./catalog.ts";
+import { copyCap, WAITING_CARDS } from "./catalog.ts";
 import { EVOLUTIONS } from "./strategies.ts";
+import { trialCopies, trialLeft } from "./trial-deck.ts";
 
 const OWNED_KEY = "clash-owned";
-const STARTER = new Set([...DEFAULT_DECK.monsters, ...DEFAULT_DECK.spells]);
 
 /**
  * Which cards a player may put in a deck (owner, 19/10): a guest has the default deck's cards and the cards opened
@@ -34,8 +34,32 @@ export function usableCopies(id: string, counts: Map<string, number> = ownedCopi
   const cap = copyCap(id);
   if (cap === 0) return 0;
   if (appMode() === "publisher") return cap;
-  const owned = Math.min(cap, counts.get(id) ?? 0);
-  return owned > 0 ? owned : STARTER.has(id) ? 1 : 0;
+  // Copies owned, or the copies this week's trial deck lends, whichever is more (chủ game 08/11).
+  return Math.min(cap, Math.max(counts.get(id) ?? 0, trialCopies(id)));
+}
+
+/** Copies owned (capped), without the trial ones. */
+export function ownedCopiesOf(id: string, counts: Map<string, number> = ownedCopies()): number {
+  if (appMode() === "publisher") return copyCap(id);
+  return Math.min(copyCap(id), counts.get(id) ?? 0);
+}
+
+/** The trial label of a card ("6D", "5H") while some of its usable copies are only lent this week; null otherwise. */
+export function trialTag(id: string, counts: Map<string, number> = ownedCopies()): string | null {
+  if (typeof localStorage === "undefined" || appMode() === "publisher") return null;
+  return usableCopies(id, counts) > ownedCopiesOf(id, counts) ? trialLeft() : null;
+}
+
+/** Copies in a deck past what is owned: the trial ones (and, once a week ends, the expired ones). */
+export function trialCount(ids: string[], counts: Map<string, number> = ownedCopies()): number {
+  const seen = new Map<string, number>();
+  let n = 0;
+  for (const id of ids) {
+    const k = (seen.get(id) ?? 0) + 1;
+    seen.set(id, k);
+    if (k > ownedCopiesOf(id, counts)) n += 1;
+  }
+  return n;
 }
 
 /** `usableCopies` for many cards at once, reading the owned list a single time. */
@@ -54,11 +78,9 @@ export function realOwned(): Set<string> {
   }
 }
 
-/** Of these cards, the ones that play as FAKE: starter-deck cards whose real card is not owned (chủ game 22/10). */
-export function fakeIds(ids: string[]): string[] {
-  if (typeof localStorage === "undefined") return ids.filter((id) => STARTER.has(id));
-  const real = realOwned();
-  return ids.filter((id) => STARTER.has(id) && !real.has(id));
+/** Lá fake bỏ (chủ game 08/11): the starter cards are trial cards with full figures now, so none plays as fake. */
+export function fakeIds(_ids: string[]): string[] {
+  return [];
 }
 
 /** Chân kén is no evolution of its own: it comes out of Kén ngài, so it needs what Kén ngài needs. */
@@ -74,9 +96,10 @@ export function canReachForm(id: string): boolean {
 }
 
 /** A saved list of cards with each card kept no more times than the deck may hold it (chủ game 08/11). */
-export function keepCopies(list: unknown, ok: (id: string) => boolean): string[] {
+export function keepCopies(list: unknown, ok: (id: string) => boolean, upTo: "use" | "cap" = "use"): string[] {
   if (!Array.isArray(list)) return [];
-  const room = copiesOf(list.filter((id): id is string => typeof id === "string"));
+  // A saved deck keeps cards it may no longer use (a trial week over) up to their cap: shown dimmed, marked "!".
+  const room = upTo === "cap" ? new Map(list.filter((id): id is string => typeof id === "string").map((id) => [id, copyCap(id)])) : copiesOf(list.filter((id): id is string => typeof id === "string"));
   const used = new Map<string, number>();
   const next: string[] = [];
   for (const id of list) {

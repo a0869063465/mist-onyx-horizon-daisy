@@ -1,4 +1,4 @@
-import { DECK_MIN, DECK_SIZE, DEFAULT_DECK, deckLegal, FORMS, MIN_MONSTERS, MIN_SPELLS, monsterCard, spellCard, STARTER_NAME, type MonsterCard, type SpellCard } from "./catalog.ts";
+import { copyCap, DECK_MIN, DECK_SIZE, DEFAULT_DECK, deckLegal, FORMS, MIN_MONSTERS, MIN_SPELLS, monsterCard, spellCard, STARTER_NAME, type MonsterCard, type SpellCard } from "./catalog.ts";
 import { copiesOf, fakeIds, keepCopies } from "./owned-cards.ts";
 
 const KEY = "clash-beasts-deck";
@@ -33,7 +33,9 @@ export function deckIssues(deck: BeastDeck): string | null {
   const room = copiesOf([...monsters, ...spells]);
   const counts = new Map<string, number>();
   for (const id of [...monsters, ...spells]) counts.set(id, (counts.get(id) ?? 0) + 1);
-  if ([...counts].some(([id, n]) => n > (room.get(id) ?? 0))) return "Quá số bản cho phép của một lá.";
+  if ([...counts].some(([id, n]) => n > copyCap(id))) return "Quá số bản cho phép của một lá.";
+  // Lá chưa có hoặc hết hạn dùng thử (chủ game 08/11): bộ in mờ, dấu ! đỏ, không chơi được tới khi đổi hoặc mở gói.
+  if ([...counts].some(([id, n]) => n > (room.get(id) ?? 0))) return "Có lá chưa sở hữu hoặc đã hết hạn dùng thử.";
   if (spells.filter((id) => spellCard(id)?.env).length > 1) return "Chỉ được một lá môi trường.";
   if (!deckLegal(monsters.length, spells.length)) return `Cần ${DECK_MIN} đến ${DECK_SIZE} lá, ít nhất ${MIN_MONSTERS} quái.`;
   return null;

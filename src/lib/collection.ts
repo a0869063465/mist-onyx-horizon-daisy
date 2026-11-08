@@ -1,6 +1,6 @@
 import { DEFAULT_DECK, FORMS, MONSTERS, copyCap, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
-import { fakeIds } from "./owned-cards.ts";
+import { trialTag } from "./owned-cards.ts";
 import { addOwned, addStars, loadRates, naturalTier, ownedCount, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { noteCards } from "./mission-store.ts";
 import { spellKindRank } from "./spell-kinds.ts";
@@ -220,10 +220,9 @@ export function collectionOwned(owned: Set<string>): Set<string> {
  * where it is N; every other card shows its tier.
  */
 export function rarityTag(id: string, tier: Tier): { text: string; cls: string } {
-  if (fakeIds([id]).length > 0) {
-    if (tier === "N") return { text: "F", cls: "is-FN" };
-    if (tier === "SR") return { text: "FK", cls: "is-FK" };
-  }
+  // Lá dùng thử (chủ game 08/11): the time left ("6D", "5H") where a fake card had F / FK.
+  const left = trialTag(id);
+  if (left) return { text: left, cls: "is-trial" };
   return { text: tier, cls: `is-${tier}` };
 }
 

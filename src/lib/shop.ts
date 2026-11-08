@@ -42,6 +42,8 @@ export const PACK = {
 };
 
 const STAR_KEY = "clash-stars";
+/** Set before going to the shop from a card the deck lacks: the shop opens straight on the pack page (chủ game 08/11). */
+export const SHOP_PACK_KEY = "clash-shop-pack";
 const OWNED_KEY = "clash-owned";
 const RATE_KEY = "clash-pack-odds";
 const TIER_RANK: Record<Tier, number> = { N: 0, SR: 1, UR: 2 };

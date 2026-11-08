@@ -1,6 +1,7 @@
 import { raiseDefaultDeck, type BeastDeck } from "./deck.ts";
 import { DEFAULT_DECK, monsterCard, spellCard, STARTER_NAME } from "./catalog.ts";
-import { keepCopies } from "./owned-cards.ts";
+import { keepCopies, trialCount } from "./owned-cards.ts";
+import { TRIAL_SWAP_OVER, trialDeck, weekIndex } from "./trial-deck.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
 const KEY = "clash-deck-book";
@@ -39,8 +40,8 @@ function entry(raw: unknown, used: Set<number>): DeckEntry | null {
     n,
     name: typeof row.name === "string" ? row.name.slice(0, 40) : `Bộ ${n}`,
     // A guest's saved deck drops the cards not owned (owner, 19/10).
-    monsters: keepCopies(row.monsters, (id) => Boolean(monsterCard(id))),
-    spells: keepCopies(row.spells, (id) => Boolean(spellCard(id))),
+    monsters: keepCopies(row.monsters, (id) => Boolean(monsterCard(id)), "cap"),
+    spells: keepCopies(row.spells, (id) => Boolean(spellCard(id)), "cap"),
   };
   if (row.fav === true) kept.fav = true;
   if (typeof row.at === "number" && Number.isFinite(row.at)) kept.at = row.at;
@@ -65,8 +66,10 @@ export function parseBook(raw: string): DeckBook | null {
 }
 
 function seed(): DeckBook {
+  // A new phone starts with this week's trial deck (chủ game 08/11).
+  const trial = typeof localStorage === "undefined" ? { name: STARTER_NAME, monsters: DEFAULT_DECK.monsters, spells: DEFAULT_DECK.spells } : trialDeck();
   return {
-    decks: [{ n: 1, name: STARTER_NAME, monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells] }],
+    decks: [{ n: 1, name: trial.name, monsters: [...trial.monsters], spells: [...trial.spells] }],
     active: 1,
   };
 }
@@ -81,10 +84,29 @@ export function loadBook(): DeckBook {
     if (!book) return seed();
     const data = JSON.parse(raw) as { active?: unknown };
     const active = Number(data.active);
-    return { decks: book.decks, active: book.decks.some((row) => row.n === active) ? active : book.decks[0].n };
+    return rotateTrial({ decks: book.decks, active: book.decks.some((row) => row.n === active) ? active : book.decks[0].n });
   } catch {
     return seed();
   }
+}
+
+const TRIAL_WEEK_KEY = "clash-trial-week";
+
+/**
+ * A new trial week (chủ game 08/11): a deck holding more than 16 trial copies becomes the new week's trial deck
+ * whole; the others keep their cards, the expired ones dimmed until bought or drawn.
+ */
+function rotateTrial(book: DeckBook): DeckBook {
+  const week = String(weekIndex());
+  if (localStorage.getItem(TRIAL_WEEK_KEY) === week) return book;
+  const fresh = trialDeck();
+  const decks = book.decks.map((row) =>
+    trialCount([...row.monsters, ...row.spells]) > TRIAL_SWAP_OVER ? { ...row, name: fresh.name, monsters: [...fresh.monsters], spells: [...fresh.spells], at: Date.now() } : row,
+  );
+  const next = { ...book, decks };
+  saveBook(next);
+  localStorage.setItem(TRIAL_WEEK_KEY, week);
+  return next;
 }
 
 export function saveBook(book: DeckBook) {

@@ -13470,3 +13470,18 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-row-count { margin-right: 0.3rem; font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; color: #ffe08a; text-shadow: 0 1px 2px #000, 0 0 5px rgba(255, 200, 70, 0.55); }
 .dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; padding: 0.05rem 0.32rem; border-radius: 0.4rem; border: 1px solid rgba(255, 215, 106, 0.6); background: rgba(12, 10, 6, 0.85); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.78rem; font-weight: 800; line-height: 1.15; color: #ffe6a6; pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
+/* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
+.dk-trial, .dk-row-trial { font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-weight: 800; line-height: 1.15; color: #fff; background: linear-gradient(90deg, #0f7a8f, #22b8d6); border-radius: 0.35rem; text-shadow: 0 1px 1px #032a33; }
+.dk-trial { position: absolute; left: 50%; top: 2%; z-index: 3; transform: translateX(-50%); padding: 0.05rem 0.32rem; font-size: 0.78rem; pointer-events: none; }
+.dk-row-trial { margin-right: 0.3rem; padding: 0.02rem 0.28rem; font-size: 0.8rem; }
+.dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }
+.dk-trade { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+.dk-trade-btns { display: flex; gap: 0.4rem; }
+.dk-trade-btns .al-panel-view { flex: 1; padding: 0.4rem 0.5rem; border: 1px solid rgba(255, 215, 106, 0.45); border-radius: 0.6rem; background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; color: #ffe6a6; font-size: 0.95rem; }
+.cv-tag.is-trial, .al-rarity.is-trial { background: linear-gradient(90deg, #0f7a8f, #22b8d6); text-shadow: 0 1px 1px #032a33; }
+.lor-box.is-off { filter: grayscale(0.8) brightness(0.6); }
+.lor-trial { position: absolute; left: 50%; bottom: 14%; z-index: 4; transform: translateX(-50%); padding: 0.08rem 0.45rem; border-radius: 0.4rem; font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.95rem; font-weight: 800; color: #fff; background: linear-gradient(90deg, #0f7a8f, #22b8d6); text-shadow: 0 1px 1px #032a33; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); pointer-events: none; }
+/* Page turn (chủ game 08/11): the frames must go with the page, not stay behind. The leaf is one flattened, composited
+   layer, so the frame pictures (slot.webp) and the card arts turn together. */
+.al-view .al-leaf { transform-style: flat; will-change: transform; isolation: isolate; contain: layout style; }
+.al-view .al-leaf * { backface-visibility: visible; }
