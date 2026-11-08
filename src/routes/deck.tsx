@@ -431,6 +431,7 @@ function DeckPage() {
                 count={used.get(card.id) ?? 1}
                 canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
                 onAdd={() => addCard({ id: card.id, kind: "monster" })}
+                spare={!booted || (room.get(card.id) ?? 0) > 1 || (used.get(card.id) ?? 0) > 1}
                 off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
@@ -445,6 +446,7 @@ function DeckPage() {
                 count={used.get(card.id) ?? 1}
                 canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
                 onAdd={() => addCard({ id: card.id, kind: "spell" })}
+                spare={!booted || (room.get(card.id) ?? 0) > 1 || (used.get(card.id) ?? 0) > 1}
                 off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
