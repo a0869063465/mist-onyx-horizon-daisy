@@ -234,19 +234,23 @@ function DeckPage() {
       />
     ) : null;
   const sheetKind = (id: string): Kind => (spellCard(id) ? "spell" : "monster");
+  // A card the deck holds more of than it may use (trial cards, or not owned): Đổi sao / Cửa hàng stand where the arrows are,
+  // until the copies are bought or drawn, then the arrows come back (chủ game 08/11).
   const asideOf = (id: string) => (
     <>
-      <CopyArrows
-        count={used.get(id) ?? 0}
-        canAdd={booted && (used.get(id) ?? 0) < (room.get(id) ?? 0)}
-        onAdd={() => addCard({ id, kind: sheetKind(id) })}
-        onDrop={() => dropCard({ id, kind: sheetKind(id) })}
-      />
-      {tradeBox(id)}
+      {booted && lacks(id) ? (
+        tradeBox(id)
+      ) : (
+        <CopyArrows
+          count={used.get(id) ?? 0}
+          canAdd={booted && (used.get(id) ?? 0) < (room.get(id) ?? 0)}
+          onAdd={() => addCard({ id, kind: sheetKind(id) })}
+          onDrop={() => dropCard({ id, kind: sheetKind(id) })}
+        />
+      )}
       <BalanceBox id={id} />
     </>
-  );
-  // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
+  );  // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
   const fakes = new Set(booted ? fakeIds([...MONSTERS, ...SPELLS].map((card) => card.id)) : []);
   // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
   // Read on this phone after the first render, so the page the server sent matches.
