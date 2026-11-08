@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
+import { AlbumPic, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
 import { FORMS, monsterCard } from "@/lib/catalog";
 import { albumPages, awaitsAppraisal, cardName, cardNumbers, formatNo, rarityOf, setsOf, type Album, type AlbumCard, type CardSet, type PageItem } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
-import { loadRates, type Rates, type Tier } from "@/lib/shop";
+import { loadRates, useStars, type Rates, type Tier } from "@/lib/shop";
 
 type Stage = "fly" | "open" | "ready" | "closing";
 type Turn = { to: number; dir: 1 | -1 };
@@ -16,9 +16,12 @@ type Tap = (card: AlbumCard, linked: boolean, at: DOMRect) => void;
 
 /** The cover flies to the middle, then swings open; a page turns; a linked card flares before its sets open. */
 const FLY_MS = 460;
-const OPEN_MS = 900;
+const OPEN_MS = 1050;
 const CLOSE_MS = 220;
 const FLIP_MS = 640;
+
+/** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
+const COVER = { hinge: 0.273, top: 0.1354, bottom: 0.8646 };
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
@@ -83,6 +86,8 @@ export function AlbumBook({
   const [floats, setFloats] = useState<Float[]>([]);
   const book = useRef<HTMLDivElement>(null);
   const cover = useRef<HTMLSpanElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const stars = useStars();
   const swipe = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const timers = useRef<number[]>([]);
   const at = useRef(0);
@@ -100,7 +105,14 @@ export function AlbumBook({
   useLayoutEffect(() => {
     const el = cover.current;
     if (!from || !el || !book.current) return;
-    const to = book.current.getBoundingClientRect();
+    // The cover's board lands on the page block of the picture (its gutter at x 45, 745 wide, 1347 tall of 849×1851); the
+    // hinge of the cover is the spine's edge, so it swings open about the gutter like a real book (chủ game 08/11).
+    const fr = (frame.current ?? book.current).getBoundingClientRect();
+    const u = fr.width / 849;
+    const height = (1347 * u) / (COVER.bottom - COVER.top);
+    const width = height * 0.625;
+    const to = { left: fr.left + 45 * u - COVER.hinge * width, top: fr.top + 303 * u - COVER.top * height, width, height };
+    el.style.setProperty("--hinge", `${COVER.hinge * 100}%`);
     const place = (rect: { left: number; top: number; width: number; height: number }) => {
       el.style.left = `${rect.left}px`;
       el.style.top = `${rect.top}px`;
@@ -257,14 +269,18 @@ export function AlbumBook({
 
   return (
     <div className={`al-view is-${stage}`}>
+      <div ref={frame} className="al-frame">
       <header className="al-head">
-        <button type="button" className="cv-back" data-ui="soft" aria-label={tr("Trở về")} onClick={close}>
-          {"<<"}
-        </button>
+        <button type="button" className="cv-back" data-ui="soft" aria-label={tr("Trở về")} onClick={close} />
         <h2>{tr(albumTitle(album.id, album.name))}</h2>
         <span className={`al-tally${done ? " is-done" : ""}`} aria-label={tr("Số lá đã có")}>
           <CardsIcon />
-          {have}/{album.cards.length}
+          <b>
+            {have}/{album.cards.length}
+          </b>
+        </span>
+        <span className="al-stars" style={{ "--fit": Math.min(1, 3.2 / String(stars).length) } as CSSProperties}>
+          {stars}
         </span>
         {album.prize ? (
           <span className="al-head-prize">
@@ -279,7 +295,6 @@ export function AlbumBook({
       </div>
       <footer className="al-foot">
         <button type="button" className="al-arrow" data-ui="soft" aria-label={tr("Trang trước")} disabled={shown === 0 || !!turn || busy} onClick={() => go(-1)}>
-          <Chevron back />
         </button>
         <span className="al-dots" aria-label={`${shown + 1}/${pages.length}`}>
           {pages.map((_, page) => (
@@ -287,10 +302,16 @@ export function AlbumBook({
           ))}
         </span>
         <button type="button" className="al-arrow" data-ui="soft" aria-label={tr("Trang sau")} disabled={shown === pages.length - 1 || !!turn || busy} onClick={() => go(1)}>
-          <Chevron />
         </button>
       </footer>
-      {stage === "fly" || stage === "open" ? <AlbumCover ref={cover} album={album} done={done} clean className={`al-fly${stage === "open" ? " is-opening" : ""}`} /> : null}
+      </div>
+      {stage === "fly" || stage === "open" ? (
+        <span ref={cover} className={`al-fly${stage === "open" ? " is-opening" : ""}`}>
+          <img className="al-fly-front" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
+          <i className="al-fly-back" />
+          <i className="al-fly-shade" />
+        </span>
+      ) : null}
       {panel ? (
         <SetPanel opened={panel} owned={owned} claimed={claimed} sets={sets} albums={albums} onView={setSheet} onAsk={setAsk} onClaim={claim} onClose={() => setPanel(null)} />
       ) : null}
@@ -421,13 +442,5 @@ function Pocket({
       <span className="al-no">{formatNo(card.no)}</span>
       {linked ? <span className={`al-solo${lit ? " is-done" : ""}`} aria-hidden="true" /> : null}
     </button>
-  );
-}
-
-function Chevron({ back = false }: { back?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d={back ? "M15 4.5 7.5 12l7.5 7.5" : "M9 4.5 16.5 12 9 19.5"} />
-    </svg>
   );
 }

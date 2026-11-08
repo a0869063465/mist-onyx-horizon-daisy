@@ -13324,21 +13324,21 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .cx .al-shelf { position: absolute; inset: 0; padding: 0; overflow: visible; pointer-events: none; }
 .al-banner { display: none; }
 .al-row {
-  position: absolute; left: 0; right: 0; top: 19.14%; height: calc(100cqw * 560 / 848);
-  display: flex; align-items: flex-start; padding: 0 7.7cqw; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; pointer-events: auto;
-  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  position: absolute; left: 0; right: 0; top: 15.6%; height: calc(100cqw * 656 / 848);
+  display: flex; align-items: flex-start; padding: 0 0 0 calc(100cqw * 21 / 848); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; pointer-events: auto;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; --pill: 3.7%;
 }
 .al-row::-webkit-scrollbar { display: none; }
-.al-part.is-env .al-row { top: 54.3%; }
-.cx .al-item { position: relative; flex: none; width: calc(100cqw * 350 / 848); padding: 0; gap: 0; display: block; opacity: var(--edge, 1); }
+.al-part.is-env .al-row { top: 50.6%; --pill: 2.6%; }
+.cx .al-item { position: relative; flex: none; width: calc(100cqw * 410 / 848); margin-right: calc(100cqw * -25 / 848); padding: 0; gap: 0; display: block; opacity: var(--edge, 1); }
 .cx .al-item:active .al-cover { transform: none; }
-.cx .al-cover.is-book { width: 100%; aspect-ratio: 400 / 640; border-radius: 0; background: none; box-shadow: none; }
+.cx .al-cover.is-book { width: 100%; aspect-ratio: 480 / 768; border-radius: 0; background: none; box-shadow: none; }
 .cx .al-cover.is-book::before, .cx .al-cover.is-book::after { content: none; }
 .cx .al-cover.is-book.is-done { background: none; box-shadow: none; filter: drop-shadow(0 0 2.6cqw rgba(255, 200, 80, 0.55)); }
 .al-cover-book { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .cx .al-new { right: 3%; top: 3%; width: 6cqw; height: 6cqw; font-size: 4cqw; box-shadow: 0 0 0 0.35cqw #fff, 0 0 2cqw rgba(255, 40, 40, 0.85); }
 .al-prog {
-  position: absolute; left: 12%; width: 76%; bottom: 0.8%; height: 8.4%; display: flex; align-items: center; gap: 2.2%; padding: 0 5%;
+  position: absolute; left: 13%; width: 74%; bottom: var(--pill, 3%); height: 8.4%; display: flex; align-items: center; gap: 2.2%; padding: 0 5%;
   border-radius: 999px; border: 0.45cqw solid #3d6bd0;
   background: linear-gradient(180deg, #11245a, #081437);
   box-shadow: 0 0 1.6cqw rgba(70, 130, 255, 0.55), inset 0 0 1cqw rgba(0, 0, 0, 0.7);
@@ -13350,47 +13350,83 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-prog.is-done b { color: var(--cx-gold); }
 .al-item.is-soon { cursor: default; }
 
-/* ── Bên trong album (chủ game 08/11, theo ảnh album Yugi): nền xanh đậm, trang giấy da, lá khung vàng + bảng No.xxx, nút lật tròn viền vàng ── */
-.al-view::before {
-  background:
-    radial-gradient(100% 55% at 50% 38%, #12224f 0%, #0a1331 55%, #050a1c 100%);
+/* ── Bên trong album (chủ game 08/11): ảnh album Yugi của chủ game làm nền NGUYÊN (xoá lá, số, chữ rồi vẽ lại bằng code), mọi toạ độ theo đơn vị --u = 1 px của ảnh 849×1851 ── */
+.al-view { display: block; background: #050a1c; }
+.al-view::before { content: none; }
+.al-frame {
+  --cw: min(100vw, calc(100dvh * 849 / 1851)); --u: calc(var(--cw) / 849);
+  position: absolute; left: calc((100vw - var(--cw)) / 2); top: calc((100dvh - var(--cw) * 1851 / 849) / 2);
+  width: var(--cw); height: calc(var(--cw) * 1851 / 849);
+  background: url("/ui/col/inner.webp") 0 0 / 100% 100% no-repeat; animation: al-in 0.24s ease-out both;
 }
-.al-view .al-head h2 { font-family: "Cinzel", "Trajan Pro", "Times New Roman", serif; font-size: 1.7rem; letter-spacing: 0.02em; color: #ffd978; text-shadow: 0 0 0.7rem rgba(255, 190, 70, 0.4), 0 2px 5px rgba(0, 0, 0, 0.9); position: relative; padding-bottom: 0.35rem; }
-.al-view .al-head h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 7.5rem; height: 2px; background: linear-gradient(90deg, transparent, #f1c25a 20%, #ffe9a6 50%, #f1c25a 80%, transparent); border-radius: 2px; }
-.al-view .cv-back {
-  width: 2.9rem; height: 2.9rem; flex: none; border-radius: 50%; padding: 0; border: 0.14rem solid #e7b84e; color: #ffd978; font-weight: 800;
-  background: radial-gradient(circle at 40% 30%, #1d3270, #0a1536 75%); box-shadow: 0 0 0.9rem rgba(255, 190, 70, 0.45), inset 0 0 0.5rem rgba(0, 0, 0, 0.6);
+.al-view .al-head { position: absolute; inset: 0; padding: 0; display: block; pointer-events: none; }
+.al-view .al-head > * { pointer-events: auto; }
+.al-view .cv-back { position: absolute; left: calc(37 * var(--u)); top: calc(105 * var(--u)); width: calc(90 * var(--u)); height: calc(90 * var(--u)); border: 0; border-radius: 50%; background: none; box-shadow: none; }
+.al-view .al-head h2 {
+  position: absolute; left: calc(160 * var(--u)); top: calc(112 * var(--u)); width: calc(320 * var(--u)); height: calc(78 * var(--u)); margin: 0; padding: 0; display: flex; align-items: center;
+  font: 800 calc(66 * var(--u)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; letter-spacing: 0.01em; text-transform: none;
+  background: linear-gradient(180deg, #ffe9a6 0%, #f2c15a 55%, #c98a2c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 0 calc(7 * var(--u)) rgba(255, 190, 70, 0.45));
 }
+.al-view .al-head h2::after { content: none; }
 .al-view .al-tally {
-  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.38rem 1.1rem; border-radius: 999px; border: 0.12rem solid #e7b84e;
-  background: linear-gradient(180deg, #0d1a45, #060d26); color: #fff; font: 800 1.15rem / 1 "Roboto", system-ui, sans-serif;
-  box-shadow: 0 0 0.8rem rgba(255, 190, 70, 0.35), inset 0 0 0.5rem rgba(0, 0, 0, 0.6);
+  position: absolute; left: calc(520 * var(--u)); top: calc(133 * var(--u)); width: calc(160 * var(--u)); height: calc(38 * var(--u)); padding: 0; gap: calc(14 * var(--u));
+  display: flex; align-items: center; justify-content: center; border: 0; background: none; box-shadow: none; color: #f3d48a;
+  font: 800 calc(40 * var(--u)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif;
 }
-.al-view .al-tally.is-done { color: #ffe9a6; }
-.al-view .al-tally svg { width: 1.15rem; height: 1.15rem; color: #e8f0ff; }
+.al-view .al-tally b { font: inherit; }
+.al-view .al-tally svg { width: calc(34 * var(--u)); height: calc(34 * var(--u)); color: #f3d48a; }
+.al-view .al-tally.is-done { color: #fff0b0; }
+.al-stars {
+  position: absolute; left: calc(764 * var(--u)); top: calc(137 * var(--u)); width: calc(36 * var(--u)); height: calc(30 * var(--u)); display: flex; align-items: center; justify-content: center;
+  font: 800 calc(31 * var(--u) * var(--fit, 1)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; color: #f6d77f; overflow: visible; white-space: nowrap;
+}
+.al-view .al-head-prize { position: absolute; left: calc(300 * var(--u)); top: calc(122 * var(--u)); margin: 0; }
+.al-view.is-fly .al-head, .al-view.is-fly .al-foot { opacity: 0; }
+/* the page block of the picture, where the leaves turn */
+.al-view .al-stage { position: absolute; left: calc(52 * var(--u)); top: calc(332 * var(--u)); width: calc(726 * var(--u)); height: calc(1250 * var(--u)); padding: 0; display: block; container-type: normal; touch-action: none; }
+.al-view .al-book { position: absolute; inset: 0; width: auto; aspect-ratio: auto; container-type: normal; perspective: 2400px; }
+.al-view .al-leaf { transform-origin: left center; }
 .al-view .al-page {
-  border-radius: 1.2cqw 1.6cqw 1.6cqw 1.2cqw;
-  background:
-    radial-gradient(120% 90% at 50% 40%, rgba(255, 244, 214, 0.35), rgba(120, 80, 30, 0.22) 100%),
-    linear-gradient(165deg, #dcc08e 0%, #cfae78 55%, #bf9a62 100%);
-  box-shadow: 0 0 0 0.55cqw #4a3a22, 1.2cqw 0 0 0.55cqw #14234f, 1.2cqw 0 0 0.9cqw #c79b3c, 0 2.4cqw 6cqw rgba(0, 0, 0, 0.7), inset 0 0 5cqw rgba(110, 70, 20, 0.45);
+  border-radius: 0; box-shadow: none;
+  background: url("/ui/col/inner.webp") calc(-52 * var(--u)) calc(-332 * var(--u)) / calc(849 * var(--u)) calc(1851 * var(--u)) no-repeat;
 }
-.al-view .al-page::before { width: 4cqw; background: linear-gradient(90deg, rgba(60, 38, 12, 0.5), rgba(60, 38, 12, 0)); border-radius: 1.2cqw 0 0 1.2cqw; box-shadow: none; }
-.al-view .al-page::after { content: none; }
-.al-view .al-pockets { inset: 5cqw 3.2cqw 2.4cqw 3.6cqw; gap: 4.4cqw 2.2cqw; }
-.al-view .al-slot { background: none; box-shadow: none; }
+.al-view .al-page::before, .al-view .al-page::after { content: none; }
+.al-view .al-pockets { inset: 0; padding: calc(36 * var(--u)) 0 0 calc(32 * var(--u)); gap: calc(38 * var(--u)) calc(30.3 * var(--u)); grid-template-columns: repeat(4, calc(149 * var(--u))); align-content: start; font-size: calc(10 * var(--u)); }
+.al-view .al-slot { aspect-ratio: 149 / 232; border-radius: 0; background: none; box-shadow: none; }
 .al-view .al-slot::after { content: none; }
+.al-view .al-slot > .al-pic { inset: 0; }
 .al-view .al-pocket.is-blank .al-slot { background: none; }
 .al-view .al-no {
-  margin: 0.9cqw 6% 0; padding: 0.9cqw 0; border-radius: 0.8cqw; border: 0.3cqw solid #b98a35;
-  background: linear-gradient(180deg, #14224d, #0a1230); box-shadow: 0 0 0 0.25cqw rgba(0, 0, 0, 0.55);
-  font-family: "Roboto Condensed", "Be Vietnam Pro", system-ui, sans-serif; font-size: 3.1cqw; font-weight: 800; letter-spacing: 0.02em; color: #f3dca0;
+  width: 98%; height: calc(40 * var(--u)); margin: calc(-3 * var(--u)) auto 0; padding: 0; display: flex; align-items: center; justify-content: center;
+  border-radius: calc(5 * var(--u)); border: calc(2 * var(--u)) solid #b98a35; background: linear-gradient(180deg, #14224d, #0a1230); box-shadow: 0 0 0 calc(1.5 * var(--u)) rgba(0, 0, 0, 0.55);
+  font: 800 calc(25 * var(--u)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; letter-spacing: 0.02em; color: #f3dca0;
 }
 .al-view .al-pocket.is-missing .al-no { color: #c9bd9c; }
-.al-view .al-arrow { width: 3.3rem; height: 3.3rem; border: 0.14rem solid #e7b84e; background: radial-gradient(circle at 40% 30%, #1d3270, #0a1536 75%); box-shadow: 0 0 0.9rem rgba(255, 190, 70, 0.4), inset 0 0 0.5rem rgba(0, 0, 0, 0.6); }
-.al-view .al-arrow svg { stroke: #ffd978; }
-.al-view .al-dots i { background: #34456f; }
-.al-view .al-dots i.on { background: #ffc23a; box-shadow: 0 0 8px rgba(255, 190, 60, 0.8); }
-.al-view .al-book { width: min(100cqw, 100cqh * 0.58); aspect-ratio: 0.58; }
-.al-view .al-pockets { inset: 4.4cqw 3.4cqw 2cqw 4cqw; gap: 3.3cqw 2.2cqw; }
-.al-cover-book { object-fit: contain; }
+.al-view .al-foot { position: absolute; inset: 0; padding: 0; display: block; pointer-events: none; }
+.al-view .al-arrow {
+  position: absolute; top: calc(1683 * var(--u)); width: calc(108 * var(--u)); height: calc(108 * var(--u)); padding: 0; border: 0; border-radius: 50%; background: none; box-shadow: none; pointer-events: auto;
+}
+.al-view .al-arrow:first-child { left: calc(196 * var(--u)); }
+.al-view .al-arrow:last-child { left: calc(541 * var(--u)); }
+.al-view .al-arrow:disabled { opacity: 1; background: radial-gradient(circle, rgba(5, 10, 28, 0.62) 0 62%, transparent 66%); }
+.al-view .al-dots { position: absolute; left: calc(375 * var(--u)); width: calc(100 * var(--u)); top: calc(1725 * var(--u)); gap: calc(16 * var(--u)); justify-content: center; min-width: 0; }
+.al-view .al-dots i { width: calc(18 * var(--u)); height: calc(18 * var(--u)); background: #34456f; box-shadow: none; }
+.al-view .al-dots i.on { background: #ffc23a; box-shadow: 0 0 calc(10 * var(--u)) rgba(255, 190, 60, 0.85); transform: none; }
+
+/* The cover from the shelf lands on the book, then swings open about the spine (its hinge), the inside of the cover showing as it turns. */
+.al-fly { position: fixed; z-index: 4; display: block; --hinge: 27.3%; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; backface-visibility: visible; pointer-events: none; transform: perspective(3600px) rotateY(0deg); }
+.al-fly > * { position: absolute; display: block; }
+.al-fly-front { inset: 0; width: 100%; height: 100%; backface-visibility: hidden; }
+.al-fly-back {
+  left: var(--hinge); right: 10.8%; top: 13.5%; bottom: 13.5%; backface-visibility: hidden; transform: rotateY(180deg);
+  border-radius: 0 3% 3% 0 / 0 2% 2% 0;
+  background: radial-gradient(120% 80% at 55% 40%, #223a7c, #101c46 70%, #0a1230), #101c46;
+  box-shadow: inset 0 0 0 calc(5px) #7a5a20, inset 0 0 0 calc(7px) #d9a73f, inset 0 0 40px rgba(0, 0, 0, 0.6);
+}
+.al-fly-shade { inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 60%); opacity: 0; backface-visibility: hidden; }
+.al-fly.is-flying {
+  transition: left 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), top 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), height 0.46s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.al-fly.is-opening { transform: perspective(3600px) rotateY(-180deg); transition: transform 1.05s cubic-bezier(0.5, 0.05, 0.3, 1), opacity 0.25s ease-in 0.82s; opacity: 0; }
+.al-fly.is-opening .al-fly-shade { animation: al-cover-shade 1.05s ease-in-out both; }
+@keyframes al-cover-shade { 0% { opacity: 0; } 45% { opacity: 0.55; } 50%, 100% { opacity: 0; } }
