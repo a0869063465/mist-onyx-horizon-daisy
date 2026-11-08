@@ -13391,17 +13391,23 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   background: url("/ui/col/inner.webp") calc(-52 * var(--u)) calc(-332 * var(--u)) / calc(849 * var(--u)) calc(1851 * var(--u)) no-repeat;
 }
 .al-view .al-page::before, .al-view .al-page::after { content: none; }
-.al-view .al-pockets { inset: 0; padding: calc(36 * var(--u)) 0 0 calc(32 * var(--u)); gap: calc(38 * var(--u)) calc(30.3 * var(--u)); grid-template-columns: repeat(4, calc(149 * var(--u))); align-content: start; font-size: calc(10 * var(--u)); }
+.al-view .al-pockets { inset: 0; padding: calc(36 * var(--u)) 0 0 calc(32 * var(--u)); gap: calc(40 * var(--u)) calc(30.3 * var(--u)); grid-template-columns: repeat(4, calc(149 * var(--u))); align-content: start; font-size: calc(10 * var(--u)); }
+/* A pocket is the frame and number plate cut from the owner's own picture (slot.webp), the card's art in its window. */
 .al-view .al-slot { aspect-ratio: 149 / 232; border-radius: 0; background: none; box-shadow: none; }
-.al-view .al-slot::after { content: none; }
-.al-view .al-slot > .al-pic { inset: 0; }
+.al-view .al-slot::after {
+  content: ""; position: absolute; z-index: 3; left: calc(-6 * var(--u)); top: calc(-8 * var(--u)); width: calc(166 * var(--u)); height: calc(290 * var(--u)); inset: auto auto auto auto;
+  left: calc(-6 * var(--u)); top: calc(-8 * var(--u)); border-radius: 0; background: url("/ui/col/slot.webp") 0 0 / 100% 100% no-repeat; pointer-events: none;
+}
+.al-view .al-slot > .al-pic { position: absolute; inset: auto; left: calc(7 * var(--u)); top: calc(5 * var(--u)); width: calc(138 * var(--u)); height: calc(222 * var(--u)); aspect-ratio: auto; z-index: 1; }
+.al-view .al-slot .al-pic-art { inset: 0; border-radius: 0; }
+.al-view .al-slot .al-pic-frame { display: none; }
 .al-view .al-pocket.is-blank .al-slot { background: none; }
 .al-view .al-no {
-  width: 98%; height: calc(40 * var(--u)); margin: calc(-3 * var(--u)) auto 0; padding: 0; display: flex; align-items: center; justify-content: center;
-  border-radius: calc(5 * var(--u)); border: calc(2 * var(--u)) solid #b98a35; background: linear-gradient(180deg, #14224d, #0a1230); box-shadow: 0 0 0 calc(1.5 * var(--u)) rgba(0, 0, 0, 0.55);
-  font: 800 calc(25 * var(--u)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; letter-spacing: 0.02em; color: #f3dca0;
+  position: relative; z-index: 4; width: 100%; height: calc(30 * var(--u)); margin: calc(8 * var(--u)) 0 0; padding: 0; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+  font: 700 calc(23 * var(--u)) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; letter-spacing: 0.02em; color: #f4e1a6; text-shadow: 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.7);
 }
-.al-view .al-pocket.is-missing .al-no { color: #c9bd9c; }
+.al-view .al-pocket.is-missing .al-no { color: #d8c690; }
 .al-view .al-foot { position: absolute; inset: 0; padding: 0; display: block; pointer-events: none; }
 .al-view .al-arrow {
   position: absolute; top: calc(1683 * var(--u)); width: calc(108 * var(--u)); height: calc(108 * var(--u)); padding: 0; border: 0; border-radius: 50%; background: none; box-shadow: none; pointer-events: auto;
