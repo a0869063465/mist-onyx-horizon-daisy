@@ -22,6 +22,13 @@ export function AlbumPic({ id, missing = false, vault = false }: { id: string; m
 /** The books drawn for the shelf (name on the plaque) and for opening (the same without the name); `soon` = no cards yet. */
 export const BOOKS = new Set(["nui", "bong-toi", "thao-nguyen", "rung-ram", "dat-da", "bien-sau", "cu-dia-may-moc", "thanh-dia-thien-su", "nui-dung-nham", "vuong-quoc", "phep", "yugi", "joey"]);
 
+/** Where each book's body sits across its 480-wide picture (left and right edge), measured from the pictures. */
+export const BOOK_X: Record<string, [number, number]> = {
+  "bien-sau": [0.098, 0.894], "bong-toi": [0.108, 0.929], "cu-dia-may-moc": [0.106, 0.915], "dat-da": [0.094, 0.906], joey: [0.106, 0.915],
+  "nui-dung-nham": [0.106, 0.929], nui: [0.117, 0.883], phep: [0.104, 0.912], "rung-ram": [0.108, 0.894], "thanh-dia-thien-su": [0.1, 0.9],
+  "thao-nguyen": [0.104, 0.915], "vuong-quoc": [0.096, 0.9], yugi: [0.102, 0.898],
+};
+
 /** What the book says on its plaque: the album's name. */
 export function albumTitle(_id: string, name: string): string {
   return name;
@@ -36,6 +43,21 @@ export function AlbumCover({ album, done, clean = false, className = "", ref }: 
   return (
     <span ref={ref} className={`al-cover is-book${done ? " is-done" : ""}${className ? ` ${className}` : ""}`}>
       {src ? <img className="al-cover-book" src={src} alt={tr(album.name)} draggable={false} /> : null}
+    </span>
+  );
+}
+
+/**
+ * A card as it stands in the album: the art in the window of the owner's own frame (`slot.webp`) with its number on the
+ * plate, so the group panel looks like the pages (chủ game 08/11). Sized by its container's width.
+ */
+export function SlotCard({ id, no, missing = false }: { id: string; no?: string; missing?: boolean }) {
+  const art = monsterCard(id) ? artSrc(id, 1) : spellSrc(id);
+  return (
+    <span className={`slot-card${missing ? " is-missing" : ""}`}>
+      <span className="slot-card-art" style={{ backgroundImage: `url(${art})` }} />
+      <img className="slot-card-frame" src="/ui/col/slot.webp" alt="" draggable={false} />
+      {no ? <b className="slot-card-no">{no}</b> : null}
     </span>
   );
 }

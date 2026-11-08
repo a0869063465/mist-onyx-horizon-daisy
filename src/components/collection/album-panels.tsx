@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { AlbumPic } from "@/components/collection/album-parts";
+import { AlbumPic, SlotCard } from "@/components/collection/album-parts";
 import { albumOf, cardName, exchangePrice, formatNo, rarityOf, setReward, setsOf, type Album, type CardSet } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
 import { useStars } from "@/lib/shop";
@@ -218,7 +218,7 @@ export function SetPanel({
         </button>
         <div className="al-panel-top">
           <span className="al-panel-pic">
-            <AlbumPic id={id} missing={!owned.has(id)} />
+            <SlotCard id={id} no={self.no ? formatNo(self.no) : undefined} missing={!owned.has(id)} />
           </span>
           <div className="al-panel-info">
             <h3>{tr(cardName(id))}</h3>
@@ -257,8 +257,7 @@ export function SetPanel({
                       aria-label={tr(cardName(card))}
                       onClick={() => onView(card)}
                     >
-                      <AlbumPic id={card} missing={!owned.has(card)} />
-                      <small>{at.no ? formatNo(at.no) : ""}</small>
+                      <SlotCard id={card} no={at.no ? formatNo(at.no) : undefined} missing={!owned.has(card)} />
                       <small>{tr(at.album)}</small>
                     </button>
                   );

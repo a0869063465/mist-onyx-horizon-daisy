@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumPic, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
+import { AlbumPic, BOOK_X, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
 import { FORMS, monsterCard } from "@/lib/catalog";
@@ -21,13 +21,14 @@ const CLOSE_MS = 220;
 const FLIP_MS = 640;
 
 /** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
-const COVER = { hinge: 0.12, left: 0.273, right: 0.965, top: 0.1354, bottom: 0.845 };
+const COVER = { top: 0.1354, bottom: 0.834 };
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
 const STAGGER_MS = 130;
 /** A swipe this far across turns the page. */
-const SWIPE_PX = 42;
+/** A page turns only after a long, flat swipe (chủ game 08/11: better to miss than to turn by mistake). */
+const swipeLength = () => Math.max(150, window.innerWidth * 0.4);
 
 const forms = new Set(FORMS.map((card) => card.id));
 const idsOf = (page: PageItem[]) => page.flatMap((item) => (item.type === "card" ? [item.card.id] : item.type === "set" ? item.cards.map((card) => card.id) : []));
@@ -109,12 +110,15 @@ export function AlbumBook({
     // hinge of the cover is the spine's edge, so it swings open about the gutter like a real book (chủ game 08/11).
     const fr = (frame.current ?? book.current).getBoundingClientRect();
     const u = fr.width / 849;
-    // The board covers the whole page block of the picture (x 45–835, y 300–1665 of 849×1851, edge of the pages
-    // included), and swings about the hinge, 2/5 deep in the spine (chủ game 08/11).
-    const width = (790 * u) / (COVER.right - COVER.left);
+    // Every book lands the same way (chủ game 08/11, from his picture): the front board's frame runs from 8,7% to 99,6% of the
+    // page width, the spine hangs out of the screen on the left; the board swings about a line 2/5 deep in the spine. Vertically it
+    // covers the page block of the picture (y 300–1665 of 1851).
+    const [bl, br] = BOOK_X[album.id] ?? [0.1, 0.9];
+    const spineEnd = bl + 0.263 * (br - bl);
+    const width = ((0.996 - 0.087) * fr.width) / (br - spineEnd);
     const height = (1365 * u) / (COVER.bottom - COVER.top);
-    const to = { left: fr.left + 45 * u - COVER.left * width, top: fr.top + 300 * u - COVER.top * height, width, height };
-    el.style.setProperty("--hinge", `${COVER.hinge * 100}%`);
+    const to = { left: fr.left + 0.087 * fr.width - spineEnd * width, top: fr.top + 300 * u - COVER.top * height, width, height };
+    el.style.setProperty("--hinge", `${(bl + 0.4 * (spineEnd - bl)) * 100}%`);
     const place = (rect: { left: number; top: number; width: number; height: number }) => {
       el.style.left = `${rect.left}px`;
       el.style.top = `${rect.top}px`;
@@ -196,7 +200,8 @@ export function AlbumBook({
 
   function tap(card: AlbumCard, linked: boolean, rect: DOMRect) {
     if (swipe.current?.moved || turn || burst || busy) return;
-    if (!linked) {
+    // Any card that belongs to a group (framed on the page, linked, or in a character album) opens its group (chủ game 08/11).
+    if (!linked && setsOf(card.id, sets).length === 0) {
       setSheet(card.id);
       return;
     }
@@ -243,7 +248,7 @@ export function AlbumBook({
     if (!start) return;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.2) go(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > swipeLength() && Math.abs(dx) > Math.abs(dy) * 2.2) go(dx < 0 ? 1 : -1);
   }
 
   const leaf = (page: number, kind: string) => (

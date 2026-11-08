@@ -13421,7 +13421,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* The cover from the shelf lands on the book, then its front board swings open about the hinge (2/5 deep in the spine). The coloured
    base under the board is the back cover: it stays lying on the page behind and does not turn (chủ game 08/11). */
-.al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; --cut: 84.5%; pointer-events: none; }
+.al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; --cut: 83.4%; pointer-events: none; }
 .al-fly > * { position: absolute; display: block; }
 .al-fly-base { inset: 0; width: 100%; height: 100%; clip-path: inset(var(--cut) 0 0 0); }
 .al-fly-spin { inset: 0; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; transform: perspective(3600px) rotateY(0deg); clip-path: none; }
@@ -13442,3 +13442,16 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-fly.is-opening .al-fly-shade { animation: al-cover-shade 1.05s ease-in-out both; }
 @keyframes al-base-out { to { opacity: 0; } }
 @keyframes al-cover-shade { 0% { opacity: 0; } 45% { opacity: 0.55; } 50%, 100% { opacity: 0; } }
+
+/* ── Trang nhóm (chủ game 08/11): lá dùng đúng khung + bảng số của trang album, bảng nền xanh đậm viền vàng như trang trong ── */
+.slot-card { position: relative; display: block; width: 100%; aspect-ratio: 166 / 290; }
+.slot-card-art { position: absolute; left: 7.8%; top: 4.5%; width: 83.1%; height: 76.6%; background: #0b0b0e center 20% / cover no-repeat; }
+.slot-card-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.slot-card-no { position: absolute; left: 0; right: 0; bottom: 3.6%; height: 10.5%; display: flex; align-items: center; justify-content: center; font: 700 clamp(0.62rem, 3.4cqw, 1.1rem) / 1 "Barlow Condensed", "Roboto Condensed", system-ui, sans-serif; letter-spacing: 0.02em; color: #f4e1a6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.slot-card.is-missing .slot-card-art { filter: grayscale(1) brightness(0.55); }
+.slot-card.is-missing .slot-card-no { color: #d8c690; }
+.al-panel { container-type: inline-size; background: radial-gradient(120% 80% at 50% 0%, #14265a, #0a1331 70%); border: 0.14rem solid #e7b84e; box-shadow: 0 0 1.4rem rgba(255, 190, 70, 0.3), 0 1rem 2rem rgba(0, 0, 0, 0.7); }
+.al-panel-pic { width: 30%; }
+.al-panel-card { container-type: inline-size; }
+.al-panel-card .slot-card { margin-bottom: 0.1rem; }
+.al-panel-card.is-self .slot-card { filter: drop-shadow(0 0 5px #79d4ff) drop-shadow(0 0 2px #79d4ff); }

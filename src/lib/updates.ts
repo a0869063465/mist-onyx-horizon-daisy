@@ -948,6 +948,7 @@ export const PENDING_NOTES: string[] = [
   "Album sưu tập: các cuốn sách cách xa nhau hơn và cùng độ cao, bỏ vuốt ngang đổi tab ở Bộ sưu tập, các nơi vuốt đổi tab khác phải vuốt dài hơn mới ăn. Bên trong album dùng đúng ảnh của bạn làm nền, bìa mở ra quay quanh gáy sách.",
   "Album sưu tập: bìa sách mở ra không còn mảng trong suốt, sửa lỗi ảnh album Rừng rậm bị cắt, các lá bên trong album dùng đúng khung và bảng số cắt từ ảnh của bạn.",
   "Album sưu tập: bìa sách bay vào giữa màn phủ kín cuốn sách rồi lật quanh gáy, đường lật nằm sâu khoảng 2/5 gáy, mở ra đúng trang giấy bên trong.",
+  "Album sưu tập: bìa mở ra khớp trái phải như ảnh cho mọi album, dải bìa sau đứng yên không lật, nhấp bất kỳ lá nào thuộc nhóm (cả album Yugi) đều hiện nhóm, trang nhóm dùng khung và bảng số như trang album, lật trang album phải vuốt ngang thật dài.",
 ];
 
 function remarkOf(notes: string[]) {
