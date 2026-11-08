@@ -13469,10 +13469,10 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .po-refund.is-copy { color: #9fe3ff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(80, 190, 255, 0.6); }
 /* Nhiều bản một lá (chủ game 08/11): ×n on the deck list row, copies in / copies allowed on the pool card. */
 .dk-row-count { margin-right: 0.3rem; padding: 0 0.3rem; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0.4rem; background: rgba(0, 0, 0, 0.35); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: #9a8f78; text-shadow: 0 1px 2px #000; -webkit-tap-highlight-color: transparent; }
-.dk-row-count.is-add { border-color: #ff9a2e; background: rgba(255, 140, 30, 0.22); color: #ff9a2e; text-shadow: 0 1px 2px #000, 0 0 6px rgba(255, 150, 40, 0.6); }
+.dk-row-count.is-add { border-color: var(--tone, #3ec6ff); background: color-mix(in srgb, var(--tone, #3ec6ff) 22%, transparent); color: color-mix(in srgb, var(--tone, #3ec6ff) 55%, #fff); text-shadow: 0 1px 2px #000, 0 0 6px var(--tone, #3ec6ff); }
 .dk-row-count.is-add:active { transform: scale(0.92); }
 .dk-tip-text em { font-style: normal; font-weight: 900; }
-.dk-tip-x { color: #ff9a2e; }
+.dk-tip-x { color: #6fd8ff; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
 .dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
 .dk-tip-r4 { color: #b45cff; }
 .dk-tip-sp { color: #ff4fa6; }

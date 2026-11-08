@@ -43,6 +43,7 @@ export function DeckRow({ id, kind, count = 1, canAdd = false, onAdd, off = fals
           <button
             type="button"
             className={`dk-row-count${canAdd ? " is-add" : ""}`}
+            style={{ "--tone": sort ? sort.tone : "#3ec6ff" } as CSSProperties}
             aria-label={tr("Thêm bản sao")}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
