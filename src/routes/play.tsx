@@ -8117,17 +8117,17 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
 /** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
 function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
   const stats = visibleStats(mon, allies);
-  const sheetSpots = sheetSpots();
+  const spotsNow = sheetSpots();
   const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
         className={`fstat is-${key}${value < 0 || cut ? " is-red" : blue ? " is-blue" : ""}`}
         style={{
-          left: `${sheetSpots[key].x}%`,
-          top: `${sheetSpots[key].y}%`,
-          fontSize: cardText(sheetSpots[key].size, "cqmin"),
-          width: `${sheetSpots[key].width}%`,
-          height: `${sheetSpots[key].height}%`,
+          left: `${spotsNow[key].x}%`,
+          top: `${spotsNow[key].y}%`,
+          fontSize: cardText(spotsNow[key].size, "cqmin"),
+          width: `${spotsNow[key].width}%`,
+          height: `${spotsNow[key].height}%`,
         }}
       >
         {value}
