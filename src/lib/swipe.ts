@@ -5,7 +5,7 @@ import { useMemo, useRef, type TouchEvent } from "react";
  * (dài ≥ 110 px, ngang gấp 2,6 lần dọc, dưới 0,7 giây; chủ game 08/11: bớt nhạy, vuốt dài mới ăn; chỉ vuốt đổi tab, vuốt đổi lá trong bảng `inside` giữ như cũ). Bỏ qua cú vuốt bắt đầu trên ô nhập, thanh trượt hoặc vùng có `data-noswipe`
  * (nơi có cử chỉ riêng như lật trang Album, cuộn lá). `go` trả `false` khi không còn tab để đổi: cú vuốt được giữ cho vùng bao ngoài xử lý.
  */
-export function useSwipe(go: (dir: 1 | -1) => boolean | void, inside = false) {
+export function useSwipe(go: (dir: 1 | -1) => boolean | void, inside = false, min?: () => number) {
   const start = useRef<{ x: number; y: number; t: number } | null>(null);
   const goRef = useRef(go);
   goRef.current = go;
@@ -25,7 +25,7 @@ export function useSwipe(go: (dir: 1 | -1) => boolean | void, inside = false) {
         if (!from || !touch) return;
         const dx = touch.clientX - from.x;
         const dy = touch.clientY - from.y;
-        if (Math.abs(dx) < (inside ? 56 : SWIPE_MIN) || Math.abs(dx) < Math.abs(dy) * (inside ? 1.7 : 2.6) || Date.now() - from.t > (inside ? 800 : 700)) return;
+        if (Math.abs(dx) < (inside ? 56 : min ? min() : SWIPE_MIN) || Math.abs(dx) < Math.abs(dy) * (inside ? 1.7 : 2.6) || Date.now() - from.t > (inside ? 800 : 700)) return;
         if (goRef.current(dx < 0 ? 1 : -1) !== false) event.stopPropagation();
       },
       onTouchCancel() {

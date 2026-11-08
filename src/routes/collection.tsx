@@ -5,6 +5,7 @@ import { CardVault } from "@/components/collection/card-vault";
 import { GlyphDefs } from "@/components/game/monster-sheet";
 import { tr, useLang } from "@/lib/i18n";
 import { useStars } from "@/lib/shop";
+import { stepTab, useSwipe } from "@/lib/swipe";
 
 export const Route = createFileRoute("/collection")({ component: CollectionPage });
 
@@ -18,11 +19,21 @@ function CollectionPage() {
   const [tab, setTab] = useState<"vault" | "album">("vault");
   const [booted, setBooted] = useState(false);
   useEffect(() => setBooted(true), []);
+  // Tab swipe is back, but only after a very long one (chủ game 08/11: better to miss than to switch by mistake).
+  const swipe = useSwipe(
+    (dir) => {
+      const next = stepTab<"vault" | "album">(["vault", "album"], tab, dir);
+      if (!next) return false;
+      setTab(next);
+    },
+    false,
+    () => Math.max(200, window.innerWidth * 0.5),
+  );
 
   return (
     <>
     <div className="cx-fill" aria-hidden="true" />
-    <main className={`cv cx is-${tab}`}>
+    <main className={`cv cx is-${tab}`} {...swipe}>
       <GlyphDefs />
       <Link to="/" className="cx-back" aria-label={tr("Trở về")} />
       <span className="cx-wallet" aria-label={tr("Sao của bạn")}>

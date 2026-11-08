@@ -26,9 +26,8 @@ const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
 const STAGGER_MS = 130;
-/** A swipe this far across turns the page. */
-/** A page turns only after a long, flat swipe (chủ game 08/11: better to miss than to turn by mistake). */
-const swipeLength = () => Math.max(150, window.innerWidth * 0.4);
+/** A swipe this far across turns the page (back to the original, chủ game 08/11). */
+const SWIPE_PX = 42;
 
 const forms = new Set(FORMS.map((card) => card.id));
 const idsOf = (page: PageItem[]) => page.flatMap((item) => (item.type === "card" ? [item.card.id] : item.type === "set" ? item.cards.map((card) => card.id) : []));
@@ -248,7 +247,7 @@ export function AlbumBook({
     if (!start) return;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    if (Math.abs(dx) > swipeLength() && Math.abs(dx) > Math.abs(dy) * 2.2) go(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.2) go(dx < 0 ? 1 : -1);
   }
 
   const leaf = (page: number, kind: string) => (

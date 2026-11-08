@@ -13423,8 +13423,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
    base under the board is the back cover: it stays lying on the page behind and does not turn (chủ game 08/11). */
 .al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; --cut: 83.4%; pointer-events: none; }
 .al-fly > * { position: absolute; display: block; }
-.al-fly-base { inset: 0; width: 100%; height: 100%; clip-path: inset(var(--cut) 0 0 0); }
-.al-fly-spin { inset: 0; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; transform: perspective(3600px) rotateY(0deg); clip-path: none; }
+.al-fly-base { inset: 0; width: 100%; height: 100%; clip-path: inset(var(--cut) 0 0 0); z-index: 2; }
+.al-fly-spin { z-index: 1; inset: 0; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; transform: perspective(3600px) rotateY(0deg); clip-path: none; }
 .al-fly-spin > * { position: absolute; display: block; }
 .al-fly-front { inset: 0; width: 100%; height: 100%; backface-visibility: hidden; clip-path: inset(0 0 calc(100% - var(--cut)) 0); }
 .al-fly-back {
