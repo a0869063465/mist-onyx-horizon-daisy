@@ -55,6 +55,7 @@ function DeckPage() {
   // Where the open sheet came from: a swipe on it steps through that list (the pool, or the deck's own list).
   const sheetFrom = useRef<"pool" | "list">("pool");
   const [naming, setNaming] = useState<string | null>(null);
+  const [fullPing, setFullPing] = useState(0);
   // Height of the keyboard (visual viewport), so the name box sits right above it, top left (chủ game 08/11).
   const [kb, setKb] = useState(0);
   useEffect(() => {
@@ -140,6 +141,11 @@ function DeckPage() {
 
   function addCard(pick: Pick) {
     if (!canUseCard(pick.id)) return;
+    // A full deck: the tip jumps up to say so, again at every try (chủ game 08/11).
+    if (deck.monsters.length + deck.spells.length >= DECK_SIZE) {
+      setFullPing((n) => n + 1);
+      return;
+    }
     setDeck((current) => {
       const total = current.monsters.length + current.spells.length;
       if (total >= DECK_SIZE) return current;
@@ -484,7 +490,7 @@ function DeckPage() {
               </button>
             ) : null}
           </label>
-          <DragTip />
+          <DragTip full={deck.monsters.length + deck.spells.length >= DECK_SIZE} ping={fullPing} />
           {/* Row 1: Quái, Phép. Row 2: Thống kê, Lọc, Lưu; Lưu sits right above Đổi hình nền (owner, 18/10). */}
           <div className="dk-pad">
             <div className="dk-tools is-main">
@@ -588,7 +594,7 @@ function DeckPage() {
  */
 const TIP_KEY = "clash-deck-tip";
 
-function DragTip() {
+function DragTip({ full, ping }: { full: boolean; ping: number }) {
   // Page 0 how to move cards; page 1 (tap the line) how the x1 / x2 on the right of a row adds copies; tap again to sink it.
   const [page, setPage] = useState(0);
   const [sunk, setSunk] = useState(false);
@@ -599,6 +605,22 @@ function DragTip() {
       // Shown by default.
     }
   }, []);
+  // Full deck (page 3): shown at once when the deck fills and at every further try; back to page 0 when it is no longer full.
+  useEffect(() => {
+    if (ping > 0 && full) {
+      setSunk(false);
+      setPage(3);
+    }
+  }, [ping, full]);
+  const wasFull = useRef(false);
+  useEffect(() => {
+    if (full && !wasFull.current) {
+      setSunk(false);
+      setPage(3);
+    }
+    if (!full && page === 3) setPage(0);
+    wasFull.current = full;
+  }, [full]);
   function keep(value: boolean) {
     try {
       localStorage.setItem(TIP_KEY, value ? "sunk" : "up");
@@ -611,6 +633,8 @@ function DragTip() {
       setSunk(false);
       setPage(0);
       keep(false);
+    } else if (page === 3) {
+      setPage(0);
     } else if (page < 2) {
       setPage(page + 1);
     } else {
@@ -620,13 +644,17 @@ function DragTip() {
   }
   return (
     <button type="button" className={`dk-tip${sunk ? " is-sunk" : ""}`} aria-expanded={!sunk} onClick={flip}>
-      <span className="dk-tip-text" key={page}>
+      <span className={`dk-tip-text${page === 3 ? " is-full" : ""}`} key={`${page}-${page === 3 ? ping : 0}`}>
         <i className="dk-tip-mark" aria-hidden="true">
           ?
         </i>
         {page === 0 ? (
           <span>
             <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+          </span>
+        ) : page === 3 ? (
+          <span>
+            <b>{tr("Bộ bài")}</b> {tr("đã")} <em className="dk-tip-full">{tr("Full số lá")}</em>
           </span>
         ) : page === 1 ? (
           <span>
