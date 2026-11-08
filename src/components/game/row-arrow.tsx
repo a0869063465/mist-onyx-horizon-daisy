@@ -55,7 +55,7 @@ export function RowArrow({ row, off = false, onPick }: { row: SummonRow; off?: b
             <path d={d} />
           </clipPath>
         </defs>
-        <path d={d} fill={`url(#${id}-gold)`} stroke={row === "front" ? "#4a0c08" : "#0a2547"} strokeWidth="3.2" strokeLinejoin="round" />
+        <path d={d} fill={`url(#${id}-gold)`} stroke="#ffffff" strokeWidth="3.2" strokeLinejoin="round" />
         <g clipPath={`url(#${id}-in)`}>
           <rect x="-34" y="-38" width="68" height="76" fill={`url(#${id}-gloss)`} />
           <path d={d} fill="none" stroke="#ffffff" strokeOpacity="0.55" strokeWidth="2" strokeLinejoin="round" transform="scale(0.8)" />
