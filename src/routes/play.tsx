@@ -1935,6 +1935,26 @@ function PlayPage() {
       setHint({ targets: [".hand.is-strip", ".medal-act"], body: <p>Bạn không có quái {one} nào trên tay.<br />Hãy bấm chuyển</p> });
     }
   }
+  /**
+   * Lượt đầu, chưa rút bài (chủ game 08/11): bấm liên tục 5-6 lần mà không có việc chủ động nào xen vào (xem thông tin,
+   * rút bài) là thao tác bất lực: hiện hướng dẫn chỉ phải rút bài.
+   */
+  const helpless = useRef({ n: 0, at: 0 });
+  function helplessTap(deliberate: boolean) {
+    const now = Date.now();
+    const run = helpless.current;
+    if (deliberate || now - run.at > 5000) run.n = 0;
+    if (deliberate) return;
+    run.at = now;
+    run.n += 1;
+    if (run.n < 5) return;
+    if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1 || hint) return;
+    const mine = duel.players[viewer];
+    if (mine.draws >= 1 || pileLeft(mine) < 1) return;
+    run.n = 0;
+    // After the finger is up, so the click of this same touch does not land on the new overlay and close it.
+    window.setTimeout(() => setHint({ targets: [".face-pile"], body: <p>Hãy rút bài đã.<br />Bấm vào <b className="hint-sum">xấp bài</b> để rút.</p> }), 450);
+  }
   /** Thiếu sao (không phải chuyện rút bài): bảng mana cần thêm. */
   function stuckHint(cardStars: number) {
     if (!duel || !hintOk()) return;
@@ -5888,6 +5908,7 @@ function PlayPage() {
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
+          helplessTap(Boolean(inspect) || Boolean((event.target as HTMLElement).closest(".face-pile")));
           startPress(event);
           // A touch anywhere but the hand puts the picked card back.
           if (!(event.target as HTMLElement).closest(".hand, .hand-acts, .row-arrows")) setHandPick(null);
