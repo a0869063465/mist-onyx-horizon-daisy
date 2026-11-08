@@ -21,7 +21,7 @@ const CLOSE_MS = 220;
 const FLIP_MS = 640;
 
 /** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
-const COVER = { hinge: 0.273, top: 0.1354, bottom: 0.8646 };
+const COVER = { hinge: 0.12, left: 0.273, right: 0.965, top: 0.1354, bottom: 0.8646 };
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
@@ -109,9 +109,11 @@ export function AlbumBook({
     // hinge of the cover is the spine's edge, so it swings open about the gutter like a real book (chủ game 08/11).
     const fr = (frame.current ?? book.current).getBoundingClientRect();
     const u = fr.width / 849;
-    const height = (1347 * u) / (COVER.bottom - COVER.top);
-    const width = height * 0.625;
-    const to = { left: fr.left + 45 * u - COVER.hinge * width, top: fr.top + 303 * u - COVER.top * height, width, height };
+    // The board covers the whole page block of the picture (x 45–835, y 300–1665 of 849×1851, edge of the pages
+    // included), and swings about the hinge, 2/5 deep in the spine (chủ game 08/11).
+    const width = (790 * u) / (COVER.right - COVER.left);
+    const height = (1365 * u) / (COVER.bottom - COVER.top);
+    const to = { left: fr.left + 45 * u - COVER.left * width, top: fr.top + 300 * u - COVER.top * height, width, height };
     el.style.setProperty("--hinge", `${COVER.hinge * 100}%`);
     const place = (rect: { left: number; top: number; width: number; height: number }) => {
       el.style.left = `${rect.left}px`;

@@ -13420,11 +13420,11 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-view .al-dots i.on { background: #ffc23a; box-shadow: 0 0 calc(10 * var(--u)) rgba(255, 190, 60, 0.85); transform: none; }
 
 /* The cover from the shelf lands on the book, then swings open about the spine (its hinge), the inside of the cover showing as it turns. */
-.al-fly { position: fixed; z-index: 4; display: block; --hinge: 27.3%; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; backface-visibility: visible; pointer-events: none; transform: perspective(3600px) rotateY(0deg); }
+.al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; backface-visibility: visible; pointer-events: none; transform: perspective(3600px) rotateY(0deg); }
 .al-fly > * { position: absolute; display: block; }
 .al-fly-front { inset: 0; width: 100%; height: 100%; backface-visibility: hidden; }
 .al-fly-back {
-  left: var(--hinge); right: 10.8%; top: 13.5%; bottom: 13.5%; backface-visibility: hidden; transform: rotateY(180deg);
+  left: 27.3%; right: 3.5%; top: 13.54%; bottom: 13.54%; backface-visibility: hidden; transform: rotateY(180deg);
   border-radius: 0 3% 3% 0 / 0 2% 2% 0;
   background: radial-gradient(120% 80% at 55% 40%, #223a7c, #101c46 70%, #0a1230), #101c46;
   box-shadow: inset 0 0 0 calc(5px) #7a5a20, inset 0 0 0 calc(7px) #d9a73f, inset 0 0 40px rgba(0, 0, 0, 0.6);

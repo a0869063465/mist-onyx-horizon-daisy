@@ -947,6 +947,7 @@ export const PENDING_NOTES: string[] = [
   "Album sưu tập có nền mới, sách mới trên kệ (Yugi, Phép, Joey sắp có; Núi, Bóng tối, Thảo nguyên, Rừng rậm, Đất đá, Biển sâu, Cứ địa máy móc, Thánh địa, Dung nham, Vương đô sắp có), hai cuốn rõ, cuốn thứ ba mờ dần. Màn thấp thu cả trang cho vừa, vào game tự bung toàn màn hình khi chạm lần đầu, mở album có lại hiệu ứng bay và lật bìa, bên trong album làm lại trang giấy da.",
   "Album sưu tập: các cuốn sách cách xa nhau hơn và cùng độ cao, bỏ vuốt ngang đổi tab ở Bộ sưu tập, các nơi vuốt đổi tab khác phải vuốt dài hơn mới ăn. Bên trong album dùng đúng ảnh của bạn làm nền, bìa mở ra quay quanh gáy sách.",
   "Album sưu tập: bìa sách mở ra không còn mảng trong suốt, sửa lỗi ảnh album Rừng rậm bị cắt, các lá bên trong album dùng đúng khung và bảng số cắt từ ảnh của bạn.",
+  "Album sưu tập: bìa sách bay vào giữa màn phủ kín cuốn sách rồi lật quanh gáy, đường lật nằm sâu khoảng 2/5 gáy, mở ra đúng trang giấy bên trong.",
 ];
 
 function remarkOf(notes: string[]) {
