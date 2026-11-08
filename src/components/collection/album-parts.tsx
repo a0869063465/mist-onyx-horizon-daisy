@@ -29,6 +29,16 @@ export const BOOK_X: Record<string, [number, number]> = {
   "thao-nguyen": [0.104, 0.915], "vuong-quoc": [0.096, 0.9], yugi: [0.102, 0.898],
 };
 
+/**
+ * Where the front board ends and the glowing base begins, per book, as a fraction of its 768-tall picture (chủ game
+ * 08/11): just under the gold bottom line of that book's frame (measured on each picture). The board turns; what lies
+ * below (page edge, glowing strip) is the base and stays put.
+ */
+export const COVER_CUT: Record<string, number> = {
+  "bien-sau": 0.8203, "bong-toi": 0.8112, "cu-dia-may-moc": 0.8177, "dat-da": 0.8086, joey: 0.8307, "nui-dung-nham": 0.8073, nui: 0.8034,
+  phep: 0.819, "rung-ram": 0.8034, "thanh-dia-thien-su": 0.8073, "thao-nguyen": 0.8203, "vuong-quoc": 0.8177, yugi: 0.832,
+};
+
 /** What the book says on its plaque: the album's name. */
 export function albumTitle(_id: string, name: string): string {
   return name;

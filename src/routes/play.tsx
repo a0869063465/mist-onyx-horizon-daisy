@@ -169,7 +169,7 @@ import {
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
-import { COUNT_MARKS, fieldSpots, sheetSpots, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
@@ -8117,7 +8117,7 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
 /** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
 function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
   const stats = visibleStats(mon, allies);
-  const spotsNow = sheetSpots();
+  const spotsNow = SHEET_SPOTS;
   const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
@@ -8138,7 +8138,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
     <span className="sheet-unit">
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
-        <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-sheet.png" alt="" draggable={false} />
         {spot("def", stats.def, stats.blueDef, fakeCut(mon, "def", stats.def))}
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}

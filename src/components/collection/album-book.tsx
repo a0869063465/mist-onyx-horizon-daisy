@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumPic, BOOK_X, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
+import { AlbumPic, BOOK_X, COVER_CUT, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
 import { FORMS, copyCap, monsterCard } from "@/lib/catalog";
@@ -22,6 +22,7 @@ const FLIP_MS = 640;
 
 /** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
 const COVER = { top: 0.1354, bottom: 0.834 };
+const coverCut = (id: string) => COVER_CUT[id] ?? COVER.bottom;
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
@@ -115,8 +116,10 @@ export function AlbumBook({
     const [bl, br] = BOOK_X[album.id] ?? [0.1, 0.9];
     const spineEnd = bl + 0.263 * (br - bl);
     const width = ((0.996 - 0.087) * fr.width) / (br - spineEnd);
-    const height = (1365 * u) / (COVER.bottom - COVER.top);
+    const cut = coverCut(album.id);
+    const height = (1365 * u) / (cut - COVER.top);
     const to = { left: fr.left + 0.087 * fr.width - spineEnd * width, top: fr.top + 300 * u - COVER.top * height, width, height };
+    el.style.setProperty("--cut", `${cut * 100}%`);
     el.style.setProperty("--hinge", `${(bl + 0.4 * (spineEnd - bl)) * 100}%`);
     const place = (rect: { left: number; top: number; width: number; height: number }) => {
       el.style.left = `${rect.left}px`;

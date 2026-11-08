@@ -955,6 +955,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng mô tả lá: thủ và thủ phép về chỗ cũ, công và máu hạ thấp xuống một chút. Lá phép bỏ icon tốc độ, chữ mô tả dùng màu như lá quái. Nút Nhận thưởng nhóm trong album cùng kiểu vàng tối với Xem và Đổi.",
   "Một bộ bài được mang nhiều bản cùng một lá: quái 1 sao tối đa 3 bản, quái 2 sao 2 bản, phép 0 mana 2 bản, lá khác 1 bản. Phải có đủ số bản. Mở gói, đổi sao, quà thư trùng lá thì thêm 1 bản tới đủ, quá thì hoàn 1 sao.",
   "Album sưu tập: lật trang thì khung lá, số No. và tranh đi cùng trang, không còn khung ở lại hay biến mất.",
+  "Bảng mô tả lá quái trở lại kiểu cũ, chỉ lá phép giữ khung màu như lá trên tay. Album sưu tập: mở album thì đế phát sáng dưới bìa đứng yên, chỉ bìa trước lật; chỗ cắt đo riêng từng album.",
 ];
 
 function remarkOf(notes: string[]) {
