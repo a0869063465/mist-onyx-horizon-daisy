@@ -13,7 +13,7 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 ## Đánh số việc (Vx)
 
 - Mỗi việc mới chủ game gửi, Claude gán số kế tiếp: V1, V2, V3… Số không tái dùng.
-- Bộ đếm hiện tại: **lần gán kế tiếp là V3**. Sau mỗi lần gán, tăng bộ đếm lên 1 và ghi vào bảng "Đang mở".
+- Bộ đếm hiện tại: **lần gán kế tiếp là V4**. Sau mỗi lần gán, tăng bộ đếm lên 1 và ghi vào bảng "Đang mở".
 - Các V cũ (V1–V8, V8A–D trong lịch sử) đã đóng, không dùng lại số.
 
 ## Trạng thái nhanh
@@ -37,6 +37,7 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 |---|---|---|
 | V1: Mô tả skill đổi màu thông minh (chủ game gửi 08/11) | Chờ làm rõ: skill nào, đổi màu theo gì (từ khoá, loại, mức) | Chưa chốt |
 | V2: Mô tả màu thông minh, sau đó sắp xếp lại thông minh bằng AI (chủ game gửi 08/11) | Chờ làm rõ: phạm vi mô tả, tiêu chí sắp xếp, AI dùng để làm gì (phân loại lúc chạy hay công cụ ghi) | Chưa chốt |
+| V3: Tuỳ tình huống bị thiếu công cụ mà tạo bài (chủ game gửi 08/11) | Chỉ ghi nhận, chưa phân tích | — |
 | Album: lề trái còn lộ trang trước; sách "Đất Hoang" nâu chưa dùng | Chờ chủ game chọn chỗ dùng | Sonnet 5.5 medium |
 | Album: chữ tiếng Anh "Theo nhân vật/môi trường", "Sắp có" chưa dịch; trang mô tả lá chưa đổi kiểu | Chưa làm | Sonnet 5.5 low |
 | Album và toàn bộ giao diện mới: chưa thử điện thoại thật, màn rất ngắn/rất dài | Chưa kiểm | — |
