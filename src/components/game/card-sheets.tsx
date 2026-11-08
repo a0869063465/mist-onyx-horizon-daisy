@@ -6,7 +6,7 @@ import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/compon
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
-import { fieldSpots, loadSpellHand, type FieldKey } from "@/lib/layouts";
+import { sheetSpots, loadSpellHand, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
@@ -59,11 +59,10 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
     rim: `sp-${kind.key}`,
     ring: kind.tone,
     deep: "#14101c",
-    speed: spellSpeed(id) ? `/ui/speed-${spellSpeed(id)}.webp` : undefined,
     body: (
       <>
-        <p className="ink-spell">
-          <CopyText text={spell?.effect ?? ""} />
+        <p>
+          <CopyText text={spell?.effect ?? ""} firstTitle={false} inked />
         </p>
         {note ? <p className="msheet-note">{tr(note)}</p> : null}
       </>
@@ -75,7 +74,7 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
 export function FieldFace({ id }: { id: string }) {
   const card = monsterCard(id);
   if (!card) return null;
-  const layout = fieldSpots();
+  const layout = sheetSpots();
   const spot = (key: FieldKey, value: number) =>
     value === 0 ? null : (
       <span

@@ -567,6 +567,18 @@ export function saveMenuIcons(layout: Record<MenuIconKey, MenuIcon>) {
   localStorage.setItem(MENU_ICON_KEY, JSON.stringify(layout));
 }
 
+/** The sheet's card (chủ game 08/11): the field's frame and figures, but def and mdef where they were, atk and hp a little lower. */
+export function sheetSpots(): Record<FieldKey, FieldSpot> {
+  const f = fieldSpots();
+  return {
+    ...f,
+    def: SHEET_SPOTS.def,
+    mdef: SHEET_SPOTS.mdef,
+    atk: { ...f.atk, y: f.atk.y + 1.6 },
+    hp: { ...f.hp, y: f.hp.y + 1.6 },
+  };
+}
+
 /** Lá quái trên sân dùng đúng khung và vị trí số của lá trên tay (chủ game 03/11); số cam vào ô tối góc trên phải (chỗ ô sao). */
 export function fieldSpots(): Record<FieldKey, FieldSpot> {
   const h = loadHand();
