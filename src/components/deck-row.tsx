@@ -52,8 +52,7 @@ export function DeckRow({ id, kind, count = 1, canAdd = false, onAdd, off = fals
           >
             x{count}
           </button>
-        ) : null}
-        {monster ? (
+        ) : monster ? (
           monster.gems > 0 ? (
             <span className="dk-row-cost">
               <i className="mana-gem" />

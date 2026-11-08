@@ -7710,7 +7710,8 @@ button.watch-back {
    share the space down to the last row evenly. */
 .dk-pad { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; gap: 0.4rem; }
 .dk-tools.is-main { grid-template-columns: repeat(2, auto); justify-content: center; gap: 1.4rem; margin: 0; }
-.dk-tools.is-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.25rem; margin: 0; }
+.dk-tools.is-stack { grid-template-columns: repeat(2, auto); justify-content: center; gap: 0.4rem 1.4rem; margin: 0; }
+.dk-tools.is-stack .dk-tool.is-small .sk3d-gem { width: 2.9rem; height: 2.9rem; }
 .dk-tool { position: relative; display: grid; place-items: center; padding: 0; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
 .dk-gem.sk3d { width: auto; }
 .dk-tool .sk3d-gem { width: 2.9rem; height: 2.9rem; transition: transform 0.14s ease-out, box-shadow 0.14s ease-out, opacity 0.14s; }

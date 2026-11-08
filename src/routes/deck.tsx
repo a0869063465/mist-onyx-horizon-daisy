@@ -586,8 +586,8 @@ function DragTip() {
       setSunk(false);
       setPage(0);
       keep(false);
-    } else if (page === 0) {
-      setPage(1);
+    } else if (page < 2) {
+      setPage(page + 1);
     } else {
       setSunk(true);
       keep(true);
@@ -603,10 +603,13 @@ function DragTip() {
           <span>
             <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
           </span>
+        ) : page === 1 ? (
+          <span>
+            <em className="dk-tip-x">x1, x2</em> {tr("bên phải lá bài, bấm vào đó để")} <b>{tr("thêm bản sao")}</b> {tr("vào bộ.")}
+          </span>
         ) : (
           <span>
-            <em className="dk-tip-x">x1, x2</em> {tr("bên phải lá bài, bấm vào đó để")} <b>{tr("thêm bản sao")}</b> {tr("vào bộ.")} {tr("Quái")} <em className="dk-tip-r3">{tr("3 sao")}</em>, <em className="dk-tip-r4">{tr("4 sao")}</em> {tr("và")}{" "}
-            <em className="dk-tip-sp">{tr("phép mạnh")}</em> {tr("chỉ được đem")} <em className="dk-tip-one">{tr("1 bản duy nhất")}</em>.
+            {tr("Quái")} <em className="dk-tip-r3">{tr("3 sao")}</em>, <em className="dk-tip-r4">{tr("4 sao")}</em> {tr("và")} <em className="dk-tip-sp">{tr("phép mạnh")}</em> {tr("chỉ được đem")} <em className="dk-tip-one">{tr("1 bản duy nhất")}</em>.
           </span>
         )}
       </span>
