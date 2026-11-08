@@ -10,6 +10,12 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 - Mỗi việc mới: 3 dòng kế hoạch (vừa làm / hiện trạng / sắp làm), kèm mô hình và nỗ lực. Ghi file trước khi sửa code.
 - Ghi rõ nhánh và "đã lên main?" ở mỗi mục. Không để "CHƯA áp main" cho việc đã có trong `main`.
 
+## Đánh số việc (Vx)
+
+- Mỗi việc mới chủ game gửi, Claude gán số kế tiếp: V1, V2, V3… Số không tái dùng.
+- Bộ đếm hiện tại: **lần gán kế tiếp là V2**. Sau mỗi lần gán, tăng bộ đếm lên 1 và ghi vào bảng "Đang mở".
+- Các V cũ (V1–V8, V8A–D trong lịch sử) đã đóng, không dùng lại số.
+
 ## Trạng thái nhanh
 
 - `main`: `0756de3` (08/11/2026). Nhánh `Sualoi` có thêm 1 commit chưa lên `main`: `24840c1` (Hoán đổi: chọn sai không làm trận đứng yên, máy chỉ nhắm quái mình).
@@ -29,6 +35,7 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 
 | Việc | Trạng thái | Mô hình đề xuất |
 |---|---|---|
+| V1: Mô tả skill đổi màu thông minh (chủ game gửi 08/11) | Chờ làm rõ: skill nào, đổi màu theo gì (từ khoá, loại, mức) | Chưa chốt |
 | Album: lề trái còn lộ trang trước; sách "Đất Hoang" nâu chưa dùng | Chờ chủ game chọn chỗ dùng | Sonnet 5.5 medium |
 | Album: chữ tiếng Anh "Theo nhân vật/môi trường", "Sắp có" chưa dịch; trang mô tả lá chưa đổi kiểu | Chưa làm | Sonnet 5.5 low |
 | Album và toàn bộ giao diện mới: chưa thử điện thoại thật, màn rất ngắn/rất dài | Chưa kiểm | — |
