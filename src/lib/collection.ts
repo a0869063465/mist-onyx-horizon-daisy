@@ -220,9 +220,9 @@ export function collectionOwned(owned: Set<string>): Set<string> {
  * where it is N; every other card shows its tier.
  */
 export function rarityTag(id: string, tier: Tier): { text: string; cls: string } {
-  // Lá dùng thử (chủ game 08/11): the time left ("6D", "5H") where a fake card had F / FK.
+  // Lá dùng thử (chủ game 08/11): the time left ("6D", "5H") in the same tag a fake card had (F red, FK orange).
   const left = trialTag(id);
-  if (left) return { text: left, cls: "is-trial" };
+  if (left) return { text: left, cls: tier === "N" ? "is-FN" : "is-FK" };
   return { text: tier, cls: `is-${tier}` };
 }
 

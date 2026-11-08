@@ -6,7 +6,7 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canReachForm, canUseCard, copiesOf, fakeIds, trialTag, usableCopies } from "@/lib/owned-cards";
+import { canReachForm, canUseCard, copiesOf, fakeIds, usableCopies } from "@/lib/owned-cards";
 import { ExchangeAsk } from "@/components/collection/album-panels";
 import { albums, cardNumbers, exchangeCard, exchangePrice } from "@/lib/collection";
 import { SHOP_PACK_KEY } from "@/lib/shop";
@@ -216,7 +216,6 @@ function DeckPage() {
   const copies = (id: string) => (
     <>
       {(room.get(id) ?? 0) > 1 ? <b className="dk-copies">{used.get(id) ?? 0}/{room.get(id)}</b> : null}
-      {booted && trialTag(id) ? <b className="dk-trial">{trialTag(id)}</b> : null}
     </>
   );
   // Copies in the deck it may not use (not owned, or a trial week over): the row is dimmed (chủ game 08/11).
@@ -413,7 +412,6 @@ function DeckPage() {
                 kind="monster"
                 count={used.get(card.id) ?? 1}
                 off={booted && lacks(card.id)}
-                trial={booted ? trialTag(card.id) : null}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "monster" }, "list")}
@@ -426,7 +424,6 @@ function DeckPage() {
                 kind="spell"
                 count={used.get(card.id) ?? 1}
                 off={booted && lacks(card.id)}
-                trial={booted ? trialTag(card.id) : null}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "spell" }, "list")}

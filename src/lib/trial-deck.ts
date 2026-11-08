@@ -49,6 +49,6 @@ export function trialCopies(id: string, now = Date.now()): number {
 /** Time left on the trial cards, as the owner wrote it: "7D" while a day or more is left, else "6H". */
 export function trialLeft(now = Date.now()): string {
   const left = Math.max(0, trialEnds(now) - now);
-  const days = Math.floor(left / DAY);
-  return days >= 1 ? `${days}D` : `${Math.max(1, Math.ceil(left / (60 * 60 * 1000)))}H`;
+  // Monday 0:00 shows 7D; under a day left it counts hours.
+  return left >= DAY ? `${Math.ceil(left / DAY)}D` : `${Math.max(1, Math.ceil(left / (60 * 60 * 1000)))}H`;
 }
