@@ -13461,3 +13461,4 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   padding: 0.5rem 1.3rem; border: 1px solid rgba(255, 215, 106, 0.45); border-radius: 0.7rem;
   background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; color: #ffe6a6; font-size: 1rem;
 }
+.sheet-unit .field-unit .frame.is-spellframe { mix-blend-mode: screen; }

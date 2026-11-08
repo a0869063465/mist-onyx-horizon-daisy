@@ -951,6 +951,7 @@ export const PENDING_NOTES: string[] = [
   "Album sưu tập: bìa mở ra khớp trái phải như ảnh cho mọi album, dải bìa sau đứng yên không lật, nhấp bất kỳ lá nào thuộc nhóm (cả album Yugi) đều hiện nhóm, trang nhóm dùng khung và bảng số như trang album, lật trang album phải vuốt ngang thật dài.",
   "Album sưu tập: dải vân sáng và bìa dưới nằm trên bìa trước nên đứng yên hẳn khi bìa mở. Lật trang album về như cũ. Vuốt đổi tab ở Bộ sưu tập quay lại nhưng phải vuốt rất dài mới ăn.",
   "Bảng mô tả lá quái dùng đúng khung lá trên tay nên số công, máu, thủ nằm khớp ô. Trang nhóm trong album: hình lá trên về kiểu cũ, chỉ ghi số No, bỏ tên album, nút Xem và Đổi đổi sang kiểu vàng tối như ô Giám định.",
+  "Bảng mô tả lá phép dùng khung viền màu theo tốc độ phép (chậm đỏ, nhanh hồng, siêu tốc trắng, buff xanh lá) như lá trên tay.",
 ];
 
 function remarkOf(notes: string[]) {

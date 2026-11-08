@@ -1,13 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { AlbumPic } from "@/components/collection/album-parts";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
-import { artSrc, monsterCard, spellCard } from "@/lib/catalog";
+import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
-import { fieldSpots, type FieldKey } from "@/lib/layouts";
+import { fieldSpots, loadSpellHand, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
@@ -102,6 +101,32 @@ export function FieldFace({ id }: { id: string }) {
         {spot("mdef", card.mdef)}
         {spot("atk", card.atk)}
         {spot("hp", card.hp)}
+      </span>
+    </span>
+  );
+}
+
+/** A spell as it looks in the hand (art in the frame of its speed colour), for its sheet (chủ game 08/11). */
+export function SpellFace({ id, gems }: { id: string; gems?: number | string }) {
+  const spell = spellCard(id);
+  if (!spell) return null;
+  const n = parseInt(String(gems ?? spell.gems), 10) || 0;
+  const speed = spellSpeed(id);
+  const frame = speed ? `/ui/spell-frame-${speed}${n > 0 ? "" : "-nogem"}.png` : "/spell-frame-hand.png";
+  const at = loadSpellHand().gems;
+  return (
+    <span className="sheet-unit">
+      <span className="field-unit">
+        <img className="art" src={spellSrc(id)} alt="" draggable={false} />
+        <img className="frame is-spellframe" src={frame} alt="" draggable={false} />
+        {n > 0 ? (
+          <span
+            className="fstat is-gems"
+            style={{ left: `${at.x}%`, top: `${at.y}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
+          >
+            {n}
+          </span>
+        ) : null}
       </span>
     </span>
   );
@@ -226,7 +251,7 @@ export function SpellSheet({
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
       name={spell.name}
-      card={<AlbumPic id={id} />}
+      card={<SpellFace id={id} gems={gems} />}
       count=""
       tag={{ gems: gems ?? spell.gems }}
       skills={[]}
