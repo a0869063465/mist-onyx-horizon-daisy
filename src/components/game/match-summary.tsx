@@ -172,8 +172,10 @@ export function DeckDrawer({
   onPick: (pick: { id: string; kind: "monster" | "spell" }) => void;
   onClose: () => void;
 }) {
-  const monsters = cards.monsters.map((id) => monsterCard(id)).filter((card): card is MonsterCard => Boolean(card)).sort(byStars);
-  const spells = cards.spells.map((id) => spellCard(id)).filter((card): card is SpellCard => Boolean(card)).sort(byMana);
+  const count = new Map<string, number>();
+  for (const id of [...cards.monsters, ...cards.spells]) count.set(id, (count.get(id) ?? 0) + 1);
+  const monsters = [...new Set(cards.monsters)].map((id) => monsterCard(id)).filter((card): card is MonsterCard => Boolean(card)).sort(byStars);
+  const spells = [...new Set(cards.spells)].map((id) => spellCard(id)).filter((card): card is SpellCard => Boolean(card)).sort(byMana);
   const rows = [...monsters.map((card) => ({ id: card.id, kind: "monster" as const })), ...spells.map((card) => ({ id: card.id, kind: "spell" as const }))];
   return (
     <div className={`ms-drawer-back${leaving ? " is-leaving" : ""}`} onClick={(event) => event.target === event.currentTarget && onClose()}>
@@ -188,22 +190,22 @@ export function DeckDrawer({
           <div className="ms-counts">
             <span title={tr("Quái thú")}>
               <Glyph name="wolf-head" fill="#f4efe2" />
-              <b>{monsters.length}</b>
+              <b>{cards.monsters.length}</b>
             </span>
             <span title={tr("Phép")}>
               <Glyph name="spell-book" fill="#f4efe2" />
-              <b>{spells.length}</b>
+              <b>{cards.spells.length}</b>
             </span>
             <span title={tr("Tổng")}>
               <CardsIcon />
-              <b>{monsters.length + spells.length}</b>
+              <b>{cards.monsters.length + cards.spells.length}</b>
             </span>
           </div>
         </header>
         <div className="ms-drawer-list">
           {rows.map((row, i) => (
             <span key={row.id} className="ms-drawer-row" style={{ "--i": i } as CSSProperties}>
-              <DeckRow id={row.id} kind={row.kind} onTap={() => onPick(row)} />
+              <DeckRow id={row.id} kind={row.kind} count={count.get(row.id) ?? 1} onTap={() => onPick(row)} />
             </span>
           ))}
         </div>

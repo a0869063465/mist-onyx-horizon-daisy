@@ -327,7 +327,7 @@ export function Badges({ pull }: { pull: Pull }) {
     <>
       {pull.fresh ? <b className="po-new">{tr("MỚI")}</b> : null}
       <b className={`po-tag is-${pull.tier}`}>{TIER_LABEL[pull.tier]}</b>
-      {pull.refund ? <b className="po-refund">+{pull.refund}★</b> : null}
+      {pull.refund ? <b className="po-refund">+{pull.refund}★</b> : pull.copy ? <b className="po-refund is-copy">{tr("+1 bản")}</b> : null}
     </>
   );
 }
@@ -335,7 +335,7 @@ export function Badges({ pull }: { pull: Pull }) {
 function PackCard({ pull, slot, flipped, pop, away, onFlip }: { pull: Pull; slot: number; flipped: boolean; pop: boolean; away: boolean; onFlip: (event: MouseEvent) => void }) {
   return (
     <span className="po-slot" style={{ "--i": slot } as CSSProperties}>
-      <button type="button" className={`po-card is-${pull.tier}${flipped ? " is-flipped" : ""}${pull.fresh ? "" : " is-owned"}${pop ? " is-pop" : ""}${away ? " is-away" : ""}`} onClick={onFlip} aria-label={flipped ? undefined : tr("Lật lá")}>
+      <button type="button" className={`po-card is-${pull.tier}${flipped ? " is-flipped" : ""}${pull.fresh || pull.copy ? "" : " is-owned"}${pop ? " is-pop" : ""}${away ? " is-away" : ""}`} onClick={onFlip} aria-label={flipped ? undefined : tr("Lật lá")}>
         <span className="po-card-inner">
           <span className="po-card-back">
             <img src={CARD_BACK[pull.tier]} alt="" draggable={false} />
@@ -411,7 +411,7 @@ function Results({ purchase, onTap, onDone }: { purchase: Purchase; onTap: (pull
       </header>
       <div className="po-grid">
         {pulls.map((pull, index) => (
-          <button key={index} type="button" className={`po-res is-${pull.tier}${pull.fresh ? "" : " is-owned"}`} style={{ "--i": index } as CSSProperties} onClick={() => onTap(pull)}>
+          <button key={index} type="button" className={`po-res is-${pull.tier}${pull.fresh || pull.copy ? "" : " is-owned"}`} style={{ "--i": index } as CSSProperties} onClick={() => onTap(pull)}>
             <Face pull={pull} />
             <Badges pull={pull} />
           </button>

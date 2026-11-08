@@ -1,7 +1,7 @@
-import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
+import { DEFAULT_DECK, FORMS, MONSTERS, copyCap, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
 import { fakeIds } from "./owned-cards.ts";
-import { addOwned, addStars, loadRates, naturalTier, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
+import { addOwned, addStars, loadRates, naturalTier, ownedCount, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { noteCards } from "./mission-store.ts";
 import { spellKindRank } from "./spell-kinds.ts";
 import { EVOLUTIONS } from "./strategies.ts";
@@ -352,8 +352,9 @@ export function exchangePrice(id: string, rates: Rates = loadRates()): number {
 /** Buys a card of the albums not owned yet, saved before any light show; false when owned or short of stars. */
 export function exchangeCard(id: string): boolean {
   const price = exchangePrice(id);
-  if (collectionOwned(ownedIds()).has(id) || !cardNumbers().has(id) || starCount() < price) return false;
-  addOwned(id);
+  // Một bản nữa của lá đã có cũng đổi được, tới trần của lá (chủ game 08/11).
+  if (ownedCount(id) >= copyCap(id) || !cardNumbers().has(id) || starCount() < price) return false;
+  if (addOwned(id) === "full") return false;
   addStars(-price);
   noteCards([{ id, tier: rarityOf(id) }]);
   return true;

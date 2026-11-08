@@ -6,7 +6,7 @@ import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/ca
 import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
 import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
+import { canReachForm, canUseCard, copiesOf, fakeIds, usableCopies } from "@/lib/owned-cards";
 import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
@@ -91,22 +91,25 @@ function DeckPage() {
     setDeck((current) => {
       const total = current.monsters.length + current.spells.length;
       if (total >= DECK_SIZE) return current;
+      // Một lá được nhiều bản tới số bản dùng được (chủ game 08/11).
+      const room = usableCopies(pick.id);
       if (pick.kind === "monster") {
-        if (current.monsters.includes(pick.id) || current.monsters.length >= 17 || FORMS.some((card) => card.id === pick.id)) return current;
+        if (current.monsters.filter((id) => id === pick.id).length >= room || FORMS.some((card) => card.id === pick.id)) return current;
         return { ...current, monsters: [...current.monsters, pick.id] };
       }
-      if (current.spells.includes(pick.id) || current.spells.length >= 11) return current;
+      if (current.spells.filter((id) => id === pick.id).length >= room || current.spells.length >= DECK_SIZE - MIN_MONSTERS) return current;
       if (spellCard(pick.id)?.env && current.spells.some((item) => spellCard(item)?.env)) return current;
       return { ...current, spells: [...current.spells, pick.id] };
     });
   }
 
+  // Takes one copy out (the last one put in).
   function dropCard(pick: Pick) {
-    setDeck((current) =>
-      pick.kind === "monster"
-        ? { ...current, monsters: current.monsters.filter((item) => item !== pick.id) }
-        : { ...current, spells: current.spells.filter((item) => item !== pick.id) },
-    );
+    const less = (list: string[]) => {
+      const at = list.lastIndexOf(pick.id);
+      return at < 0 ? list : [...list.slice(0, at), ...list.slice(at + 1)];
+    };
+    setDeck((current) => (pick.kind === "monster" ? { ...current, monsters: less(current.monsters) } : { ...current, spells: less(current.spells) }));
   }
 
   // Dragging: the page listens to every move so a card can travel from the pool to the list and back.
@@ -198,7 +201,12 @@ function DeckPage() {
   // 16 to 24 cards, at least 13 monsters, spells not required (chủ game 28/10).
   const short = Math.max(Math.max(0, MIN_MONSTERS - deck.monsters.length), DECK_MIN - total);
   const canSave = short === 0 && !issue;
-  const inDeck = new Set([...deck.monsters, ...deck.spells]);
+  // Copies in the deck and copies the deck may hold: a pool card dims only once all its copies are in.
+  const used = new Map<string, number>();
+  for (const id of [...deck.monsters, ...deck.spells]) used.set(id, (used.get(id) ?? 0) + 1);
+  const room = booted ? copiesOf([...MONSTERS, ...SPELLS].map((card) => card.id)) : new Map<string, number>();
+  const inDeck = new Set([...used].filter(([id, n]) => n >= (room.get(id) ?? 1)).map(([id]) => id));
+  const copies = (id: string) => (room.get(id) ?? 0) > 1 ? <b className="dk-copies">{used.get(id) ?? 0}/{room.get(id)}</b> : null;
   // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
   const fakes = new Set(booted ? fakeIds([...MONSTERS, ...SPELLS].map((card) => card.id)) : []);
   // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
@@ -222,11 +230,11 @@ function DeckPage() {
   const poolMonsters = q || mode === "monster" ? allMonsters.filter((card) => named(card.name) && passesFilter(card.id, filter, plans)) : [];
   const poolSpells = q || mode === "spell" ? allSpells.filter((card) => named(card.name)) : [];
 
-  const pickedMonsters = deck.monsters
+  const pickedMonsters = [...new Set(deck.monsters)]
     .map((id) => monsterCard(id))
     .filter((card): card is MonsterCard => !!card)
     .sort(byStars);
-  const pickedSpells = deck.spells
+  const pickedSpells = [...new Set(deck.spells)]
     .map((id) => spellCard(id))
     .filter((card): card is SpellCard => !!card)
     .sort(byMana);
@@ -322,6 +330,7 @@ function DeckPage() {
               onContextMenu={(event) => event.preventDefault()}
             >
               <CardFace monster={card} hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
+              {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />
@@ -340,6 +349,7 @@ function DeckPage() {
               onContextMenu={(event) => event.preventDefault()}
             >
               <CardFace spellId={card.id} hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
+              {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />
@@ -358,6 +368,7 @@ function DeckPage() {
                 key={card.id}
                 id={card.id}
                 kind="monster"
+                count={used.get(card.id) ?? 1}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "monster" }, "list")}
@@ -368,6 +379,7 @@ function DeckPage() {
                 key={card.id}
                 id={card.id}
                 kind="spell"
+                count={used.get(card.id) ?? 1}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
                 onTap={() => tap({ id: card.id, kind: "spell" }, "list")}

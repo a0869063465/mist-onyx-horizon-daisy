@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FORMS, MONSTERS, SPELLS, WAITING_CARDS, monsterCard, spellCard } from "@/lib/catalog";
+import { FORMS, MONSTERS, SPELLS, WAITING_CARDS, copyCap, monsterCard, spellCard } from "@/lib/catalog";
 import { spellKindRank } from "@/lib/spell-kinds";
 import { noteCards } from "@/lib/mission-store";
 
@@ -19,7 +19,8 @@ export type PackKind = "monster" | "spell";
 export type PackEntry = { id: string; kind: PackKind };
 /** The chance (in %) each card drawn is of each tier, and the cards moved to another tier than the usual one. */
 export type Rates = { tiers: Record<Tier, number>; moved: Record<string, Tier> };
-export type Pull = PackEntry & { tier: Tier; fresh: boolean; refund: number };
+/** `copy`: one more copy of a card already owned, under its cap (chủ game 08/11). */
+export type Pull = PackEntry & { tier: Tier; fresh: boolean; copy?: boolean; refund: number };
 export type OpenedPack = { pulls: Pull[]; best: Tier };
 export type Purchase = { packs: OpenedPack[]; spent: number; refund: number; fresh: number };
 
@@ -181,13 +182,42 @@ export function useStars(): number {
 }
 
 export function ownedIds(): Set<string> {
-  const raw = read<unknown>(OWNED_KEY, []);
-  return new Set(Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : []);
+  return new Set(ownedList());
 }
 
-/** A card the player now has (Đổi sao lấy lá in the albums). */
-export function addOwned(id: string) {
-  write(OWNED_KEY, [...ownedIds(), id]);
+/** Every card owned, once per copy (chủ game 08/11: a card may be owned several times, up to its cap). */
+function ownedList(): string[] {
+  const raw = read<unknown>(OWNED_KEY, []);
+  return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : [];
+}
+
+/** How many copies of each card are owned. */
+export function ownedCounts(): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const id of ownedList()) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return counts;
+}
+
+export function ownedCount(id: string): number {
+  return ownedCounts().get(id) ?? 0;
+}
+
+/** What a card got means: the first copy, one more copy under the cap, or the cap is full (1 star back). */
+export type Gain = "new" | "copy" | "full";
+
+function gainOf(counts: Map<string, number>, id: string): Gain {
+  const have = counts.get(id) ?? 0;
+  if (have >= Math.max(1, copyCap(id))) return "full";
+  counts.set(id, have + 1);
+  return have === 0 ? "new" : "copy";
+}
+
+/** A card the player now has (packs, Đổi sao lấy lá, gifts): one more copy while under its cap. */
+export function addOwned(id: string): Gain {
+  const counts = ownedCounts();
+  const gain = gainOf(counts, id);
+  if (gain !== "full") write(OWNED_KEY, [...ownedList(), id]);
+  return gain;
 }
 
 /** Publisher tool: forget the cards drawn, to see NEW and the refunds again. */
@@ -346,22 +376,22 @@ export function buyPacks(count: 1 | 10, rng: () => number = Math.random): Purcha
   const price = count === BUNDLE_SIZE ? BUNDLE_PRICE : PACK_PRICE;
   const stars = starCount();
   if (stars < price) return null;
-  const owned = ownedIds();
+  const counts = ownedCounts();
+  const kept = ownedList();
   let refund = 0;
   let fresh = 0;
   const drawn = drawPacks(count, loadRates(), rng, pityCount());
   const packs: OpenedPack[] = drawn.packs.map((cards) => {
     const pulls = cards.map(({ id, kind, tier }) => {
-      const isNew = !owned.has(id);
-      if (isNew) {
-        owned.add(id);
-        fresh += 1;
-      } else refund += 1;
-      return { id, kind, tier, fresh: isNew, refund: isNew ? 0 : 1 };
+      const gain = gainOf(counts, id);
+      if (gain === "full") refund += 1;
+      else kept.push(id);
+      if (gain === "new") fresh += 1;
+      return { id, kind, tier, fresh: gain === "new", copy: gain === "copy", refund: gain === "full" ? 1 : 0 };
     });
     return { pulls, best: bestOf(pulls) };
   });
-  write(OWNED_KEY, [...owned]);
+  write(OWNED_KEY, kept);
   setStarCount(stars - price + refund);
   setPity(Math.min(drawn.since, PITY_LIMIT - 1));
   noteCards(packs.flatMap((pack) => pack.pulls.map(({ id, tier }) => ({ id, tier }))));
@@ -376,11 +406,9 @@ export function drawReward(rng: () => number = Math.random): Pull | null {
   const rates = loadRates();
   const [card] = drawFrom(pools(rates), rates, 1, rng);
   if (!card) return null;
-  const owned = ownedIds();
-  const fresh = !owned.has(card.id);
-  if (fresh) write(OWNED_KEY, [...owned, card.id]);
-  else setStarCount(starCount() + 1);
-  return { ...card, fresh, refund: fresh ? 0 : 1 };
+  const gain = addOwned(card.id);
+  if (gain === "full") setStarCount(starCount() + 1);
+  return { ...card, fresh: gain === "new", copy: gain === "copy", refund: gain === "full" ? 1 : 0 };
 }
 
 // ---- Odds for the rate panel ----

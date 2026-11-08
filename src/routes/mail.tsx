@@ -307,7 +307,7 @@ function Slot({ gift, done }: { gift: Gift; done: boolean }) {
 function Reward({ got, onClose }: { got: Claimed; onClose: () => void }) {
   const items: Array<{ key: string; gift: Gift; note: string }> = [];
   if (got.stars > 0) items.push({ key: "stars", gift: { kind: "stars", n: got.stars }, note: `${tr("SAO")} ×${got.stars}` });
-  got.cards.forEach((card, index) => items.push({ key: `c${index}`, gift: { kind: "card", id: card.id }, note: card.fresh ? tr("MỚI") : tr("Đã có · hoàn +1★") }));
+  got.cards.forEach((card, index) => items.push({ key: `c${index}`, gift: { kind: "card", id: card.id }, note: card.fresh ? tr("MỚI") : card.copy ? tr("+1 bản") : tr("Đã có · hoàn +1★") }));
   return (
     <div className="ml-got" role="dialog" aria-label={tr("BẠN ĐÃ NHẬN ĐƯỢC")} onClick={onClose}>
       <h2>{tr("BẠN ĐÃ NHẬN ĐƯỢC")}</h2>

@@ -13465,3 +13465,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Nhận ★ in the group panel takes the same dark-gold look as Xem / Đổi (chủ game 08/11). */
 .al-panel-set header .al-prize.is-claim { color: #ffe6a6; border: 1px solid rgba(255, 215, 106, 0.45); background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; animation: none; }
+.po-refund.is-copy { color: #9fe3ff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(80, 190, 255, 0.6); }
+/* Nhiều bản một lá (chủ game 08/11): ×n on the deck list row, copies in / copies allowed on the pool card. */
+.dk-row-count { margin-right: 0.3rem; font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; color: #ffe08a; text-shadow: 0 1px 2px #000, 0 0 5px rgba(255, 200, 70, 0.55); }
+.dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; padding: 0.05rem 0.32rem; border-radius: 0.4rem; border: 1px solid rgba(255, 215, 106, 0.6); background: rgba(12, 10, 6, 0.85); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.78rem; font-weight: 800; line-height: 1.15; color: #ffe6a6; pointer-events: none; }
+.dk-card.is-in .dk-copies { opacity: 0.8; }

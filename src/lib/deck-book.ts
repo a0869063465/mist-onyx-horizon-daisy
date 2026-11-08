@@ -1,6 +1,6 @@
 import { raiseDefaultDeck, type BeastDeck } from "./deck.ts";
 import { DEFAULT_DECK, monsterCard, spellCard, STARTER_NAME } from "./catalog.ts";
-import { canUseCard } from "./owned-cards.ts";
+import { keepCopies } from "./owned-cards.ts";
 import { EVOLUTIONS } from "./strategies.ts";
 
 const KEY = "clash-deck-book";
@@ -28,15 +28,6 @@ type PickerWindow = Window & {
   showOpenFilePicker?: (options: unknown) => Promise<FileHandle[]>;
 };
 
-function ids(list: unknown, ok: (id: string) => boolean): string[] {
-  if (!Array.isArray(list)) return [];
-  const next: string[] = [];
-  for (const id of list) {
-    if (typeof id !== "string" || !ok(id) || next.includes(id)) continue;
-    next.push(id);
-  }
-  return next;
-}
 
 function entry(raw: unknown, used: Set<number>): DeckEntry | null {
   if (!raw || typeof raw !== "object") return null;
@@ -48,8 +39,8 @@ function entry(raw: unknown, used: Set<number>): DeckEntry | null {
     n,
     name: typeof row.name === "string" ? row.name.slice(0, 40) : `Bộ ${n}`,
     // A guest's saved deck drops the cards not owned (owner, 19/10).
-    monsters: ids(row.monsters, (id) => Boolean(monsterCard(id)) && canUseCard(id)),
-    spells: ids(row.spells, (id) => Boolean(spellCard(id)) && canUseCard(id)),
+    monsters: keepCopies(row.monsters, (id) => Boolean(monsterCard(id))),
+    spells: keepCopies(row.spells, (id) => Boolean(spellCard(id))),
   };
   if (row.fav === true) kept.fav = true;
   if (typeof row.at === "number" && Number.isFinite(row.at)) kept.at = row.at;
@@ -114,7 +105,7 @@ export function deckOrder(decks: DeckEntry[]): DeckEntry[] {
 export function coverChoices(entry: Pick<DeckEntry, "monsters">): string[] {
   const owned = new Set(entry.monsters);
   const forms = EVOLUTIONS.filter((row) => row.needs.every((id) => owned.has(id))).map((row) => row.result);
-  return [...entry.monsters.filter((id) => monsterCard(id)), ...forms.filter((id) => !owned.has(id))];
+  return [...new Set([...entry.monsters.filter((id) => monsterCard(id)), ...forms.filter((id) => !owned.has(id))])];
 }
 
 /**
