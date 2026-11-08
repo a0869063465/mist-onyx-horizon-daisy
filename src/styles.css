@@ -13419,20 +13419,26 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-view .al-dots i { width: calc(18 * var(--u)); height: calc(18 * var(--u)); background: #34456f; box-shadow: none; }
 .al-view .al-dots i.on { background: #ffc23a; box-shadow: 0 0 calc(10 * var(--u)) rgba(255, 190, 60, 0.85); transform: none; }
 
-/* The cover from the shelf lands on the book, then swings open about the spine (its hinge), the inside of the cover showing as it turns. */
-.al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; backface-visibility: visible; pointer-events: none; transform: perspective(3600px) rotateY(0deg); }
+/* The cover from the shelf lands on the book, then its front board swings open about the hinge (2/5 deep in the spine). The coloured
+   base under the board is the back cover: it stays lying on the page behind and does not turn (chủ game 08/11). */
+.al-fly { position: fixed; z-index: 4; display: block; --hinge: 12%; --cut: 84.5%; pointer-events: none; }
 .al-fly > * { position: absolute; display: block; }
-.al-fly-front { inset: 0; width: 100%; height: 100%; backface-visibility: hidden; }
+.al-fly-base { inset: 0; width: 100%; height: 100%; clip-path: inset(var(--cut) 0 0 0); }
+.al-fly-spin { inset: 0; transform-origin: var(--hinge) 50%; transform-style: preserve-3d; transform: perspective(3600px) rotateY(0deg); clip-path: none; }
+.al-fly-spin > * { position: absolute; display: block; }
+.al-fly-front { inset: 0; width: 100%; height: 100%; backface-visibility: hidden; clip-path: inset(0 0 calc(100% - var(--cut)) 0); }
 .al-fly-back {
-  left: 27.3%; right: 3.5%; top: 13.54%; bottom: 13.54%; backface-visibility: hidden; transform: rotateY(180deg);
+  left: 27.3%; right: 3.5%; top: 13.54%; bottom: calc(100% - var(--cut)); backface-visibility: hidden; transform: rotateY(180deg);
   border-radius: 0 3% 3% 0 / 0 2% 2% 0;
   background: radial-gradient(120% 80% at 55% 40%, #223a7c, #101c46 70%, #0a1230), #101c46;
   box-shadow: inset 0 0 0 calc(5px) #7a5a20, inset 0 0 0 calc(7px) #d9a73f, inset 0 0 40px rgba(0, 0, 0, 0.6);
 }
-.al-fly-shade { inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 60%); opacity: 0; backface-visibility: hidden; }
+.al-fly-shade { inset: 0 0 calc(100% - var(--cut)) 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), transparent 60%); opacity: 0; backface-visibility: hidden; }
 .al-fly.is-flying {
   transition: left 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), top 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.46s cubic-bezier(0.3, 0.7, 0.2, 1), height 0.46s cubic-bezier(0.3, 0.7, 0.2, 1);
 }
-.al-fly.is-opening { transform: perspective(3600px) rotateY(-180deg); transition: transform 1.05s cubic-bezier(0.5, 0.05, 0.3, 1), opacity 0.25s ease-in 0.82s; opacity: 0; }
+.al-fly.is-opening .al-fly-spin { transform: perspective(3600px) rotateY(-180deg); transition: transform 1.05s cubic-bezier(0.5, 0.05, 0.3, 1); }
+.al-fly.is-opening .al-fly-base { animation: al-base-out 0.5s ease-in 0.7s both; }
 .al-fly.is-opening .al-fly-shade { animation: al-cover-shade 1.05s ease-in-out both; }
+@keyframes al-base-out { to { opacity: 0; } }
 @keyframes al-cover-shade { 0% { opacity: 0; } 45% { opacity: 0.55; } 50%, 100% { opacity: 0; } }

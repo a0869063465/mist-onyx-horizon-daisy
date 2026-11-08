@@ -21,7 +21,7 @@ const CLOSE_MS = 220;
 const FLIP_MS = 640;
 
 /** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
-const COVER = { hinge: 0.12, left: 0.273, right: 0.965, top: 0.1354, bottom: 0.8646 };
+const COVER = { hinge: 0.12, left: 0.273, right: 0.965, top: 0.1354, bottom: 0.845 };
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
@@ -309,9 +309,12 @@ export function AlbumBook({
       </div>
       {stage === "fly" || stage === "open" ? (
         <span ref={cover} className={`al-fly${stage === "open" ? " is-opening" : ""}`}>
-          <img className="al-fly-front" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
-          <i className="al-fly-back" />
-          <i className="al-fly-shade" />
+          <img className="al-fly-base" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
+          <span className="al-fly-spin">
+            <img className="al-fly-front" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
+            <i className="al-fly-back" />
+            <i className="al-fly-shade" />
+          </span>
         </span>
       ) : null}
       {panel ? (
