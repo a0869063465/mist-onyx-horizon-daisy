@@ -962,6 +962,7 @@ export const PENDING_NOTES: string[] = [
   "Chỉnh sửa bộ bài: bỏ nút Lưu, thoát trang là tự lưu (bộ không hợp lệ thì về lại bộ lúc vào trang). Bên phải mỗi lá trong danh sách có x1, x2, bấm để thêm bản sao. Bấm dòng hướng dẫn để xem cách thêm bản. Nút thống kê màu xanh lá, lá trong kho hiện kiểu lá trên tay.",
   "Nhãn hạn dùng thử đổi sang góc đối diện nhãn UR và SR, đuôi nhọn quay vào trong, màu đỏ thẫm sáng.",
   "Lượt đầu chưa rút bài mà bấm liên tục 5-6 lần là thao tác bất lực: hướng dẫn hiện ra chỉ phải rút bài.",
+  "Bấm lá quái trên tay mà chỉ có một cách triệu hồi thì hiện luôn hai mũi tên chọn hàng: lên màu đỏ (hàng trước, có nguy cơ), xuống màu xanh lam (hàng sau). Hai màu in hơi nhạt.",
 ];
 
 function remarkOf(notes: string[]) {

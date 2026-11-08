@@ -7219,14 +7219,14 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
-        {pickStage === "menu" && pickActs.length > 0 && pickSpot && pickMon !== null ? (
+        {pickStage === "menu" && pickActs.length > 1 && pickSpot && pickMon !== null ? (
           <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
             {pickActs.map((act) => (
               <ActionButton key={act.key} action={act} mini />
             ))}
           </span>
         ) : null}
-        {pickStage === "rows" && pickShown && pickSpot && pickMon !== null ? (
+        {(pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
           // Mũi tên chọn hàng (chủ game 28/10): ngoài lá, ngay trên mép trên lá, nằm cạnh nhau như ở nút Triệu hồi.
           <span className="row-arrows is-hand" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }}>
             <RowArrow row="front" off={pickShown.front === null} onPick={() => pickRow(pickMon, "front")} />
