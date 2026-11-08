@@ -9,7 +9,7 @@ import { spellKind } from "@/lib/spell-kinds";
  * One row of the deck list: the stars (monster) or mana (spell, blank at 0) on the left, the name over a strip
  * of the card's art, and on the right the summoning mana crystal (monster, hidden at 0) or the spell's kind icon.
  */
-export function DeckRow({ id, kind, count = 1, off = false, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; count?: number; off?: boolean; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
+export function DeckRow({ id, kind, count = 1, canAdd = false, onAdd, off = false, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; count?: number; canAdd?: boolean; onAdd?: () => void; off?: boolean; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
   const monster = kind === "monster" ? monsterCard(id) : undefined;
   const spell = kind === "spell" ? spellCard(id) : undefined;
   if (!monster && !spell) return null;
@@ -39,7 +39,20 @@ export function DeckRow({ id, kind, count = 1, off = false, lifted = false, onPr
       </span>
       <span className="dk-row-name">{tr(monster?.name ?? spell?.name ?? "")}</span>
       <span className="dk-row-end">
-        {count > 1 ? <b className="dk-row-count">×{count}</b> : null}
+        {onAdd ? (
+          <button
+            type="button"
+            className={`dk-row-count${canAdd ? " is-add" : ""}`}
+            aria-label={tr("Thêm bản sao")}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (canAdd) onAdd();
+            }}
+          >
+            x{count}
+          </button>
+        ) : null}
         {monster ? (
           monster.gems > 0 ? (
             <span className="dk-row-cost">

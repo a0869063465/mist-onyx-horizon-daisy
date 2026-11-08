@@ -38,6 +38,10 @@ const DECK_SIZE = 24;
  * Drag a card from the pool down onto the list to add it, a row of the list up onto the pool to take it out;
  * tap a card or a row to read it.
  */
+function validDeck(deck: BeastDeck): boolean {
+  return !deckIssues(deck) && deck.monsters.length >= MIN_MONSTERS && deck.monsters.length + deck.spells.length >= DECK_MIN;
+}
+
 function DeckPage() {
   const [deck, setDeck] = useState<BeastDeck>(DEFAULT_DECK);
   const [book, setBook] = useState<DeckEntry[]>([]);
@@ -50,7 +54,6 @@ function DeckPage() {
   const [sheet, setSheet] = useState<Pick | null>(null);
   // Where the open sheet came from: a swipe on it steps through that list (the pool, or the deck's own list).
   const sheetFrom = useRef<"pool" | "list">("pool");
-  const [saved, setSaved] = useState(false);
   const [naming, setNaming] = useState<string | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const [covering, setCovering] = useState(false);
@@ -62,7 +65,10 @@ function DeckPage() {
   const grab = useRef<Grab | null>(null);
   // A press that turned into a drag or a swipe is not a tap: its click (if the browser sends one) is ignored.
   const skipTap = useRef(false);
-  const savedTimer = useRef(0);
+  // The deck as it was saved when the page opened, and the latest state, for the save on leaving (chủ game 08/11).
+  const first = useRef<{ n: number | null; monsters: string[]; spells: string[] } | null>(null);
+  const latest = useRef({ deck, book, active });
+  latest.current = { deck, book, active };
   const plans = useMemo(() => loadStrategies(), []);
   useLang();
 
@@ -71,8 +77,9 @@ function DeckPage() {
     const found = stored.decks.find((row) => row.n === stored.active) ?? stored.decks[0];
     setBook(stored.decks);
     setActive(found?.n ?? null);
-    if (found) setDeck(cardsOf(found));
-    else setDeck(loadDeck());
+    const opened = found ? cardsOf(found) : loadDeck();
+    first.current = { n: found?.n ?? null, monsters: [...opened.monsters], spells: [...opened.spells] };
+    setDeck(opened);
     setBooted(true);
   }, []);
 
@@ -91,7 +98,30 @@ function DeckPage() {
     saveBook({ decks: book, active });
   }, [book, active, booted]);
 
-  useEffect(() => () => window.clearTimeout(savedTimer.current), []);
+  // No Lưu button: leaving saves the deck. One that is not valid goes back to how it was when the page opened; if that one was
+  // not valid either, it is saved as it stands.
+  useEffect(() => {
+    const finish = () => {
+      const { deck: now, book: rows, active: at } = latest.current;
+      const start = first.current;
+      if (!start) return;
+      if (!validDeck(now)) {
+        if (validDeck(start) && start.n === at) {
+          const back = rows.map((row) => (row.n === at ? { ...row, monsters: start.monsters, spells: start.spells } : row));
+          saveBook({ decks: back, active: at });
+          saveDeck(start);
+          return;
+        }
+        saveBook({ decks: rows, active: at });
+      }
+      saveDeck(now);
+    };
+    window.addEventListener("pagehide", finish);
+    return () => {
+      window.removeEventListener("pagehide", finish);
+      finish();
+    };
+  }, []);
 
   function addCard(pick: Pick) {
     if (!canUseCard(pick.id)) return;
@@ -202,12 +232,8 @@ function DeckPage() {
     grab.current = held;
   }
 
-  const issue = deckIssues(deck);
   const balance = deckBalance(deck);
   const total = deck.monsters.length + deck.spells.length;
-  // 16 to 24 cards, at least 13 monsters, spells not required (chủ game 28/10).
-  const short = Math.max(Math.max(0, MIN_MONSTERS - deck.monsters.length), DECK_MIN - total);
-  const canSave = short === 0 && !issue;
   // Copies in the deck and copies the deck may hold: a pool card dims only once all its copies are in.
   const used = new Map<string, number>();
   for (const id of [...deck.monsters, ...deck.spells]) used.set(id, (used.get(id) ?? 0) + 1);
@@ -301,14 +327,6 @@ function DeckPage() {
     setSheet(next);
   }
 
-  function save() {
-    if (!canSave) return;
-    saveDeck(deck);
-    setSaved(true);
-    window.clearTimeout(savedTimer.current);
-    savedTimer.current = window.setTimeout(() => setSaved(false), 3000);
-  }
-
   function rename(value: string) {
     const name = value.trim();
     setNaming(null);
@@ -371,7 +389,7 @@ function DeckPage() {
               onClick={() => tap({ id: card.id, kind: "monster" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace monster={card} hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
+              <CardFace monster={card} hand hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
               {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
@@ -390,7 +408,7 @@ function DeckPage() {
               onClick={() => tap({ id: card.id, kind: "spell" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace spellId={card.id} hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
+              <CardFace spellId={card.id} hand hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
               {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
@@ -411,6 +429,8 @@ function DeckPage() {
                 id={card.id}
                 kind="monster"
                 count={used.get(card.id) ?? 1}
+                canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
+                onAdd={() => addCard({ id: card.id, kind: "monster" })}
                 off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
@@ -423,6 +443,8 @@ function DeckPage() {
                 id={card.id}
                 kind="spell"
                 count={used.get(card.id) ?? 1}
+                canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
+                onAdd={() => addCard({ id: card.id, kind: "spell" })}
                 off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
@@ -460,7 +482,7 @@ function DeckPage() {
             </div>
             <div className="dk-tools is-stack">
               <button type="button" className="dk-tool is-small" aria-label={tr("Các chiến thuật đang có trong bộ bài")} onClick={() => setPlansOpen(true)}>
-                <ToolGem glyph="histogram" rim="active" ring="#3ec6ff" deep="#0b2a4a" />
+                <ToolGem glyph="histogram" rim="green" ring="#3fcf6a" deep="#0b3a1a" />
               </button>
               <button
                 type="button"
@@ -469,10 +491,6 @@ function DeckPage() {
                 onClick={() => setFilterOpen((open) => !open)}
               >
                 <ToolGem glyph="funnel" rim="steel" ring="#b9bec8" deep="#2a2d33" />
-              </button>
-              <button type="button" className={`dk-tool is-small is-save${canSave ? "" : " is-off"}${saved ? " is-saved" : ""}`} aria-label={tr("Lưu")} disabled={!canSave} onClick={save}>
-                <ToolGem glyph={saved ? "check-mark" : "save"} rim="active" ring="#3ec6ff" deep="#0b2a4a" />
-                {short > 0 ? <b className="dk-count is-bad">-{short}</b> : null}
               </button>
             </div>
           </div>
@@ -502,7 +520,7 @@ function DeckPage() {
       </section>
       {ghost ? (
         <div className={`dk-ghost${ghostFits ? " is-fit" : ""}`} style={{ left: ghost.x, top: ghost.y }}>
-          {ghost.kind === "monster" ? <CardFace monster={ghostCard} hideName /> : <CardFace spellId={ghost.id} hideName />}
+          {ghost.kind === "monster" ? <CardFace monster={ghostCard} hand hideName /> : <CardFace spellId={ghost.id} hand hideName />}
         </div>
       ) : null}
       {sheet ? (
@@ -546,6 +564,8 @@ function DeckPage() {
 const TIP_KEY = "clash-deck-tip";
 
 function DragTip() {
+  // Page 0 how to move cards; page 1 (tap the line) how the x1 / x2 on the right of a row adds copies; tap again to sink it.
+  const [page, setPage] = useState(0);
   const [sunk, setSunk] = useState(false);
   useEffect(() => {
     try {
@@ -554,25 +574,41 @@ function DragTip() {
       // Shown by default.
     }
   }, []);
+  function keep(value: boolean) {
+    try {
+      localStorage.setItem(TIP_KEY, value ? "sunk" : "up");
+    } catch {
+      // Only this visit then.
+    }
+  }
   function flip() {
-    setSunk((now) => {
-      try {
-        localStorage.setItem(TIP_KEY, now ? "up" : "sunk");
-      } catch {
-        // Only this visit then.
-      }
-      return !now;
-    });
+    if (sunk) {
+      setSunk(false);
+      setPage(0);
+      keep(false);
+    } else if (page === 0) {
+      setPage(1);
+    } else {
+      setSunk(true);
+      keep(true);
+    }
   }
   return (
     <button type="button" className={`dk-tip${sunk ? " is-sunk" : ""}`} aria-expanded={!sunk} onClick={flip}>
-      <span className="dk-tip-text">
+      <span className="dk-tip-text" key={page}>
         <i className="dk-tip-mark" aria-hidden="true">
           ?
         </i>
-        <span>
-          <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
-        </span>
+        {page === 0 ? (
+          <span>
+            <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+          </span>
+        ) : (
+          <span>
+            <em className="dk-tip-x">x1, x2</em> {tr("bên phải lá bài, bấm vào đó để")} <b>{tr("thêm bản sao")}</b> {tr("vào bộ.")} {tr("Quái")} <em className="dk-tip-r3">{tr("3 sao")}</em>, <em className="dk-tip-r4">{tr("4 sao")}</em> {tr("và")}{" "}
+            <em className="dk-tip-sp">{tr("phép mạnh")}</em> {tr("chỉ được đem")} <em className="dk-tip-one">{tr("1 bản duy nhất")}</em>.
+          </span>
+        )}
       </span>
       <span className="dk-tip-tab" aria-hidden="true">
         ?

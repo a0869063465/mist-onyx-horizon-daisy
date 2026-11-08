@@ -88,6 +88,13 @@ export function GlyphDefs() {
           <stop offset="0.75" stopColor="#173f78" />
           <stop offset="1" stopColor="#7cc4ff" />
         </linearGradient>
+        <linearGradient id="rim3d-green" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#eafff0" />
+          <stop offset="0.3" stopColor="#3fcf6a" />
+          <stop offset="0.5" stopColor="#dfffe8" />
+          <stop offset="0.75" stopColor="#12632d" />
+          <stop offset="1" stopColor="#7cf0a0" />
+        </linearGradient>
         <linearGradient id="rim3d-passive" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#f6eaff" />
           <stop offset="0.3" stopColor="#9a5fe0" />

@@ -13467,7 +13467,14 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-panel-set header .al-prize.is-claim { color: #ffe6a6; border: 1px solid rgba(255, 215, 106, 0.45); background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; animation: none; }
 .po-refund.is-copy { color: #9fe3ff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(80, 190, 255, 0.6); }
 /* Nhiều bản một lá (chủ game 08/11): ×n on the deck list row, copies in / copies allowed on the pool card. */
-.dk-row-count { margin-right: 0.3rem; font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; color: #ffe08a; text-shadow: 0 1px 2px #000, 0 0 5px rgba(255, 200, 70, 0.55); }
+.dk-row-count { margin-right: 0.3rem; padding: 0 0.3rem; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0.4rem; background: rgba(0, 0, 0, 0.35); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: #9a8f78; text-shadow: 0 1px 2px #000; -webkit-tap-highlight-color: transparent; }
+.dk-row-count.is-add { border-color: #ff9a2e; background: rgba(255, 140, 30, 0.22); color: #ff9a2e; text-shadow: 0 1px 2px #000, 0 0 6px rgba(255, 150, 40, 0.6); }
+.dk-row-count.is-add:active { transform: scale(0.92); }
+.dk-tip-text em { font-style: normal; font-weight: 900; }
+.dk-tip-x { color: #ff9a2e; }
+.dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
+.dk-tip-r4 { color: #b45cff; }
+.dk-tip-sp { color: #ff4fa6; }
 .dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; padding: 0.05rem 0.32rem; border-radius: 0.4rem; border: 1px solid rgba(255, 215, 106, 0.6); background: rgba(12, 10, 6, 0.85); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.78rem; font-weight: 800; line-height: 1.15; color: #ffe6a6; pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
 /* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
