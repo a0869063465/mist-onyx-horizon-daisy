@@ -26,19 +26,13 @@ function CollectionPage() {
   });
 
   return (
-    <main className="cv" {...swipe}>
+    <main className={`cv cx is-${tab}`} {...swipe}>
       <GlyphDefs />
-      <header className="cv-head">
-        <Link to="/" className="cv-back" aria-label={tr("Trở về")}>
-          {"<<"}
-        </Link>
-        <h1>{tr("Bộ sưu tập")}</h1>
-        <span className="cv-wallet" aria-label={tr("Sao của bạn")}>
-          <i aria-hidden="true">★</i>
-          <b>{stars}</b>
-        </span>
-      </header>
-      <nav className="cv-tabs" role="tablist">
+      <Link to="/" className="cx-back" aria-label={tr("Trở về")} />
+      <span className="cx-wallet" aria-label={tr("Sao của bạn")}>
+        {stars}
+      </span>
+      <nav className="cx-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "vault"} className={tab === "vault" ? "on" : ""} onClick={() => setTab("vault")}>
           {tr("Kho bài")}
         </button>

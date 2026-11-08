@@ -943,6 +943,7 @@ export const PENDING_NOTES: string[] = [
   "Vuốt trái/phải trong bảng mô tả lá đổi sang lá kế ở tay bài, sân, môi trường, tường thành và icon phản ứng.",
   "Menu chính: icon Phần thưởng đổi sang hộp quà tím nơ đỏ mới.",
   "Nhạc trong trận: thêm bài Chiến binh card, thay phiên ngẫu nhiên với bài cũ (bài này không còn ở nhạc menu).",
+  "Bộ sưu tập đổi giao diện mới. Kho bài có khung lá vàng. Album là các cuốn sách trên kệ, vuốt ngang để xem tiếp, kèm số lá đã có. Thêm Album chính và Quái thú (Quái thú chưa có lá).",
 ];
 
 function remarkOf(notes: string[]) {

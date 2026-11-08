@@ -62,62 +62,52 @@ export function AlbumTab() {
     return stars;
   }
 
+  // "Quái thú" has only its cover for now (chủ game 08/11).
+  const soon: Album = { id: "quai-thu", name: "Quái thú", env: null, cover: "/art/mat-xanh-huy-diet.jpg", cards: [], group: "char" };
+  const parts = [
+    { key: "char", title: "Theo nhân vật", group: [...list.filter((album) => album.group === "char"), soon] },
+    { key: "env", title: "Theo môi trường", group: list.filter((album) => album.group !== "char") },
+  ];
+
   return (
     <>
       <div className="al-shelf">
-        {[
-          { key: "char", title: "Nhân vật", group: list.filter((album) => album.group === "char") },
-          {
-            key: "env",
-            title: "Môi trường",
-            group: list.filter((album) => album.group !== "char"),
-          },
-        ]
-          .filter((part) => part.group.length)
-          .map(({ key, title, group }) => (
-            <section key={key} className="al-section">
-              <h3 className="al-section-title">{tr(title)}</h3>
-              <div className="al-grid">
-                {group.map((album) => {
-                  const have = album.cards.filter((card) => owned.has(card.id)).length;
-                  const done = have === album.cards.length;
-                  return (
-                    <button
-                      key={album.id}
-                      type="button"
-                      className="al-item"
-                      onClick={(event) =>
-                        openAlbum(
-                          album,
-                          event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ??
-                            null,
-                        )
-                      }
-                    >
-                      <span className="al-name">{tr(album.name)}</span>
-                      <span className="al-item-cover">
-                        <AlbumCover album={album} done={done} />
-                        {album.group !== "char" &&
-                        album.cards.some((card) => fresh.has(card.id)) ? (
-                          <i className="al-new" aria-label={tr("Có lá mới")}>
-                            !
-                          </i>
-                        ) : null}
-                      </span>
-                      {done ? (
-                        <b className="al-done">{tr("Hoàn thành!")}</b>
-                      ) : (
-                        <span className="al-count">
-                          <CardsIcon />
-                          {have}/{album.cards.length}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        {parts.map(({ key, title, group }) => (
+          <section key={key} className={`al-part is-${key}`}>
+            <h3 className="al-banner">{tr(title)}</h3>
+            <div className="al-row">
+              {group.map((album) => {
+                const total = album.cards.length;
+                const have = album.cards.filter((card) => owned.has(card.id)).length;
+                const done = total > 0 && have === total;
+                const empty = total === 0;
+                return (
+                  <button
+                    key={album.id}
+                    type="button"
+                    className={`al-item${empty ? " is-soon" : ""}`}
+                    disabled={empty}
+                    onClick={(event) => openAlbum(album, event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ?? null)}
+                  >
+                    <AlbumCover album={album} done={done} />
+                    {album.group !== "char" && album.cards.some((card) => fresh.has(card.id)) ? (
+                      <i className="al-new" aria-label={tr("Có lá mới")}>
+                        !
+                      </i>
+                    ) : null}
+                    <span className={`al-prog${done ? " is-done" : ""}`}>
+                      <CardsIcon />
+                      <b>{empty ? tr("Sắp có") : `${have}/${total}`}</b>
+                      <u>
+                        <i style={{ width: `${total ? Math.round((have / total) * 100) : 0}%` }} />
+                      </u>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
       {open ? (
         <AlbumBook

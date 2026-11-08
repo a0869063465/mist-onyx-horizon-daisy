@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge } from "@/components/collection/album-parts";
+import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
 import { FORMS, monsterCard } from "@/lib/catalog";
@@ -261,7 +261,7 @@ export function AlbumBook({
         <button type="button" className="cv-back" data-ui="soft" aria-label={tr("Trở về")} onClick={close}>
           {"<<"}
         </button>
-        <h2>{tr(album.name)}</h2>
+        <h2>{tr(albumTitle(album.id, album.name))}</h2>
         <span className={`al-tally${done ? " is-done" : ""}`} aria-label={tr("Số lá đã có")}>
           <CardsIcon />
           {have}/{album.cards.length}
