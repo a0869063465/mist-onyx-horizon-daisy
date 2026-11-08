@@ -13,8 +13,8 @@ import { skillsOf } from "@/lib/skill-book";
 import { spellKind, spellSpeed } from "@/lib/spell-kinds";
 
 /** The power balance notes of a card (Tăng, Giảm, Thay đổi lối chơi), newest first, as the deck page showed them. */
-export function BalanceLines({ id }: { id: string }) {
-  const blocks = infoBlocks(id);
+export function BalanceLines({ id, newest = false }: { id: string; newest?: boolean }) {
+  const blocks = newest ? infoBlocks(id).slice(0, 1) : infoBlocks(id);
   return (
     <div className="power-lines">
       {blocks.map((block, index) => (

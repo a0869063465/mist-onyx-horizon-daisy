@@ -233,8 +233,15 @@ function DeckPage() {
         }}
       />
     ) : null;
+  const sheetKind = (id: string): Kind => (spellCard(id) ? "spell" : "monster");
   const asideOf = (id: string) => (
     <>
+      <CopyArrows
+        count={used.get(id) ?? 0}
+        canAdd={booted && (used.get(id) ?? 0) < (room.get(id) ?? 0)}
+        onAdd={() => addCard({ id, kind: sheetKind(id) })}
+        onDrop={() => dropCard({ id, kind: sheetKind(id) })}
+      />
       {tradeBox(id)}
       <BalanceBox id={id} />
     </>
@@ -595,6 +602,28 @@ function TradeBox({ id, onTrade, onShop }: { id: string; onTrade?: () => void; o
   );
 }
 
+/**
+ * Two arrows on the card's sheet in the deck builder (chủ game 08/11): blue (left) puts one more copy in the deck and
+ * shows how many are in; red (right) takes one out. Blue dims when no copy is left to add, red when none is in.
+ */
+function CopyArrows({ count, canAdd, onAdd, onDrop }: { count: number; canAdd: boolean; onAdd: () => void; onDrop: () => void }) {
+  return (
+    <div className="dk-arrows">
+      <button type="button" className="dk-arrow is-add" disabled={!canAdd} aria-label={tr("Thêm 1 bản vào bộ")} onClick={onAdd}>
+        <img src="/ui/arrow-add.webp" alt="" draggable={false} />
+        {count > 0 ? (
+          <b key={count} className="dk-arrow-n">
+            {count}
+          </b>
+        ) : null}
+      </button>
+      <button type="button" className="dk-arrow is-del" disabled={count === 0} aria-label={tr("Bỏ 1 bản khỏi bộ")} onClick={onDrop}>
+        <img src="/ui/arrow-del.webp" alt="" draggable={false} />
+      </button>
+    </div>
+  );
+}
+
 /** Power balance notes beside the card on its sheet, under its name (owner, 18/10: instead of a Cân bằng icon). */
 function BalanceBox({ id }: { id: string }) {
   const blocks = infoBlocks(id);
@@ -602,7 +631,7 @@ function BalanceBox({ id }: { id: string }) {
   return (
     <section className={`msheet-balance is-${blocks[0].tone}`}>
       <b>{tr("Cân bằng sức mạnh")}</b>
-      <BalanceLines id={id} />
+      <BalanceLines id={id} newest />
     </section>
   );
 }
