@@ -55,6 +55,21 @@ function DeckPage() {
   // Where the open sheet came from: a swipe on it steps through that list (the pool, or the deck's own list).
   const sheetFrom = useRef<"pool" | "list">("pool");
   const [naming, setNaming] = useState<string | null>(null);
+  // Height of the keyboard (visual viewport), so the name box sits right above it, top left (chủ game 08/11).
+  const [kb, setKb] = useState(0);
+  useEffect(() => {
+    if (naming === null) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const read = () => setKb(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    read();
+    vv.addEventListener("resize", read);
+    vv.addEventListener("scroll", read);
+    return () => {
+      vv.removeEventListener("resize", read);
+      vv.removeEventListener("scroll", read);
+    };
+  }, [naming === null]);
   const [plansOpen, setPlansOpen] = useState(false);
   const [covering, setCovering] = useState(false);
   const [ghost, setGhost] = useState<Ghost | null>(null);
@@ -506,7 +521,15 @@ function DeckPage() {
             {naming !== null ? (
               <input
                 className="dk-name-edit"
+                style={{ bottom: `${kb + 6}px` }}
                 autoFocus
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                name="deck-title"
+                data-lpignore="true"
+                data-form-type="other"
                 value={naming}
                 maxLength={40}
                 aria-label={tr("Tên bộ bài")}

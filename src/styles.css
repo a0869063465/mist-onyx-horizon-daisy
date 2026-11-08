@@ -7888,10 +7888,12 @@ button.watch-back {
 }
 .dk-name-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 .dk-name-edit {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  width: 100%;
+  position: fixed;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 60;
+  width: min(19rem, calc(100vw - 1rem));
+  height: 2.6rem;
   padding: 0 0.6rem;
   font: inherit;
   font-size: 0.86rem;
