@@ -290,7 +290,7 @@ export function AlbumBook({
           <Chevron />
         </button>
       </footer>
-      {stage === "fly" || stage === "open" ? <AlbumCover ref={cover} album={album} done={done} className={`al-fly${stage === "open" ? " is-opening" : ""}`} /> : null}
+      {stage === "fly" || stage === "open" ? <AlbumCover ref={cover} album={album} done={done} clean className={`al-fly${stage === "open" ? " is-opening" : ""}`} /> : null}
       {panel ? (
         <SetPanel opened={panel} owned={owned} claimed={claimed} sets={sets} albums={albums} onView={setSheet} onAsk={setAsk} onClaim={claim} onClose={() => setPanel(null)} />
       ) : null}

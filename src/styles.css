@@ -13263,7 +13263,16 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* ── Bộ sưu tập, giao diện mới (chủ game 08/11): cả trang là ảnh (nền, nút tròn, khung, sách) cắt từ bản thiết kế 848×1855;
    chữ và số do code vẽ lên đúng chỗ. Mọi toạ độ = % của trang, cỡ chữ = cqw. ── */
-.cx { container-type: inline-size; --cx-gold: #ffe7a3; }
+/* The page keeps the shape of the picture (848×1855) on any phone: a short screen shrinks the whole page, with the dark fill beside it. */
+.cx-fill { position: fixed; inset: 0; z-index: 0; background: #05071c; }
+.cx {
+  --cw: min(100vw, calc(100dvh * 848 / 1855));
+  inset: auto; left: calc((100vw - var(--cw)) / 2); top: calc((100dvh - var(--cw) * 1855 / 848) / 2);
+  width: var(--cw); height: calc(var(--cw) * 1855 / 848);
+  container-type: inline-size; --cx-gold: #ffe7a3;
+}
+.cx.is-album .cx-tabs button, .cx.is-album .cx-tabs button.on { color: transparent; text-shadow: none; }
+.cx.is-album .cx-wallet { top: 4.7%; }
 .cx.is-vault { background: url("/ui/col/bg-vault.webp") 0 0 / 100% 100% no-repeat, #05071c; }
 .cx.is-album { background: url("/ui/col/bg-album.webp") 0 0 / 100% 100% no-repeat, #05071c; }
 .cx-back { position: absolute; left: 4.4%; top: 3.3%; width: 9%; height: 4.2%; border-radius: 50%; }
@@ -13313,42 +13322,20 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .cx .cv-tag { left: -0.4cqw; top: -0.9cqw; width: 9.2cqw; min-width: 0; height: 3.8cqw; padding: 0 0 0 1.5cqw; display: flex; align-items: center; font-size: 3.2cqw; }
 /* Album: các cuốn sách nằm trên kệ, cuộn ngang liên tục */
 .cx .al-shelf { position: absolute; inset: 0; padding: 0; overflow: visible; pointer-events: none; }
-.al-banner {
-  position: absolute; left: 32.9%; width: 47.2%; top: 15.42%; height: 3.88%; margin: 0;
-  display: flex; align-items: center; justify-content: center;
-  font: 700 3.9cqw / 1 "Cinzel", "Trajan Pro", "Times New Roman", serif; letter-spacing: 0.03em; text-transform: uppercase; color: var(--cx-gold);
-  text-shadow: 0 0.2cqw 0.4cqw rgba(0, 0, 0, 0.9), 0 0 1.2cqw rgba(255, 190, 70, 0.45);
-}
-.al-part.is-env .al-banner { left: 33.8%; top: 52.08%; }
+.al-banner { display: none; }
 .al-row {
-  position: absolute; left: 0; right: 0; top: 20.5%; height: calc(100cqw * 498 / 848);
+  position: absolute; left: 0; right: 0; top: 19.14%; height: calc(100cqw * 560 / 848);
   display: flex; align-items: flex-start; padding: 0 7.7cqw; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; pointer-events: auto;
   overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
 }
 .al-row::-webkit-scrollbar { display: none; }
-.al-part.is-env .al-row { top: 55.8%; }
-.cx .al-item { position: relative; flex: none; width: calc(100cqw * 366 / 848); margin-right: calc(100cqw * -3 / 848); padding: 0; gap: 0; display: block; }
+.al-part.is-env .al-row { top: 54.3%; }
+.cx .al-item { position: relative; flex: none; width: calc(100cqw * 350 / 848); padding: 0; gap: 0; display: block; opacity: var(--edge, 1); }
 .cx .al-item:active .al-cover { transform: none; }
-.cx .al-cover.is-book { width: 100%; aspect-ratio: 366 / 498; border-radius: 3cqw; background: none; box-shadow: none; transition: none; }
+.cx .al-cover.is-book { width: 100%; aspect-ratio: 400 / 640; border-radius: 0; background: none; box-shadow: none; }
 .cx .al-cover.is-book::before, .cx .al-cover.is-book::after { content: none; }
-.cx .al-cover.is-book.is-done { background: none; box-shadow: 0 0 5cqw rgba(255, 200, 80, 0.45); }
-.cx .al-cover-art {
-  position: absolute; inset: auto; left: 6.83%; top: 6.83%; width: 84.97%; height: 84.74%; border-radius: 0; box-shadow: none;
-  background: #0b0f1c center 30% / cover no-repeat;
-  -webkit-mask: url("/ui/col/book-win.webp") center / 100% 100% no-repeat; mask: url("/ui/col/book-win.webp") center / 100% 100% no-repeat;
-}
-.al-cover-plaque {
-  position: absolute; left: 24.04%; top: 70.28%; width: 67.76%; height: 12.85%;
-  background: linear-gradient(180deg, rgba(8, 16, 38, 0.86), rgba(3, 8, 22, 0.92));
-  clip-path: polygon(0 50%, 12.9% 0, 87.1% 0, 100% 50%, 87.1% 100%, 12.9% 100%);
-}
-.al-cover-book { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: plus-lighter; pointer-events: none; }
-.al-cover-name {
-  position: absolute; left: 24.04%; top: 70.28%; width: 67.76%; height: 12.85%;
-  display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1;
-  font: 700 var(--nm, 4.2cqw) / 1 "Be Vietnam Pro", system-ui, sans-serif; color: var(--cx-gold);
-  text-shadow: 0 0.2cqw 0.5cqw rgba(0, 0, 0, 0.9), 0 0 1cqw rgba(255, 190, 70, 0.4);
-}
+.cx .al-cover.is-book.is-done { background: none; box-shadow: none; filter: drop-shadow(0 0 2.6cqw rgba(255, 200, 80, 0.55)); }
+.al-cover-book { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .cx .al-new { right: 3%; top: 3%; width: 6cqw; height: 6cqw; font-size: 4cqw; box-shadow: 0 0 0 0.35cqw #fff, 0 0 2cqw rgba(255, 40, 40, 0.85); }
 .al-prog {
   position: absolute; left: 12%; width: 76%; bottom: 0.8%; height: 8.4%; display: flex; align-items: center; gap: 2.2%; padding: 0 5%;
@@ -13362,3 +13349,48 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .al-prog u i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, #ffe27a, #f3a31b); }
 .al-prog.is-done b { color: var(--cx-gold); }
 .al-item.is-soon { cursor: default; }
+
+/* ── Bên trong album (chủ game 08/11, theo ảnh album Yugi): nền xanh đậm, trang giấy da, lá khung vàng + bảng No.xxx, nút lật tròn viền vàng ── */
+.al-view::before {
+  background:
+    radial-gradient(100% 55% at 50% 38%, #12224f 0%, #0a1331 55%, #050a1c 100%);
+}
+.al-view .al-head h2 { font-family: "Cinzel", "Trajan Pro", "Times New Roman", serif; font-size: 1.7rem; letter-spacing: 0.02em; color: #ffd978; text-shadow: 0 0 0.7rem rgba(255, 190, 70, 0.4), 0 2px 5px rgba(0, 0, 0, 0.9); position: relative; padding-bottom: 0.35rem; }
+.al-view .al-head h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 7.5rem; height: 2px; background: linear-gradient(90deg, transparent, #f1c25a 20%, #ffe9a6 50%, #f1c25a 80%, transparent); border-radius: 2px; }
+.al-view .cv-back {
+  width: 2.9rem; height: 2.9rem; flex: none; border-radius: 50%; padding: 0; border: 0.14rem solid #e7b84e; color: #ffd978; font-weight: 800;
+  background: radial-gradient(circle at 40% 30%, #1d3270, #0a1536 75%); box-shadow: 0 0 0.9rem rgba(255, 190, 70, 0.45), inset 0 0 0.5rem rgba(0, 0, 0, 0.6);
+}
+.al-view .al-tally {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.38rem 1.1rem; border-radius: 999px; border: 0.12rem solid #e7b84e;
+  background: linear-gradient(180deg, #0d1a45, #060d26); color: #fff; font: 800 1.15rem / 1 "Roboto", system-ui, sans-serif;
+  box-shadow: 0 0 0.8rem rgba(255, 190, 70, 0.35), inset 0 0 0.5rem rgba(0, 0, 0, 0.6);
+}
+.al-view .al-tally.is-done { color: #ffe9a6; }
+.al-view .al-tally svg { width: 1.15rem; height: 1.15rem; color: #e8f0ff; }
+.al-view .al-page {
+  border-radius: 1.2cqw 1.6cqw 1.6cqw 1.2cqw;
+  background:
+    radial-gradient(120% 90% at 50% 40%, rgba(255, 244, 214, 0.35), rgba(120, 80, 30, 0.22) 100%),
+    linear-gradient(165deg, #dcc08e 0%, #cfae78 55%, #bf9a62 100%);
+  box-shadow: 0 0 0 0.55cqw #4a3a22, 1.2cqw 0 0 0.55cqw #14234f, 1.2cqw 0 0 0.9cqw #c79b3c, 0 2.4cqw 6cqw rgba(0, 0, 0, 0.7), inset 0 0 5cqw rgba(110, 70, 20, 0.45);
+}
+.al-view .al-page::before { width: 4cqw; background: linear-gradient(90deg, rgba(60, 38, 12, 0.5), rgba(60, 38, 12, 0)); border-radius: 1.2cqw 0 0 1.2cqw; box-shadow: none; }
+.al-view .al-page::after { content: none; }
+.al-view .al-pockets { inset: 5cqw 3.2cqw 2.4cqw 3.6cqw; gap: 4.4cqw 2.2cqw; }
+.al-view .al-slot { background: none; box-shadow: none; }
+.al-view .al-slot::after { content: none; }
+.al-view .al-pocket.is-blank .al-slot { background: none; }
+.al-view .al-no {
+  margin: 0.9cqw 6% 0; padding: 0.9cqw 0; border-radius: 0.8cqw; border: 0.3cqw solid #b98a35;
+  background: linear-gradient(180deg, #14224d, #0a1230); box-shadow: 0 0 0 0.25cqw rgba(0, 0, 0, 0.55);
+  font-family: "Roboto Condensed", "Be Vietnam Pro", system-ui, sans-serif; font-size: 3.1cqw; font-weight: 800; letter-spacing: 0.02em; color: #f3dca0;
+}
+.al-view .al-pocket.is-missing .al-no { color: #c9bd9c; }
+.al-view .al-arrow { width: 3.3rem; height: 3.3rem; border: 0.14rem solid #e7b84e; background: radial-gradient(circle at 40% 30%, #1d3270, #0a1536 75%); box-shadow: 0 0 0.9rem rgba(255, 190, 70, 0.4), inset 0 0 0.5rem rgba(0, 0, 0, 0.6); }
+.al-view .al-arrow svg { stroke: #ffd978; }
+.al-view .al-dots i { background: #34456f; }
+.al-view .al-dots i.on { background: #ffc23a; box-shadow: 0 0 8px rgba(255, 190, 60, 0.8); }
+.al-view .al-book { width: min(100cqw, 100cqh * 0.58); aspect-ratio: 0.58; }
+.al-view .al-pockets { inset: 4.4cqw 3.4cqw 2cqw 4cqw; gap: 3.3cqw 2.2cqw; }
+.al-cover-book { object-fit: contain; }

@@ -26,6 +26,8 @@ function CollectionPage() {
   });
 
   return (
+    <>
+    <div className="cx-fill" aria-hidden="true" />
     <main className={`cv cx is-${tab}`} {...swipe}>
       <GlyphDefs />
       <Link to="/" className="cx-back" aria-label={tr("Trở về")} />
@@ -42,5 +44,6 @@ function CollectionPage() {
       </nav>
       {booted ? tab === "vault" ? <CardVault /> : <AlbumTab /> : null}
     </main>
+    </>
   );
 }

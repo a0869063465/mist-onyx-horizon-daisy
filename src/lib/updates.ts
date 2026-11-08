@@ -944,6 +944,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: icon Phần thưởng đổi sang hộp quà tím nơ đỏ mới.",
   "Nhạc trong trận: thêm bài Chiến binh card, thay phiên ngẫu nhiên với bài cũ (bài này không còn ở nhạc menu).",
   "Bộ sưu tập đổi giao diện mới. Kho bài có khung lá vàng. Album là các cuốn sách trên kệ, vuốt ngang để xem tiếp, kèm số lá đã có. Thêm Album chính và Quái thú (Quái thú chưa có lá).",
+  "Album sưu tập có nền mới, sách mới trên kệ (Yugi, Phép, Joey sắp có; Núi, Bóng tối, Thảo nguyên, Rừng rậm, Đất đá, Biển sâu, Cứ địa máy móc, Thánh địa, Dung nham, Vương đô sắp có), hai cuốn rõ, cuốn thứ ba mờ dần. Màn thấp thu cả trang cho vừa, vào game tự bung toàn màn hình khi chạm lần đầu, mở album có lại hiệu ứng bay và lật bìa, bên trong album làm lại trang giấy da.",
 ];
 
 function remarkOf(notes: string[]) {

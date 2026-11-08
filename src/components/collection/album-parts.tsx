@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type Ref } from "react";
+import { useState, type Ref } from "react";
 import { AppraisePanel } from "@/components/collection/appraise-panel";
 import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
@@ -19,39 +19,23 @@ export function AlbumPic({ id, missing = false, vault = false }: { id: string; m
   );
 }
 
-/** The tone of a book's leather, by album (chủ game 08/11: one binder standard, recoloured per album). */
-const TONES: Record<string, string> = {
-  yugi: "purple",
-  "quai-thu": "blue",
-  nui: "blue",
-  "bong-toi": "violet",
-  "thao-nguyen": "olive",
-  "rung-ram": "green",
-  "dat-da": "brown",
-  "bien-sau": "steel",
-  "cu-dia-may-moc": "steel",
-  "thanh-dia-thien-su": "pearl",
-  "nui-dung-nham": "crimson",
-  phep: "violet",
-  "vuong-quoc": "purple",
-};
+/** The books drawn for the shelf (name on the plaque) and for opening (the same without the name); `soon` = no cards yet. */
+export const BOOKS = new Set(["nui", "bong-toi", "thao-nguyen", "rung-ram", "dat-da", "bien-sau", "cu-dia-may-moc", "thanh-dia-thien-su", "nui-dung-nham", "vuong-quoc", "phep", "yugi", "joey"]);
 
-/** What the book says on its plaque: the album's name (the main album of a character is "Album chính"). */
-export function albumTitle(id: string, name: string): string {
-  return id === "yugi" ? "Album chính" : name;
+/** What the book says on its plaque: the album's name. */
+export function albumTitle(_id: string, name: string): string {
+  return name;
 }
 
-/** An album's cover: a book (spine, gold corners, a plaque) with the album's picture in its window; golden glow once complete. */
-export function AlbumCover({ album, done, className = "", ref }: { album: Pick<Album, "id" | "name" | "cover">; done: boolean; className?: string; ref?: Ref<HTMLSpanElement> }) {
-  const tone = TONES[album.id] ?? "blue";
+/**
+ * An album's cover: one picture of a book (chủ game 08/11). On the shelf it carries its name; the one that flies and
+ * swings open (`clean`) is the same book without the name.
+ */
+export function AlbumCover({ album, done, clean = false, className = "", ref }: { album: Pick<Album, "id" | "name" | "cover">; done: boolean; clean?: boolean; className?: string; ref?: Ref<HTMLSpanElement> }) {
+  const src = BOOKS.has(album.id) ? `/ui/col/${clean ? "open" : "shelf"}/${album.id}.webp` : null;
   return (
     <span ref={ref} className={`al-cover is-book${done ? " is-done" : ""}${className ? ` ${className}` : ""}`}>
-      <span className="al-cover-art" style={{ backgroundImage: `url(${album.cover})` }} />
-      <i className="al-cover-plaque" aria-hidden="true" />
-      <img className="al-cover-book" src={`/ui/col/book-${tone}.webp`} alt="" draggable={false} />
-      <b className="al-cover-name" style={{ "--nm": `${Math.min(4.2, 36 / Math.max(8, tr(albumTitle(album.id, album.name)).length))}cqw` } as CSSProperties}>
-        {tr(albumTitle(album.id, album.name))}
-      </b>
+      {src ? <img className="al-cover-book" src={src} alt={tr(album.name)} draggable={false} /> : null}
     </span>
   );
 }
