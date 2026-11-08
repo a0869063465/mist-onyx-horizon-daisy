@@ -218,12 +218,12 @@ export function SetPanel({
         </button>
         <div className="al-panel-top">
           <span className="al-panel-pic">
-            <SlotCard id={id} no={self.no ? formatNo(self.no) : undefined} missing={!owned.has(id)} />
+            <AlbumPic id={id} missing={!owned.has(id)} />
           </span>
           <div className="al-panel-info">
             <h3>{tr(cardName(id))}</h3>
             <small>
-              {self.no ? formatNo(self.no) : ""} · {tr(self.album)}
+              {self.no ? formatNo(self.no) : ""}
             </small>
             <span className="al-panel-btns">
               <button type="button" className="al-panel-view" onClick={() => onView(id)}>
@@ -258,7 +258,6 @@ export function SetPanel({
                       onClick={() => onView(card)}
                     >
                       <SlotCard id={card} no={at.no ? formatNo(at.no) : undefined} missing={!owned.has(card)} />
-                      <small>{tr(at.album)}</small>
                     </button>
                   );
                 })}
