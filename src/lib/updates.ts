@@ -957,6 +957,7 @@ export const PENDING_NOTES: string[] = [
   "Album sưu tập: lật trang thì khung lá, số No. và tranh đi cùng trang, không còn khung ở lại hay biến mất.",
   "Bảng mô tả lá quái trở lại kiểu cũ, chỉ lá phép giữ khung màu như lá trên tay. Album sưu tập: mở album thì đế phát sáng dưới bìa đứng yên, chỉ bìa trước lật; chỗ cắt đo riêng từng album.",
   "Chỉnh sửa bộ bài: bảng lá có 2 mũi tên, xanh thêm 1 bản vào bộ (hiện số bản đang có), đỏ bỏ 1 bản; mũi tên mờ khi hết bản để thêm hoặc bộ không có lá. Khung Cân bằng sức mạnh thu nhỏ một nửa, chỉ ghi lần cân bằng mới nhất.",
+  "Bảng mô tả lá quái: số công và máu nhích lên đúng vào giữa ô.",
 ];
 
 function remarkOf(notes: string[]) {
