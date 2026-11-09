@@ -171,14 +171,14 @@ Lưu ý:
 
 | Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
 |---|---|---|---|
-| Đập phá | (tên kỹ năng) | Kỹ năng nội tại của Khổng lồ 1 mắt: đòn đánh thường chủ động tốn thêm mana, và mỗi đòn đánh thường tăng vĩnh viễn công. | `khong-lo-mot-mat` trong `catalog.ts`: "Đòn đánh thường chủ động của hắn tốn thêm 1 mana. Những lần bị động thì không tốn. Tăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường." |
+| Đập phá | (tên kỹ năng) | Kỹ năng nội tại của Khổng lồ 1 mắt: đòn đánh thường chủ động Tiêu hao 1 mana, và mỗi đòn đánh thường tăng vĩnh viễn công. | `khong-lo-mot-mat` trong `catalog.ts`: "Đòn đánh thường chủ động của hắn tốn thêm 1 mana. Những lần bị động thì không tốn. Tăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường." |
 | Mỗi đòn đánh | ca (cam) | Điều kiện kích hoạt. | Chữ lá có "sau mỗi đòn đánh thường". |
 | đòn đánh là chủ động | ca (cam) | Điều kiện: đòn đánh do người chơi chủ động ra, không phải khi bị đánh. | "Đòn đánh thường chủ động" trong chữ lá. |
 | tăng | lu (xanh lá) | Tác dụng tăng chỉ số. | "Tăng cho hắn 1 công vĩnh viễn". |
 | x công vĩnh viễn | lu (xanh lá) theo "tăng"; "công" ca theo quy ước cũ | Lượng công tăng vĩnh viễn. | 1 công. |
-| Tiêu hao 1 mana | lam (xanh lam) | Áp màu có sẵn của "Tiêu hao N mana". | "tốn thêm 1 mana" trong chữ lá Đập phá. |
+| Tiêu hao 1 mana | lam (xanh lam) | Áp màu có sẵn của "Tiêu hao N mana". | "Tiêu hao 1 mana" trong chữ lá Đập phá (sau 10/11). |
 
 Lưu ý:
-- Chữ lá Đập phá viết "tốn thêm 1 mana", không viết "Tiêu hao 1 mana". Nếu muốn từ khoá này áp dụng được cho Đập phá thì chủ game cần chọn: giữ chữ "tốn thêm", hay đổi thành "Tiêu hao". Chữ lá là của chủ game nên tôi không tự đổi.
+- Chữ lá Đập phá đã đổi (10/11, theo chủ game) từ "tốn thêm 1 mana" thành "Tiêu hao 1 mana"; STALE_SKILLS có thêm dòng để bản lưu cũ không giữ chữ cũ. Còn lại: trial.ts (gợi ý Sát hạch) và appraisal.ts (lý do câu hỏi) vẫn ghi "tốn thêm 1 mana", chờ chủ game chọn đổi hay giữ.
 - Màu của "x công vĩnh viễn" chưa được chủ game nói. Tôi để "công" theo quy ước cam, còn "tăng" theo lục. Cần xác nhận.
 - Khung màu của các từ khoá mới do chủ game làm thủ công, tài liệu không ghi khung.

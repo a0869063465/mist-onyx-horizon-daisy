@@ -505,7 +505,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Khổng lồ 1 mắt",
     "stars": 1,
     "gems": 0,
-    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn tốn thêm 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
+    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn Tiêu hao 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
     "atk": 3,
     "def": 3,
     "mdef": 0,
