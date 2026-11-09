@@ -182,3 +182,20 @@ Lưu ý:
 - Chữ lá Đập phá đã đổi (10/11, theo chủ game) từ "tốn thêm 1 mana" thành "Tiêu hao 1 mana"; STALE_SKILLS có thêm dòng để bản lưu cũ không giữ chữ cũ. Còn lại: trial.ts (gợi ý Sát hạch) và appraisal.ts (lý do câu hỏi) vẫn ghi "tốn thêm 1 mana", chờ chủ game chọn đổi hay giữ.
 - Màu của "x công vĩnh viễn" chưa được chủ game nói. Tôi để "công" theo quy ước cam, còn "tăng" theo lục. Cần xác nhận.
 - Khung màu của các từ khoá mới do chủ game làm thủ công, tài liệu không ghi khung.
+
+### Từ khoá đợt 3 (10/11/2026)
+
+Cầu sấm là phép (skill) của Phù thuỷ tí hơn. Không ghi tốc độ vì đây là phép nhanh, chỉ ghi khi là skill chậm (chủ game).
+
+| Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
+|---|---|---|---|
+| Dùng x mana | lam (xanh lam) | Số mana tiêu hao khi dùng. | Cầu sấm: "Dùng 1 mana", x = 1. |
+| sát thương phép | lam (xanh lam) | Loại sát thương phép (bị trừ thủ phép). | Cầu sấm: "gây sát thương phép". |
+| x (số gốc của sát thương) | lam (xanh lam) | Lượng sát thương cơ bản, cộng thêm theo điều kiện. | Cầu sấm: "bằng 2 cộng với…", x = 2. |
+| số sao hiện có | ca (cam) | Điều kiện/lượng cộng thêm: số sao hiện có của người dùng. | Cầu sấm: "số sao hiện có". |
+| lên đối thủ | d (đỏ) | Mục tiêu: người chơi đối phương. | Cầu sấm: "lên người đối thủ hoặc 1 quái địch". |
+| lên 1 quái địch | d (đỏ) | Mục tiêu: 1 quái thú địch. | Cầu sấm: cùng câu trên. |
+
+Lưu ý:
+- Chữ lá Cầu sấm (`catalog.ts`, Phù thuỷ tí hơn): "Dùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên người đối thủ hoặc 1 quái địch." Đây là chữ hiện có, chưa đổi.
+- Tên kỹ năng trong bảng quái là "Cầu sấm" (`skill-book.ts`, kiểu chủ động xanh lam). Lá khác có "Cầu sấm ánh sáng" (Mắt xanh huỷ diệt) là một skill khác, không gộp.
