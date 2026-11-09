@@ -966,6 +966,7 @@ export const PENDING_NOTES: string[] = [
   "Chỉnh sửa bộ bài: dòng \"Bộ bài đã Full số lá\" chỉ hiện khi bạn cố thêm lá lần thứ 3 lúc bộ đã đầy, rồi nhảy lên ở mỗi lần thử sau.",
   "Số mana trên lá phép trong bảng mô tả nâng lên một chút cho nằm giữa viên mana.",
   "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
+  "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
 ];
 
 function remarkOf(notes: string[]) {

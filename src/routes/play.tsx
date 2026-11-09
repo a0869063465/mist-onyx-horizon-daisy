@@ -846,6 +846,9 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
     const before = fieldMon(prev, struck);
     if (!where || !before) return null;
     const after = fieldMon(next, struck);
+    // Gương phòng hộ chặn đòn (chủ game 09/11): không gây sát thương thì không có hiệu ứng đánh trúng; chỉ số kẻ đánh bị cướp
+    // nên máu của nó đổi, không phải là trúng đòn trả.
+    if (prev.hold?.mirror && after && after.hp === before.hp) return null;
     const hurt = !after || after.hp !== before.hp || fieldMon(next, attacker.uid)?.hp !== attacker.hp;
     if (!hurt) return null;
     const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
