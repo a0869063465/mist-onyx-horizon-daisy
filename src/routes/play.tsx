@@ -3892,6 +3892,8 @@ function PlayPage() {
     seal(duel, next);
     if (duel.mode === "test") setTestPast((list) => [...list, structuredClone(duel)].slice(-40));
     const previous = duel;
+    // Gương phòng hộ vừa dựng trước đòn của bên này (dù đòn đi đường nào): giữ bàn lúc trước để X rút lại được (chủ game 09/11).
+    if (previous.step === "main" && mirrorWaits(next, previous.turn) && previous.turn === viewer) setMirrorBack((kept) => kept ?? { base: previous, chain });
     const ticket = pushGen.current + 1;
     pushGen.current = ticket;
     holdNotice(next.live, true, next.clock);
