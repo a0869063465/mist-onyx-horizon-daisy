@@ -13490,7 +13490,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
 .dk-tip-r4 { color: #b45cff; }
 .dk-tip-sp { color: #ff4fa6; }
-.dk-copies { position: absolute; left: 5%; top: -0.22rem; z-index: 3; min-width: 1.5rem; padding: 0.1rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1.5px solid var(--tone, #3ec6ff); background: linear-gradient(180deg, #0f2a58, #071530); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: color-mix(in srgb, var(--tone, #3ec6ff) 82%, #fff); text-shadow: 0 0.06rem 0 rgba(0, 0, 0, 0.9), 0 0 0.35rem color-mix(in srgb, var(--tone, #3ec6ff) 60%, transparent); box-shadow: 0 0 0.45rem color-mix(in srgb, var(--tone, #3ec6ff) 70%, transparent), 0 0.12rem 0.2rem rgba(0, 0, 0, 0.7); pointer-events: none; }
+.dk-copies { position: absolute; left: 5%; top: -0.22rem; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid var(--tone, #3ec6ff); background: color-mix(in srgb, var(--tone, #3ec6ff) 34%, #0a1a30); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: color-mix(in srgb, var(--tone, #3ec6ff) 55%, #fff); text-shadow: 0 1px 2px #000, 0 0 6px var(--tone, #3ec6ff); pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
 /* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
 .dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }
