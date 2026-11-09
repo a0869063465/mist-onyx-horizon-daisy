@@ -84,7 +84,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
   "mat-xanh-huy-diet": [A("Cầu sấm ánh sáng", "bolt-eye")],
   "mat-do-tan-pha": [A("Cầu lửa địa ngục", "burning-eye")],
-  "hoa-an-thit-nguoi": [A("Hấp thụ", "carnivorous-plant"), NOTE("không đánh thường")],
+  "hoa-an-thit-nguoi": [slow(R("Hấp thụ", "carnivorous-plant")), NOTE("không đánh thường")],
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
