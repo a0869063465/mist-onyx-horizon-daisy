@@ -198,6 +198,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["rong-con", "hoặc người chơi."],
   ["rong-ngan-tuoi", "hoặc người chơi."],
   ["phu-thuy-ti-hon", "lên người đối thủ hoặc 1 quái địch"],
+  ["hoa-an-thit-nguoi", "từ 1 quái thú, để cướp 2 máu tối đa của nó"],
   ["ngai-khong-lo", "Tiêu hao 1 mana gây 4 sát thương phép lên tất cả quái thú kẻ địch. Quái sống sót dính độc 1 sát thương chuẩn đầu mỗi lượt, kéo 3 lượt, không cộng dồn."],
   ["trai-tim-hai-long", "lên toàn bộ kẻ địch"],
   ["kazura", "Điểm số phía trên tôi là số máu ảo"],

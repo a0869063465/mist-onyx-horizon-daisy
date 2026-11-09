@@ -465,7 +465,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Hoa ăn thịt người",
     "stars": 1,
     "gems": 1,
-    "skill": "Tôi Không đánh thường. Cũng Không thể chặn.\n__**Hấp thụ**__\nTiêu hao 0 mana. Chịu đòn từ 1 quái thú, để cướp 2 máu tối đa của nó, và cộng vào cho bản thân.",
+    "skill": "Tôi Không đánh thường. Cũng Không thể chặn.\n__**Hấp thụ**__\nTiêu hao 0 mana. Chịu đòn vật lý, để cướp 2 máu tối đa của quái thú đó.",
     "atk": 0,
     "def": 3,
     "mdef": 0,
