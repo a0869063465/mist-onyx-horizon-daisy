@@ -9,6 +9,12 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
 - Làm xong: `docs/luat-la-bai.md` (cấu trúc lá, chữ lá đọc số, phân loại kỹ năng và phép, quy tắc viết mô tả, checklist lá mới). Viết từ code hiện có; chưa có kiểm tra tự động.
 - Chủ game cần duyệt: màu "risk" (tài liệu ghi cam theo ghi chú 03/11, còn comment trong skill-book.ts ghi đỏ), và danh sách từ khoá chung (mục 8 còn trống).
 
+## Quy ước thống kê màu từ khoá (10/11, chủ game yêu cầu)
+
+- Mỗi cuối phiên tôi tự thống kê từ khoá theo màu (lam, d, v, h, lu, ch, ca, t, gvt), bảng nằm ở `docs/luat-la-bai.md` mục 9. Màu không có từ khoá thì bỏ.
+- Đã làm: gvt phòng ngự đổi vàng 52% → 55% (`styles.css`). Đã commit cùng ghi chú này.
+- Chờ chủ game: màu xám ("không thể hành động"), và màu ch (xanh đọt chuối) chưa có từ khoá.
+
 ## Việc mới chờ chi tiết (09/11, CHƯA làm)
 
 - Yêu cầu chủ game: tạo hệ thống keyword bằng hình ảnh, nằm bên cạnh phải lá bài. Chi tiết chủ game nói sau.

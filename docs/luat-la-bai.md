@@ -128,3 +128,24 @@ Một lá không có trong `SPEEDS` không có nhãn tốc độ. Kiểu khung (
 - Chưa có danh sách từ khoá chung (ví dụ "khống chế", "tê liệt", "dung hợp" với nghĩa thống nhất) tập trung ở một nơi; mỗi chữ lá tự viết. Cần chủ game duyệt một bảng từ khoá trước khi thêm vào đây.
 - Chưa có kiểm tra tự động chữ lá có khớp `SKILL_BOOK` và tên quái hay không; kiểm bằng tay khi thêm lá.
 - Chưa có quy định màu khung, màu viền cho từng loại và từng tốc độ trong tài liệu này. Chủ game tự chọn và chỉnh bằng tay.
+
+## 9. Thống kê từ khoá theo màu (cập nhật sau mỗi phiên)
+
+Quy ước của chủ game: "từ khoá" là chữ tô màu trong chữ lá. Tên từ khoá không dùng chung với "keyword" (mục sau này, chủ game sẽ nói riêng). Màu không có từ khoá thì không ghi.
+
+Viết tắt: lam = xanh lam, d = đỏ, v = vàng, h = hồng, lu = xanh lá, ch = xanh đọt chuối, ca = cam, t = tím, gvt = gradient vàng tím.
+
+Thống kê theo code hiện có (`src/components/game/sheet-ink.ts`, CSS `.ink-*` trong `src/styles.css`), phiên 10/11/2026:
+
+- **lam**: giải trừ trạng thái bất lợi ("giải trừ", "giải khống chế", "giải mọi trạng thái bất lợi").
+- **d**: hiến tế.
+- **v**: thủ ("thủ"); phòng ngự (phần trên của gvt).
+- **h**: tiến hoá.
+- **lu**: máu, máu tối đa, hồi máu.
+- **ca**: số lượt ("N lượt"), công.
+- **t**: thủ phép; phòng ngự (phần dưới của gvt).
+- **gvt**: phòng ngự. Chủ game (10/11): tím đang quá nhiều, tăng phần vàng lên, ít nhất 55% (đã đổi từ 52% lên 55% trong `styles.css`, `.ink-sheet-guard`).
+- **ch**: chưa có từ khoá.
+- Không đưa vào danh sách: "không thể hành động / tấn công / chặn…" (màu xám, không có trong bảng màu của chủ game).
+
+Cần chủ game xác nhận: xám (không thể hành động) có giữ hay đổi sang một màu trong danh sách trên.
