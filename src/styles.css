@@ -13519,3 +13519,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-row[data-n="2"] { height: 20%; }
 .kw-row[data-n="3"] { height: 15%; }
 .kw-icon { display: block; height: 100%; width: auto; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)); }
+/* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
+.kw-icon[data-kw="phep"] { filter: drop-shadow(0 0 2px #c14dff) drop-shadow(0 0 6px #c14dff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.kw-icon[data-kw="vinh-quang"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.kw-icon[data-kw="luon-lach-1"], .kw-icon[data-kw="luon-lach-2"] { filter: drop-shadow(0 0 2px #ffb52e) drop-shadow(0 0 6px #ffb52e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.kw-icon[data-kw="khong-chan"] { filter: drop-shadow(0 0 2px #ff5a2e) drop-shadow(0 0 6px #ff5a2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
