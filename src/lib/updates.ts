@@ -963,6 +963,8 @@ export const PENDING_NOTES: string[] = [
   "Nhãn hạn dùng thử đổi sang góc đối diện nhãn UR và SR, đuôi nhọn quay vào trong, màu đỏ thẫm sáng.",
   "Lượt đầu chưa rút bài mà bấm liên tục 5-6 lần là thao tác bất lực: hướng dẫn hiện ra chỉ phải rút bài.",
   "Bấm lá quái trên tay mà chỉ có một cách triệu hồi thì hiện luôn hai mũi tên chọn hàng: lên màu đỏ (hàng trước, có nguy cơ), xuống màu xanh lam (hàng sau). Hai màu in hơi nhạt.",
+  "Chỉnh sửa bộ bài: dòng \"Bộ bài đã Full số lá\" chỉ hiện khi bạn cố thêm lá lần thứ 3 lúc bộ đã đầy, rồi nhảy lên ở mỗi lần thử sau.",
+  "Số mana trên lá phép trong bảng mô tả nâng lên một chút cho nằm giữa viên mana.",
 ];
 
 function remarkOf(notes: string[]) {

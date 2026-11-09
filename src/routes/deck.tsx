@@ -56,6 +56,7 @@ function DeckPage() {
   const sheetFrom = useRef<"pool" | "list">("pool");
   const [naming, setNaming] = useState<string | null>(null);
   const [fullPing, setFullPing] = useState(0);
+  const fullTries = useRef(0);
   // Height of the keyboard (visual viewport), so the name box sits right above it, top left (chủ game 08/11).
   const [kb, setKb] = useState(0);
   useEffect(() => {
@@ -143,7 +144,9 @@ function DeckPage() {
     if (!canUseCard(pick.id)) return;
     // A full deck: the tip jumps up to say so, again at every try (chủ game 08/11).
     if (deck.monsters.length + deck.spells.length >= DECK_SIZE) {
-      setFullPing((n) => n + 1);
+      // Only after the third try (chủ game 09/11); from then on it jumps at every try.
+      fullTries.current += 1;
+      if (fullTries.current >= 3) setFullPing((n) => n + 1);
       return;
     }
     setDeck((current) => {
@@ -490,7 +493,7 @@ function DeckPage() {
               </button>
             ) : null}
           </label>
-          <DragTip full={deck.monsters.length + deck.spells.length >= DECK_SIZE} ping={fullPing} />
+          <DragTip reset={() => { fullTries.current = 0; }} full={deck.monsters.length + deck.spells.length >= DECK_SIZE} ping={fullPing} />
           {/* Row 1: Quái, Phép. Row 2: Thống kê, Lọc, Lưu; Lưu sits right above Đổi hình nền (owner, 18/10). */}
           <div className="dk-pad">
             <div className="dk-tools is-main">
@@ -594,7 +597,7 @@ function DeckPage() {
  */
 const TIP_KEY = "clash-deck-tip";
 
-function DragTip({ full, ping }: { full: boolean; ping: number }) {
+function DragTip({ full, ping, reset }: { full: boolean; ping: number; reset: () => void }) {
   // Page 0 how to move cards; page 1 (tap the line) how the x1 / x2 on the right of a row adds copies; tap again to sink it.
   const [page, setPage] = useState(0);
   const [sunk, setSunk] = useState(false);
@@ -612,14 +615,11 @@ function DragTip({ full, ping }: { full: boolean; ping: number }) {
       setPage(3);
     }
   }, [ping, full]);
-  const wasFull = useRef(false);
   useEffect(() => {
-    if (full && !wasFull.current) {
-      setSunk(false);
-      setPage(3);
+    if (!full) {
+      reset();
+      if (page === 3) setPage(0);
     }
-    if (!full && page === 3) setPage(0);
-    wasFull.current = full;
   }, [full]);
   function keep(value: boolean) {
     try {

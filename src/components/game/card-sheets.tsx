@@ -121,7 +121,7 @@ export function SpellFace({ id, gems }: { id: string; gems?: number | string }) 
         {n > 0 ? (
           <span
             className="fstat is-gems"
-            style={{ left: `${at.x}%`, top: `${at.y}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
+            style={{ left: `${at.x}%`, top: `${at.y - 1.5}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
           >
             {n}
           </span>
