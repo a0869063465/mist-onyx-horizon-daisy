@@ -968,6 +968,7 @@ export const PENDING_NOTES: string[] = [
   "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
   "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
   "Kizuran giảm máu từ 8 xuống 6.",
+  "Lỡ đánh vào Gương phòng hộ đang đứng trên sân: sau khi Xác nhận, gương tự dựng mà bạn chưa bấm OK thì vẫn bấm X để rút lại đòn.",
 ];
 
 function remarkOf(notes: string[]) {

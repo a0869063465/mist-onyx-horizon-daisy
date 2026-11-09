@@ -569,6 +569,14 @@ function deckOf(face: import("@/lib/duel").DuelFace | undefined) {
 
 const TEST_DUEL_KEY = "clash-test-duel";
 
+/** Gương phòng hộ đứng sẵn vừa tự dựng trước đòn đánh của `side`, và còn chờ `side` trả lời (chưa phát động). */
+function mirrorWaits(duel: Duel, side: Side): boolean {
+  const hold = duel.hold;
+  if (duel.step !== "respond" || !hold || hold.stage || hold.mirror !== "up" || hold.priority !== side || duel.turn !== side) return false;
+  const pending = duel.pending;
+  return Boolean(pending && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill)));
+}
+
 function loadTestDuel(): Duel | null {
   if (typeof sessionStorage === "undefined") return null;
   try {
@@ -1848,6 +1856,9 @@ function PlayPage() {
   // until the tick. `act`: one action at the opponent; `answer`: answers to the opponent's action. `base` is the
   // match as it stood before (X goes back to it, with the icons of `chain` as they were). `peek`: the eye's preview.
   const [queue, setQueue] = useState<{ kind: "act" | "answer"; base: Duel; chain: ChainOrb[] } | null>(null);
+  // Gương phòng hộ đứng sẵn (chủ game 09/11): sau Xác nhận, gương tự dựng và quyền còn ở bên đánh; gương chủ yếu để doạ,
+  // nên đòn lỡ tay vẫn rút lại được bằng X tới khi bên đánh bấm OK. `base` là bàn lúc trước khi đánh.
+  const [mirrorBack, setMirrorBack] = useState<{ base: Duel; chain: ChainOrb[] } | null>(null);
   const [peek, setPeek] = useState(false);
   const sightMemo = useRef<{ duel: Duel | null; kind: string | null; sight: Sight | null }>({ duel: null, kind: null, sight: null });
   // Whom the waiting action lands on (dòng chảy đợt 2), worked out once per state of the match.
@@ -3529,6 +3540,11 @@ function PlayPage() {
       setPeek(false);
     }
   }, [duel, queue]);
+  // The withdraw of a mirror-faced attack goes once the attacker lets the mirror rise, or anything else moves on.
+  useEffect(() => {
+    if (!mirrorBack) return;
+    if (!duel || duel.mid !== mirrorBack.base.mid || duel.winner !== null || !mirrorWaits(duel, duel.turn)) setMirrorBack(null);
+  }, [duel, mirrorBack]);
   // The row arrows stand outside the picked card, over its top edge: where that card is on the board, in % of the board.
   const [pickSpot, setPickSpot] = useState<{ x: number; top: number } | null>(null);
   useLayoutEffect(() => {
@@ -3615,6 +3631,8 @@ function PlayPage() {
   // when this side has an action to cancel. With nothing of this side queued the preview is the match as it goes on if
   // this side lets the waiting action through.
   const eyeOn = Boolean(queue) || Boolean(responding && duel.hold && !duel.hold.stage);
+  // X còn mở khi Gương phòng hộ đứng sẵn tự dựng trước đòn của mình và chưa phát động (chủ game 09/11).
+  const withdrawOn = !queue && Boolean(mirrorBack) && mine && mirrorWaits(duel, viewer);
   let sight: Sight | null = null;
   if (peek && eyeOn) {
     const memo = sightMemo.current;
@@ -3827,7 +3845,9 @@ function PlayPage() {
     setQueue(null);
     setPeek(false);
     if (kind === "act") {
-      land(confirmStage(duel));
+      const sent = confirmStage(duel);
+      if (mirrorWaits(sent, viewer)) setMirrorBack({ base: queue.base, chain: queue.chain });
+      land(sent);
       return;
     }
     const open = duel.step === "respond" && duel.hold && !duel.hold.stage && duel.hold.priority === viewer;
@@ -3846,6 +3866,17 @@ function PlayPage() {
     setChain(icons);
     holdNotice("");
     setDuel(base);
+  }
+
+  /** X lúc Gương phòng hộ đứng chờ bên đánh: đòn rút lại, bàn về như trước khi đánh; đối thủ đã thấy đòn nên cũng được gửi. */
+  function withdrawMirror() {
+    if (!duel || !mirrorBack) return;
+    const { base, chain: icons } = mirrorBack;
+    setMirrorBack(null);
+    setPeek(false);
+    prevDuel.current = base;
+    setChain(icons);
+    land({ ...base, live: "Rút lại đòn đánh." });
   }
 
   /** A move this screen's player cannot make while something waits in the queue. */
@@ -7248,8 +7279,15 @@ function PlayPage() {
             )
           ) : null}
           {replay || board.drawMon.hidden ? null : (
-            <button type="button" className={`oracle-act${queue || markId || picking ? " is-live" : ""}`} aria-label={tr("Huỷ hàng chờ")} disabled={!queue && !markId && !picking} style={pinMedal(board.drawMon)} onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : cancelQueue())}>
-              <OracleOrb kind="cancel" state={queue || markId || picking ? "open" : "shut"} />
+            <button
+              type="button"
+              className={`oracle-act${queue || markId || picking || withdrawOn ? " is-live" : ""}`}
+              aria-label={tr("Huỷ hàng chờ")}
+              disabled={!queue && !markId && !picking && !withdrawOn}
+              style={pinMedal(board.drawMon)}
+              onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : queue ? cancelQueue() : withdrawOn ? withdrawMirror() : undefined)}
+            >
+              <OracleOrb kind="cancel" state={queue || markId || picking || withdrawOn ? "open" : "shut"} />
             </button>
           )}
           {replay || board.drawSpell.hidden ? null : (

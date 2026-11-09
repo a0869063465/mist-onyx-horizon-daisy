@@ -1,5 +1,11 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Huỷ đòn khi Gương phòng hộ đứng sẵn (09/11, Opus 5.5 high)
+1. Việc vừa làm: gộp `main` (51 commit) vào nhánh `ccr-42ba0a1d-w5tvmy` (nhánh cũ thiếu việc của `main`).
+2. Hiện trạng: đã nhận 1 ảnh (quái mình đánh, Gương tự dựng, X khép). Tái hiện được: sau Xác nhận, gương còn "up", quyền ở bên đánh nhưng X khép.
+3. Việc sắp làm: X vẫn mở ở bước đó, bấm X rút đòn (bàn về như trước khi đánh, gửi cả đối thủ).
+- ĐÃ LÀM (chưa áp `main`): play.tsx `mirrorBack` (giữ bàn trước khi đánh lúc Xác nhận nếu gương "up" còn chờ bên đánh), `mirrorWaits`, `withdrawOn`, `withdrawMirror` (X mở, bấm thì về bàn cũ + gửi online, chữ "Rút lại đòn đánh."); bấm OK thì như cũ. Thử Chromium 412×915 Vs Máy: X mở sau Xác nhận, X trả quái + mana, OK thì gương chặn. tsc 7 lỗi cũ. round-rules: bài "Hấp thụ ma pháp nuốt Phục kích" chập chờn từ trước (cả khi chưa sửa). Chưa thử online 2 máy; mở lại trang giữa chừng thì mất `mirrorBack` (X khép).
+
 ## Chuyển cửa sổ (11/11/2026, Haiku 5.5 medium)
 - Đã xong: các thay đổi nhánh `ccr-b3cdb72e-7r9yr6` đã có trên main (`225084c`). Skill `chuyen-cua-so` đã tạo (`.claude/skills/chuyen-cua-so/`).
 - Còn dở: chưa chạy `tsc` và `round-rules` trên main sau khi áp; màu cho "x công vĩnh viễn" và "x sát thương phép" chưa được xác nhận.
