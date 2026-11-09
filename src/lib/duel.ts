@@ -14,6 +14,7 @@ import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
+import { keywordsOf } from "./keywords.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
 export type Side = 0 | 1;
@@ -3223,6 +3224,18 @@ function guardStrikeKind(mon: FieldMon, roster?: string[]): "phys" | "spell" {
   return "phys";
 }
 
+/** Keyword Đòn đánh phép (chủ game 09/11): đòn đánh thường của quái này gây sát thương phép. */
+function magicStrike(mon: FieldMon): boolean {
+  return keywordsOf(mon.cardId).includes("phep");
+}
+
+/** Keyword Đâm xuyên (chủ game 09/11): đòn đánh thường hạ quái thì sát thương thừa đánh thẳng lên người chơi. */
+function pierceLeft(attacker: FieldMon, fallen: FieldMon, surplus: number): number {
+  if (attacker.horn || attacker.gaze || attacker.bolt) return 0;
+  if (!keywordsOf(attacker.cardId).includes("dam-xuyen")) return 0;
+  return fallen.hp <= 0 && surplus > 0 ? surplus : 0;
+}
+
 function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | null>): { mon: FieldMon; bite: number; surplus: number } {
   if (raw <= 0) return { mon: defender, bite: 0, surplus: 0 };
   const mon = openShade(defender);
@@ -3265,7 +3278,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const hiddenTrue = shadeHidden(attacker) && !beam;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt) || hiddenTrue;
   const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) && !defender.waitCounter && attacker.row !== "back" && defender.row !== "back" ? riderPackets(defender, attacker, alliesA) : null;
-  const blockSpell = !attackerDodged && !beam && !counterBlow && defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell" && counter > 0;
+  const blockSpell = !attackerDodged && !beam && !counterBlow && ((defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell") || magicStrike(defender)) && counter > 0;
   const counterRaw = outgoing(defender, counter);
   const struck = attackerDodged || beam
     ? { mon: attacker, bite: 0, surplus: 0 }
@@ -3324,7 +3337,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     }
   } else {
     const riderAtk = attacker.cardId === RIDER;
-    const guardSpell = !riderAtk && guardStrikeKind(attacker, rosterA) === "spell";
+    const guardSpell = !riderAtk && (guardStrikeKind(attacker, rosterA) === "spell" || magicStrike(attacker));
     const dragon = !riderAtk && !guardSpell && defender.cardId === "chien-binh-rong" && !defenderDodged;
     let hit;
     if (guardSpell) {
@@ -4246,6 +4259,8 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
   const blocker = you.field.find((mon) => mon?.uid === blockerUid) ?? null;
   if (blocker?.row === "back") return note(state, "Quái hàng sau không chặn được.");
   if (!blocker || blocker.dim || blocker.cardId === "chan-ken" || held(blocker) || hexLocked(blocker) || blocker.noBlock || (blocker.path ?? 0) > 0) return note(state, "Quái này không chặn được");
+  const barred = keywordBarred(state, defender, blocker);
+  if (barred) return note(state, barred);
   let next = state;
   let skill = false;
   if (withSkill) {
@@ -4310,6 +4325,39 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
   const ids = [blockerUid];
   if (pending?.kind === "face") ids.push(pending.attacker);
   return stampLegend(blocked, ids);
+}
+
+/** Kẻ ra đòn (đánh thường) hoặc kẻ dùng kỹ năng đang chờ, nếu là quái. */
+function pendingStriker(state: Duel): FieldMon | null {
+  const pending = state.pending;
+  const uid = pending?.kind === "melee" || pending?.kind === "face" ? pending.attacker : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.caster : null;
+  if (!uid) return null;
+  return state.players[0].field.find((mon) => mon?.uid === uid) ?? state.players[1].field.find((mon) => mon?.uid === uid) ?? null;
+}
+
+/**
+ * Keyword chặn (chủ game 09/11), tính theo quái đang ra đòn hoặc dùng kỹ năng: Siêu tốc không ai chặn; Bọc thép chỉ quái
+ * tổng phòng ngự (thủ + thủ phép) từ 3; Khổng lồ chỉ quái từ 5 máu; Nanh vuốt chỉ quái từ 4 công; Luồn lách x thì số
+ * quái được chặn = số quái hàng trước hiện có của bên chặn trừ x. Trả lý do bị từ chối, hoặc null khi được chặn.
+ */
+export function keywordBarred(state: Duel, side: Side, blocker: FieldMon): string | null {
+  const striker = pendingStriker(state);
+  if (!striker) return null;
+  const marks = keywordsOf(striker.cardId);
+  if (!marks.length) return null;
+  const name = cardOf(striker).name;
+  const allies = state.players[side].field;
+  if (marks.includes("sieu-toc")) return `${name} có Siêu tốc: không quái nào chặn được.`;
+  if (marks.includes("boc-thep") && liveDef(blocker, allies) + liveMdef(blocker, allies) < 3) return `${name} có Bọc thép: chỉ quái có tổng phòng ngự từ 3 trở lên được chặn.`;
+  if (marks.includes("khong-lo") && blocker.hp < 5) return `${name} có Khổng lồ: chỉ quái có từ 5 máu trở lên được chặn.`;
+  if (marks.includes("nanh-vuot") && liveAtk(blocker) < 4) return `${name} có Nanh vuốt: chỉ quái có công từ 4 trở lên được chặn.`;
+  const slip = marks.includes("luon-lach-2") ? 2 : marks.includes("luon-lach-1") ? 1 : 0;
+  if (slip) {
+    const front = allies.filter((mon) => mon && mon.hp > 0 && mon.row !== "back").length;
+    const used = (state.hold?.blocker ? 1 : 0) + (state.hold?.covers?.length ?? 0);
+    if (used >= front - slip) return `${name} có Luồn lách ${slip}: không còn quái nào được chặn.`;
+  }
+  return null;
 }
 
 /**
@@ -5254,9 +5302,11 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   const fed = withLeech(you.field, riderAttacker, hit.bite, hit.surplus);
   let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
   next = patch(next, foe, settleCocoon(dropDead({ ...them, field: them.field.map((mon) => (mon?.uid === defender.uid ? body : mon)) })));
+  const pierce = pierceLeft(attacker, body, hit.surplus);
+  if (pierce) next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - pierce });
   const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
   next = soul.state;
-  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${soul.line}`;
+  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`;
   const hornRows = attacker.horn
     ? [
         { name: cardOf(defender).name, bits: `${hornDealt} sát thương phép` },
@@ -5303,7 +5353,8 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   ), attacker.uid, swordSwing(attacker)), attacker.uid, defender.uid)), foe, attacker.uid);
   const origin = state.pending?.kind === "melee" ? state.pending.defender : defender.uid;
   const hunted = markPrey(swung, side, attacker, origin, origin === defender.uid && !hit.dodged, riderAttacker.hp <= 0);
-  return covered ? mysticRiposte(hunted, defender.uid, attacker.uid) : hunted;
+  const done = covered ? mysticRiposte(hunted, defender.uid, attacker.uid) : hunted;
+  return pierce ? checkWinner(done) : done;
 }
 
 const SOUL_ID = "ke-giam-ho-linh-hon";
@@ -5614,6 +5665,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     const fed = withLeech(you.field, worn.attacker, hit.bite, hit.surplus);
     let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
     next = patch(next, foe, settleCocoon(dropDead({ ...guarding, field: guarding.field.map((mon) => (mon?.uid === body.uid ? worn.defender : mon)) })));
+    const pierce = pierceLeft(attacker, worn.defender, hit.surplus);
+    if (pierce) next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - pierce });
     const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
     next = soul.state;
     const gazeOnly = Boolean(attacker.gaze && !attacker.horn && !attacker.bolt);
@@ -5641,7 +5694,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
         : 0;
     const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly || hiddenOnly ? `, chịu ${taken} sát thương chuẩn` : "";
     const blocked = releaseLegend({
-      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${cardOf(body).name} né đòn.` : ""}${soul.line}`, beamed || gazeOnly ? "spell" : "hit"),
+      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${cardOf(body).name} né đòn.` : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`, beamed || gazeOnly ? "spell" : "hit"),
       step: "main",
       pending: null,
       mends: [awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend })),
@@ -5652,7 +5705,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
       smashPlain(blocker) && !attacker.horn && !attacker.gaze && !attacker.bolt,
     ), attacker.uid, swordSwing(attacker)), attacker.uid, blocker.uid)), foe, attacker.uid);
     const hunted = markPrey(swung, side, attacker, "face", false, worn.attacker.hp <= 0);
-    return blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
+    const done = blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
+    return pierce ? checkWinner(done) : done;
   }
   if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, null);
   if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {
@@ -5678,7 +5732,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   next = soul.state;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt);
   const beamed = Boolean(attacker.horn || attacker.gaze || attacker.bolt);
-  const guardSpell = !attacker.horn && !attacker.gaze && !bolt && guardStrikeKind(attacker, you.roster) === "spell";
+  const guardSpell = !attacker.horn && !attacker.gaze && !bolt && (guardStrikeKind(attacker, you.roster) === "spell" || magicStrike(attacker));
   const preyHit = attacker.cardId === PREY && attacker.preyKind === "spell" ? "sát thương phép" : attacker.cardId === PREY && attacker.preyKind === "tru" ? "sát thương chuẩn" : "";
   const hiddenFace = shadeHidden(attacker) && !beamed ? "sát thương chuẩn" : "";
   const faceWord = guardSpell ? "sát thương phép" : preyHit || hiddenFace || "máu";

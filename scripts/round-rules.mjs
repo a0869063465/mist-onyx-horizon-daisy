@@ -10,6 +10,17 @@ const D = await server.ssrLoadModule("/src/lib/duel.ts");
 const C = await server.ssrLoadModule("/src/lib/catalog.ts");
 const B = await server.ssrLoadModule("/src/lib/brain.ts");
 const P = await server.ssrLoadModule("/src/lib/preview.ts");
+const K = await server.ssrLoadModule("/src/lib/keywords.ts");
+
+/** Gắn tạm keyword cho một quái trong lúc chạy fn (CARD_KEYWORDS thật đang rỗng). */
+function withKeywords(id, list, fn) {
+  K.CARD_KEYWORDS[id] = list;
+  try {
+    fn();
+  } finally {
+    delete K.CARD_KEYWORDS[id];
+  }
+}
 
 const DECK = { monsters: ["khong-lo-mot-mat", "may-chem", "rong-con", "khong-lo-mot-mat", "may-chem"], spells: ["hap-thu-ma-phap", "vong-xoay-bao-ho"] };
 
@@ -874,6 +885,95 @@ test("Hấp thụ ma pháp không dùng được khi không có gì để nuốt
   assert.ok(!D.eatFor(swung, 1));
   const tried = D.castSpell(swung, swung.players[1].hand.indexOf("hap-thu-ma-phap"));
   assert.ok(tried.players[1].hand.includes("hap-thu-ma-phap"), "lá còn trên tay");
+});
+
+test("keyword chặn: Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt", () => {
+  const base = () => {
+    let s = board({ 0: ["may-chem", { atk: 3, hp: 10 }] }, { 0: ["rong-con", { atk: 2, def: 1, mdef: 1, hp: 4 }], 1: ["rong-con", { atk: 5, def: 2, mdef: 2, hp: 6 }] });
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  withKeywords("may-chem", ["sieu-toc"], () => {
+    const s = base();
+    const swung = D.attackFace(s, uid(s, 0, 0));
+    assert.match(D.assignBlock(swung, uid(s, 1, 1)).live, /Siêu tốc/);
+  });
+  withKeywords("may-chem", ["boc-thep"], () => {
+    const s = base();
+    const swung = D.attackFace(s, uid(s, 0, 0));
+    assert.match(D.assignBlock(swung, uid(s, 1, 0)).live, /Bọc thép/);
+    assert.equal(D.assignBlock(swung, uid(s, 1, 1)).hold?.blocker, uid(s, 1, 1));
+  });
+  withKeywords("may-chem", ["khong-lo"], () => {
+    const s = base();
+    const swung = D.attackFace(s, uid(s, 0, 0));
+    assert.match(D.assignBlock(swung, uid(s, 1, 0)).live, /Khổng lồ/);
+    assert.equal(D.assignBlock(swung, uid(s, 1, 1)).hold?.blocker, uid(s, 1, 1));
+  });
+  withKeywords("may-chem", ["nanh-vuot"], () => {
+    const s = base();
+    const swung = D.attackFace(s, uid(s, 0, 0));
+    assert.match(D.assignBlock(swung, uid(s, 1, 0)).live, /Nanh vuốt/);
+    assert.equal(D.assignBlock(swung, uid(s, 1, 1)).hold?.blocker, uid(s, 1, 1));
+  });
+  const s = base();
+  assert.equal(D.assignBlock(D.attackFace(s, uid(s, 0, 0)), uid(s, 1, 0)).hold?.blocker, uid(s, 1, 0), "không keyword thì chặn như thường");
+});
+
+test("keyword Luồn lách: số quái được chặn = số quái hàng trước trừ x", () => {
+  const make = (front) => {
+    const theirs = {};
+    for (let i = 0; i < front; i += 1) theirs[i] = ["rong-con", { atk: 2, def: 1, hp: 6 }];
+    let s = board({ 0: ["may-chem", { atk: 3, hp: 10 }] }, theirs);
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  withKeywords("may-chem", ["luon-lach-1"], () => {
+    const one = make(1);
+    assert.match(D.assignBlock(D.attackFace(one, uid(one, 0, 0)), uid(one, 1, 0)).live, /Luồn lách 1/);
+    const two = make(2);
+    assert.equal(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).hold?.blocker, uid(two, 1, 0));
+  });
+  withKeywords("may-chem", ["luon-lach-2"], () => {
+    const two = make(2);
+    assert.match(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).live, /Luồn lách 2/);
+    const three = make(3);
+    assert.equal(D.assignBlock(D.attackFace(three, uid(three, 0, 0)), uid(three, 1, 0)).hold?.blocker, uid(three, 1, 0));
+  });
+});
+
+test("keyword Đòn đánh phép: đòn đánh thường trừ thủ phép, không trừ thủ", () => {
+  const make = () => {
+    let s = board({ 0: ["may-chem", { atk: 4, hp: 10 }] }, { 0: ["rong-con", { atk: 0, def: 3, mdef: 0, hp: 9, maxHp: 9 }] });
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  const plain = make();
+  const a = D.passResponse(D.attackMonster(plain, uid(plain, 0, 0), uid(plain, 1, 0)));
+  assert.equal(at(a, 1, 0).hp, 8, "thường: 4 công trừ 3 thủ");
+  withKeywords("may-chem", ["phep"], () => {
+    const s = make();
+    const b = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    assert.equal(at(b, 1, 0).hp, 5, `phép: 4 sát thương phép, thủ phép 0 (${b.live})`);
+  });
+});
+
+test("keyword Đâm xuyên: hạ quái thì sát thương thừa vào người chơi", () => {
+  const make = () => {
+    let s = board({ 0: ["may-chem", { atk: 9, hp: 10 }] }, { 0: ["rong-con", { atk: 0, def: 0, mdef: 0, hp: 2, maxHp: 2 }] });
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  const plain = make();
+  const hp = plain.players[1].hp;
+  const a = D.passResponse(D.attackMonster(plain, uid(plain, 0, 0), uid(plain, 1, 0)));
+  assert.equal(a.players[1].hp, hp, "không keyword thì người chơi không mất máu");
+  withKeywords("may-chem", ["dam-xuyen"], () => {
+    const s = make();
+    const b = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    assert.equal(b.players[1].hp, hp - 7, b.live);
+    assert.match(b.live, /Đâm xuyên gây 7/);
+  });
 });
 
 let failed = 0;

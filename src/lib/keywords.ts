@@ -3,7 +3,9 @@
  * Chưa quái nào mang keyword: gắn bằng cách thêm id quái vào `CARD_KEYWORDS` khi chủ game đưa danh sách. Quái 5 sao tạm
  * thời chưa có keyword nào (chủ game 09/11).
  *
- * Luật (làm sau, chờ danh sách quái; chủ game 09/11):
+ * Luật (chủ game 09/11). ĐÃ CÓ LUẬT (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép, Khổng lồ,
+ * Siêu tốc, Nanh vuốt, Luồn lách 1/2, Đòn đánh phép, Đâm xuyên. CHƯA CÓ LUẬT (chờ chủ game nói tác dụng/số): Vinh quang,
+ * Hiến tế, Đội quân, Báo oán, Phẫn nộ, Khát máu, Bắn phá.
  * - "boc-thep": chỉ quái có tổng phòng ngự (thủ + thủ phép) từ 3 trở lên được chặn đòn của quái này.
  * - "khong-lo": chỉ quái có từ 5 máu trở lên được chặn.
  * - "sieu-toc": không quái nào chặn được.
