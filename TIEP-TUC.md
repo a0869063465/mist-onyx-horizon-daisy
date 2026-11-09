@@ -14,6 +14,7 @@ Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo 
 - Mỗi cuối phiên tôi tự thống kê từ khoá theo màu (lam, d, v, h, lu, ch, ca, t, gvt), bảng nằm ở `docs/luat-la-bai.md` mục 9. Màu không có từ khoá thì bỏ.
 - Đã làm: gvt phòng ngự đổi vàng 52% → 55% (`styles.css`). Đã commit cùng ghi chú này.
 - Chờ chủ game: màu xám ("không thể hành động"), và màu ch (xanh đọt chuối) chưa có từ khoá.
+- Từ khoá mới 10/11 (chủ game): "Tiêu hao N mana" (lam), "Chịu đòn" (d; lam nếu là đòn phép), "N máu tối đa" (lu), Hấp thụ (skill chậm, đỏ). Chi tiết ở `docs/luat-la-bai.md` mục 9. Chờ chủ game xác nhận Hấp thụ: code hiện là skill chủ động xanh lam (Hoa ăn thịt người), không phải chậm đỏ.
 
 ## Việc mới chờ chi tiết (09/11, CHƯA làm)
 

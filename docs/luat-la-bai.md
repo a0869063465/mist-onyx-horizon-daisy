@@ -149,3 +149,20 @@ Thống kê theo code hiện có (`src/components/game/sheet-ink.ts`, CSS `.ink-
 - Không đưa vào danh sách: "không thể hành động / tấn công / chặn…" (màu xám, không có trong bảng màu của chủ game).
 
 Cần chủ game xác nhận: xám (không thể hành động) có giữ hay đổi sang một màu trong danh sách trên.
+
+### Từ khoá do chủ game định nghĩa (10/11/2026)
+
+Cột "Dữ liệu hiện có" lấy từ `catalog.ts` lúc viết; chữ lá thật vẫn là của chủ game.
+
+| Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
+|---|---|---|---|
+| Tiêu hao N mana | lam (xanh lam) | Số mana trả khi dùng kỹ năng. | N = 0: 3 lần; N = 1: 29 lần. |
+| Chịu đòn | d (đỏ) | Nhận đòn đánh tay. Nếu là đòn phép thì màu lam: "Chịu đòn phép". | Nhiều lá dùng chữ này trong kỹ năng. |
+| Chịu đòn phép | lam (xanh lam) | Nhận sát thương phép. | Chưa có lá nào tách riêng chữ này. |
+| N máu tối đa | lu (xanh lá) | Lượng máu tối đa bị cướp hoặc được cộng. | N = 1, 2, 3 có trong chữ lá. |
+| Hấp thụ | (skill) chậm, đỏ | Kỹ năng hút máu tối đa của quái đã chịu đòn. Chủ game định nghĩa: skill chậm và skill đỏ. | Hoa ăn thịt người: "Hấp thụ", chịu đòn từ 1 quái thú, cướp 2 máu tối đa. Code hiện ghi là chủ động xanh lam, không phải chậm đỏ. |
+
+Lưu ý:
+- Tên "Hấp thụ" trùng tên phép "Hấp thụ ma pháp" (phép giải trừ). Cần đặt rõ khi viết lại chữ lá.
+- Trong code, Hấp thụ của Hoa ăn thịt người vẫn là `active` (xanh lam) và có `harmSkill`, không phải `slow` và `risk`. Chưa đổi, chờ chủ game xác nhận.
+- Dùng màu của từ khoá làm nhãn trong bảng: `Tiêu hao N mana` xanh lam, `Chịu đòn` đỏ, `N máu tối đa` xanh lá.
