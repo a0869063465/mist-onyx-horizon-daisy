@@ -166,3 +166,19 @@ Lưu ý:
 - Tên "Hấp thụ" trùng tên phép "Hấp thụ ma pháp" (phép giải trừ). Cần đặt rõ khi viết lại chữ lá.
 - Trong code, Hấp thụ của Hoa ăn thịt người vẫn là `active` (xanh lam) và có `harmSkill`, không phải `slow` và `risk`. Chưa đổi, chờ chủ game xác nhận.
 - Dùng màu của từ khoá làm nhãn trong bảng: `Tiêu hao N mana` xanh lam, `Chịu đòn` đỏ, `N máu tối đa` xanh lá.
+
+### Từ khoá đợt 2 (10/11/2026)
+
+| Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
+|---|---|---|---|
+| Đập phá | (tên kỹ năng) | Kỹ năng nội tại của Khổng lồ 1 mắt: đòn đánh thường chủ động tốn thêm mana, và mỗi đòn đánh thường tăng vĩnh viễn công. | `khong-lo-mot-mat` trong `catalog.ts`: "Đòn đánh thường chủ động của hắn tốn thêm 1 mana. Những lần bị động thì không tốn. Tăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường." |
+| Mỗi đòn đánh | ca (cam) | Điều kiện kích hoạt. | Chữ lá có "sau mỗi đòn đánh thường". |
+| đòn đánh là chủ động | ca (cam) | Điều kiện: đòn đánh do người chơi chủ động ra, không phải khi bị đánh. | "Đòn đánh thường chủ động" trong chữ lá. |
+| tăng | lu (xanh lá) | Tác dụng tăng chỉ số. | "Tăng cho hắn 1 công vĩnh viễn". |
+| x công vĩnh viễn | lu (xanh lá) theo "tăng"; "công" ca theo quy ước cũ | Lượng công tăng vĩnh viễn. | 1 công. |
+| Tiêu hao 1 mana | lam (xanh lam) | Áp màu có sẵn của "Tiêu hao N mana". | "tốn thêm 1 mana" trong chữ lá Đập phá. |
+
+Lưu ý:
+- Chữ lá Đập phá viết "tốn thêm 1 mana", không viết "Tiêu hao 1 mana". Nếu muốn từ khoá này áp dụng được cho Đập phá thì chủ game cần chọn: giữ chữ "tốn thêm", hay đổi thành "Tiêu hao". Chữ lá là của chủ game nên tôi không tự đổi.
+- Màu của "x công vĩnh viễn" chưa được chủ game nói. Tôi để "công" theo quy ước cam, còn "tăng" theo lục. Cần xác nhận.
+- Khung màu của các từ khoá mới do chủ game làm thủ công, tài liệu không ghi khung.
