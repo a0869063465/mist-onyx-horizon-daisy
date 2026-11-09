@@ -226,12 +226,10 @@ Nhảy qua lại là skill nội tại (tím) của Thỏ đen tinh nghịch (`t
 | khả năng né | t (tím) | Cơ chế né sát thương. | "Có khả năng né được…" |
 | 40% (x) | ca (cam) | Tỉ lệ né, gắn với "đòn đánh vật lý". | 40% |
 | đòn đánh vật lý | ca (cam) | Loại đòn bị né. | "…trong các cuộc giao tranh" (đòn đánh thường). |
-| 75% (x) | ca (cam) | Tỉ lệ né khi đối thủ là quái từ 3 sao trở lên, gắn với cụm "quái thú từ 3 sao trở lên". | 75% |
-| quái thú từ 3 sao trở lên | ca (cam) | Điều kiện nâng tỉ lệ né. | "…khi đấu với quái thú từ 3 sao trở lên" |
+| 75% (x) | ca (cam) | Tỉ lệ né đòn đánh vật lý khi đấu với quái từ 3 sao trở lên. Gắn với "đòn đánh vật lý" (bổ nghĩa cho "khả năng né"), không gắn với điều kiện sao. | 75% |
+| quái thú từ 3 sao trở lên | ca (cam) | Điều kiện: đối thủ là quái từ 3 sao trở lên (đứng sau, không phải cụm gắn với số 75%). | "…khi đấu với quái thú từ 3 sao trở lên" |
 
-Đoán về x sau cùng (75%):
-- Theo quy tắc của bạn (số gắn với cụm nó tác động), 75% theo cụm "quái thú từ 3 sao trở lên". Lý do: con số đứng ngay trước cụm này trong mệnh đề "lên đến… đối với…", và nó là giá trị thay thế cho 40% khi điều kiện đúng.
-- Cách đoán khác (75% theo cụm "khả năng né") không khớp với cách bạn tô 40% theo "đòn đánh vật lý". Tôi chọn cách thứ nhất, nhưng bạn xác nhận.
+Về x sau cùng (75%): chủ game xác nhận 75% theo "đòn đánh vật lý", giống 40%. Lý do: số đó bổ nghĩa cho "khả năng né đòn đánh vật lý", không gắn với điều kiện sao.
 
 Lưu ý:
 - Chữ lá hiện có, chưa đổi.
