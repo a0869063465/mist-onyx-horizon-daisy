@@ -195,6 +195,8 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["tho-den-tinh-nghich", "tăng lên đến 75% khi đấu với quái thú"],
   ["the-than-cua-shien", "chuyển mục tiêu sang ta"],
   ["the-than-cua-shien", "có nguy cơ gặp nạn"],
+  ["rong-con", "hoặc người chơi."],
+  ["rong-ngan-tuoi", "hoặc người chơi."],
   ["ngai-khong-lo", "Tiêu hao 1 mana gây 4 sát thương phép lên tất cả quái thú kẻ địch. Quái sống sót dính độc 1 sát thương chuẩn đầu mỗi lượt, kéo 3 lượt, không cộng dồn."],
   ["trai-tim-hai-long", "lên toàn bộ kẻ địch"],
   ["kazura", "Điểm số phía trên tôi là số máu ảo"],
