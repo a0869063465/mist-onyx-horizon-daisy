@@ -216,3 +216,23 @@ Lưu ý:
 - Chữ lá Rồng con: "Tiêu hao 1 mana để gây 2 sát thương chuẩn và 1 sát thương phép lên 1 kẻ địch hoặc người chơi." Rồng ngàn tuổi: "…gây 3 sát thương chuẩn và 4 sát thương phép…". Chữ hiện có, chưa đổi.
 - Màu xám bây giờ có từ khoá đầu tiên (sát thương chuẩn). Mục 9 trước đây hỏi xám có giữ không; câu này đã có câu trả lời một phần, chờ chủ game xác nhận.
 - Màu của "x sát thương phép" chưa được chủ game nói trong tin này, nên tôi áp lam theo đợt 3. Cần xác nhận.
+
+### Từ khoá đợt 5 (10/11/2026)
+
+Nhảy qua lại là skill nội tại (tím) của Thỏ đen tinh nghịch (`tho-den-tinh-nghich`). Chữ lá: "Có khả năng né được 40% sát thương trong các cuộc giao tranh, tăng lên đến 75% khi đấu với quái thú từ 3 sao trở lên."
+
+| Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
+|---|---|---|---|
+| khả năng né | t (tím) | Cơ chế né sát thương. | "Có khả năng né được…" |
+| 40% (x) | ca (cam) | Tỉ lệ né, gắn với "đòn đánh vật lý". | 40% |
+| đòn đánh vật lý | ca (cam) | Loại đòn bị né. | "…trong các cuộc giao tranh" (đòn đánh thường). |
+| 75% (x) | ca (cam) | Tỉ lệ né khi đối thủ là quái từ 3 sao trở lên, gắn với cụm "quái thú từ 3 sao trở lên". | 75% |
+| quái thú từ 3 sao trở lên | ca (cam) | Điều kiện nâng tỉ lệ né. | "…khi đấu với quái thú từ 3 sao trở lên" |
+
+Đoán về x sau cùng (75%):
+- Theo quy tắc của bạn (số gắn với cụm nó tác động), 75% theo cụm "quái thú từ 3 sao trở lên". Lý do: con số đứng ngay trước cụm này trong mệnh đề "lên đến… đối với…", và nó là giá trị thay thế cho 40% khi điều kiện đúng.
+- Cách đoán khác (75% theo cụm "khả năng né") không khớp với cách bạn tô 40% theo "đòn đánh vật lý". Tôi chọn cách thứ nhất, nhưng bạn xác nhận.
+
+Lưu ý:
+- Chữ lá hiện có, chưa đổi.
+- Màu t (tím) cho "khả năng né" là theo bạn. Dùng cùng màu với nội tại của bảng quái (passive = tím trong `skill-book.ts`), tôi không cần đổi code.
