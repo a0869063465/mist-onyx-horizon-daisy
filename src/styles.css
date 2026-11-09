@@ -7264,7 +7264,7 @@ button.watch-back {
 .msheet-desc b.ink-sheet-mdef { color: #c084fc; }
 .msheet-desc b.ink-sheet-guard {
   color: #ffbe0b;
-  background-image: linear-gradient(to bottom, #ffbe0b 0 52%, #b45cff 52% 100%);
+  background-image: linear-gradient(to bottom, #ffbe0b 0 55%, #b45cff 55% 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
