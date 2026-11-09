@@ -279,7 +279,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Phù thuỷ tí hơn",
     "stars": 1,
     "gems": 0,
-    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên người đối thủ hoặc 1 quái địch.",
+    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên đối thủ hoặc lên 1 quái địch.",
     "atk": 1,
     "def": 0,
     "mdef": 2,
