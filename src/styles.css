@@ -13213,7 +13213,9 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-card.is-q { container-type: inline-size; height: auto; width: 100%; overflow: visible; }
 .mx-q { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; user-select: none; }
 .mx-q.is-in { animation: mx-fade-in 620ms ease both; }
-.mx-q.is-under { z-index: 0; }
+/* Nhận thưởng: khung xanh lá nằm sẵn bên dưới, khung vàng mờ dần phía trên rồi biến mất hẳn, không để lộ rìa khung vàng. */
+.mx-q.is-under { z-index: 2; animation: mx-fade-out 620ms ease both; }
+@keyframes mx-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes mx-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .mx-card.is-q .mx-fill { position: absolute; z-index: 1; border-style: solid; border-color: transparent; border-width: 0; border-image: url(/ui/mission/q-fill.webp) 0 10 0 10 fill / 0 1.02cqw 0 1.02cqw stretch; min-width: 2.04cqw; border-radius: 0; background: none; mix-blend-mode: normal; transition: width 520ms cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
 .mx-num { position: absolute; z-index: 2; transform: translateY(-50%); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", sans-serif; font-weight: 700; font-size: 4.38cqw; line-height: 1; color: #fff; white-space: nowrap; letter-spacing: 0.01em; -webkit-text-stroke: 0.3cqw rgba(0, 14, 48, 0.92); paint-order: stroke fill; text-shadow: 0 0.25cqw 0.35cqw rgba(0, 0, 0, 0.55); font-variant-numeric: tabular-nums; pointer-events: none; }

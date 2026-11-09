@@ -107,7 +107,7 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
     >
       {view === "p" ? <img key={`p${settle}`} className={`mx-q${settle > 0 ? " is-in" : ""}`} src={`/ui/mission/w-p${at}.webp`} alt="" draggable={false} /> : null}
       {view === "g" || (view === "d" && flash) ? <img className={`mx-q${view === "d" ? " is-under" : ""}`} src={`/ui/mission/w-g${at}.webp`} alt="" draggable={false} /> : null}
-      {view === "d" ? <img className={`mx-q${flash ? " is-in" : ""}`} src={`/ui/mission/w-d${at}.webp`} alt="" draggable={false} /> : null}
+      {view === "d" ? <img className="mx-q" src={`/ui/mission/w-d${at}.webp`} alt="" draggable={false} /> : null}
       {view === "p" ? (
         <>
           <i

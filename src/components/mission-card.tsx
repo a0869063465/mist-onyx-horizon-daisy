@@ -65,7 +65,7 @@ export function DailyCard({ row, at, daily, from, delay = 0 }: { row: ListedMiss
     >
       {!claimed && !ready ? <img className="mx-q" src={`/ui/mission/q-b${at}.webp`} alt="" draggable={false} /> : null}
       {ready || (claimed && fading) ? <img className={`mx-q${claimed ? " is-under" : ""}`} src={`/ui/mission/q-g${at}.webp`} alt="" draggable={false} /> : null}
-      {claimed ? <img className={`mx-q${fading ? " is-in" : ""}`} src={`/ui/mission/q-d${at}.webp`} alt="" draggable={false} /> : null}
+      {claimed ? <img className="mx-q" src={`/ui/mission/q-d${at}.webp`} alt="" draggable={false} /> : null}
       {!claimed && !ready ? (
         <>
           <i
