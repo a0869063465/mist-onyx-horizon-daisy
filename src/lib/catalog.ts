@@ -661,7 +661,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Thế thân của shien",
     "stars": 1,
     "gems": 0,
-    "skill": "__**Thế thân**__:\n- Trên sân, khi một quái đồng minh hoặc người chơi bị nhắm đến, chuyển mục tiêu sang ta.\n- Trên tay, khi 1 đồng minh trên sân có nguy cơ gặp nạn, tiêu hao 1 mana để thế chỗ, đồng minh về tay giữ nguyên trạng thái, và triệu hồi lại ở lượt sau đó mà không tốn mana.",
+    "skill": "__**Thế thân**__:\n- Trên sân. Khi ta trên sân, điều kiện phát động: 1 quái thú đồng minh khác bị nhắm đến bởi đối thủ. Chuyển tất cả các đòn nhắm đến sang cho ta.\n- Trên tay. Khi ta trên tay, điều kiện phát động: 1 quái thú đồng minh khác bị nhắm đến bởi đối thủ. Tiêu hao 1 mana, đổi chỗ ta và quái thú đó, đồng minh về tay giữ nguyên trạng thái. Và có thể triệu hồi ở lượt sau mà không tiêu hao mana.",
     "atk": 3,
     "def": 0,
     "mdef": 0,
