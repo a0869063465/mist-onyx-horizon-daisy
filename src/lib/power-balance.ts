@@ -391,6 +391,12 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { atk: { from: 3, to: 2 } },
   },
   {
+    id: "kizuran",
+    at: "2026-11-09",
+    wave: 32,
+    stats: { hp: { from: 8, to: 6 } },
+  },
+  {
     id: "kazura",
     at: "2026-11-01",
     wave: 31,

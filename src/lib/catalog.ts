@@ -418,7 +418,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 2,
     "def": 0,
     "mdef": 0,
-    "hp": 8,
+    "hp": 6,
     "art": "kizuran",
     "strong": "Máu rất trâu",
     "weak": "Không có điểm phòng ngự",

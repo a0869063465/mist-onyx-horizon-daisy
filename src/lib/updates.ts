@@ -967,6 +967,7 @@ export const PENDING_NOTES: string[] = [
   "Số mana trên lá phép trong bảng mô tả nâng lên một chút cho nằm giữa viên mana.",
   "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
   "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
+  "Kizuran giảm máu từ 8 xuống 6.",
 ];
 
 function remarkOf(notes: string[]) {
