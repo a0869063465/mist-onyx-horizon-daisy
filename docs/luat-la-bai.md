@@ -199,3 +199,20 @@ Cầu sấm là phép (skill) của Phù thuỷ tí hơn. Không ghi tốc độ
 Lưu ý:
 - Chữ lá Cầu sấm (`catalog.ts`, Phù thuỷ tí hơn): "Dùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên người đối thủ hoặc 1 quái địch." Đây là chữ hiện có, chưa đổi.
 - Tên kỹ năng trong bảng quái là "Cầu sấm" (`skill-book.ts`, kiểu chủ động xanh lam). Lá khác có "Cầu sấm ánh sáng" (Mắt xanh huỷ diệt) là một skill khác, không gộp.
+
+### Từ khoá đợt 4 (10/11/2026)
+
+Hơi thở rồng là skill chủ động của hai quái: Rồng con và Rồng ngàn tuổi. Cả hai đều tiêu hao 1 mana, nhắm 1 kẻ địch hoặc người chơi.
+
+| Từ khoá | Màu | Nghĩa | Dữ liệu hiện có |
+|---|---|---|---|
+| sát thương chuẩn (viết tắt: xa) | xám | Sát thương không bị trừ thủ hay thủ phép. Ký hiệu viết tắt "xa". | Rồng con: 2; Rồng ngàn tuổi: 3. |
+| sát thương phép | lam (xanh lam) | Như đợt 3: màu lam. Chủ game không nói màu lần này, tôi áp màu cũ. | Rồng con: 1; Rồng ngàn tuổi: 4. |
+| Tiêu hao 1 mana | lam (xanh lam) | Màu có sẵn của "Tiêu hao N mana". | Cả hai lá. |
+| lên 1 kẻ địch | đỏ | Mục tiêu: 1 quái thú địch. | Cả hai lá. |
+| lên người chơi | đỏ | Mục tiêu: người chơi đối phương. | Cả hai lá. |
+
+Lưu ý:
+- Chữ lá Rồng con: "Tiêu hao 1 mana để gây 2 sát thương chuẩn và 1 sát thương phép lên 1 kẻ địch hoặc người chơi." Rồng ngàn tuổi: "…gây 3 sát thương chuẩn và 4 sát thương phép…". Chữ hiện có, chưa đổi.
+- Màu xám bây giờ có từ khoá đầu tiên (sát thương chuẩn). Mục 9 trước đây hỏi xám có giữ không; câu này đã có câu trả lời một phần, chờ chủ game xác nhận.
+- Màu của "x sát thương phép" chưa được chủ game nói trong tin này, nên tôi áp lam theo đợt 3. Cần xác nhận.
