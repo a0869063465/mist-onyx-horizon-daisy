@@ -220,7 +220,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Thỏ đen tinh nghịch",
     "stars": 1,
     "gems": 1,
-    "skill": "__**Nhảy qua lại**__: \nCó khả năng né được 40% sát thương trong các cuộc giao tranh, tăng lên đến 75% khi đấu với quái thú từ 3 sao trở lên.",
+    "skill": "__**Nhảy qua lại**__: \nCó khả năng né 40% đối với các đòn đánh vật lý, lên đến 75% khi đối thủ là quái thú từ 3 sao trở lên.",
     "atk": 4,
     "def": 0,
     "mdef": 0,
