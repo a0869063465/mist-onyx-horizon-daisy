@@ -969,6 +969,7 @@ export const PENDING_NOTES: string[] = [
   "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
   "Kizuran giảm máu từ 8 xuống 6.",
   "Bên xanh có lá Núi dung nham trên sân thì nửa dưới bàn đấu đổi sang nền dung nham.",
+  "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
 ];
 
 function remarkOf(notes: string[]) {

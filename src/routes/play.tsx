@@ -170,7 +170,7 @@ import {
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
-import { bottomArt, topArt } from "@/lib/env-boards";
+import { bottomArt, LAVA_BOARD_ART, LAVA_SHORT_ART, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
@@ -8223,7 +8223,7 @@ function BoardArt({ src, bottom, cut }: { src: string; bottom?: string; cut: Boa
     );
   }
   // Bàn thấp: ảnh đã bỏ SHORT_TOP phần trăm đầu, toạ độ vẫn tính theo bàn đầy đủ (trừ SHORT_TOP khi đặt vị trí ảnh).
-  if (cut.short) src = SHORT_ART;
+  if (cut.short) src = src === LAVA_BOARD_ART ? LAVA_SHORT_ART : SHORT_ART;
   const lost = cut.short ? SHORT_TOP : 0;
   const size = `100% ${(100 - lost) / cut.v}cqh`;
   const at = (imageY: number) => `0 ${-(imageY - lost) / cut.v}cqh`;

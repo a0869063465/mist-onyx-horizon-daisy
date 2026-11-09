@@ -11,6 +11,9 @@ export const ENV_BOARDS: Record<string, { top: string; bottom: string }> = {
 };
 
 export const DEFAULT_BOARD_ART = "/board-full.jpg";
+/** Bàn dung nham (chủ game 09/11): nửa của bên có lá Núi dung nham trên sân dùng ảnh này, bản thấp là `board-lava-short.jpg`. */
+export const LAVA_BOARD_ART = "/board-lava.jpg";
+export const LAVA_SHORT_ART = "/board-lava-short.jpg";
 
 /** The environment id whose board art and layout apply, or undefined for the default board. */
 export function boardEnv(env: string | null | undefined): string | undefined {
@@ -18,12 +21,10 @@ export function boardEnv(env: string | null | undefined): string | undefined {
 }
 
 /** Tạm thời (chủ game 28/10, "khoan làm môi trường"): mọi môi trường dùng chung bàn board-full.jpg; ảnh riêng giữ trong ENV_BOARDS để làm sau. */
-export function topArt(_env: string | null | undefined): string {
-  return DEFAULT_BOARD_ART;
+export function topArt(env: string | null | undefined): string {
+  return env === "nui-dung-nham" ? LAVA_BOARD_ART : DEFAULT_BOARD_ART;
 }
 
-/** Nửa dưới (bên xanh): có lá Núi dung nham thì nền dung nham (chủ game 09/11), còn lại như cũ. */
-export const LAVA_BOARD_ART = "/board-lava.jpg";
 export function bottomArt(env: string | null | undefined): string {
   return env === "nui-dung-nham" ? LAVA_BOARD_ART : DEFAULT_BOARD_ART;
 }
