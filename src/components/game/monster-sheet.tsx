@@ -514,13 +514,6 @@ export function MonsterSheet({
             {card}
             {badge}
             {count ? <span className="msheet-count">{count}</span> : null}
-            {onArt ? (
-              <span className="msheet-fan" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            ) : null}
           </div>
           <div className="msheet-side">
             <div className="msheet-head">
