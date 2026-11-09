@@ -41,10 +41,10 @@ export function RowArrow({ row, off = false, onPick }: { row: SummonRow; off?: b
       <svg viewBox="-34 -38 68 76" aria-hidden="true">
         <defs>
           <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fffbe0" />
-            <stop offset="0.3" stopColor="#ffdf5c" />
-            <stop offset="0.66" stopColor="#f5a21e" />
-            <stop offset="1" stopColor="#a35400" />
+            <stop offset="0" stopColor={row === "front" ? "#ffe3de" : "#e0f0ff"} />
+            <stop offset="0.3" stopColor={row === "front" ? "#ff7a6b" : "#6ab4f2"} />
+            <stop offset="0.66" stopColor={row === "front" ? "#d93a2e" : "#2f7fd0"} />
+            <stop offset="1" stopColor={row === "front" ? "#6e1410" : "#123f78"} />
           </linearGradient>
           <linearGradient id={`${id}-gloss`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#fff" stopOpacity="0.7" />
@@ -55,10 +55,10 @@ export function RowArrow({ row, off = false, onPick }: { row: SummonRow; off?: b
             <path d={d} />
           </clipPath>
         </defs>
-        <path d={d} fill={`url(#${id}-gold)`} stroke="#4a2400" strokeWidth="3.2" strokeLinejoin="round" />
+        <path d={d} fill={`url(#${id}-gold)`} stroke="#ffffff" strokeWidth="3.2" strokeLinejoin="round" />
         <g clipPath={`url(#${id}-in)`}>
           <rect x="-34" y="-38" width="68" height="76" fill={`url(#${id}-gloss)`} />
-          <path d={d} fill="none" stroke="#fff6c8" strokeOpacity="0.75" strokeWidth="2" strokeLinejoin="round" transform="scale(0.8)" />
+          <path d={d} fill="none" stroke="#ffffff" strokeOpacity="0.55" strokeWidth="2" strokeLinejoin="round" transform="scale(0.8)" />
         </g>
       </svg>
     </button>

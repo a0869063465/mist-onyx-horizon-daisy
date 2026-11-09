@@ -181,8 +181,8 @@ export const SHEET_SPOTS: Record<FieldKey, FieldSpot> = {
   name: { x: 50, y: 50, size: 10, width: 10, height: 10 },
   def: { x: 18.6, y: 51.9, size: 14, width: 10, height: 6 },
   mdef: { x: 18.6, y: 64.3, size: 14, width: 10, height: 6 },
-  atk: { x: 37.9, y: 88.3, size: 20, width: 14, height: 9 },
-  hp: { x: 86.1, y: 88.3, size: 20, width: 14, height: 9 },
+  atk: { x: 37.9, y: 86.8, size: 20, width: 14, height: 9 },
+  hp: { x: 86.1, y: 86.8, size: 20, width: 14, height: 9 },
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp", Spot> = {

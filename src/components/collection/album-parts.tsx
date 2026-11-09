@@ -3,14 +3,14 @@ import { AppraisePanel } from "@/components/collection/appraise-panel";
 import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { rarityOf, rarityTag, type Album } from "@/lib/collection";
-import { fakeIds } from "@/lib/owned-cards";
+import { trialTag } from "@/lib/owned-cards";
 import { tr } from "@/lib/i18n";
 
 /** A card in an album: its art in the gold frame of Đổi hình nền, no figures, no name; grey while not owned. */
 export function AlbumPic({ id, missing = false, vault = false }: { id: string; missing?: boolean; vault?: boolean }) {
   const art = monsterCard(id) ? artSrc(id, 1) : spellSrc(id);
-  // A fake card (the starter deck's cut copy) shows in colour (owner 22/10) but is still not owned.
-  const fake = missing && fakeIds([id]).length > 0;
+  // A trial card (lent this week, chủ game 08/11) shows in colour but is still not owned.
+  const fake = missing && trialTag(id) !== null;
   return (
     <span className={`al-pic${vault ? " is-vault" : ""}${fake ? " is-fake" : missing ? " is-missing" : ""}`}>
       <span className="al-pic-art" style={{ backgroundImage: `url(${art})` }} />
@@ -27,6 +27,16 @@ export const BOOK_X: Record<string, [number, number]> = {
   "bien-sau": [0.098, 0.894], "bong-toi": [0.108, 0.929], "cu-dia-may-moc": [0.106, 0.915], "dat-da": [0.094, 0.906], joey: [0.106, 0.915],
   "nui-dung-nham": [0.106, 0.929], nui: [0.117, 0.883], phep: [0.104, 0.912], "rung-ram": [0.108, 0.894], "thanh-dia-thien-su": [0.1, 0.9],
   "thao-nguyen": [0.104, 0.915], "vuong-quoc": [0.096, 0.9], yugi: [0.102, 0.898],
+};
+
+/**
+ * Where the front board ends and the glowing base begins, per book, as a fraction of its 768-tall picture (chủ game
+ * 08/11): just under the gold bottom line of that book's frame (measured on each picture). The board turns; what lies
+ * below (page edge, glowing strip) is the base and stays put.
+ */
+export const COVER_CUT: Record<string, number> = {
+  "bien-sau": 0.8203, "bong-toi": 0.8112, "cu-dia-may-moc": 0.8177, "dat-da": 0.8086, joey: 0.8307, "nui-dung-nham": 0.8073, nui: 0.8034,
+  phep: 0.819, "rung-ram": 0.8034, "thanh-dia-thien-su": 0.8073, "thao-nguyen": 0.8203, "vuong-quoc": 0.8177, yugi: 0.832,
 };
 
 /** What the book says on its plaque: the album's name. */

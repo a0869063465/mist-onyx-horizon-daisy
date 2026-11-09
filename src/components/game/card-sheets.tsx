@@ -6,15 +6,15 @@ import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/compon
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
-import { sheetSpots, loadSpellHand, type FieldKey } from "@/lib/layouts";
+import { SHEET_SPOTS, loadSpellHand, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
 import { spellKind, spellSpeed } from "@/lib/spell-kinds";
 
 /** The power balance notes of a card (Tăng, Giảm, Thay đổi lối chơi), newest first, as the deck page showed them. */
-export function BalanceLines({ id }: { id: string }) {
-  const blocks = infoBlocks(id);
+export function BalanceLines({ id, newest = false }: { id: string; newest?: boolean }) {
+  const blocks = newest ? infoBlocks(id).slice(0, 1) : infoBlocks(id);
   return (
     <div className="power-lines">
       {blocks.map((block, index) => (
@@ -74,7 +74,7 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
 export function FieldFace({ id }: { id: string }) {
   const card = monsterCard(id);
   if (!card) return null;
-  const layout = sheetSpots();
+  const layout = SHEET_SPOTS;
   const spot = (key: FieldKey, value: number) =>
     value === 0 ? null : (
       <span
@@ -95,7 +95,7 @@ export function FieldFace({ id }: { id: string }) {
     <span className="sheet-unit">
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
-        <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-sheet.png" alt="" draggable={false} />
         {spot("def", card.def)}
         {spot("mdef", card.mdef)}
         {spot("atk", card.atk)}
@@ -121,7 +121,7 @@ export function SpellFace({ id, gems }: { id: string; gems?: number | string }) 
         {n > 0 ? (
           <span
             className="fstat is-gems"
-            style={{ left: `${at.x}%`, top: `${at.y}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
+            style={{ left: `${at.x}%`, top: `${at.y - 1.5}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
           >
             {n}
           </span>

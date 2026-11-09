@@ -169,7 +169,7 @@ import {
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
-import { COUNT_MARKS, fieldSpots, sheetSpots, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
+import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
@@ -846,6 +846,9 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
     const before = fieldMon(prev, struck);
     if (!where || !before) return null;
     const after = fieldMon(next, struck);
+    // Gương phòng hộ chặn đòn (chủ game 09/11): không gây sát thương thì không có hiệu ứng đánh trúng; chỉ số kẻ đánh bị cướp
+    // nên máu của nó đổi, không phải là trúng đòn trả.
+    if (prev.hold?.mirror && after && after.hp === before.hp) return null;
     const hurt = !after || after.hp !== before.hp || fieldMon(next, attacker.uid)?.hp !== attacker.hp;
     if (!hurt) return null;
     const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
@@ -1934,6 +1937,26 @@ function PlayPage() {
       if (!countHint("t1-pass")) return;
       setHint({ targets: [".hand.is-strip", ".medal-act"], body: <p>Bạn không có quái {one} nào trên tay.<br />Hãy bấm chuyển</p> });
     }
+  }
+  /**
+   * Lượt đầu, chưa rút bài (chủ game 08/11): bấm liên tục 5-6 lần mà không có việc chủ động nào xen vào (xem thông tin,
+   * rút bài) là thao tác bất lực: hiện hướng dẫn chỉ phải rút bài.
+   */
+  const helpless = useRef({ n: 0, at: 0 });
+  function helplessTap(deliberate: boolean) {
+    const now = Date.now();
+    const run = helpless.current;
+    if (deliberate || now - run.at > 5000) run.n = 0;
+    if (deliberate) return;
+    run.at = now;
+    run.n += 1;
+    if (run.n < 5) return;
+    if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1 || hint) return;
+    const mine = duel.players[viewer];
+    if (mine.draws >= 1 || pileLeft(mine) < 1) return;
+    run.n = 0;
+    // After the finger is up, so the click of this same touch does not land on the new overlay and close it.
+    window.setTimeout(() => setHint({ targets: [".face-pile"], body: <p>Hãy rút bài đã.<br />Bấm vào <b className="hint-sum">xấp bài</b> để rút.</p> }), 450);
   }
   /** Thiếu sao (không phải chuyện rút bài): bảng mana cần thêm. */
   function stuckHint(cardStars: number) {
@@ -5888,6 +5911,7 @@ function PlayPage() {
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
+          helplessTap(Boolean(inspect) || Boolean((event.target as HTMLElement).closest(".face-pile")));
           startPress(event);
           // A touch anywhere but the hand puts the picked card back.
           if (!(event.target as HTMLElement).closest(".hand, .hand-acts, .row-arrows")) setHandPick(null);
@@ -7198,14 +7222,14 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
-        {pickStage === "menu" && pickActs.length > 0 && pickSpot && pickMon !== null ? (
+        {pickStage === "menu" && pickActs.length > 1 && pickSpot && pickMon !== null ? (
           <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
             {pickActs.map((act) => (
               <ActionButton key={act.key} action={act} mini />
             ))}
           </span>
         ) : null}
-        {pickStage === "rows" && pickShown && pickSpot && pickMon !== null ? (
+        {(pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
           // Mũi tên chọn hàng (chủ game 28/10): ngoài lá, ngay trên mép trên lá, nằm cạnh nhau như ở nút Triệu hồi.
           <span className="row-arrows is-hand" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }}>
             <RowArrow row="front" off={pickShown.front === null} onPick={() => pickRow(pickMon, "front")} />
@@ -8117,7 +8141,7 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
 /** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
 function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
   const stats = visibleStats(mon, allies);
-  const spotsNow = sheetSpots();
+  const spotsNow = SHEET_SPOTS;
   const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
@@ -8138,7 +8162,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
     <span className="sheet-unit">
       <span className="field-unit">
         {art ? <img className="art" src={art} alt="" draggable={false} /> : null}
-        <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
+        <img className="frame" src="/ui/frame-sheet.png" alt="" draggable={false} />
         {spot("def", stats.def, stats.blueDef, fakeCut(mon, "def", stats.def))}
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}

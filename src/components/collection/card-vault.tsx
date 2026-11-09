@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { fakeIds } from "@/lib/owned-cards";
+import { trialTag } from "@/lib/owned-cards";
 import { AlbumPic, AppraiseBox, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
@@ -220,7 +220,7 @@ export function CardVault() {
       <div className="cv-pool">
         <div className="cv-grid">
           {shown.map((row) => (
-            <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned || fakeIds([row.id]).length ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
+            <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned || trialTag(row.id) ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
               <AlbumPic id={row.id} missing={!row.owned} vault />
               <b className={`cv-tag ${rarityTag(row.id, row.tier).cls}`}>{rarityTag(row.id, row.tier).text}</b>
             </button>

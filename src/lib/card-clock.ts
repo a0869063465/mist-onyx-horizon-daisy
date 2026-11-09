@@ -416,10 +416,10 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "atk": 2,
     "def": 0,
     "mdef": 0,
-    "hp": 8,
+    "hp": 6,
     "text": "a59f34df",
     "added": null,
-    "powerAt": "2026-11-01",
+    "powerAt": "2026-11-09",
     "powerTone": "down",
     "shiftAt": "2026-10-17"
   },

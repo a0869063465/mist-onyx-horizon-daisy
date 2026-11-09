@@ -953,6 +953,21 @@ export const PENDING_NOTES: string[] = [
   "Bảng mô tả lá quái dùng đúng khung lá trên tay nên số công, máu, thủ nằm khớp ô. Trang nhóm trong album: hình lá trên về kiểu cũ, chỉ ghi số No, bỏ tên album, nút Xem và Đổi đổi sang kiểu vàng tối như ô Giám định.",
   "Bảng mô tả lá phép dùng khung viền màu theo tốc độ phép (chậm đỏ, nhanh hồng, siêu tốc trắng, buff xanh lá) như lá trên tay.",
   "Bảng mô tả lá: thủ và thủ phép về chỗ cũ, công và máu hạ thấp xuống một chút. Lá phép bỏ icon tốc độ, chữ mô tả dùng màu như lá quái. Nút Nhận thưởng nhóm trong album cùng kiểu vàng tối với Xem và Đổi.",
+  "Một bộ bài được mang nhiều bản cùng một lá: quái 1 sao tối đa 3 bản, quái 2 sao 2 bản, phép 0 mana 2 bản, lá khác 1 bản. Phải có đủ số bản. Mở gói, đổi sao, quà thư trùng lá thì thêm 1 bản tới đủ, quá thì hoàn 1 sao.",
+  "Album sưu tập: lật trang thì khung lá, số No. và tranh đi cùng trang, không còn khung ở lại hay biến mất.",
+  "Bảng mô tả lá quái trở lại kiểu cũ, chỉ lá phép giữ khung màu như lá trên tay. Album sưu tập: mở album thì đế phát sáng dưới bìa đứng yên, chỉ bìa trước lật; chỗ cắt đo riêng từng album.",
+  "Chỉnh sửa bộ bài: bảng lá có 2 mũi tên, xanh thêm 1 bản vào bộ (hiện số bản đang có), đỏ bỏ 1 bản; mũi tên mờ khi hết bản để thêm hoặc bộ không có lá. Khung Cân bằng sức mạnh thu nhỏ một nửa, chỉ ghi lần cân bằng mới nhất.",
+  "Bảng mô tả lá quái: số công và máu nhích lên đúng vào giữa ô.",
+  "Bỏ lá fake, thay bằng lá dùng thử chỉ số đầy đủ, đổi bộ thử mỗi 0 giờ thứ Hai. Nhãn hạn (7D, 6H) đặt đúng chỗ nhãn F/FK cũ và trên hộp bộ bài có hơn 16 lá thử. Sang tuần mới, bộ có hơn 16 lá thử được thay bằng bộ thử mới; bộ khác giữ lá hết hạn in mờ, dấu ! đỏ, bấm lá để Đổi sao hoặc tới Cửa hàng.",
+  "Chỉnh sửa bộ bài: bỏ nút Lưu, thoát trang là tự lưu (bộ không hợp lệ thì về lại bộ lúc vào trang). Bên phải mỗi lá trong danh sách có x1, x2, bấm để thêm bản sao. Bấm dòng hướng dẫn để xem cách thêm bản. Nút thống kê màu xanh lá, lá trong kho hiện kiểu lá trên tay.",
+  "Nhãn hạn dùng thử đổi sang góc đối diện nhãn UR và SR, đuôi nhọn quay vào trong, màu đỏ thẫm sáng.",
+  "Lượt đầu chưa rút bài mà bấm liên tục 5-6 lần là thao tác bất lực: hướng dẫn hiện ra chỉ phải rút bài.",
+  "Bấm lá quái trên tay mà chỉ có một cách triệu hồi thì hiện luôn hai mũi tên chọn hàng: lên màu đỏ (hàng trước, có nguy cơ), xuống màu xanh lam (hàng sau). Hai màu in hơi nhạt.",
+  "Chỉnh sửa bộ bài: dòng \"Bộ bài đã Full số lá\" chỉ hiện khi bạn cố thêm lá lần thứ 3 lúc bộ đã đầy, rồi nhảy lên ở mỗi lần thử sau.",
+  "Số mana trên lá phép trong bảng mô tả nâng lên một chút cho nằm giữa viên mana.",
+  "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
+  "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
+  "Kizuran giảm máu từ 8 xuống 6.",
 ];
 
 function remarkOf(notes: string[]) {

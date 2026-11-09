@@ -1,7 +1,7 @@
-import { DEFAULT_DECK, FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
+import { DEFAULT_DECK, FORMS, MONSTERS, copyCap, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
-import { fakeIds } from "./owned-cards.ts";
-import { addOwned, addStars, loadRates, naturalTier, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
+import { trialTag } from "./owned-cards.ts";
+import { addOwned, addStars, loadRates, naturalTier, ownedCount, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
 import { noteCards } from "./mission-store.ts";
 import { spellKindRank } from "./spell-kinds.ts";
 import { EVOLUTIONS } from "./strategies.ts";
@@ -220,10 +220,9 @@ export function collectionOwned(owned: Set<string>): Set<string> {
  * where it is N; every other card shows its tier.
  */
 export function rarityTag(id: string, tier: Tier): { text: string; cls: string } {
-  if (fakeIds([id]).length > 0) {
-    if (tier === "N") return { text: "F", cls: "is-FN" };
-    if (tier === "SR") return { text: "FK", cls: "is-FK" };
-  }
+  // Lá dùng thử (chủ game 08/11): the time left ("6D", "5H") in the same tag a fake card had (F red, FK orange).
+  const left = trialTag(id);
+  if (left) return { text: left, cls: tier === "N" ? "is-FN" : "is-FK" };
   return { text: tier, cls: `is-${tier}` };
 }
 
@@ -352,8 +351,9 @@ export function exchangePrice(id: string, rates: Rates = loadRates()): number {
 /** Buys a card of the albums not owned yet, saved before any light show; false when owned or short of stars. */
 export function exchangeCard(id: string): boolean {
   const price = exchangePrice(id);
-  if (collectionOwned(ownedIds()).has(id) || !cardNumbers().has(id) || starCount() < price) return false;
-  addOwned(id);
+  // Một bản nữa của lá đã có cũng đổi được, tới trần của lá (chủ game 08/11).
+  if (ownedCount(id) >= copyCap(id) || !cardNumbers().has(id) || starCount() < price) return false;
+  if (addOwned(id) === "full") return false;
   addStars(-price);
   noteCards([{ id, tier: rarityOf(id) }]);
   return true;

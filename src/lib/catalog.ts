@@ -418,7 +418,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 2,
     "def": 0,
     "mdef": 0,
-    "hp": 8,
+    "hp": 6,
     "art": "kizuran",
     "strong": "Máu rất trâu",
     "weak": "Không có điểm phòng ngự",
@@ -1134,6 +1134,20 @@ export const DECK_SIZE = 24;
 export const DECK_MIN = 16;
 export const MIN_MONSTERS = 13;
 export const MIN_SPELLS = 0;
+
+/**
+ * Bản tối đa của một lá trong một bộ (chủ game 08/11): quái 1 sao 3 bản, quái 2 sao 2 bản, phép 0 mana 2 bản,
+ * mọi lá khác 1 bản. Dạng ngoài bộ (tiến hoá, dung hợp) không bỏ vào bộ: 0. Lá môi trường vẫn chỉ 1 lá mỗi bộ.
+ */
+export function copyCap(id: string): number {
+  if (FORMS.some((card) => card.id === id)) return 0;
+  const monster = monsterCard(id);
+  if (monster) return monster.stars <= 1 ? 3 : monster.stars === 2 ? 2 : 1;
+  const spell = spellCard(id);
+  if (!spell) return 0;
+  if (spell.env) return 1;
+  return spell.gems === 0 ? 2 : 1;
+}
 
 export function deckLegal(monsterCount: number, spellCount: number): boolean {
   const total = monsterCount + spellCount;

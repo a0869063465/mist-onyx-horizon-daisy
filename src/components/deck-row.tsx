@@ -9,7 +9,7 @@ import { spellKind } from "@/lib/spell-kinds";
  * One row of the deck list: the stars (monster) or mana (spell, blank at 0) on the left, the name over a strip
  * of the card's art, and on the right the summoning mana crystal (monster, hidden at 0) or the spell's kind icon.
  */
-export function DeckRow({ id, kind, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
+export function DeckRow({ id, kind, count = 1, canAdd = false, onAdd, spare = true, off = false, lifted = false, onPress, onTap }: { id: string; kind: "monster" | "spell"; count?: number; canAdd?: boolean; onAdd?: () => void; spare?: boolean; off?: boolean; lifted?: boolean; onPress?: (event: ReactPointerEvent) => void; onTap: () => void }) {
   const monster = kind === "monster" ? monsterCard(id) : undefined;
   const spell = kind === "spell" ? spellCard(id) : undefined;
   if (!monster && !spell) return null;
@@ -19,7 +19,7 @@ export function DeckRow({ id, kind, lifted = false, onPress, onTap }: { id: stri
     <div
       role="button"
       tabIndex={0}
-      className={`dk-row is-${kind}${lifted ? " is-lifted" : ""}`}
+      className={`dk-row is-${kind}${lifted ? " is-lifted" : ""}${off ? " is-off" : ""}`}
       onPointerDown={onPress}
       onClick={onTap}
       onContextMenu={(event) => event.preventDefault()}
@@ -39,7 +39,21 @@ export function DeckRow({ id, kind, lifted = false, onPress, onTap }: { id: stri
       </span>
       <span className="dk-row-name">{tr(monster?.name ?? spell?.name ?? "")}</span>
       <span className="dk-row-end">
-        {monster ? (
+        {onAdd && !spare ? null : onAdd ? (
+          <button
+            type="button"
+            className={`dk-row-count${canAdd ? " is-add" : ""}`}
+            style={{ "--tone": sort ? sort.tone : "#3ec6ff" } as CSSProperties}
+            aria-label={tr("Thêm bản sao")}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (canAdd) onAdd();
+            }}
+          >
+            x{count}
+          </button>
+        ) : monster ? (
           monster.gems > 0 ? (
             <span className="dk-row-cost">
               <i className="mana-gem" />

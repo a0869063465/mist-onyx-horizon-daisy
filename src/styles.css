@@ -7710,7 +7710,8 @@ button.watch-back {
    share the space down to the last row evenly. */
 .dk-pad { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; gap: 0.4rem; }
 .dk-tools.is-main { grid-template-columns: repeat(2, auto); justify-content: center; gap: 1.4rem; margin: 0; }
-.dk-tools.is-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.25rem; margin: 0; }
+.dk-tools.is-stack { grid-template-columns: repeat(2, auto); justify-content: center; gap: 0.4rem 1.4rem; margin: 0; }
+.dk-tools.is-stack .dk-tool.is-small .sk3d-gem { width: 2.9rem; height: 2.9rem; }
 .dk-tool { position: relative; display: grid; place-items: center; padding: 0; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
 .dk-gem.sk3d { width: auto; }
 .dk-tool .sk3d-gem { width: 2.9rem; height: 2.9rem; transition: transform 0.14s ease-out, box-shadow 0.14s ease-out, opacity 0.14s; }
@@ -7814,7 +7815,7 @@ button.watch-back {
 /* Power balance notes beside the card on its sheet (deck builder). */
 .msheet-balance {
   margin-top: 0.35rem;
-  max-height: 7.2rem;
+  max-height: 3.6rem;
   overflow-y: auto;
   padding: 0.4rem 0.5rem 0.45rem;
   border-radius: 0.55rem;
@@ -7887,10 +7888,12 @@ button.watch-back {
 }
 .dk-name-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 .dk-name-edit {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  width: 100%;
+  position: fixed;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 60;
+  width: min(19rem, calc(100vw - 1rem));
+  height: 2.6rem;
   padding: 0 0.6rem;
   font: inherit;
   font-size: 0.86rem;
@@ -9892,8 +9895,12 @@ button.watch-back {
 .cv-tag.is-SR { background: linear-gradient(90deg, #ff5a0a 0%, #ff8a14 45%, #ffc21f 85%, #ffe14a 100%); text-shadow: 0 1px 1px #8a3000; }
 .cv-tag.is-UR { background: linear-gradient(90deg, #ff3fa4 0%, #d24dff 40%, #6f7bff 70%, #46c8ff 100%); text-shadow: 0 1px 1px #3a0a5a; }
 /* Fake cards (chủ game 22/10): F in red where they would be N, FK in red-orange where they would be SR. */
-.cv-tag.is-FN, .al-rarity.is-FN { background: linear-gradient(90deg, #a80f0f, #e53030); text-shadow: 0 1px 1px #3a0000; }
-.cv-tag.is-FK, .al-rarity.is-FK { background: linear-gradient(90deg, #d8330a, #ff6a1f); text-shadow: 0 1px 1px #5a1400; }
+.cv-tag.is-FN, .al-rarity.is-FN, .cv-tag.is-FK, .al-rarity.is-FK { background: linear-gradient(270deg, #8a0612 0%, #c4121f 55%, #ff3b3b 100%); text-shadow: 0 1px 1px #2a0004; }
+/* Lá dùng thử: nhãn hạn ở góc đối diện nhãn UR/SR, đuôi nhọn quay vào trong (chủ game 08/11). */
+.cv-tag.is-FN, .cv-tag.is-FK { left: auto; right: -0.25rem; padding: 0.1rem 0.3rem 0.1rem 0.5rem; clip-path: polygon(0 0, 100% 0, 100% 100%, 24% 100%); }
+.cx .cv-tag.is-FN, .cx .cv-tag.is-FK { left: auto; right: -0.4cqw; padding: 0 1.5cqw 0 0; justify-content: flex-end; }
+.al-rarity.is-FN, .al-rarity.is-FK { clip-path: polygon(0 0, 82% 0, 100% 100%, 0 100%); padding: 0.1rem 0.75rem 0.1rem 0.55rem; }
+.ml-slot.is-card .al-rarity.is-FN, .ml-slot.is-card .al-rarity.is-FK { left: auto; right: 0.2rem; }
 .cv-empty { margin: 2.5rem 0; text-align: center; font-weight: 700; color: rgba(214, 226, 255, 0.65); }
 
 /* A card's sheet and its 3D roll dim the whole page, the header and tabs too. */
@@ -10727,6 +10734,8 @@ button.watch-back {
 .msheet-rarity { position: absolute; top: -0.5rem; left: -0.45rem; z-index: 4; font-style: normal; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)); }
 /* A spell's mana sits top right of the picture, so its rarity goes left (owner 22/10); a monster's own number keeps the old place. */
 .msheet-card:has(.msheet-count) .msheet-rarity { left: auto; right: -0.45rem; }
+.msheet-card:has(.al-rarity.is-FN, .al-rarity.is-FK) .msheet-rarity { left: auto; right: -0.45rem; }
+.msheet-card:has(.msheet-count):has(.al-rarity.is-FN, .al-rarity.is-FK) .msheet-rarity { right: auto; left: -0.45rem; }
 /* Giám định: the lock box as a button. */
 .al-appraise { width: 100%; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 0 10px rgba(255, 200, 70, 0.25); }
 .al-appraise:active { transform: scale(0.97); }
@@ -11899,16 +11908,17 @@ button.watch-back {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 0 0.32rem rgba(255, 196, 40, 0.95)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8));
+  opacity: 0.82;
   animation: row-arrow-up 1s ease-in-out infinite;
 }
-.row-arrow.is-back svg { animation-name: row-arrow-down; }
-.row-arrow:active svg { transform: scale(0.88); filter: brightness(1.25) drop-shadow(0 0 0.5rem rgba(255, 210, 60, 1)); }
+.row-arrow.is-back svg { animation-name: row-arrow-down; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+.row-arrow:active svg { transform: scale(0.88); opacity: 1; }
 .row-arrow.is-off { cursor: default; }
 .row-arrow.is-off svg { animation: none; filter: grayscale(1) brightness(0.48) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); opacity: 0.7; }
 @keyframes row-arrow-in { from { opacity: 0; transform: scale(0.55); } }
-@keyframes row-arrow-up { 50% { transform: translateY(-7%); filter: drop-shadow(0 0 0.55rem rgba(255, 214, 70, 1)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); } }
-@keyframes row-arrow-down { 50% { transform: translateY(7%); filter: drop-shadow(0 0 0.55rem rgba(255, 214, 70, 1)) drop-shadow(0 0.14rem 0.12rem rgba(0, 0, 0, 0.8)); } }
+@keyframes row-arrow-up { 50% { transform: translateY(-7%); } }
+@keyframes row-arrow-down { 50% { transform: translateY(7%); } }
 /* Same box as the summon tile it replaces, so nothing around it moves. */
 .act3d-rows { display: inline-flex; justify-content: center; align-items: center; gap: 0.3rem; min-width: 4.9rem; min-height: 5.1rem; }
 .act3d-rows .row-arrow { width: 2.3rem; height: 2.8rem; }
@@ -13203,7 +13213,9 @@ img.fs-emblem { width: 1.25rem; height: auto; fill: none; stroke: none; }
 .mx-card.is-q { container-type: inline-size; height: auto; width: 100%; overflow: visible; }
 .mx-q { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; user-select: none; }
 .mx-q.is-in { animation: mx-fade-in 620ms ease both; }
-.mx-q.is-under { z-index: 0; }
+/* Nhận thưởng: khung xanh lá nằm sẵn bên dưới, khung vàng mờ dần phía trên rồi biến mất hẳn, không để lộ rìa khung vàng. */
+.mx-q.is-under { z-index: 2; animation: mx-fade-out 620ms ease both; }
+@keyframes mx-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes mx-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .mx-card.is-q .mx-fill { position: absolute; z-index: 1; border-style: solid; border-color: transparent; border-width: 0; border-image: url(/ui/mission/q-fill.webp) 0 10 0 10 fill / 0 1.02cqw 0 1.02cqw stretch; min-width: 2.04cqw; border-radius: 0; background: none; mix-blend-mode: normal; transition: width 520ms cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
 .mx-num { position: absolute; z-index: 2; transform: translateY(-50%); font-family: "Roboto Condensed", "Barlow Condensed", "Be Vietnam Pro", sans-serif; font-weight: 700; font-size: 4.38cqw; line-height: 1; color: #fff; white-space: nowrap; letter-spacing: 0.01em; -webkit-text-stroke: 0.3cqw rgba(0, 14, 48, 0.92); paint-order: stroke fill; text-shadow: 0 0.25cqw 0.35cqw rgba(0, 0, 0, 0.55); font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -13465,3 +13477,38 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Nhận ★ in the group panel takes the same dark-gold look as Xem / Đổi (chủ game 08/11). */
 .al-panel-set header .al-prize.is-claim { color: #ffe6a6; border: 1px solid rgba(255, 215, 106, 0.45); background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; animation: none; }
+.po-refund.is-copy { color: #9fe3ff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(80, 190, 255, 0.6); }
+/* Nhiều bản một lá (chủ game 08/11): ×n on the deck list row, copies in / copies allowed on the pool card. */
+.dk-row-count { margin-right: 0.3rem; padding: 0 0.3rem; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0.4rem; background: rgba(0, 0, 0, 0.35); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: #9a8f78; text-shadow: 0 1px 2px #000; -webkit-tap-highlight-color: transparent; }
+.dk-row-count.is-add { border-color: var(--tone, #3ec6ff); background: color-mix(in srgb, var(--tone, #3ec6ff) 22%, transparent); color: color-mix(in srgb, var(--tone, #3ec6ff) 55%, #fff); text-shadow: 0 1px 2px #000, 0 0 6px var(--tone, #3ec6ff); }
+.dk-row-count.is-add:active { transform: scale(0.92); }
+.dk-tip-text em { font-style: normal; font-weight: 900; }
+.dk-tip-full { color: #ff4fa6; text-shadow: 0 1px 0 #4a0a2a, 0 0 6px rgba(255, 79, 166, 0.7); }
+.dk-tip-text.is-full { animation: dk-tip-jump 0.5s ease-out; }
+@keyframes dk-tip-jump { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-7px) scale(1.08); } 55% { transform: translateY(0) scale(0.97); } 75% { transform: translateY(-3px) scale(1.03); } 100% { transform: translateY(0) scale(1); } }
+.dk-tip-x { color: #6fd8ff; text-shadow: 0 1px 0 #06243f, 0 0 6px #3ec6ff; }
+.dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
+.dk-tip-r4 { color: #b45cff; }
+.dk-tip-sp { color: #ff4fa6; }
+.dk-copies { position: absolute; left: 5%; top: -0.22rem; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid color-mix(in srgb, var(--tone, #3ec6ff) 70%, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--tone, #3ec6ff) 88%, #fff), color-mix(in srgb, var(--tone, #3ec6ff) 62%, #000)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); pointer-events: none; }
+.dk-card.is-in .dk-copies { opacity: 0.8; }
+/* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
+.dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }
+.dk-trade { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+.dk-trade-btns { display: flex; gap: 0.4rem; }
+.dk-trade-btns .al-panel-view { flex: 1; padding: 0.4rem 0.5rem; border: 1px solid rgba(255, 215, 106, 0.45); border-radius: 0.6rem; background: linear-gradient(180deg, rgba(40, 30, 10, 0.85), rgba(16, 12, 4, 0.9)); box-shadow: none; color: #ffe6a6; font-size: 0.95rem; }
+.lor-box.is-off > :not(.lor-box-warn):not(.lor-box-trial) { filter: grayscale(0.8) brightness(0.6); }
+.lor-box-trial { position: absolute; left: 4%; top: 9%; z-index: 4; min-width: 26%; padding: 0.1rem 0.55rem 0.1rem 0.3rem; clip-path: polygon(0 0, 100% 0, 76% 100%, 0 100%); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.85rem; font-weight: 800; line-height: 1.1; color: #fff; background: linear-gradient(90deg, #d8330a, #ff6a1f); text-shadow: 0 1px 1px #5a1400; pointer-events: none; }
+/* Page turn (chủ game 08/11): the frames must go with the page, not stay behind. The leaf is one flattened, composited
+   layer, so the frame pictures (slot.webp) and the card arts turn together. */
+.al-view .al-leaf { transform-style: flat; will-change: transform; isolation: isolate; contain: layout style; }
+.al-view .al-leaf * { backface-visibility: visible; }
+
+/* Deck builder sheet (chủ game 08/11): balance notes halved (newest note only, scroll when long), two arrows above. */
+.dk-arrows { display: flex; justify-content: center; gap: 0.7rem; margin-top: 0.1rem; }
+.dk-arrow { position: relative; display: grid; place-items: center; width: 4.1rem; height: 3.1rem; padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.08s, filter 0.15s, opacity 0.15s; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55)); -webkit-tap-highlight-color: transparent; }
+.dk-arrow img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.dk-arrow:active:not(:disabled) { transform: translateY(2px) scale(0.93); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) brightness(1.15); }
+.dk-arrow:disabled { opacity: 0.38; filter: grayscale(0.7) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); cursor: default; }
+.dk-arrow-n { position: absolute; left: 50%; top: 50%; transform: translate(-42%, -52%); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.7rem; font-weight: 800; line-height: 1; color: #fff; -webkit-text-stroke: 0.14rem #0a3a63; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 20, 50, 0.7), 0 0 8px rgba(120, 220, 255, 0.8); pointer-events: none; animation: dk-pop 0.22s ease-out; }
+@keyframes dk-pop { from { transform: translate(-42%, -52%) scale(1.7); } to { transform: translate(-42%, -52%) scale(1); } }
