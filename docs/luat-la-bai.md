@@ -135,20 +135,20 @@ Quy ước của chủ game: "từ khoá" là chữ tô màu trong chữ lá. T�
 
 Viết tắt: lam = xanh lam, d = đỏ, v = vàng, h = hồng, lu = xanh lá, ch = xanh đọt chuối, ca = cam, t = tím, gvt = gradient vàng tím.
 
-Thống kê theo code hiện có (`src/components/game/sheet-ink.ts`, CSS `.ink-*` trong `src/styles.css`), phiên 10/11/2026:
+Thống kê cập nhật (10/11/2026, sau các đợt từ khoá 1–5). Nguồn: màu có sẵn trong code (`sheet-ink.ts`, `.ink-*` trong `styles.css`) cộng các từ khoá chủ game đã duyệt. Màu không có từ khoá thì không ghi.
 
-- **lam**: giải trừ trạng thái bất lợi ("giải trừ", "giải khống chế", "giải mọi trạng thái bất lợi").
-- **d**: hiến tế.
-- **v**: thủ ("thủ"); phòng ngự (phần trên của gvt).
-- **h**: tiến hoá.
-- **lu**: máu, máu tối đa, hồi máu.
-- **ca**: số lượt ("N lượt"), công.
-- **t**: thủ phép; phòng ngự (phần dưới của gvt).
-- **gvt**: phòng ngự. Chủ game (10/11): tím đang quá nhiều, tăng phần vàng lên, ít nhất 55% (đã đổi từ 52% lên 55% trong `styles.css`, `.ink-sheet-guard`).
-- **ch**: chưa có từ khoá.
-- Không đưa vào danh sách: "không thể hành động / tấn công / chặn…" (màu xám, không có trong bảng màu của chủ game).
+- **lam** (xanh lam): giải trừ trạng thái bất lợi (code); Tiêu hao N mana; Dùng x mana; sát thương phép; x của sát thương phép (Cầu sấm, Hơi thở rồng); chịu đòn phép.
+- **d** (đỏ): hiến tế (code); chịu đòn; lên đối thủ; lên 1 quái địch; lên 1 kẻ địch; lên người chơi.
+- **v** (vàng): thủ (code); phòng ngự (phần trên của gvt).
+- **h** (hồng): tiến hoá (code).
+- **lu** (xanh lá): máu, máu tối đa, hồi máu (code); N máu tối đa; tăng (Đập phá); x công vĩnh viễn (chờ xác nhận, theo "tăng").
+- **ca** (cam): N lượt, công (code); Mỗi đòn đánh; đòn đánh là chủ động; số sao hiện có (Cầu sấm); 40% và 75% (Nhảy qua lại); đòn đánh vật lý; quái thú từ 3 sao trở lên.
+- **t** (tím): thủ phép, phòng ngự (phần dưới của gvt) (code); khả năng né (Nhảy qua lại).
+- **xám**: sát thương chuẩn (viết tắt "xa", Hơi thở rồng); không thể hành động / tấn công (code).
+- **ch** (xanh đọt chuối): chưa có từ khoá.
+- **gvt** (gradient vàng tím): phòng ngự. Chủ game (10/11): tím đang quá nhiều, vàng tới 55% (đã đổi trong `styles.css`).
 
-Cần chủ game xác nhận: xám (không thể hành động) có giữ hay đổi sang một màu trong danh sách trên.
+Không phải màu: Hấp thụ là skill chậm, đỏ (chủ game); code hiện là chủ động xanh lam, chưa đổi.
 
 ### Từ khoá do chủ game định nghĩa (10/11/2026)
 
