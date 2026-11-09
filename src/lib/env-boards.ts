@@ -22,6 +22,8 @@ export function topArt(_env: string | null | undefined): string {
   return DEFAULT_BOARD_ART;
 }
 
-export function bottomArt(_env: string | null | undefined): string {
-  return DEFAULT_BOARD_ART;
+/** Nửa dưới (bên xanh): có lá Núi dung nham thì nền dung nham (chủ game 09/11), còn lại như cũ. */
+export const LAVA_BOARD_ART = "/board-lava.jpg";
+export function bottomArt(env: string | null | undefined): string {
+  return env === "nui-dung-nham" ? LAVA_BOARD_ART : DEFAULT_BOARD_ART;
 }

@@ -5922,7 +5922,7 @@ function PlayPage() {
         onPointerCancel={dropAsk}
       >
         <div className="diorama">
-        <BoardArt src={artTop} cut={cut} />
+        <BoardArt src={artTop} bottom={artBottom} cut={cut} />
         <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
         {(() => {
           // Tay đối thủ (chủ game 28/10): lá úp xoè trong khay để bài (băng rôn đỏ ở chính giữa trên cùng), nhìn là thấy
@@ -8202,8 +8202,26 @@ function pinMedal(spot: { x: number; y: number; width: number; size: number }): 
 }
 
 /** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
-function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
-  if (cut.v === 1) return <img className="board-art" src={src} alt="" />;
+/** Chỗ nối hai ảnh bàn (giữa dải đá, phần trăm chiều cao): hai ảnh có cùng dải đá nên nối mờ chỗ này không thấy đường. */
+const SEAM_Y = 52.4;
+const SEAM_FADE = 1.4;
+function BoardArt({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
+  const other = bottom && bottom !== src ? bottom : null;
+  if (cut.v === 1) {
+    return (
+      <>
+        <img className="board-art" src={src} alt="" />
+        {other ? (
+          <img
+            className="board-art"
+            src={other}
+            alt=""
+            style={{ maskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)`, WebkitMaskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)` }}
+          />
+        ) : null}
+      </>
+    );
+  }
   // Bàn thấp: ảnh đã bỏ SHORT_TOP phần trăm đầu, toạ độ vẫn tính theo bàn đầy đủ (trừ SHORT_TOP khi đặt vị trí ảnh).
   if (cut.short) src = SHORT_ART;
   const lost = cut.short ? SHORT_TOP : 0;
@@ -8211,7 +8229,27 @@ function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
   const at = (imageY: number) => `0 ${-(imageY - lost) / cut.v}cqh`;
   const redEnd = (RED_END - cut.top) / cut.v;
   if (cut.to - cut.from < 0.01) {
-    return <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />;
+    const seam = (SEAM_Y - cut.top) / cut.v;
+    const fade = SEAM_FADE / cut.v;
+    return (
+      <>
+        <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />
+        {other ? (
+          <div
+            className="board-art-slice"
+            style={{
+              top: 0,
+              bottom: 0,
+              backgroundImage: `url(${other})`,
+              backgroundSize: `100% ${100 / cut.v}cqh`,
+              backgroundPosition: `0 ${-cut.top / cut.v}cqh`,
+              maskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
+              WebkitMaskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
+            }}
+          />
+        ) : null}
+      </>
+    );
   }
   // Floor layer under the gap between the halves; its middle sits where the middle of the original floor was.
   const gap = (BLUE_START - cut.to) / cut.v;
@@ -8221,6 +8259,10 @@ function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
   const floorTop = redEnd - reach;
   const floorY = floorMiddle + (floorTop - gapMiddle) * cut.v;
   const feather = 0.8;
+  // Nửa dưới bằng ảnh riêng (ảnh đầy đủ, không phải bản thấp): vị trí tính theo ảnh đầy đủ.
+  const lowerArt = other ?? src;
+  const lowerSize = other ? `100% ${100 / cut.v}cqh` : size;
+  const lowerAt = other ? `0 ${-BLUE_START / cut.v}cqh` : at(BLUE_START);
   return (
     <>
       <div className="board-art-slice" style={{ top: `${floorTop}cqh`, height: `${gap + reach * 2}cqh`, backgroundImage: `url(${FLOOR_ART})`, backgroundSize: size, backgroundPosition: at(floorY) }} />
@@ -8230,7 +8272,7 @@ function BoardArt({ src, cut }: { src: string; cut: BoardCut }) {
       />
       <div
         className="board-art-slice"
-        style={{ top: `${redEnd + gap}cqh`, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(BLUE_START), maskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)` }}
+        style={{ top: `${redEnd + gap}cqh`, bottom: 0, backgroundImage: `url(${lowerArt})`, backgroundSize: lowerSize, backgroundPosition: lowerAt, maskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)` }}
       />
     </>
   );
