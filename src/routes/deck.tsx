@@ -5,7 +5,7 @@ import { CardFace } from "@/components/game/card-face";
 import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
-import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
+import { artSrc, copyCap, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { canReachForm, canUseCard, copiesOf, fakeIds, usableCopies } from "@/lib/owned-cards";
 import { ExchangeAsk } from "@/components/collection/album-panels";
 import { albums, cardNumbers, exchangeCard, exchangePrice } from "@/lib/collection";
@@ -266,7 +266,8 @@ function DeckPage() {
   // Copies still to add (chủ game 09/11): a blue number like the x1 / x2 of the list, nothing when all copies are in or the card has one.
   const copies = (id: string) => {
     const left = (room.get(id) ?? 0) - (used.get(id) ?? 0);
-    if ((room.get(id) ?? 0) <= 1 || left <= 0) return null;
+    // Only below the most the rules allow: all 3 copies still free, or 1 of 1, say nothing (chủ game 09/11).
+    if (left <= 0 || left >= copyCap(id)) return null;
     const tone = spellCard(id) ? spellKind(id).tone : "#3ec6ff";
     return (
       <b className="dk-copies" style={{ "--tone": tone } as CSSProperties}>
