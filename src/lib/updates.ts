@@ -970,6 +970,7 @@ export const PENDING_NOTES: string[] = [
   "Kizuran giảm máu từ 8 xuống 6.",
   "Bên xanh có lá Núi dung nham trên sân thì nửa dưới bàn đấu đổi sang nền dung nham.",
   "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
+  "Nền dung nham có hiệu ứng lửa cháy chuyển động; dải đá giữa sân đứng yên. Máy bật chế độ giảm chuyển động thì không chạy.",
 ];
 
 function remarkOf(notes: string[]) {

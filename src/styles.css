@@ -2057,6 +2057,8 @@
   object-fit: cover;
   pointer-events: none;
 }
+.lava-fire { position: absolute; left: 0; width: 100%; overflow: hidden; pointer-events: none; }
+.lava-fire video { position: absolute; left: 0; width: 100%; object-fit: fill; pointer-events: none; }
 .board-art-slice {
   position: absolute;
   left: 0;

@@ -8202,10 +8202,68 @@ function pinMedal(spot: { x: number; y: number; width: number; size: number }): 
 }
 
 /** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
+/**
+ * Lớp lửa cháy (chủ game 09/11): video dung nham phủ lên phần dung nham của nền bàn. Video 720×1280 khớp ảnh `board-lava.jpg` theo phép
+ * co giãn 1,168 lần (đo bằng so khớp điểm ảnh): nó phủ từ 10,0% tới 89,94% chiều cao ảnh, nên chỉ nửa dung nham mới có lửa;
+ * dải đá giữa sân, phần trên cùng và phần dưới cùng đứng yên. Cắt bàn theo đúng ranh đỏ/trắng như ảnh.
+ */
+const FIRE_TOP = 10.0;
+const FIRE_BOTTOM = 89.94;
+function LavaFire({ half, cut }: { half: "top" | "bottom"; cut: BoardCut }) {
+  const [calm, setCalm] = useState(true);
+  useEffect(() => {
+    setCalm(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+  if (calm) return null;
+  const band = cut.to - cut.from;
+  const at = (y: number) => (half === "top" ? (y - cut.top) / cut.v : (y - cut.top - band) / cut.v);
+  const from = half === "top" ? Math.max(FIRE_TOP, cut.top) : BLUE_START;
+  const to = half === "top" ? RED_END : FIRE_BOTTOM;
+  const start = Math.max(0, at(from));
+  const end = Math.min(100, at(to));
+  if (end - start < 1) return null;
+  const edge = 1.4;
+  const softStart = (half === "top" ? from > cut.top : true) ? edge : 0;
+  const softEnd = (half === "top" ? true : to < cut.top + band + 100 * cut.v) ? edge : 0;
+  const mask = `linear-gradient(to bottom, transparent 0, #000 ${softStart}cqh, #000 calc(100% - ${softEnd}cqh), transparent 100%)`;
+  return (
+    <div className="lava-fire" style={{ top: `${start}cqh`, height: `${end - start}cqh`, maskImage: mask, WebkitMaskImage: mask }}>
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        aria-hidden="true"
+        style={{ top: `${at(FIRE_TOP) - start}cqh`, height: `${(FIRE_BOTTOM - FIRE_TOP) / cut.v}cqh` }}
+      >
+        <source src="/lava-fire.mp4" type="video/mp4" />
+        <source src="/lava-fire.webm" type="video/webm" />
+      </video>
+    </div>
+  );
+}
+
 /** Chỗ nối hai ảnh bàn (giữa dải đá, phần trăm chiều cao): hai ảnh có cùng dải đá nên nối mờ chỗ này không thấy đường. */
 const SEAM_Y = 52.4;
 const SEAM_FADE = 1.4;
 function BoardArt({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
+  const fire = (
+    <>
+      {src === LAVA_BOARD_ART ? <LavaFire half="top" cut={cut} /> : null}
+      {(bottom ?? src) === LAVA_BOARD_ART ? <LavaFire half="bottom" cut={cut} /> : null}
+    </>
+  );
+  return (
+    <>
+      <BoardImages src={src} bottom={bottom} cut={cut} />
+      {fire}
+    </>
+  );
+}
+
+function BoardImages({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
   const other = bottom && bottom !== src ? bottom : null;
   if (cut.v === 1) {
     return (
