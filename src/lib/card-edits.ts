@@ -192,6 +192,7 @@ function write(store: Store) {
 const STALE_SKILLS: Array<[string, string]> = [
   ["khong-lo-mot-mat", "Sau mỗi lần giáp lá cà"],
   ["khong-lo-mot-mat", "tốn thêm 1 mana"],
+  ["tho-den-tinh-nghich", "tăng lên đến 75% khi đấu với quái thú"],
   ["ngai-khong-lo", "Tiêu hao 1 mana gây 4 sát thương phép lên tất cả quái thú kẻ địch. Quái sống sót dính độc 1 sát thương chuẩn đầu mỗi lượt, kéo 3 lượt, không cộng dồn."],
   ["trai-tim-hai-long", "lên toàn bộ kẻ địch"],
   ["kazura", "Điểm số phía trên tôi là số máu ảo"],
