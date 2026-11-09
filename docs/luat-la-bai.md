@@ -234,3 +234,11 @@ Về x sau cùng (75%): chủ game xác nhận 75% theo "đòn đánh vật lý"
 Lưu ý:
 - Chữ lá hiện có, chưa đổi.
 - Màu t (tím) cho "khả năng né" là theo bạn. Dùng cùng màu với nội tại của bảng quái (passive = tím trong `skill-book.ts`), tôi không cần đổi code.
+
+#### Mẫu mô tả Nhảy qua lại (đánh dấu màu bằng thẻ, chưa đưa vào chữ lá)
+
+Đánh dấu: [t]…[/t] tím, [ca]…[/ca] cam.
+
+[t]Có khả năng né[/t] [ca]40%[/ca] [ca]đòn đánh vật lý[/ca] trong các cuộc giao tranh, tăng lên [ca]75%[/ca] [ca]đòn đánh vật lý[/ca] khi đấu với [ca]quái thú từ 3 sao trở lên[/ca].
+
+Ghi chú: chữ lá trong `catalog.ts` vẫn là chữ cũ của chủ game. Chưa đổi chữ lá; chờ chủ game duyệt mẫu này rồi mới đổi (và thêm dòng `STALE_SKILLS` nếu đổi).
