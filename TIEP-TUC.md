@@ -1,7 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
 ## Keyword bằng hình (09/11, Sonnet 5.5 medium)
-1. Việc vừa làm: 5 icon `public/ui/kw/` (phep, vinh-quang, luon-lach-1, luon-lach-2, khong-chan), `src/lib/keywords.ts` (`CARD_KEYWORDS` RỖNG, thêm id quái khi chủ game đưa danh sách), `KeywordRow` ở cạnh trên trái lá quái (tay bài, sân, bảng mô tả, kho bài); số bản `.dk-copies` dời xuống góc phải dưới, trên khung máu. Thử bằng gán tạm (đã bỏ): ổn.
+1. Việc vừa làm: 5 icon `public/ui/kw/` (phep, vinh-quang, luon-lach-1, luon-lach-2, khong-chan), `src/lib/keywords.ts` (`CARD_KEYWORDS` RỖNG, thêm id quái khi chủ game đưa danh sách), `KeywordRow` ở cạnh trên trái lá quái, to hết mức (1 keyword cao 28% lá, 2 thì 20%, 3 thì 15%; chủ game 09/11: thường 1 lá chỉ 1 keyword) (tay bài, sân, bảng mô tả, kho bài); số bản `.dk-copies` dời xuống góc phải dưới, trên khung máu. Thử bằng gán tạm (đã bỏ): ổn.
 2. Hiện trạng: chưa quái nào có keyword. Trong bảng mô tả, hàng keyword đè lên icon chồng lá (lá liên quan) ở góc trái trên, chờ chủ game chọn cách tránh.
 3. Việc sắp làm: luật (Opus 5.5 high) khi có danh sách quái. Phép = đòn đánh thường gây sát thương phép; Vinh quang = hạ quái được chỉ số, hạ quái bằng/hơn sao được thêm chỉ số cường hoá (tuỳ quái); Luồn lách x = số quái hàng trước hiện có trừ x được chặn, chỉ riêng quái này; Không chặn = cấm chặn. Quái 5 sao tạm chưa có.
 

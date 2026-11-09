@@ -5,7 +5,7 @@ export function KeywordRow({ cardId }: { cardId: string | undefined | null }) {
   const list = keywordsOf(cardId);
   if (list.length === 0) return null;
   return (
-    <span className="kw-row" aria-hidden="true">
+    <span className="kw-row" data-n={Math.min(3, list.length)} aria-hidden="true">
       {list.map((id) => (
         <img key={id} className="kw-icon" src={KEYWORDS[id].src} alt="" draggable={false} />
       ))}
