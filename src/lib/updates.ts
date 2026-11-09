@@ -965,6 +965,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm lá quái trên tay mà chỉ có một cách triệu hồi thì hiện luôn hai mũi tên chọn hàng: lên màu đỏ (hàng trước, có nguy cơ), xuống màu xanh lam (hàng sau). Hai màu in hơi nhạt.",
   "Chỉnh sửa bộ bài: dòng \"Bộ bài đã Full số lá\" chỉ hiện khi bạn cố thêm lá lần thứ 3 lúc bộ đã đầy, rồi nhảy lên ở mỗi lần thử sau.",
   "Số mana trên lá phép trong bảng mô tả nâng lên một chút cho nằm giữa viên mana.",
+  "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
 ];
 
 function remarkOf(notes: string[]) {

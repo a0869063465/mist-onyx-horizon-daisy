@@ -13490,7 +13490,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
 .dk-tip-r4 { color: #b45cff; }
 .dk-tip-sp { color: #ff4fa6; }
-.dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; padding: 0.05rem 0.32rem; border-radius: 0.4rem; border: 1px solid rgba(255, 215, 106, 0.6); background: rgba(12, 10, 6, 0.85); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.78rem; font-weight: 800; line-height: 1.15; color: #ffe6a6; pointer-events: none; }
+.dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; padding: 0 0.34rem; border-radius: 0.4rem; border: 1px solid var(--tone, #3ec6ff); background: color-mix(in srgb, var(--tone, #3ec6ff) 22%, rgba(8, 12, 20, 0.7)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 0.95rem; font-weight: 800; line-height: 1.25; color: color-mix(in srgb, var(--tone, #3ec6ff) 55%, #fff); text-shadow: 0 1px 2px #000, 0 0 6px var(--tone, #3ec6ff); pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
 /* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
 .dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }

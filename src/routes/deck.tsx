@@ -15,7 +15,7 @@ import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type Dec
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
 import { tr, useLang } from "@/lib/i18n";
 import { infoBlocks, markFace } from "@/lib/power-balance";
-import { spellKindRank } from "@/lib/spell-kinds";
+import { spellKind, spellKindRank } from "@/lib/spell-kinds";
 import { deckTactics, loadStrategies } from "@/lib/strategies";
 
 export const Route = createFileRoute("/deck")({ component: DeckPage });
@@ -263,11 +263,17 @@ function DeckPage() {
   for (const id of [...deck.monsters, ...deck.spells]) used.set(id, (used.get(id) ?? 0) + 1);
   const room = booted ? copiesOf([...MONSTERS, ...SPELLS].map((card) => card.id)) : new Map<string, number>();
   const inDeck = new Set([...used].filter(([id, n]) => n >= (room.get(id) ?? 1)).map(([id]) => id));
-  const copies = (id: string) => (
-    <>
-      {(room.get(id) ?? 0) > 1 ? <b className="dk-copies">{used.get(id) ?? 0}/{room.get(id)}</b> : null}
-    </>
-  );
+  // Copies still to add (chủ game 09/11): a blue number like the x1 / x2 of the list, nothing when all copies are in or the card has one.
+  const copies = (id: string) => {
+    const left = (room.get(id) ?? 0) - (used.get(id) ?? 0);
+    if ((room.get(id) ?? 0) <= 1 || left <= 0) return null;
+    const tone = spellCard(id) ? spellKind(id).tone : "#3ec6ff";
+    return (
+      <b className="dk-copies" style={{ "--tone": tone } as CSSProperties}>
+        {left}
+      </b>
+    );
+  };
   // Copies in the deck it may not use (not owned, or a trial week over): the row is dimmed (chủ game 08/11).
   const lacks = (id: string) => (used.get(id) ?? 0) > (room.get(id) ?? 0);
   void owns;
