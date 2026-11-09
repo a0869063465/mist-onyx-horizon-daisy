@@ -137,12 +137,12 @@ Viết tắt: lam = xanh lam, d = đỏ, v = vàng, h = hồng, lu = xanh lá, c
 
 Thống kê cập nhật (10/11/2026, sau các đợt từ khoá 1–5). Nguồn: màu có sẵn trong code (`sheet-ink.ts`, `.ink-*` trong `styles.css`) cộng các từ khoá chủ game đã duyệt. Màu không có từ khoá thì không ghi.
 
-- **lam** (xanh lam): giải trừ trạng thái bất lợi (code); Tiêu hao N mana; Dùng x mana; sát thương phép; x của sát thương phép (Cầu sấm, Hơi thở rồng); chịu đòn phép.
+- **lam** (xanh lam): giải trừ trạng thái bất lợi (code); Tiêu hao N mana; Dùng x mana; sát thương phép; x của sát thương phép (Cầu sấm, Hơi thở rồng); chịu đòn phép; không tiêu hao mana (Thế thân).
 - **d** (đỏ): hiến tế (code); chịu đòn; lên đối thủ; lên 1 quái địch; lên 1 kẻ địch; lên người chơi.
 - **v** (vàng): thủ (code); phòng ngự (phần trên của gvt).
-- **h** (hồng): tiến hoá (code).
+- **h** (hồng): tiến hoá (code); điều kiện phát động (Thế thân).
 - **lu** (xanh lá): máu, máu tối đa, hồi máu (code); N máu tối đa; tăng (Đập phá); x công vĩnh viễn (chờ xác nhận, theo "tăng").
-- **ca** (cam): N lượt, công (code); Mỗi đòn đánh; đòn đánh là chủ động; số sao hiện có (Cầu sấm); 40% và 75% (Nhảy qua lại); đòn đánh vật lý; quái thú từ 3 sao trở lên.
+- **ca** (cam): N lượt, công (code); Mỗi đòn đánh; đòn đánh là chủ động; số sao hiện có (Cầu sấm); 40% và 75% (Nhảy qua lại); đòn đánh vật lý; quái thú từ 3 sao trở lên; chuyển tất cả các đòn nhắm đến; đổi chỗ; quái thú đó; giữ nguyên trạng thái; triệu hồi; lượt sau (Thế thân).
 - **t** (tím): thủ phép, phòng ngự (phần dưới của gvt) (code); khả năng né (Nhảy qua lại).
 - **xám**: sát thương chuẩn (viết tắt "xa", Hơi thở rồng); không thể hành động / tấn công (code).
 - **ch** (xanh đọt chuối): chưa có từ khoá.
@@ -242,3 +242,28 @@ Lưu ý:
 [t]Có khả năng né[/t] [ca]40%[/ca] đối với [ca]các đòn đánh vật lý[/ca], lên đến [ca]75%[/ca] khi đối thủ là [ca]quái thú từ 3 sao trở lên[/ca].
 
 Mẫu do chủ game viết lại (10/11), đã thay bản nháp của tôi. Ghi chú: chữ lá trong `catalog.ts` vẫn là chữ cũ. Chưa đổi chữ lá; chờ chủ game duyệt rồi mới đổi (và thêm dòng `STALE_SKILLS` nếu đổi).
+
+### Từ khoá đợt 6 (10/11/2026): Thế thân
+
+Thế thân là kỹ năng của Thế thân của shien (`the-than-cua-shien`), gồm hai dạng: trên sân và trên tay. Chữ lá hiện có khác với bản chủ game gửi ở hai chỗ: chữ lá nói "một quái đồng minh hoặc người chơi" và "chuyển mục tiêu sang ta", còn bản chủ game nói "1 quái thú đồng minh khác" và "chuyển tất cả các đòn nhắm đến". Chưa đổi chữ lá.
+
+| Từ khoá | Màu | Dạng | Ghi chú |
+|---|---|---|---|
+| Điều kiện phát động | h (hồng) | cả hai | |
+| 1 quái thú đồng minh khác | chưa có màu | trên sân | Chủ game chưa tô màu. |
+| bị nhắm đến (bởi đối thủ) | chưa có màu | trên sân | Chủ game chưa tô màu. |
+| Khi ta trên sân | chưa có màu | trên sân | Chủ game chưa tô màu. |
+| Khi ta trên tay | chưa có màu | trên tay | Chủ game chưa tô màu. |
+| Chuyển tất cả các đòn nhắm đến | ca (cam) | trên sân | |
+| Tiêu hao 1 mana | lam (xanh lam) | trên tay | Màu có sẵn của "Tiêu hao N mana". |
+| đổi chỗ | ca (cam) | trên tay | |
+| quái thú đó | ca (cam) | trên tay | |
+| đồng minh về tay | chưa có màu | trên tay | Chủ game chưa tô màu. |
+| giữ nguyên trạng thái | ca (cam) | trên tay | |
+| triệu hồi | ca (cam) | trên tay | |
+| lượt sau | ca (cam) | trên tay | |
+| không tiêu hao mana | lam (xanh lam) | trên tay | |
+
+Lưu ý:
+- Các cụm chưa có màu (quái đồng minh, bị nhắm đến, khi ta trên sân/tay, về tay) chủ game chưa tô. Tôi không tự chọn màu.
+- Tên kỹ năng trong bảng quái là "Thế thân trên sân" và "Thế thân trên tay" (`skill-book.ts`, kiểu hồng `SP`).
