@@ -239,6 +239,6 @@ Lưu ý:
 
 Đánh dấu: [t]…[/t] tím, [ca]…[/ca] cam.
 
-[t]Có khả năng né[/t] [ca]40%[/ca] [ca]đòn đánh vật lý[/ca] trong các cuộc giao tranh, tăng lên [ca]75%[/ca] [ca]đòn đánh vật lý[/ca] khi đấu với [ca]quái thú từ 3 sao trở lên[/ca].
+[t]Có khả năng né[/t] [ca]40%[/ca] đối với [ca]các đòn đánh vật lý[/ca], lên đến [ca]75%[/ca] khi đối thủ là [ca]quái thú từ 3 sao trở lên[/ca].
 
-Ghi chú: chữ lá trong `catalog.ts` vẫn là chữ cũ của chủ game. Chưa đổi chữ lá; chờ chủ game duyệt mẫu này rồi mới đổi (và thêm dòng `STALE_SKILLS` nếu đổi).
+Mẫu do chủ game viết lại (10/11), đã thay bản nháp của tôi. Ghi chú: chữ lá trong `catalog.ts` vẫn là chữ cũ. Chưa đổi chữ lá; chờ chủ game duyệt rồi mới đổi (và thêm dòng `STALE_SKILLS` nếu đổi).
