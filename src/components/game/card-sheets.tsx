@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { KeywordRow } from "@/components/game/keyword-row";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
@@ -100,6 +101,7 @@ export function FieldFace({ id }: { id: string }) {
         {spot("mdef", card.mdef)}
         {spot("atk", card.atk)}
         {spot("hp", card.hp)}
+        <KeywordRow cardId={id} />
       </span>
     </span>
   );

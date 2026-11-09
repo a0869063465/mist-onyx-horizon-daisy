@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Keyword bằng hình (09/11, Sonnet 5.5 medium)
+1. Việc vừa làm: 5 icon `public/ui/kw/` (phep, vinh-quang, luon-lach-1, luon-lach-2, khong-chan), `src/lib/keywords.ts` (`CARD_KEYWORDS` RỖNG, thêm id quái khi chủ game đưa danh sách), `KeywordRow` ở cạnh trên trái lá quái (tay bài, sân, bảng mô tả, kho bài); số bản `.dk-copies` dời xuống góc phải dưới, trên khung máu. Thử bằng gán tạm (đã bỏ): ổn.
+2. Hiện trạng: chưa quái nào có keyword. Trong bảng mô tả, hàng keyword đè lên icon chồng lá (lá liên quan) ở góc trái trên, chờ chủ game chọn cách tránh.
+3. Việc sắp làm: luật (Opus 5.5 high) khi có danh sách quái. Phép = đòn đánh thường gây sát thương phép; Vinh quang = hạ quái được chỉ số, hạ quái bằng/hơn sao được thêm chỉ số cường hoá (tuỳ quái); Luồn lách x = số quái hàng trước hiện có trừ x được chặn, chỉ riêng quái này; Không chặn = cấm chặn. Quái 5 sao tạm chưa có.
+
 ## Huỷ đòn khi Gương phòng hộ đứng sẵn (09/11, Opus 5.5 high)
 1. Việc vừa làm: gộp `main` (51 commit) vào nhánh `ccr-42ba0a1d-w5tvmy` (nhánh cũ thiếu việc của `main`).
 2. Hiện trạng: đã nhận 1 ảnh (quái mình đánh, Gương tự dựng, X khép). Tái hiện được: sau Xác nhận, gương còn "up", quyền ở bên đánh nhưng X khép.

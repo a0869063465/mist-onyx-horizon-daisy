@@ -13490,7 +13490,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
 .dk-tip-r4 { color: #b45cff; }
 .dk-tip-sp { color: #ff4fa6; }
-.dk-copies { position: absolute; left: 5%; top: -0.22rem; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid color-mix(in srgb, var(--tone, #3ec6ff) 70%, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--tone, #3ec6ff) 88%, #fff), color-mix(in srgb, var(--tone, #3ec6ff) 62%, #000)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); pointer-events: none; }
+.dk-copies { position: absolute; right: 4%; bottom: 21%; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid color-mix(in srgb, var(--tone, #3ec6ff) 70%, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--tone, #3ec6ff) 88%, #fff), color-mix(in srgb, var(--tone, #3ec6ff) 62%, #000)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
 /* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
 .dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }
@@ -13512,3 +13512,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-arrow:disabled { opacity: 0.38; filter: grayscale(0.7) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); cursor: default; }
 .dk-arrow-n { position: absolute; left: 50%; top: 50%; transform: translate(-42%, -52%); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.7rem; font-weight: 800; line-height: 1; color: #fff; -webkit-text-stroke: 0.14rem #0a3a63; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 20, 50, 0.7), 0 0 8px rgba(120, 220, 255, 0.8); pointer-events: none; animation: dk-pop 0.22s ease-out; }
 @keyframes dk-pop { from { transform: translate(-42%, -52%) scale(1.7); } to { transform: translate(-42%, -52%) scale(1); } }
+
+/* Keyword bằng hình (chủ game 09/11): hàng icon ngang ở cạnh trên bên trái lá quái; số bản trong kho bài dời xuống góc phải
+   dưới hình, trên khung máu (.dk-copies). */
+.kw-row { position: absolute; left: 3%; top: 1%; height: 12%; z-index: 4; display: flex; align-items: center; gap: 1%; pointer-events: none; }
+.kw-icon { display: block; height: 100%; width: auto; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)); }

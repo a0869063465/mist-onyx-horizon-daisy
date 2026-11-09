@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { KeywordRow } from "@/components/game/keyword-row";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
@@ -8207,6 +8208,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}
         {spot("hp", mon.hp, stats.blueHp, fakeCut(mon, "hp", mon.hp))}
+        <KeywordRow cardId={mon.cardId} />
       </span>
     </span>
   );
@@ -8429,6 +8431,7 @@ function BoardSlot({
         <span className="fu-body">
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
+        {veil || decoy || mask ? null : <KeywordRow cardId={mon.cardId} />}
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
         <span className="badges">
           {bind > 0 ? <i className="is-hold">{bind >= 90 ? "∞" : bind}</i> : null}

@@ -1,4 +1,5 @@
 import { spellSpeed } from "@/lib/spell-kinds";
+import { KeywordRow } from "@/components/game/keyword-row";
 import { useLayoutEffect, useRef, useState } from "react";
 import { artSrc, fakeMonsterCard, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { tr, useLang } from "@/lib/i18n";
@@ -192,6 +193,7 @@ export function CardFace({
           {pin(spots.mdef, live?.mdef ?? cut?.mdef ?? monster.mdef, false, "mdef")}
           {pin(spots.atk, live?.atk ?? cut?.atk ?? monster.atk, false, "atk")}
           {pin(spots.hp, live?.hp ?? cut?.hp ?? monster.hp, false, "hp")}
+          <KeywordRow cardId={monster.id} />
           {hideName || hand ? null : pin(spots.name, tr(live?.name ?? monster.name), true)}
           {badge && !hand ? <NewMark spot={spots.fresh} kind={badge} /> : null}
         </>

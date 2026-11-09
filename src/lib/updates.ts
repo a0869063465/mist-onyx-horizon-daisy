@@ -969,6 +969,7 @@ export const PENDING_NOTES: string[] = [
   "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
   "Kizuran giảm máu từ 8 xuống 6.",
   "Lỡ đánh vào Gương phòng hộ đang đứng trên sân: sau khi Xác nhận, gương tự dựng mà bạn chưa bấm OK thì vẫn bấm X để rút lại đòn.",
+  "Kho bài trong Chỉnh sửa bộ bài: số bản còn thêm được dời xuống góc phải dưới hình, trên khung máu.",
 ];
 
 function remarkOf(notes: string[]) {
