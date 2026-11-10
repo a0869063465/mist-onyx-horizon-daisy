@@ -1,7 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
-## Keyword: bộ 14 icon mới THAY bộ 15 cũ (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
-- Đã làm: `public/ui/kw/` 14 icon (cuoi-luot đỏ, linh-hon xanh lam, nhiem-vu vàng, ben-bi xanh dương, guom-mau đỏ, luc-luong cam, hien-te cam, hoi-phuc xanh lục, doi-mo tím, tao-bai xanh lục, dau-luot xanh lam, bo-bai đỏ, xieng-xich trắng, giao-chien vàng), `keywords.ts` viết lại (tác dụng chủ game ghi trong comment), glow `.kw-icon[data-kw]` theo màu đó. Luật cũ (Bọc thép, Khổng lồ, Siêu tốc, Nanh vuốt, Luồn lách, Đòn đánh phép, Đâm xuyên) vẫn trong duel.ts nhưng ngưng dùng (id cũ nằm trong `LegacyKeywordId`, không icon nào nối tới).
+## Keyword: bộ 14 icon mới THÊM vào bộ 15 cũ, không thay (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
+- Đã làm: `public/ui/kw/` 14 icon (cuoi-luot đỏ, linh-hon xanh lam, nhiem-vu vàng, ben-bi xanh dương, guom-mau đỏ, luc-luong cam, hien-te cam, hoi-phuc xanh lục, doi-mo tím, tao-bai xanh lục, dau-luot xanh lam, bo-bai đỏ, xieng-xich trắng, giao-chien vàng), `keywords.ts` viết lại (tác dụng chủ game ghi trong comment), glow `.kw-icon[data-kw]` theo màu đó. Tổng 29 icon: bộ cũ giữ nguyên luật; Hiến tế mới (id `hien-te-thuong`, cam, thưởng khi triệu hồi nhờ hiến tế) trùng tên với Hiến tế cũ (`hien-te`, vàng, hy sinh máu hiện tại), chờ chủ game chốt giữ cả hai hay gộp.
 - Chưa làm: luật 14 keyword mới (Opus 5.5 high, chờ số + danh sách quái), chưa quái nào mang keyword. Chưa chụp bằng mắt. tsc không lỗi mới, round-rules 56/56.
 
 ## Keyword bằng hình (09/11, Sonnet 5.5 medium)
