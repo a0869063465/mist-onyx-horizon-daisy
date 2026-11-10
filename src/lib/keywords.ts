@@ -27,6 +27,16 @@
  *   không phòng ngự. - "tao-bai": hiệu ứng tạo bài trên tay. - "dau-luot": đầu lượt phát huy tác dụng.
  * - "bo-bai": bỏ bài để đổi lấy hiệu ứng có lợi. - "xieng-xich": bài quân khống chế.
  * - "tan-cong": thưởng phát huy trước khi quái CHỦ ĐỘNG lao vào đánh hoặc dùng kỹ năng (quái tự đánh/bị động không tính).
+ *
+ * Bộ thứ 3 (10, chủ game 10/11), nhãn nhóm; tác dụng chủ game viết (CHƯA có luật, CHƯA gắn quái):
+ * - "si-khi" Sĩ khí (xanh lá): triệu hồi, tặng thưởng cho đồng minh dưới sân hoặc trên tay. - "trieu-goi" Triệu gọi (vàng): gọi quái khác ra sân.
+ * - "hao-quang" Hào quang (xanh lá): đứng trên sân, buff thưởng cho các đồng minh. - "sao-choi" Sao chổi (đỏ): các quái có kỹ năng gây sát thương.
+ * - "ho-ve" Hộ vệ (xanh dương): có thể đỡ đòn bất chấp, nhưng chỉ được đặt ở hàng trước. - "thao-vat" Tháo vát (xanh dương): hành động 2 lần mỗi lượt.
+ * - "trang-bi" Trang bị (vàng): item trang bị cho quái, khi quái rời sân trang bị về tay; lần 2 dùng tiêu hao thêm 1 mana và không về tay nữa.
+ * - "da-tang" Đá tảng (nâu): quái thủ và máu cao nhưng không có công; gây sát thương chủ động bằng 70% máu nhưng bị trả đòn cùng lúc;
+ *   khi bị đánh thì phản đòn bằng sát thương mà thủ, thủ phép đã chặn cộng 25% máu hiện tại.
+ * - "debuff" Debuff (đỏ): giảm chỉ số địch. - "buff" Buff (xanh lá): tăng và hiệu ứng có lợi cho đồng minh.
+ * - "vinh-quang": icon đổi sang mũ kỵ sĩ (10/11).
  */
 export type NewKeywordId =
   | "cuoi-luot"
@@ -60,7 +70,17 @@ export type LegacyKeywordId =
   | "phan-no"
   | "mui-mau"
   | "dam-xuyen"
-  | "tan-pha";
+  | "tan-pha"
+  | "si-khi"
+  | "trieu-goi"
+  | "hao-quang"
+  | "sao-choi"
+  | "ho-ve"
+  | "thao-vat"
+  | "trang-bi"
+  | "da-tang"
+  | "debuff"
+  | "buff";
 
 export type KeywordId = NewKeywordId | LegacyKeywordId;
 
@@ -94,6 +114,16 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "mui-mau": { src: "/ui/kw/mui-mau.webp", label: "Mùi máu" },
   "dam-xuyen": { src: "/ui/kw/dam-xuyen.webp", label: "Đâm xuyên" },
   "tan-pha": { src: "/ui/kw/tan-pha.webp", label: "Tàn phá" },
+  "si-khi": { src: "/ui/kw/si-khi.webp", label: "Sĩ khí" },
+  "trieu-goi": { src: "/ui/kw/trieu-goi.webp", label: "Triệu gọi" },
+  "hao-quang": { src: "/ui/kw/hao-quang.webp", label: "Hào quang" },
+  "sao-choi": { src: "/ui/kw/sao-choi.webp", label: "Sao chổi" },
+  "ho-ve": { src: "/ui/kw/ho-ve.webp", label: "Hộ vệ" },
+  "thao-vat": { src: "/ui/kw/thao-vat.webp", label: "Tháo vát" },
+  "trang-bi": { src: "/ui/kw/trang-bi.webp", label: "Trang bị" },
+  "da-tang": { src: "/ui/kw/da-tang.webp", label: "Đá tảng" },
+  "debuff": { src: "/ui/kw/debuff.webp", label: "Debuff" },
+  "buff": { src: "/ui/kw/buff.webp", label: "Buff" },
 };
 
 /** Keyword từng quái, theo id quái (chủ game duyệt 10/11: đa phần 1, tối đa 2, chỉ cái đặc trưng chính). */

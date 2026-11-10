@@ -1,5 +1,9 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Keyword bộ thứ 3: 10 icon mới + đổi icon Vinh quang (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
+- Đã làm: `public/ui/kw/` thêm si-khi, trieu-goi, hao-quang, sao-choi, ho-ve, thao-vat, trang-bi, da-tang, debuff, buff; `vinh-quang.webp` đổi sang mũ kỵ sĩ; `keywords.ts` (id, tên, tác dụng ghi trong comment), `--kw` trong styles.css (xanh lá Sĩ khí/Hào quang/Buff, vàng Triệu gọi/Trang bị, đỏ Sao chổi/Debuff, xanh dương Hộ vệ/Tháo vát, nâu Đá tảng). tsc 7 lỗi cũ.
+- Chưa làm: gắn vào quái (Opus 5.5 high đưa bảng đề xuất, chủ game duyệt); luật thật Hộ vệ, Tháo vát, Trang bị, Đá tảng (Opus 5.5 high, chỉ khi chủ game nói).
+
 ## Keyword đã gắn vào quái (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`, chưa chụp bằng mắt)
 - `CARD_KEYWORDS` + `KEYWORD_LINES` (keywords.ts): 22 quái theo bảng chủ game chốt (Bền bỉ bỏ Lính đá; Giao chiến đổi tên Tấn công = chỉ Kỵ sĩ bóng tối (Kỵ pháp), quái tự đánh không tính; Lực lưỡng Khổng lồ 1 mắt + Máy chém; Tàn phá chỉ diện rộng từ đầu; Hồi phục có Kizuran). `skillsOf` gắn `keyword` cho kỹ năng liên quan, bảng quái in icon (`.msheet-kw`, 1,8rem) trước tên kỹ năng (mô tả hiện theo từng kỹ năng).
 - 10/11 chỉnh theo chủ game: keyword đổi chỗ với `.dk-copies` (x1/x2 lên góc trên trái, keyword xuống góc phải dưới, trên khung máu, `.kw-row` bottom 25%); nền tối mờ dần (không lộ mép) + vòng hào quang mờ phía sau icon (`--kw`), icon giữ cỡ cũ, hình trong không glow. Mọi nơi dùng chung `.kw-row`.

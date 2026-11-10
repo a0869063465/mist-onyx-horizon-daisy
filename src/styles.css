@@ -13541,6 +13541,16 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="phep"] { --kw: #c14dff; }
 .kw-icon[data-kw="vinh-quang"] { --kw: #ffc94d; }
+.kw-icon[data-kw="si-khi"] { --kw: #3cff4a; }
+.kw-icon[data-kw="trieu-goi"] { --kw: #ffc94d; }
+.kw-icon[data-kw="hao-quang"] { --kw: #3cff4a; }
+.kw-icon[data-kw="sao-choi"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="ho-ve"] { --kw: #2f6bff; }
+.kw-icon[data-kw="thao-vat"] { --kw: #2f6bff; }
+.kw-icon[data-kw="trang-bi"] { --kw: #ffc94d; }
+.kw-icon[data-kw="da-tang"] { --kw: #b07a45; }
+.kw-icon[data-kw="debuff"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="buff"] { --kw: #3cff4a; }
 .kw-icon[data-kw="khe-uoc"] { --kw: #ffc94d; }
 .kw-icon[data-kw="lien-ket"] { --kw: #ffc94d; }
 .kw-icon[data-kw="bao-oan"] { --kw: #f2f6ff; }
