@@ -972,6 +972,7 @@ export const PENDING_NOTES: string[] = [
   "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
   "Nền dung nham có hiệu ứng lửa cháy chuyển động; dải đá giữa sân đứng yên. Máy bật chế độ giảm chuyển động thì không chạy.",
   "Kéo quái trên sân lên mục tiêu: hiện danh sách Tấn công và các skill dùng được lên mục tiêu đó, giống danh sách khi bấm quái. Quái không đánh được (công 0) thì chỉ kéo được vào quân mình để dùng skill hỗ trợ. Skill ngẫu nhiên hay đánh cả phe địch (như Cò quay) hiện khi thả vào bất kỳ quái địch nào.",
+  "Skill nhiều mục tiêu: chọn nốt mục tiêu bằng bấm hoặc ấn rê; 2 giây chưa chọn thì hiện bảng các mục tiêu còn lại để bấm.",
 ];
 
 function remarkOf(notes: string[]) {

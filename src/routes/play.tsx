@@ -1808,6 +1808,8 @@ function PlayPage() {
   const [dropMenu, setDropMenu] = useState<{ uid: string; key: string } | null>(null);
   /** A target to fire at once the aim picked from the drop list is in place. */
   const fireAfter = useRef<string | null>(null);
+  /** Skill nhiều mục tiêu (chủ game 10/11): no tap or press on the next target within 2 s, the list of targets shows. */
+  const [alsoPanel, setAlsoPanel] = useState(false);
   // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
   const slideFire = useRef<(key: string) => void>(() => undefined);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
@@ -3592,6 +3594,15 @@ function PlayPage() {
     if (!key || !aim) return;
     fireAfter.current = null;
     slideFire.current(key);
+  }, [aim]);
+  // Chọn nốt mục tiêu (chủ game 10/11): a quick tap or a press-and-slide picks it; nothing right within 2 s, the list shows.
+  useEffect(() => {
+    setAlsoPanel(false);
+    if (aim?.kind !== "skill" || !aim.also) return;
+    const timer = window.setTimeout(() => {
+      if (!pressing.current) setAlsoPanel(true);
+    }, 2000);
+    return () => window.clearTimeout(timer);
   }, [aim]);
   // The match moved on: the drop list goes.
   useEffect(() => {
@@ -6762,6 +6773,37 @@ function PlayPage() {
               setKnightAsk(null);
             }}
           />
+        ) : null}
+        {alsoPanel && aim?.kind === "skill" && aim.also ? (
+          <div className="ask-card">
+            <p>{tr("Chọn mục tiêu tiếp theo")}</p>
+            {[...alsoKeys()].map((key) => {
+              const [side, slot] = key.split("-").map(Number);
+              const mon = duel.players[side as Side]?.field[slot];
+              if (!mon) return null;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    setAlsoPanel(false);
+                    slideFire.current(key);
+                  }}
+                >
+                  {fieldName(mon)}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => {
+                setAlsoPanel(false);
+                setAim(null);
+              }}
+            >
+              {tr("Huỷ")}
+            </button>
+          </div>
         ) : null}
         {lureAsk ? (
           <div className="ask-card">
