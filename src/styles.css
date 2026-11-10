@@ -13515,11 +13515,11 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Keyword bằng hình (chủ game 09/11): hàng icon ngang ở cạnh trên bên trái lá quái; số bản trong kho bài dời xuống góc phải
    dưới hình, trên khung máu (.dk-copies). */
-.kw-row { position: absolute; right: 3%; bottom: 24%; height: 21%; z-index: 4; display: flex; flex-direction: row-reverse; align-items: center; gap: 2%; pointer-events: none; }
-.kw-row[data-n="2"] { height: 17%; }
-.kw-row[data-n="3"] { height: 14%; }
-.kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; /* nền mờ dần cho dễ nhìn icon, không lộ mép; vòng tròn tưởng tượng phía sau như hào quang (chủ game 10/11) */ background: radial-gradient(circle, rgba(6, 6, 10, 0.72) 0%, rgba(6, 6, 10, 0.5) 38%, rgba(6, 6, 10, 0) 66%), radial-gradient(circle, transparent 0, transparent 53%, color-mix(in srgb, var(--kw) 55%, transparent) 61%, color-mix(in srgb, var(--kw) 18%, transparent) 69%, transparent 77%); }
-.kw-icon > img { display: block; width: 74%; height: 74%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
+.kw-row { position: absolute; right: 2%; bottom: 22%; height: 24%; z-index: 4; display: flex; flex-direction: row-reverse; align-items: center; gap: 2%; pointer-events: none; }
+.kw-row[data-n="2"] { height: 19%; }
+.kw-row[data-n="3"] { height: 16%; }
+.kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; /* nền mờ dần cho dễ nhìn icon, không lộ mép; vòng tròn tưởng tượng phía sau như hào quang (chủ game 10/11) */ background: radial-gradient(circle closest-side, transparent 0%, transparent 58%, color-mix(in srgb, var(--kw) 30%, transparent) 70%, color-mix(in srgb, var(--kw) 62%, transparent) 78%, color-mix(in srgb, var(--kw) 28%, transparent) 88%, transparent 100%), radial-gradient(circle closest-side, rgba(6, 6, 10, 0.78) 0%, rgba(6, 6, 10, 0.66) 40%, rgba(6, 6, 10, 0.42) 62%, rgba(6, 6, 10, 0.18) 80%, rgba(6, 6, 10, 0.05) 92%, rgba(6, 6, 10, 0) 100%); }
+.kw-icon > img { display: block; width: 66%; height: 66%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
 .kw-icon[data-kw="cuoi-luot"] { --kw: #ff3b2e; }
 .kw-icon[data-kw="linh-hon"] { --kw: #3fb4ff; }
 .kw-icon[data-kw="nhiem-vu"] { --kw: #ffc94d; }
@@ -13552,4 +13552,4 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 /* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
 
 /* Icon keyword đứng trước dòng mô tả của kỹ năng (chủ game 10/11): không nhỏ hơn 50% icon tốc độ cũ (2,6rem). */
-.msheet-kw { display: inline-grid; height: 1.9rem; vertical-align: middle; margin: -0.2rem 0.15rem -0.2rem -0.2rem; }
+.msheet-kw { display: inline-grid; height: 2.15rem; vertical-align: middle; margin: -0.3rem 0.1rem -0.3rem -0.3rem; }
