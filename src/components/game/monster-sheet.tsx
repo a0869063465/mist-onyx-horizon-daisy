@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
+import { KEYWORDS } from "@/lib/keywords";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
@@ -545,6 +546,7 @@ export function MonsterSheet({
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
+                {shown.keyword ? <img className="kw-icon msheet-kw" data-kw={shown.keyword} src={KEYWORDS[shown.keyword].src} alt={KEYWORDS[shown.keyword].label} draggable={false} /> : null}
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">

@@ -26,7 +26,7 @@
  * - "hoi-phuc": hồi máu sau giao tranh hoặc cuối lượt. - "doi-mo": mỗi 3 quái đội mồ chết gần nhất trỗi dậy cả 3 với 1 máu,
  *   không phòng ngự. - "tao-bai": hiệu ứng tạo bài trên tay. - "dau-luot": đầu lượt phát huy tác dụng.
  * - "bo-bai": bỏ bài để đổi lấy hiệu ứng có lợi. - "xieng-xich": bài quân khống chế.
- * - "giao-chien": phát huy khả năng trong giao tranh.
+ * - "tan-cong": thưởng phát huy trước khi quái CHỦ ĐỘNG lao vào đánh hoặc dùng kỹ năng (quái tự đánh/bị động không tính).
  */
 export type NewKeywordId =
   | "cuoi-luot"
@@ -42,7 +42,7 @@ export type NewKeywordId =
   | "dau-luot"
   | "bo-bai"
   | "xieng-xich"
-  | "giao-chien";
+  | "tan-cong";
 
 /** Bộ icon cũ (15, trong đó Hiến tế cũ đổi tên thành Khế ước, id "khe-uoc"). */
 export type LegacyKeywordId =
@@ -78,7 +78,7 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "dau-luot": { src: "/ui/kw/dau-luot.webp", label: "Đầu lượt" },
   "bo-bai": { src: "/ui/kw/bo-bai.webp", label: "Bỏ bài" },
   "xieng-xich": { src: "/ui/kw/xieng-xich.webp", label: "Xiềng xích" },
-  "giao-chien": { src: "/ui/kw/giao-chien.webp", label: "Giao chiến" },
+  "tan-cong": { src: "/ui/kw/tan-cong.webp", label: "Tấn công" },
   "boc-thep": { src: "/ui/kw/boc-thep.webp", label: "Bọc thép" },
   "khong-lo": { src: "/ui/kw/khong-lo.webp", label: "Khổng lồ" },
   "sieu-toc": { src: "/ui/kw/sieu-toc.webp", label: "Siêu tốc" },
@@ -96,8 +96,55 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "tan-pha": { src: "/ui/kw/tan-pha.webp", label: "Tàn phá" },
 };
 
-/** Keyword từng quái, theo id quái. Chủ game đưa danh sách rồi mới thêm. */
-export const CARD_KEYWORDS: Record<string, KeywordId[]> = {};
+/** Keyword từng quái, theo id quái (chủ game duyệt 10/11: đa phần 1, tối đa 2, chỉ cái đặc trưng chính). */
+export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
+  "chien-si-gam-nham": ["ben-bi"],
+  "chien-binh-rong": ["ben-bi"],
+  "hiep-si-ho-ve": ["ben-bi"],
+  "khong-lo-mot-mat": ["luc-luong"],
+  "may-chem": ["luc-luong"],
+  "trai-tim-hai-long": ["tan-pha"],
+  "loi-nguyen-cua-rong": ["tan-pha"],
+  "thuong-quan-long": ["tan-pha"],
+  "may-nem-bom-hinh-nhen": ["tan-pha"],
+  "ong-khong-lo": ["xieng-xich"],
+  "sat-nhan-bat-giu": ["xieng-xich"],
+  "phu-thuy-rung-den": ["xieng-xich"],
+  "my-dieu-nhan": ["nhiem-vu", "xieng-xich"],
+  "kiem-si-lua-thieng": ["khe-uoc"],
+  "ke-giam-ho-linh-hon": ["khe-uoc"],
+  "mo-voi-ma-mut": ["khe-uoc", "bao-oan"],
+  "dau-si-bo-tot": ["vinh-quang"],
+  "rong-boc-trung": ["hoi-phuc"],
+  "kizuran": ["hoi-phuc"],
+  "quai-thu-thien-su": ["dau-luot"],
+  "ke-san-moi-tu-than": ["bao-oan"],
+  "ky-si-bong-toi": ["tan-cong"],
+};
+
+/** Dòng mô tả (theo tên kỹ năng trên bảng quái) được in icon keyword phía trước. */
+export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
+  "chien-si-gam-nham": { "Khiên thú sĩ": "ben-bi" },
+  "chien-binh-rong": { "Vảy rồng": "ben-bi" },
+  "hiep-si-ho-ve": { "Lời chúc của kỵ sĩ": "ben-bi", "Lời chúc của vua": "ben-bi", "Lời chúc của hậu": "ben-bi" },
+  "trai-tim-hai-long": { "Đại hồng thuỷ huỷ diệt": "tan-pha" },
+  "loi-nguyen-cua-rong": { "Địa ngục lửa": "tan-pha" },
+  "thuong-quan-long": { "Cò quay": "tan-pha" },
+  "may-nem-bom-hinh-nhen": { "Súng phóng lựu": "tan-pha" },
+  "ong-khong-lo": { "Kim châm tê liệt": "xieng-xich" },
+  "sat-nhan-bat-giu": { "Bắt Giữ": "xieng-xich" },
+  "phu-thuy-rung-den": { "Nguyền rủa": "xieng-xich" },
+  "my-dieu-nhan": { "Mê hoặc": "xieng-xich" },
+  "kiem-si-lua-thieng": { "Truy cùng diệt tận": "khe-uoc", "Hoả thần long": "khe-uoc" },
+  "ke-giam-ho-linh-hon": { "Kiếm hấp thụ linh hồn": "khe-uoc" },
+  "mo-voi-ma-mut": { "Nguyền rủa": "khe-uoc", "Ác linh": "bao-oan" },
+  "dau-si-bo-tot": { "Chiến lợi phẩm": "vinh-quang" },
+  "rong-boc-trung": { "Thế thủ": "hoi-phuc" },
+  kizuran: { "Chịu đòn vì bạn": "hoi-phuc" },
+  "quai-thu-thien-su": { "Cầu nguyện": "dau-luot", "Ân huệ thiên sứ": "dau-luot" },
+  "ke-san-moi-tu-than": { "Kẻ săn mồi tử thần": "bao-oan" },
+  "ky-si-bong-toi": { "Kỵ pháp": "tan-cong" },
+};
 
 export function keywordsOf(cardId: string | undefined | null): KeywordId[] {
   return cardId ? (CARD_KEYWORDS[cardId] ?? []) : [];

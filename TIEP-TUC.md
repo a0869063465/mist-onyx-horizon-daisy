@@ -1,5 +1,9 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Keyword đã gắn vào quái (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`, chưa chụp bằng mắt)
+- `CARD_KEYWORDS` + `KEYWORD_LINES` (keywords.ts): 22 quái theo bảng chủ game chốt (Bền bỉ bỏ Lính đá; Giao chiến đổi tên Tấn công = chỉ Kỵ sĩ bóng tối (Kỵ pháp), quái tự đánh không tính; Lực lưỡng Khổng lồ 1 mắt + Máy chém; Tàn phá chỉ diện rộng từ đầu; Hồi phục có Kizuran). `skillsOf` gắn `keyword` cho kỹ năng liên quan, bảng quái in icon (`.msheet-kw`, 1,8rem) trước tên kỹ năng (mô tả hiện theo từng kỹ năng).
+- Chưa gắn: Tiến hoá (Sâu non, Kỵ sĩ, chưa có icon), Liên kết (tộc ≥ 6 lá khác nhau, chờ chủ game chọn tộc), Linh hồn (chưa quái nào).
+
 ## Áp keyword thông minh vào quái (10/11): LUẬT CHỦ GAME CHỐT, CHƯA LÀM, chờ "ok"
 - Mỗi quái đa phần 1 keyword, tối đa 2 keyword chính. Chỉ áp cái ĐẶC TRƯNG chính của quái, không phải gì cũng gắn. Chỉ áp trên quái (không phép).
 - Khi quái có keyword: dòng mô tả (cả dòng) liên quan keyword đó thì in icon keyword TRƯỚC dòng; icon đủ to, có thể nhỏ hơn icon tốc độ phép cũ (hình tốc độ cao 2,6rem) nhưng KHÔNG dưới 50% cỡ đó (tức ≥ 1,3rem).

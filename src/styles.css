@@ -13531,7 +13531,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="dau-luot"] { filter: drop-shadow(0 0 2px #3fb4ff) drop-shadow(0 0 6px #3fb4ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="bo-bai"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="xieng-xich"] { filter: drop-shadow(0 0 2px #f2f6ff) drop-shadow(0 0 6px #f2f6ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="giao-chien"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.kw-icon[data-kw="tan-cong"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="boc-thep"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="khong-lo"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="sieu-toc"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
@@ -13549,3 +13549,6 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="tan-pha"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 .kw-icon[data-kw="hien-te-thuong"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
 /* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
+
+/* Icon keyword đứng trước dòng mô tả của kỹ năng (chủ game 10/11): không nhỏ hơn 50% icon tốc độ cũ (2,6rem). */
+.msheet-kw { display: inline-block; height: 1.8rem; width: auto; vertical-align: middle; margin-right: 0.3rem; }
