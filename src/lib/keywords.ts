@@ -5,7 +5,7 @@
  *
  * Bộ cũ (15): ĐÃ CÓ LUẬT (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép (phòng ngự thủ + thủ phép ≥ 3 mới
  * chặn được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 1/2, Đòn đánh phép (đòn đánh
- * thường gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). CHƯA CÓ LUẬT: Vinh quang, Hiến tế (hy sinh máu
+ * thường gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). CHƯA CÓ LUẬT: Vinh quang, Khế ước (trước là Hiến tế; hy sinh máu
  * hiện tại), Đội quân, Báo oán (khi chết), Phẫn nộ (mỗi khi mất máu), Khát máu (khi người chơi địch mất máu), Bắn phá (đòn
  * hoặc kỹ năng thường gây kèm sát thương lên người chơi).
  *
@@ -35,7 +35,7 @@ export type NewKeywordId =
   | "xieng-xich"
   | "giao-chien";
 
-/** Bộ icon cũ (15, trong đó Hiến tế cũ là "hien-te"). */
+/** Bộ icon cũ (15, trong đó Hiến tế cũ đổi tên thành Khế ước, id "khe-uoc"). */
 export type LegacyKeywordId =
   | "boc-thep"
   | "khong-lo"
@@ -45,7 +45,7 @@ export type LegacyKeywordId =
   | "luon-lach-2"
   | "phep"
   | "vinh-quang"
-  | "hien-te"
+  | "khe-uoc"
   | "doi-quan"
   | "bao-oan"
   | "phan-no"
@@ -78,7 +78,7 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "luon-lach-2": { src: "/ui/kw/luon-lach-2.webp", label: "Luồn lách 2" },
   phep: { src: "/ui/kw/phep.webp", label: "Đòn đánh phép" },
   "vinh-quang": { src: "/ui/kw/vinh-quang.webp", label: "Vinh quang" },
-  "hien-te": { src: "/ui/kw/hien-te.webp", label: "Hiến tế" },
+  "khe-uoc": { src: "/ui/kw/khe-uoc.webp", label: "Khế ước" },
   "doi-quan": { src: "/ui/kw/doi-quan.webp", label: "Đội quân" },
   "bao-oan": { src: "/ui/kw/bao-oan.webp", label: "Báo oán" },
   "phan-no": { src: "/ui/kw/phan-no.webp", label: "Phẫn nộ" },
