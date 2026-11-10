@@ -13520,22 +13520,22 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-row[data-n="3"] { height: 16%; }
 .kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; /* nền mờ dần cho dễ nhìn icon, không lộ mép; vòng tròn tưởng tượng phía sau như hào quang (chủ game 10/11) */ background: radial-gradient(circle closest-side, transparent 0%, transparent 56%, color-mix(in srgb, var(--kw) 55%, transparent) 68%, var(--kw) 77%, color-mix(in srgb, var(--kw) 60%, transparent) 86%, color-mix(in srgb, var(--kw) 18%, transparent) 94%, transparent 100%), radial-gradient(circle closest-side, rgba(4, 4, 8, 0.9) 0%, rgba(4, 4, 8, 0.8) 45%, rgba(4, 4, 8, 0.55) 68%, rgba(4, 4, 8, 0.22) 84%, rgba(4, 4, 8, 0) 100%); }
 .kw-icon > img { display: block; width: 66%; height: 66%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
-.kw-icon[data-kw="cuoi-luot"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="cuoi-luot"] { --kw: #ff5a48; }
 .kw-icon[data-kw="linh-hon"] { --kw: #3fb4ff; }
 .kw-icon[data-kw="nhiem-vu"] { --kw: #ffc94d; }
 .kw-icon[data-kw="ben-bi"] { --kw: #2f6bff; }
-.kw-icon[data-kw="guom-mau"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="guom-mau"] { --kw: #ff5a48; }
 .kw-icon[data-kw="luc-luong"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="hoi-phuc"] { --kw: #3cff4a; }
 .kw-icon[data-kw="doi-mo"] { --kw: #c14dff; }
 .kw-icon[data-kw="tao-bai"] { --kw: #3cff4a; }
 .kw-icon[data-kw="dau-luot"] { --kw: #3fb4ff; }
-.kw-icon[data-kw="bo-bai"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="bo-bai"] { --kw: #ff5a48; }
 .kw-icon[data-kw="xieng-xich"] { --kw: #f2f6ff; }
 .kw-icon[data-kw="tan-cong"] { --kw: #ffc94d; }
 .kw-icon[data-kw="boc-thep"] { --kw: #ffc94d; }
-.kw-icon[data-kw="khong-lo"] { --kw: #ff3b2e; }
-.kw-icon[data-kw="sieu-toc"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="khong-lo"] { --kw: #ff5a48; }
+.kw-icon[data-kw="sieu-toc"] { --kw: #ff5a48; }
 .kw-icon[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
 .kw-icon[data-kw="luon-lach-1"] { --kw: #3cff4a; }
 .kw-icon[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
@@ -13544,20 +13544,30 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="si-khi"] { --kw: #3cff4a; }
 .kw-icon[data-kw="trieu-goi"] { --kw: #ffc94d; }
 .kw-icon[data-kw="hao-quang"] { --kw: #3cff4a; }
-.kw-icon[data-kw="sao-choi"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="sao-choi"] { --kw: #ff5a48; }
 .kw-icon[data-kw="ho-ve"] { --kw: #2f6bff; }
 .kw-icon[data-kw="thao-vat"] { --kw: #2f6bff; }
 .kw-icon[data-kw="trang-bi"] { --kw: #ffc94d; }
 .kw-icon[data-kw="da-tang"] { --kw: #b07a45; }
-.kw-icon[data-kw="debuff"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="debuff"] { --kw: #ff5a48; }
 .kw-icon[data-kw="buff"] { --kw: #3cff4a; }
 .kw-icon[data-kw="khe-uoc"] { --kw: #ffc94d; }
 .kw-icon[data-kw="lien-ket"] { --kw: #ffc94d; }
 .kw-icon[data-kw="bao-oan"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="phan-no"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="phan-no"] { --kw: #ff5a48; }
 .kw-icon[data-kw="mui-mau"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="dam-xuyen"] { --kw: #ff8a1f; }
-.kw-icon[data-kw="tan-pha"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="tan-pha"] { --kw: #ff5a48; }
+/* glow đỏ sáng và dày hơn vì trước đó quá chìm (chủ game 10/11); trắng, cam, xanh lá giữ nguyên */
+.kw-icon[data-kw="cuoi-luot"],
+.kw-icon[data-kw="guom-mau"],
+.kw-icon[data-kw="bo-bai"],
+.kw-icon[data-kw="khong-lo"],
+.kw-icon[data-kw="sieu-toc"],
+.kw-icon[data-kw="sao-choi"],
+.kw-icon[data-kw="debuff"],
+.kw-icon[data-kw="phan-no"],
+.kw-icon[data-kw="tan-pha"] { filter: drop-shadow(0 0 2px #ff5a48) drop-shadow(0 0 5px rgba(255, 90, 72, 0.75)); }
 .kw-icon[data-kw="hien-te-thuong"] { --kw: #ff8a1f; }
 /* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
 

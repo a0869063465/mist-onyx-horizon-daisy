@@ -971,6 +971,7 @@ export const PENDING_NOTES: string[] = [
   "Lỡ đánh vào Gương phòng hộ đang đứng trên sân: sau khi Xác nhận, gương tự dựng mà bạn chưa bấm OK thì vẫn bấm X để rút lại đòn.",
   "Kho bài trong Chỉnh sửa bộ bài: số bản còn thêm được dời xuống góc phải dưới hình, trên khung máu.",
   "Hộ vệ: Hiệp sĩ hộ vệ và Lính chiến đá khổng lồ chặn được cả quái có Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt, Luồn lách. Chỉ triệu hồi vào hàng trước.",
+  "Icon keyword màu đỏ sáng và rõ hơn, trước đó glow đỏ quá chìm.",
 ];
 
 function remarkOf(notes: string[]) {
