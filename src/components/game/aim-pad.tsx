@@ -38,7 +38,7 @@ export function AimPad({ box, kind, open, onStep, onOk }: { box: PadBox; kind: U
   const tone = TONES[kind] ?? TONES.active;
   const size = Math.max(26, Math.min(40, box.width * 0.5));
   const reachX = box.width * 0.5;
-  const reachY = box.height * 0.5;
+  const reachY = reachX; // cả 4 mũi tên cách đều nút OK, lấy mũi tên phải làm chuẩn (chủ game 10/11)
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
   const defs = (
     <defs>
