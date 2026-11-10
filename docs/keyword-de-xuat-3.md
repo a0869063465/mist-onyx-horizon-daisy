@@ -1,19 +1,19 @@
-# Đề xuất gắn 4 keyword mới (10/11, Opus 5.5 high, CHỜ chủ game duyệt)
+# Đề xuất gắn 4 keyword mới (10/11, Opus 5.5 high, lần 2 sau câu trả lời của chủ game)
 
-Mỗi quái tối đa 2 keyword; trong ngoặc = dòng mô tả sẽ có icon phía trước. Không thêm luật, không sửa chữ lá.
+Định nghĩa chủ game chốt:
+- Cầu mana: quái dùng mana để tạo lợi thế (không tốn mana thì không tính).
+- Linh hoạt: quái chuyển đổi thế, thế công có lợi gì, thế thủ có lợi gì rõ ràng.
+- Cường hoá 1 / vĩnh viễn: tự tăng chỉ số khi thoả 1 điều kiện, hành động cụ thể có thể lặp lại nhiều lần; thường điều kiện đến từ nơi khác (đồng minh triệu hồi, gây sát thương vào người chơi đối phương…), không phải tự buff đặc biệt.
 
 ## Chắc
-- Cầu mana: Quái thú thiên sứ (Ân huệ thiên sứ: +1 mana mỗi lượt), giữ Đầu lượt.
-- Linh hoạt: Rồng bọc trứng (Linh hoạt: đổi thế công / thế thủ), giữ Hồi phục.
-- Cường hoá 1: Kraken (Đắm tàu: giáp lá cà cộng công), Hiệp sĩ của vua (Kiếm tấn công: +5 công tới đòn 2).
-- Cường hoá vĩnh viễn: Khổng lồ 1 mắt (Đập phá: +1 công vĩnh viễn), giữ Lực lưỡng; Kẻ giám hộ linh hồn (Phẫn nộ: tăng vĩnh viễn máu tối đa), giữ Khế ước.
+- Linh hoạt: Rồng bọc trứng (Linh hoạt), giữ Hồi phục.
+- Cường hoá 1: Cơn thịnh nộ của hải vương (Đè nén: mỗi hành động của đối thủ nhắm vào phe ta +3 công), giữ Sao chổi.
+- Cường hoá vĩnh viễn: Kẻ giám hộ linh hồn (Phẫn nộ: mỗi 3 máu người chơi đã mất +1 máu tối đa vĩnh viễn), giữ Khế ước.
 
-## Chưa chắc (bạn chọn)
-1. Hiệp sĩ của hậu: Cầu mana (Đàm phán: lúc phản ứng skill và đòn đánh không hao mana)?
-2. Cơn thịnh nộ của hải vương: thêm Cường hoá 1 (Đè nén: +3 công, mất sau khi tấn công)?
-3. Kỵ sĩ bóng tối: Kỵ pháp đang mang Tấn công; đổi sang Cường hoá 1, hay giữ?
-4. Chiến sĩ gặm nhắm: Khiên thú sĩ (gấp đôi phòng ngự tạm thời) là Cường hoá 1, hay giữ Bền bỉ? Có tính Linh hoạt (trạng thái phòng thủ) không?
-5. Máy quay thưởng: thêm Cường hoá vĩnh viễn (Kiếm +2 công, Khiên +1 phòng ngự vĩnh viễn) bên cạnh Sao chổi?
-6. Mỹ điểu nhân (Giáp và Vuốt, Roi điện tăng vĩnh viễn) đã có 2 keyword: thay 1 cái bằng Cường hoá vĩnh viễn, hay để?
-7. Đấu sĩ bò tót: Chiến lợi phẩm (điểm dư thành chỉ số vĩnh viễn) đang là Vinh quang; thêm Cường hoá vĩnh viễn?
-8. Tê giác bé con (Thăng cấp đổi chỉ số gốc): Cường hoá vĩnh viễn hay để cho keyword Tiến hoá sau này?
+## Bỏ (theo câu trả lời): Hiệp sĩ của hậu, Kỵ sĩ bóng tối, Chiến sĩ gặm nhắm, Máy quay thưởng, Mỹ điểu nhân, Đấu sĩ bò tót, Tê giác bé con.
+
+## Còn hỏi
+1. Quái thú thiên sứ (Ân huệ thiên sứ: tiêu 1 mana mỗi lượt để ở lại, có nó thì +1 mana mỗi lượt): Cầu mana?
+2. Khổng lồ 1 mắt (Đập phá: +1 công vĩnh viễn sau mỗi đòn đánh thường, điều kiện từ chính nó): Cường hoá vĩnh viễn?
+3. Kraken (Đắm tàu: mỗi lần giáp lá cà, phần sát thương thủ chặn được cộng vào công): Cường hoá 1?
+4. Hiệp sĩ của vua (Kiếm tấn công: đòn 1 +5 công, đòn 2 trả về): bỏ?

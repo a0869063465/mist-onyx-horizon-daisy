@@ -1,6 +1,6 @@
 # Việc đang dở (đọc trước khi làm)
 
-## Đề xuất gắn 4 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): CHỜ chủ game duyệt 8 câu
+## Đề xuất gắn 4 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): lần 2, CHỜ chủ game trả lời 4 câu
 1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết `docs/keyword-de-xuat-3.md` (phần Chắc + 8 câu Chưa chắc).
 2. Hiện trạng: không ảnh/video mới. Chưa gắn vào code.
 3. Việc sắp làm: chủ game trả lời → Sonnet 5.5 medium gắn `CARD_KEYWORDS` + `KEYWORD_LINES`.
