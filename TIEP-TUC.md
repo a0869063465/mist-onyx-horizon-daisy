@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Đề xuất gắn 10 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): CHỜ chủ game trả lời 9 câu
+1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết bảng đề xuất `docs/keyword-de-xuat-2.md` (phần Chắc + 9 câu Chưa chắc).
+2. Hiện trạng: không có ảnh/video mới. Chưa gắn vào code.
+3. Việc sắp làm: chủ game trả lời 9 câu → Sonnet 5.5 medium gắn `CARD_KEYWORDS` + `KEYWORD_LINES`, chụp kiểm.
+
 ## Keyword bộ thứ 3: 10 icon mới + đổi icon Vinh quang (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 - Đã làm: `public/ui/kw/` thêm si-khi, trieu-goi, hao-quang, sao-choi, ho-ve, thao-vat, trang-bi, da-tang, debuff, buff; `vinh-quang.webp` đổi sang mũ kỵ sĩ; `keywords.ts` (id, tên, tác dụng ghi trong comment), `--kw` trong styles.css (xanh lá Sĩ khí/Hào quang/Buff, vàng Triệu gọi/Trang bị, đỏ Sao chổi/Debuff, xanh dương Hộ vệ/Tháo vát, nâu Đá tảng). tsc 7 lỗi cũ.
 - Chưa làm: gắn vào quái (Opus 5.5 high đưa bảng đề xuất, chủ game duyệt); luật thật Hộ vệ, Tháo vát, Trang bị, Đá tảng (Opus 5.5 high, chỉ khi chủ game nói).
