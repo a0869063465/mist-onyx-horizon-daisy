@@ -13,7 +13,7 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 ## Đánh số việc (Vx)
 
 - Mỗi việc mới chủ game gửi, Claude gán số kế tiếp: V1, V2, V3… Số không tái dùng.
-- Bộ đếm hiện tại: **lần gán kế tiếp là V6**. Sau mỗi lần gán, tăng bộ đếm lên 1 và ghi vào bảng "Đang mở".
+- Bộ đếm hiện tại: **lần gán kế tiếp là V7**. Sau mỗi lần gán, tăng bộ đếm lên 1 và ghi vào bảng "Đang mở".
 - Các V cũ (V1–V8, V8A–D trong lịch sử) đã đóng, không dùng lại số.
 
 ## Trạng thái nhanh
@@ -40,6 +40,7 @@ Cập nhật: 08/11/2026. Nguồn đúng là nhánh `main`. Lịch sử đầy �
 | V3: Tuỳ tình huống bị thiếu công cụ mà tạo bài (chủ game gửi 08/11) | Chỉ ghi nhận, chưa phân tích | — |
 | V4: Đè 1 quân xuống để nó không chặn được (chủ game gửi 08/11) | Chỉ ghi nhận, chưa phân tích | — |
 | V5: Keyword (chủ game gửi 09/11): hồi máu cuối lượt, đòn đánh phép, đòn đánh chuẩn, khoá chặn đòn, đòn đánh lan, đòn đánh kèm sát thương nhà chính, khiên chặn phép, khiên chặn thú, kiếm tấn công, kiếm phòng ngự. Làm keyword bằng GPT | Chỉ ghi nhận, chưa phân tích | — |
+| V6: Công/Thủ, lá chuyển qua lại 2 trạng thái; Mana, lá hồi mana (chủ game gửi 10/11) | Chỉ ghi nhận, chưa phân tích | — |
 | Album: lề trái còn lộ trang trước; sách "Đất Hoang" nâu chưa dùng | Chờ chủ game chọn chỗ dùng | Sonnet 5.5 medium |
 | Album: chữ tiếng Anh "Theo nhân vật/môi trường", "Sắp có" chưa dịch; trang mô tả lá chưa đổi kiểu | Chưa làm | Sonnet 5.5 low |
 | Album và toàn bộ giao diện mới: chưa thử điện thoại thật, màn rất ngắn/rất dài | Chưa kiểm | — |
