@@ -39,7 +39,13 @@
  * - "da-tang" Đá tảng (nâu): quái thủ và máu cao nhưng không có công; gây sát thương chủ động bằng 70% máu nhưng bị trả đòn cùng lúc;
  *   khi bị đánh thì phản đòn bằng sát thương mà thủ, thủ phép đã chặn cộng 25% máu hiện tại.
  * - "debuff" Debuff (đỏ): giảm chỉ số địch. - "buff" Buff (xanh lá): tăng và hiệu ứng có lợi cho đồng minh.
- * - "vinh-quang": icon đổi sang mũ kỵ sĩ (10/11).
+ * - "vinh-quang": icon đổi sang mũ kỵ sĩ (10/11). Sĩ khí đổi ảnh (mũi tên xanh + mũi tên vàng xuống, 10/11).
+ *
+ * Bộ thứ 4 (4, chủ game 10/11), nhãn nhóm, CHƯA có luật, CHƯA gắn quái:
+ * - "cau-mana" Cầu mana (xanh lam): quái có skill tương tác, làm lợi về mặt mana.
+ * - "linh-hoat" Linh hoạt (vàng): quái có thể chuyển đổi thế công và thủ.
+ * - "cuong-hoa-1" Cường hoá 1 (xanh lá): quái tự tăng chỉ số trong lượt khi có điều kiện xảy ra.
+ * - "cuong-hoa-vinh-vien" Cường hoá vĩnh viễn (xanh lá): quái tự tăng chỉ số vĩnh viễn khi có điều kiện xảy ra.
  */
 export type NewKeywordId =
   | "cuoi-luot"
@@ -83,7 +89,11 @@ export type LegacyKeywordId =
   | "trang-bi"
   | "da-tang"
   | "debuff"
-  | "buff";
+  | "buff"
+  | "cau-mana"
+  | "linh-hoat"
+  | "cuong-hoa-1"
+  | "cuong-hoa-vinh-vien";
 
 export type KeywordId = NewKeywordId | LegacyKeywordId;
 
@@ -127,6 +137,10 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "da-tang": { src: "/ui/kw/da-tang.webp", label: "Đá tảng" },
   "debuff": { src: "/ui/kw/debuff.webp", label: "Debuff" },
   "buff": { src: "/ui/kw/buff.webp", label: "Buff" },
+  "cau-mana": { src: "/ui/kw/cau-mana.webp", label: "Cầu mana" },
+  "linh-hoat": { src: "/ui/kw/linh-hoat.webp", label: "Linh hoạt" },
+  "cuong-hoa-1": { src: "/ui/kw/cuong-hoa-1.webp", label: "Cường hoá 1" },
+  "cuong-hoa-vinh-vien": { src: "/ui/kw/cuong-hoa-vinh-vien.webp", label: "Cường hoá vĩnh viễn" },
 };
 
 /** Keyword từng quái, theo id quái (chủ game duyệt 10/11: đa phần 1, tối đa 2, chỉ cái đặc trưng chính). */

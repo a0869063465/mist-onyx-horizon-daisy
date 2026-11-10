@@ -13560,6 +13560,10 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="mui-mau"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="dam-xuyen"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="tan-pha"] { --kw: #ff5a48; }
+.kw-icon[data-kw="cau-mana"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="linh-hoat"] { --kw: #ffc94d; }
+.kw-icon[data-kw="cuong-hoa-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="cuong-hoa-vinh-vien"] { --kw: #3cff4a; }
 /* glow đỏ sáng và dày hơn vì trước đó quá chìm (chủ game 10/11); trắng, cam, xanh lá giữ nguyên */
 .kw-icon[data-kw="cuoi-luot"],
 .kw-icon[data-kw="guom-mau"],

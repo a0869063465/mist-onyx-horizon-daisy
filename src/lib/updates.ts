@@ -972,6 +972,7 @@ export const PENDING_NOTES: string[] = [
   "Kho bài trong Chỉnh sửa bộ bài: số bản còn thêm được dời xuống góc phải dưới hình, trên khung máu.",
   "Hộ vệ: Hiệp sĩ hộ vệ và Lính chiến đá khổng lồ chặn được cả quái có Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt, Luồn lách. Chỉ triệu hồi vào hàng trước.",
   "Icon keyword màu đỏ sáng và rõ hơn, trước đó glow đỏ quá chìm.",
+  "Keyword mới: Cầu mana, Linh hoạt, Cường hoá 1, Cường hoá vĩnh viễn (chưa quái nào mang). Sĩ khí đổi hình icon.",
   "Bên xanh có lá Núi dung nham trên sân thì nửa dưới bàn đấu đổi sang nền dung nham.",
   "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
   "Nền dung nham có hiệu ứng lửa cháy chuyển động; dải đá giữa sân đứng yên. Máy bật chế độ giảm chuyển động thì không chạy.",
