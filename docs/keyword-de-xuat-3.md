@@ -12,7 +12,9 @@
 
 ## Bỏ (theo câu trả lời): Hiệp sĩ của hậu, Kỵ sĩ bóng tối, Chiến sĩ gặm nhắm, Máy quay thưởng, Mỹ điểu nhân, Đấu sĩ bò tót, Tê giác bé con.
 
-## Còn hỏi
+## Chủ game trả lời: C1 có (Quái thú thiên sứ = Cầu mana), C2 có (Khổng lồ 1 mắt = Cường hoá vĩnh viễn), C3 không (Kraken), C4 đang hỏi lại.
+
+## Câu cũ
 1. Quái thú thiên sứ (Ân huệ thiên sứ: tiêu 1 mana mỗi lượt để ở lại, có nó thì +1 mana mỗi lượt): Cầu mana?
 2. Khổng lồ 1 mắt (Đập phá: +1 công vĩnh viễn sau mỗi đòn đánh thường, điều kiện từ chính nó): Cường hoá vĩnh viễn?
 3. Kraken (Đắm tàu: mỗi lần giáp lá cà, phần sát thương thủ chặn được cộng vào công): Cường hoá 1?
