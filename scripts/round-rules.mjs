@@ -976,6 +976,118 @@ test("keyword Đâm xuyên: hạ quái thì sát thương thừa vào người c
   });
 });
 
+test("Hộ vệ: chặn được kẻ có Siêu tốc; chỉ triệu hồi vào hàng trước", () => {
+  const base = () => {
+    let s = board({ 0: ["may-chem", { atk: 3, hp: 10 }] }, { 0: ["rong-con", { atk: 2, def: 1, mdef: 1, hp: 4 }] });
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  withKeywords("may-chem", ["sieu-toc"], () => {
+    const plain = base();
+    assert.match(D.assignBlock(D.attackFace(plain, uid(plain, 0, 0)), uid(plain, 1, 0)).live, /Siêu tốc/);
+    withKeywords("rong-con", ["ho-ve"], () => {
+      const s = base();
+      const blocked = D.assignBlock(D.attackFace(s, uid(s, 0, 0)), uid(s, 1, 0));
+      assert.equal(blocked.hold?.blocker, uid(s, 1, 0), blocked.live);
+    });
+  });
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 8, flask: 0, stars: 4 })) };
+  s = D.testGrant(s, 0, "hiep-si-ho-ve", false);
+  const index = s.players[0].reserve.findIndex((p) => p.id === "hiep-si-ho-ve");
+  assert.match(D.summon(s, index, 3).live, /hàng trước/);
+  assert.ok(D.summon(s, index, 0).players[0].field[0], "hàng trước thì được");
+});
+
+/** Bỏ hộp hỏi giải phóng cầu ma lực (mana đầy) để bài thử đi tiếp. */
+const calm = (s) => ({ ...s, gemCap: null, gemWarn: null });
+
+test("Tháo vát: đánh 2 lần mỗi vòng, lần 3 không được", () => {
+  const make = () => {
+    let s = board({ 0: ["may-chem", { atk: 1, hp: 10 }] }, { 3: ["rong-con", { hp: 9 }] });
+    s = D.endTurn(D.endTurn(s));
+    return { ...s, turn: 0, round: 0 };
+  };
+  const twice = (s) => {
+    const a = D.passResponse(D.attackFace(s, uid(s, 0, 0)));
+    assert.equal(a.turn, 1, a.live);
+    const back = calm(D.endTurn(calm(a)));
+    assert.equal(back.turn, 0, back.live);
+    return back;
+  };
+  const plain = twice(make());
+  assert.notEqual(D.attackFace(plain, uid(plain, 0, 0)).pending?.kind, "face", "không keyword: chỉ 1 lần");
+  withKeywords("may-chem", ["thao-vat"], () => {
+    const back = twice(make());
+    const second = D.attackFace(back, uid(back, 0, 0));
+    assert.equal(second.pending?.kind, "face", second.live);
+    const third = calm(D.endTurn(calm(D.passResponse(second))));
+    assert.equal(third.turn, 0, third.live);
+    assert.notEqual(D.attackFace(third, uid(third, 0, 0)).pending?.kind, "face", "lần 3 không được");
+  });
+});
+
+test("Đá tảng: đánh bằng 70% máu, bị đánh trả cùng lúc; bị đánh thì phản đòn", () => {
+  withKeywords("may-chem", ["da-tang"], () => {
+    let s = board({ 0: ["may-chem", { atk: 0, def: 0, mdef: 0, hp: 10, maxHp: 10 }] }, { 0: ["rong-con", { atk: 3, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+    s = D.endTurn(D.endTurn(s));
+    s = { ...s, turn: 0, round: 0 };
+    const hit = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    assert.equal(at(hit, 1, 0).hp, 13, hit.live);
+    assert.equal(at(hit, 0, 0).hp, 7, "mục tiêu đánh trả cùng lúc");
+    assert.ok(!hit.counterAsk, "không Trả đòn riêng");
+    let t = board({ 0: ["khong-lo-mot-mat", { atk: 6, def: 0, mdef: 0, hp: 20, maxHp: 20 }] }, { 0: ["may-chem", { atk: 0, def: 2, mdef: 0, hp: 8, maxHp: 8 }] });
+    t = D.endTurn(D.endTurn(t));
+    t = { ...t, turn: 0, round: 0 };
+    const struck = D.passResponse(D.attackMonster(t, uid(t, 0, 0), uid(t, 1, 0)));
+    assert.equal(at(struck, 1, 0).hp, 4, struck.live);
+    assert.equal(at(struck, 0, 0).hp, 16, "phản 2 chặn + 2 (25% của 8)");
+  });
+});
+
+test("Trang bị: cộng chỉ số, quái rời sân thì về tay, lần 2 thêm 1 mana rồi mất hẳn", () => {
+  const card = C.spellCard("mua-ma-thuat");
+  const saved = { gear: card.gear, effect: card.effect };
+  card.gear = true;
+  card.effect = "+2 công, +3 máu";
+  try {
+    let s = board({ 0: ["rong-con", { atk: 1, def: 0, mdef: 0, hp: 2, maxHp: 2 }], 1: ["rong-con", { atk: 1, def: 0, mdef: 0, hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { atk: 30, hp: 30, maxHp: 30 }] });
+    s = D.endTurn(D.endTurn(s));
+    s = rich(withHand({ ...s, turn: 0, round: 0 }, 0, ["mua-ma-thuat"]));
+    const orb = s.players[0].orb;
+    const worn = D.castSpell(s, s.players[0].hand.indexOf("mua-ma-thuat"), uid(s, 0, 0));
+    assert.equal(at(worn, 0, 0).atk, 3, worn.live);
+    assert.equal(at(worn, 0, 0).hp, 5);
+    assert.equal(at(worn, 0, 0).maxHp, 5);
+    assert.equal(worn.players[0].orb, orb - card.gems);
+    assert.ok(!worn.players[0].hand.includes("mua-ma-thuat"));
+    const kill = (state, slot) => {
+      let r = state.turn === 1 ? calm(D.endTurn(state)) : state;
+      r = r.turn === 0 ? calm(D.endTurn(r)) : r;
+      if (r.round !== 1) r = calm(D.endTurn(calm(D.endTurn(r))));
+      assert.equal(r.round, 1, r.live);
+      r = { ...r, turn: 1 };
+      return D.passResponse(D.attackMonster(r, uid(r, 1, 0), uid(r, 0, slot)));
+    };
+    const dead = kill(worn, 0);
+    assert.equal(at(dead, 0, 0), null, dead.live);
+    const i = dead.players[0].hand.indexOf("mua-ma-thuat");
+    assert.ok(i >= 0, "về tay");
+    assert.equal(dead.players[0].tolls[i], true, "lần sau thêm 1 mana");
+    let again = { ...rich(dead), turn: 0, round: 0, step: "main", pending: null, hold: null, skipped: [false, false] };
+    const orb2 = again.players[0].orb;
+    const worn2 = D.castSpell(again, i, uid(again, 0, 1));
+    assert.equal(at(worn2, 0, 1).atk, 3, worn2.live);
+    assert.equal(worn2.players[0].orb, orb2 - card.gems - 1);
+    const dead2 = kill(worn2, 1);
+    assert.equal(at(dead2, 0, 1), null, dead2.live);
+    assert.ok(!dead2.players[0].hand.includes("mua-ma-thuat"), "lần 2 rời sân thì mất hẳn");
+  } finally {
+    card.gear = saved.gear;
+    card.effect = saved.effect;
+  }
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

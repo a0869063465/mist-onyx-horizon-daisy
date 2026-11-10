@@ -167,6 +167,9 @@ import {
   type Slot,
   confirmStage,
   stageHold,
+  knackOpen,
+  boulder,
+  gearCard,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
@@ -893,6 +896,10 @@ const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "ngan-chan-phong-ngu": "foe",
   "la-chan-phan-don": "foe",
 };
+/** Phe mục tiêu của lá phép kéo/bấm chọn mục tiêu; lá Trang bị gắn lên quái mình. */
+function spellAimOf(id: string): "foe" | "ally" | undefined {
+  return SPELL_AIMS[id] ?? (gearCard(id) ? "ally" : undefined);
+}
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
 const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat"]);
@@ -1285,6 +1292,11 @@ function fakeCut(mon: FieldMon, key: "atk" | "def" | "mdef" | "hp", value: numbe
   if (!mon.fake) return false;
   const real = monsterCard(mon.cardId);
   return Boolean(real && (key === "hp" ? (mon.maxHp || value) : value) < real[key]);
+}
+
+/** Đã mệt (hành động rồi), trừ quái Tháo vát còn lượt hành động thứ hai. */
+function tired(mon: FieldMon) {
+  return mon.dim && !knackOpen(mon);
 }
 
 function holdingMend(mon: FieldMon) {
@@ -4186,7 +4198,7 @@ function PlayPage() {
   /** The targets this drag can land on, by the match's own rules: empty slots it can be summoned into, enemies it can attack. */
   function snapKeys(payload: Grab): Set<string> {
     const keys = new Set<string>();
-    if (payload.kind === "spell") return SPELL_AIMS[payload.spellId] ? spellKeys(payload.spellId, payload.index) : keys;
+    if (payload.kind === "spell") return spellAimOf(payload.spellId) ? spellKeys(payload.spellId, payload.index) : keys;
     if (!duel || !canPlay || responding || duel.step !== "main" || queue) return keys;
     if (payload.kind === "summon") {
       if (riteHand === payload.index) return keys;
@@ -4236,7 +4248,7 @@ function PlayPage() {
       else each(viewer, (mon) => boxAllies(duel, viewer).includes(mon.uid));
       return keys;
     }
-    const aims = SPELL_AIMS[id];
+    const aims = spellAimOf(id);
     if (!aims) return keys;
     const cards = duel.players[viewer].hand.length;
     each(aims === "foe" ? foeSide : viewer, (mon) => {
@@ -4252,8 +4264,8 @@ function PlayPage() {
 
   /** The spell being aimed now (dragged, or picked with Use), if it takes a target. */
   function spellAim(): { id: string; index: number; from?: string } | null {
-    if (drag?.kind === "spell") return SPELL_AIMS[drag.spellId] ? { id: drag.spellId, index: drag.index } : null;
-    if (aim?.kind === "spell" && (SPELL_AIMS[aim.spellId] || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat")) return { id: aim.spellId, index: aim.index, from: aim.from };
+    if (drag?.kind === "spell") return spellAimOf(drag.spellId) ? { id: drag.spellId, index: drag.index } : null;
+    if (aim?.kind === "spell" && (spellAimOf(aim.spellId) || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat")) return { id: aim.spellId, index: aim.index, from: aim.from };
     return null;
   }
 
@@ -4388,7 +4400,7 @@ function PlayPage() {
     if (cast) {
       // Phép có mục tiêu (V8B): only the monsters it can take glow; the others on its side are marked as not pickable.
       const keys = spellKeys(cast.id, cast.index, cast.from);
-      const onFoe = cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : SPELL_AIMS[cast.id] === "foe";
+      const onFoe = cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : spellAimOf(cast.id) === "foe";
       const plan = { keys, foe: onFoe, you: !onFoe, caster: "" };
       planCache.current = { duel, aim, uid, plan };
       return plan;
@@ -5024,7 +5036,7 @@ function PlayPage() {
     const harpyUp = side === viewer && harpyAlert(duel, mon, viewer);
     const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
     if (side === viewer && sealed && !harpyUp) return;
-    if (side === viewer && (hatchReady || reelReady || harpyUp || (!mon.dim && (canPlay || reactive)))) {
+    if (side === viewer && (hatchReady || reelReady || harpyUp || (!tired(mon) && (canPlay || reactive)))) {
       setAim({ kind: "menu", uid: mon.uid });
       setLook(null);
       return;
@@ -5939,7 +5951,7 @@ function PlayPage() {
         />
       ) : null}
       <section
-        className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && !SPELL_AIMS[drag.spellId] && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
+        className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && !spellAimOf(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
         style={{ "--board-v": cut.v, "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={(event) => {
@@ -6931,7 +6943,7 @@ function PlayPage() {
             Boolean(swapAsk);
           const youBlocked =
             !!mon && !frozen && mon.uid !== plan?.caster && !(plan ? plan.keys.has(`${viewer}-${index}`) : youHot) && (plan ? plan.you : youSpell);
-          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!mon.dim && (canPlay || (canIntercept && mon.row !== "back"))));
+          const grabbable = !!mon && !!card && mon.cardId !== "chan-ken" && mon.stun <= 0 && !(mon.path ?? 0) && (coverDrag || (!tired(mon) && (canPlay || (canIntercept && mon.row !== "back"))));
           return (
             <BoardSlot
               key={`y${index}`}
@@ -7852,7 +7864,7 @@ function UnitChips({
   if (!mon || !card || index < 0) return null;
   const box = SLOT_BOX[screenSide(side, viewer)][index];
   const you = duel.players[side];
-  const noSkill = (mon.dim && !riposte) || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
+  const noSkill = (tired(mon) && !riposte) || mon.stun > 0 || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon);
   const noAttack = noSkill || (mon.gag ?? 0) > 0 || card.id === "hoa-an-thit-nguoi";
   const empty = you.field.filter((unit) => !unit).length;
   type Row = { key: string; label: string; go: () => void; slide?: ChipSlide };
@@ -8003,7 +8015,7 @@ function UnitChips({
       });
     }
   }
-  const strikeShown = attackable && sword && !noAttack && visibleStats(mon, you.field).atk > 0;
+  const strikeShown = attackable && sword && !noAttack && (visibleStats(mon, you.field).atk > 0 || boulder(mon));
   if (!strikeShown && y.length === 0 && z.length === 0) return null;
 
   // Each button shows the skill's emblem and name as on the monster sheet: the colour of its kind there, or blue
@@ -8426,7 +8438,7 @@ function BoardSlot({
       onPointerUp={frozen ? undefined : onPointerUp}
     >
       <span
-        className={`field-unit${mask ? "" : `${mon.dim || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
+        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
         <span className="fu-body">
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}

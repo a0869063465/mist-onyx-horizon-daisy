@@ -1,5 +1,13 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Luật 4 keyword Hộ vệ, Tháo vát, Trang bị, Đá tảng (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): ĐÃ LÀM, CHƯA áp `main`, chưa chụp bằng mắt
+- Code (duel.ts): `guardBarred` (summon, summonVow, fuse), `keywordBarred` bỏ qua quái chặn có Hộ vệ; `knack` + `knackOpen`/`knackRun` (attackMonster, attackFace, useSkill, declareSkill), máy (brain.ts) cũng đánh lần 2, play.tsx `tired()`; `boulder`, `strikeAtk`, `boulderBack` trong `strikePair`, `answersLater`/`afterBlow` bỏ Trả đòn riêng, nút Tấn công hiện cho Đá tảng; `SpellCard.gear`, `castGear`, `gearHome` (trong `patch`: quái rời sân thì lá về tay kèm "n+1", gắn lần 2 thì vào mộ, bản quái về tay/xấp bỏ chỉ số trang bị), play.tsx `spellAimOf` (kéo/bấm Use chọn quái mình). round-rules 60/60 (4 bài mới), tsc 7 lỗi cũ.
+- Hạn chế: Đá tảng chỉ phản đòn với đòn đánh thường (cả sừng/tia), CHƯA phản skill (đường sát thương skill nằm riêng từng skill). Lá Trang bị bị quái đối thủ cướp sang sân bên kia thì về tay chủ nhưng quái vẫn giữ chỉ số. Lá trả về tay có sẵn "n+1" vì lý do khác thì lần gắn đó cũng tính là lần 2. Chưa lá nào mang Tháo vát, Đá tảng, Trang bị (khung lá trang bị, nhóm tốc độ chờ chủ game).
+1. Việc vừa làm: gắn xong keyword cho quái; chủ game trả lời hết câu hỏi luật.
+2. Hiện trạng: không có ảnh/video mới. Chỉ Hộ vệ có quái mang; 3 keyword kia dựng luật sẵn, thử bằng gán tạm.
+3. Việc sắp làm: 4 luật vào duel.ts + giao diện tối thiểu, chạy thử, đẩy nhánh. Xong dừng.
+- Chốt: Hộ vệ bỏ qua cấm chặn keyword, chặn cả skill, chỉ triệu hồi hàng trước, giữ Tường thành/Kiếm hộ vệ. Tháo vát: đánh/skill 2 lần mỗi vòng, chặn 1 lần. Đá tảng: đánh = 70% máu, mục tiêu đánh trả cùng lúc (kể cả hàng sau); bị đánh thì phản = phần thủ/thủ phép chặn (cùng loại sát thương nhận) + 25% máu hiện tại (vật lý). Trang bị: lá phép mới gắn lên quái mình, chỉ số đọc từ chữ lá, quái rời sân mọi kiểu thì về tay, lần 2 tốn +1 mana, rời sân lần sau thì mất hẳn.
+
 ## Keyword mới đã gắn vào quái (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`, chưa chụp bằng mắt)
 - Chủ game trả lời F–I (câu 6–9): Hiệp sĩ hộ vệ có Hộ vệ (Kiếm hộ vệ), Thế thân của shien không; Đá tảng chủ game thêm sau (quái hệ đá); Tháo vát, Sĩ khí, Trang bị để trống.
 - Đã gắn (`keywords.ts`): Sao chổi cho 8 quái sát thương, Hào quang + Buff Yêu tinh chúc phúc, Buff Nàng tiên giữ khoá, Debuff Khủng long vãy kiếm, Triệu gọi Cục bông ma quái, Hộ vệ Lính chiến đá khổng lồ + Hiệp sĩ hộ vệ.

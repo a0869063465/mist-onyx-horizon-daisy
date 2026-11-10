@@ -26,6 +26,8 @@ export type SpellCard = {
   effect: string;
   picture?: string;
   env?: boolean;
+  /** Lá Trang bị (keyword Trang bị, chủ game 10/11): gắn lên 1 quái của mình, cộng chỉ số ghi trên lá. */
+  gear?: boolean;
   since?: string;
 };
 

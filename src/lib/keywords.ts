@@ -28,7 +28,10 @@
  * - "bo-bai": bỏ bài để đổi lấy hiệu ứng có lợi. - "xieng-xich": bài quân khống chế.
  * - "tan-cong": thưởng phát huy trước khi quái CHỦ ĐỘNG lao vào đánh hoặc dùng kỹ năng (quái tự đánh/bị động không tính).
  *
- * Bộ thứ 3 (10, chủ game 10/11), nhãn nhóm; tác dụng chủ game viết (CHƯA có luật, CHƯA gắn quái):
+ * Bộ thứ 3 (10, chủ game 10/11), nhãn nhóm; tác dụng chủ game viết. CÓ LUẬT CHUNG (duel.ts): Hộ vệ (`keywordBarred` bỏ
+ * qua, `guardBarred` chỉ hàng trước), Tháo vát (`markUsed`/`knackRun`: đánh hoặc skill 2 lần mỗi vòng), Đá tảng (`strikeAtk`
+ * 70% máu, `boulderBack` phản đòn, đối thủ đánh trả cùng lúc kể cả hàng sau, không Trả đòn riêng), Trang bị (lá phép có
+ * `gear: true` trong catalog, `castGear`/`gearHome`; chỉ số đọc "+N công/thủ/thủ phép/phòng ngự/máu" trên chữ lá).
  * - "si-khi" Sĩ khí (xanh lá): triệu hồi, tặng thưởng cho đồng minh dưới sân hoặc trên tay. - "trieu-goi" Triệu gọi (vàng): gọi quái khác ra sân.
  * - "hao-quang" Hào quang (xanh lá): đứng trên sân, buff thưởng cho các đồng minh. - "sao-choi" Sao chổi (đỏ): các quái có kỹ năng gây sát thương.
  * - "ho-ve" Hộ vệ (xanh dương): có thể đỡ đòn bất chấp, nhưng chỉ được đặt ở hàng trước. - "thao-vat" Tháo vát (xanh dương): hành động 2 lần mỗi lượt.

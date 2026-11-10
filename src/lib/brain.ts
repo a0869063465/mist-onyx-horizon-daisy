@@ -41,6 +41,7 @@ import {
   type Duel,
   type FieldMon,
   type Side,
+  knackOpen,
 } from "./duel.ts";
 import { fieldBindsFor } from "./field-chips.ts";
 
@@ -441,7 +442,7 @@ export function mainMoves(state: Duel): Move[] {
     }
   });
   spellMoves(state, list);
-  const ready = own.filter((mon) => !mon.dim && mon.stun === 0 && !(mon.chain ?? 0) && !(mon.path ?? 0));
+  const ready = own.filter((mon) => (!mon.dim || knackOpen(mon)) && mon.stun === 0 && !(mon.chain ?? 0) && !(mon.path ?? 0));
   for (const mon of ready) skillMoves(state, mon, list);
   if (canTargetFoe(state) && me.attackLock === 0) {
     for (const mon of ready) {
