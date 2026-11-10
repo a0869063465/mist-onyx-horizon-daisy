@@ -13514,3 +13514,68 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-arrow:disabled { opacity: 0.38; filter: grayscale(0.7) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); cursor: default; }
 .dk-arrow-n { position: absolute; left: 50%; top: 50%; transform: translate(-42%, -52%); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.7rem; font-weight: 800; line-height: 1; color: #fff; -webkit-text-stroke: 0.14rem #0a3a63; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 20, 50, 0.7), 0 0 8px rgba(120, 220, 255, 0.8); pointer-events: none; animation: dk-pop 0.22s ease-out; }
 @keyframes dk-pop { from { transform: translate(-42%, -52%) scale(1.7); } to { transform: translate(-42%, -52%) scale(1); } }
+
+/* Chọn mục tiêu bằng 4 mũi tên (chủ game 10/11): 4 mũi tên bay từ tâm lá quái ra 4 phía, nút OK tròn ở giữa. */
+.aim-pad {
+  position: fixed;
+  z-index: 32;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.aim-pad-arrow,
+.aim-pad-ok {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--pad-size);
+  height: var(--pad-size);
+  margin: calc(var(--pad-size) / -2) 0 0 calc(var(--pad-size) / -2);
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.aim-pad-arrow svg,
+.aim-pad-ok svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 1.5px var(--pad-glow)) drop-shadow(0 0 5px var(--pad-glow)) drop-shadow(0 1px 1px rgb(0 0 0 / 0.7));
+}
+.aim-pad-arrow {
+  transform: translate(var(--to-x), var(--to-y));
+  animation: aim-pad-fly 320ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.aim-pad-arrow svg { opacity: 0.92; }
+.aim-pad-arrow:active svg { opacity: 1; scale: 0.86; }
+.aim-pad-arrow.is-up svg, .aim-pad-arrow.is-down svg { animation: aim-pad-bob-y 1.1s ease-in-out 320ms infinite; }
+.aim-pad-arrow.is-left svg, .aim-pad-arrow.is-right svg { animation: aim-pad-bob-x 1.1s ease-in-out 320ms infinite; }
+.aim-pad-arrow.is-up { --bob: -1; }
+.aim-pad-arrow.is-down { --bob: 1; }
+.aim-pad-arrow.is-left { --bob: -1; }
+.aim-pad-arrow.is-right { --bob: 1; }
+@keyframes aim-pad-fly {
+  from { transform: translate(0, 0) scale(0.3); opacity: 0; }
+  to { transform: translate(var(--to-x), var(--to-y)) scale(1); opacity: 1; }
+}
+@keyframes aim-pad-bob-x { 50% { translate: calc(var(--bob) * 3px) 0; } }
+@keyframes aim-pad-bob-y { 50% { translate: 0 calc(var(--bob) * 3px); } }
+.aim-pad-ok {
+  width: calc(var(--pad-size) * 1.15);
+  height: calc(var(--pad-size) * 1.15);
+  margin: calc(var(--pad-size) * -0.575) 0 0 calc(var(--pad-size) * -0.575);
+  animation: aim-pad-pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.aim-pad-ok:active svg { scale: 0.88; }
+.aim-pad-ok-text {
+  fill: #ffffff;
+  font: 800 22px/1 "Barlow Condensed", "Be Vietnam Pro", sans-serif;
+  paint-order: stroke fill;
+  stroke: rgb(0 0 0 / 0.75);
+  stroke-width: 3.5px;
+}
+@keyframes aim-pad-pop { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }

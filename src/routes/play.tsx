@@ -30,6 +30,7 @@ import { STAR_COST } from "@/lib/duel";
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
 import { AimMark } from "@/components/game/aim-mark";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
+import { AimPad, type PadBox, type PadDir } from "@/components/game/aim-pad";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
 import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
@@ -1810,6 +1811,13 @@ function PlayPage() {
   const fireAfter = useRef<string | null>(null);
   /** Skill nhiều mục tiêu (chủ game 10/11): no tap or press on the next target within 2 s, the list of targets shows. */
   const [alsoPanel, setAlsoPanel] = useState(false);
+  /**
+   * Chọn mục tiêu bằng 4 mũi tên (chủ game 10/11): with Tấn công or a skill on, the target lit for the arrows and the OK
+   * on the caster's card (nearest the caster at first), and the caster's card on screen.
+   */
+  const [aimLit, setAimLit] = useState<string | null>(null);
+  const [padBox, setPadBox] = useState<PadBox | null>(null);
+  const aimSeen = useRef<Aim | null>(null);
   // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
   const slideFire = useRef<(key: string) => void>(() => undefined);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
@@ -3604,6 +3612,37 @@ function PlayPage() {
     }, 2000);
     return () => window.clearTimeout(timer);
   }, [aim]);
+  // 4 mũi tên (chủ game 10/11): a new aim lights the target nearest the caster; the lit one stays while it can still be taken.
+  useLayoutEffect(() => {
+    const on = aim?.kind === "attack" || aim?.kind === "skill";
+    const keys = on ? padKeys() : new Set<string>();
+    const slot = on && aim ? you.field.findIndex((unit) => unit?.uid === aim.uid) : -1;
+    const caster = slot >= 0 ? document.querySelector<HTMLElement>(`[data-slot="${viewer}-${slot}"]`)?.getBoundingClientRect() : undefined;
+    if (!on || keys.size === 0 || !caster || caster.width === 0) {
+      aimSeen.current = aim;
+      setAimLit(null);
+      setPadBox(null);
+      return;
+    }
+    setPadBox({ left: caster.left, top: caster.top, width: caster.width, height: caster.height });
+    const fresh = aimSeen.current !== aim;
+    aimSeen.current = aim;
+    setAimLit((lit) => {
+      if (!fresh && lit && keys.has(lit)) return lit;
+      const cx = caster.left + caster.width / 2;
+      const cy = caster.top + caster.height / 2;
+      let best: string | null = null;
+      let far = Infinity;
+      for (const one of torchBoxes(keys)) {
+        const d = Math.hypot(one.left + one.width / 2 - cx, one.top + one.height / 2 - cy);
+        if (d < far) {
+          far = d;
+          best = one.key;
+        }
+      }
+      return best;
+    });
+  }, [aim, duel]);
   // The match moved on: the drop list goes.
   useEffect(() => {
     setDropMenu((open) => {
@@ -4418,6 +4457,49 @@ function PlayPage() {
       if (mon && mon.uid !== aim.uid) keys.add(`${viewer}-${slot}`);
     });
     return keys;
+  }
+
+  /** The colour of the button now aiming (its icon's ring): Tấn công orange, a skill by its kind. */
+  function aimKind(): UnitActKind {
+    if (!duel || aim?.kind !== "skill") return "attack";
+    const index = aim.index;
+    const dry = unitRows(rowArgs(aim.uid, () => undefined, () => undefined, () => undefined, true));
+    return dry?.rows.find((row) => row.slide?.kind === "skill" && row.slide.index === index)?.kind ?? "active";
+  }
+
+  /** The targets the arrows walk over now (the ones Tấn công or the skill can take). */
+  function padKeys(): Set<string> {
+    if (aim?.kind !== "attack" && aim?.kind !== "skill") return new Set();
+    return targetPlan()?.keys ?? new Set();
+  }
+
+  /**
+   * The target next to the lit one in a direction (mũi tên): ahead of it that way, within a wide cone, the nearest along
+   * the way with a sideways miss counting double; none, the arrow hides.
+   */
+  function stepLit(dir: PadDir): string | null {
+    if (!aimLit) return null;
+    const boxes = torchBoxes(padKeys());
+    const at = boxes.find((one) => one.key === aimLit);
+    if (!at) return null;
+    const cx = at.left + at.width / 2;
+    const cy = at.top + at.height / 2;
+    let best: string | null = null;
+    let score = Infinity;
+    for (const one of boxes) {
+      if (one.key === aimLit) continue;
+      const dx = one.left + one.width / 2 - cx;
+      const dy = one.top + one.height / 2 - cy;
+      const along = dir === "right" ? dx : dir === "left" ? -dx : dir === "down" ? dy : -dy;
+      const side = Math.abs(dir === "left" || dir === "right" ? dy : dx);
+      if (along < 6 || side > along * 1.8) continue;
+      const cost = along + side * 2;
+      if (cost < score) {
+        score = cost;
+        best = one.key;
+      }
+    }
+    return best;
   }
 
   /** The boxes on screen of the targets a torch can pick. */
@@ -7052,7 +7134,7 @@ function PlayPage() {
               tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               attack={foeHot && drag?.kind !== "spell" && aim?.kind !== "spell"}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
-              snapped={snap === `${side}-${index}`}
+              snapped={snap === `${side}-${index}` || (!snap && !drag && aimLit === `${side}-${index}`)}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
@@ -7113,7 +7195,7 @@ function PlayPage() {
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
               tone={drag?.kind === "summon" || aim?.kind === "summon" ? "summon" : drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
-              snapped={snap === `${viewer}-${index}`}
+              snapped={snap === `${viewer}-${index}` || (!snap && !drag && aimLit === `${viewer}-${index}`)}
               attack={false}
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
@@ -7167,7 +7249,7 @@ function PlayPage() {
         {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
           <button
             type="button"
-            className={`face-drop${snap === "face" ? " is-snap" : ""}`}
+            className={`face-drop${snap === "face" || (!snap && !drag && aimLit === "face") ? " is-snap" : ""}`}
             data-face="1"
             onClick={() => {
               if (suppressClick.current) {
@@ -7691,6 +7773,24 @@ function PlayPage() {
             </>
           ) : null)}
         {drag && snap ? <SnapTop keyName={snap} x={drag.x} y={drag.y} /> : null}
+        {padBox && aimLit && !drag && !snap && (aim?.kind === "attack" || aim?.kind === "skill") ? (
+          <AimPad
+            box={padBox}
+            kind={aimKind()}
+            open={{ up: Boolean(stepLit("up")), down: Boolean(stepLit("down")), left: Boolean(stepLit("left")), right: Boolean(stepLit("right")) }}
+            onStep={(dir) => {
+              const next = stepLit(dir);
+              if (next) setAimLit(next);
+            }}
+            onOk={() => {
+              const key = aimLit;
+              setAimLit(null);
+              setPadBox(null);
+              holdNotice("");
+              slideFire.current(key);
+            }}
+          />
+        ) : null}
         {drag ? (
           <div className="ghost" style={{ left: drag.x, top: drag.y }}>
             {drag.kind === "spell" ? (
