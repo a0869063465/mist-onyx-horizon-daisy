@@ -968,6 +968,7 @@ export const PENDING_NOTES: string[] = [
   "Kho bài trong Chỉnh sửa bộ bài: ô góc trên trái giờ ghi số bản còn thêm được (màu xanh như x1, x2), không ghi gì khi đã đủ bản hoặc lá chỉ có 1 bản.",
   "Gương phòng hộ chặn đòn đánh thường thì quái bị chặn không còn hiệu ứng đánh trúng nữa.",
   "Kizuran giảm máu từ 8 xuống 6.",
+  "Lỡ đánh vào Gương phòng hộ đang đứng trên sân: sau khi Xác nhận, gương tự dựng mà bạn chưa bấm OK thì vẫn bấm X để rút lại đòn.",
   "Bên xanh có lá Núi dung nham trên sân thì nửa dưới bàn đấu đổi sang nền dung nham.",
   "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
   "Nền dung nham có hiệu ứng lửa cháy chuyển động; dải đá giữa sân đứng yên. Máy bật chế độ giảm chuyển động thì không chạy.",

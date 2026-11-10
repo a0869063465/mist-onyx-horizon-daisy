@@ -1,8 +1,43 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Huỷ đòn khi Gương phòng hộ đứng sẵn (09/11, Opus 5.5 high)
+1. Việc vừa làm: gộp `main` (51 commit) vào nhánh `ccr-42ba0a1d-w5tvmy` (nhánh cũ thiếu việc của `main`).
+2. Hiện trạng: đã nhận 1 ảnh (quái mình đánh, Gương tự dựng, X khép). Tái hiện được: sau Xác nhận, gương còn "up", quyền ở bên đánh nhưng X khép.
+3. Việc sắp làm: X vẫn mở ở bước đó, bấm X rút đòn (bàn về như trước khi đánh, gửi cả đối thủ).
+- ĐÃ LÀM (chưa áp `main`): play.tsx `mirrorBack` (giữ bàn trước khi đánh lúc Xác nhận nếu gương "up" còn chờ bên đánh), `mirrorWaits`, `withdrawOn`, `withdrawMirror` (X mở, bấm thì về bàn cũ + gửi online, chữ "Rút lại đòn đánh."); bấm OK thì như cũ. Thử Chromium 412×915 Vs Máy: X mở sau Xác nhận, X trả quái + mana, OK thì gương chặn. tsc 7 lỗi cũ. round-rules: bài "Hấp thụ ma pháp nuốt Phục kích" chập chờn từ trước (cả khi chưa sửa). Chưa thử online 2 máy; mở lại trang giữa chừng thì mất `mirrorBack` (X khép).
+
+## Chuyển cửa sổ (11/11/2026, Haiku 5.5 medium)
+- Đã xong: các thay đổi nhánh `ccr-b3cdb72e-7r9yr6` đã có trên main (`225084c`). Skill `chuyen-cua-so` đã tạo (`.claude/skills/chuyen-cua-so/`).
+- Còn dở: chưa chạy `tsc` và `round-rules` trên main sau khi áp; màu cho "x công vĩnh viễn" và "x sát thương phép" chưa được xác nhận.
+- Chờ chủ game: mô hình cho việc luật (đề xuất Opus 5.5 high), chữ mới nếu có.
+
 Ghi lại cuối phiên ngày 21/10/2026. Nhánh làm việc: `claude/test-app-phf3et`. `main` đã được cập nhật bằng nhánh này lần cuối ngày 21/10 (chủ game bảo "Xong thì áp lên main"), gồm mọi việc tới hết Bộ sưu tập và kho bài Chỉnh sửa bộ bài chỉ hiện lá sở hữu.
 Vercel tự dựng bản xem thử cho nhánh này; link chính đi theo `main`. Chỉ cập nhật `main` khi chủ game bảo (đẩy nhánh lên `main`, không ép, không viết lại lịch sử). `main` cũ trước 19/10 là bản xuất từ Grok không chung lịch sử; lần gộp đầu dùng `--allow-unrelated-histories -s ours`.
 Phiên trước dừng ở đây (21/10, phiên sau Bộ sưu tập): làm theo video LoR chủ game gửi. ĐÃ LÀM và đẩy nhánh (CHƯA áp lên `main`): nút 3D Rút quái / Rút phép / Hết lượt / OK, Giáp và Vuốt / Roi điện qua chớp cam, thanh phản ứng mới bước 1 và bước 2. Câu G3 chủ game trả lời "Ngay khi" nhưng bảo để sau, nên luật mới của Gương phòng hộ CHƯA làm. Chủ game (22/10): "Tiếp bước 4, bước 3 làm sau" = đợt 4 Đầu trận (T1, T15, T2) trong "Gợi ý chia đợt" sau video LoR, đợt 3 Hết trận làm sau (kế hoạch thanh phản ứng chỉ có 2 bước). Chủ game trả lời 12 câu và đợt 4 ĐÃ LÀM, đã đẩy nhánh (xem mục "Đợt 4 Đầu trận (22/10)" ngay dưới). Sau đó bước 3 Hết trận cả 3 đợt 3a, 3b, 3c ĐÃ LÀM, đã đẩy nhánh (mục "Bước 3 Hết trận" ngay dưới). 23/10: AI đợt 1 ĐÃ LÀM (mục "AI của máy"), chỉnh viền gói SR/UR và tia sét vàng khi mở gói (mục "Mở gói"). Chờ chủ game thử và gửi dữ liệu trận Vs Máy. 23/10 (phiên sau): icon phản ứng + dây ánh sáng đợt 1 ĐÃ LÀM trên nhánh `ccr-c980aef6-7t5bp0` (mục "Icon phản ứng + dây ánh sáng" ngay dưới), đợt 2 và 3 chờ chủ game. Xem mục "Video LoR (21/10)" ngay dưới. 23/10 (cuối phiên): chủ game bảo "Xong thì nhập vào main", `main` đã được đẩy lên nhánh `ccr-c980aef6-7t5bp0` (đi thẳng, không gộp), gồm mọi việc tới hết T1–T5 của icon phản ứng đợt 1. Các mục "CHƯA làm" bên dưới vẫn phải hỏi trước. 29/10: dòng chảy đợt 2 ĐÃ LÀM và đẩy nhánh `ccr-c980aef6-7t5bp0` (mục "Dòng chảy đợt 2" ngay dưới), chờ chủ game xem ảnh; việc kế theo thứ tự chủ game: chỗ dang dở của hàng chờ (chủ game CHƯA chọn A/B), rồi chuỗi đầy đủ + đợt 3.
+
+## Luật lá bài có hệ thống (10/11, ĐÃ LÀM bản đầu, Haiku 5.5, chưa chốt mô hình)
+
+- Làm xong: `docs/luat-la-bai.md` (cấu trúc lá, chữ lá đọc số, phân loại kỹ năng và phép, quy tắc viết mô tả, checklist lá mới). Viết từ code hiện có; chưa có kiểm tra tự động.
+- Chủ game cần duyệt: màu "risk" (tài liệu ghi cam theo ghi chú 03/11, còn comment trong skill-book.ts ghi đỏ), và danh sách từ khoá chung (mục 8 còn trống).
+
+## Quy ước thống kê màu từ khoá (10/11, chủ game yêu cầu)
+
+- Mỗi cuối phiên tôi tự thống kê từ khoá theo màu (lam, d, v, h, lu, ch, ca, t, gvt), bảng nằm ở `docs/luat-la-bai.md` mục 9. Màu không có từ khoá thì bỏ.
+- Đã làm: gvt phòng ngự đổi vàng 52% → 55% (`styles.css`). Đã commit cùng ghi chú này.
+- Chờ chủ game: màu xám ("không thể hành động"), và màu ch (xanh đọt chuối) chưa có từ khoá.
+- Từ khoá mới 10/11 (chủ game): "Tiêu hao N mana" (lam), "Chịu đòn" (d; lam nếu là đòn phép), "N máu tối đa" (lu), Hấp thụ (skill chậm, đỏ). Chi tiết ở `docs/luat-la-bai.md` mục 9. Chờ chủ game xác nhận Hấp thụ: code hiện là skill chủ động xanh lam (Hoa ăn thịt người), không phải chậm đỏ.
+
+## Việc mới chờ chi tiết (09/11, CHƯA làm)
+
+- Yêu cầu chủ game: tạo hệ thống keyword bằng hình ảnh, nằm bên cạnh phải lá bài. Chi tiết chủ game nói sau.
+- Cần hỏi khi có chi tiết: lá nào (tay, sân, bảng mô tả, kho), keyword nào và hình lấy từ đâu, lúc nào hiện.
+- Mô hình/nỗ lực đề xuất: Sonnet 5.5 medium cho giao diện; chờ chủ game chốt.
+
+## Phiên mới (08/11, mô hình đang chạy: Haiku 5.5, bắt đầu lại từ TIEP-TUC)
+
+1. Việc vừa làm: đọc TIEP-TUC.md, kiểm git. Nhánh `ccr-b3cdb72e-7r9yr6` trùng `main` (b846cda), không có thay đổi chưa commit.
+2. Hiện trạng: Bộ sưu tập lần 6 đã có trên `main`, T7 (thoát toàn màn khi vuốt) chờ chủ game chọn hướng. Chưa có ảnh/video mới trong phiên này. CHƯA được ghi chú: 5 commit bảng mô tả (4836071, 4cf5d9b, 30d3ace, 62604f9 và b846cda sửa bảng quái trong trận) đã lên `main` nhưng chưa có mục ghi chú nào.
+3. Việc sắp làm: chờ chủ game xem Bộ sưu tập + bảng mô tả, chọn hướng T7. Mô hình/nỗ lực cho việc kế: chưa chốt (Haiku 5.5 không nằm trong bảng đã duyệt, cần chủ game chọn trước khi làm).
 
 ## Bộ sưu tập giao diện mới (chủ game 08/11, Sonnet 5.5 medium, nhánh `ccr-3802e949-4nybtg`, ĐÃ ÁP `main` 08/11 commit 7f05ef3)
 
