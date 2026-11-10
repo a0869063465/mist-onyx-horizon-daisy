@@ -4485,6 +4485,7 @@ function PlayPage() {
     const cx = at.left + at.width / 2;
     const cy = at.top + at.height / 2;
     let best: string | null = null;
+    let bestX = 0;
     let score = Infinity;
     for (const one of boxes) {
       if (one.key === aimLit) continue;
@@ -4494,9 +4495,13 @@ function PlayPage() {
       const side = Math.abs(dir === "left" || dir === "right" ? dy : dx);
       if (along < 6 || side > along * 1.8) continue;
       const cost = along + side * 2;
-      if (cost < score) {
-        score = cost;
+      // Gần bằng nhau (ô 4 và ô 6 quanh ô 5): lấy ô gần quái đang dùng hơn (chủ game 10/11).
+      const tie = Math.abs(cost - score) < 8;
+      const nearer = tie && padBox ? Math.abs(one.left + one.width / 2 - (padBox.left + padBox.width / 2)) < Math.abs(bestX - (padBox.left + padBox.width / 2)) : false;
+      if (cost < score - 8 || (tie && (nearer || (!padBox && cost < score))) || (!tie && cost < score)) {
+        score = Math.min(score, cost);
         best = one.key;
+        bestX = one.left + one.width / 2;
       }
     }
     return best;
