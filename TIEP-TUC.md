@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Đề xuất gắn 4 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): CHỜ chủ game duyệt 8 câu
+1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết `docs/keyword-de-xuat-3.md` (phần Chắc + 8 câu Chưa chắc).
+2. Hiện trạng: không ảnh/video mới. Chưa gắn vào code.
+3. Việc sắp làm: chủ game trả lời → Sonnet 5.5 medium gắn `CARD_KEYWORDS` + `KEYWORD_LINES`.
+
 ## 4 keyword mới + đổi icon Sĩ khí (10/11, Sonnet 5.5 low, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 - Đã làm: icon `public/ui/kw/` cau-mana, linh-hoat, cuong-hoa-1, cuong-hoa-vinh-vien (+ si-khi ghi đè), `keywords.ts` (id, tên, tác dụng chủ game viết trong comment), `--kw` styles.css (Cầu mana xanh lam, Linh hoạt vàng, Cường hoá xanh lá; màu Linh hoạt/Cầu mana Claude tự chọn, chủ game chưa duyệt). Chưa quái nào mang, chưa luật. tsc 7 lỗi cũ.
 
