@@ -16,7 +16,7 @@
  *   lượt ở mức 2, mức 4 cộng dồn cả 2 + 4, mức 6 cộng dồn cả 2 + 4 + 6.
  * - "bao-oan": phát huy khả năng khi chết. - "phan-no": phát huy khả năng khi bị mất máu.
  * - "mui-mau" Mùi máu (trước là Khát máu): khi người chơi địch mất máu thì có thưởng.
- * - "ban-pha": quái đa mục tiêu.
+ * - "tan-pha" Tàn phá (trước là Bắn phá): quái đa mục tiêu.
  *
  * Bộ mới (14), cũng là nhãn nhóm; tác dụng chủ game viết:
  * - "cuoi-luot": phát huy công dụng ở cuối lượt. - "linh-hon": quái bị tiêu diệt ngay sau hành động hoặc đến hết lượt.
@@ -60,7 +60,7 @@ export type LegacyKeywordId =
   | "phan-no"
   | "mui-mau"
   | "dam-xuyen"
-  | "ban-pha";
+  | "tan-pha";
 
 export type KeywordId = NewKeywordId | LegacyKeywordId;
 
@@ -93,7 +93,7 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "phan-no": { src: "/ui/kw/phan-no.webp", label: "Phẫn nộ" },
   "mui-mau": { src: "/ui/kw/mui-mau.webp", label: "Mùi máu" },
   "dam-xuyen": { src: "/ui/kw/dam-xuyen.webp", label: "Đâm xuyên" },
-  "ban-pha": { src: "/ui/kw/ban-pha.webp", label: "Bắn phá" },
+  "tan-pha": { src: "/ui/kw/tan-pha.webp", label: "Tàn phá" },
 };
 
 /** Keyword từng quái, theo id quái. Chủ game đưa danh sách rồi mới thêm. */
