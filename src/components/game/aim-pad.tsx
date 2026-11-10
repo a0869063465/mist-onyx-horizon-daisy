@@ -36,7 +36,7 @@ export type PadBox = { left: number; top: number; width: number; height: number 
 export function AimPad({ box, kind, open, onStep, onOk }: { box: PadBox; kind: UnitActKind; open: Record<PadDir, boolean>; onStep: (dir: PadDir) => void; onOk: () => void }) {
   const id = `ap${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const tone = TONES[kind] ?? TONES.active;
-  const size = Math.max(26, Math.min(40, box.width * 0.5));
+  const size = Math.max(22, Math.min(34, box.width * 0.42));
   const reachX = box.width * 0.5;
   const reachY = reachX; // cả 4 mũi tên cách đều nút OK, lấy mũi tên phải làm chuẩn (chủ game 10/11)
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
