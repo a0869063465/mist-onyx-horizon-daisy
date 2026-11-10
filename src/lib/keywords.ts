@@ -3,13 +3,22 @@
  * quái (tay bài, sân, bảng mô tả, kho bài). Chưa quái nào mang keyword: gắn bằng cách thêm id quái vào `CARD_KEYWORDS` khi
  * chủ game đưa danh sách. Quái 5 sao tạm thời chưa có keyword nào.
  *
- * Bộ cũ (15): ĐÃ CÓ LUẬT (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép (phòng ngự thủ + thủ phép ≥ 3 mới
- * chặn được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 1/2, Đòn đánh phép (đòn đánh
- * thường gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). CHƯA CÓ LUẬT: Vinh quang, Khế ước (trước là Hiến tế; hy sinh máu
- * hiện tại), Đội quân, Báo oán (khi chết), Phẫn nộ (mỗi khi mất máu), Khát máu (khi người chơi địch mất máu), Bắn phá (đòn
- * hoặc kỹ năng thường gây kèm sát thương lên người chơi).
+ * Keyword là NHÃN XẾP NHÓM (chủ game 10/11): quái cùng đặc điểm mang chung keyword, tác dụng thật của từng quái nằm ở
+ * skill riêng của nó. Chỉ một số keyword có luật chung trong engine (xem dưới).
  *
- * Bộ mới (14), CHƯA CÓ LUẬT (chờ số và danh sách quái); tác dụng chủ game viết:
+ * Bộ cũ (15): CÓ LUẬT CHUNG (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép (thủ + thủ phép ≥ 3 mới chặn
+ * được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 1/2, Đòn đánh phép (đòn đánh thường
+ * gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). NHÃN NHÓM, không luật chung:
+ * - "khe-uoc" Khế ước (trước là Hiến tế): hy sinh máu của 1 hay nhiều quái để tạo hiệu ứng có lợi (sát thương người chơi
+ *   địch, hồi máu người chơi, sát thương quái địch, tăng chỉ số...; chỉ là ví dụ).
+ * - "vinh-quang": hạ gục quái thấp sao hơn thì được thưởng, hạ quái sao bằng hoặc cao hơn thì được thưởng cường hoá.
+ * - "lien-ket" Liên kết (trước là Đội quân): có 2, 4, 6 quân cùng tộc (hoặc môi trường) trên sân thì phát huy tác dụng lần
+ *   lượt ở mức 2, mức 4 cộng dồn cả 2 + 4, mức 6 cộng dồn cả 2 + 4 + 6.
+ * - "bao-oan": phát huy khả năng khi chết. - "phan-no": phát huy khả năng khi bị mất máu.
+ * - "mui-mau" Mùi máu (trước là Khát máu): khi người chơi địch mất máu thì có thưởng.
+ * - "ban-pha": quái đa mục tiêu.
+ *
+ * Bộ mới (14), cũng là nhãn nhóm; tác dụng chủ game viết:
  * - "cuoi-luot": phát huy công dụng ở cuối lượt. - "linh-hon": quái bị tiêu diệt ngay sau hành động hoặc đến hết lượt.
  * - "nhiem-vu": hoàn thành nhiệm vụ được giao thì nhận công dụng mới. - "ben-bi": quái duy trì sống sót bằng phòng ngự.
  * - "guom-mau": đánh vào được người chơi thì có thưởng. - "luc-luong": bài quân có chỉ số gốc cao.
@@ -46,10 +55,10 @@ export type LegacyKeywordId =
   | "phep"
   | "vinh-quang"
   | "khe-uoc"
-  | "doi-quan"
+  | "lien-ket"
   | "bao-oan"
   | "phan-no"
-  | "khat-mau"
+  | "mui-mau"
   | "dam-xuyen"
   | "ban-pha";
 
@@ -79,10 +88,10 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   phep: { src: "/ui/kw/phep.webp", label: "Đòn đánh phép" },
   "vinh-quang": { src: "/ui/kw/vinh-quang.webp", label: "Vinh quang" },
   "khe-uoc": { src: "/ui/kw/khe-uoc.webp", label: "Khế ước" },
-  "doi-quan": { src: "/ui/kw/doi-quan.webp", label: "Đội quân" },
+  "lien-ket": { src: "/ui/kw/lien-ket.webp", label: "Liên kết" },
   "bao-oan": { src: "/ui/kw/bao-oan.webp", label: "Báo oán" },
   "phan-no": { src: "/ui/kw/phan-no.webp", label: "Phẫn nộ" },
-  "khat-mau": { src: "/ui/kw/khat-mau.webp", label: "Khát máu" },
+  "mui-mau": { src: "/ui/kw/mui-mau.webp", label: "Mùi máu" },
   "dam-xuyen": { src: "/ui/kw/dam-xuyen.webp", label: "Đâm xuyên" },
   "ban-pha": { src: "/ui/kw/ban-pha.webp", label: "Bắn phá" },
 };
