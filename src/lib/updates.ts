@@ -972,6 +972,12 @@ export const PENDING_NOTES: string[] = [
   "Kho bài trong Chỉnh sửa bộ bài: số bản còn thêm được dời xuống góc phải dưới hình, trên khung máu.",
   "Hộ vệ: Hiệp sĩ hộ vệ và Lính chiến đá khổng lồ chặn được cả quái có Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt, Luồn lách. Chỉ triệu hồi vào hàng trước.",
   "Icon keyword màu đỏ sáng và rõ hơn, trước đó glow đỏ quá chìm.",
+  "Bên xanh có lá Núi dung nham trên sân thì nửa dưới bàn đấu đổi sang nền dung nham.",
+  "Bên đỏ có lá Núi dung nham trên sân thì nửa trên bàn đấu cũng đổi sang nền dung nham.",
+  "Nền dung nham có hiệu ứng lửa cháy chuyển động; dải đá giữa sân đứng yên. Máy bật chế độ giảm chuyển động thì không chạy.",
+  "Kéo quái trên sân lên mục tiêu: hiện danh sách Tấn công và các skill dùng được lên mục tiêu đó, giống danh sách khi bấm quái. Quái không đánh được (công 0) thì chỉ kéo được vào quân mình để dùng skill hỗ trợ. Skill ngẫu nhiên hay đánh cả phe địch (như Cò quay) hiện khi thả vào bất kỳ quái địch nào.",
+  "Skill nhiều mục tiêu: chọn nốt mục tiêu bằng bấm hoặc ấn rê; 2 giây chưa chọn thì hiện bảng các mục tiêu còn lại để bấm.",
+  "Bấm Tấn công hoặc skill: mục tiêu gần nhất sáng neon, trên lá quái hiện 4 mũi tên để dời neon sang mục tiêu khác và nút OK ở giữa để chọn. Màu theo icon (Tấn công cam). Bấm thẳng hay ấn rê vẫn dùng được.",
 ];
 
 function remarkOf(notes: string[]) {
