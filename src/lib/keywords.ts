@@ -130,7 +130,7 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
 export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "chien-si-gam-nham": ["ben-bi"],
   "chien-binh-rong": ["ben-bi"],
-  "hiep-si-ho-ve": ["ben-bi"],
+  "hiep-si-ho-ve": ["ben-bi", "ho-ve"],
   "khong-lo-mot-mat": ["luc-luong"],
   "may-chem": ["luc-luong"],
   "trai-tim-hai-long": ["tan-pha"],
@@ -150,13 +150,26 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "quai-thu-thien-su": ["dau-luot"],
   "ke-san-moi-tu-than": ["bao-oan"],
   "ky-si-bong-toi": ["tan-cong"],
+  "rong-con": ["sao-choi"],
+  "phu-thuy-ti-hon": ["sao-choi"],
+  "ma-dao-si": ["sao-choi"],
+  "ga-he-dang-so": ["sao-choi"],
+  "sua-hut-ma-phap": ["sao-choi"],
+  "trieu-hoi-ac-ma": ["sao-choi"],
+  "mat-do-tan-pha": ["sao-choi"],
+  "mat-xanh-huy-diet": ["sao-choi"],
+  "yeu-tinh-chuc-phuc": ["hao-quang", "buff"],
+  "thien-than-be-nho": ["buff"],
+  "khung-long-vay-kiem": ["debuff"],
+  "cuc-bong-ma-quai": ["trieu-goi"],
+  "linh-chien-da-khong-lo": ["ho-ve"],
 };
 
 /** Dòng mô tả (theo tên kỹ năng trên bảng quái) được in icon keyword phía trước. */
 export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "chien-si-gam-nham": { "Khiên thú sĩ": "ben-bi" },
   "chien-binh-rong": { "Vảy rồng": "ben-bi" },
-  "hiep-si-ho-ve": { "Lời chúc của kỵ sĩ": "ben-bi", "Lời chúc của vua": "ben-bi", "Lời chúc của hậu": "ben-bi" },
+  "hiep-si-ho-ve": { "Kiếm hộ vệ": "ho-ve", "Lời chúc của kỵ sĩ": "ben-bi", "Lời chúc của vua": "ben-bi", "Lời chúc của hậu": "ben-bi" },
   "trai-tim-hai-long": { "Đại hồng thuỷ huỷ diệt": "tan-pha" },
   "loi-nguyen-cua-rong": { "Địa ngục lửa": "tan-pha" },
   "thuong-quan-long": { "Cò quay": "tan-pha" },
@@ -174,6 +187,19 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "quai-thu-thien-su": { "Cầu nguyện": "dau-luot", "Ân huệ thiên sứ": "dau-luot" },
   "ke-san-moi-tu-than": { "Kẻ săn mồi tử thần": "bao-oan" },
   "ky-si-bong-toi": { "Kỵ pháp": "tan-cong" },
+  "rong-con": { "Hơi thở rồng": "sao-choi" },
+  "phu-thuy-ti-hon": { "Cầu sấm": "sao-choi" },
+  "ma-dao-si": { "Ma đạn": "sao-choi" },
+  "ga-he-dang-so": { "Quả cầu bóng đêm": "sao-choi" },
+  "sua-hut-ma-phap": { "Tích luỹ ma pháp": "sao-choi" },
+  "trieu-hoi-ac-ma": { "Sấm địa ngục": "sao-choi" },
+  "mat-do-tan-pha": { "Cầu lửa địa ngục": "sao-choi" },
+  "mat-xanh-huy-diet": { "Cầu sấm ánh sáng": "sao-choi" },
+  "yeu-tinh-chuc-phuc": { "Lời chúc phúc của tinh linh": "hao-quang", "Hỗ công": "buff", "Hộ thủ": "buff" },
+  "thien-than-be-nho": { "Thiên thần hộ mệnh": "buff" },
+  "khung-long-vay-kiem": { "Vãy phá giáp": "debuff" },
+  "cuc-bong-ma-quai": { "Pháo kích": "trieu-goi", "Bông mềm": "trieu-goi" },
+  "linh-chien-da-khong-lo": { "Tường thành": "ho-ve" },
 };
 
 export function keywordsOf(cardId: string | undefined | null): KeywordId[] {

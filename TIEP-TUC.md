@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Keyword mới đã gắn vào quái (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`, chưa chụp bằng mắt)
+- Chủ game trả lời F–I (câu 6–9): Hiệp sĩ hộ vệ có Hộ vệ (Kiếm hộ vệ), Thế thân của shien không; Đá tảng chủ game thêm sau (quái hệ đá); Tháo vát, Sĩ khí, Trang bị để trống.
+- Đã gắn (`keywords.ts`): Sao chổi cho 8 quái sát thương, Hào quang + Buff Yêu tinh chúc phúc, Buff Nàng tiên giữ khoá, Debuff Khủng long vãy kiếm, Triệu gọi Cục bông ma quái, Hộ vệ Lính chiến đá khổng lồ + Hiệp sĩ hộ vệ.
+- CHƯA gắn: câu 1–5 (Rồng canh pháo đài, Phù thuỷ thời gian, Phù thuỷ rừng đen, Kiếm sĩ lửa thiêng, Cơn thịnh nộ/Máy quay thưởng) chủ game chưa trả lời. tsc 7 lỗi cũ, round-rules 56/56 (có bài chập chờn cũ).
+
 ## Đề xuất gắn 10 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): CHỜ chủ game trả lời 9 câu
 1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết bảng đề xuất `docs/keyword-de-xuat-2.md` (phần Chắc + 9 câu Chưa chắc).
 2. Hiện trạng: không có ảnh/video mới. Chưa gắn vào code.
