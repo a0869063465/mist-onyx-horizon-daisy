@@ -43,7 +43,7 @@
  *
  * Bộ thứ 4 (4, chủ game 10/11), nhãn nhóm, CHƯA có luật, CHƯA gắn quái:
  * - "cau-mana" Cầu mana (xanh lam): quái có skill tương tác, làm lợi về mặt mana.
- * - "linh-hoat" Linh hoạt (vàng): quái có thể chuyển đổi thế công và thủ.
+ * - "linh-hoat" Linh hoạt (trắng): quái có thể chuyển đổi thế công và thủ.
  * - "cuong-hoa-1" Cường hoá 1 (xanh lá): quái tự tăng chỉ số trong lượt khi có điều kiện xảy ra.
  * - "cuong-hoa-vinh-vien" Cường hoá vĩnh viễn (xanh lá): quái tự tăng chỉ số vĩnh viễn khi có điều kiện xảy ra.
  */
