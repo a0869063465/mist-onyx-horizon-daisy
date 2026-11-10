@@ -139,9 +139,9 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "may-nem-bom-hinh-nhen": ["tan-pha"],
   "ong-khong-lo": ["xieng-xich"],
   "sat-nhan-bat-giu": ["xieng-xich"],
-  "phu-thuy-rung-den": ["xieng-xich"],
+  "phu-thuy-rung-den": ["debuff"],
   "my-dieu-nhan": ["nhiem-vu", "xieng-xich"],
-  "kiem-si-lua-thieng": ["khe-uoc"],
+  "kiem-si-lua-thieng": ["khe-uoc", "sao-choi"],
   "ke-giam-ho-linh-hon": ["khe-uoc"],
   "mo-voi-ma-mut": ["khe-uoc", "bao-oan"],
   "dau-si-bo-tot": ["vinh-quang"],
@@ -163,6 +163,10 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "khung-long-vay-kiem": ["debuff"],
   "cuc-bong-ma-quai": ["trieu-goi"],
   "linh-chien-da-khong-lo": ["ho-ve"],
+  "rong-phun-hoa-cau": ["sao-choi", "debuff"],
+  "phu-thuy-thoi-gian": ["debuff", "buff"],
+  "con-thinh-no-cua-hai-vuong": ["sao-choi"],
+  "may-quay-thuong": ["sao-choi"],
 };
 
 /** Dòng mô tả (theo tên kỹ năng trên bảng quái) được in icon keyword phía trước. */
@@ -176,9 +180,9 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "may-nem-bom-hinh-nhen": { "Súng phóng lựu": "tan-pha" },
   "ong-khong-lo": { "Kim châm tê liệt": "xieng-xich" },
   "sat-nhan-bat-giu": { "Bắt Giữ": "xieng-xich" },
-  "phu-thuy-rung-den": { "Nguyền rủa": "xieng-xich" },
+  "phu-thuy-rung-den": { "Nguyền rủa": "debuff" },
   "my-dieu-nhan": { "Mê hoặc": "xieng-xich" },
-  "kiem-si-lua-thieng": { "Truy cùng diệt tận": "khe-uoc", "Hoả thần long": "khe-uoc" },
+  "kiem-si-lua-thieng": { "Vệt lửa": "sao-choi", "Truy cùng diệt tận": "khe-uoc", "Hoả thần long": "khe-uoc" },
   "ke-giam-ho-linh-hon": { "Kiếm hấp thụ linh hồn": "khe-uoc" },
   "mo-voi-ma-mut": { "Nguyền rủa": "khe-uoc", "Ác linh": "bao-oan" },
   "dau-si-bo-tot": { "Chiến lợi phẩm": "vinh-quang" },
@@ -200,6 +204,10 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "khung-long-vay-kiem": { "Vãy phá giáp": "debuff" },
   "cuc-bong-ma-quai": { "Pháo kích": "trieu-goi", "Bông mềm": "trieu-goi" },
   "linh-chien-da-khong-lo": { "Tường thành": "ho-ve" },
+  "rong-phun-hoa-cau": { "Hoả cầu": "sao-choi" },
+  "phu-thuy-thoi-gian": { "Lão hoá": "debuff", "Dòng chảy thời gian": "buff" },
+  "con-thinh-no-cua-hai-vuong": { "Cơn thịnh nộ của hải thần": "sao-choi" },
+  "may-quay-thuong": { "Con bạc nổi giận": "sao-choi" },
 };
 
 export function keywordsOf(cardId: string | undefined | null): KeywordId[] {
