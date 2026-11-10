@@ -13490,7 +13490,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk-tip-r3, .dk-tip-one { color: #ff4a4a; }
 .dk-tip-r4 { color: #b45cff; }
 .dk-tip-sp { color: #ff4fa6; }
-.dk-copies { position: absolute; right: 4%; bottom: 21%; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid color-mix(in srgb, var(--tone, #3ec6ff) 70%, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--tone, #3ec6ff) 88%, #fff), color-mix(in srgb, var(--tone, #3ec6ff) 62%, #000)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); pointer-events: none; }
+.dk-copies { position: absolute; left: 4%; top: 2%; z-index: 3; min-width: 1.5rem; padding: 0.08rem 0.36rem; box-sizing: border-box; text-align: center; border-radius: 0.4rem; border: 1px solid color-mix(in srgb, var(--tone, #3ec6ff) 70%, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--tone, #3ec6ff) 88%, #fff), color-mix(in srgb, var(--tone, #3ec6ff) 62%, #000)); font-family: var(--lor-cond, "Barlow Condensed", sans-serif); font-size: 1.25rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55); pointer-events: none; }
 .dk-card.is-in .dk-copies { opacity: 0.8; }
 /* Bộ dùng thử (chủ game 08/11): the time left on a trial card, a dimmed row for a card the deck may not use. */
 .dk-row.is-off { filter: grayscale(0.85) brightness(0.55); }
@@ -13515,40 +13515,41 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Keyword bằng hình (chủ game 09/11): hàng icon ngang ở cạnh trên bên trái lá quái; số bản trong kho bài dời xuống góc phải
    dưới hình, trên khung máu (.dk-copies). */
-.kw-row { position: absolute; left: 3%; top: 1%; height: 28%; z-index: 4; display: flex; align-items: center; gap: 1%; pointer-events: none; }
-.kw-row[data-n="2"] { height: 20%; }
-.kw-row[data-n="3"] { height: 15%; }
-.kw-icon { display: block; height: 100%; width: auto; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)); }
-.kw-icon[data-kw="cuoi-luot"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="linh-hon"] { filter: drop-shadow(0 0 2px #3fb4ff) drop-shadow(0 0 6px #3fb4ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="nhiem-vu"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="ben-bi"] { filter: drop-shadow(0 0 2px #2f6bff) drop-shadow(0 0 6px #2f6bff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="guom-mau"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="luc-luong"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="hoi-phuc"] { filter: drop-shadow(0 0 2px #3cff4a) drop-shadow(0 0 6px #3cff4a) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="doi-mo"] { filter: drop-shadow(0 0 2px #c14dff) drop-shadow(0 0 6px #c14dff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="tao-bai"] { filter: drop-shadow(0 0 2px #3cff4a) drop-shadow(0 0 6px #3cff4a) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="dau-luot"] { filter: drop-shadow(0 0 2px #3fb4ff) drop-shadow(0 0 6px #3fb4ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="bo-bai"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="xieng-xich"] { filter: drop-shadow(0 0 2px #f2f6ff) drop-shadow(0 0 6px #f2f6ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="tan-cong"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="boc-thep"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="khong-lo"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="sieu-toc"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="nanh-vuot"] { filter: drop-shadow(0 0 2px #f2f6ff) drop-shadow(0 0 6px #f2f6ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="luon-lach-1"] { filter: drop-shadow(0 0 2px #3cff4a) drop-shadow(0 0 6px #3cff4a) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="luon-lach-2"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="phep"] { filter: drop-shadow(0 0 2px #c14dff) drop-shadow(0 0 6px #c14dff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="vinh-quang"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="khe-uoc"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="lien-ket"] { filter: drop-shadow(0 0 2px #ffc94d) drop-shadow(0 0 6px #ffc94d) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="bao-oan"] { filter: drop-shadow(0 0 2px #f2f6ff) drop-shadow(0 0 6px #f2f6ff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="phan-no"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="mui-mau"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="dam-xuyen"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="tan-pha"] { filter: drop-shadow(0 0 2px #ff3b2e) drop-shadow(0 0 6px #ff3b2e) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.kw-icon[data-kw="hien-te-thuong"] { filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.kw-row { position: absolute; right: 4%; bottom: 25%; height: 20%; z-index: 4; display: flex; flex-direction: row-reverse; align-items: center; gap: 2%; pointer-events: none; }
+.kw-row[data-n="2"] { height: 16%; }
+.kw-row[data-n="3"] { height: 13%; }
+.kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; border-radius: 50%; background: radial-gradient(circle at 50% 42%, #23232b 0%, #050507 78%); /* chỉ vòng ngoài sáng để nhận diện (chủ game 10/11), hình bên trong không glow */ box-shadow: 0 0 0 0.09rem var(--kw), 0 0 0.45rem 0.08rem var(--kw), 0 0.1rem 0.25rem rgba(0, 0, 0, 0.7); }
+.kw-icon > img { display: block; width: 78%; height: 78%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.kw-icon[data-kw="cuoi-luot"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="linh-hon"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="nhiem-vu"] { --kw: #ffc94d; }
+.kw-icon[data-kw="ben-bi"] { --kw: #2f6bff; }
+.kw-icon[data-kw="guom-mau"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="luc-luong"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="hoi-phuc"] { --kw: #3cff4a; }
+.kw-icon[data-kw="doi-mo"] { --kw: #c14dff; }
+.kw-icon[data-kw="tao-bai"] { --kw: #3cff4a; }
+.kw-icon[data-kw="dau-luot"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="bo-bai"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="xieng-xich"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="tan-cong"] { --kw: #ffc94d; }
+.kw-icon[data-kw="boc-thep"] { --kw: #ffc94d; }
+.kw-icon[data-kw="khong-lo"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="sieu-toc"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="luon-lach-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="phep"] { --kw: #c14dff; }
+.kw-icon[data-kw="vinh-quang"] { --kw: #ffc94d; }
+.kw-icon[data-kw="khe-uoc"] { --kw: #ffc94d; }
+.kw-icon[data-kw="lien-ket"] { --kw: #ffc94d; }
+.kw-icon[data-kw="bao-oan"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="phan-no"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="mui-mau"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="dam-xuyen"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="tan-pha"] { --kw: #ff3b2e; }
+.kw-icon[data-kw="hien-te-thuong"] { --kw: #ff8a1f; }
 /* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
 
 /* Icon keyword đứng trước dòng mô tả của kỹ năng (chủ game 10/11): không nhỏ hơn 50% icon tốc độ cũ (2,6rem). */
-.msheet-kw { display: inline-block; height: 1.8rem; width: auto; vertical-align: middle; margin-right: 0.3rem; }
+.msheet-kw { display: inline-grid; height: 1.8rem; vertical-align: middle; margin-right: 0.45rem; }

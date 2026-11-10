@@ -546,7 +546,9 @@ export function MonsterSheet({
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
-                {shown.keyword ? <img className="kw-icon msheet-kw" data-kw={shown.keyword} src={KEYWORDS[shown.keyword].src} alt={KEYWORDS[shown.keyword].label} draggable={false} /> : null}
+                {shown.keyword ? <span className="kw-icon msheet-kw" data-kw={shown.keyword} title={KEYWORDS[shown.keyword].label}>
+                  <img src={KEYWORDS[shown.keyword].src} alt="" draggable={false} />
+                </span> : null}
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">
