@@ -1804,6 +1804,10 @@ function PlayPage() {
   // as data-slot, or "face"), and a drop that is not right on a target picks it. `snapPool` holds the targets the match
   // accepts for this drag, worked out once when it starts.
   const [snap, setSnap] = useState<string | null>(null);
+  /** Kéo quái lên mục tiêu (chủ game 10/11): the monster and the target it was dropped on; the list of what it can do there shows. */
+  const [dropMenu, setDropMenu] = useState<{ uid: string; key: string } | null>(null);
+  /** A target to fire at once the aim picked from the drop list is in place. */
+  const fireAfter = useRef<string | null>(null);
   // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
   const slideFire = useRef<(key: string) => void>(() => undefined);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
@@ -3582,6 +3586,20 @@ function PlayPage() {
     }
   }, [duel]);
   useEffect(() => () => window.clearTimeout(cueTimer.current), []);
+  // Kéo quái lên mục tiêu: the button picked from the drop list fires at the target once its aim is in place.
+  useEffect(() => {
+    const key = fireAfter.current;
+    if (!key || !aim) return;
+    fireAfter.current = null;
+    slideFire.current(key);
+  }, [aim]);
+  // The match moved on: the drop list goes.
+  useEffect(() => {
+    setDropMenu((open) => {
+      if (open) setSnap(null);
+      return null;
+    });
+  }, [duel]);
 
   if (duel) turnClock.current = duel.clock ?? 1;
 
@@ -4161,7 +4179,7 @@ function PlayPage() {
       }
       return keys;
     }
-    if (payload.kind === "unit" && !aim) return attackKeys(payload.uid);
+    if (payload.kind === "unit" && !aim) return dropPlan(payload.uid)?.keys ?? attackKeys(payload.uid);
     return keys;
   }
 
@@ -4269,11 +4287,11 @@ function PlayPage() {
   function startPress(event: ReactPointerEvent) {
     if (!duel || event.button > 0 || drag || grab.current) return;
     const cast = aim?.kind === "spell" ? spellAim() : null;
-    if (aim?.kind !== "attack" && !(aim?.kind === "skill" && !aim.also) && !cast) return;
+    if (aim?.kind !== "attack" && aim?.kind !== "skill" && !cast) return;
     const target = event.target as HTMLElement;
     if (target.closest(".unit-acts, .hand, .act, .aim-mark, .rp-bar") || (target.closest("button") && !target.closest(".slot, .face-drop"))) return;
     // Bấm Use rồi rê trên sân (V8B): a spell with a target lights its targets the same way.
-    const keys = cast ? spellKeys(cast.id, cast.index, cast.from) : aim?.kind === "attack" ? attackKeys(aim.uid) : aim?.kind === "skill" ? slideKeys({ kind: "skill", uid: aim.uid, index: aim.index }) : new Set<string>();
+    const keys = cast ? spellKeys(cast.id, cast.index, cast.from) : aim?.kind === "attack" ? attackKeys(aim.uid) : aim?.kind === "skill" ? (aim.also ? alsoKeys() : slideKeys({ kind: "skill", uid: aim.uid, index: aim.index })) : new Set<string>();
     if (keys.size === 0) return;
     const lamp = lightTorch(event.clientX, event.clientY);
     torch.current = lamp;
@@ -4313,6 +4331,10 @@ function PlayPage() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", stop);
     window.addEventListener("pointercancel", stop);
+  }
+
+  function hitsHand(x: number, y: number): boolean {
+    return Boolean(under(x, y)?.closest(".hand"));
   }
 
   function snapNode(key: string): HTMLElement | null {
@@ -4361,8 +4383,12 @@ function PlayPage() {
     }
     if (!canPlay || responding || duel.step !== "main" || queue) return null;
     let plan: TargetPlan | null = null;
-    if (uid && !aim) plan = { keys: attackKeys(uid), foe: true, you: false, caster: uid };
+    if (uid && !aim) {
+      const keys = snapPool.current?.grab.kind === "unit" && snapPool.current.grab.uid === uid ? snapPool.current.keys : attackKeys(uid);
+      plan = { keys, foe: true, you: [...keys].some((key) => key.startsWith(`${viewer}-`)), caster: uid };
+    }
     else if (aim?.kind === "attack") plan = { keys: attackKeys(aim.uid), foe: true, you: false, caster: aim.uid };
+    else if (aim?.kind === "skill" && aim.also) plan = { keys: alsoKeys(), foe: false, you: true, caster: aim.uid };
     else if (aim?.kind === "skill" && !aim.also) {
       const id = you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "";
       const both = id === "phu-thuy-thoi-gian";
@@ -4371,6 +4397,16 @@ function PlayPage() {
     }
     planCache.current = { duel, aim, uid, plan };
     return plan;
+  }
+
+  /** The next target of a skill with more than one (Dụ dỗ: the ally after the enemy): your monsters but the caster. */
+  function alsoKeys(): Set<string> {
+    const keys = new Set<string>();
+    if (aim?.kind !== "skill" || !aim.also) return keys;
+    you.field.forEach((mon, slot) => {
+      if (mon && mon.uid !== aim.uid) keys.add(`${viewer}-${slot}`);
+    });
+    return keys;
   }
 
   /** The boxes on screen of the targets a torch can pick. */
@@ -4777,6 +4813,17 @@ function PlayPage() {
     }
     if (!moved) return;
     suppressClick.current = true;
+    // Kéo quái lên mục tiêu (chủ game 10/11): the list of what it can do there shows, near the monster dragged.
+    if (payload.kind === "unit" && !aim && duel && canPlay && !responding && duel.step === "main" && !queue) {
+      if (snapped && dropRows({ uid: payload.uid, key: snapped })) {
+        setDropMenu({ uid: payload.uid, key: snapped });
+        setSnap(snapped);
+        return;
+      }
+      // Nothing it can do where it was dropped (an attack with 0 attack, a skill that takes no such target): nothing happens.
+      if (!hitsHand(event.clientX, event.clientY)) holdNotice("Quái này không làm được gì ở đó.");
+      return;
+    }
     finishDrop((snapped ? snapNode(snapped) : null) ?? under(event.clientX, event.clientY), payload, { x: event.clientX, y: event.clientY });
   }
 
@@ -4809,6 +4856,111 @@ function PlayPage() {
     const mon = duel.players[side as Side]?.field[slot];
     if (mon) onUnit(side as Side, mon);
   };
+
+  /** The buttons of a monster on the field, with the given hands for what they do (real ones, or a dry run). */
+  function rowArgs(uid: string, put: (next: Duel) => void, aimTo: (next: Aim | null) => void, lure: (uid: string) => void, dry = false): UnitRowsArgs {
+    return {
+      duel: duel!,
+      uid,
+      viewer,
+      attackable: canPlay,
+      blessOn: blessArm,
+      onBless: () => undefined,
+      onChronoFlow: (id) => {
+        if (!duel || !canTargetFoe(duel)) {
+          if (!dry) holdNotice("Lượt đầu không được nhắm đối thủ.");
+          return;
+        }
+        aimTo(null);
+        put(useSkill(duel, id, null, 2));
+      },
+      onLure: lure,
+      setAim: aimTo,
+      apply: put,
+    };
+  }
+
+  /**
+   * A button with no target of its own (Cò quay, a skill on the whole enemy side...): does it act on the enemy? Found by
+   * a dry run of the button: the enemy side changes, or a window opens for the enemy to answer.
+   */
+  function hitsFoe(uid: string, key: string): boolean {
+    if (!duel) return false;
+    let out: Duel | null = null;
+    let lured = false;
+    const dry = unitRows(rowArgs(uid, (next) => (out = next), () => undefined, () => (lured = true), true));
+    const row = dry?.rows.find((one) => one.key === key);
+    if (!row) return false;
+    try {
+      row.go();
+    } catch {
+      return false;
+    }
+    if (lured) return true;
+    const next = out as Duel | null;
+    if (!next || next === duel) return false;
+    const side = (1 - viewer) as Side;
+    const shape = (game: Duel) => JSON.stringify({ hp: game.players[side].hp, field: game.players[side].field.map((mon) => (mon ? [mon.uid, mon.hp, mon.atk, mon.def, mon.mdef, mon.stun, mon.chain ?? 0] : null)) });
+    if (shape(next) !== shape(duel)) return true;
+    return next.step === "respond" && Boolean(next.pending) && !duel.pending;
+  }
+
+  /**
+   * Kéo quái lên mục tiêu (chủ game 10/11): what each button of the monster can be dropped on. Tấn công and the skills
+   * that pick a target take the targets their own rule takes; a button with no target that acts on the enemy (random or
+   * whole-side) takes any enemy and the enemy player; the rest (self buffs) stay on the tap list only.
+   */
+  function dropPlan(uid: string): { keys: Set<string>; options: Array<{ row: UnitRow; keys: Set<string>; open: boolean }>; box: { x: number; y: number; w: number; h: number } } | null {
+    if (!duel || !canPlay || responding || duel.step !== "main" || queue) return null;
+    const built = unitRows(rowArgs(uid, apply, setAim, (id) => setLureAsk(id)));
+    if (!built) return null;
+    const self = `${viewer}-${you.field.findIndex((mon) => mon?.uid === uid)}`;
+    const foeSide = (1 - viewer) as Side;
+    const anyFoe = new Set<string>(["face"]);
+    duel.players[foeSide].field.forEach((mon, slot) => {
+      if (mon) anyFoe.add(`${foeSide}-${slot}`);
+    });
+    const options: Array<{ row: UnitRow; keys: Set<string>; open: boolean }> = [];
+    const keys = new Set<string>();
+    for (const row of built.rows) {
+      let picks: Set<string> | null = null;
+      let open = false;
+      if (row.slide) picks = row.slide.kind === "attack" ? attackKeys(uid) : slideKeys(row.slide);
+      else if (hitsFoe(uid, row.key)) {
+        picks = anyFoe;
+        open = true;
+      }
+      if (!picks) continue;
+      const mine = new Set([...picks].filter((key) => key !== self));
+      if (mine.size === 0) continue;
+      options.push({ row, keys: mine, open });
+      for (const key of mine) keys.add(key);
+    }
+    return { keys, options, box: built.box };
+  }
+
+  /** The drop list: only the buttons that take this target, each firing at it. */
+  function dropRows(ask: { uid: string; key: string }): { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number } } | null {
+    const plan = dropPlan(ask.uid);
+    if (!plan) return null;
+    const rows = plan.options
+      .filter((option) => option.keys.has(ask.key))
+      .map(({ row, open }) => ({
+        ...row,
+        slide: undefined,
+        go: () => {
+          setDropMenu(null);
+          setSnap(null);
+          if (open || !row.slide) {
+            row.go();
+            return;
+          }
+          fireAfter.current = ask.key;
+          setAim(row.slide.kind === "attack" ? { kind: "attack", uid: row.slide.uid } : { kind: "skill", uid: row.slide.uid, index: row.slide.index });
+        },
+      }));
+    return rows.length ? { rows, box: plan.box } : null;
+  }
 
   function onUnit(side: Side, mon: FieldMon) {
     if (suppressClick.current) {
@@ -5911,6 +6063,10 @@ function PlayPage() {
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
+          if (dropMenu && !(event.target as HTMLElement).closest(".unit-acts")) {
+            setDropMenu(null);
+            setSnap(null);
+          }
           helplessTap(Boolean(inspect) || Boolean((event.target as HTMLElement).closest(".face-pile")));
           startPress(event);
           // A touch anywhere but the hand puts the picked card back.
@@ -7301,6 +7457,12 @@ function PlayPage() {
             apply={apply}
           />
         ) : null}
+        {dropMenu && !duel.counterAsk
+          ? (() => {
+              const built = dropRows(dropMenu);
+              return built ? <UnitActs rows={built.rows} box={built.box} soloRed={false} /> : null;
+            })()
+          : null}
         {aim?.kind === "menu" && !duel.counterAsk ? (
           <UnitChips
             duel={duel}
@@ -7775,35 +7937,23 @@ function isPrime(duel: Duel, mon: FieldMon, side: Side) {
 type TargetPlan = { keys: Set<string>; foe: boolean; you: boolean; caster: string };
 type ChipSlide = { kind: "attack"; uid: string } | { kind: "skill"; uid: string; index: number };
 
-function UnitChips({
-  duel,
-  uid,
-  viewer,
-  attackable,
-  riposte = false,
-  blessOn,
-  onBless,
-  onChronoFlow,
-  onLure,
-  onSlide,
-  setAim,
-  apply,
-}: {
+type UnitRow = { key: string; label: string; go: () => void; slide?: ChipSlide; icon: string; kind: UnitActKind };
+type UnitRowsArgs = {
   duel: Duel;
   uid: string;
   viewer: Side;
   attackable: boolean;
-  /** Trả đòn (luật 6 ô): quái vừa chịu đòn chọn đánh thường hoặc kỹ năng để đánh trả, dù đang mệt. */
   riposte?: boolean;
   blessOn: boolean;
   onBless: () => void;
   onChronoFlow: (uid: string) => void;
   onLure: (uid: string) => void;
-  /** Ấn giữ rồi trượt (chủ game 31/10): a button that picks a target starts a slide to it. */
-  onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void;
   setAim: (aim: Aim | null) => void;
   apply: (next: Duel) => void;
-}) {
+};
+
+/** The buttons a monster on the field shows when tapped (the same list a drag onto a target filters). */
+function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onBless, onChronoFlow, onLure, setAim, apply }: UnitRowsArgs): { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean } | null {
   const side = (duel.players[0].field.some((unit) => unit?.uid === uid) ? 0 : 1) as Side;
   const mon = duel.players[side].field.find((unit) => unit?.uid === uid) ?? null;
   const card = mon ? monsterCard(mon.cardId) : undefined;
@@ -7989,6 +8139,45 @@ function UnitChips({
     ...z.map((item) => ({ ...item, ...lookOf(item.label, "z") })),
   ];
   const soloRed = z.length === 1 && y.length === 0 && !strikeShown;
+  return { rows, box, soloRed };
+}
+
+function UnitChips({
+  duel,
+  uid,
+  viewer,
+  attackable,
+  riposte = false,
+  blessOn,
+  onBless,
+  onChronoFlow,
+  onLure,
+  onSlide,
+  setAim,
+  apply,
+}: {
+  duel: Duel;
+  uid: string;
+  viewer: Side;
+  attackable: boolean;
+  /** Trả đòn (luật 6 ô): quái vừa chịu đòn chọn đánh thường hoặc kỹ năng để đánh trả, dù đang mệt. */
+  riposte?: boolean;
+  blessOn: boolean;
+  onBless: () => void;
+  onChronoFlow: (uid: string) => void;
+  onLure: (uid: string) => void;
+  /** Ấn giữ rồi trượt (chủ game 31/10): a button that picks a target starts a slide to it. */
+  onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void;
+  setAim: (aim: Aim | null) => void;
+  apply: (next: Duel) => void;
+}) {
+  const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, setAim, apply });
+  if (!built) return null;
+  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} />;
+}
+
+/** The list of buttons above a monster on the field (tapped, or dragged onto a target). */
+function UnitActs({ rows, box, soloRed, riposte = false, onSlide }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void }) {
   const wide = Math.max(box.w + 8, 31);
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
