@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Áp keyword thông minh vào quái (10/11): LUẬT CHỦ GAME CHỐT, CHƯA LÀM, chờ "ok"
+- Mỗi quái đa phần 1 keyword, tối đa 2 keyword chính. Chỉ áp cái ĐẶC TRƯNG chính của quái, không phải gì cũng gắn. Chỉ áp trên quái (không phép).
+- Khi quái có keyword: dòng mô tả (cả dòng) liên quan keyword đó thì in icon keyword TRƯỚC dòng; icon đủ to, có thể nhỏ hơn icon tốc độ phép cũ (hình tốc độ cao 2,6rem) nhưng KHÔNG dưới 50% cỡ đó (tức ≥ 1,3rem).
+- Kế hoạch: Opus 5.5 high đọc quái 1–4 sao, đưa bảng đề xuất quái → keyword + dòng liên quan, chỗ không chắc đánh dấu; chủ game duyệt; Sonnet 5.5 medium gắn `CARD_KEYWORDS` + vẽ icon trước dòng mô tả. Chủ game nói "ok" mới bắt đầu.
+
 ## Keyword: bộ 14 icon mới THÊM vào bộ 15 cũ, không thay (10/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 - Đã làm: `public/ui/kw/` 14 icon (cuoi-luot đỏ, linh-hon xanh lam, nhiem-vu vàng, ben-bi xanh dương, guom-mau đỏ, luc-luong cam, hien-te cam, hoi-phuc xanh lục, doi-mo tím, tao-bai xanh lục, dau-luot xanh lam, bo-bai đỏ, xieng-xich trắng, giao-chien vàng), `keywords.ts` viết lại (tác dụng chủ game ghi trong comment), glow `.kw-icon[data-kw]` theo màu đó. Tổng 29 icon: bộ cũ giữ nguyên luật; Đội quân đổi tên Liên kết (`lien-ket`, 2/4/6 quân cùng tộc cộng dồn), Khát máu đổi tên Mùi máu (`mui-mau`), Bắn phá đổi tên Tàn phá (`tan-pha`) = quái đa mục tiêu. Chủ game 10/11: keyword là NHÃN XẾP NHÓM, tác dụng nằm ở skill từng quái, không phải luật chung (trừ 7 cái đã có luật). Hiến tế mới (id `hien-te-thuong`, cam, thưởng khi triệu hồi nhờ hiến tế) trùng tên với Hiến tế cũ, chủ game đổi tên thành Khế ước (`khe-uoc`, vàng, hy sinh máu hiện tại); không còn trùng tên.
 - Chưa làm: luật 14 keyword mới (Opus 5.5 high, chờ số + danh sách quái), chưa quái nào mang keyword. Chưa chụp bằng mắt. tsc không lỗi mới, round-rules 56/56.
