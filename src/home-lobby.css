@@ -4,6 +4,8 @@
   --lobby-gold: #e8c98a;
   --lobby-ink: #f4f2ed;
   --lobby-cyan: #39daee;
+  --lobby-player-name: #edcc88;
+  --lobby-player-rank: #87d958;
   position: relative;
   display: grid;
   place-items: center;
@@ -20,7 +22,7 @@
   color: var(--lobby-ink);
 }
 .lobby-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: -2; }
-.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081624 0%, rgb(8 22 36 / .92) 9%, transparent 34%); }
+.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 27%, rgb(8 26 41 / .96) 32%, rgb(8 26 41 / .86) 36%, rgb(8 26 41 / .62) 40%, rgb(8 26 41 / .24) 45%, transparent 49%); }
 .lobby-shortcuts { position: absolute; inset: 0; pointer-events: none; }
 .lobby-shortcut {
   position: absolute;
@@ -66,17 +68,17 @@
 .lobby button:disabled { cursor: default; opacity: 1; }
 
 /* Player row directly above the mode selector, measured against the supplied reference. */
-.lobby-account { position:absolute; left:6.9%; right:4%; bottom:32%; height:6.2%; display:flex; align-items:flex-end; justify-content:space-between; gap:2cqw; }
-.lobby-currencies { display:flex; align-items:center; gap:3.2cqw; padding-bottom:1cqw; }
+.lobby-account { position:absolute; left:6.9%; right:3.8%; bottom:33.7%; height:6.5%; display:flex; align-items:flex-end; justify-content:space-between; gap:2cqw; }
+.lobby-currencies { display:flex; align-items:center; gap:3.8cqw; padding-bottom:1cqw; }
 .lobby-currencies > span { display:flex; align-items:center; gap:1.5cqw; }
-.lobby-currencies b { font-size:3cqw; font-weight:700; color:#fff; }
-.lobby-star { font-style:normal; font-size:4.3cqw; line-height:1; color:#ffd44d; filter:drop-shadow(0 1px 2px #694500); }
+.lobby-currencies b { font-size:3.25cqw; font-weight:650; color:#fff; }
+.lobby-star { font-style:normal; font-size:4.65cqw; line-height:1; color:#ffd44d; filter:drop-shadow(0 1px 2px #694500); }
 .lobby-star.is-rainbow { background:conic-gradient(#58e8ff,#7b72ff,#ef6eea,#ffe75b,#55eeb1,#58e8ff); background-clip:text; -webkit-background-clip:text; color:transparent; }
-.lobby-profile { display:flex; align-items:center; gap:1.8cqw; border:0; padding:0; background:transparent; text-align:right; color:var(--lobby-gold); cursor:pointer; }
+.lobby-profile { display:flex; align-items:center; gap:1.8cqw; border:0; padding:0; background:transparent; text-align:left; color:var(--lobby-player-name); cursor:pointer; font-family:inherit; text-shadow:0 1px 2px #04101b; }
 .lobby-profile > span { display:flex; flex-direction:column; gap:1cqw; }
-.lobby-profile b { font-size:4cqw; white-space:nowrap; }
-.lobby-profile small { font-size:3.2cqw; font-weight:700; color:#8be65f; white-space:nowrap; }
-.lobby-avatar { display:block; flex:none; width:11cqw; height:11cqw; border:2px solid var(--lobby-gold); border-radius:50%; overflow:hidden; background:#102336; box-shadow:0 0 1cqw #081321; }
+.lobby-profile b { font-size:4.5cqw; line-height:1.1; font-weight:750; color:var(--lobby-player-name); white-space:nowrap; }
+.lobby-profile small { display:flex; align-items:center; gap:1.25cqw; font-size:3.85cqw; line-height:1.15; font-weight:750; color:var(--lobby-player-rank); white-space:nowrap; }
+.lobby-avatar { display:block; flex:none; width:13cqw; height:13cqw; border:2px solid var(--lobby-gold); border-radius:50%; overflow:hidden; background:#102336; box-shadow:0 0 1cqw #081321; }
 .lobby-avatar img { width:100%; height:100%; object-fit:cover; object-position:center 25%; }
 
 /* Mode selector overlay, matching the supplied dark navy and thin gold framing. */
