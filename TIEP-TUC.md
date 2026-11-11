@@ -1,5 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
+**Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
+
 ## Luật mới chủ game 11/11, CHƯA LÀM (chủ game: để phiên mới tạo từ main làm tiếp)
 
 Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
