@@ -55,7 +55,7 @@
 .lobby-coin { position: absolute; display: block; }
 .lobby-coin-star { position: absolute; width: calc(var(--h) * 37); height: auto; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .55)); pointer-events: none; }
 .lobby-coin-num { position: absolute; font-weight: 600; line-height: 1; color: #f2f2f2; text-shadow: 0 .25cqw .6cqw rgb(0 0 0 / .65); white-space: nowrap; }
-.lobby-profile { position: absolute; left: calc(var(--h) * 557); top: calc(var(--h) * -180); width: calc(var(--h) * 368); height: calc(var(--h) * 118); padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-profile { position: absolute; left: calc(var(--h) * 557); top: calc(var(--h) * -166); width: calc(var(--h) * 368); height: calc(var(--h) * 118); padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .lobby-profile:active .lobby-avatar { transform: scale(.94); filter: brightness(1.2); }
 .lobby-name, .lobby-rank { position: absolute; right: 0; line-height: 1; white-space: nowrap; font-weight: 700; }
 .lobby-name { background: linear-gradient(180deg, #ecd7ac 0%, #e4bd84 45%, #be884b 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .6)); }

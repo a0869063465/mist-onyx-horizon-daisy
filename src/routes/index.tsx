@@ -89,12 +89,12 @@ function Home() {
   const [navOn, setNavOn] = useState<number | null>(null);
 
   const buttons: Btn[] = [
-    { key: "missions", label: "Nhiệm vụ", img: "quest", at: [19, 699, 137, 138], to: "/missions", dot: quests },
-    { key: "rewards", label: "Phần thưởng", img: "gift", at: [17, 857, 140, 139], dot: true },
-    { key: "ranks", label: "Xếp hạng", img: "rank", at: [19, 1016, 137, 137] },
-    { key: "settings", label: "Cài đặt", img: "settings", at: [672, 699, 135, 138], to: "/tune" },
-    { key: "mail", label: "Thư", img: "mail", at: [671, 857, 138, 139], to: "/mail", dot: mails.some(row => !row.read || row.owing) },
-    { key: "friends", label: "Bạn bè", img: "friends", at: [672, 1016, 138, 137], to: "/friends", dot: friends.asks > 0 },
+    { key: "missions", label: "Nhiệm vụ", img: "quest", at: [19, 684, 137, 138], to: "/missions", dot: quests },
+    { key: "rewards", label: "Phần thưởng", img: "gift", at: [17, 842, 140, 139], dot: true },
+    { key: "ranks", label: "Xếp hạng", img: "rank", at: [19, 1001, 137, 137] },
+    { key: "settings", label: "Cài đặt", img: "settings", at: [672, 684, 135, 138], to: "/tune" },
+    { key: "mail", label: "Thư", img: "mail", at: [671, 842, 138, 139], to: "/mail", dot: mails.some(row => !row.read || row.owing) },
+    { key: "friends", label: "Bạn bè", img: "friends", at: [672, 1001, 138, 137], to: "/friends", dot: friends.asks > 0 },
   ];
   const navItems: { label: string; to?: "/deck" | "/shop" | "/collection"; left: number; width: number }[] = [
     { label: "Sự kiện", left: 0, width: 196 },
@@ -142,10 +142,10 @@ function Home() {
             <span className="lobby-ring" />
           </button>
 
-          <img className="lobby-coin-star" src="/ui/home/star-gold.webp" alt="" draggable={false} style={{ left: h(4), top: h(-124), width: h(56) }} />
-          <b className="lobby-coin-num" style={{ left: h(76), top: h(-121), fontSize: h(45) }} aria-label={tr("Số sao")}>{stars}</b>
-          <img className="lobby-coin-star" src="/ui/home/star-rainbow.webp" alt="" draggable={false} style={{ left: h(208), top: h(-124), width: h(56) }} />
-          <b className="lobby-coin-num" style={{ left: h(280), top: h(-121), fontSize: h(45) }} title={tr("Sao hiếm — sắp có")}>0</b>
+          <img className="lobby-coin-star" src="/ui/home/star-gold.webp" alt="" draggable={false} style={{ left: h(4), top: h(-110), width: h(56) }} />
+          <b className="lobby-coin-num" style={{ left: h(76), top: h(-107), fontSize: h(45) }} aria-label={tr("Số sao")}>{stars}</b>
+          <img className="lobby-coin-star" src="/ui/home/star-rainbow.webp" alt="" draggable={false} style={{ left: h(208), top: h(-110), width: h(56) }} />
+          <b className="lobby-coin-num" style={{ left: h(280), top: h(-107), fontSize: h(45) }} title={tr("Sao hiếm — sắp có")}>0</b>
 
           <button type="button" className="lobby-profile" onClick={() => { playUi("select"); setMine(playerId()); }} aria-label={tr("Hồ sơ")}>
             <span className="lobby-name" style={{ top: h(4), right: h(172), fontSize: h(56) }}>{tr("Người chơi")}</span>
