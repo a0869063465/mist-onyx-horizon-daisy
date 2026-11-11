@@ -397,7 +397,7 @@ function woundPile(card: PileMon, dmg: number): PileMon | null {
   return { ...card, hp, saved: card.saved ? { ...card.saved, hp } : card.saved };
 }
 
-const LIFE = 16;
+const LIFE = 20;
 
 /** Số lá trên tay đầu trận: 3 lá đầu xấp chung, quái hay phép tuỳ xấp (chủ game 28/10). */
 export const OPENING_CARDS = 3;

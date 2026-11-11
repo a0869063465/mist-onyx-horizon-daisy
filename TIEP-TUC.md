@@ -10,7 +10,7 @@
 ## Luật mới 11/11: 0.2 + 0.3 ĐÃ LÀM (Opus 5.5 high, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
 1. Việc vừa làm: 0.2 Hoả cầu (Rồng canh pháo đài) và Vãy phá giáp (Khủng long vãy kiếm) trừ thủ phép/thủ TRƯỚC rồi mới gây sát thương (duel.ts `strikePair` đầu hàm, nhánh Hoả cầu); 0.3 neon còn sáng mục tiêu mà bấm chuyển lượt = bắn mục tiêu đó rồi xác nhận hàng chờ (play.tsx `autoOk`); thiếu bước (skill 2 bước, bảng hỏi thêm) thì huỷ rồi chuyển. round-rules 66/66 (+2 bài, bài Phục kích chập chờn cũ), tsc 7 lỗi cũ, thử Chromium trận Test: Khổng lồ 1 mắt đánh Máy chém, bấm chuyển lượt → đòn sang đối thủ.
 2. Hiện trạng: không ảnh/video mới. Chỉ áp cho neon của Tấn công/skill (phép kéo/Use chưa có neon kiểu này).
-3. Việc sắp làm: 0.1 máu người chơi 16 → 20 (`LIFE` duel.ts), 0.4 Hoa ăn thịt người thủ 2, 0.5 Máy chém máu 2, 0.6 Quái thú thiên sứ máu 4: Sonnet 5.5 low, chờ chủ game hạ mô hình.
+3. 0.1 ĐÃ LÀM (Sonnet 5.5 low): `LIFE` 20, round-rules 66/66. 0.4–0.6 chủ game bảo đã làm ở nhánh khác. Xong nhóm 0.
 
 ## Luật mới chủ game 11/11 (bản gốc trước khi làm)
 

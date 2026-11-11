@@ -9,7 +9,7 @@ Nguồn: các nhánh `ccr-7fdbb403` (06–07/11), `ccr-55229734` và `ccr-601c58
 
 | # | Anh nói | Còn thiếu |
 |---|---|---|
-| 0.1 | Máu về lại 20 | Rõ: máu người chơi, hiện 16 → 20. Chưa làm. |
+| 0.1 | Máu về lại 20 | ĐÃ LÀM 11/11: máu người chơi 16 → 20. |
 | 0.2 | Skill và đòn đánh: trừ thủ và thủ phép trước rồi mới áp sát thương vào | ĐÃ LÀM 11/11: Hoả cầu, Vãy phá giáp. |
 | 0.3 | Chọn qua lại neon đúng mục tiêu mà quên bấm OK, rồi bấm chuyển lượt thì tự OK, không huỷ hàng chờ | ĐÃ LÀM 11/11. Thiếu bước thì huỷ. |
 | 0.4 | Hoa ăn thịt người: thủ còn 2 | Rõ. |

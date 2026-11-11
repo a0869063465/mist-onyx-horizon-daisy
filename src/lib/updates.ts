@@ -989,6 +989,7 @@ export const PENDING_NOTES: string[] = [
   "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
   "Hoả cầu của Rồng canh pháo đài giảm thủ phép trước rồi mới gây sát thương. Vãy phá giáp của Khủng long vãy kiếm giảm thủ trước rồi mới giao tranh.",
   "Neon đang sáng mục tiêu mà quên bấm OK, bấm chuyển lượt thì đòn tự chọn mục tiêu đó và xác nhận, không bị huỷ.",
+  "Máu người chơi lúc bắt đầu trận là 20 (trước là 16).",
 ];
 
 function remarkOf(notes: string[]) {
