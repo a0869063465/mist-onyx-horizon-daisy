@@ -5,7 +5,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -171,6 +171,7 @@ import {
   knackOpen,
   boulder,
   gearCard,
+  backSlot,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
@@ -364,7 +365,7 @@ type Grab =
   | { kind: "unit"; uid: string; card: MonsterCard; live: { name: string; atk: number; def: number; mdef: number; hp: number; level: number } };
 
 type Drag = Grab & { x: number; y: number };
-type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number };
+type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean };
 
 function floaterStyle(item: Floater) {
   return {
@@ -1395,13 +1396,15 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
         const rose = was.cardId === "ky-si-bong-toi" && now.cardId === "chien-binh-huyen-thoai";
         if (beam) floaters.push(...laserTicks(beam));
         else if (!(rose && delta < 0) && !(bombOn && bombHits.includes(was.uid)) && !(danOn && danHits.includes(was.uid)) && !riderIds.has(was.uid)) {
-          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where });
+          // grow: the rise came with a max-HP rise (tăng máu tối đa), which keeps its old ring.
+          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp });
           if (delta < 0 && !(next.skill && skillLook(next.skill.id, next.skill.index))) hits.push(now.uid);
         }
       }
       const mendN = was && now && now.uid === was.uid ? (next.mends ?? []).find((row) => row.uid === now.uid)?.n ?? 0 : 0;
       if (mendN > 0 && was && now && now.hp - was.hp !== mendN) {
-        floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${mendN}`, heal: true, spot: where });
+        // The mend's own video is played by the loop over duel.mends; no second one here.
+        floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${mendN}`, heal: true, spot: where, hush: true });
       }
       const rain = /Mưa ma thuật hồi (\d+)/.exec(next.live);
       if (was && now && now.uid === was.uid && rain && harmShift(was) && !harmShift(now) && now.hp === was.hp) {
@@ -2922,7 +2925,13 @@ function PlayPage() {
         (beamCaster === "kiem-si-lua-thieng" || beamCaster === "mat-do-tan-pha" || beamCaster === "loi-nguyen-cua-rong" || beamCaster === "rong-ac-ma" || (beamCaster === "rong-phun-hoa-cau" && duel.pending.index === 1))) ||
       hellFace;
     const beamIndex = beam && duel.pending?.kind === "beam" ? duel.pending.index : -1;
-    const damageStart = beam && damageShot(beamCaster, beamIndex) && !firePrep && !beamKill && skillLook(beamCaster, beamIndex) !== "gun";
+    // Skill nước có video riêng kèm âm của video (chủ game 06/11): bỏ âm nổ cũ.
+    const waterIds = ["trai-tim-hai-long", "con-thinh-no-cua-hai-vuong"];
+    const waterCast =
+      waterIds.includes(beamCaster) ||
+      waterIds.includes(duel.skill?.id ?? "") ||
+      (prev.pending?.kind === "beam" && waterIds.includes(fieldMon(prev, prev.pending.caster)?.cardId ?? ""));
+    const damageStart = beam && damageShot(beamCaster, beamIndex) && !firePrep && !beamKill && !waterCast && skillLook(beamCaster, beamIndex) !== "gun";
     const beeBind = beam && beamCaster === "ong-khong-lo";
     const beeLand = prev.pending?.kind !== "beam" && /Ong khổng lồ gây tê liệt/.test(said);
     const wasHorn = Boolean(attackWas && !attackNow && fieldMon(prev, attackWas.attacker)?.horn);
@@ -3150,7 +3159,7 @@ function PlayPage() {
       if (!wasHorn) playCue("boltPrep");
       playCue("boltSmall", wasHorn ? 0 : 0.24);
     }
-    else if (!quiet && monsterKill && !whipNow && !whipBoom && !/Sấm lôi phá/.test(said) && !/Sấm sét tận thế/.test(said) && !/Roi điện/.test(said) && !/Roi sấm/.test(said) && !(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun") && !/cường hoá và tiêu diệt/.test(said) && !/quét cả sân/.test(said)) {
+    else if (!quiet && monsterKill && !waterCast && !whipNow && !whipBoom && !/Sấm lôi phá/.test(said) && !/Sấm sét tận thế/.test(said) && !/Roi điện/.test(said) && !/Roi sấm/.test(said) && !(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun") && !/cường hoá và tiêu diệt/.test(said) && !/quét cả sân/.test(said)) {
       if (!cameFromBeam) playCue("spellRise");
       playCue("spellBoom");
     } else if (!quiet && curseBoom) playCue("swordBoom");
@@ -3249,15 +3258,7 @@ function PlayPage() {
             if (index < 0) continue;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
             if (!spot) continue;
-            emitFx({
-              t: "ring",
-              act: "heal",
-              spot: side === viewerNow ? "self" : "target",
-              x: spot.x,
-              y: spot.y,
-              color: "#3ec6ff",
-              power: 1.05,
-            });
+            emitFx({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
           }
         }
       }
@@ -3266,7 +3267,10 @@ function PlayPage() {
         if (grouped && !item.heal && item.text !== "Hạ") continue;
         // The HP a landing blow hits gets its own flash when the lightning reaches it.
         if (orbLate.has(item.id)) continue;
-        if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
+        // Hồi máu, buff và tự tăng chỉ số dùng video hồi máu (chủ game 06/11); tăng máu tối đa giữ vòng cũ.
+        if (item.hush) continue;
+        if (item.heal && !item.grow) emitFx({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
+        else if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
         else {
           emitFx({
             t: "burst",
@@ -3356,7 +3360,29 @@ function PlayPage() {
         const multi = look === "tide-mid" || look === "tide-big";
         if (!(opening && multi)) {
           const rank = look === "tide-big" ? "big" : look === "tide-mid" ? "mid" : "small";
-          for (const hit of hits) emitFx({ t: "tide", rank, x: hit.x, y: hit.y });
+          if (rank === "big") {
+            // Sóng lớn: một con sóng mỗi hàng bị trúng, giữa hàng, đáy ở chân hàng (chủ game 04/11).
+            const rows = new Map<string, { x: number; y: number }>();
+            for (const hit of hits) {
+              let best: { key: string; x: number; y: number; d: number } | null = null;
+              for (const screen of [0, 1] as const) {
+                for (const back of [false, true]) {
+                  const boxes = SLOT_BOX[screen].filter((_, index) => backSlot(index) === back);
+                  const mid = boxes.reduce((sum, box) => sum + box.y + box.h / 2, 0) / boxes.length;
+                  const d = Math.abs(mid - hit.y);
+                  if (!best || d < best.d) {
+                    const left = Math.min(...boxes.map((box) => box.x));
+                    const right = Math.max(...boxes.map((box) => box.x + box.w));
+                    const foot = Math.max(...boxes.map((box) => box.y + box.h));
+                    best = { key: `${screen}-${back}`, x: (left + right) / 2, y: foot, d };
+                  }
+                }
+              }
+              if (best && best.d < 9) rows.set(best.key, { x: best.x, y: best.y });
+              else rows.set(`${hit.x}-${hit.y}`, { x: hit.x, y: hit.y });
+            }
+            for (const row of rows.values()) emitFx({ t: "tide", rank, x: row.x, y: row.y });
+          } else for (const hit of hits) emitFx({ t: "tide", rank, x: hit.x, y: hit.y });
         }
       } else if (look === "fire" || look === "gun") {
         const opening = look === "gun" ? openingGun : openingFire;
@@ -3420,8 +3446,14 @@ function PlayPage() {
         emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
         for (let i = 1; i < count; i += 1) playCue("spellBoom", i * 0.42);
       } else if (!started && (hits.length > 0 || finished || stamped || look === "spell")) {
-        for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
-        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+        const rageCast = duel.skill?.id === "con-thinh-no-cua-hai-vuong" || (prev.pending?.kind === "beam" && fieldMon(prev, prev.pending.caster)?.cardId === "con-thinh-no-cua-hai-vuong");
+        if (rageCast && hits.length > 0) {
+          // Cơn thịnh nộ của hải thần: video xoáy nước thay nổ đỏ (chủ game 06/11).
+          for (const hit of hits) emitFx({ t: "tide", rank: "rage", x: hit.x, y: hit.y });
+        } else {
+          for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
+          emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+        }
       }
     }
     const beamDrops = laserDrops(prev, duel, viewerNow);
@@ -8053,6 +8085,7 @@ function PlayPage() {
         <Spectacle />
         <ArenaFx />
         <FireBurst />
+        <HealBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />

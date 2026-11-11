@@ -5728,6 +5728,36 @@ button.watch-back {
   mix-blend-mode: screen;
   animation: tide-blast 0.85s ease-out forwards;
 }
+/* Đại hồng thuỷ huỷ diệt: video sóng (webm trong suốt theo độ sáng), đáy đặt ở chân hàng bị đánh, phủ cả hàng (chủ game 04/11). */
+/* Hồi máu: video vòng sáng + dấu cộng (chủ game 06/11), đáy ở điểm hồi, trong suốt theo độ sáng. */
+.heal-blast {
+  position: absolute;
+  z-index: 13;
+  width: 26%;
+  transform: translate(-50%, -62%);
+  pointer-events: none;
+  object-fit: contain;
+}
+/* Video nước (06/11): vòng sóng ở đáy khung nên đặt tâm vòng (~78% chiều cao) vào điểm trúng. */
+.tide-vid {
+  position: absolute;
+  z-index: 13;
+  transform: translate(-50%, -78%);
+  pointer-events: none;
+  object-fit: contain;
+}
+.tide-vid.is-small { width: 30%; }
+.tide-vid.is-mid { width: 34%; }
+/* Điểm phát lực (đốm trắng nóng nhất, đo ~63%,51% khung video lúc 1,1–1,5 giây) đặt đúng tâm lá. */
+.tide-vid.is-rage { width: 32%; transform: translate(-63%, -51%); }
+.tide-wave {
+  position: absolute;
+  z-index: 13;
+  width: 78%;
+  transform: translate(-50%, -86%);
+  pointer-events: none;
+  object-fit: contain;
+}
 .tide-blast.is-small {
   width: 13%;
 }

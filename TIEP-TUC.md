@@ -420,6 +420,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 ## Quy tắc làm việc với chủ game
 
 - GHI VIỆC SẮP LÀM NGẮN (chủ game 05/11, nhắc lại, TUYỆT ĐỐI TUÂN THEO): mỗi việc sắp làm viết DƯỚI 4 DÒNG, trong tin nhắn trả lời, file kế hoạch và file này. Không bảng dài, không liệt kê chi tiết. Dài hơn thì chủ game không đọc. Chi tiết kỹ thuật chỉ ghi ngắn vào TIEP-TUC.md sau khi làm xong.
+- VFX TỪ VIDEO (chủ game 06/11): mỗi lần cài hoặc sửa VFX, ĐỌC `.claude/skills/vfx/SKILL.md` trước. "Chèn hiệu ứng" không nói gì = thay CẢ hình lẫn âm thanh của video (tách âm gốc, bỏ âm cũ của hiệu ứng đó).
 - SAI MÔ HÌNH THÌ KHÔNG LÀM (chủ game 01/11): mỗi việc có mô hình + nỗ lực đã chốt với chủ game. Nếu mô hình/nỗ lực đang chạy khác chốt thì DỪNG, báo, chờ chủ game đổi, kể cả khi đã được cấp quyền sửa. Xong phần được duyệt thì DỪNG, không tự sang bước kế (01/11 đã tự sang T2d sau khi chỉ được duyệt bước 1 là sai).
 - BÁO KẾ HOẠCH NGẮN (chủ game 01/11, nhắc lại nhiều lần): giữa chừng chỉ nói HIỆN TRẠNG (vừa xong phần nào, hoặc lỗi là gì) rồi HƯỚNG LÀM, kèm MÔ HÌNH. Vài dòng, không dài. File kế hoạch cũng giữ ngắn.
 - LÀM THEO VIDEO (chủ game 01/11): xem kỹ cả video bằng số liệu và chụp cận, dựng game cạnh khung video để so; không làm theo trí nhớ. Chi tiết ở skill `hoc-tu-video`, `be-sang`.
@@ -465,6 +466,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - HỎI HẾT MỌI KHÂU THIẾT KẾ TRƯỚC KHI LÀM (chủ game 28/10, nhắc gắt sau vụ mũi tên ↑↓, tay đối thủ, xấp bài): trước khi làm một phần giao diện, liệt kê và hỏi TẤT CẢ những khâu thiết kế có thể phát sinh: vị trí chính xác (trên/ngoài lá, cạnh nhau hay chồng, chỗ nào trên bàn), nút cũ biến mất hay giữ, hình in sẵn trên bàn dùng hay vẽ thêm, số đặt ở đâu, kích thước, lúc nào hiện/ẩn, cách huỷ, áp cho những chỗ nào. Không tự chọn chỗ nào chưa được nói rõ, kể cả chỗ tưởng là nhỏ. Lần này Claude tự đặt mũi tên đè lên lá, mũi tên hai bên nút Triệu hồi, tay đối thủ cạnh xấp bài, mà chưa từng hỏi.
 - LỖI ĐÃ MẮC, TUYỆT ĐỐI KHÔNG LẶP LẠI (chủ game 29/10: "Những lỗi sai cập nhật vào file md, tuyệt đối không để sai nữa"):
   - Làm nhầm tab (chủ game 05/11, ô sao vàng): chủ game gửi ảnh trang TUẦN và bảo "cắt bỏ khung sao, chèn khung sao của tab ngày", Claude lại sửa tab NGÀY, rồi bị bắt trả về. Luật: ảnh của tab nào thì làm trên tab đó; trước khi sửa phải nói rõ "tôi sẽ sửa tab X, ảnh Y" và chờ chủ game xác nhận khi có thể nhầm; chủ game hỏi "đã làm chưa" thì kiểm trạng thái thật rồi trả lời, không tự sửa tiếp.
+  - Làm ngay khi chủ game chỉ bảo "tự sắp xếp, quyết hướng đề xuất" (06/11, 3 video nước): chủ game chỉ muốn Claude QUYẾT hướng và báo lại, không bảo gắn code. Luật: giao quyền chọn hướng thì ĐỀ XUẤT (bảng video → skill), báo lại câu trả lời, CHỜ "ok" rồi mới làm. Nhớ báo lại câu trả lời của lượt trước khi làm.
   - Không nêu đề xuất mô hình + nỗ lực ngay trong tin nhắn trả lời kế hoạch (chủ game nhắc 3 lần liên tiếp 30/10: "Vẫn không đề xuất mô hình, tôi không muốn việc này lặp lại nữa"). Luật: MỖI kế hoạch phải có dòng "Đề xuất mô hình và nỗ lực" (bảng: phần, mô hình, nỗ lực, lý do) ngay trong tin nhắn trả lời VÀ trong file này, kèm việc vừa làm (nếu có) và tóm tắt việc sắp làm. Viết file md để nhớ trước khi làm.
   - Sửa code khi chủ game chưa nói "ok" (đã mắc 3 lần ở dòng chảy đợt 2). Mọi chỉnh sửa, kể cả nhỏ, kể cả góp ý chủ game vừa gửi: ghi vào file này, đưa kế hoạch, hỏi, CHỜ "ok" rồi mới sửa.
   - Sửa LUẬT LÁ khi chủ game chỉ nhờ phần nhìn (30/10, Giáp cơ khí: tự đổi sang chờ trong chuỗi, so công lúc nổ). Luật dự án: code phép/skill đã xây không đụng; nhờ về icon/dòng thì chỉ sửa reaction-chain/reaction-line/play (hiển thị). Khi chưa chắc cơ chế lá là chạy ngay hay chờ, HỎI trước.
@@ -847,3 +849,27 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 - SỬA HOÁN ĐỔI ĐỨNG YÊN 06/11 (chủ game báo kèm ảnh; Sonnet 5.5 medium, nhánh `Sualoi`, CHƯA áp `main`): nguyên nhân = `confirmSwap` (duel.ts) khi chọn quái/lá thứ hai bị từ chối thì mất `locked` nên OK bị chặn mãi, giao diện không hiện lại. Sửa: giữ nguyên `swap` khi bị từ chối; `swap` cụt (không `locked`) bị bỏ ở `passResponseCore`; `swapToken` loại quái `abroad` (Hộp ma thuật); máy (brain.ts) chỉ nhắm quái phe mình, `finishSwap` dùng `swapRows` (xuất từ duel.ts), `tryMove` bỏ nước còn `swap` dở; play.tsx `swapFit` loại `abroad`, `swapBench` kiểm mana của Triệu hồi ác ma. round-rules thêm 3 bài (55/55; các bài mới FAIL trên code cũ). Bài "Hấp thụ ma pháp nuốt Phục kích" thỉnh thoảng FAIL ngẫu nhiên, cũng FAIL trên code cũ (không do sửa này, chưa tìm nguyên nhân). CHƯA chạy tự đấu (script rules/sim.mjs đã mất) và CHƯA chụp Chromium cảnh máy dùng Hoán đổi.
 - ĐÃ ÁP `main` 05/11 lần 5 (chủ game: "Áp lên main"): đẩy thẳng nhánh `ccr-4a6b9076-s9p3aq` lên `main` (fast-forward, không ép), gồm sửa nền menu hết nhảy hình.
 - NHIỆM VỤ NÚT + KHUNG TƯƠNG TÁC 06/11 (chủ game: bấm vào phải có cảm giác tương tác dù không có gì xảy ra; Sonnet 5.5 medium, nhánh `ccr-4a6b9076-s9p3aq`, CHƯA áp `main`): hàng Ngày/Tuần (`mission-card.tsx`, `missions.tsx`) lún 0,965 + sáng khi giữ (`:active`), chạm là vệt sáng quét `.mx-sweep` + tiếng `playUi("soft")` (hàng vàng chạm bất kỳ chỗ nào cũng nhận, nút sao `stopPropagation`), ô sao/ảnh thưởng nảy `mx-bump`; nút lùi và 2 tab lún + loé viền xanh (`:active`), hover sáng nhẹ trên máy có chuột, giảm chuyển động tắt hiệu ứng. Thử Chromium 412×915: giữ hàng đầu lún, vệt sáng chạy. tsc 7 lỗi cũ.
+
+## KẾ HOẠCH MÊ CUNG PVE (04/11/2026, chủ game lập; CHƯA LÀM, chờ trả lời câu hỏi)
+
+Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
+
+1. Bảo vật ngàn năm (mỗi món một cơ chế):
+   - Trò chơi: rút 2 lá được chọn trong bộ bài.
+   - Dây chuyền: có nút, nguy hiểm, chỉ đường, quái (chọn cấp), rương.
+   - Cân: giám định rương bằng số sao, tăng chỉ số nhận được.
+   - Trượng: dùng 1 lần, điều khiển quái tránh khỏi đường.
+   - Mắt: hút quái vào lá bài.
+   - Vòng cổ: xem trước tương lai.
+   - Chìa khoá: mở dungeon và rương.
+2. AI bố trí quái hợp lý; quái mạnh buộc người chơi phải nâng sức mạnh mới qua được.
+3. Trang bị: sâu, mất khi xong dungeon.
+4. Nghiên cứu "TS" online (chưa rõ TS là gì, hỏi lại).
+
+Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
+Đề xuất mô hình: chưa định (chờ chủ game chốt phần kế).
+
+## Nhánh VFX `ccr-ede12b11-gjcyr2` (04/11)
+
+- ĐẠI HỒNG THUỶ 1 HÀNG + SÓNG VIDEO ĐÃ LÀM 04/11 (Opus high, chủ game gửi video sóng `fb195226`; CHƯA áp `main`): duel.ts nhánh `all` của Trái tim hải long: chọn 1 quái, victims = quái sống cùng hàng (`backSlot`) với nó; sát thương, mana, Ngập lụt, chặn (quái hàng trước che nhánh vào hàng sau) giữ như cũ. icon-briefs "lên cả hàng của mục tiêu". Hình: `public/fx/dai-hong-thuy.webm` (video chủ game bỏ 0,36 giây đen đầu, 512 px, VP9 alpha = 3×max(r,g,b), 1,1 MB; trộn screen bị mất màu trên sân xanh nên bỏ), `WaterBurst` rank big phát video (`.tide-wave` rộng 78%, đáy ở chân hàng `translate(-50%,-86%)`), play.tsx gom điểm trúng theo hàng (`SLOT_BOX`) nên 1 sóng mỗi hàng. Đo video: 0,38 s sóng lên, đỉnh 1,5–2,4 s, tan hết 3,9 s. Số sát thương hiện ngay lúc sóng bắt đầu (sóng đổ ~1 giây sau), chưa canh khớp. Chữ mô tả lá vẫn "lên tất cả kẻ địch": chờ chủ game viết lại. Thử: round-rules 48/48 (thêm 1 bài), Chromium trận Test 390×844 và 740 (scratchpad `wave/mk.mjs`, `run.mjs`). Chưa thử Vs Máy (sóng ở sân đỏ phía trên), Safari không có alpha webm.
+- KẾ: hiệu ứng khói độc Thổi độc theo video `03aa4a8f` (Sonnet medium, chủ game chốt làm sau).

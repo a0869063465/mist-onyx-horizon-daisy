@@ -54,6 +54,11 @@ function font(): Promise<unknown> {
 /** Effect videos, kept as named so the players can ask fxUrl for the same string. */
 export const FX_VIDEOS = [
   "/fx/lua-no.mp4?v=2",
+  "/fx/dai-hong-thuy.webm?v=1",
+  "/fx/hoi-mau.webm?v=1",
+  "/fx/thuy-tru.webm?v=1",
+  "/fx/thuy-no.webm?v=1",
+  "/fx/thuy-xoay.webm?v=1",
   "/fx/laser.mp4?v=2",
   "/fx/set-dien.mp4?v=1",
   "/fx/set-to.mp4?v=1",

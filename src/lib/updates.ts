@@ -981,6 +981,11 @@ export const PENDING_NOTES: string[] = [
   "Bấm Tấn công hoặc skill: mục tiêu gần nhất sáng neon, trên lá quái hiện 4 mũi tên để dời neon sang mục tiêu khác và nút OK ở giữa để chọn. Màu theo icon (Tấn công cam). Bấm thẳng hay ấn rê vẫn dùng được.",
   "Hoán đổi: chọn quái hoặc lá dự bị không hợp lệ không còn làm trận đứng yên; máy chỉ nhắm quái của mình; quái mượn từ Hộp ma thuật không chọn để hoán đổi được.",
   "Nhiệm vụ: nút và khung bấm vào có phản hồi (lún, sáng, tiếng bấm).",
+  "Đại hồng thuỷ huỷ diệt chỉ đánh cả hàng của quái được chọn, không còn đánh mọi kẻ địch.",
+  "Đại hồng thuỷ huỷ diệt có hiệu ứng sóng lớn dâng lên phủ cả hàng bị đánh.",
+  "Hiệu ứng hồi máu, buff và tự tăng chỉ số đổi sang video vòng sáng xanh lục. Tăng máu tối đa giữ hiệu ứng cũ.",
+  "Triều lên có cột nước rơi, Con nước lớn tàn phá có nổ nước, Cơn thịnh nộ của hải thần có xoáy nước thay hiệu ứng cũ.",
+  "Hiệu ứng nước (Triều lên, Con nước lớn tàn phá, Đại hồng thuỷ huỷ diệt, Cơn thịnh nộ của hải thần) và hồi máu dùng đúng âm thanh của video, bỏ tiếng nổ cũ.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -1121,6 +1121,26 @@ test("Máy không chọn nước Hoán đổi hỏng", () => {
   if (act) assert.ok(!B.runAct(swung, act).swap, `nước ${JSON.stringify(act)} không để swap dở`);
 });
 
+test("Đại hồng thuỷ huỷ diệt: chọn 1 quái, chỉ cả hàng của nó dính (chủ game 04/11)", () => {
+  const tough = { hp: 40, maxHp: 40, mdef: 0 };
+  for (const [aim, hitRow] of [[3, [3, 4, 5]], [1, [0, 1, 2]]]) {
+    let s = board(
+      { 0: ["trai-tim-hai-long"] },
+      { 0: ["may-chem", tough], 1: ["may-chem", tough], 2: ["may-chem", tough], 3: ["may-chem", tough], 4: ["may-chem", tough], 5: ["may-chem", tough] },
+    );
+    s = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 5, flask: 0, stars: 4 } : p)) };
+    const cast = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, aim), 2);
+    let done = cast;
+    for (let i = 0; i < 6 && (done.pending || done.hold); i += 1) done = D.passResponse(done);
+    for (let slot = 0; slot < 6; slot += 1) {
+      const mon = at(done, 1, slot);
+      assert.ok(mon, `ô ${slot} còn quái | ${done.live}`);
+      if (hitRow.includes(slot)) assert.ok(mon.hp < 40, `ô ${slot} phải dính | ${done.live}`);
+      else assert.equal(mon.hp, 40, `ô ${slot} không được dính | ${done.live}`);
+    }
+  }
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
