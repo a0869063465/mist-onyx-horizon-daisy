@@ -142,10 +142,10 @@ function Home() {
             <span className="lobby-ring" />
           </button>
 
-          <img className="lobby-coin-star" src="/ui/home/star-gold.webp" alt="" draggable={false} style={{ left: h(4), top: h(-110), width: h(56) }} />
-          <b className="lobby-coin-num" style={{ left: h(76), top: h(-107), fontSize: h(45) }} aria-label={tr("Số sao")}>{stars}</b>
-          <img className="lobby-coin-star" src="/ui/home/star-rainbow.webp" alt="" draggable={false} style={{ left: h(208), top: h(-110), width: h(56) }} />
-          <b className="lobby-coin-num" style={{ left: h(280), top: h(-107), fontSize: h(45) }} title={tr("Sao hiếm — sắp có")}>0</b>
+          <img className="lobby-coin-star" src="/ui/home/star-gold.webp" alt="" draggable={false} style={{ left: h(4), top: h(-124), width: h(56) }} />
+          <b className="lobby-coin-num" style={{ left: h(76), top: h(-121), fontSize: h(45) }} aria-label={tr("Số sao")}>{stars}</b>
+          <img className="lobby-coin-star" src="/ui/home/star-rainbow.webp" alt="" draggable={false} style={{ left: h(208), top: h(-124), width: h(56) }} />
+          <b className="lobby-coin-num" style={{ left: h(280), top: h(-121), fontSize: h(45) }} title={tr("Sao hiếm — sắp có")}>0</b>
 
           <button type="button" className="lobby-profile" onClick={() => { playUi("select"); setMine(playerId()); }} aria-label={tr("Hồ sơ")}>
             <span className="lobby-name" style={{ top: h(4), right: h(172), fontSize: h(56) }}>{tr("Người chơi")}</span>
