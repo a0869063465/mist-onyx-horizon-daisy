@@ -7,6 +7,12 @@ import { missionsReady, onMissions } from "@/lib/mission-store";
 import { usePulse } from "@/lib/friend-state";
 import { useEffect, useState } from "react";
 import "@/home-lobby.css";
+import { useStars } from "@/lib/shop";
+import { artSrc } from "@/lib/catalog";
+import { coverOf, loadBook } from "@/lib/deck-book";
+import { START_RANK, rankLabel } from "@/lib/rank";
+import { playerId } from "@/lib/friend-state";
+import { FriendProfile } from "@/components/friend-profile";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ name: "theme-color", content: "#0b1b2c" }] }),
@@ -17,6 +23,14 @@ export const Route = createFileRoute("/")({
 // percentages of the same 9:20 stage, independent of the video dimensions.
 function Home() {
   useLang();
+  const stars = useStars();
+  const [mine, setMine] = useState<string | null>(null);
+  const [face, setFace] = useState<string | null>(null);
+  useEffect(() => {
+    const book = loadBook();
+    const entry = book.decks.find(row => row.n === book.active) ?? book.decks[0];
+    setFace(entry ? coverOf(entry) : null);
+  }, []);
   const mails = useMail();
   const friends = usePulse();
   const [quests, setQuests] = useState(false);
@@ -46,6 +60,16 @@ function Home() {
               : <button key={key} type="button" className={className} disabled aria-label={`${tr(label)} — ${tr("Sắp có")}`}>{content}</button>;
           })}
         </nav>
+        <div className="lobby-account">
+          <div className="lobby-currencies" aria-label={tr("Số sao")}>
+            <span><i className="lobby-star" aria-hidden="true">★</i><b>{stars}</b></span>
+            <span title={tr("Sao cầu vồng — sắp có")}><i className="lobby-star is-rainbow" aria-hidden="true">★</i><b>—</b></span>
+          </div>
+          <button type="button" className="lobby-profile" onClick={() => { playUi("select"); setMine(playerId()); }} aria-label={tr("Hồ sơ")}>
+            <span><b>{tr("Người chơi")}</b><small>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</small></span>
+            <i className="lobby-avatar">{face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}</i>
+          </button>
+        </div>
         <Link to="/modes" className="lobby-mode" onPointerDown={() => playUi("select")} aria-label={tr("Chọn chế độ chơi")}>
           <span className="lobby-mode-marker" aria-hidden="true" />
           <b>{tr("Đánh thường")}</b>
@@ -63,6 +87,7 @@ function Home() {
           <Link to="/collection" onPointerDown={() => playUi("select")}><BookOpen aria-hidden="true" /><span>{tr("Bộ sưu tập")}</span></Link>
         </nav>
       </div>
+      {mine ? <FriendProfile friend={mine} onClose={() => setMine(null)} /> : null}
     </main>
   );
 }
