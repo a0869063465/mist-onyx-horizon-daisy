@@ -991,6 +991,7 @@ export const PENDING_NOTES: string[] = [
   "Màn hình chính dùng video nền lặp, sáu nút hai bên và cụm chọn chế độ, PvE/PvP, điều hướng dưới theo bố cục fantasy 9:20; bỏ thanh thông tin phía trên.",
   "Menu chính: thêm sao vàng bên trái, vị trí sao cầu vồng chờ dữ liệu và hồ sơ bên phải trên thanh Đánh thường; avatar tròn, bấm mở hồ sơ.",
   "Menu chính: bấm thanh chế độ mở bảng 2×2, quân mã cho Đánh với máy, sét cho Đánh thường, cúp Xếp hạng và kiếm chéo Tuỳ chọn; nền phía sau tối và mờ, lưu chế độ đã chọn. Xếp hạng sắp có.",
+  "Menu chính: tăng cỡ avatar tròn, tên, rank và sao theo ảnh mẫu; bỏ icon trước rank và kéo nền xanh đen lên sau hàng hồ sơ để chữ rõ hơn, cố định màu tên vàng và rank xanh lá.",
 ];
 
 function remarkOf(notes: string[]) {
