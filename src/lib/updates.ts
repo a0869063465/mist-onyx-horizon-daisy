@@ -990,6 +990,7 @@ export const PENDING_NOTES: string[] = [
   "Hoa ăn thịt người còn 2 thủ, thay vì 3. Máy chém còn 2 máu, thay vì 3. Quái thú thiên sứ còn 4 máu, thay vì 6.",
   "Màn hình chính dùng video nền lặp, sáu nút hai bên và cụm chọn chế độ, PvE/PvP, điều hướng dưới theo bố cục fantasy 9:20; bỏ thanh thông tin phía trên.",
   "Menu chính: thêm sao vàng bên trái, vị trí sao cầu vồng chờ dữ liệu và hồ sơ bên phải trên thanh Đánh thường; avatar tròn, bấm mở hồ sơ.",
+  "Menu chính: bấm thanh chế độ mở bảng 2×2, quân mã cho Đánh với máy, sét cho Đánh thường, cúp Xếp hạng và kiếm chéo Tuỳ chọn; nền phía sau tối và mờ, lưu chế độ đã chọn. Xếp hạng sắp có.",
 ];
 
 function remarkOf(notes: string[]) {
