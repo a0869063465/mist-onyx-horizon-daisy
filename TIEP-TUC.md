@@ -2,6 +2,11 @@
 
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
+## Việc chưa làm sau lần gộp 11/11 (chủ game bảo ghi lại để phiên khác làm)
+1. Việc vừa làm: gộp vào `main` 4 nhánh dở + 4 keyword mới (Cầu mana, Linh hoạt, Cường hoá 1, Cường hoá vĩnh viễn). `tsc` 7 lỗi cũ.
+2. Hiện trạng: `round-rules` lúc 63/64 lúc 64/64: bài "Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả" chập chờn (ghi nhận từ trước, chưa xác định có do lần gộp này không). Chưa chụp bằng mắt 4 keyword mới.
+3. Việc sắp làm (chưa làm, phiên khác): (a) tìm nguyên nhân bài kiểm tra chập chờn (Opus 5.5 high); (b) gộp nhánh `ccr-902b4e60-v4q179` (sửa lỗi Hỗ công cộng vào skill + lá Tê giáp có cánh + luật trong `AGENTS.project.md`; chủ game đã duyệt, cần xem trước khi gộp; Sonnet 5.5 medium); (c) nhánh `thietke`/`vfx` (6 icon menu chưa dùng) và `quai-moi` (11 ảnh minh hoạ lá chưa có lá): giữ nguyên trên GitHub, chờ chủ game quyết; (d) nhánh `ccr-65a3d75a` (bản dọn gọn ghi chú) không gộp. Không xoá nhánh nào.
+
 ## Luật mới chủ game 11/11, CHƯA LÀM (chủ game: để phiên mới tạo từ main làm tiếp)
 
 Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
