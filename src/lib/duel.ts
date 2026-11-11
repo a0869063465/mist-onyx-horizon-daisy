@@ -3409,6 +3409,9 @@ export function strikeAtk(mon: FieldMon): number {
 }
 
 function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
+  // Vãy phá giáp: trừ thủ của quái địch TRƯỚC rồi mới tính sát thương (chủ game 11/11, luật 0.2).
+  if (attacker.cardId === "khung-long-vay-kiem") defender = { ...defender, def: defender.def - skillLoss(attacker.cardId, "def", 2) };
+  if (defender.cardId === "khung-long-vay-kiem") attacker = { ...attacker, def: attacker.def - skillLoss(defender.cardId, "def", 2) };
   let atk = strikeAtk(attacker) + rockA;
   let counter = liveAtk(defender) + rockB;
   // Hàng sau đánh thì không bị phản đòn; bị đánh thì cũng không phản đòn (chủ game 28/10, C2).
@@ -3446,7 +3449,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     ...struckBy.mon,
     charge: attacker.charge + (attackerDodged ? 1 : 0),
     dim: true,
-    def: defender.cardId === "khung-long-vay-kiem" ? attacker.def - skillLoss(defender.cardId, "def", 2) : struckBy.mon.def,
+    def: struckBy.mon.def,
     mdef: struckBy.mon.mdef,
   }));
   const hornRaw = bolt ? liveAtk(attacker) + plate.p + plate.s : attacker.horn === "plus" ? Math.min(8, atk) : attacker.horn === "splash" ? Math.min(4, atk) : atk;
@@ -3540,7 +3543,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const nextDefender = {
     ...defenderBody,
     charge: defender.charge + (defenderDodged ? 1 : 0),
-    def: attacker.cardId === "khung-long-vay-kiem" ? defender.def - skillLoss(attacker.cardId, "def", 2) : defenderBody.def,
+    def: defenderBody.def,
     mdef: defenderBody.mdef,
     dim: true,
   };
@@ -8414,14 +8417,13 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
       const real = shuntUid(them.field, target.uid) ?? target.uid;
       const loss = skillLoss(mon.cardId, "mdef", 1);
       const amount = skillFigure(mon.cardId, "dmg", 3) + (mon.skillUp ?? 0);
-      const foeField = them.field.map((unit) => {
-        if (unit?.uid !== real) return unit;
-        return { ...damageSpell(unit, amount, them.field, mon), mdef: unit.mdef - loss };
-      });
+      // Giảm thủ phép TRƯỚC rồi mới gây sát thương (chủ game 11/11, luật 0.2).
+      const shredded = them.field.map((unit) => (unit?.uid === real ? { ...unit, mdef: unit.mdef - loss } : unit));
+      const foeField = shredded.map((unit) => (unit?.uid === real ? damageSpell(unit, amount, shredded, mon) : unit));
       const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
       let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
       next = patch(next, foe, settleCocoon(dropDead({ ...them, field: foeField })));
-      return note(next, `${castName(mon.cardId, skillIndex)} giảm ${loss} thủ phép và gây ${spellPhrase([them.field.find((unit) => unit?.uid === real)], amount, them.field, mon)}`, "spell");
+      return note(next, `${castName(mon.cardId, skillIndex)} giảm ${loss} thủ phép và gây ${spellPhrase([shredded.find((unit) => unit?.uid === real)], amount, shredded, mon)}`, "spell");
     }
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
     const them = state.players[foe];

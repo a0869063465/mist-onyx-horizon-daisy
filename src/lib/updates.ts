@@ -987,6 +987,8 @@ export const PENDING_NOTES: string[] = [
   "Triều lên có cột nước rơi, Con nước lớn tàn phá có nổ nước, Cơn thịnh nộ của hải thần có xoáy nước thay hiệu ứng cũ.",
   "Hiệu ứng nước (Triều lên, Con nước lớn tàn phá, Đại hồng thuỷ huỷ diệt, Cơn thịnh nộ của hải thần) và hồi máu dùng đúng âm thanh của video, bỏ tiếng nổ cũ.",
   "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
+  "Hoả cầu của Rồng canh pháo đài giảm thủ phép trước rồi mới gây sát thương. Vãy phá giáp của Khủng long vãy kiếm giảm thủ trước rồi mới giao tranh.",
+  "Neon đang sáng mục tiêu mà quên bấm OK, bấm chuyển lượt thì đòn tự chọn mục tiêu đó và xác nhận, không bị huỷ.",
 ];
 
 function remarkOf(notes: string[]) {

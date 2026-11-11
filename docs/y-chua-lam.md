@@ -9,9 +9,9 @@ Nguồn: các nhánh `ccr-7fdbb403` (06–07/11), `ccr-55229734` và `ccr-601c58
 
 | # | Anh nói | Còn thiếu |
 |---|---|---|
-| 0.1 | Máu về lại 20 | Máu người chơi hay máu quái? Hiện đang là bao nhiêu? |
-| 0.2 | Skill và đòn đánh: trừ thủ và thủ phép trước rồi mới áp sát thương vào | Hiện thứ tự đang thế nào, áp cho cả sát thương vật lý, phép và hỗn hợp? |
-| 0.3 | Chọn qua lại neon đúng mục tiêu mà quên bấm OK, rồi bấm chuyển lượt thì tự OK, không huỷ hàng chờ | Rõ. Là sửa lỗi. |
+| 0.1 | Máu về lại 20 | Rõ: máu người chơi, hiện 16 → 20. Chưa làm. |
+| 0.2 | Skill và đòn đánh: trừ thủ và thủ phép trước rồi mới áp sát thương vào | ĐÃ LÀM 11/11: Hoả cầu, Vãy phá giáp. |
+| 0.3 | Chọn qua lại neon đúng mục tiêu mà quên bấm OK, rồi bấm chuyển lượt thì tự OK, không huỷ hàng chờ | ĐÃ LÀM 11/11. Thiếu bước thì huỷ. |
 | 0.4 | Hoa ăn thịt người: thủ còn 2 | Rõ. |
 | 0.5 | Máy chém: máu còn 2 | Rõ. |
 | 0.6 | Quái thú thiên sứ: máu còn 4 | Rõ. |

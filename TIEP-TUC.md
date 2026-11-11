@@ -7,7 +7,12 @@
 2. Hiện trạng: `round-rules` lúc 63/64 lúc 64/64: bài "Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả" chập chờn (ghi nhận từ trước, chưa xác định có do lần gộp này không). Chưa chụp bằng mắt 4 keyword mới.
 3. Việc sắp làm (chưa làm, phiên khác): (a) tìm nguyên nhân bài kiểm tra chập chờn (Opus 5.5 high); (b) gộp nhánh `ccr-902b4e60-v4q179` (sửa lỗi Hỗ công cộng vào skill + lá Tê giáp có cánh + luật trong `AGENTS.project.md`; chủ game đã duyệt, cần xem trước khi gộp; Sonnet 5.5 medium); (c) nhánh `thietke`/`vfx` (6 icon menu chưa dùng) và `quai-moi` (11 ảnh minh hoạ lá chưa có lá): giữ nguyên trên GitHub, chờ chủ game quyết; (d) nhánh `ccr-65a3d75a` (bản dọn gọn ghi chú) không gộp. Không xoá nhánh nào.
 
-## Luật mới chủ game 11/11, CHƯA LÀM (chủ game: để phiên mới tạo từ main làm tiếp)
+## Luật mới 11/11: 0.2 + 0.3 ĐÃ LÀM (Opus 5.5 high, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
+1. Việc vừa làm: 0.2 Hoả cầu (Rồng canh pháo đài) và Vãy phá giáp (Khủng long vãy kiếm) trừ thủ phép/thủ TRƯỚC rồi mới gây sát thương (duel.ts `strikePair` đầu hàm, nhánh Hoả cầu); 0.3 neon còn sáng mục tiêu mà bấm chuyển lượt = bắn mục tiêu đó rồi xác nhận hàng chờ (play.tsx `autoOk`); thiếu bước (skill 2 bước, bảng hỏi thêm) thì huỷ rồi chuyển. round-rules 66/66 (+2 bài, bài Phục kích chập chờn cũ), tsc 7 lỗi cũ, thử Chromium trận Test: Khổng lồ 1 mắt đánh Máy chém, bấm chuyển lượt → đòn sang đối thủ.
+2. Hiện trạng: không ảnh/video mới. Chỉ áp cho neon của Tấn công/skill (phép kéo/Use chưa có neon kiểu này).
+3. Việc sắp làm: 0.1 máu người chơi 16 → 20 (`LIFE` duel.ts), 0.4 Hoa ăn thịt người thủ 2, 0.5 Máy chém máu 2, 0.6 Quái thú thiên sứ máu 4: Sonnet 5.5 low, chờ chủ game hạ mô hình.
+
+## Luật mới chủ game 11/11 (bản gốc trước khi làm)
 
 Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
 Hiện trạng: chưa nhận ảnh/video mới. Chưa làm gì ở 6 điểm dưới; HỎI LẠI từng điểm chưa rõ trước khi sửa (nhất là điểm 1).

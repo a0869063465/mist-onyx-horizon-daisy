@@ -1143,6 +1143,22 @@ test("Đại hồng thuỷ huỷ diệt: chọn 1 quái, chỉ cả hàng của 
   }
 });
 
+test("luật 0.2: Vãy phá giáp trừ 2 thủ TRƯỚC rồi mới tính sát thương", () => {
+  let s = board({ 0: ["khung-long-vay-kiem", { atk: 4, def: 0, hp: 10, maxHp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 0, def: 3, mdef: 0, hp: 10, maxHp: 10 }] });
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(done, 1, 0).def, 1, done.live);
+  assert.equal(at(done, 1, 0).hp, 7, `4 công vào thủ 3 - 2 = 1 → 3 sát thương | ${done.live}`);
+});
+
+test("luật 0.2: Hoả cầu giảm 1 thủ phép TRƯỚC rồi mới gây sát thương phép", () => {
+  let s = board({ 0: ["rong-phun-hoa-cau"] }, { 0: ["khong-lo-mot-mat", { atk: 0, def: 0, mdef: 2, hp: 10, maxHp: 10 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3 })) };
+  let next = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 1);
+  for (let i = 0; i < 3 && next.step === "respond"; i++) next = D.passResponse(next);
+  assert.equal(at(next, 1, 0).mdef, 1, next.live);
+  assert.equal(at(next, 1, 0).hp, 8, `3 phép vào thủ phép 2 - 1 = 1 → 2 sát thương | ${next.live}`);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

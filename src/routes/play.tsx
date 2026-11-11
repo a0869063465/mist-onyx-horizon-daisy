@@ -1844,6 +1844,8 @@ function PlayPage() {
   const aimSeen = useRef<Aim | null>(null);
   // The tap a slide ends in, kept fresh each render so it sees the button's aim (ấn giữ rồi trượt).
   const slideFire = useRef<(key: string) => void>(() => undefined);
+  /** Luật 0.3: chuyển lượt lúc neon còn sáng đã bắn mục tiêu đó; lần dựng kế tiếp xác nhận hàng chờ (hoặc huỷ nếu còn thiếu bước). */
+  const autoOk = useRef(false);
   const snapPool = useRef<{ grab: Grab; keys: Set<string> } | null>(null);
   /** Chọn mục tiêu bằng đèn pin (chủ game 01/11): the lamp at the touch-down point of an attack drag or a target press. */
   const torch = useRef<TorchState | null>(null);
@@ -3711,6 +3713,20 @@ function PlayPage() {
       return null;
     });
   }, [duel]);
+  // Luật 0.3 (chủ game 11/11): bấm chuyển lượt khi neon còn sáng mục tiêu = mục tiêu đó được chọn, hành động vào hàng chờ
+  // và được xác nhận luôn (sang đối thủ như thường). Còn thiếu bước (skill 2 bước, bảng hỏi thêm) thì huỷ rồi chuyển lượt.
+  useEffect(() => {
+    if (!autoOk.current || !duel) return;
+    autoOk.current = false;
+    if (queue) {
+      confirmQueue();
+      return;
+    }
+    if (aim || vowAsk || hornAsk || knightAsk || chronoAsk || digPick) {
+      cancelPick();
+      if (duel.step === "main" && duel.turn === viewer && !duel.hold) apply(endTurn(duel));
+    }
+  }, [queue, aim, duel, aimLit]);
 
   if (duel) turnClock.current = duel.clock ?? 1;
 
@@ -7646,6 +7662,16 @@ function PlayPage() {
               aria-label={ticking ? "OK" : tr("Hết lượt")}
               onClick={() => {
                 if (markId) return;
+                // Luật 0.3: neon còn sáng mục tiêu mà quên OK thì chọn luôn mục tiêu đó rồi xác nhận, không huỷ.
+                if (aimLit && (aim?.kind === "attack" || aim?.kind === "skill")) {
+                  const key = aimLit;
+                  setAimLit(null);
+                  setPadBox(null);
+                  holdNotice("");
+                  autoOk.current = true;
+                  slideFire.current(key);
+                  return;
+                }
                 if (queue) confirmQueue();
                 else if (duel.hold?.stage) land(confirmStage(duel));
                 else if (responding) land(passResponse(duel));
