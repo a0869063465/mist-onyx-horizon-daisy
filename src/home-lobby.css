@@ -17,10 +17,12 @@
   width: var(--stage-w);
   aspect-ratio: 826 / 1905;
   overflow: hidden;
+  background: #081a29;
   color: #f4f2ed;
   font-family: "Outfit", "Be Vietnam Pro", system-ui, sans-serif;
 }
-.lobby-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: -2; }
+/* Video nền 2:3 (11/11): đặt sát đỉnh sân khấu, cao ~65%, đáy mờ dần vào nền tối nên không lộ mép cắt. */
+.lobby-background { position: absolute; left: 0; top: 0; width: 100%; height: auto; aspect-ratio: 720 / 1072; object-fit: cover; z-index: -2; -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%); }
 /* Vân xanh đen có sẵn: giữ để hồ sơ và sao đọc rõ. */
 .lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 27%, rgb(8 26 41 / .96) 32%, rgb(8 26 41 / .86) 36%, rgb(8 26 41 / .62) 40%, rgb(8 26 41 / .24) 45%, transparent 49%); }
 
