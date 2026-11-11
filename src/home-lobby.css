@@ -1,11 +1,9 @@
-/* Approved reference anchors: x/702 and y/1536; shared 9:20 coordinate plane. */
+/* Menu chính: bố cục dựng lại từ ảnh nguyên liệu (H3/H4/H5/H6/H7 chủ game 11/11).
+   Toạ độ tính theo ảnh H3 826 × 1905; mọi phần tử đặt bằng % của sân khấu. */
 .lobby {
+  --stage-w: min(100vw, calc(100dvh * 826 / 1905));
   --lobby-navy: #0b1b2c;
-  --lobby-gold: #e8c98a;
-  --lobby-ink: #f4f2ed;
   --lobby-cyan: #39daee;
-  --lobby-player-name: #edcc88;
-  --lobby-player-rank: #87d958;
   position: relative;
   display: grid;
   place-items: center;
@@ -16,96 +14,75 @@
   position: relative;
   isolation: isolate;
   container-type: inline-size;
-  width: min(100vw, 45dvh);
-  aspect-ratio: 9 / 20;
+  width: var(--stage-w);
+  aspect-ratio: 826 / 1905;
   overflow: hidden;
-  color: var(--lobby-ink);
+  color: #f4f2ed;
+  font-family: "Outfit", "Be Vietnam Pro", system-ui, sans-serif;
 }
 .lobby-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: -2; }
+/* Vân xanh đen có sẵn: giữ để hồ sơ và sao đọc rõ. */
 .lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 27%, rgb(8 26 41 / .96) 32%, rgb(8 26 41 / .86) 36%, rgb(8 26 41 / .62) 40%, rgb(8 26 41 / .24) 45%, transparent 49%); }
-.lobby-shortcuts { position: absolute; inset: 0; pointer-events: none; }
-.lobby-shortcut {
-  position: absolute;
-  left: 3.13%;
-  top: 35.68%;
-  width: 14.25%;
-  height: 6.51%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.15cqw;
-  border: 1px solid var(--lobby-gold);
-  border-radius: 2.8cqw;
-  background: linear-gradient(145deg, rgb(22 40 54 / .96), rgb(8 24 37 / .96));
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06), 0 1cqw 1.4cqw rgb(0 0 0 / .32);
-  color: var(--lobby-gold);
-  text-decoration: none;
-  pointer-events: auto;
-  padding: 0;
-}
-.lobby-shortcut svg { width: 6.2cqw; height: 6.2cqw; stroke-width: 1.7; }
-.lobby-shortcut span { color: var(--lobby-ink); font-size: 2.3cqw; font-weight: 600; line-height: 1.2; white-space: nowrap; }
-.lobby-shortcut-1, .lobby-shortcut-4 { top: 44.08%; }
-.lobby-shortcut-2, .lobby-shortcut-5 { top: 52.47%; }
-.lobby-shortcut-3, .lobby-shortcut-4, .lobby-shortcut-5 { left: 83.33%; }
-.lobby-dot { position: absolute; right: 6%; top: 3%; width: 2.8cqw; aspect-ratio: 1; border-radius: 50%; background: #ef4046; border: 1px solid #8f242d; }
-.lobby-mode { position: absolute; left: 7.83%; top: 69.34%; width: 84.05%; height: 5.27%; display: flex; align-items: center; gap: 2.7cqw; padding: 0 4cqw; overflow: hidden; border: 1px solid var(--lobby-gold); border-radius: 1.7cqw; background: rgb(8 27 40 / .94); color: var(--lobby-gold); text-decoration: none; }
-.lobby-mode-marker { flex: 0 0 .8cqw; height: 45%; border-radius: 1cqw; background: var(--lobby-cyan); }
-.lobby-mode b { z-index: 1; font-size: 4cqw; line-height: 1; white-space: nowrap; }
-.lobby-mode img { position: absolute; right: 8%; top: 0; width: 44%; height: 100%; object-fit: cover; mask-image: linear-gradient(to right, transparent, black 20%, black 85%, transparent); }
-.lobby-mode > svg { margin-left: auto; width: 5cqw; height: 5cqw; z-index: 1; }
-.lobby-play { position: absolute; left: 4.13%; top: 76.24%; width: 91.88%; height: 12.63%; display: grid; grid-template-columns: 307fr 319fr; gap: 2.7cqw; }
-.lobby-play-card { display: block; min-width: 0; padding: 0; border: 0; background: transparent; text-decoration: none; }
-.lobby-play-card img { display: block; width: 100%; height: 100%; object-fit: fill; }
-.lobby-navigation { position: absolute; inset: 91.8% 0 0; display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; padding-top: 2.6cqw; border-top: 1px solid rgb(232 201 138 / .65); border-radius: 4cqw 4cqw 0 0; background: linear-gradient(180deg, rgb(12 32 49 / .96), #091725); }
-.lobby-navigation > * { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.3cqw; padding: 0; border: 0; background: none; color: var(--lobby-gold); text-decoration: none; }
-.lobby-navigation > * + *::before { content: ""; position: absolute; left: 0; top: 15%; height: 80%; width: 1px; background: rgb(232 201 138 / .26); }
-.lobby-navigation svg { width: 6.5cqw; height: 6.5cqw; stroke-width: 1.7; }
-.lobby-navigation span { font-size: 2.7cqw; font-weight: 600; line-height: 1.2; color: var(--lobby-ink); white-space: nowrap; }
-.lobby a:focus-visible, .lobby button:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 3px; }
-.lobby a:active { filter: brightness(1.15); }
-.lobby button:disabled { cursor: default; opacity: 1; }
 
-/* Player row directly above the mode selector, measured against the supplied reference. */
-.lobby-account { position:absolute; left:6.9%; right:3.8%; bottom:33.7%; height:6.5%; display:flex; align-items:flex-end; justify-content:space-between; gap:2cqw; }
-.lobby-currencies { display:flex; align-items:center; gap:3.8cqw; padding-bottom:1cqw; }
-.lobby-currencies > span { display:flex; align-items:center; gap:1.5cqw; }
-.lobby-currencies b { font-size:3.25cqw; font-weight:650; color:#fff; }
-.lobby-star { font-style:normal; font-size:4.65cqw; line-height:1; color:#ffd44d; filter:drop-shadow(0 1px 2px #694500); }
-.lobby-star.is-rainbow { background:conic-gradient(#58e8ff,#7b72ff,#ef6eea,#ffe75b,#55eeb1,#58e8ff); background-clip:text; -webkit-background-clip:text; color:transparent; }
-.lobby-profile { display:flex; align-items:center; gap:1.8cqw; border:0; padding:0; background:transparent; text-align:left; color:var(--lobby-player-name); cursor:pointer; font-family:inherit; text-shadow:0 1px 2px #04101b; }
-.lobby-profile > span { display:flex; flex-direction:column; gap:1cqw; }
-.lobby-profile b { font-size:4.5cqw; line-height:1.1; font-weight:750; color:var(--lobby-player-name); white-space:nowrap; }
-.lobby-profile small { display:flex; align-items:center; gap:1.25cqw; font-size:3.85cqw; line-height:1.15; font-weight:750; color:var(--lobby-player-rank); white-space:nowrap; }
-.lobby-avatar { display:block; flex:none; width:13cqw; height:13cqw; border:2px solid var(--lobby-gold); border-radius:50%; overflow:hidden; background:#102336; box-shadow:0 0 1cqw #081321; }
-.lobby-avatar img { width:100%; height:100%; object-fit:cover; object-position:center 25%; }
+/* Nút ảnh: mọi nút đều có hiệu ứng bấm (lún + sáng + vòng sáng), nút khoá thì rung. */
+.lobby-btn { position: absolute; display: block; padding: 0; border: 0; background: transparent; color: inherit; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-btn > img { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; transition: filter .15s; will-change: transform; }
+.lobby-btn:active > img { transform: scale(.94); filter: brightness(1.3); }
+.lobby-ring { position: absolute; inset: 6%; border-radius: 20%; border: 2px solid #ffe3a0; box-shadow: 0 0 2.4cqw #ffc760, inset 0 0 2cqw #ffc76088; opacity: 0; pointer-events: none; }
+.lobby-btn.is-locked .lobby-ring { border-color: #8fb4d6; box-shadow: 0 0 2cqw #5f8fbb; }
+.lobby-btn.is-wide .lobby-ring { border-radius: 4cqw; }
+.lobby-btn:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 2px; border-radius: 12%; }
+.lobby-dot { position: absolute; left: 81%; top: 19%; width: 2.7cqw; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff6a5e, #e0141c 65%); border: .35cqw solid #ffd9c8; box-shadow: 0 0 1.2cqw #ff3b30; pointer-events: none; }
 
-/* Mode selector overlay, matching the supplied dark navy and thin gold framing. */
-.lobby-mode { cursor:pointer; text-align:left; font-family:inherit; }
-.lobby-bar-symbol { position:absolute; right:20%; top:8%; height:84%; width:12%; display:grid; place-items:center; z-index:1; color:#edd28c; filter:drop-shadow(0 0 .8cqw #bd8926); }
-.lobby-bar-symbol svg { width:100%; height:100%; stroke-width:1.8; }
-.lobby-bar-symbol.is-quick { color:#47dcff; filter:drop-shadow(0 0 1.1cqw #00baff); }
-.lobby-bar-symbol.is-quick svg { fill:#1289e7; }
-.lobby-picker { position:fixed; inset:0; margin:auto; width:min(76vw,34.2dvh); max-width:calc(100vw - 24px); padding:3cqw; border:1px solid #e6c588; border-radius:4.5cqw; color:#f0f0ef; background:linear-gradient(145deg,#142332,#0b1a26); box-shadow:0 0 0 2px #665238,inset 0 0 2cqw #233e4a,0 2cqw 5cqw #0009; overflow:visible; }
-.lobby-picker::backdrop { background:rgb(2 9 18 / .48); backdrop-filter:blur(3px); }
-.lobby-picker header { display:flex; align-items:center; justify-content:center; position:relative; padding:0 5cqw 3cqw; }
-.lobby-picker h2 { display:flex; align-items:center; gap:2cqw; margin:0; text-transform:uppercase; font-size:4cqw; font-weight:750; white-space:nowrap; }
-.lobby-picker h2::before,.lobby-picker h2::after { content:""; width:7cqw; height:1px; background:linear-gradient(90deg,transparent,#e4c780); }
-.lobby-picker h2::after { transform:rotate(180deg); }
-.lobby-picker header button { position:absolute; right:0; top:-.3cqw; padding:0; border:0; background:none; color:#dec18b; cursor:pointer; }
-.lobby-picker header button svg { width:5cqw; height:5cqw; }
-.lobby-picker-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:2cqw; }
-.lobby-choice { position:relative; isolation:isolate; aspect-ratio:1.3; min-width:0; padding:3cqw 1cqw; border:1px solid #c5ab77; border-radius:2.7cqw; overflow:hidden; background:#102534; color:#f0f0ee; cursor:pointer; font-family:inherit; }
-.lobby-choice > img { position:absolute; inset:0; z-index:-2; width:100%; height:100%; object-fit:cover; object-position:center 35%; filter:brightness(.73) saturate(.75); }
-.lobby-choice::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,#07192705,#07192765 32%,#071927ee); }
-.lobby-choice-content { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1cqw; }
-.lobby-choice-content > svg { width:9cqw; height:9cqw; margin-bottom:.5cqw; color:#f0d58c; filter:drop-shadow(0 1px 2px #0009); stroke-width:2; }
-.lobby-choice.is-quick .lobby-choice-content > svg { color:#48dfff; fill:#168cdd; filter:drop-shadow(0 0 1cqw #009ded); }
-.lobby-choice-content b { font-size:3cqw; line-height:1.15; text-transform:uppercase; }
-.lobby-choice-content small { font-size:2.15cqw; line-height:1.25; }
-.lobby-choice.is-selected { border:2px solid #0fe7f1; box-shadow:0 0 1.8cqw #00d5ed88,inset 0 0 2cqw #00d5ed44; }
-.lobby-choice-check { position:absolute; right:1cqw; top:1cqw; display:grid; place-items:center; width:5cqw; height:5cqw; border:2px solid #00e7ec; border-radius:50%; background:#082b3e; color:#00f2ee; }
-.lobby-choice-check svg { width:75%; height:75%; }
-.lobby-choice:disabled { opacity:1; cursor:default; }
-.lobby-choice:focus-visible,.lobby-picker header button:focus-visible { outline:2px solid #3ee9ff; outline-offset:3px; }
+/* Thanh điều hướng dưới (4 vùng bấm đều nhau trên ảnh). */
+.lobby-nav { position: absolute; }
+.lobby-nav > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.lobby-nav-hit { position: absolute; top: 0; bottom: 0; display: block; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; overflow: hidden; border-radius: 3cqw; }
+.lobby-nav-hit:active { background: radial-gradient(ellipse at 50% 45%, rgb(255 214 130 / .30), transparent 70%); }
+.lobby-nav-hit:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: -3px; }
+.lobby-nav-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgb(255 214 130 / .55), transparent 68%); }
+/* Vầng xanh "mục đang mở" dưới mục được chọn. */
+.lobby-nav-glow { position: absolute; left: 14%; right: 14%; bottom: 3.5%; height: 3.2%; pointer-events: none; opacity: 0; transition: opacity .25s; }
+.lobby-nav-glow.is-on { opacity: 1; }
+.lobby-nav-glow::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; transform: translateY(-50%); background: linear-gradient(90deg, transparent, #3be3ff 25%, #9ff3ff 50%, #3be3ff 75%, transparent); box-shadow: 0 0 1.6cqw #25c8f0, 0 0 .5cqw #8ef0ff; }
+.lobby-nav-glow::after { content: ""; position: absolute; left: 50%; top: 50%; width: 1.2cqw; height: 1.2cqw; transform: translate(-50%, -50%) rotate(45deg); background: #bff7ff; box-shadow: 0 0 1.4cqw #3be3ff; }
+
+/* PvE / PvP. */
+.lobby-play { position: absolute; }
+
+/* Thanh chế độ + hồ sơ. Đơn vị --h = 1 px ảnh H4 quy về sân khấu (thanh rộng 701/826 trong H3 = 904 px H4). */
+.lobby-account { position: absolute; left: 7.748%; top: 69.82%; width: 84.87%; height: 0; --h: 0.09388cqw; font-family: "Outfit", "Be Vietnam Pro", sans-serif; }
+.lobby-coin { position: absolute; display: block; }
+.lobby-coin-star { position: absolute; width: calc(var(--h) * 37); height: auto; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .55)); pointer-events: none; }
+.lobby-coin-num { position: absolute; font-weight: 600; line-height: 1; color: #f2f2f2; text-shadow: 0 .25cqw .6cqw rgb(0 0 0 / .65); white-space: nowrap; }
+.lobby-profile { position: absolute; left: calc(var(--h) * 557); top: calc(var(--h) * -142); width: calc(var(--h) * 368); height: calc(var(--h) * 118); padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-profile:active .lobby-avatar { transform: scale(.94); filter: brightness(1.2); }
+.lobby-name, .lobby-rank { position: absolute; right: 0; line-height: 1; white-space: nowrap; font-weight: 700; }
+.lobby-name { background: linear-gradient(180deg, #ecd7ac 0%, #e4bd84 45%, #be884b 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .6)); }
+.lobby-rank { background: linear-gradient(180deg, #7ddf70 0%, #6bcb63 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .6)); }
+.lobby-avatar { position: absolute; right: 0; top: 0; width: calc(var(--h) * 118); height: calc(var(--h) * 117); transition: transform .12s, filter .12s; }
+.lobby-avatar > img.art { position: absolute; inset: 7%; width: 86%; height: 86%; object-fit: cover; object-position: center 25%; clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0 92%, 0 8%); }
+.lobby-avatar > img.frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.lobby-mode { position: absolute; left: 0; top: calc(var(--h) * -2); width: 100%; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-mode > img { display: block; width: 100%; height: auto; pointer-events: none; transition: filter .15s; }
+.lobby-mode:active > img { transform: scale(.985); filter: brightness(1.25); }
+.lobby-mode .lobby-ring { inset: 12% 0.4%; border-radius: 3cqw; }
+
+/* Bảng chọn chế độ (H5): ảnh nguyên bản + vùng bấm trong suốt. */
+.lobby-picker { position: fixed; inset: 0; margin: auto; padding: 0; border: 0; background: transparent; overflow: visible; width: calc(var(--stage-w) * 0.77); aspect-ratio: 650 / 600; height: auto; max-height: none; color: inherit; }
+.lobby-picker::backdrop { background: rgb(2 9 18 / .6); backdrop-filter: blur(3px); }
+.lobby-picker > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.lobby-tile, .lobby-close { position: absolute; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-tile { width: 43.8%; height: 36.6%; border-radius: 5.2% / 7%; }
+.lobby-tile.t0 { left: 4.9%; top: 17.3%; }
+.lobby-tile.t1 { left: 51.4%; top: 17.3%; }
+.lobby-tile.t2 { left: 4.9%; top: 56.8%; height: 37.2%; }
+.lobby-tile.t3 { left: 51.4%; top: 56.8%; height: 37.2%; }
+.lobby-tile:active { background: rgb(255 230 160 / .18); }
+.lobby-tile.is-selected { box-shadow: 0 0 0 .5cqw #f6d98f, 0 0 3cqw #ffd36a; }
+.lobby-tile-check { position: absolute; right: 4%; top: 5%; display: grid; place-items: center; width: 7.5cqw; height: 7.5cqw; border: .45cqw solid #f6d98f; border-radius: 50%; background: #123a54; color: #f6d98f; font-size: 4.4cqw; font-weight: 800; line-height: 1; box-shadow: 0 0 1.6cqw #ffd36a; }
+.lobby-close { left: 87.5%; top: 3.2%; width: 9%; height: 9.6%; border-radius: 50%; }
+.lobby-close:active { background: rgb(255 230 160 / .22); }
+.lobby-tile .lobby-ring, .lobby-close .lobby-ring { inset: 0; border-radius: inherit; }
+.lobby a:focus-visible, .lobby button:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 2px; }
+.lobby-picker:focus { outline: none; }
