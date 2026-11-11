@@ -979,6 +979,7 @@ export const PENDING_NOTES: string[] = [
   "Kéo quái trên sân lên mục tiêu: hiện danh sách Tấn công và các skill dùng được lên mục tiêu đó, giống danh sách khi bấm quái. Quái không đánh được (công 0) thì chỉ kéo được vào quân mình để dùng skill hỗ trợ. Skill ngẫu nhiên hay đánh cả phe địch (như Cò quay) hiện khi thả vào bất kỳ quái địch nào.",
   "Skill nhiều mục tiêu: chọn nốt mục tiêu bằng bấm hoặc ấn rê; 2 giây chưa chọn thì hiện bảng các mục tiêu còn lại để bấm.",
   "Bấm Tấn công hoặc skill: mục tiêu gần nhất sáng neon, trên lá quái hiện 4 mũi tên để dời neon sang mục tiêu khác và nút OK ở giữa để chọn. Màu theo icon (Tấn công cam). Bấm thẳng hay ấn rê vẫn dùng được.",
+  "Hoán đổi: chọn quái hoặc lá dự bị không hợp lệ không còn làm trận đứng yên; máy chỉ nhắm quái của mình; quái mượn từ Hộp ma thuật không chọn để hoán đổi được.",
 ];
 
 function remarkOf(notes: string[]) {

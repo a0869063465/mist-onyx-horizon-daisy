@@ -1086,6 +1086,39 @@ test("Trang bị: cộng chỉ số, quái rời sân thì về tay, lần 2 th�
     card.gear = saved.gear;
     card.effect = saved.effect;
   }
+test("Hoán đổi: chọn lá dự bị không đủ điều kiện thì vẫn còn quái bị nhắm, không đứng yên", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }], 1: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = rich(withHand(s, 1, ["hoan-doi", "thuong-quan-long"]));
+  s = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, stars: 0 } : p)) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const cast = D.castSpell(swung, swung.players[1].hand.indexOf("hoan-doi"), uid(s, 1, 0));
+  assert.ok(cast.swap?.locked, "Hoán đổi mở bước chọn");
+  const bench = cast.players[1].reserve.findIndex((card) => card.id === "thuong-quan-long");
+  assert.ok(bench >= 0, "lá dự bị 4 sao có trên tay");
+  const refused = D.confirmSwap(cast, cast.swap.locked, `r:${bench}`);
+  assert.equal(refused.swap?.locked, cast.swap.locked, "chọn sai vẫn giữ quái bị nhắm");
+  const done = D.confirmSwap(refused, cast.swap.locked, `f:${uid(s, 1, 1)}`);
+  assert.ok(!done.swap, "chọn quái hợp lệ thì xong");
+});
+
+test("Hoán đổi: swap không có quái bị nhắm bị bỏ, OK không kẹt; quái từ Hộp ma thuật không chọn được", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }], 1: ["may-chem", { hp: 20, maxHp: 20, abroad: 0 }] });
+  s = rich(withHand(s, 1, ["hoan-doi"]));
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const dead = { ...swung, swap: { first: null, side: 1 } };
+  const passed = D.passResponse(dead);
+  assert.ok(!passed.swap, "swap cụt bị bỏ");
+  const cast = D.castSpell(swung, swung.players[1].hand.indexOf("hoan-doi"), uid(s, 1, 0));
+  assert.ok(!cast.swap || D.swapRows(cast.players[1]).every((token) => token !== `f:${uid(s, 1, 1)}`), "quái abroad không nằm trong danh sách chọn");
+});
+
+test("Máy không chọn nước Hoán đổi hỏng", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }], 1: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = rich(withHand(s, 1, ["hoan-doi", "thuong-quan-long"]));
+  s = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, stars: 0 } : p)) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const act = B.brainChoose(swung, 300);
+  if (act) assert.ok(!B.runAct(swung, act).swap, `nước ${JSON.stringify(act)} không để swap dở`);
 });
 
 let failed = 0;
