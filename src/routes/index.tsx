@@ -9,7 +9,7 @@ import "@/home-lobby.css";
 import { useStars } from "@/lib/shop";
 import { artSrc } from "@/lib/catalog";
 import { coverOf, loadBook } from "@/lib/deck-book";
-import { START_RANK, rankLabel } from "@/lib/rank";
+import { START_RANK, rankFrame, rankLabel } from "@/lib/rank";
 import { playerId } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
 
@@ -148,12 +148,24 @@ function Home() {
           <b className="lobby-coin-num" style={{ left: h(234), top: h(-72), fontSize: h(35) }} title={tr("Sao hiếm — sắp có")}>0</b>
 
           <button type="button" className="lobby-profile" onClick={() => { playUi("select"); setMine(playerId()); }} aria-label={tr("Hồ sơ")}>
-            <span className="lobby-name" style={{ top: h(6), right: h(140), fontSize: h(46) }}>{tr("Người chơi")}</span>
-            <span className="lobby-rank" style={{ top: h(68), right: h(133), fontSize: h(40) }}>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
-            <i className="lobby-avatar">
-              {face ? <img className="art" src={artSrc(face)} alt="" draggable={false} /> : null}
-              <img className="frame" src="/ui/home/avatar-frame.webp" alt="" draggable={false} />
-            </i>
+            <span className="lobby-name" style={{ top: h(6), right: h(170), fontSize: h(46) }}>{tr("Người chơi")}</span>
+            <span className="lobby-rank" style={{ top: h(68), right: h(163), fontSize: h(40) }}>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
+            {(() => {
+              // Ô trống của khung khớp đúng chỗ ảnh đại diện (102 đơn vị), khung nhô ra ngoài theo tỉ lệ.
+              const f = rankFrame(START_RANK.tier);
+              const [hl, ht, hr, hb] = f.hole;
+              const k = 102 / (hr - hl);
+              return (
+                <i className="lobby-avatar" style={{ ["--k" as string]: k }}>
+                  {face ? (
+                    <img className="art" src={artSrc(face)} alt="" draggable={false}
+                      style={{ left: `calc(var(--h) * ${(59 - 51).toFixed(1)})`, top: `calc(var(--h) * ${(58.5 - ((hb - ht) * k) / 2).toFixed(1)})`, width: `calc(var(--h) * 102)`, height: `calc(var(--h) * ${((hb - ht) * k).toFixed(1)})` }} />
+                  ) : null}
+                  <img className="frame" src={f.src} alt="" draggable={false}
+                    style={{ left: `calc(var(--h) * ${(8 - hl * k).toFixed(1)})`, top: `calc(var(--h) * ${(58.5 - ((hb - ht) * k) / 2 - ht * k).toFixed(1)})`, width: `calc(var(--h) * ${(f.w * k).toFixed(1)})`, height: `calc(var(--h) * ${(f.h * k).toFixed(1)})` }} />
+                </i>
+              );
+            })()}
           </button>
         </div>
 

@@ -996,6 +996,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: bấm thanh chế độ mở bảng 2×2, quân mã cho Đánh với máy, sét cho Đánh thường, cúp Xếp hạng và kiếm chéo Tuỳ chọn; nền phía sau tối và mờ, lưu chế độ đã chọn. Xếp hạng sắp có.",
   "Menu chính: tăng cỡ avatar tròn, tên, rank và sao theo ảnh mẫu; bỏ icon trước rank và kéo nền xanh đen lên sau hàng hồ sơ để chữ rõ hơn, cố định màu tên vàng và rank xanh lá.",
   "Menu chính làm lại theo ảnh mới: 6 nút bên, thanh Đánh thường và bảng chọn chế độ, PvE/PvP, thanh dưới, hồ sơ kèm sao thường và sao hiếm. Mọi nút bấm đều có hiệu ứng.",
+  "Menu chính: khung hồ sơ đổi theo hạng, 6 khung mới (Vua trò chơi, Đấu thủ lừng danh, Đấu thủ chuyên nghiệp, Học viên học viện, Bài thủ nghiệp dư, Tập chơi); hiện là khung xanh lá Tập chơi.",
 ];
 
 function remarkOf(notes: string[]) {
