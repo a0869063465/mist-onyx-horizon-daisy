@@ -989,6 +989,7 @@ export const PENDING_NOTES: string[] = [
   "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
   "Hoa ăn thịt người còn 2 thủ, thay vì 3. Máy chém còn 2 máu, thay vì 3. Quái thú thiên sứ còn 4 máu, thay vì 6.",
   "Màn hình chính dùng video nền lặp, sáu nút hai bên và cụm chọn chế độ, PvE/PvP, điều hướng dưới theo bố cục fantasy 9:20; bỏ thanh thông tin phía trên.",
+  "Menu chính: thêm sao vàng bên trái, vị trí sao cầu vồng chờ dữ liệu và hồ sơ bên phải trên thanh Đánh thường; avatar tròn, bấm mở hồ sơ.",
 ];
 
 function remarkOf(notes: string[]) {
