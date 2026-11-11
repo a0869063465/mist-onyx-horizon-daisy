@@ -979,6 +979,7 @@ export const PENDING_NOTES: string[] = [
   "Kéo quái trên sân lên mục tiêu: hiện danh sách Tấn công và các skill dùng được lên mục tiêu đó, giống danh sách khi bấm quái. Quái không đánh được (công 0) thì chỉ kéo được vào quân mình để dùng skill hỗ trợ. Skill ngẫu nhiên hay đánh cả phe địch (như Cò quay) hiện khi thả vào bất kỳ quái địch nào.",
   "Skill nhiều mục tiêu: chọn nốt mục tiêu bằng bấm hoặc ấn rê; 2 giây chưa chọn thì hiện bảng các mục tiêu còn lại để bấm.",
   "Bấm Tấn công hoặc skill: mục tiêu gần nhất sáng neon, trên lá quái hiện 4 mũi tên để dời neon sang mục tiêu khác và nút OK ở giữa để chọn. Màu theo icon (Tấn công cam). Bấm thẳng hay ấn rê vẫn dùng được.",
+  "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
 ];
 
 function remarkOf(notes: string[]) {
