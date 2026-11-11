@@ -63,7 +63,7 @@
 .lobby-avatar { position: absolute; right: 0; top: 0; width: calc(var(--h) * 118); height: calc(var(--h) * 117); transition: transform .12s, filter .12s; }
 .lobby-avatar > img.art { position: absolute; object-fit: cover; object-position: center 25%; clip-path: polygon(7% 0, 93% 0, 100% 7%, 100% 93%, 93% 100%, 7% 100%, 0 93%, 0 7%); }
 .lobby-avatar > img.frame { position: absolute; max-width: none; pointer-events: none; }
-.lobby-mode { position: absolute; left: 0; top: calc(var(--h) * -2); width: 100%; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-mode { position: absolute; left: 0; top: calc(var(--h) * -14); width: 100%; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .lobby-mode > img { display: block; width: 100%; height: auto; pointer-events: none; transition: filter .15s; }
 .lobby-mode:active > img { transform: scale(.985); filter: brightness(1.25); }
 .lobby-mode .lobby-ring { inset: 12% 0.4%; border-radius: 3cqw; }

@@ -998,6 +998,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính làm lại theo ảnh mới: 6 nút bên, thanh Đánh thường và bảng chọn chế độ, PvE/PvP, thanh dưới, hồ sơ kèm sao thường và sao hiếm. Mọi nút bấm đều có hiệu ứng.",
   "Menu chính: khung hồ sơ đổi theo hạng, 6 khung mới (Vua trò chơi, Đấu thủ lừng danh, Đấu thủ chuyên nghiệp, Học viên học viện, Bài thủ nghiệp dư, Tập chơi); hiện là khung xanh lá Tập chơi.",
   "Menu chính: sao vàng và sao cầu vồng đổi theo ảnh mẫu, sao và số to hơn, tên và hạng to hơn, khung Tập chơi mới.",
+  "Menu chính: thanh chế độ cao hơn, chữ trên thanh viết hoa (ĐÁNH THƯỜNG, ĐÁNH TUỲ CHỌN, ĐÁNH XẾP HẠNG, ĐÁNH VỚI MÁY).",
 ];
 
 function remarkOf(notes: string[]) {
