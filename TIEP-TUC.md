@@ -14,10 +14,10 @@ Hiện trạng: chưa nhận ảnh/video mới. Chưa làm gì ở 6 điểm dư
 6. Quái thú thiên sứ: máu còn 4.
 Việc sắp làm: chờ phiên mới; đề xuất điểm 1–2–3 Opus 5.5 high, điểm 4–6 Sonnet 5.5 low (đổi chỉ số: ghi `BALANCE_LOG`, chạy `stamp-cards`, ghi PENDING_NOTES).
 
-## Đề xuất gắn 4 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): lần 2, CHỜ chủ game trả lời 4 câu
-1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết `docs/keyword-de-xuat-3.md` (phần Chắc + 8 câu Chưa chắc).
-2. Hiện trạng: không ảnh/video mới. Chưa gắn vào code.
-3. Việc sắp làm: chủ game trả lời → Sonnet 5.5 medium gắn `CARD_KEYWORDS` + `KEYWORD_LINES`.
+## 4 keyword mới ĐÃ GẮN vào quái (11/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`, chưa chụp bằng mắt)
+1. Việc vừa làm: gắn `CARD_KEYWORDS` + `KEYWORD_LINES`: Cầu mana = Quái thú thiên sứ (dòng Ân huệ thiên sứ); Linh hoạt = Rồng bọc trứng (dòng Thế công, Thế thủ giữ Hồi phục); Cường hoá 1 = Cơn thịnh nộ của hải vương (Đè nén); Cường hoá vĩnh viễn = Khổng lồ 1 mắt (Đập phá), Kẻ giám hộ linh hồn (Phẫn nộ). Không gắn: Hiệp sĩ của vua, Kraken, Hiệp sĩ của hậu, Kỵ sĩ bóng tối, Chiến sĩ gặm nhắm, Máy quay thưởng, Mỹ điểu nhân, Đấu sĩ bò tót, Tê giác bé con. tsc 7 lỗi cũ, round-rules 60/60.
+2. Hiện trạng: không ảnh/video mới. Dòng Linh hoạt của Rồng bọc trứng Claude tự đặt ở Thế công (bảng quái không có skill tên "Linh hoạt"): chờ chủ game xác nhận. Glow xanh dương/xanh lam/vàng/nâu/tím chưa duyệt.
+3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
 
 ## 4 keyword mới + đổi icon Sĩ khí (10/11, Sonnet 5.5 low, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 - Đã làm: icon `public/ui/kw/` cau-mana, linh-hoat, cuong-hoa-1, cuong-hoa-vinh-vien (+ si-khi ghi đè), `keywords.ts` (id, tên, tác dụng chủ game viết trong comment), `--kw` styles.css (Cầu mana xanh lam, Linh hoạt vàng, Cường hoá xanh lá; màu Linh hoạt/Cầu mana Claude tự chọn, chủ game chưa duyệt). Chưa quái nào mang, chưa luật. tsc 7 lỗi cũ.

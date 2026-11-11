@@ -986,6 +986,7 @@ export const PENDING_NOTES: string[] = [
   "Hiệu ứng hồi máu, buff và tự tăng chỉ số đổi sang video vòng sáng xanh lục. Tăng máu tối đa giữ hiệu ứng cũ.",
   "Triều lên có cột nước rơi, Con nước lớn tàn phá có nổ nước, Cơn thịnh nộ của hải thần có xoáy nước thay hiệu ứng cũ.",
   "Hiệu ứng nước (Triều lên, Con nước lớn tàn phá, Đại hồng thuỷ huỷ diệt, Cơn thịnh nộ của hải thần) và hồi máu dùng đúng âm thanh của video, bỏ tiếng nổ cũ.",
+  "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
 ];
 
 function remarkOf(notes: string[]) {
