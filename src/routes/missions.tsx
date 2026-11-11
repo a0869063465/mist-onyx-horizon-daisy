@@ -47,8 +47,8 @@ function MissionsPage() {
         <Link to="/" className="mx-back" aria-label={tr("Trở về")} data-sfx onPointerDown={() => playUi("soft")} />
         {tab === "weekly" ? <img className="mx-neon" src="/ui/mission/tab-week-neon.webp" alt="" draggable={false} /> : null}
         <div className="mx-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === "daily"} aria-label={tr("Nhiệm vụ ngày")} className="mx-tab is-day" onClick={() => pick("daily")} />
-          <button type="button" role="tab" aria-selected={tab === "weekly"} aria-label={tr("Nhiệm vụ tuần")} className="mx-tab is-week" onClick={() => pick("weekly")} />
+          <button type="button" role="tab" aria-selected={tab === "daily"} aria-label={tr("Nhiệm vụ ngày")} className="mx-tab is-day" onPointerDown={() => tab === "daily" && playUi("soft")} onClick={() => pick("daily")} />
+          <button type="button" role="tab" aria-selected={tab === "weekly"} aria-label={tr("Nhiệm vụ tuần")} className="mx-tab is-week" onPointerDown={() => tab === "weekly" && playUi("soft")} onClick={() => pick("weekly")} />
         </div>
         <ol className="mx-list" key={tab}>
           {list.map((row, at) => (tab === "weekly" ? <WeeklyCard key={row.id} row={row} at={at} weekly={weekly} /> : <DailyCard key={row.id} row={row} at={at} daily={daily} />))}
@@ -72,6 +72,7 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
   const [flash, setFlash] = useState(false);
   const [settle, setSettle] = useState(0);
   const [pop, setPop] = useState(0);
+  const [tap, setTap] = useState(0);
   const timer = useRef<number | undefined>(undefined);
   const finished = left <= 0;
   const view: "p" | "g" | "d" = flash || finished ? "d" : done >= row.goal ? "g" : "p";
@@ -104,7 +105,14 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
       className={`mx-card is-q is-wk is-v${view}`}
       style={{ "--i": at, aspectRatio: "900 / 196" } as CSSProperties}
       aria-label={`${tr(row.title)} ${done} / ${row.goal}`}
+      data-tap={tap}
+      onPointerDown={() => {
+        if (view !== "g") playUi("soft");
+        setTap((n) => n + 1);
+      }}
+      onClick={press}
     >
+      <span key={tap} className={`mx-sweep${tap > 0 ? " is-on" : ""}`} aria-hidden="true" />
       {view === "p" ? <img key={`p${settle}`} className={`mx-q${settle > 0 ? " is-in" : ""}`} src={`/ui/mission/w-p${at}.webp`} alt="" draggable={false} /> : null}
       {view === "g" || (view === "d" && flash) ? <img className={`mx-q${view === "d" ? " is-under" : ""}`} src={`/ui/mission/w-g${at}.webp`} alt="" draggable={false} /> : null}
       {view === "d" ? <img className="mx-q" src={`/ui/mission/w-d${at}.webp`} alt="" draggable={false} /> : null}
@@ -126,7 +134,10 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
           type="button"
           className="mx-box is-glow"
           aria-label={tr("Nhận thưởng")}
-          onClick={press}
+          onClick={(e) => {
+            e.stopPropagation();
+            press();
+          }}
           style={{
             left: `${star.star[0]}%`,
             top: `${star.star[1]}%`,

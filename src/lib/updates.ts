@@ -980,6 +980,7 @@ export const PENDING_NOTES: string[] = [
   "Skill nhiều mục tiêu: chọn nốt mục tiêu bằng bấm hoặc ấn rê; 2 giây chưa chọn thì hiện bảng các mục tiêu còn lại để bấm.",
   "Bấm Tấn công hoặc skill: mục tiêu gần nhất sáng neon, trên lá quái hiện 4 mũi tên để dời neon sang mục tiêu khác và nút OK ở giữa để chọn. Màu theo icon (Tấn công cam). Bấm thẳng hay ấn rê vẫn dùng được.",
   "Hoán đổi: chọn quái hoặc lá dự bị không hợp lệ không còn làm trận đứng yên; máy chỉ nhắm quái của mình; quái mượn từ Hộp ma thuật không chọn để hoán đổi được.",
+  "Nhiệm vụ: nút và khung bấm vào có phản hồi (lún, sáng, tiếng bấm).",
 ];
 
 function remarkOf(notes: string[]) {
