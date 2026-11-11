@@ -1,0 +1,66 @@
+/* Approved reference anchors: x/702 and y/1536; shared 9:20 coordinate plane. */
+.lobby {
+  --lobby-navy: #0b1b2c;
+  --lobby-gold: #e8c98a;
+  --lobby-ink: #f4f2ed;
+  --lobby-cyan: #39daee;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  background: var(--lobby-navy);
+}
+.lobby-stage {
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: min(100vw, 45dvh);
+  aspect-ratio: 9 / 20;
+  overflow: hidden;
+  color: var(--lobby-ink);
+}
+.lobby-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: -2; }
+.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081624 0%, rgb(8 22 36 / .92) 9%, transparent 34%); }
+.lobby-shortcuts { position: absolute; inset: 0; pointer-events: none; }
+.lobby-shortcut {
+  position: absolute;
+  left: 3.13%;
+  top: 35.68%;
+  width: 14.25%;
+  height: 6.51%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.15cqw;
+  border: 1px solid var(--lobby-gold);
+  border-radius: 2.8cqw;
+  background: linear-gradient(145deg, rgb(22 40 54 / .96), rgb(8 24 37 / .96));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06), 0 1cqw 1.4cqw rgb(0 0 0 / .32);
+  color: var(--lobby-gold);
+  text-decoration: none;
+  pointer-events: auto;
+  padding: 0;
+}
+.lobby-shortcut svg { width: 6.2cqw; height: 6.2cqw; stroke-width: 1.7; }
+.lobby-shortcut span { color: var(--lobby-ink); font-size: 2.3cqw; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.lobby-shortcut-1, .lobby-shortcut-4 { top: 44.08%; }
+.lobby-shortcut-2, .lobby-shortcut-5 { top: 52.47%; }
+.lobby-shortcut-3, .lobby-shortcut-4, .lobby-shortcut-5 { left: 83.33%; }
+.lobby-dot { position: absolute; right: 6%; top: 3%; width: 2.8cqw; aspect-ratio: 1; border-radius: 50%; background: #ef4046; border: 1px solid #8f242d; }
+.lobby-mode { position: absolute; left: 7.83%; top: 69.34%; width: 84.05%; height: 5.27%; display: flex; align-items: center; gap: 2.7cqw; padding: 0 4cqw; overflow: hidden; border: 1px solid var(--lobby-gold); border-radius: 1.7cqw; background: rgb(8 27 40 / .94); color: var(--lobby-gold); text-decoration: none; }
+.lobby-mode-marker { flex: 0 0 .8cqw; height: 45%; border-radius: 1cqw; background: var(--lobby-cyan); }
+.lobby-mode b { z-index: 1; font-size: 4cqw; line-height: 1; white-space: nowrap; }
+.lobby-mode img { position: absolute; right: 8%; top: 0; width: 44%; height: 100%; object-fit: cover; mask-image: linear-gradient(to right, transparent, black 20%, black 85%, transparent); }
+.lobby-mode > svg { margin-left: auto; width: 5cqw; height: 5cqw; z-index: 1; }
+.lobby-play { position: absolute; left: 4.13%; top: 76.24%; width: 91.88%; height: 12.63%; display: grid; grid-template-columns: 307fr 319fr; gap: 2.7cqw; }
+.lobby-play-card { display: block; min-width: 0; padding: 0; border: 0; background: transparent; text-decoration: none; }
+.lobby-play-card img { display: block; width: 100%; height: 100%; object-fit: fill; }
+.lobby-navigation { position: absolute; inset: 91.8% 0 0; display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; padding-top: 2.6cqw; border-top: 1px solid rgb(232 201 138 / .65); border-radius: 4cqw 4cqw 0 0; background: linear-gradient(180deg, rgb(12 32 49 / .96), #091725); }
+.lobby-navigation > * { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.3cqw; padding: 0; border: 0; background: none; color: var(--lobby-gold); text-decoration: none; }
+.lobby-navigation > * + *::before { content: ""; position: absolute; left: 0; top: 15%; height: 80%; width: 1px; background: rgb(232 201 138 / .26); }
+.lobby-navigation svg { width: 6.5cqw; height: 6.5cqw; stroke-width: 1.7; }
+.lobby-navigation span { font-size: 2.7cqw; font-weight: 600; line-height: 1.2; color: var(--lobby-ink); white-space: nowrap; }
+.lobby a:focus-visible, .lobby button:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 3px; }
+.lobby a:active { filter: brightness(1.15); }
+.lobby button:disabled { cursor: default; opacity: 1; }
