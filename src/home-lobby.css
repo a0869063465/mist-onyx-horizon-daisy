@@ -22,9 +22,9 @@
   font-family: "Outfit", "Be Vietnam Pro", system-ui, sans-serif;
 }
 /* Video nền 2:3 (11/11): đặt sát đỉnh sân khấu, cao ~65%, đáy mờ dần vào nền tối nên không lộ mép cắt. */
-.lobby-background { position: absolute; left: 0; top: 0; width: 100%; height: auto; aspect-ratio: 720 / 1072; object-fit: cover; z-index: -2; -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 74%, transparent 100%); }
+.lobby-background { position: absolute; left: -12.5cqw; top: 0; width: 125cqw; max-width: none; height: auto; aspect-ratio: 720 / 1072; object-fit: cover; z-index: -2; -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%); }
 /* Vân xanh đen có sẵn: giữ để hồ sơ và sao đọc rõ. */
-.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 27%, rgb(8 26 41 / .96) 32%, rgb(8 26 41 / .86) 36%, rgb(8 26 41 / .62) 40%, rgb(8 26 41 / .24) 45%, transparent 49%); }
+.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 26%, rgb(8 26 41 / .93) 29%, rgb(8 26 41 / .72) 33%, rgb(8 26 41 / .38) 37%, rgb(8 26 41 / .12) 41%, transparent 45%); }
 
 /* Nút ảnh: mọi nút đều có hiệu ứng bấm (lún + sáng + vòng sáng), nút khoá thì rung. */
 .lobby-btn { position: absolute; display: block; padding: 0; border: 0; background: transparent; color: inherit; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
