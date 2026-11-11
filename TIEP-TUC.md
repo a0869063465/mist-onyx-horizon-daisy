@@ -7,6 +7,9 @@
 2. Hiện trạng: `round-rules` lúc 63/64 lúc 64/64: bài "Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả" chập chờn (ghi nhận từ trước, chưa xác định có do lần gộp này không). Chưa chụp bằng mắt 4 keyword mới.
 3. Việc sắp làm (chưa làm, phiên khác): (a) tìm nguyên nhân bài kiểm tra chập chờn (Opus 5.5 high); (b) gộp nhánh `ccr-902b4e60-v4q179` (sửa lỗi Hỗ công cộng vào skill + lá Tê giáp có cánh + luật trong `AGENTS.project.md`; chủ game đã duyệt, cần xem trước khi gộp; Sonnet 5.5 medium); (c) nhánh `thietke`/`vfx` (6 icon menu chưa dùng) và `quai-moi` (11 ảnh minh hoạ lá chưa có lá): giữ nguyên trên GitHub, chờ chủ game quyết; (d) nhánh `ccr-65a3d75a` (bản dọn gọn ghi chú) không gộp. Không xoá nhánh nào.
 
+## Phiên phụ 11/11 (Sonnet 5.5 low, nhánh `ccr-b9b935aa-34c6k2`): điểm 4–6 ĐÃ LÀM
+Hoa ăn thịt người thủ 2, Máy chém máu 2, Quái thú thiên sứ máu 4 (catalog, `BALANCE_LOG` wave 33, `stamp-cards`, PENDING_NOTES). tsc 7 lỗi cũ. Điểm 1–3 để phiên chính.
+
 ## Luật mới chủ game 11/11, CHƯA LÀM (chủ game: để phiên mới tạo từ main làm tiếp)
 
 Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
