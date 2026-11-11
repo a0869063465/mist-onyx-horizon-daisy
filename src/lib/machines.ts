@@ -10,22 +10,33 @@ import { PACK } from "./shop.ts";
  */
 export type Machine = { id: string; name?: string; monsters: string[]; spells: string[]; pack: string };
 
+/** [id, số bản] → danh sách lặp id (bộ nhiều bản). */
+function copies(list: [string, number][]): string[] {
+  return list.flatMap(([id, n]) => Array<string>(n).fill(id));
+}
+
 export const MACHINES: Machine[] = [
-  // Deck 1 "Khởi đầu" (chủ game 11/11): mỗi lá 1 bản; danh sách trong ảnh bị cắt nên chỉ có các lá nhìn thấy.
+  // Deck 1 "Khởi đầu" (chủ game 11/11): 16 quái + 8 phép = 24 lá, nhiều bản theo ảnh chủ game gửi.
   {
     id: "khoi-dau",
     name: "Khởi đầu",
-    monsters: [
-      "hoa-an-thit-nguoi",
-      "khong-lo-mot-mat",
-      "phu-thuy-ti-hon",
-      "rong-con",
-      "tho-den-tinh-nghich",
-      "khung-long-vay-kiem",
-      "rong-phun-hoa-cau",
-      "chien-binh-rong",
-    ],
-    spells: ["hap-thu-ma-phap", "hoan-doi", "phuc-kich", "soi-xich-dia-nguc", "thanh-guom-anh-sang"],
+    monsters: copies([
+      ["hoa-an-thit-nguoi", 3],
+      ["khong-lo-mot-mat", 3],
+      ["phu-thuy-ti-hon", 3],
+      ["rong-con", 1],
+      ["tho-den-tinh-nghich", 2],
+      ["khung-long-vay-kiem", 1],
+      ["rong-phun-hoa-cau", 2],
+      ["chien-binh-rong", 1],
+    ]),
+    spells: copies([
+      ["hap-thu-ma-phap", 2],
+      ["hoan-doi", 2],
+      ["phuc-kich", 2],
+      ["soi-xich-dia-nguc", 1],
+      ["thanh-guom-anh-sang", 1],
+    ]),
     pack: PACK.id,
   },
   {
