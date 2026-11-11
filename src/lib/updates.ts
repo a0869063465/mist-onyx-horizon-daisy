@@ -990,6 +990,11 @@ export const PENDING_NOTES: string[] = [
   "Hoả cầu của Rồng canh pháo đài giảm thủ phép trước rồi mới gây sát thương. Vãy phá giáp của Khủng long vãy kiếm giảm thủ trước rồi mới giao tranh.",
   "Neon đang sáng mục tiêu mà quên bấm OK, bấm chuyển lượt thì đòn tự chọn mục tiêu đó và xác nhận, không bị huỷ.",
   "Máu người chơi lúc bắt đầu trận là 20 (trước là 16).",
+  "Hoa ăn thịt người còn 2 thủ, thay vì 3. Máy chém còn 2 máu, thay vì 3. Quái thú thiên sứ còn 4 máu, thay vì 6.",
+  "Màn hình chính dùng video nền lặp, sáu nút hai bên và cụm chọn chế độ, PvE/PvP, điều hướng dưới theo bố cục fantasy 9:20; bỏ thanh thông tin phía trên.",
+  "Menu chính: thêm sao vàng bên trái, vị trí sao cầu vồng chờ dữ liệu và hồ sơ bên phải trên thanh Đánh thường; avatar tròn, bấm mở hồ sơ.",
+  "Menu chính: bấm thanh chế độ mở bảng 2×2, quân mã cho Đánh với máy, sét cho Đánh thường, cúp Xếp hạng và kiếm chéo Tuỳ chọn; nền phía sau tối và mờ, lưu chế độ đã chọn. Xếp hạng sắp có.",
+  "Menu chính: tăng cỡ avatar tròn, tên, rank và sao theo ảnh mẫu; bỏ icon trước rank và kéo nền xanh đen lên sau hàng hồ sơ để chữ rõ hơn, cố định màu tên vàng và rank xanh lá.",
 ];
 
 function remarkOf(notes: string[]) {

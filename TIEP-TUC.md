@@ -12,7 +12,10 @@
 2. Hiện trạng: không ảnh/video mới. Chỉ áp cho neon của Tấn công/skill (phép kéo/Use chưa có neon kiểu này).
 3. 0.1 ĐÃ LÀM (Sonnet 5.5 low): `LIFE` 20, round-rules 66/66. 0.4–0.6 chủ game bảo đã làm ở nhánh khác. Xong nhóm 0.
 
-## Luật mới chủ game 11/11 (bản gốc trước khi làm)
+## Phiên phụ 11/11 (Sonnet 5.5 low, nhánh `ccr-b9b935aa-34c6k2`): điểm 4–6 ĐÃ LÀM
+Hoa ăn thịt người thủ 2, Máy chém máu 2, Quái thú thiên sứ máu 4 (catalog, `BALANCE_LOG` wave 33, `stamp-cards`, PENDING_NOTES). tsc 7 lỗi cũ. Điểm 1–3 để phiên chính.
+
+## Luật mới chủ game 11/11 (bản gốc; điểm 1–6 nay đã xong, xem hai mục trên)
 
 Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
 Hiện trạng: chưa nhận ảnh/video mới. Chưa làm gì ở 6 điểm dưới; HỎI LẠI từng điểm chưa rõ trước khi sửa (nhất là điểm 1).

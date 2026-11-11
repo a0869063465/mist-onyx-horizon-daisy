@@ -122,7 +122,8 @@ test("ending an AI match stores it once and the export can read it", () => {
   const dead = checkWinner({ ...open, players: [{ ...open.players[0], hp: 0 }, open.players[1]] });
   assert.equal(dead.step, "over");
   assert.equal(noteFinishedAi(open, dead, { id: "damage", startedAt: 1, decks: null, saved: false }, store).saved, true);
-  assert.equal(exportMatchHistory(store).status === "ready" ? exportMatchHistory(store).count : 0, 2);
+  const packed = exportMatchHistory(store);
+  assert.equal(packed.status === "ready" ? packed.count : 0, 2);
   const hotStart = createDuel(undefined, "hotseat");
   const hot = concede(hotStart, 0);
   assert.equal(noteFinishedAi(hotStart, hot, { id: "hot", startedAt: 1, decks: null, saved: false }, store).saved, false);
@@ -260,7 +261,8 @@ test("an AI match is stored once, and a forfeit stores the winner", () => {
   };
   assert.equal(rememberMatch(row, store).ok, true);
   assert.equal(rememberMatch(row, store).ok, true);
-  assert.equal(rememberMatch(row, store).ok && rememberMatch(row, store).added, false);
+  const repeat = rememberMatch(row, store);
+  assert.equal(repeat.ok && repeat.added, false);
   const lost = finish(createDuel(undefined, "ai"), 0);
   assert.equal(lost.winner, 1);
   assert.equal(rememberMatch({ ...row, id: "match-loss", winner: lost.winner, log: lost.log }, store).ok, true);
@@ -384,7 +386,7 @@ test("concede and a rules win are different endings, and an AI match stores even
     events: quit.events,
   }, store);
   assert.equal(saved.ok && saved.added, true);
-  assert.equal(rememberMatch({
+  const full = rememberMatch({
     id: "full",
     startedAt: 5,
     endedAt: 9,
@@ -393,7 +395,8 @@ test("concede and a rules win are different endings, and an AI match stores even
     decks,
     log: quit.log,
     events: quit.events,
-  }, store).added, false);
+  }, store);
+  assert.equal(full.ok && full.added, false);
   assert.equal(loadMatchHistory(store).length, 1);
   assert.equal(loadMatchHistory(store)[0]?.events.length, quit.events?.length);
 

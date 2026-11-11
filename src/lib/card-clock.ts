@@ -248,11 +248,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "atk": 0,
     "def": 0,
     "mdef": 0,
-    "hp": 6,
+    "hp": 4,
     "text": "899b9a3a",
     "added": "2026-10-05",
-    "powerAt": "2026-10-14",
-    "powerTone": "up",
+    "powerAt": "2026-11-11",
+    "powerTone": "down",
     "shiftAt": "2026-10-09"
   },
   "te-giac-be-con": {
@@ -470,13 +470,13 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "stars": 1,
     "mana": 1,
     "atk": 0,
-    "def": 3,
+    "def": 2,
     "mdef": 0,
     "hp": 3,
     "text": "e9b01a8b",
     "added": null,
-    "powerAt": null,
-    "powerTone": null,
+    "powerAt": "2026-11-11",
+    "powerTone": "down",
     "shiftAt": "2026-11-11"
   },
   "thuong-quan-long": {
@@ -570,11 +570,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "atk": 4,
     "def": 0,
     "mdef": 4,
-    "hp": 3,
+    "hp": 2,
     "text": "811c9dc5",
     "added": null,
-    "powerAt": null,
-    "powerTone": null,
+    "powerAt": "2026-11-11",
+    "powerTone": "down",
     "shiftAt": null
   },
   "ma-dao-si": {
