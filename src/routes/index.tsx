@@ -148,8 +148,8 @@ function Home() {
           <b className="lobby-coin-num" style={{ left: h(234), top: h(-72), fontSize: h(35) }} title={tr("Sao hiếm — sắp có")}>0</b>
 
           <button type="button" className="lobby-profile" onClick={() => { playUi("select"); setMine(playerId()); }} aria-label={tr("Hồ sơ")}>
-            <span className="lobby-name" style={{ top: h(6), right: h(170), fontSize: h(46) }}>{tr("Người chơi")}</span>
-            <span className="lobby-rank" style={{ top: h(68), right: h(163), fontSize: h(40) }}>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
+            <span className="lobby-name" style={{ top: h(4), right: h(172), fontSize: h(56) }}>{tr("Người chơi")}</span>
+            <span className="lobby-rank" style={{ top: h(76), right: h(165), fontSize: h(49) }}>{tr(rankLabel(START_RANK.tier, START_RANK.level))}</span>
             {(() => {
               // Ô trống của khung khớp đúng chỗ ảnh đại diện (102 đơn vị), khung nhô ra ngoài theo tỉ lệ.
               const f = rankFrame(START_RANK.tier);
