@@ -626,7 +626,7 @@ export function infoBlocks(id: string): InfoBlock[] {
     if (cursor[key] !== now[key]) drift[key] = { from: cursor[key], to: now[key] };
   }
   const driftTone = toneFromStats(drift);
-  const driftEntry: BalanceEntry = { id, at: "live", stats: drift };
+  const driftEntry: BalanceEntry = { id, at: "live", wave: 0, stats: drift };
   const driftLines = entryLines(driftEntry);
   if (driftTone && driftLines.length) {
     blocks.push({ at: "live", when: "", tone: driftTone, toneText: toneWord(driftTone), lines: driftLines });

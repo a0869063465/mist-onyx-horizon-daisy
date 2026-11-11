@@ -2718,10 +2718,11 @@ function PlayPage() {
         if (next !== current) pulled = next;
         return next;
       });
-      if (!pulled || pulled.mode !== "net" || !seat) return;
+      const sent = pulled as Duel | null;
+      if (!sent || sent.mode !== "net" || !seat) return;
       const ticket = pushGen.current + 1;
       pushGen.current = ticket;
-      void pushDuel({ data: { code: seat.code, seat: seat.seat, duel: JSON.stringify({ ...pulled, glimpse: null }) } }).then((pushed) => {
+      void pushDuel({ data: { code: seat.code, seat: seat.seat, duel: JSON.stringify({ ...sent, glimpse: null }) } }).then((pushed) => {
         if (ticket !== pushGen.current) return;
         if (!pushed.ok) return;
         rev.current = pushed.rev;
