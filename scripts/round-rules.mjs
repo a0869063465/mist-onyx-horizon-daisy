@@ -1086,6 +1086,8 @@ test("Trang bị: cộng chỉ số, quái rời sân thì về tay, lần 2 th�
     card.gear = saved.gear;
     card.effect = saved.effect;
   }
+});
+
 test("Hoán đổi: chọn lá dự bị không đủ điều kiện thì vẫn còn quái bị nhắm, không đứng yên", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }], 1: ["may-chem", { hp: 20, maxHp: 20 }] });
   s = rich(withHand(s, 1, ["hoan-doi", "thuong-quan-long"]));

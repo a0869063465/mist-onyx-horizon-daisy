@@ -1,5 +1,17 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Luật mới chủ game 11/11, CHƯA LÀM (chủ game: để phiên mới tạo từ main làm tiếp)
+
+Việc vừa làm: gộp `main` với 4 nhánh phiên bị dỡ (keyword 10/11, Hoán đổi chọn sai, nút Nhiệm vụ, VFX nước), `round-rules` 64/64, `tsc` 7 lỗi cũ.
+Hiện trạng: chưa nhận ảnh/video mới. Chưa làm gì ở 6 điểm dưới; HỎI LẠI từng điểm chưa rõ trước khi sửa (nhất là điểm 1).
+1. "Máu về lại 20" (chưa rõ: máu người chơi? hiện bao nhiêu? lúc nào đổi).
+2. Trừ thủ / thủ phép TRƯỚC rồi mới áp sát thương, cho cả skill và đòn đánh (chưa rõ: hiện thứ tự thế nào, đòn phép/vật lý/hỗn hợp).
+3. Lỗi: chọn qua lại neon đúng mục tiêu mà quên bấm OK, rồi bấm chuyển lượt thì mặc định tự OK (xác nhận hàng chờ), không huỷ hàng chờ.
+4. Hoa ăn thịt người: thủ còn 2.
+5. Máy chém: máu còn 2.
+6. Quái thú thiên sứ: máu còn 4.
+Việc sắp làm: chờ phiên mới; đề xuất điểm 1–2–3 Opus 5.5 high, điểm 4–6 Sonnet 5.5 low (đổi chỉ số: ghi `BALANCE_LOG`, chạy `stamp-cards`, ghi PENDING_NOTES).
+
 ## Đề xuất gắn 4 keyword mới vào quái (10/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`): lần 2, CHỜ chủ game trả lời 4 câu
 1. Việc vừa làm: đọc chữ lá quái 1–4 sao, viết `docs/keyword-de-xuat-3.md` (phần Chắc + 8 câu Chưa chắc).
 2. Hiện trạng: không ảnh/video mới. Chưa gắn vào code.
