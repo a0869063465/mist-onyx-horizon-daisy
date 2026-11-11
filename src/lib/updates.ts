@@ -997,6 +997,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: tăng cỡ avatar tròn, tên, rank và sao theo ảnh mẫu; bỏ icon trước rank và kéo nền xanh đen lên sau hàng hồ sơ để chữ rõ hơn, cố định màu tên vàng và rank xanh lá.",
   "Menu chính làm lại theo ảnh mới: 6 nút bên, thanh Đánh thường và bảng chọn chế độ, PvE/PvP, thanh dưới, hồ sơ kèm sao thường và sao hiếm. Mọi nút bấm đều có hiệu ứng.",
   "Menu chính: khung hồ sơ đổi theo hạng, 6 khung mới (Vua trò chơi, Đấu thủ lừng danh, Đấu thủ chuyên nghiệp, Học viên học viện, Bài thủ nghiệp dư, Tập chơi); hiện là khung xanh lá Tập chơi.",
+  "Menu chính: sao vàng và sao cầu vồng đổi theo ảnh mẫu, sao và số to hơn, tên và hạng to hơn, khung Tập chơi mới.",
 ];
 
 function remarkOf(notes: string[]) {
