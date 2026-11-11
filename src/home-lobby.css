@@ -64,3 +64,17 @@
 .lobby a:focus-visible, .lobby button:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 3px; }
 .lobby a:active { filter: brightness(1.15); }
 .lobby button:disabled { cursor: default; opacity: 1; }
+
+/* Player row directly above the mode selector, measured against the supplied reference. */
+.lobby-account { position:absolute; left:6.9%; right:4%; bottom:32%; height:6.2%; display:flex; align-items:flex-end; justify-content:space-between; gap:2cqw; }
+.lobby-currencies { display:flex; align-items:center; gap:3.2cqw; padding-bottom:1cqw; }
+.lobby-currencies > span { display:flex; align-items:center; gap:1.5cqw; }
+.lobby-currencies b { font-size:3cqw; font-weight:700; color:#fff; }
+.lobby-star { font-style:normal; font-size:4.3cqw; line-height:1; color:#ffd44d; filter:drop-shadow(0 1px 2px #694500); }
+.lobby-star.is-rainbow { background:conic-gradient(#58e8ff,#7b72ff,#ef6eea,#ffe75b,#55eeb1,#58e8ff); background-clip:text; -webkit-background-clip:text; color:transparent; }
+.lobby-profile { display:flex; align-items:center; gap:1.8cqw; border:0; padding:0; background:transparent; text-align:right; color:var(--lobby-gold); cursor:pointer; }
+.lobby-profile > span { display:flex; flex-direction:column; gap:1cqw; }
+.lobby-profile b { font-size:4cqw; white-space:nowrap; }
+.lobby-profile small { font-size:3.2cqw; font-weight:700; color:#8be65f; white-space:nowrap; }
+.lobby-avatar { display:block; flex:none; width:11cqw; height:11cqw; border:2px solid var(--lobby-gold); border-radius:50%; overflow:hidden; background:#102336; box-shadow:0 0 1cqw #081321; }
+.lobby-avatar img { width:100%; height:100%; object-fit:cover; object-position:center 25%; }
