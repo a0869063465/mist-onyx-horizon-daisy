@@ -8,9 +8,26 @@ import { PACK } from "./shop.ts";
  * is one, máy chung: the old Lv 1 Meta deck with Máy chém in place of Ma đạo sĩ, Sấm sét tận thế left out and Thảo
  * nguyên as its environment, all real cards. Winning against the same machine 3 times gives a card of its pack.
  */
-export type Machine = { id: string; monsters: string[]; spells: string[]; pack: string };
+export type Machine = { id: string; name?: string; monsters: string[]; spells: string[]; pack: string };
 
 export const MACHINES: Machine[] = [
+  // Deck 1 "Khởi đầu" (chủ game 11/11): mỗi lá 1 bản; danh sách trong ảnh bị cắt nên chỉ có các lá nhìn thấy.
+  {
+    id: "khoi-dau",
+    name: "Khởi đầu",
+    monsters: [
+      "hoa-an-thit-nguoi",
+      "khong-lo-mot-mat",
+      "phu-thuy-ti-hon",
+      "rong-con",
+      "tho-den-tinh-nghich",
+      "khung-long-vay-kiem",
+      "rong-phun-hoa-cau",
+      "chien-binh-rong",
+    ],
+    spells: ["hap-thu-ma-phap", "hoan-doi", "phuc-kich", "soi-xich-dia-nguc", "thanh-guom-anh-sang"],
+    pack: PACK.id,
+  },
   {
     id: "may-chung",
     monsters: [
@@ -119,7 +136,7 @@ const NAMES = [
 export function machineFace(machine: Machine, rng: () => number = Math.random): DuelFace {
   return {
     name: NAMES[Math.floor(rng() * NAMES.length)],
-    deck: machineGroup(machine),
+    deck: machine.name ?? machineGroup(machine),
     cover: machineChampion(machine),
     cards: { monsters: [...machine.monsters], spells: [...machine.spells] },
   };

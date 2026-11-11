@@ -988,6 +988,7 @@ export const PENDING_NOTES: string[] = [
   "Hiệu ứng nước (Triều lên, Con nước lớn tàn phá, Đại hồng thuỷ huỷ diệt, Cơn thịnh nộ của hải thần) và hồi máu dùng đúng âm thanh của video, bỏ tiếng nổ cũ.",
   "Quái có thêm keyword: Cầu mana (Quái thú thiên sứ), Linh hoạt (Rồng bọc trứng), Cường hoá 1 (Cơn thịnh nộ của hải vương), Cường hoá vĩnh viễn (Khổng lồ 1 mắt, Kẻ giám hộ linh hồn).",
   "Hoa ăn thịt người còn 2 thủ, thay vì 3. Máy chém còn 2 máu, thay vì 3. Quái thú thiên sứ còn 4 máu, thay vì 6.",
+  "Máy dùng bộ bài mới tên Khởi đầu: Hoa ăn thịt người, Khổng lồ 1 mắt, Phù thuỷ tí hơn, Rồng con, Thỏ đen tinh nghịch, Khủng long vãy kiếm, Rồng canh pháo đài, Chiến binh rồng, cùng 5 phép Hấp thụ ma pháp, Hoán đổi, Phục kích, Sợi xích địa ngục, Thanh gươm ánh sáng.",
 ];
 
 function remarkOf(notes: string[]) {
