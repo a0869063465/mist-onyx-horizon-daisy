@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarCheck, ClipboardList, Settings, Gift, Mail, Users, Trophy, Layers, ShoppingCart, BookOpen, RefreshCw } from "lucide-react";
+import { CalendarCheck, ClipboardList, Settings, Gift, Mail, Users, Trophy, Layers, ShoppingCart, BookOpen, RefreshCw, Zap, Swords, X, Check } from "lucide-react";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import { useMail } from "@/lib/mail-box";
 import { missionsReady, onMissions } from "@/lib/mission-store";
 import { usePulse } from "@/lib/friend-state";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "@/home-lobby.css";
 import { useStars } from "@/lib/shop";
 import { artSrc } from "@/lib/catalog";
@@ -21,9 +21,40 @@ export const Route = createFileRoute("/")({
 
 // Layout measured from the approved 702 × 1536 reference. All anchors are
 // percentages of the same 9:20 stage, independent of the video dimensions.
+
+type LobbyMode = "ai" | "quick" | "ranked" | "custom";
+const lobbyModes: { key: LobbyMode; label: string; description: string; background: string }[] = [
+  { key: "ai", label: "Đánh với máy", description: "Đấu với máy", background: "/art/spells/thanh-dia-thien-su.jpg" },
+  { key: "quick", label: "Đánh thường", description: "Đấu với người chơi", background: "/art/spells/nui.jpg" },
+  { key: "ranked", label: "Xếp hạng", description: "Tranh tài xếp hạng — Sắp có", background: "/env/rung-ram.jpg" },
+  { key: "custom", label: "Tuỳ chọn", description: "Tạo phòng hoặc nhập mã", background: "/art/spells/thanh-dia-thien-su.jpg" },
+];
+
+function ModeSymbol({ mode }: { mode: LobbyMode }) {
+  if (mode === "quick") return <Zap aria-hidden="true" />;
+  if (mode === "custom") return <Swords aria-hidden="true" />;
+  if (mode === "ranked") return <Trophy aria-hidden="true" />;
+  return <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M17 53h32v6H15v-6h2Zm4-4c0-10 14-14 14-23l-9 6-11-5 7-13 12-5 4-7 5 12c11 12 9 24 6 35H21Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="m24 23 4-2M39 18c8 13 6 20 3 26" fill="none" stroke="#12283b" strokeWidth="3" strokeLinecap="round"/></svg>;
+}
+
 function Home() {
   useLang();
   const stars = useStars();
+  const picker = useRef<HTMLDialogElement>(null);
+  const [selectedMode, setSelectedMode] = useState<LobbyMode>("quick");
+  useEffect(() => {
+    const saved = localStorage.getItem("clash-play-mode");
+    if (saved === "ai" || saved === "quick" || saved === "custom") setSelectedMode(saved);
+  }, []);
+  const selected = lobbyModes.find(item => item.key === selectedMode)!;
+  function openPicker() { playUi("select"); picker.current?.showModal(); }
+  function selectMode(mode: LobbyMode) {
+    if (mode === "ranked") return;
+    setSelectedMode(mode);
+    localStorage.setItem("clash-play-mode", mode);
+    playUi("confirm");
+    picker.current?.close();
+  }
   const [mine, setMine] = useState<string | null>(null);
   const [face, setFace] = useState<string | null>(null);
   useEffect(() => {
@@ -70,16 +101,32 @@ function Home() {
             <i className="lobby-avatar">{face ? <img src={artSrc(face)} alt="" draggable={false} /> : null}</i>
           </button>
         </div>
-        <Link to="/modes" className="lobby-mode" onPointerDown={() => playUi("select")} aria-label={tr("Chọn chế độ chơi")}>
+        <button type="button" className="lobby-mode" onClick={openPicker} aria-label={tr("Chọn chế độ chơi")} aria-haspopup="dialog">
           <span className="lobby-mode-marker" aria-hidden="true" />
-          <b>{tr("Đánh thường")}</b>
+          <b>{tr(selected.label)}</b>
           <img src="/ui/home/season-cards.svg" alt="" draggable={false} />
+          <span className={`lobby-bar-symbol is-${selectedMode}`}><ModeSymbol mode={selectedMode} /></span>
           <RefreshCw aria-hidden="true" />
-        </Link>
+        </button>
         <div className="lobby-play" aria-label={tr("Chơi")}>
           <button type="button" className="lobby-play-card" disabled aria-label="PvE — Phiêu lưu (sắp có)"><img src="/ui/home/pve.svg" alt="PvE · Phiêu lưu" draggable={false} /></button>
           <Link to="/modes" className="lobby-play-card" onPointerDown={() => playUi("confirm")} aria-label="PvP — Đấu hạng"><img src="/ui/home/pvp.svg" alt="PvP · Đấu hạng" draggable={false} /></Link>
         </div>
+        <dialog ref={picker} className="lobby-picker" aria-labelledby="lobby-picker-title" onClick={event => {
+          if (event.target === event.currentTarget) {
+            const box = event.currentTarget.getBoundingClientRect();
+            if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) picker.current?.close();
+          }
+        }}>
+          <header><h2 id="lobby-picker-title">{tr("Chọn chế độ")}</h2><button type="button" autoFocus onClick={() => picker.current?.close()} aria-label={tr("Đóng")}><X /></button></header>
+          <div className="lobby-picker-grid">
+            {lobbyModes.map(item => <button key={item.key} type="button" className={`lobby-choice is-${item.key}${selectedMode === item.key ? " is-selected" : ""}`} disabled={item.key === "ranked"} onClick={() => selectMode(item.key)} aria-pressed={selectedMode === item.key}>
+              <img src={item.background} alt="" draggable={false} />
+              <span className="lobby-choice-content"><ModeSymbol mode={item.key} /><b>{tr(item.label)}</b><small>{tr(item.description)}</small></span>
+              {selectedMode === item.key ? <span className="lobby-choice-check"><Check /></span> : null}
+            </button>)}
+          </div>
+        </dialog>
         <nav className="lobby-navigation" aria-label={tr("Điều hướng chính")}>
           <button type="button" disabled><Trophy aria-hidden="true" /><span>{tr("Xếp hạng")}</span></button>
           <Link to="/deck" onPointerDown={() => playUi("select")}><Layers aria-hidden="true" /><span>{tr("Bộ bài")}</span></Link>
