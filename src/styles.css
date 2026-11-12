@@ -13687,5 +13687,5 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 @media (hover: hover) { .mx-tab:hover, .mx-back:hover { background-color: rgba(150, 215, 255, 0.12); } .mx-card.is-q:hover { filter: brightness(1.08); } }
 @media (prefers-reduced-motion: reduce) { .mx-sweep.is-on, .mx-card.is-q img.mx-box { animation: none !important; } }
 
-/* Icon keyword chèn giữa câu mô tả (chủ game 12/11): cỡ giữ như icon trước dòng, kéo xuống và lề âm để KHÔNG đẩy dòng lên. */
-.kw-inline { display: inline-grid; height: 1.6em; vertical-align: -0.55em; margin: -0.5em 0.2em -0.5em 0; }
+/* Icon keyword chèn giữa câu mô tả (chủ game 12/11): cao ~78% icon trước dòng (2,15rem), tâm hình nằm trên đường giữa chữ (vertical-align: middle), lề âm để KHÔNG đẩy dòng lên. */
+.kw-inline { display: inline-grid; height: 2.05em; vertical-align: middle; margin: -0.6em 0.25em -0.6em 0; }
