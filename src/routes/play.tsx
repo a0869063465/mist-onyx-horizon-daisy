@@ -1812,6 +1812,7 @@ function PlayPage() {
   const [handPick, setHandPick] = useState<{ pile: "reserve" | "spell"; index: number; id: string } | null>(null);
   /** Bấm 1 lần lá quái trên tay: hàng nút (menu) rồi 2 mũi tên chọn hàng (rows). */
   const [pickStage, setPickStage] = useState<"menu" | "rows">("menu");
+  const spellUse = useRef<{ run: () => void; cost: number } | null>(null);
   useEffect(() => setPickStage("menu"), [handPick]);
   const lastTap = useRef<{ pile: "reserve" | "spell"; index: number; at: number } | null>(null);
   // `slot` null: chosen from the Hiến tế button, the row arrows choose where it lands; a drop on a slot keeps that slot.
@@ -3615,7 +3616,7 @@ function PlayPage() {
   // The row arrows stand outside the picked card, over its top edge: where that card is on the board, in % of the board.
   const [pickSpot, setPickSpot] = useState<{ x: number; top: number } | null>(null);
   useLayoutEffect(() => {
-    const el = handPick?.pile === "reserve" ? document.querySelector(`[data-reserve="${handPick.index}"]`) : null;
+    const el = handPick?.pile === "reserve" ? document.querySelector(`[data-reserve="${handPick.index}"]`) : handPick?.pile === "spell" ? document.querySelector(`[data-hand="s:${handPick.index}"] .hand-card`) : null;
     const board = el?.closest(".board")?.getBoundingClientRect();
     if (!el || !board) {
       setPickSpot(null);
@@ -5541,6 +5542,9 @@ function PlayPage() {
   }
 
   // The picked monster in hand that can be summoned now (a monster flashing orange shows its skill instead).
+  // Nút "Dùng phép" của lá phép đang chọn (chủ game 12/11): nằm trên lá như nút Triệu hồi; `useNow` do vòng vẽ tay bài gán.
+  spellUse.current = null;
+  const spellUseNow = () => spellUse.current;
   const pickHeld = handPick?.pile === "reserve" ? you.reserve[handPick.index] : undefined;
   const pickMon = pickHeld && pickHeld.id === handPick?.id && canPlay && !(pickHeld.id === "cuc-bong-ma-quai" && cotton.hand) && !(pickHeld.id === "the-than-cua-shien" && standHand) ? handPick.index : null;
   const pickRows = pickMon !== null ? { front: rowSlot("front", summonAt(pickMon)), back: rowSlot("back", summonAt(pickMon)) } : null;
@@ -7509,16 +7513,7 @@ function PlayPage() {
                     <CardFace spellId={id} hand gems={tolled ? `${spellCard(id)?.gems ?? 0}+1` : undefined} selected={open || picked} />
                   </button>
                 );
-                // One tap on a spell that can be used now shows its use icon (chủ game 28/10: "Bấm 1 lần hiện icon dùng phép").
-                return (
-                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`s:${index}`}>
-                    {card}
-                    {picked && (usable || slowUse) && !using ? (
-                      <HandUse
-                        icon="fairy-wand"
-                        kind="spell"
-                        label="Dùng phép"
-                        onUse={() => {
+                const useNow = () => {
                           if (secondTap("spell", index)) {
                             openSheet("spell", index);
                             return;
@@ -7600,9 +7595,12 @@ function PlayPage() {
                           const aimedAlly = aimed && you.field.some((mon) => mon?.uid === aimed) ? aimed : null;
                           const target = id === "ngan-chan-phong-ngu" ? aimedFoe ?? foeMon?.uid ?? null : id === "co-may-thoi-gian" || id === "giap-co-khi" ? aimedAlly : null;
                           apply(castSpell(duel, index, target));
-                        }}
-                      />
-                    ) : null}
+                        };
+                if (picked && (usable || slowUse) && !using) spellUse.current = { run: useNow, cost: (spellCard(id)?.gems ?? 0) + (tolled ? 1 : 0) };
+                // One tap on a spell that can be used now shows its use icon (chủ game 28/10: "Bấm 1 lần hiện icon dùng phép").
+                return (
+                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`s:${index}`}>
+                    {card}
                   </div>
                 );
               }),
@@ -7614,6 +7612,11 @@ function PlayPage() {
             {pickActs.map((act) => (
               <ActionButton key={act.key} action={act} mini />
             ))}
+          </span>
+        ) : null}
+        {handPick?.pile === "spell" && spellUseNow() && pickSpot ? (
+          <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
+            <ActionButton action={{ key: "cast", label: "Dùng phép", tone: "purple", cost: spellUseNow()?.cost ?? 0, onPress: spellUseNow()?.run }} mini />
           </span>
         ) : null}
         {(pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
