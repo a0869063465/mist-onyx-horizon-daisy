@@ -79,6 +79,7 @@ import {
   castSpell,
   concede,
   createDuel,
+  openingDraw,
   declareSkill,
   dismissGlimpse,
   draw,
@@ -406,6 +407,8 @@ const RAW_SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
 const ROW_SLOTS: Record<SummonRow, Slot[]> = { front: [0, 1, 2], back: [3, 4, 5] };
 /** Two taps on the same card in hand within this many ms open its sheet (chủ game 28/10). */
 const DOUBLE_TAP = 350;
+/** Gợi ý lượt 1 (t1-draw1, t1-draw0, t1-pass, t1-more): tạm ẩn từ 12/11, đặt false để bật lại. */
+const TURN_ONE_HINTS_OFF = true;
 
 /** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
 const FLOOR_ART = "/board-floor.jpg";
@@ -1956,6 +1959,8 @@ function PlayPage() {
   }
   /** Lượt 1: mọi hành động lặp lại (nhấp lá, kéo quái, bấm quái) nhắc người chơi bước tiếp theo. */
   function turnOneHint() {
+    // Tạm ẩn (chủ game 12/11): lượt đầu đã tự rút 1 lá nên các gợi ý cũ của lượt 1 không còn đúng.
+    if (TURN_ONE_HINTS_OFF) return;
     if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1) return;
     const mine = duel.players[viewer];
     const one = <b className="hint-s1">1 sao</b>;
@@ -2311,7 +2316,7 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
-      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : newMatch(mode);
+      const next = mode === "test" ? (loadTestDuel() ?? openingDraw(createDuel(loadDeck(), "test"))) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
         matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
@@ -4179,7 +4184,7 @@ function PlayPage() {
 
   function restartTest() {
     if (!duel || duel.mode !== "test") return;
-    const fresh = createDuel(loadDeck(), "test");
+    const fresh = openingDraw(createDuel(loadDeck(), "test"));
     setTestPast((list) => [...list, structuredClone(duel)].slice(-40));
     prevDuel.current = fresh;
     seenViewer.current = viewerSide(fresh, boardActor(fresh), netRef.current?.seat ?? null);

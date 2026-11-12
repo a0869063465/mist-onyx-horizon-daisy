@@ -615,7 +615,8 @@ export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
   };
   const done: [boolean, boolean] = side === 0 ? [true, opener.done[1]] : [opener.done[0], true];
   const players: [Player, Player] = side === 0 ? [swapped, state.players[1]] : [state.players[0], swapped];
-  return { ...state, players, opener: done[0] && done[1] ? null : { done } };
+  const next: Duel = { ...state, players, opener: done[0] && done[1] ? null : { done } };
+  return next.opener ? next : openingDraw(next);
 }
 
 /** Máy đổi bài (chủ game 22/10, câu 5): the 3 and 4 star monsters, which it cannot summon early; the spell stays. */
@@ -2947,22 +2948,40 @@ function drawCore(state: Duel): Duel {
   if (state.step !== "main" || state.winner) return state;
   const waiting = needUpkeep(state);
   if (waiting) return waiting;
-  const side = state.turn;
+  const drawn = drawFor(state, state.turn);
+  return typeof drawn === "string" ? note(state, drawn) : drawn;
+}
+
+/** One draw for `side`: 1 gem, top of the shared pile, counted as that round's draw. A string is why it cannot. */
+function drawFor(state: Duel, side: Side): Duel | string {
   let player = state.players[side];
-  if (player.drawLock) return note(state, "Lượt này không được rút bài.");
-  if (player.draws >= 1) return note(state, "Mỗi vòng chỉ rút 1 lá.");
-  if (pileLeft(player) === 0) return note(state, "Hết bài để rút.");
+  if (player.drawLock) return "Lượt này không được rút bài.";
+  if (player.draws >= 1) return "Mỗi vòng chỉ rút 1 lá.";
+  if (pileLeft(player) === 0) return "Hết bài để rút.";
   const before = player.stars;
   const paid = pay(player, 1);
-  if (!paid) return note(state, "Rút bài cần 1 gem trên quả cầu.");
+  if (!paid) return "Rút bài cần 1 gem trên quả cầu.";
   const top = takeTop(paid);
-  if (!top) return note(state, "Hết bài để rút.");
+  if (!top) return "Hết bài để rút.";
   player = { ...top.player, draws: top.player.draws + 1 };
   const pile = top.kind;
   const kind = pile === "monster" ? "1 quái" : "1 phép";
   const cardName = pile === "monster" ? monsterCard(player.reserve.at(-1)?.id ?? "")?.name : spellCard(player.hand.at(-1) ?? "")?.name;
   const shown = cardName ?? kind;
   return note(pingStars(patch({ ...state, seq: state.seq + 1 }, side, player), side, before, player.stars), `${sideName(side)} rút ${shown}.`);
+}
+
+/**
+ * Luật 12/11 (chủ game): lượt đầu cả hai bên tự rút 1 lá, tốn 1 gem như rút tay, và đó là lá rút của vòng 1
+ * (vòng 1 không rút thêm). Chạy lúc bảng đổi bài đầu trận đóng; trận không có bảng đó (Test) thì chạy lúc tạo trận.
+ */
+export function openingDraw(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as Side[]) {
+    const drawn = drawFor(next, side);
+    if (typeof drawn !== "string") next = drawn;
+  }
+  return next;
 }
 
 export function summon(state: Duel, reserveIndex: number, slot: Slot): Duel {

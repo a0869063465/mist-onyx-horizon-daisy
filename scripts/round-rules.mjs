@@ -1143,6 +1143,28 @@ test("Đại hồng thuỷ huỷ diệt: chọn 1 quái, chỉ cả hàng của 
   }
 });
 
+test("luật 12/11: đổi bài xong, cả hai bên tự rút 1 lá, tốn 1 gem, vòng 1 không rút thêm", () => {
+  let s = D.createDuel(undefined, "ai");
+  assert.ok(s.opener, "trận Vs Máy còn bảng đổi bài của người chơi");
+  assert.equal(s.players[0].draws, 0, "chưa đổi bài thì chưa rút");
+  const hand0 = s.players[0].reserve.length + s.players[0].hand.length;
+  const hand1 = s.players[1].reserve.length + s.players[1].hand.length;
+  const pile0 = D.pileLeft(s.players[0]);
+  const orb = [s.players[0].orb, s.players[1].orb];
+  s = D.openerSwap(s, 0, { reserve: [], hand: [] });
+  assert.equal(s.opener, null);
+  for (const side of [0, 1]) {
+    const p = s.players[side];
+    assert.equal(p.draws, 1, `bên ${side} đã rút`);
+    assert.equal(p.orb, orb[side] - 1, `bên ${side} trả 1 gem`);
+  }
+  assert.equal(s.players[0].reserve.length + s.players[0].hand.length, hand0 + 1);
+  assert.equal(s.players[1].reserve.length + s.players[1].hand.length, hand1 + 1);
+  assert.equal(D.pileLeft(s.players[0]), pile0 - 1);
+  const again = D.draw(s);
+  assert.equal(again.players[0].draws, 1, "vòng 1 không rút thêm");
+});
+
 test("luật 0.2: Vãy phá giáp trừ 2 thủ TRƯỚC rồi mới tính sát thương", () => {
   let s = board({ 0: ["khung-long-vay-kiem", { atk: 4, def: 0, hp: 10, maxHp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 0, def: 3, mdef: 0, hp: 10, maxHp: 10 }] });
   const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));

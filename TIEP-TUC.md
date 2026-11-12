@@ -7,6 +7,11 @@
 2. Hiện trạng: `round-rules` lúc 63/64 lúc 64/64: bài "Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả" chập chờn (ghi nhận từ trước, chưa xác định có do lần gộp này không). Chưa chụp bằng mắt 4 keyword mới.
 3. Việc sắp làm (chưa làm, phiên khác): (a) tìm nguyên nhân bài kiểm tra chập chờn (Opus 5.5 high); (b) gộp nhánh `ccr-902b4e60-v4q179` (sửa lỗi Hỗ công cộng vào skill + lá Tê giáp có cánh + luật trong `AGENTS.project.md`; chủ game đã duyệt, cần xem trước khi gộp; Sonnet 5.5 medium); (c) nhánh `thietke`/`vfx` (6 icon menu chưa dùng) và `quai-moi` (11 ảnh minh hoạ lá chưa có lá): giữ nguyên trên GitHub, chờ chủ game quyết; (d) nhánh `ccr-65a3d75a` (bản dọn gọn ghi chú) không gộp. Không xoá nhánh nào.
 
+## Lượt đầu tự rút 1 lá (12/11, Opus 5.5 high, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
+1. Việc vừa làm: `openingDraw` (duel.ts, tách `drawFor` từ `drawCore`): lúc bảng đổi bài đóng (`openerSwap` khi cả hai xong) mỗi bên tự rút 1 lá, tốn 1 gem, tính là lá rút vòng 1. Trận Test gọi lúc tạo trận (play.tsx). Hướng dẫn và Thực chiến không đổi (trận dựng sẵn). Gợi ý lượt 1 tắt bằng `TURN_ONE_HINTS_OFF` (play.tsx).
+2. Hiện trạng: round-rules 66/67 (bài Phục kích chập chờn cũ), tsc sạch, thử Vs Máy 412×915: mỗi bên 4 lá, 1 sao, còn 1 gem. Chưa thử online 2 máy, chưa xem lá bay của lá rút tự động.
+3. Việc sắp làm: chờ chủ game xem.
+
 ## Menu chính làm lại theo ảnh (11/11, Sonnet 5.5 medium, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
 1. Việc vừa làm: dựng lại `index.tsx` + `home-lobby.css` bằng ảnh nguyên liệu chủ game gửi (H3/H4/H5/H6/H7, chữ giữ trong ảnh), ảnh cắt ở `public/ui/home/` (btn-*, nav, pve, pvp, bar-*, dialog, star-*, avatar-frame; script cắt nằm ở scratchpad, mất khi hết phiên). Chữ hồ sơ dùng font Outfit + gradient đo từ H4 (tên #ECD7AC→#E4BD84→#BE884B, hạng xanh lá, số trắng), không huy hiệu hạng. Sao thường = số thật, sao hiếm = 0. Thanh chế độ đổi theo bảng chọn (H5, hộp bấm trong suốt đè ảnh, Xếp hạng không mở được); vầng xanh dưới thanh dưới theo mục vừa bấm.
 2. Hiện trạng: tsc sạch, thử Chromium 412×915 và 826×1905: bấm thanh mở bảng, chọn Đánh với máy lưu `clash-play-mode`, Xếp hạng không đóng, Thư mở `/mail`. Mọi nút có hiệu ứng lún/sáng/vòng (khoá thì rung). Chưa thử điện thoại thật. Vân xanh đen cũ giữ.
