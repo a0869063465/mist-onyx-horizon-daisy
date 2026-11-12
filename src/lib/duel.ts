@@ -14,6 +14,7 @@ import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
+import { keywordsOf } from "./keywords.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
 export type Side = 0 | 1;
@@ -28,6 +29,11 @@ export const FIELD_SLOTS = 6;
 export const ROW_SLOTS = 3;
 export function backSlot(slot: number): boolean {
   return slot >= ROW_SLOTS;
+}
+/** Hộ vệ (chủ game 10/11): quái mang keyword Hộ vệ chỉ được triệu hồi vào ô hàng trước. */
+export function guardBarred(cardId: string | undefined | null, slot: number): string | null {
+  if (!cardId || !backSlot(slot) || !keywordsOf(cardId).includes("ho-ve")) return null;
+  return "Quái Hộ vệ chỉ được đặt ở hàng trước.";
 }
 /** Mọi ô, hàng trước trước: ô trống đầu tiên từ trái sang của hàng trước, rồi tới hàng sau. */
 export const ALL_SLOTS: readonly Slot[] = [0, 1, 2, 3, 4, 5];
@@ -126,6 +132,10 @@ export type FieldMon = {
   row?: "back";
   /** Đã đánh hoặc dùng kỹ năng trong vòng này: mỗi quái một lần mỗi vòng. */
   used?: boolean;
+  /** Tháo vát: đã dùng lần hành động thứ nhất trong vòng (còn lần thứ hai). */
+  knack?: number;
+  /** Lá Trang bị đang gắn: chỉ số đã cộng, `again` = đã gắn lần 2 (rời sân thì mất hẳn). */
+  gear?: GearWorn[];
   /** Chỉ trong lúc giáp lá cà: quái này không đánh trả ngay mà được Trả đòn riêng sau đòn (`afterBlow`). */
   waitCounter?: boolean;
   /** Hộp ma thuật (chủ game 02/11): đứng ở sân của bên kia tới hết vòng; giá trị là bên chủ thật. Không ai điều khiển. */
@@ -135,6 +145,8 @@ export type FieldMon = {
 export type PileKind = "monster" | "spell";
 
 export type PileMon = { id: string; hp: number; maxHp: number; saved?: Omit<FieldMon, "uid">; toll?: boolean; freeAt?: number; fake?: boolean };
+
+export type GearWorn = { id: string; again?: boolean; atk: number; def: number; mdef: number; hp: number };
 
 export type Player = {
   hp: number;
@@ -217,6 +229,15 @@ export type Hold = {
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
+  /** Giáp và Vuốt (chủ game 04/11): it waits in the chain like Phục kích; once the chain lands the skill or spell on
+   *  `bird` is stopped and the bird grows. */
+  ward?: { bird: string };
+  /**
+   * Hấp thụ ma pháp nuốt được phép chậm, phép nhanh và skill dạng phép (chủ game 04/11). The last fast answer in the
+   * chain keeps the board as it was just before it took effect (its card already paid), so the answer can be swallowed
+   * and the chain goes on from there.
+   */
+  eat?: { card: string; side: Side; back: Duel };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -376,7 +397,7 @@ function woundPile(card: PileMon, dmg: number): PileMon | null {
   return { ...card, hp, saved: card.saved ? { ...card.saved, hp } : card.saved };
 }
 
-const LIFE = 16;
+const LIFE = 20;
 
 /** Số lá trên tay đầu trận: 3 lá đầu xấp chung, quái hay phép tuỳ xấp (chủ game 28/10). */
 export const OPENING_CARDS = 3;
@@ -553,7 +574,36 @@ export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
     hand: player.hand.filter((_, index) => !outSpells.has(index)),
     tolls: tolls.filter((_, index) => !outSpells.has(index)),
   };
+  const keptReserve = kept.reserve;
+  const keptHand = kept.hand;
   for (let n = 0; n < backMonsters.length + backSpells.length; n += 1) kept = takeTop(kept)?.player ?? kept;
+  // Lá mới đứng đúng chỗ lá bị đổi, các lá còn lại giữ nguyên chỗ (chủ game 04/11, V2); lá nào khác loại thì xuống cuối.
+  const newMonsters = kept.reserve.slice(keptReserve.length);
+  const newSpells = kept.hand.slice(keptHand.length);
+  const newTolls = (kept.tolls ?? []).slice(keptHand.length);
+  let nextMonster = 0;
+  const reserve: typeof kept.reserve = [];
+  player.reserve.forEach((held, index) => {
+    if (!outMonsters.has(index)) reserve.push(held);
+    else if (nextMonster < newMonsters.length) reserve.push(newMonsters[nextMonster++]);
+  });
+  reserve.push(...newMonsters.slice(nextMonster));
+  let nextSpell = 0;
+  const hand: string[] = [];
+  const handTollsNow: boolean[] = [];
+  player.hand.forEach((id, index) => {
+    if (!outSpells.has(index)) {
+      hand.push(id);
+      handTollsNow.push(tolls[index]);
+    } else if (nextSpell < newSpells.length) {
+      hand.push(newSpells[nextSpell]);
+      handTollsNow.push(newTolls[nextSpell]);
+      nextSpell += 1;
+    }
+  });
+  hand.push(...newSpells.slice(nextSpell));
+  handTollsNow.push(...newTolls.slice(nextSpell));
+  kept = { ...kept, reserve, hand, tolls: handTollsNow };
   const spellPile = shuffle([...kept.spellDeck.map((id, index): [string, boolean] => [id, kept.spellTax?.[index] ?? false]), ...backSpells]);
   const monsterDeck = shuffle([...kept.monsterDeck, ...backMonsters]);
   const swapped: Player = {
@@ -1174,8 +1224,8 @@ function withRows(player: Player): Player {
 }
 
 function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
-  const player = envBoost(syncOrder(withRows(rawPlayer)));
   const prev = state.players[side];
+  const player = gearHome(prev, envBoost(syncOrder(withRows(rawPlayer))));
   const gone = [
     ...departed(prev.field, player.field),
     ...(prev.env && prev.env !== player.env ? [prev.env] : []),
@@ -1189,6 +1239,102 @@ function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
     born = { ...(born ?? {}), [mon.uid]: { mon: structuredClone(mon), slot: slot as Slot } };
   });
   return { ...state, players, born };
+}
+
+/** Lá Trang bị (chủ game 10/11). */
+export function gearCard(cardId: string | null | undefined): boolean {
+  return Boolean(cardId && spellCard(cardId)?.gear);
+}
+
+/** Chỉ số ghi trên lá Trang bị: +N công, +N thủ, +N thủ phép, +N phòng ngự (cả thủ và thủ phép), +N máu (tối đa). */
+export function gearStats(cardId: string): Omit<GearWorn, "id" | "again"> {
+  const text = plainCopy(spellCard(cardId)?.effect ?? "");
+  const sum = (pattern: RegExp) => grabNums(text, pattern).reduce((total, n) => total + n, 0);
+  const guard = sum(/\+\s*(\d+)\s*phòng\s*ngự/gi);
+  return {
+    atk: sum(/\+\s*(\d+)\s*công/gi),
+    def: sum(/\+\s*(\d+)\s*thủ(?!\s*phép)/gi) + guard,
+    mdef: sum(/\+\s*(\d+)\s*thủ\s*phép/gi) + guard,
+    hp: sum(/\+\s*(\d+)\s*máu/gi),
+  };
+}
+
+function wearGear(mon: FieldMon, gear: GearWorn): FieldMon {
+  const cap = mon.maxHp || mon.hp;
+  return {
+    ...mon,
+    atk: mon.atk + gear.atk,
+    def: mon.def + gear.def,
+    mdef: mon.mdef + gear.mdef,
+    maxHp: cap + gear.hp,
+    hp: mon.hp + gear.hp,
+    raised: markRaised(mon, { atk: gear.atk, def: gear.def, mdef: gear.mdef, hp: gear.hp }),
+    gear: [...(mon.gear ?? []), gear],
+  };
+}
+
+/** Bỏ chỉ số của mọi lá Trang bị (bản quái đã rời sân còn giữ trong tay, xấp). */
+function shedGear<T extends Omit<FieldMon, "uid">>(mon: T): T {
+  if (!mon.gear?.length) return mon;
+  const add = mon.gear.reduce((total, g) => ({ atk: total.atk + g.atk, def: total.def + g.def, mdef: total.mdef + g.mdef, hp: total.hp + g.hp }), { atk: 0, def: 0, mdef: 0, hp: 0 });
+  const cap = Math.max(1, (mon.maxHp || mon.hp) - add.hp);
+  const raised = mon.raised ? { atk: mon.raised.atk - add.atk, def: mon.raised.def - add.def, mdef: mon.raised.mdef - add.mdef, hp: mon.raised.hp - add.hp } : mon.raised;
+  return { ...mon, atk: mon.atk - add.atk, def: mon.def - add.def, mdef: mon.mdef - add.mdef, maxHp: cap, hp: Math.min(cap, mon.hp), raised, gear: undefined };
+}
+
+/**
+ * Quái rời sân bằng mọi cách (chủ game 10/11): lá Trang bị trên nó về tay chủ, lần dùng sau tốn thêm 1 mana; lá đã gắn
+ * lần 2 thì vào mộ. Bản quái giữ lại (về tay, về xấp) bỏ chỉ số trang bị.
+ */
+function gearHome(prev: Player, player: Player): Player {
+  const stay = new Set(player.field.filter((mon): mon is FieldMon => Boolean(mon)).map((mon) => mon.uid));
+  const lost = prev.field.filter((mon): mon is FieldMon => Boolean(mon?.gear?.length && !stay.has(mon.uid)));
+  const kept = (card: PileMon): PileMon => {
+    if (!card.saved?.gear?.length) return card;
+    const saved = shedGear(card.saved);
+    const cap = saved.maxHp || saved.hp;
+    return { ...card, saved, maxHp: cap, hp: Math.min(card.hp, cap) };
+  };
+  const reserve = player.reserve.some((card) => card.saved?.gear?.length) ? player.reserve.map(kept) : player.reserve;
+  const monsterDeck = player.monsterDeck.some((card) => card.saved?.gear?.length) ? player.monsterDeck.map(kept) : player.monsterDeck;
+  if (!lost.length && reserve === player.reserve && monsterDeck === player.monsterDeck) return player;
+  const worn = lost.flatMap((mon) => mon.gear ?? []);
+  const back = worn.filter((g) => !g.again).map((g) => g.id);
+  const gone = worn.filter((g) => g.again).map((g) => g.id);
+  return {
+    ...player,
+    reserve,
+    monsterDeck,
+    hand: [...player.hand, ...back],
+    tolls: [...handTolls(player), ...back.map(() => true)],
+    ...(gone.length ? { spent: [...(player.spent ?? prev.spent ?? []), ...gone] } : {}),
+  };
+}
+
+/** Gắn lá Trang bị lên 1 quái của mình: chỉ ở lượt chính, không dùng trong giao tranh. */
+function castGear(state: Duel, handIndex: number, targetUid: string | null, replay: boolean): Duel {
+  if (state.step !== "main") return note(state, "Trang bị không dùng trong giao tranh.");
+  const side = state.turn;
+  const player = state.players[side];
+  const card = spellCard(player.hand[handIndex] ?? "");
+  if (!card) return state;
+  const mine = player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.cardId !== "mu" && mon.abroad === undefined));
+  const ally = targetUid ? mine.find((mon) => mon.uid === targetUid) ?? null : mine.length === 1 ? mine[0]! : null;
+  if (!ally) return note(state, "Chọn quái của bạn để trang bị.");
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  let owner = player;
+  if (!replay) {
+    const bill = playBill(card.gems, tolled, player.orb, player.flask);
+    if (bill) return note(state, bill);
+    const paid = payPlayed(player, card.gems, tolled);
+    if (!paid) return note(state, `Cần ${card.gems} gem.`);
+    owner = paid;
+  }
+  const dropped = dropHandCard(owner, handIndex);
+  const worn: GearWorn = { id: card.id, ...(tolled ? { again: true } : {}), ...gearStats(card.id) };
+  const field = dropped.field.map((mon) => (mon?.uid === ally.uid ? wearGear(mon, worn) : mon));
+  const next = pingStars(patch(state, side, { ...dropped, field }), side, player.stars, dropped.stars);
+  return note(next, `${cardOf(ally).name} được trang bị ${card.name}.`, "heal");
 }
 
 function cardOf(mon: FieldMon): MonsterCard {
@@ -2720,7 +2866,32 @@ function skillIsFree(cardId: string, index: number): boolean {
 function markUsed(state: Duel, side: Side, uid: string): Duel {
   const player = state.players[side];
   if (!player.field.some((mon) => mon?.uid === uid)) return state;
-  return patch(state, side, { ...player, field: player.field.map((mon) => (mon?.uid === uid ? { ...mon, used: true } : mon)) });
+  const spend = (mon: FieldMon): FieldMon => (knackOf(mon) && !mon.knack ? { ...mon, knack: 1 } : { ...mon, used: true });
+  return patch(state, side, { ...player, field: player.field.map((mon) => (mon?.uid === uid ? spend(mon) : mon)) });
+}
+
+/** Tháo vát (chủ game 10/11): đánh thường hoặc dùng kỹ năng 2 lần mỗi vòng; chặn vẫn như quái thường. */
+function knackOf(mon: FieldMon): boolean {
+  return keywordsOf(mon.cardId).includes("thao-vat");
+}
+
+/** Quái Tháo vát đã hành động 1 lần trong vòng, chưa hết lượt thứ hai, không bị khống chế: còn hành động được. */
+export function knackOpen(mon: FieldMon | null | undefined): boolean {
+  return Boolean(mon && knackOf(mon) && mon.knack === 1 && !mon.used && mon.dim && !mon.curse && !mon.cage && !barred(mon) && (mon.path ?? 0) === 0);
+}
+
+/**
+ * Lần hành động thứ hai của quái Tháo vát: quái mệt sau lần đầu được đứng dậy để làm tiếp; bị từ chối thì bàn về như cũ.
+ */
+function knackRun(state: Duel, uid: string, run: (from: Duel) => Duel): Duel | null {
+  if (state.step !== "main") return null;
+  const side = state.turn;
+  const player = state.players[side];
+  const mon = player.field.find((unit) => unit?.uid === uid) ?? null;
+  if (!knackOpen(mon)) return null;
+  const fresh = patch(state, side, { ...player, field: player.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: false } : unit)) });
+  const next = run(fresh);
+  return next === fresh ? state : next.players === fresh.players ? { ...next, players: state.players } : next;
 }
 
 function dueUpkeep(mon: FieldMon | null): mon is FieldMon {
@@ -2823,6 +2994,8 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
     if ((player.aside ?? 0) >= 1) return note(state, `${card.name} đã triệu hồi trong lượt này.`);
   } else if (player.summons >= 1) return note(state, "Mỗi vòng chỉ triệu hồi 1 lần.");
   if (player.field[slot]) return note(state, "Ô này đã có quái.");
+  const guardRow = guardBarred(cardId, slot);
+  if (guardRow) return note(state, guardRow);
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   const short = player.stars < card.stars;
@@ -2911,9 +3084,13 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: str
   const freed = unique.map((uid) => player.field.findIndex((mon) => mon?.uid === uid)).filter((index) => index >= 0);
   let land: Slot = slot;
   if (occupant && !unique.includes(occupant.uid)) {
+    const room = freed.filter((index) => !guardBarred(cardId, index));
     if (freed.length === 0) return note(state, "Ô này đã có quái.");
-    land = freed[Math.floor(Math.random() * freed.length)] as Slot;
+    if (room.length === 0) return note(state, guardBarred(cardId, freed[0]) ?? "Ô này đã có quái.");
+    land = room[Math.floor(Math.random() * room.length)] as Slot;
   }
+  const guardRow = guardBarred(cardId, land);
+  if (guardRow) return note(state, guardRow);
   if ((player.locked?.[land] ?? 0) > 0 && !player.field[land]) return note(state, "Ô này đang ngập, chưa dùng được");
   if (boxShut(state, side, land) && !player.field[land]) return note(state, "Ô này bị khoá tới hết vòng.");
   const stars = cardStars(cardId, held.saved?.level ?? 1);
@@ -3022,6 +3199,8 @@ function fuseCore(state: Duel, reserveIndex: number, fieldUid: string, slot: Slo
   const result = resultId ? monsterCard(resultId) : undefined;
   if ((!recipe && !knight) || !handCard || !result) return note(state, "Không hợp nhất được.");
   if (player.field[slot] && player.field[slot]?.uid !== fieldUid && !(knight && player.field[slot]?.cardId && ["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"].includes(player.field[slot]?.cardId ?? ""))) return note(state, "Ô này đã có quái.");
+  const guardRow = guardBarred(result.id, slot);
+  if (guardRow) return note(state, guardRow);
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   const born = place({ ...state, seq: state.seq + 1 }, side, result.id);
@@ -3185,6 +3364,18 @@ function guardStrikeKind(mon: FieldMon, roster?: string[]): "phys" | "spell" {
   return "phys";
 }
 
+/** Keyword Đòn đánh phép (chủ game 09/11): đòn đánh thường của quái này gây sát thương phép. */
+function magicStrike(mon: FieldMon): boolean {
+  return keywordsOf(mon.cardId).includes("phep");
+}
+
+/** Keyword Đâm xuyên (chủ game 09/11): đòn đánh thường hạ quái thì sát thương thừa đánh thẳng lên người chơi. */
+function pierceLeft(attacker: FieldMon, fallen: FieldMon, surplus: number): number {
+  if (attacker.horn || attacker.gaze || attacker.bolt) return 0;
+  if (!keywordsOf(attacker.cardId).includes("dam-xuyen")) return 0;
+  return fallen.hp <= 0 && surplus > 0 ? surplus : 0;
+}
+
 function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | null>): { mon: FieldMon; bite: number; surplus: number } {
   if (raw <= 0) return { mon: defender, bite: 0, surplus: 0 };
   const mon = openShade(defender);
@@ -3207,11 +3398,25 @@ function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | 
   return { ...hit, mon: { ...hit.mon, stored } };
 }
 
+/** Đá tảng (chủ game 10/11): quái mang keyword Đá tảng. */
+export function boulder(mon: FieldMon | null | undefined): boolean {
+  return Boolean(mon && keywordsOf(mon.cardId).includes("da-tang"));
+}
+
+/** Sức đánh của đòn đánh thường: Đá tảng không có công, đánh bằng 70% máu hiện tại (làm tròn). */
+export function strikeAtk(mon: FieldMon): number {
+  return boulder(mon) ? Math.round(Math.max(0, mon.hp) * 0.7) : liveAtk(mon);
+}
+
 function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
-  let atk = liveAtk(attacker) + rockA;
+  // Vãy phá giáp: trừ thủ của quái địch TRƯỚC rồi mới tính sát thương (chủ game 11/11, luật 0.2).
+  if (attacker.cardId === "khung-long-vay-kiem") defender = { ...defender, def: defender.def - skillLoss(attacker.cardId, "def", 2) };
+  if (defender.cardId === "khung-long-vay-kiem") attacker = { ...attacker, def: attacker.def - skillLoss(defender.cardId, "def", 2) };
+  let atk = strikeAtk(attacker) + rockA;
   let counter = liveAtk(defender) + rockB;
   // Hàng sau đánh thì không bị phản đòn; bị đánh thì cũng không phản đòn (chủ game 28/10, C2).
-  const noAnswer = defender.riposte || defender.waitCounter || attacker.row === "back" || defender.row === "back";
+  // Đá tảng đánh thì mục tiêu đánh trả cùng lúc, kể cả quái hàng sau (chủ game 10/11).
+  const noAnswer = !boulder(attacker) && (defender.riposte || defender.waitCounter || attacker.row === "back" || defender.row === "back");
   if (noAnswer) counter = 0;
   const defA = liveDef(attacker, alliesA);
   const defB = liveDef(defender, alliesB);
@@ -3227,7 +3432,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const hiddenTrue = shadeHidden(attacker) && !beam;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt) || hiddenTrue;
   const counterBlow = defender.cardId === RIDER && !beam && !shadeHidden(attacker) && !defender.waitCounter && attacker.row !== "back" && defender.row !== "back" ? riderPackets(defender, attacker, alliesA) : null;
-  const blockSpell = !attackerDodged && !beam && !counterBlow && defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell" && counter > 0;
+  const blockSpell = !attackerDodged && !beam && !counterBlow && ((defender.cardId === GUARD_KNIGHT && Boolean(defender.guarding) && guardStrikeKind(defender, rosterB) === "spell") || magicStrike(defender)) && counter > 0;
   const counterRaw = outgoing(defender, counter);
   const struck = attackerDodged || beam
     ? { mon: attacker, bite: 0, surplus: 0 }
@@ -3237,12 +3442,15 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
         ? strikeSpell(attacker, counterRaw, alliesA)
         : takePhysical(attacker, counterRaw, alliesA);
   if (blockSpell && counterRaw > 0) wardLines.push(`${cardOf(defender).name} gây ${counterRaw} sát thương phép`);
+  const rocky = boulder(defender) && !attackerDodged && !defenderDodged && !defender.cage && !shadeHidden(attacker) && !shadeHidden(defender);
+  const struckBy = rocky ? boulderBack(attacker, defender, atk, beam, gazeTrue, alliesA, alliesB, rosterA) : struck;
+  if (rocky && struckBy.mon.hp !== attacker.hp) wardLines.push(`${cardOf(defender).name} phản đòn`);
   const nextAttacker = spendBless(clearClash({
-    ...struck.mon,
+    ...struckBy.mon,
     charge: attacker.charge + (attackerDodged ? 1 : 0),
     dim: true,
-    def: defender.cardId === "khung-long-vay-kiem" ? attacker.def - skillLoss(defender.cardId, "def", 2) : struck.mon.def,
-    mdef: struck.mon.mdef,
+    def: struckBy.mon.def,
+    mdef: struckBy.mon.mdef,
   }));
   const hornRaw = bolt ? liveAtk(attacker) + plate.p + plate.s : attacker.horn === "plus" ? Math.min(8, atk) : attacker.horn === "splash" ? Math.min(4, atk) : atk;
   const hornAmount = outgoing(attacker, hornRaw);
@@ -3286,7 +3494,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     }
   } else {
     const riderAtk = attacker.cardId === RIDER;
-    const guardSpell = !riderAtk && guardStrikeKind(attacker, rosterA) === "spell";
+    const guardSpell = !riderAtk && (guardStrikeKind(attacker, rosterA) === "spell" || magicStrike(attacker));
     const dragon = !riderAtk && !guardSpell && defender.cardId === "chien-binh-rong" && !defenderDodged;
     let hit;
     if (guardSpell) {
@@ -3335,7 +3543,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const nextDefender = {
     ...defenderBody,
     charge: defender.charge + (defenderDodged ? 1 : 0),
-    def: attacker.cardId === "khung-long-vay-kiem" ? defender.def - skillLoss(attacker.cardId, "def", 2) : defenderBody.def,
+    def: defenderBody.def,
     mdef: defenderBody.mdef,
     dim: true,
   };
@@ -3534,7 +3742,40 @@ function fadeBuff(mon: FieldMon): FieldMon {
  * Trả đòn (chủ game 28/10, như bản Grok): khi quái hàng trước giáp lá cà với quái hàng trước, bên bị đánh không trừ
  * máu kẻ đánh ngay; sau đòn, nếu còn sống, nó được Trả đòn riêng. Quái hàng sau đánh thì không bị trả đòn.
  */
+/**
+ * Đá tảng bị đánh (chủ game 10/11): phản đòn vào kẻ ra đòn bằng phần thủ / thủ phép đã chặn (cùng loại với sát thương
+ * nhận: đòn vật lý thì vật lý, đòn phép thì phép, sát thương chuẩn không có phần này) cộng 25% máu hiện tại (vật lý),
+ * làm tròn. Thay cho đòn đánh trả thường.
+ */
+function boulderBack(attacker: FieldMon, rock: FieldMon, atk: number, beam: boolean, gazeTrue: boolean, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[]): { mon: FieldMon; bite: number; surplus: number } {
+  const riderAtk = attacker.cardId === RIDER;
+  const spellBlow = beam ? !gazeTrue : !riderAtk && (guardStrikeKind(attacker, rosterA) === "spell" || magicStrike(attacker));
+  const trueBlow = beam && gazeTrue;
+  const raw = Math.max(0, beam ? outgoing(attacker, attacker.horn === "plus" ? Math.min(8, atk) : attacker.horn === "splash" ? Math.min(4, atk) : atk) : outgoing(attacker, atk));
+  const guard = trueBlow ? 0 : spellBlow ? liveMdef(rock, alliesB) : liveDef(rock, alliesB);
+  const blocked = Math.min(raw, Math.max(0, guard));
+  const quarter = Math.round(Math.max(0, rock.hp) * 0.25);
+  let mon = attacker;
+  let bite = 0;
+  let surplus = 0;
+  if (blocked > 0 && spellBlow) {
+    const hit = strikeSpell(mon, outgoing(rock, blocked), alliesA);
+    mon = hit.mon;
+    bite += hit.bite;
+    surplus += hit.surplus;
+  }
+  const phys = (spellBlow ? 0 : blocked) + quarter;
+  if (phys > 0) {
+    const hit = takePhysical(mon, outgoing(rock, phys), alliesA);
+    mon = hit.mon;
+    bite += hit.bite;
+    surplus += hit.surplus;
+  }
+  return { mon, bite, surplus };
+}
+
 function answersLater(attacker: FieldMon, defender: FieldMon, meleeBlow: boolean): FieldMon {
+  if (boulder(attacker) || boulder(defender)) return defender;
   if (!meleeBlow || attacker.row === "back" || defender.row === "back" || defender.riposte) return defender;
   return { ...defender, waitCounter: true };
 }
@@ -3555,6 +3796,8 @@ function afterBlow(before: Duel, resolved: Duel, victimUid: string | null, attac
   const attacker = resolved.players[atkSide].field.find((mon) => mon?.uid === attackerUid) ?? null;
   const victim = resolved.players[vicSide].field.find((mon) => mon?.uid === victimUid) ?? null;
   if (!frontCounter(victim, attacker)) return resolved;
+  // Đá tảng: đòn đánh qua lại đã xảy ra cùng lúc, không Trả đòn riêng nữa.
+  if (boulder(victim) || boulder(attacker)) return resolved;
   const asked = note({ ...resolved, counterAsk: { uid: victim.uid, from: attackerUid }, turn: vicSide }, `${cardOf(victim).name} được Trả đòn.`, "info");
   return asked.mode === "ai" && vicSide === 1 ? pickCounter(asked, "phys") : asked;
 }
@@ -3789,7 +4032,9 @@ function yieldResolved(before: Duel, after: Duel): Duel {
 
 function passResponseCore(state: Duel): Duel {
   if (state.step !== "respond" || !state.hold || !state.pending || state.winner) return state;
-  if (state.swap) return note(state, state.swap.locked ? "Hãy chọn 1 quái để hoán đổi." : "Hãy chọn hai quái để hoán đổi.");
+  // A swap with no locked monster can never be finished (nothing shows the picker), so it is dropped, not kept (chủ game 06/11).
+  if (state.swap && !state.swap.locked) return passResponseCore({ ...state, swap: null });
+  if (state.swap) return note(state, "Hãy chọn 1 quái để hoán đổi.");
   const hold = state.hold;
   const pending = state.pending;
   const foe = (1 - state.turn) as Side;
@@ -3802,6 +4047,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
+  if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
@@ -4207,6 +4453,8 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
   const blocker = you.field.find((mon) => mon?.uid === blockerUid) ?? null;
   if (blocker?.row === "back") return note(state, "Quái hàng sau không chặn được.");
   if (!blocker || blocker.dim || blocker.cardId === "chan-ken" || held(blocker) || hexLocked(blocker) || blocker.noBlock || (blocker.path ?? 0) > 0) return note(state, "Quái này không chặn được");
+  const barred = keywordBarred(state, defender, blocker);
+  if (barred) return note(state, barred);
   let next = state;
   let skill = false;
   if (withSkill) {
@@ -4271,6 +4519,41 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
   const ids = [blockerUid];
   if (pending?.kind === "face") ids.push(pending.attacker);
   return stampLegend(blocked, ids);
+}
+
+/** Kẻ ra đòn (đánh thường) hoặc kẻ dùng kỹ năng đang chờ, nếu là quái. */
+function pendingStriker(state: Duel): FieldMon | null {
+  const pending = state.pending;
+  const uid = pending?.kind === "melee" || pending?.kind === "face" ? pending.attacker : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.caster : null;
+  if (!uid) return null;
+  return state.players[0].field.find((mon) => mon?.uid === uid) ?? state.players[1].field.find((mon) => mon?.uid === uid) ?? null;
+}
+
+/**
+ * Keyword chặn (chủ game 09/11), tính theo quái đang ra đòn hoặc dùng kỹ năng: Siêu tốc không ai chặn; Bọc thép chỉ quái
+ * tổng phòng ngự (thủ + thủ phép) từ 3; Khổng lồ chỉ quái từ 5 máu; Nanh vuốt chỉ quái từ 4 công; Luồn lách x thì số
+ * quái được chặn = số quái hàng trước hiện có của bên chặn trừ x. Trả lý do bị từ chối, hoặc null khi được chặn.
+ */
+export function keywordBarred(state: Duel, side: Side, blocker: FieldMon): string | null {
+  // Hộ vệ (chủ game 10/11): đỡ đòn bất chấp, bỏ qua mọi keyword cấm chặn của kẻ ra đòn.
+  if (keywordsOf(blocker.cardId).includes("ho-ve")) return null;
+  const striker = pendingStriker(state);
+  if (!striker) return null;
+  const marks = keywordsOf(striker.cardId);
+  if (!marks.length) return null;
+  const name = cardOf(striker).name;
+  const allies = state.players[side].field;
+  if (marks.includes("sieu-toc")) return `${name} có Siêu tốc: không quái nào chặn được.`;
+  if (marks.includes("boc-thep") && liveDef(blocker, allies) + liveMdef(blocker, allies) < 3) return `${name} có Bọc thép: chỉ quái có tổng phòng ngự từ 3 trở lên được chặn.`;
+  if (marks.includes("khong-lo") && blocker.hp < 5) return `${name} có Khổng lồ: chỉ quái có từ 5 máu trở lên được chặn.`;
+  if (marks.includes("nanh-vuot") && liveAtk(blocker) < 4) return `${name} có Nanh vuốt: chỉ quái có công từ 4 trở lên được chặn.`;
+  const slip = marks.includes("luon-lach-2") ? 2 : marks.includes("luon-lach-1") ? 1 : 0;
+  if (slip) {
+    const front = allies.filter((mon) => mon && mon.hp > 0 && mon.row !== "back").length;
+    const used = (state.hold?.blocker ? 1 : 0) + (state.hold?.covers?.length ?? 0);
+    if (used >= front - slip) return `${name} có Luồn lách ${slip}: không còn quái nào được chặn.`;
+  }
+  return null;
 }
 
 /**
@@ -5215,9 +5498,11 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   const fed = withLeech(you.field, riderAttacker, hit.bite, hit.surplus);
   let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
   next = patch(next, foe, settleCocoon(dropDead({ ...them, field: them.field.map((mon) => (mon?.uid === defender.uid ? body : mon)) })));
+  const pierce = pierceLeft(attacker, body, hit.surplus);
+  if (pierce) next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - pierce });
   const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
   next = soul.state;
-  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${soul.line}`;
+  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`;
   const hornRows = attacker.horn
     ? [
         { name: cardOf(defender).name, bits: `${hornDealt} sát thương phép` },
@@ -5264,7 +5549,8 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   ), attacker.uid, swordSwing(attacker)), attacker.uid, defender.uid)), foe, attacker.uid);
   const origin = state.pending?.kind === "melee" ? state.pending.defender : defender.uid;
   const hunted = markPrey(swung, side, attacker, origin, origin === defender.uid && !hit.dodged, riderAttacker.hp <= 0);
-  return covered ? mysticRiposte(hunted, defender.uid, attacker.uid) : hunted;
+  const done = covered ? mysticRiposte(hunted, defender.uid, attacker.uid) : hunted;
+  return pierce ? checkWinner(done) : done;
 }
 
 const SOUL_ID = "ke-giam-ho-linh-hon";
@@ -5367,6 +5653,8 @@ export function answerSoul(state: Duel, yes: boolean): Duel {
 }
 
 export function attackMonster(state: Duel, attackerUid: string, defenderUid: string, _skipGnaw = false, soulChosen = false): Duel {
+  const second = knackRun(state, attackerUid, (from) => attackMonster(from, attackerUid, defenderUid, _skipGnaw, soulChosen));
+  if (second) return second;
   const next = attackMonsterCore(state, attackerUid, defenderUid, _skipGnaw, soulChosen);
   if (next === state || (next.soulAsk && !state.soulAsk)) return next;
   const declared = next.pending?.kind === "melee";
@@ -5453,6 +5741,8 @@ function attackMonsterCore(state: Duel, attackerUid: string, defenderUid: string
 }
 
 export function attackFace(state: Duel, attackerUid: string, soulChosen = false): Duel {
+  const second = knackRun(state, attackerUid, (from) => attackFace(from, attackerUid, soulChosen));
+  if (second) return second;
   const next = attackFaceCore(state, attackerUid, soulChosen);
   if (next === state || (next.soulAsk && !state.soulAsk)) return next;
   const declared = next.pending?.kind === "face" && !next.pending.skill;
@@ -5575,6 +5865,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
     const fed = withLeech(you.field, worn.attacker, hit.bite, hit.surplus);
     let next = patch(state, side, settleCocoon(dropDead({ ...you, field: fed.field })));
     next = patch(next, foe, settleCocoon(dropDead({ ...guarding, field: guarding.field.map((mon) => (mon?.uid === body.uid ? worn.defender : mon)) })));
+    const pierce = pierceLeft(attacker, worn.defender, hit.surplus);
+    if (pierce) next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - pierce });
     const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
     next = soul.state;
     const gazeOnly = Boolean(attacker.gaze && !attacker.horn && !attacker.bolt);
@@ -5602,7 +5894,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
         : 0;
     const hurtBit = beamed ? `, chịu ${taken} sát thương phép` : gazeOnly || hiddenOnly ? `, chịu ${taken} sát thương chuẩn` : "";
     const blocked = releaseLegend({
-      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${cardOf(body).name} né đòn.` : ""}${soul.line}`, beamed || gazeOnly ? "spell" : "hit"),
+      ...note(next, `${cardOf(body).name} ${how}${hurtBit}.${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${cardOf(body).name} né đòn.` : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`, beamed || gazeOnly ? "spell" : "hit"),
       step: "main",
       pending: null,
       mends: [awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend })),
@@ -5613,7 +5905,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
       smashPlain(blocker) && !attacker.horn && !attacker.gaze && !attacker.bolt,
     ), attacker.uid, swordSwing(attacker)), attacker.uid, blocker.uid)), foe, attacker.uid);
     const hunted = markPrey(swung, side, attacker, "face", false, worn.attacker.hp <= 0);
-    return blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
+    const done = blocker.cardId === MYSTIC ? mysticRiposte(hunted, blocker.uid, attacker.uid) : hunted;
+    return pierce ? checkWinner(done) : done;
   }
   if (isHell(attacker.cardId)) return resolveHellFace(state, attacker, null);
   if (pending.skill && (attacker.cardId === "rong-con" || attacker.cardId === "rong-ngan-tuoi" || attacker.cardId === "rong-phun-hoa-cau" || attacker.cardId === "sua-hut-ma-phap" || attacker.cardId === TIDE)) {
@@ -5623,7 +5916,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   const plate = plateBank(attacker);
   const bolt = Boolean(attacker.bolt);
   const spent = dropClash(spendBless(spendPlate(dullHorn({ ...attacker, dim: true }, attacker.horn), bolt ? { p: plate.p, s: plate.s } : plate, bolt)));
-  const raw = attacker.horn ? attacker.atk + (attacker.blessAtk ?? 0) : liveAtk(attacker);
+  const raw = attacker.horn ? attacker.atk + (attacker.blessAtk ?? 0) : strikeAtk(attacker);
   const dealt = attacker.cardId === PERFECT
     ? outgoing(attacker, bolt ? raw + plate.p + plate.s : raw + plate.p + plate.s)
     : attacker.horn || attacker.gaze
@@ -5639,7 +5932,7 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   next = soul.state;
   const gazeTrue = Boolean(attacker.gaze && !attacker.horn && !bolt);
   const beamed = Boolean(attacker.horn || attacker.gaze || attacker.bolt);
-  const guardSpell = !attacker.horn && !attacker.gaze && !bolt && guardStrikeKind(attacker, you.roster) === "spell";
+  const guardSpell = !attacker.horn && !attacker.gaze && !bolt && (guardStrikeKind(attacker, you.roster) === "spell" || magicStrike(attacker));
   const preyHit = attacker.cardId === PREY && attacker.preyKind === "spell" ? "sát thương phép" : attacker.cardId === PREY && attacker.preyKind === "tru" ? "sát thương chuẩn" : "";
   const hiddenFace = shadeHidden(attacker) && !beamed ? "sát thương chuẩn" : "";
   const faceWord = guardSpell ? "sát thương phép" : preyHit || hiddenFace || "máu";
@@ -5692,6 +5985,8 @@ export function answerGnaw(state: Duel, useSkillNow: boolean): Duel {
 }
 
 export function declareSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, extra: string | null = null): Duel {
+  const second = knackRun(state, uid, (from) => declareSkill(from, uid, targetUid, skillIndex, extra));
+  if (second) return second;
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
   if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   const counter = counterStart(state, uid);
@@ -6042,11 +6337,42 @@ function chargedWhip(state: Duel) {
   return null;
 }
 
+/** A spell card paid and gone from the hand, nothing else done yet. */
+function payHand(state: Duel, side: Side, handIndex: number): Duel | null {
+  const player = state.players[side];
+  const card = spellCard(player.hand[handIndex] ?? "");
+  if (!card) return null;
+  const before = player.stars;
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  if (playBill(card.gems, tolled, player.orb, player.flask)) return null;
+  const paid = payPlayed(player, card.gems, tolled);
+  if (!paid) return null;
+  const dropped = dropHandCard(paid, handIndex);
+  const buried = { ...dropped, spent: [...(dropped.spent ?? paid.spent ?? []), card.id] };
+  return pingStars(patch(state, side, buried), side, before, buried.stars);
+}
+
+/** There is an answer of the other side that Hấp thụ ma pháp of `side` may swallow now. */
+export function eatFor(state: Duel, side: Side): boolean {
+  if (state.step !== "respond" || !state.hold || state.hold.stage) return false;
+  if (state.hold.eat && state.hold.eat.side !== side) return true;
+  return state.hold.mirror === "up" && state.hold.priority === side && !state.hold.eat;
+}
+
+/** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
+const EATABLE = new Set(["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
+
+/** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
+function restoreEaten(now: Duel, back: Duel): Duel {
+  return { ...back, log: now.log, events: now.events, live: now.live, stepNo: now.stepNo, seq: Math.max(now.seq, back.seq), fx: now.fx };
+}
+
 export function castSpell(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
-  const next = castSpellCore(state, handIndex, targetUid, replay, sourceUid);
-  if (replay || next === state) return next;
   const side = (state.step === "main" ? state.turn : (state.hold?.priority ?? ((1 - state.turn) as Side))) as Side;
   const cardId = state.players[side].hand[handIndex] ?? null;
+  const snap = !replay && state.step === "respond" && cardId && EATABLE.has(cardId) ? payHand(state, side, handIndex) : null;
+  const next = castSpellCore(state, handIndex, targetUid, replay, sourceUid);
+  if (replay || next === state) return next;
   const held = next.pending?.kind === "spell" && next.pending.cardId === cardId;
   const removed = cardId !== null && handCopies(state.players[side].hand, cardId) > handCopies(next.players[side].hand, cardId);
   const ok = held || removed;
@@ -6067,6 +6393,7 @@ export function castSpell(state: Duel, handIndex: number, targetUid: string | nu
   if (state.step === "main") return yieldTurn(done);
   // Phép phản ứng kết thúc luôn đòn đang chờ (Phục kích, Gương phòng hộ…): đòn coi như đã xong, quyền sang bên bị đánh.
   if (state.step === "respond" && done.step === "main" && !done.pending) return yieldTurn(done);
+  if (snap && cardId && done.step === "respond" && done.hold && done.pending) return { ...done, hold: { ...done.hold, eat: { card: cardId, side, back: snap } } };
   return done;
 }
 
@@ -6091,6 +6418,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (!card) return state;
   if (card.id === "ke-dao-mo") return state;
   if (card.env) return note(state, "Lá môi trường đã nằm trên sân.");
+  if (card.gear) return castGear(state, handIndex, targetUid, replay);
   const response = new Set([
     "guong-phong-ho",
     "la-chan-phan-don",
@@ -6114,7 +6442,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap" && card.id !== "hop-ma-thuat") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được kỹ năng này.");
   }
-  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state)) {
+  if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
   if (!replay && card.id === "virus-an-mon") {
@@ -6170,7 +6498,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && state.step === "respond" && !response.has(card.id)) return note(state, "Phép này không ứng biến được.");
   const guards = ["guong-phong-ho", "la-chan-phan-don", "vong-xoay-bao-ho", "phuc-kich", "vong-nguyen-rua-ac-ma", "hoan-doi", "hap-thu-ma-phap", "hop-ma-thuat"];
-  if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side) {
+  if (!replay && state.step === "respond" && guards.includes(card.id) && answerSide(state) !== side && !(card.id === "hap-thu-ma-phap" && eatFor(state, side))) {
     return note(state, `${card.name} chỉ dùng khi phe bạn bị nhắm.`);
   }
   if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && side !== state.turn) {
@@ -6406,6 +6734,25 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     };
   }
   if (card.id === "hap-thu-ma-phap") {
+    const eat = state.hold?.eat;
+    if (!replay && eat && eat.side === foe) {
+      // The last fast answer is swallowed: the board goes back to just before it (its card stays spent), and the chain
+      // goes on with its other side to answer again (chủ game 04/11, như LoR: Hấp thụ nổ trước, đòn vẫn vào).
+      const back = eat.back;
+      const at = back.players[side].hand[handIndex] === card.id ? handIndex : back.players[side].hand.indexOf(card.id);
+      const paid = at >= 0 ? payHand(back, side, at) : null;
+      if (paid && paid.hold) {
+        const eaten = eat.card === "giap-va-vuot" ? "Giáp và Vuốt" : spellCard(eat.card)?.name ?? eat.card;
+        const restored = restoreEaten(next, paid);
+        return note({ ...restored, step: "respond", hold: { ...paid.hold, priority: foe, passed: [false, false] } }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
+      }
+    }
+    if (!replay && state.hold?.mirror === "up" && !eat) {
+      // A mirror that stood up by itself (dựng sẵn): swallowed, it stops nothing and is gone (chủ game 21/10 G2).
+      const owner = next.players[foe];
+      const kept = { ...patch(next, foe, { ...owner, mirror: 0 }), step: "respond" as const };
+      return note({ ...kept, hold: { ...state.hold, mirror: undefined, priority: foe, passed: [false, false] } }, "Hấp thụ ma pháp nuốt Gương phòng hộ.", "spell");
+    }
     if (state.pending?.kind === "lash") {
       return note({ ...next, step: "main", pending: null, hold: null }, "Hấp thụ ma pháp nuốt Roi điện.", "spell");
     }
@@ -6719,7 +7066,7 @@ function boxHome(state: Duel): Duel {
 function swapToken(player: Player, token: string): { kind: "field"; uid: string } | { kind: "reserve"; index: number } | null {
   if (token.startsWith("f:")) {
     const uid = token.slice(2);
-    return player.field.some((mon) => mon?.uid === uid) ? { kind: "field", uid } : null;
+    return player.field.some((mon) => mon?.uid === uid && mon.abroad === undefined) ? { kind: "field", uid } : null;
   }
   if (token.startsWith("r:")) {
     const index = Number(token.slice(2));
@@ -6744,7 +7091,7 @@ function demonGate(player: Player, held: PileMon): { player: Player; fresh: bool
   return { player: paid, fresh: true };
 }
 
-function swapRows(player: Player): string[] {
+export function swapRows(player: Player): string[] {
   const tokens: string[] = [];
   for (const unit of player.field) {
     if (unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined) tokens.push(`f:${unit.uid}`);
@@ -6777,7 +7124,8 @@ export function confirmSwap(state: Duel, firstToken: string, secondToken: string
   if (!state.swap.locked || firstToken !== state.swap.locked) return note(state, "Hoán đổi chỉ đổi quái đang bị nhắm.");
   const side = state.swap.side;
   const done = pickSwap({ ...state, swap: { first: firstToken, side } }, secondToken);
-  if (done.swap) return { ...done, swap: { first: null, side } };
+  // A refused second pick leaves the ask as it was (with its locked monster), or the duel froze (chủ game 06/11).
+  if (done.swap) return { ...done, swap: state.swap };
   return done;
 }
 
@@ -7281,6 +7629,7 @@ export function harpyOffer(state: Duel, side: Side): "armor" | "lash" | null {
     if (bird && !shedOf(bird).includes("lash") && owner.orb >= harpyKit(bird.cardId).lash) return "lash";
     return null;
   }
+  if (state.hold.ward) return null;
   const uid = pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.target : pending.kind === "spell" ? pending.target : null;
   const bird = harpyBird(state, side, uid);
   if (bird && !shedOf(bird).includes("armor") && owner.orb >= harpyKit(bird.cardId).armor) return "armor";
@@ -7298,18 +7647,34 @@ export function harpyWard(state: Duel): Duel {
   const kit = bird ? harpyKit(bird.cardId) : null;
   const paid = bird && kit ? pay(you, kit.armor) : null;
   if (!bird || !kit || !paid) return note(state, "Cần 2 mana.");
-  const grown = growHarpy(bird, { def: kit.def, mdef: kit.mdef, hp: kit.hp }, "armor");
-  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit));
   let what = "đòn";
   if (pending.kind === "spell") what = spellCard(pending.cardId)?.name ?? "phép";
-  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
-    const caster = state.players[0].field.find((unit) => unit?.uid === pending.caster) ?? state.players[1].field.find((unit) => unit?.uid === pending.caster);
-    what = castName(caster?.cardId ?? "", pending.index);
-  }
+  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") what = castName(ownerCard(state, pending.caster), pending.index);
+  // Skill dạng phép (chủ game 04/11): it waits in the chain like a fast spell, so Hấp thụ ma pháp may swallow it; once
+  // the chain lands (`landWard`) the skill or spell on the bird is stopped and the bird grows. The feather is spent now.
+  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? { ...unit, shed: [...shedOf(unit), "armor"] } : unit));
+  const waiting = patch(state, side, { ...paid, field });
+  const held = keep(note({ ...waiting, hold: { ...state.hold, ward: { bird: bird.uid } } }, `Giáp và Vuốt chờ huỷ ${what} nhắm vào ${cardOf(bird).name}`, "spell"));
+  return held.hold ? { ...held, hold: { ...held.hold, eat: { card: "giap-va-vuot", side, back: waiting } } } : held;
+}
+
+/** Giáp và Vuốt lands once the chain does: the skill or spell on the bird is stopped, the bird grows for good. */
+function landWard(state: Duel, birdUid: string): Duel {
+  const pending = state.pending;
+  const side = ownerSide(state, birdUid);
+  const bird = side === null ? null : state.players[side].field.find((unit) => unit?.uid === birdUid) ?? null;
+  const open = { ...state, step: "main" as const, pending: null, hold: null };
+  if (side === null || !bird || !pending) return open;
+  const kit = harpyKit(bird.cardId);
+  const grown = growHarpy({ ...bird, shed: shedOf(bird).filter((key) => key !== "armor") }, { def: kit.def, mdef: kit.mdef, hp: kit.hp }, "armor");
+  const owner = state.players[side];
+  const field = owner.field.map((unit) => (unit?.uid === bird.uid ? grown : unit));
+  let what = "đòn";
+  if (pending.kind === "spell") what = spellCard(pending.cardId)?.name ?? "phép";
+  else if (pending.kind === "beam" || pending.kind === "gnaw-skill") what = castName(ownerCard(state, pending.caster), pending.index);
   const gain = kit.mdef > 0 ? `tăng vĩnh viễn ${kit.mdef} thủ phép và ${kit.hp} máu` : `tăng vĩnh viễn ${kit.def} thủ và ${kit.hp} máu`;
   const line = actNotice("Giáp và Vuốt", [`huỷ ${what} nhắm vào ${cardOf(bird).name}`, gain]);
-  const sealed = sealHarpy(patch(state, side, { ...paid, field }), side, bird.uid, line, "spell");
-  return { ...sealed, step: "main", pending: null, hold: null };
+  return sealHarpy(patch(open, side, { ...owner, field }), side, bird.uid, line, "spell");
 }
 
 function openLash(state: Duel, owner: Side, bird: string, foe: string, stun: boolean, line: string): Duel {
@@ -7613,6 +7978,8 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 }
 
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
+  const second = silent ? null : knackRun(state, uid, (from) => useSkill(from, uid, targetUid, skillIndex, skipGnaw, extra, silent));
+  if (second) return second;
   const run = (from: Duel) => lavaSkill(from, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
   if (silent) return run(state);
   if (state.players.some((player) => player.field.some((unit) => unit?.uid === uid && unit.abroad !== undefined))) {
@@ -8050,14 +8417,13 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
       const real = shuntUid(them.field, target.uid) ?? target.uid;
       const loss = skillLoss(mon.cardId, "mdef", 1);
       const amount = skillFigure(mon.cardId, "dmg", 3) + (mon.skillUp ?? 0);
-      const foeField = them.field.map((unit) => {
-        if (unit?.uid !== real) return unit;
-        return { ...damageSpell(unit, amount, them.field, mon), mdef: unit.mdef - loss };
-      });
+      // Giảm thủ phép TRƯỚC rồi mới gây sát thương (chủ game 11/11, luật 0.2).
+      const shredded = them.field.map((unit) => (unit?.uid === real ? { ...unit, mdef: unit.mdef - loss } : unit));
+      const foeField = shredded.map((unit) => (unit?.uid === real ? damageSpell(unit, amount, shredded, mon) : unit));
       const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
       let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
       next = patch(next, foe, settleCocoon(dropDead({ ...them, field: foeField })));
-      return note(next, `${castName(mon.cardId, skillIndex)} giảm ${loss} thủ phép và gây ${spellPhrase([them.field.find((unit) => unit?.uid === real)], amount, them.field, mon)}`, "spell");
+      return note(next, `${castName(mon.cardId, skillIndex)} giảm ${loss} thủ phép và gây ${spellPhrase([shredded.find((unit) => unit?.uid === real)], amount, shredded, mon)}`, "spell");
     }
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
     const them = state.players[foe];
@@ -8503,8 +8869,11 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const living = them.field.filter((unit) => unit && unit.hp > 0);
     let victims: string[] = [];
     if (all) {
-      if (!them.field.some((unit) => unit?.uid === targetUid && unit.hp > 0)) return note(state, "Chọn một quái đối thủ.");
-      victims = living.map((unit) => unit!.uid);
+      // Đại hồng thuỷ huỷ diệt: chọn 1 quái, cả hàng của nó (trước hoặc sau) đều dính (chủ game 04/11).
+      const at = them.field.findIndex((unit) => unit?.uid === targetUid && unit.hp > 0);
+      if (at < 0) return note(state, "Chọn một quái đối thủ.");
+      const back = backSlot(at);
+      victims = them.field.flatMap((unit, index) => (unit && unit.hp > 0 && backSlot(index) === back ? [unit.uid] : []));
     } else {
       const target = them.field.find((unit) => unit?.uid === targetUid) ?? null;
       if (!target) return note(state, "Chọn một quái đối thủ");
@@ -9409,6 +9778,7 @@ function endTurnCore(state: Duel): Duel {
         held: false,
         stanceUsed: false,
         used: false,
+        knack: undefined,
         noBlock: isStill(mon.cardId) ? true : false,
         chain: Math.max(0, (mon.chain ?? 0) - 1),
         gag: Math.max(0, (mon.gag ?? 0) - 1),
@@ -9470,6 +9840,7 @@ function endTurnCore(state: Duel): Duel {
         ...mon,
         dim: mon.cardId === "ken-ngai" || mon.cardId === "chan-ken" ? true : false,
         used: false,
+        knack: undefined,
         noBlock: isStill(mon.cardId) ? true : mon.noBlock,
         charge: mon.cardId === "tho-den-tinh-nghich" ? 0 : mon.charge,
         hp: cocoon ? Math.min(cap, mon.hp + skillFigure(mon.cardId, "heal", 1)) : mon.hp,

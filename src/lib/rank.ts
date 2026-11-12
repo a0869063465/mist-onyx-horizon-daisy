@@ -25,3 +25,18 @@ const BADGES = ["vua", "lung-danh", "chuyen-nghiep", "hoc-vien", "nghiep-du", "t
 export function rankBadge(tier: number): string {
   return `/ui/rank/${BADGES[Math.min(BADGES.length - 1, Math.max(0, tier))]}.webp`;
 }
+
+/** Khung hồ sơ theo hạng (chủ game 11/11): ảnh khung + ô trống giữa (px ảnh, [trái, trên, phải, dưới]) để đặt ảnh đại diện vừa ô. */
+const FRAMES = {
+  "vua": { w: 575, h: 640, hole: [122, 160, 453, 483] },
+  "lung-danh": { w: 629, h: 640, hole: [132, 141, 497, 495] },
+  "chuyen-nghiep": { w: 619, h: 590, hole: [108, 120, 466, 467] },
+  "hoc-vien": { w: 492, h: 640, hole: [98, 189, 395, 486] },
+  "nghiep-du": { w: 640, h: 633, hole: [124, 113, 512, 476] },
+  "tap-choi": { w: 507, h: 540, hole: [77, 98, 404, 415] },
+} as const;
+
+export function rankFrame(tier: number) {
+  const key = BADGES[Math.min(BADGES.length - 1, Math.max(0, tier))];
+  return { src: `/ui/rank-frame/${key}.webp`, ...FRAMES[key] };
+}

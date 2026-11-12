@@ -4,6 +4,14 @@ import { DeckBox, LorDefs } from "@/components/deck-box";
 import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc } from "@/lib/catalog";
 import { deckIssues, saveDeck } from "@/lib/deck";
+import { trialCount } from "@/lib/owned-cards";
+import { TRIAL_SWAP_OVER, trialLeft } from "@/lib/trial-deck";
+
+/** A deck with more than 16 trial cards shows the time left on its box (chủ game 08/11). */
+function trialMark(row: { monsters: string[]; spells: string[] }): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return trialCount([...row.monsters, ...row.spells]) > TRIAL_SWAP_OVER ? trialLeft() : null;
+}
 import {
   cardsOf,
   coverOf,
@@ -310,7 +318,7 @@ function DeckSelectPage() {
               className={`lor-deck${row.n === open ? " on" : ""}`}
               onClick={() => setOpen(row.n)}
             >
-              <DeckBox cover={row.cover} spells={row.spells} fav={row.fav} warn={Boolean(deckIssues(cardsOf(row)))} />
+              <DeckBox cover={row.cover} spells={row.spells} fav={row.fav} warn={Boolean(deckIssues(cardsOf(row)))} trial={trialMark(row)} />
               <span className="lor-deck-name">{row.name}</span>
             </button>
           ))}
@@ -345,7 +353,7 @@ function DeckSelectPage() {
                   <span>{tr("Yêu thích")}</span>
                 </div>
                 <div className="lor-stage-box">
-                  <DeckBox cover={shown.cover} spells={shown.spells} fav={shown.fav} warn={Boolean(deckIssues(cardsOf(shown)))} />
+                  <DeckBox cover={shown.cover} spells={shown.spells} fav={shown.fav} warn={Boolean(deckIssues(cardsOf(shown)))} trial={trialMark(shown)} />
                 </div>
                 <div className="lor-side">
                   <button type="button" className="lor-square" onClick={() => edit(shown.n)}>

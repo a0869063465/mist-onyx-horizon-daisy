@@ -353,7 +353,7 @@ function cardIds(list: readonly { id: string }[]): string[] | null {
   return ids;
 }
 
-function spellIds(list: readonly string[], env?: string): string[] | null {
+function spellIds(list: readonly unknown[], env?: string): string[] | null {
   const ids: string[] = [];
   if (env !== undefined) {
     if (typeof env !== "string" || env.length === 0 || env.length > 80) return null;

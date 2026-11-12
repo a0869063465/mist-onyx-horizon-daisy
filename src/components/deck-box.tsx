@@ -51,11 +51,12 @@ export function LorDefs() {
  * a pointed bottom, the environment card's round socket over the bottom of the art (when the deck has one), the
  * red star ribbon of a favourite, and a red ! on top of a deck that cannot be played yet.
  */
-export function DeckBox({ cover, spells, fav, warn }: { cover?: string | null; spells: string[]; fav?: boolean; warn?: boolean }) {
+/** `trial`: the time left on a deck mostly made of trial cards (more than 16 of 24, chủ game 08/11), e.g. "6D". */
+export function DeckBox({ cover, spells, fav, warn, trial }: { cover?: string | null; spells: string[]; fav?: boolean; warn?: boolean; trial?: string | null }) {
   const art = cover ? artSrc(cover, 1) : null;
   const env = spells.find((id) => spellCard(id)?.env);
   return (
-    <span className="lor-box">
+    <span className={`lor-box${warn ? " is-off" : ""}`}>
       <span className="lor-box-art" style={art ? { backgroundImage: `url(${art})` } : undefined} />
       <svg className="lor-box-frame" viewBox="0 0 160 222" aria-hidden="true">
         <rect
@@ -119,6 +120,7 @@ export function DeckBox({ cover, spells, fav, warn }: { cover?: string | null; s
           <img src={spellSrc(env)} alt="" draggable={false} />
         </span>
       ) : null}
+      {trial ? <b className="lor-box-trial">{trial}</b> : null}
       {warn ? (
         <span className="lor-box-warn" aria-label={tr("Chưa đủ lá")}>
           !

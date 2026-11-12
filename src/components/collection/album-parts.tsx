@@ -3,27 +3,71 @@ import { AppraisePanel } from "@/components/collection/appraise-panel";
 import { canAppraise } from "@/lib/appraisal";
 import { artSrc, monsterCard, spellSrc } from "@/lib/catalog";
 import { rarityOf, rarityTag, type Album } from "@/lib/collection";
-import { fakeIds } from "@/lib/owned-cards";
+import { trialTag } from "@/lib/owned-cards";
 import { tr } from "@/lib/i18n";
 
 /** A card in an album: its art in the gold frame of Đổi hình nền, no figures, no name; grey while not owned. */
-export function AlbumPic({ id, missing = false }: { id: string; missing?: boolean }) {
+export function AlbumPic({ id, missing = false, vault = false }: { id: string; missing?: boolean; vault?: boolean }) {
   const art = monsterCard(id) ? artSrc(id, 1) : spellSrc(id);
-  // A fake card (the starter deck's cut copy) shows in colour (owner 22/10) but is still not owned.
-  const fake = missing && fakeIds([id]).length > 0;
+  // A trial card (lent this week, chủ game 08/11) shows in colour but is still not owned.
+  const fake = missing && trialTag(id) !== null;
   return (
-    <span className={`al-pic${fake ? " is-fake" : missing ? " is-missing" : ""}`}>
+    <span className={`al-pic${vault ? " is-vault" : ""}${fake ? " is-fake" : missing ? " is-missing" : ""}`}>
       <span className="al-pic-art" style={{ backgroundImage: `url(${art})` }} />
-      <img className="al-pic-frame" src="/ui/cover-frame.png" alt="" draggable={false} />
+      <img className="al-pic-frame" src={vault ? "/ui/col/card-frame.webp" : "/ui/cover-frame.png"} alt="" draggable={false} />
     </span>
   );
 }
 
-/** An album's cover: the environment card's picture in a binder with a ringed spine; gold once complete. */
-export function AlbumCover({ album, done, className = "", ref }: { album: Album; done: boolean; className?: string; ref?: Ref<HTMLSpanElement> }) {
+/** The books drawn for the shelf (name on the plaque) and for opening (the same without the name); `soon` = no cards yet. */
+export const BOOKS = new Set(["nui", "bong-toi", "thao-nguyen", "rung-ram", "dat-da", "bien-sau", "cu-dia-may-moc", "thanh-dia-thien-su", "nui-dung-nham", "vuong-quoc", "phep", "yugi", "joey"]);
+
+/** Where each book's body sits across its 480-wide picture (left and right edge), measured from the pictures. */
+export const BOOK_X: Record<string, [number, number]> = {
+  "bien-sau": [0.098, 0.894], "bong-toi": [0.108, 0.929], "cu-dia-may-moc": [0.106, 0.915], "dat-da": [0.094, 0.906], joey: [0.106, 0.915],
+  "nui-dung-nham": [0.106, 0.929], nui: [0.117, 0.883], phep: [0.104, 0.912], "rung-ram": [0.108, 0.894], "thanh-dia-thien-su": [0.1, 0.9],
+  "thao-nguyen": [0.104, 0.915], "vuong-quoc": [0.096, 0.9], yugi: [0.102, 0.898],
+};
+
+/**
+ * Where the front board ends and the glowing base begins, per book, as a fraction of its 768-tall picture (chủ game
+ * 08/11): just under the gold bottom line of that book's frame (measured on each picture). The board turns; what lies
+ * below (page edge, glowing strip) is the base and stays put.
+ */
+export const COVER_CUT: Record<string, number> = {
+  "bien-sau": 0.8203, "bong-toi": 0.8112, "cu-dia-may-moc": 0.8177, "dat-da": 0.8086, joey: 0.8307, "nui-dung-nham": 0.8073, nui: 0.8034,
+  phep: 0.819, "rung-ram": 0.8034, "thanh-dia-thien-su": 0.8073, "thao-nguyen": 0.8203, "vuong-quoc": 0.8177, yugi: 0.832,
+};
+
+/** What the book says on its plaque: the album's name. */
+export function albumTitle(_id: string, name: string): string {
+  return name;
+}
+
+/**
+ * An album's cover: one picture of a book (chủ game 08/11). On the shelf it carries its name; the one that flies and
+ * swings open (`clean`) is the same book without the name.
+ */
+export function AlbumCover({ album, done, clean = false, className = "", ref }: { album: Pick<Album, "id" | "name" | "cover">; done: boolean; clean?: boolean; className?: string; ref?: Ref<HTMLSpanElement> }) {
+  const src = BOOKS.has(album.id) ? `/ui/col/${clean ? "open" : "shelf"}/${album.id}.webp` : null;
   return (
-    <span ref={ref} className={`al-cover${done ? " is-done" : ""}${className ? ` ${className}` : ""}`}>
-      <span className="al-cover-art" style={{ backgroundImage: `url(${album.cover})` }} />
+    <span ref={ref} className={`al-cover is-book${done ? " is-done" : ""}${className ? ` ${className}` : ""}`}>
+      {src ? <img className="al-cover-book" src={src} alt={tr(album.name)} draggable={false} /> : null}
+    </span>
+  );
+}
+
+/**
+ * A card as it stands in the album: the art in the window of the owner's own frame (`slot.webp`) with its number on the
+ * plate, so the group panel looks like the pages (chủ game 08/11). Sized by its container's width.
+ */
+export function SlotCard({ id, no, missing = false }: { id: string; no?: string; missing?: boolean }) {
+  const art = monsterCard(id) ? artSrc(id, 1) : spellSrc(id);
+  return (
+    <span className={`slot-card${missing ? " is-missing" : ""}`}>
+      <span className="slot-card-art" style={{ backgroundImage: `url(${art})` }} />
+      <img className="slot-card-frame" src="/ui/col/slot.webp" alt="" draggable={false} />
+      {no ? <b className="slot-card-no">{no}</b> : null}
     </span>
   );
 }

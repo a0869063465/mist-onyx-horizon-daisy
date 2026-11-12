@@ -1,17 +1,23 @@
 import { useEffect } from "react";
 
 /**
- * Toàn màn hình (chủ game 23/10): the installed app asks for fullscreen itself, since Android does not always hide its
- * bars on launch (the owner had to swipe a few times). Browsers only grant it on a touch, so every touch while not
- * fullscreen asks again, which also covers coming back from another app. A page open in a normal browser tab is left
- * alone.
+ * Takes the whole screen on a touch, since a browser only allows it from one (chủ game 08/11: "tự bung full màn hình khi
+ * vào game"). The installed app asks on every touch while it is out of full screen; in a plain browser tab it asks until
+ * it has worked once, so a player who leaves full screen on purpose is not pulled back.
  */
 export function FullScreen() {
   useEffect(() => {
     const installed = () => window.matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches;
+    let once = false;
     const ask = () => {
-      if (!installed() || document.fullscreenElement || !document.documentElement.requestFullscreen) return;
-      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+      if (document.fullscreenElement || !document.documentElement.requestFullscreen) return;
+      if (!installed() && once) return;
+      document.documentElement
+        .requestFullscreen({ navigationUI: "hide" })
+        .then(() => {
+          once = true;
+        })
+        .catch(() => {});
     };
     window.addEventListener("pointerdown", ask, { passive: true });
     return () => window.removeEventListener("pointerdown", ask);

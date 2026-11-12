@@ -1,8 +1,9 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { AlbumPic } from "@/components/collection/album-parts";
+import { AlbumPic, SlotCard } from "@/components/collection/album-parts";
 import { albumOf, cardName, exchangePrice, formatNo, rarityOf, setReward, setsOf, type Album, type CardSet } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
-import { useStars } from "@/lib/shop";
+import { copyCap } from "@/lib/catalog";
+import { ownedCount, useStars } from "@/lib/shop";
 
 export type Opened = { id: string; from: DOMRect };
 
@@ -34,13 +35,14 @@ export function SetPrize({ set, complete, claimed, onClaim }: { set: CardSet; co
 
 /** On the sheet of an album card not owned yet: the lock, and Đổi with its price in stars. */
 export function ExchangeBox({ id, onAsk }: { id: string; onAsk: (id: string) => void }) {
+  const have = ownedCount(id);
   return (
     <section className="cv-lockbox al-trade">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
         <rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="currentColor" />
       </svg>
-      <b>{tr("Chưa có lá này")}</b>
+      <b>{have > 0 ? `${tr("Đã có")} ${have}/${copyCap(id)} ${tr("bản")}` : tr("Chưa có lá này")}</b>
       <button type="button" className="al-trade-btn" onClick={() => onAsk(id)}>
         {tr("Đổi")} <i>★{exchangePrice(id)}</i>
       </button>
@@ -71,6 +73,14 @@ export function ExchangeAsk({ id, albums, onCancel, onConfirm }: { id: string; a
             <span className={`al-rarity is-${tier}`}>{tier}</span>
           </div>
         </div>
+        {ownedCount(id) > 0 ? (
+          <div className="al-ask-row">
+            <span>{tr("Số bản")}</span>
+            <b>
+              {ownedCount(id)} <i>→</i> <em>{ownedCount(id) + 1}</em>
+            </b>
+          </div>
+        ) : null}
         <div className="al-ask-row">
           <span>{tr("Giá")}</span>
           <b>★{price}</b>
@@ -223,13 +233,13 @@ export function SetPanel({
           <div className="al-panel-info">
             <h3>{tr(cardName(id))}</h3>
             <small>
-              {self.no ? formatNo(self.no) : ""} · {tr(self.album)}
+              {self.no ? formatNo(self.no) : ""}
             </small>
             <span className="al-panel-btns">
               <button type="button" className="al-panel-view" onClick={() => onView(id)}>
                 {tr("Xem")}
               </button>
-              {owned.has(id) ? null : (
+              {owned.has(id) && ownedCount(id) >= copyCap(id) ? null : (
                 <button type="button" className="al-panel-view is-trade" onClick={() => onAsk(id)}>
                   {tr("Đổi")} <i>★{exchangePrice(id)}</i>
                 </button>
@@ -257,9 +267,7 @@ export function SetPanel({
                       aria-label={tr(cardName(card))}
                       onClick={() => onView(card)}
                     >
-                      <AlbumPic id={card} missing={!owned.has(card)} />
-                      <small>{at.no ? formatNo(at.no) : ""}</small>
-                      <small>{tr(at.album)}</small>
+                      <SlotCard id={card} no={at.no ? formatNo(at.no) : undefined} missing={!owned.has(card)} />
                     </button>
                   );
                 })}

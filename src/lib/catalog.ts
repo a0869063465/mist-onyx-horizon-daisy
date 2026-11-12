@@ -26,6 +26,8 @@ export type SpellCard = {
   effect: string;
   picture?: string;
   env?: boolean;
+  /** Lá Trang bị (keyword Trang bị, chủ game 10/11): gắn lên 1 quái của mình, cộng chỉ số ghi trên lá. */
+  gear?: boolean;
   since?: string;
 };
 
@@ -220,7 +222,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Thỏ đen tinh nghịch",
     "stars": 1,
     "gems": 1,
-    "skill": "__**Nhảy qua lại**__: \nCó khả năng né được 40% sát thương trong các cuộc giao tranh, tăng lên đến 75% khi đấu với quái thú từ 3 sao trở lên.",
+    "skill": "__**Nhảy qua lại**__: \nCó khả năng né 40% đối với các đòn đánh vật lý, lên đến 75% khi đối thủ là quái thú từ 3 sao trở lên.",
     "atk": 4,
     "def": 0,
     "mdef": 0,
@@ -253,7 +255,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 0,
     "def": 0,
     "mdef": 0,
-    "hp": 6,
+    "hp": 4,
     "art": "thien-su",
     "strong": "Trade mana giúp đẩy ván đấu cực nhanh",
     "weak": "Dễ bị khắc chế, và ngốn mana nếu dùng sai.",
@@ -279,7 +281,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Phù thuỷ tí hơn",
     "stars": 1,
     "gems": 0,
-    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên người đối thủ hoặc 1 quái địch.",
+    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 2 cộng với số sao hiện có, lên đối thủ hoặc lên 1 quái địch.",
     "atk": 1,
     "def": 0,
     "mdef": 2,
@@ -418,7 +420,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 2,
     "def": 0,
     "mdef": 0,
-    "hp": 8,
+    "hp": 6,
     "art": "kizuran",
     "strong": "Máu rất trâu",
     "weak": "Không có điểm phòng ngự",
@@ -465,9 +467,9 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Hoa ăn thịt người",
     "stars": 1,
     "gems": 1,
-    "skill": "Tôi Không đánh thường. Cũng Không thể chặn.\n__**Hấp thụ**__\nTiêu hao 0 mana. Chịu đòn từ 1 quái thú, để cướp 2 máu tối đa của nó, và cộng vào cho bản thân.",
+    "skill": "Tôi Không đánh thường. Cũng Không thể chặn.\n__**Hấp thụ**__\nTiêu hao 0 mana. Chịu đòn vật lý, để cướp 2 máu tối đa của quái thú đó.",
     "atk": 0,
-    "def": 3,
+    "def": 2,
     "mdef": 0,
     "hp": 3,
     "art": "hoa-an-thit-nguoi",
@@ -505,7 +507,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Khổng lồ 1 mắt",
     "stars": 1,
     "gems": 0,
-    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn tốn thêm 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
+    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn Tiêu hao 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
     "atk": 3,
     "def": 3,
     "mdef": 0,
@@ -532,7 +534,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Rồng con",
     "stars": 1,
     "gems": 0,
-    "skill": "**__Hơi thở rồng__**: \nTiêu hao 1 mana để gây 2 sát thương chuẩn và 1 sát thương phép lên 1 kẻ địch hoặc người chơi.",
+    "skill": "**__Hơi thở rồng__**: \nTiêu hao 1 mana để gây 2 sát thương chuẩn và 1 sát thương phép lên 1 kẻ địch hoặc lên người chơi.",
     "atk": 2,
     "def": 0,
     "mdef": 2,
@@ -563,7 +565,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 4,
     "def": 0,
     "mdef": 4,
-    "hp": 3,
+    "hp": 2,
     "art": "may-chem",
     "strong": "Kháng phép, công cao",
     "weak": "Máu yếu, thủ yếu",
@@ -661,7 +663,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Thế thân của shien",
     "stars": 1,
     "gems": 0,
-    "skill": "__**Thế thân**__:\n- Trên sân, khi một quái đồng minh hoặc người chơi bị nhắm đến, chuyển mục tiêu sang ta.\n- Trên tay, khi 1 đồng minh trên sân có nguy cơ gặp nạn, tiêu hao 1 mana để thế chỗ, đồng minh về tay giữ nguyên trạng thái, và triệu hồi lại ở lượt sau đó mà không tốn mana.",
+    "skill": "__**Thế thân**__:\n- Trên sân. Khi ta trên sân, điều kiện phát động: 1 quái thú đồng minh khác bị nhắm đến bởi đối thủ. Chuyển tất cả các đòn nhắm đến sang cho ta.\n- Trên tay. Khi ta trên tay, điều kiện phát động: 1 quái thú đồng minh khác bị nhắm đến bởi đối thủ. Tiêu hao 1 mana, đổi chỗ ta và quái thú đó, đồng minh về tay giữ nguyên trạng thái. Và có thể triệu hồi ở lượt sau mà không tiêu hao mana.",
     "atk": 3,
     "def": 0,
     "mdef": 0,
@@ -750,7 +752,7 @@ export const FORMS: MonsterCard[] = [
     "name": "Rồng ngàn tuổi",
     "stars": 4,
     "gems": 0,
-    "skill": "__**Hơi thở rồng**__: \nTiêu hao 1 mana để gây 3 sát thương chuẩn và 4 sát thương phép lên 1 kẻ địch hoặc người chơi.",
+    "skill": "__**Hơi thở rồng**__: \nTiêu hao 1 mana để gây 3 sát thương chuẩn và 4 sát thương phép lên 1 kẻ địch hoặc lên người chơi.",
     "atk": 7,
     "def": 2,
     "mdef": 3,
@@ -1134,6 +1136,20 @@ export const DECK_SIZE = 24;
 export const DECK_MIN = 16;
 export const MIN_MONSTERS = 13;
 export const MIN_SPELLS = 0;
+
+/**
+ * Bản tối đa của một lá trong một bộ (chủ game 08/11): quái 1 sao 3 bản, quái 2 sao 2 bản, phép 0 mana 2 bản,
+ * mọi lá khác 1 bản. Dạng ngoài bộ (tiến hoá, dung hợp) không bỏ vào bộ: 0. Lá môi trường vẫn chỉ 1 lá mỗi bộ.
+ */
+export function copyCap(id: string): number {
+  if (FORMS.some((card) => card.id === id)) return 0;
+  const monster = monsterCard(id);
+  if (monster) return monster.stars <= 1 ? 3 : monster.stars === 2 ? 2 : 1;
+  const spell = spellCard(id);
+  if (!spell) return 0;
+  if (spell.env) return 1;
+  return spell.gems === 0 ? 2 : 1;
+}
 
 export function deckLegal(monsterCount: number, spellCount: number): boolean {
   const total = monsterCount + spellCount;

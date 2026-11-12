@@ -1,0 +1,90 @@
+/* Menu chính: bố cục dựng lại từ ảnh nguyên liệu (H3/H4/H5/H6/H7 chủ game 11/11).
+   Toạ độ tính theo ảnh H3 826 × 1905; mọi phần tử đặt bằng % của sân khấu. */
+.lobby {
+  --stage-w: min(100vw, calc(100dvh * 826 / 1905));
+  --lobby-navy: #0b1b2c;
+  --lobby-cyan: #39daee;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  background: var(--lobby-navy);
+}
+.lobby-stage {
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: var(--stage-w);
+  aspect-ratio: 826 / 1905;
+  overflow: hidden;
+  background: #081a29;
+  color: #f4f2ed;
+  font-family: "Outfit", "Be Vietnam Pro", system-ui, sans-serif;
+}
+/* Video nền 2:3 (11/11): đặt sát đỉnh sân khấu, cao ~65%, đáy mờ dần vào nền tối nên không lộ mép cắt. */
+.lobby-background { position: absolute; left: -12.5cqw; top: 0; width: 125cqw; max-width: none; height: auto; aspect-ratio: 720 / 1072; object-fit: cover; z-index: -2; -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%); }
+/* Vân xanh đen có sẵn: giữ để hồ sơ và sao đọc rõ. */
+.lobby-bottom-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(to top, #081a29 0%, #081a29 26%, rgb(8 26 41 / .93) 29%, rgb(8 26 41 / .72) 33%, rgb(8 26 41 / .38) 37%, rgb(8 26 41 / .12) 41%, transparent 45%); }
+
+/* Nút ảnh: mọi nút đều có hiệu ứng bấm (lún + sáng + vòng sáng), nút khoá thì rung. */
+.lobby-btn { position: absolute; display: block; padding: 0; border: 0; background: transparent; color: inherit; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-btn > img { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; transition: filter .15s; will-change: transform; }
+.lobby-btn:active > img { transform: scale(.94); filter: brightness(1.3); }
+.lobby-ring { position: absolute; inset: 6%; border-radius: 20%; border: 2px solid #ffe3a0; box-shadow: 0 0 2.4cqw #ffc760, inset 0 0 2cqw #ffc76088; opacity: 0; pointer-events: none; }
+.lobby-btn.is-locked .lobby-ring { border-color: #8fb4d6; box-shadow: 0 0 2cqw #5f8fbb; }
+.lobby-btn.is-wide .lobby-ring { border-radius: 4cqw; }
+.lobby-btn:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 2px; border-radius: 12%; }
+.lobby-dot { position: absolute; left: 81%; top: 19%; width: 2.7cqw; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff6a5e, #e0141c 65%); border: .35cqw solid #ffd9c8; box-shadow: 0 0 1.2cqw #ff3b30; pointer-events: none; }
+
+/* Thanh điều hướng dưới (4 vùng bấm đều nhau trên ảnh). */
+.lobby-nav { position: absolute; }
+.lobby-nav > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.lobby-nav-hit { position: absolute; top: 0; bottom: 0; display: block; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; overflow: hidden; border-radius: 3cqw; }
+.lobby-nav-hit:active { background: radial-gradient(ellipse at 50% 45%, rgb(255 214 130 / .30), transparent 70%); }
+.lobby-nav-hit:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: -3px; }
+.lobby-nav-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgb(255 214 130 / .55), transparent 68%); }
+/* Vầng xanh "mục đang mở" dưới mục được chọn. */
+.lobby-nav-glow { position: absolute; left: 14%; right: 14%; bottom: 3.5%; height: 3.2%; pointer-events: none; opacity: 0; transition: opacity .25s; }
+.lobby-nav-glow.is-on { opacity: 1; }
+.lobby-nav-glow::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; transform: translateY(-50%); background: linear-gradient(90deg, transparent, #3be3ff 25%, #9ff3ff 50%, #3be3ff 75%, transparent); box-shadow: 0 0 1.6cqw #25c8f0, 0 0 .5cqw #8ef0ff; }
+.lobby-nav-glow::after { content: ""; position: absolute; left: 50%; top: 50%; width: 1.2cqw; height: 1.2cqw; transform: translate(-50%, -50%) rotate(45deg); background: #bff7ff; box-shadow: 0 0 1.4cqw #3be3ff; }
+
+/* PvE / PvP. */
+.lobby-play { position: absolute; }
+
+/* Thanh chế độ + hồ sơ. Đơn vị --h = 1 px ảnh H4 quy về sân khấu (thanh rộng 701/826 trong H3 = 904 px H4). */
+.lobby-account { position: absolute; left: 7.748%; top: 69.82%; width: 84.87%; height: 0; --h: 0.09388cqw; font-family: "Outfit", "Be Vietnam Pro", sans-serif; }
+.lobby-coin { position: absolute; display: block; }
+.lobby-coin-star { position: absolute; width: calc(var(--h) * 37); height: auto; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .55)); pointer-events: none; }
+.lobby-coin-num { position: absolute; font-weight: 600; line-height: 1; color: #f2f2f2; text-shadow: 0 .25cqw .6cqw rgb(0 0 0 / .65); white-space: nowrap; }
+.lobby-profile { position: absolute; left: calc(var(--h) * 557); top: calc(var(--h) * -166); width: calc(var(--h) * 368); height: calc(var(--h) * 118); padding: 0; border: 0; background: transparent; cursor: pointer; text-align: right; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-profile:active .lobby-avatar { transform: scale(.94); filter: brightness(1.2); }
+.lobby-name, .lobby-rank { position: absolute; right: 0; line-height: 1; white-space: nowrap; font-weight: 700; }
+.lobby-name { background: linear-gradient(180deg, #ecd7ac 0%, #e4bd84 45%, #be884b 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .6)); }
+.lobby-rank { background: linear-gradient(180deg, #7ddf70 0%, #6bcb63 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .3cqw .5cqw rgb(0 0 0 / .6)); }
+.lobby-avatar { position: absolute; right: 0; top: 0; width: calc(var(--h) * 118); height: calc(var(--h) * 117); transition: transform .12s, filter .12s; }
+.lobby-avatar > img.art { position: absolute; object-fit: cover; object-position: center 25%; clip-path: polygon(7% 0, 93% 0, 100% 7%, 100% 93%, 93% 100%, 7% 100%, 0 93%, 0 7%); }
+.lobby-avatar > img.frame { position: absolute; max-width: none; pointer-events: none; }
+.lobby-mode { position: absolute; left: 0; top: calc(var(--h) * -14); width: 100%; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-mode > img { display: block; width: 100%; height: auto; pointer-events: none; transition: filter .15s; }
+.lobby-mode:active > img { transform: scale(.985); filter: brightness(1.25); }
+.lobby-mode .lobby-ring { inset: 12% 0.4%; border-radius: 3cqw; }
+
+/* Bảng chọn chế độ (H5): ảnh nguyên bản + vùng bấm trong suốt. */
+.lobby-picker { position: fixed; inset: 0; margin: auto; padding: 0; border: 0; background: transparent; overflow: visible; width: calc(var(--stage-w) * 0.77); aspect-ratio: 650 / 600; height: auto; max-height: none; color: inherit; }
+.lobby-picker::backdrop { background: rgb(2 9 18 / .6); backdrop-filter: blur(3px); }
+.lobby-picker > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.lobby-tile, .lobby-close { position: absolute; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lobby-tile { width: 43.8%; height: 36.6%; border-radius: 5.2% / 7%; }
+.lobby-tile.t0 { left: 4.9%; top: 17.3%; }
+.lobby-tile.t1 { left: 51.4%; top: 17.3%; }
+.lobby-tile.t2 { left: 4.9%; top: 56.8%; height: 37.2%; }
+.lobby-tile.t3 { left: 51.4%; top: 56.8%; height: 37.2%; }
+.lobby-tile:active { background: rgb(255 230 160 / .18); }
+.lobby-tile.is-selected { box-shadow: 0 0 0 .5cqw #f6d98f, 0 0 3cqw #ffd36a; }
+.lobby-tile-check { position: absolute; right: 4%; top: 5%; display: grid; place-items: center; width: 7.5cqw; height: 7.5cqw; border: .45cqw solid #f6d98f; border-radius: 50%; background: #123a54; color: #f6d98f; font-size: 4.4cqw; font-weight: 800; line-height: 1; box-shadow: 0 0 1.6cqw #ffd36a; }
+.lobby-close { left: 87.5%; top: 3.2%; width: 9%; height: 9.6%; border-radius: 50%; }
+.lobby-close:active { background: rgb(255 230 160 / .22); }
+.lobby-tile .lobby-ring, .lobby-close .lobby-ring { inset: 0; border-radius: inherit; }
+.lobby a:focus-visible, .lobby button:focus-visible { outline: 2px solid var(--lobby-cyan); outline-offset: 2px; }
+.lobby-picker:focus { outline: none; }

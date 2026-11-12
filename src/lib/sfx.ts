@@ -5,7 +5,7 @@ const MUSIC_KEY = "clash-vol-music";
 /** Sent when the sound switch or the music volume changes, so the music follows at once. */
 export const MUSIC_EVENT = "clash-music-level";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/user-summon.ogg?v=4",
@@ -23,6 +23,12 @@ const CLIPS: Partial<Record<Cue, string>> = {
   boltSmall: "/sfx/set-nho.mp3?v=1",
   laserBoom: "/sfx/laser-no.mp3?v=1",
   poison: "/sfx/doc.mp3?v=2",
+  // Âm lấy từ chính video VFX của chủ game (06/11): phát cùng lúc video bắt đầu.
+  tideRise: "/sfx/thuy-tru.mp3?v=1",
+  tideBurst: "/sfx/thuy-no.mp3?v=1",
+  tideSwirl: "/sfx/thuy-xoay.mp3?v=1",
+  tideWave: "/sfx/dai-hong-thuy.mp3?v=1",
+  heal: "/sfx/hoi-mau.mp3?v=1",
   reflect: "/sfx/guong-vo.mp3?v=1",
   chain: "/sfx/xich.mp3?v=2",
   dispel: "/sfx/giai-tru.mp3?v=1",

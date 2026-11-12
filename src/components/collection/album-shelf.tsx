@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AlbumBook } from "@/components/collection/album-book";
 import { AlbumCover, CardsIcon } from "@/components/collection/album-parts";
 import {
@@ -62,62 +62,82 @@ export function AlbumTab() {
     return stars;
   }
 
+  // Albums with no card yet show only their book (chủ game 08/11).
+  const soon = (id: string, name: string, group: "char" | "env"): Album => ({ id, name, env: null, cover: "", cards: [], group });
+  const byId = (id: string) => list.find((album) => album.id === id);
+  const parts = [
+    {
+      key: "char",
+      title: "Theo nhân vật",
+      group: [byId("yugi"), byId("phep"), soon("joey", "Joey", "char")].filter((album): album is Album => !!album),
+    },
+    {
+      key: "env",
+      title: "Theo môi trường",
+      group: [...list.filter((album) => album.group !== "char" && album.id !== "phep"), soon("vuong-quoc", "Vương đô", "env")],
+    },
+  ];
+
+  // Only two books are clear at a time; the next one fades in as the row slides, like the hand of cards in a match.
+  const rows = useRef<Record<string, HTMLDivElement | null>>({});
+  const fade = (row: HTMLDivElement | null) => {
+    if (!row) return;
+    const box = row.getBoundingClientRect();
+    const pad = parseFloat(getComputedStyle(row).paddingLeft) || 0;
+    const left = box.left + pad;
+    const right = box.right - pad;
+    row.querySelectorAll<HTMLElement>(".al-item").forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const over = Math.max(0, left - rect.left, rect.right - right);
+      item.style.setProperty("--edge", String(Math.max(0.3, 1 - over / (rect.width * 0.9))));
+    });
+  };
+  useLayoutEffect(() => {
+    const all = () => Object.values(rows.current).forEach(fade);
+    all();
+    window.addEventListener("resize", all);
+    return () => window.removeEventListener("resize", all);
+  });
+
   return (
     <>
       <div className="al-shelf">
-        {[
-          { key: "char", title: "Nhân vật", group: list.filter((album) => album.group === "char") },
-          {
-            key: "env",
-            title: "Môi trường",
-            group: list.filter((album) => album.group !== "char"),
-          },
-        ]
-          .filter((part) => part.group.length)
-          .map(({ key, title, group }) => (
-            <section key={key} className="al-section">
-              <h3 className="al-section-title">{tr(title)}</h3>
-              <div className="al-grid">
-                {group.map((album) => {
-                  const have = album.cards.filter((card) => owned.has(card.id)).length;
-                  const done = have === album.cards.length;
-                  return (
-                    <button
-                      key={album.id}
-                      type="button"
-                      className="al-item"
-                      onClick={(event) =>
-                        openAlbum(
-                          album,
-                          event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ??
-                            null,
-                        )
-                      }
-                    >
-                      <span className="al-name">{tr(album.name)}</span>
-                      <span className="al-item-cover">
-                        <AlbumCover album={album} done={done} />
-                        {album.group !== "char" &&
-                        album.cards.some((card) => fresh.has(card.id)) ? (
-                          <i className="al-new" aria-label={tr("Có lá mới")}>
-                            !
-                          </i>
-                        ) : null}
-                      </span>
-                      {done ? (
-                        <b className="al-done">{tr("Hoàn thành!")}</b>
-                      ) : (
-                        <span className="al-count">
-                          <CardsIcon />
-                          {have}/{album.cards.length}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        {parts.map(({ key, title, group }) => (
+          <section key={key} className={`al-part is-${key}`}>
+            <h3 className="al-banner">{tr(title)}</h3>
+            <div className="al-row" ref={(el) => { rows.current[key] = el; }} onScroll={(event) => fade(event.currentTarget)}>
+              {group.map((album) => {
+                const total = album.cards.length;
+                const have = album.cards.filter((card) => owned.has(card.id)).length;
+                const done = total > 0 && have === total;
+                const empty = total === 0;
+                return (
+                  <button
+                    key={album.id}
+                    type="button"
+                    className={`al-item${empty ? " is-soon" : ""}`}
+                    disabled={empty}
+                    onClick={(event) => openAlbum(album, event.currentTarget.querySelector(".al-cover")?.getBoundingClientRect() ?? null)}
+                  >
+                    <AlbumCover album={album} done={done} />
+                    {album.group !== "char" && album.cards.some((card) => fresh.has(card.id)) ? (
+                      <i className="al-new" aria-label={tr("Có lá mới")}>
+                        !
+                      </i>
+                    ) : null}
+                    <span className={`al-prog${done ? " is-done" : ""}`}>
+                      <CardsIcon />
+                      <b>{empty ? tr("Sắp có") : `${have}/${total}`}</b>
+                      <u>
+                        <i style={{ width: `${total ? Math.round((have / total) * 100) : 0}%` }} />
+                      </u>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
       {open ? (
         <AlbumBook

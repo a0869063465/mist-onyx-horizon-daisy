@@ -1,4 +1,5 @@
 import { chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
+import { KEYWORD_LINES, type KeywordId } from "@/lib/keywords";
 
 /**
  * Skills shown as icons on the monster sheet, coloured by kind (the owner's scheme):
@@ -17,7 +18,7 @@ export type SkillKind = "active" | "risk" | "spell" | "passive" | "note";
  * Ân Huệ holds the blessings of the knight, the king and the queen.
  */
 export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[]; chain?: boolean; slow?: boolean };
-export type SkillShown = SkillEntry & { text: string };
+export type SkillShown = SkillEntry & { text: string; keyword?: KeywordId };
 
 const A = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "active", icon, head });
 const P = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "passive", icon, head });
@@ -84,7 +85,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
   "mat-xanh-huy-diet": [A("Cầu sấm ánh sáng", "bolt-eye")],
   "mat-do-tan-pha": [A("Cầu lửa địa ngục", "burning-eye")],
-  "hoa-an-thit-nguoi": [A("Hấp thụ", "carnivorous-plant"), NOTE("không đánh thường")],
+  "hoa-an-thit-nguoi": [slow(R("Hấp thụ", "carnivorous-plant")), NOTE("không đánh thường")],
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
@@ -208,6 +209,11 @@ function dropHead(segment: string, head: string): string {
 
 /** The skills of a card, each with its own slice of the card text. */
 export function skillsOf(cardId: string, text: string): SkillShown[] {
+  const lines = KEYWORD_LINES[cardId];
+  return lines ? skillsOfRaw(cardId, text).map((row) => (lines[row.name] ? { ...row, keyword: lines[row.name] } : row)) : skillsOfRaw(cardId, text);
+}
+
+function skillsOfRaw(cardId: string, text: string): SkillShown[] {
   const list = SKILL_BOOK[cardId] ?? [];
   if (list.length === 0) return [];
   // Lines a small skill took for itself, and bare heading lines, are left out of the bigger skills around them.

@@ -1,10 +1,12 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
+import { KEYWORDS } from "@/lib/keywords";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
 import { tr } from "@/lib/i18n";
+import { useSwipe } from "@/lib/swipe";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
 export type SheetTone = "gold" | "red" | "purple" | "fuse";
@@ -86,6 +88,13 @@ export function GlyphDefs() {
           <stop offset="0.5" stopColor="#dff3ff" />
           <stop offset="0.75" stopColor="#173f78" />
           <stop offset="1" stopColor="#7cc4ff" />
+        </linearGradient>
+        <linearGradient id="rim3d-green" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#eafff0" />
+          <stop offset="0.3" stopColor="#3fcf6a" />
+          <stop offset="0.5" stopColor="#dfffe8" />
+          <stop offset="0.75" stopColor="#12632d" />
+          <stop offset="1" stopColor="#7cf0a0" />
         </linearGradient>
         <linearGradient id="rim3d-passive" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#f6eaff" />
@@ -287,6 +296,7 @@ export function MonsterSheet({
   onBack,
   startSkill,
   stay = false,
+  onSwipe,
 }: {
   name: string;
   card: ReactNode;
@@ -313,7 +323,15 @@ export function MonsterSheet({
   startSkill?: string;
   /** No ✕ and no tap outside to close (chủ game 28/10: a fused monster must be summoned, the fusion cannot be undone). */
   stay?: boolean;
+  /** Vuốt ngang đổi sang lá kế (chủ game 06/11): +1 = vuốt trái. Trả false khi không còn lá để đổi. */
+  onSwipe?: (dir: 1 | -1) => boolean | void;
 }) {
+  const [slide, setSlide] = useState<0 | 1 | -1>(0);
+  const swipe = useSwipe((dir) => {
+    if (!onSwipe) return false;
+    if (onSwipe(dir) === false) return false;
+    setSlide(dir);
+  }, true);
   const wanted = startSkill?.trim().toLowerCase() ?? "";
   const startAt = wanted ? skills.findIndex((skill) => skill.name.toLowerCase() === wanted || wanted.startsWith(skill.name.toLowerCase())) : -1;
   const first = startAt >= 0 ? `s${startAt}` : skills.length ? "s0" : extras[0] ? `x:${extras[0].key}` : "";
@@ -468,9 +486,9 @@ export function MonsterSheet({
     });
   };
   return (
-    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()}>
+    <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()} {...(onSwipe ? swipe : {})}>
       <GlyphDefs />
-      <div className="msheet" role="dialog" aria-label={name}>
+      <div key={slide ? name : undefined} className={`msheet${slide ? ` is-slide-${slide > 0 ? "l" : "r"}` : ""}`} role="dialog" aria-label={name}>
         {onBack ? (
           <button type="button" className="msheet-up" aria-label={tr("Trở về")} onClick={onBack}>
             {"<<"}
@@ -497,13 +515,6 @@ export function MonsterSheet({
             {card}
             {badge}
             {count ? <span className="msheet-count">{count}</span> : null}
-            {onArt ? (
-              <span className="msheet-fan" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            ) : null}
           </div>
           <div className="msheet-side">
             <div className="msheet-head">
@@ -535,6 +546,9 @@ export function MonsterSheet({
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
+                {shown.keyword ? <span className="kw-icon msheet-kw" data-kw={shown.keyword} title={KEYWORDS[shown.keyword].label}>
+                  <img src={KEYWORDS[shown.keyword].src} alt="" draggable={false} />
+                </span> : null}
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">

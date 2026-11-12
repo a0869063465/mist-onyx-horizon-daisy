@@ -391,6 +391,12 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { atk: { from: 3, to: 2 } },
   },
   {
+    id: "kizuran",
+    at: "2026-11-09",
+    wave: 32,
+    stats: { hp: { from: 8, to: 6 } },
+  },
+  {
     id: "kazura",
     at: "2026-11-01",
     wave: 31,
@@ -403,6 +409,24 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     stats: { atk: { from: 6, to: 4 }, hp: { from: 3, to: 1 } },
     notes: ["Kim châm tê liệt còn gây thêm 2 sát thương phép"],
+  },
+  {
+    id: "hoa-an-thit-nguoi",
+    at: "2026-11-11",
+    wave: 33,
+    stats: { def: { from: 3, to: 2 } },
+  },
+  {
+    id: "may-chem",
+    at: "2026-11-11",
+    wave: 33,
+    stats: { hp: { from: 3, to: 2 } },
+  },
+  {
+    id: "quai-thu-thien-su",
+    at: "2026-11-11",
+    wave: 33,
+    stats: { hp: { from: 6, to: 4 } },
   },
 ];
 
@@ -602,7 +626,7 @@ export function infoBlocks(id: string): InfoBlock[] {
     if (cursor[key] !== now[key]) drift[key] = { from: cursor[key], to: now[key] };
   }
   const driftTone = toneFromStats(drift);
-  const driftEntry: BalanceEntry = { id, at: "live", stats: drift };
+  const driftEntry: BalanceEntry = { id, at: "live", wave: 0, stats: drift };
   const driftLines = entryLines(driftEntry);
   if (driftTone && driftLines.length) {
     blocks.push({ at: "live", when: "", tone: driftTone, toneText: toneWord(driftTone), lines: driftLines });

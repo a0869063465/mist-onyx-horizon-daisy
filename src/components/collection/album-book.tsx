@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { ExchangeAsk, ExchangeBox, ExchangeShow, SetPanel, SetPrize, StatShow, type Opened } from "@/components/collection/album-panels";
-import { AlbumCover, AlbumPic, AppraiseBox, CardsIcon, RarityBadge } from "@/components/collection/album-parts";
+import { AlbumPic, BOOK_X, COVER_CUT, AppraiseBox, CardsIcon, RarityBadge, albumTitle } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
-import { FORMS, monsterCard } from "@/lib/catalog";
+import { neighbour } from "@/lib/swipe";
+import { FORMS, copyCap, monsterCard } from "@/lib/catalog";
 import { albumPages, awaitsAppraisal, cardName, cardNumbers, formatNo, rarityOf, setsOf, type Album, type AlbumCard, type CardSet, type PageItem } from "@/lib/collection";
 import { tr } from "@/lib/i18n";
-import { loadRates, type Rates, type Tier } from "@/lib/shop";
+import { loadRates, ownedCount, useStars, type Rates, type Tier } from "@/lib/shop";
 
 type Stage = "fly" | "open" | "ready" | "closing";
 type Turn = { to: number; dir: 1 | -1 };
@@ -15,14 +16,18 @@ type Tap = (card: AlbumCard, linked: boolean, at: DOMRect) => void;
 
 /** The cover flies to the middle, then swings open; a page turns; a linked card flares before its sets open. */
 const FLY_MS = 460;
-const OPEN_MS = 900;
+const OPEN_MS = 1050;
 const CLOSE_MS = 220;
 const FLIP_MS = 640;
+
+/** Where the book sits in its picture (fractions of the 480×768 box): the spine ends at `hinge`; `top`/`bottom` are the board. */
+const COVER = { top: 0.1354, bottom: 0.834 };
+const coverCut = (id: string) => COVER_CUT[id] ?? COVER.bottom;
 const BURST_MS = 380;
 /** A new card drops into its pocket in this long, the next one on the page a little later. */
 const ARRIVE_MS = 800;
 const STAGGER_MS = 130;
-/** A swipe this far across turns the page. */
+/** A swipe this far across turns the page (back to the original, chủ game 08/11). */
 const SWIPE_PX = 42;
 
 const forms = new Set(FORMS.map((card) => card.id));
@@ -78,10 +83,12 @@ export function AlbumBook({
   const [arriving, setArriving] = useState<string[]>([]);
   const [stat, setStat] = useState<{ from: number; to: number } | null>(null);
   const [ask, setAsk] = useState<string | null>(null);
-  const [forge, setForge] = useState<{ id: string; before: number } | null>(null);
+  const [forge, setForge] = useState<{ id: string; before: number; copy?: boolean } | null>(null);
   const [floats, setFloats] = useState<Float[]>([]);
   const book = useRef<HTMLDivElement>(null);
   const cover = useRef<HTMLSpanElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const stars = useStars();
   const swipe = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const timers = useRef<number[]>([]);
   const at = useRef(0);
@@ -99,7 +106,21 @@ export function AlbumBook({
   useLayoutEffect(() => {
     const el = cover.current;
     if (!from || !el || !book.current) return;
-    const to = book.current.getBoundingClientRect();
+    // The cover's board lands on the page block of the picture (its gutter at x 45, 745 wide, 1347 tall of 849×1851); the
+    // hinge of the cover is the spine's edge, so it swings open about the gutter like a real book (chủ game 08/11).
+    const fr = (frame.current ?? book.current).getBoundingClientRect();
+    const u = fr.width / 849;
+    // Every book lands the same way (chủ game 08/11, from his picture): the front board's frame runs from 8,7% to 99,6% of the
+    // page width, the spine hangs out of the screen on the left; the board swings about a line 2/5 deep in the spine. Vertically it
+    // covers the page block of the picture (y 300–1665 of 1851).
+    const [bl, br] = BOOK_X[album.id] ?? [0.1, 0.9];
+    const spineEnd = bl + 0.263 * (br - bl);
+    const width = ((0.996 - 0.087) * fr.width) / (br - spineEnd);
+    const cut = coverCut(album.id);
+    const height = (1365 * u) / (cut - COVER.top);
+    const to = { left: fr.left + 0.087 * fr.width - spineEnd * width, top: fr.top + 300 * u - COVER.top * height, width, height };
+    el.style.setProperty("--cut", `${cut * 100}%`);
+    el.style.setProperty("--hinge", `${(bl + 0.4 * (spineEnd - bl)) * 100}%`);
     const place = (rect: { left: number; top: number; width: number; height: number }) => {
       el.style.left = `${rect.left}px`;
       el.style.top = `${rect.top}px`;
@@ -173,9 +194,16 @@ export function AlbumBook({
     later(CLOSE_MS, onClose);
   }
 
+  function swipeSheet(dir: 1 | -1) {
+    const next = neighbour(album.cards, (card) => card.id === sheet, dir);
+    if (!next) return false;
+    setSheet(next.id);
+  }
+
   function tap(card: AlbumCard, linked: boolean, rect: DOMRect) {
     if (swipe.current?.moved || turn || burst || busy) return;
-    if (!linked) {
+    // Any card that belongs to a group (framed on the page, linked, or in a character album) opens its group (chủ game 08/11).
+    if (!linked && setsOf(card.id, sets).length === 0) {
       setSheet(card.id);
       return;
     }
@@ -188,18 +216,20 @@ export function AlbumBook({
 
   // Bought: saved at once, then the light show; a card of this album then drops into its pocket.
   function buy(id: string) {
+    // One more copy of a card already owned (chủ game 08/11): the light show only, the pocket stays as it is.
+    const copy = owned.has(id);
     if (!onExchange(id)) return;
     setAsk(null);
     setSheet(null);
     setPanel(null);
-    if (here.has(id)) setPending((now) => new Set(now).add(id));
-    setForge({ id, before: have });
+    if (here.has(id) && !copy) setPending((now) => new Set(now).add(id));
+    setForge({ id, before: have, copy });
   }
 
   function forged() {
     if (!forge) return;
     setForge(null);
-    if (here.has(forge.id)) reveal([forge.id], forge.before);
+    if (here.has(forge.id) && !forge.copy) reveal([forge.id], forge.before);
   }
 
   function claim(set: CardSet, rect: DOMRect) {
@@ -244,20 +274,31 @@ export function AlbumBook({
   const leaves = !turn ? [leaf(index, "")] : turn.dir === 1 ? [leaf(turn.to, "is-under"), leaf(index, "is-turn-next")] : [leaf(index, "is-under"), leaf(turn.to, "is-turn-back")];
   // Not owned: Đổi; got from a pack or bought: Giám định; the default deck's and forms: nothing.
   const asideFor = (id: string) =>
-    forms.has(id) || !numbered.has(id) ? null : !owned.has(id) ? <ExchangeBox id={id} onAsk={setAsk} /> : awaitsAppraisal(id, owned) ? <AppraiseBox id={id} /> : null;
+    forms.has(id) || !numbered.has(id) ? null : !owned.has(id) ? (
+      <ExchangeBox id={id} onAsk={setAsk} />
+    ) : (
+      <>
+        {ownedCount(id) < copyCap(id) ? <ExchangeBox id={id} onAsk={setAsk} /> : null}
+        {awaitsAppraisal(id, owned) ? <AppraiseBox id={id} /> : null}
+      </>
+    );
   const badgeFor = (id: string) => <RarityBadge id={id} />;
   const shown = turn ? turn.to : index;
 
   return (
     <div className={`al-view is-${stage}`}>
+      <div ref={frame} className="al-frame">
       <header className="al-head">
-        <button type="button" className="cv-back" data-ui="soft" aria-label={tr("Trở về")} onClick={close}>
-          {"<<"}
-        </button>
-        <h2>{tr(album.name)}</h2>
+        <button type="button" className="cv-back" data-ui="soft" aria-label={tr("Trở về")} onClick={close} />
+        <h2>{tr(albumTitle(album.id, album.name))}</h2>
         <span className={`al-tally${done ? " is-done" : ""}`} aria-label={tr("Số lá đã có")}>
           <CardsIcon />
-          {have}/{album.cards.length}
+          <b>
+            {have}/{album.cards.length}
+          </b>
+        </span>
+        <span className="al-stars" style={{ "--fit": Math.min(1, 3.2 / String(stars).length) } as CSSProperties}>
+          {stars}
         </span>
         {album.prize ? (
           <span className="al-head-prize">
@@ -272,7 +313,6 @@ export function AlbumBook({
       </div>
       <footer className="al-foot">
         <button type="button" className="al-arrow" data-ui="soft" aria-label={tr("Trang trước")} disabled={shown === 0 || !!turn || busy} onClick={() => go(-1)}>
-          <Chevron back />
         </button>
         <span className="al-dots" aria-label={`${shown + 1}/${pages.length}`}>
           {pages.map((_, page) => (
@@ -280,18 +320,27 @@ export function AlbumBook({
           ))}
         </span>
         <button type="button" className="al-arrow" data-ui="soft" aria-label={tr("Trang sau")} disabled={shown === pages.length - 1 || !!turn || busy} onClick={() => go(1)}>
-          <Chevron />
         </button>
       </footer>
-      {stage === "fly" || stage === "open" ? <AlbumCover ref={cover} album={album} done={done} className={`al-fly${stage === "open" ? " is-opening" : ""}`} /> : null}
+      </div>
+      {stage === "fly" || stage === "open" ? (
+        <span ref={cover} className={`al-fly${stage === "open" ? " is-opening" : ""}`}>
+          <img className="al-fly-base" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
+          <span className="al-fly-spin">
+            <img className="al-fly-front" src={`/ui/col/open/${album.id}.webp`} alt="" draggable={false} />
+            <i className="al-fly-back" />
+            <i className="al-fly-shade" />
+          </span>
+        </span>
+      ) : null}
       {panel ? (
         <SetPanel opened={panel} owned={owned} claimed={claimed} sets={sets} albums={albums} onView={setSheet} onAsk={setAsk} onClaim={claim} onClose={() => setPanel(null)} />
       ) : null}
       {sheet ? (
         monsterCard(sheet) ? (
-          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
       {ask ? <ExchangeAsk id={ask} albums={albums} onCancel={() => setAsk(null)} onConfirm={() => buy(ask)} /> : null}
@@ -414,13 +463,5 @@ function Pocket({
       <span className="al-no">{formatNo(card.no)}</span>
       {linked ? <span className={`al-solo${lit ? " is-done" : ""}`} aria-hidden="true" /> : null}
     </button>
-  );
-}
-
-function Chevron({ back = false }: { back?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d={back ? "M15 4.5 7.5 12l7.5 7.5" : "M9 4.5 16.5 12 9 19.5"} />
-    </svg>
   );
 }

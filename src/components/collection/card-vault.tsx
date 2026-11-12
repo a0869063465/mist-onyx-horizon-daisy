@@ -1,7 +1,8 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { fakeIds } from "@/lib/owned-cards";
+import { trialTag } from "@/lib/owned-cards";
 import { AlbumPic, AppraiseBox, RarityBadge } from "@/components/collection/album-parts";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { neighbour } from "@/lib/swipe";
 import { Glyph } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { FORMS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
@@ -65,6 +66,11 @@ export function CardVault() {
       rows.push({ id: card.id, kind: "spell", name: card.name, stars: 0, form: false, owned: owned.has(card.id), tier: rarityOf(card.id, rates) });
     }
   }
+  const swipeSheet = (dir: 1 | -1) => {
+    const next = neighbour(shown, (row) => row.id === sheet?.id, dir);
+    if (!next) return false;
+    setSheet(next);
+  };
   const shown = (filter.tiers.length ? rows.filter((row) => filter.tiers.includes(row.tier)) : rows).sort((a, b) => order(a, b, sort));
 
   const filterCount = filter.types.length + filter.stars.length + filter.kinds.length + filter.tiers.length + (filter.monsters && filter.spells ? 0 : 1);
@@ -94,9 +100,8 @@ export function CardVault() {
 
   return (
     <section className="cv-vault">
-      <div className="cv-tools">
-        <label className="cv-search">
-          <Glyph name="magnifying-glass" fill="#cfe0ff" />
+      <div className="cx-tools">
+        <label className="cx-search">
           <input value={query} placeholder={tr("Tìm lá bài")} onChange={(event) => setQuery(event.target.value)} />
           {query ? (
             <button type="button" className="cv-search-x" data-ui="soft" aria-label={tr("Xoá")} onClick={() => setQuery("")}>
@@ -104,19 +109,13 @@ export function CardVault() {
             </button>
           ) : null}
         </label>
-        <ToolButton label={tr("Môi trường")} on={panel === "env"} count={envs.length} onClick={() => flip("env")}>
-          <Glyph name="mountains" />
-        </ToolButton>
-        <ToolButton label={tr("Lọc")} on={panel === "filter"} count={filterCount} onClick={() => flip("filter")}>
-          <Glyph name="funnel" />
-        </ToolButton>
-        <ToolButton label={tr("Sắp xếp")} on={panel === "sort"} count={sort.by === "rarity" && !sort.up ? 0 : 1} onClick={() => flip("sort")}>
-          <SortIcon up={sort.by === "rarity" ? sort.up : null} />
-        </ToolButton>
+        <ToolButton label={tr("Môi trường")} slot="env" on={panel === "env"} count={envs.length} onClick={() => flip("env")} />
+        <ToolButton label={tr("Lọc")} slot="filter" on={panel === "filter"} count={filterCount} onClick={() => flip("filter")} />
+        <ToolButton label={tr("Sắp xếp")} slot="sort" on={panel === "sort"} count={sort.by === "rarity" && !sort.up ? 0 : 1} onClick={() => flip("sort")} />
       </div>
 
       {panel === "env" ? (
-        <div className="cv-drop">
+        <div className="cv-drop cx-drop">
           <div className="cv-envs">
             {ENV_FILTERS.map((env) => (
               <button
@@ -138,7 +137,7 @@ export function CardVault() {
       ) : null}
 
       {panel === "filter" ? (
-        <div className="cv-drop">
+        <div className="cv-drop cx-drop">
           <div className="cv-show">
             <button type="button" data-ui="soft" className={`cv-show-btn is-monster${filter.monsters ? " on" : ""}`} aria-pressed={filter.monsters} onClick={() => show("monsters")}>
               <Glyph name="wolf-head" />
@@ -206,7 +205,7 @@ export function CardVault() {
       ) : null}
 
       {panel === "sort" ? (
-        <div className="cv-drop is-sort">
+        <div className="cv-drop cx-drop is-sort">
           <button type="button" data-ui="soft" className={`cv-sort${sort.by === "rarity" ? " on" : ""}`} onClick={() => setSort((now) => ({ by: "rarity", up: now.by === "rarity" ? !now.up : false }))}>
             <span>{tr("Độ hiếm")}</span>
             <small>{sort.by === "rarity" && !sort.up ? "UR → SR → N" : "N → SR → UR"}</small>
@@ -221,8 +220,8 @@ export function CardVault() {
       <div className="cv-pool">
         <div className="cv-grid">
           {shown.map((row) => (
-            <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned || fakeIds([row.id]).length ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
-              <AlbumPic id={row.id} missing={!row.owned} />
+            <button key={row.id} type="button" data-ui="soft" className={`cv-card${row.owned || trialTag(row.id) ? "" : " is-dim"}`} onClick={() => setSheet(row)}>
+              <AlbumPic id={row.id} missing={!row.owned} vault />
               <b className={`cv-tag ${rarityTag(row.id, row.tier).cls}`}>{rarityTag(row.id, row.tier).text}</b>
             </button>
           ))}
@@ -232,9 +231,9 @@ export function CardVault() {
 
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
     </section>
@@ -251,10 +250,10 @@ function order(a: Row, b: Row, sort: Sort): number {
   return (spellKindRank(a.id) - spellKindRank(b.id)) * flip || a.name.localeCompare(b.name, "vi");
 }
 
-function ToolButton({ label, on, count, onClick, children }: { label: string; on: boolean; count: number; onClick: () => void; children: ReactNode }) {
+/** The three round buttons sit on the picture of the page (their icons are in it): here only the hit area, the ring when on, the count. */
+function ToolButton({ label, slot, on, count, onClick }: { label: string; slot: string; on: boolean; count: number; onClick: () => void }) {
   return (
-    <button type="button" className={`cv-tool${on ? " on" : ""}${count ? " is-set" : ""}`} aria-label={label} aria-expanded={on} onClick={onClick}>
-      {children}
+    <button type="button" className={`cx-tool is-${slot}${on ? " on" : ""}${count ? " is-set" : ""}`} aria-label={label} aria-expanded={on} onClick={onClick}>
       {count ? <b className="cv-tool-count">{count}</b> : null}
     </button>
   );

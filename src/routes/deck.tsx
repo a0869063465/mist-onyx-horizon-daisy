@@ -1,17 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { DeckRow } from "@/components/deck-row";
 import { CardFace } from "@/components/game/card-face";
 import { BalanceLines, CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
+import { neighbour } from "@/lib/swipe";
 import { Glyph, GlyphDefs, Rim } from "@/components/game/monster-sheet";
-import { artSrc, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
-import { canReachForm, canUseCard, fakeIds } from "@/lib/owned-cards";
+import { artSrc, copyCap, DECK_MIN, DEFAULT_DECK, DECK_NOTES, FORMS, MIN_MONSTERS, MONSTERS, SPELLS, monsterCard, spellCard, spellSrc, type MonsterCard, type SpellCard } from "@/lib/catalog";
+import { canReachForm, canUseCard, copiesOf, fakeIds, usableCopies } from "@/lib/owned-cards";
+import { ExchangeAsk } from "@/components/collection/album-panels";
+import { albums, cardNumbers, exchangeCard, exchangePrice } from "@/lib/collection";
+import { SHOP_PACK_KEY } from "@/lib/shop";
 import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
 import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
 import { tr, useLang } from "@/lib/i18n";
 import { infoBlocks, markFace } from "@/lib/power-balance";
-import { spellKindRank } from "@/lib/spell-kinds";
+import { spellKind, spellKindRank } from "@/lib/spell-kinds";
 import { deckTactics, loadStrategies } from "@/lib/strategies";
 
 export const Route = createFileRoute("/deck")({ component: DeckPage });
@@ -34,6 +38,10 @@ const DECK_SIZE = 24;
  * Drag a card from the pool down onto the list to add it, a row of the list up onto the pool to take it out;
  * tap a card or a row to read it.
  */
+function validDeck(deck: BeastDeck): boolean {
+  return !deckIssues(deck) && deck.monsters.length >= MIN_MONSTERS && deck.monsters.length + deck.spells.length >= DECK_MIN;
+}
+
 function DeckPage() {
   const [deck, setDeck] = useState<BeastDeck>(DEFAULT_DECK);
   const [book, setBook] = useState<DeckEntry[]>([]);
@@ -44,15 +52,40 @@ function DeckPage() {
   const [filter, setFilter] = useState<PoolFilter>(NO_FILTER);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sheet, setSheet] = useState<Pick | null>(null);
-  const [saved, setSaved] = useState(false);
+  // Where the open sheet came from: a swipe on it steps through that list (the pool, or the deck's own list).
+  const sheetFrom = useRef<"pool" | "list">("pool");
   const [naming, setNaming] = useState<string | null>(null);
+  const [fullPing, setFullPing] = useState(0);
+  const fullTries = useRef(0);
+  // Height of the keyboard (visual viewport), so the name box sits right above it, top left (chủ game 08/11).
+  const [kb, setKb] = useState(0);
+  useEffect(() => {
+    if (naming === null) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const read = () => setKb(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    read();
+    vv.addEventListener("resize", read);
+    vv.addEventListener("scroll", read);
+    return () => {
+      vv.removeEventListener("resize", read);
+      vv.removeEventListener("scroll", read);
+    };
+  }, [naming === null]);
   const [plansOpen, setPlansOpen] = useState(false);
   const [covering, setCovering] = useState(false);
   const [ghost, setGhost] = useState<Ghost | null>(null);
+  // Đổi sao lấy lá from the deck builder (a card not owned, or a trial card whose week is over); `owns` re-reads copies.
+  const [trade, setTrade] = useState<string | null>(null);
+  const [owns, setOwns] = useState(0);
+  const navigate = useNavigate();
   const grab = useRef<Grab | null>(null);
   // A press that turned into a drag or a swipe is not a tap: its click (if the browser sends one) is ignored.
   const skipTap = useRef(false);
-  const savedTimer = useRef(0);
+  // The deck as it was saved when the page opened, and the latest state, for the save on leaving (chủ game 08/11).
+  const first = useRef<{ n: number | null; monsters: string[]; spells: string[] } | null>(null);
+  const latest = useRef({ deck, book, active });
+  latest.current = { deck, book, active };
   const plans = useMemo(() => loadStrategies(), []);
   useLang();
 
@@ -61,8 +94,9 @@ function DeckPage() {
     const found = stored.decks.find((row) => row.n === stored.active) ?? stored.decks[0];
     setBook(stored.decks);
     setActive(found?.n ?? null);
-    if (found) setDeck(cardsOf(found));
-    else setDeck(loadDeck());
+    const opened = found ? cardsOf(found) : loadDeck();
+    first.current = { n: found?.n ?? null, monsters: [...opened.monsters], spells: [...opened.spells] };
+    setDeck(opened);
     setBooted(true);
   }, []);
 
@@ -81,29 +115,62 @@ function DeckPage() {
     saveBook({ decks: book, active });
   }, [book, active, booted]);
 
-  useEffect(() => () => window.clearTimeout(savedTimer.current), []);
+  // No Lưu button: leaving saves the deck. One that is not valid goes back to how it was when the page opened; if that one was
+  // not valid either, it is saved as it stands.
+  useEffect(() => {
+    const finish = () => {
+      const { deck: now, book: rows, active: at } = latest.current;
+      const start = first.current;
+      if (!start) return;
+      if (!validDeck(now)) {
+        if (validDeck(start) && start.n === at) {
+          const back = rows.map((row) => (row.n === at ? { ...row, monsters: start.monsters, spells: start.spells } : row));
+          saveBook({ decks: back, active: at });
+          saveDeck(start);
+          return;
+        }
+        saveBook({ decks: rows, active: at });
+      }
+      saveDeck(now);
+    };
+    window.addEventListener("pagehide", finish);
+    return () => {
+      window.removeEventListener("pagehide", finish);
+      finish();
+    };
+  }, []);
 
   function addCard(pick: Pick) {
     if (!canUseCard(pick.id)) return;
+    // A full deck: the tip jumps up to say so, again at every try (chủ game 08/11).
+    if (deck.monsters.length + deck.spells.length >= DECK_SIZE) {
+      // Only after the third try (chủ game 09/11); from then on it jumps at every try.
+      fullTries.current += 1;
+      if (fullTries.current >= 3) setFullPing((n) => n + 1);
+      return;
+    }
     setDeck((current) => {
       const total = current.monsters.length + current.spells.length;
       if (total >= DECK_SIZE) return current;
+      // Một lá được nhiều bản tới số bản dùng được (chủ game 08/11).
+      const room = usableCopies(pick.id);
       if (pick.kind === "monster") {
-        if (current.monsters.includes(pick.id) || current.monsters.length >= 17 || FORMS.some((card) => card.id === pick.id)) return current;
+        if (current.monsters.filter((id) => id === pick.id).length >= room || FORMS.some((card) => card.id === pick.id)) return current;
         return { ...current, monsters: [...current.monsters, pick.id] };
       }
-      if (current.spells.includes(pick.id) || current.spells.length >= 11) return current;
+      if (current.spells.filter((id) => id === pick.id).length >= room || current.spells.length >= DECK_SIZE - MIN_MONSTERS) return current;
       if (spellCard(pick.id)?.env && current.spells.some((item) => spellCard(item)?.env)) return current;
       return { ...current, spells: [...current.spells, pick.id] };
     });
   }
 
+  // Takes one copy out (the last one put in).
   function dropCard(pick: Pick) {
-    setDeck((current) =>
-      pick.kind === "monster"
-        ? { ...current, monsters: current.monsters.filter((item) => item !== pick.id) }
-        : { ...current, spells: current.spells.filter((item) => item !== pick.id) },
-    );
+    const less = (list: string[]) => {
+      const at = list.lastIndexOf(pick.id);
+      return at < 0 ? list : [...list.slice(0, at), ...list.slice(at + 1)];
+    };
+    setDeck((current) => (pick.kind === "monster" ? { ...current, monsters: less(current.monsters) } : { ...current, spells: less(current.spells) }));
   }
 
   // Dragging: the page listens to every move so a card can travel from the pool to the list and back.
@@ -189,14 +256,57 @@ function DeckPage() {
     grab.current = held;
   }
 
-  const issue = deckIssues(deck);
   const balance = deckBalance(deck);
   const total = deck.monsters.length + deck.spells.length;
-  // 16 to 24 cards, at least 13 monsters, spells not required (chủ game 28/10).
-  const short = Math.max(Math.max(0, MIN_MONSTERS - deck.monsters.length), DECK_MIN - total);
-  const canSave = short === 0 && !issue;
-  const inDeck = new Set([...deck.monsters, ...deck.spells]);
-  // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
+  // Copies in the deck and copies the deck may hold: a pool card dims only once all its copies are in.
+  const used = new Map<string, number>();
+  for (const id of [...deck.monsters, ...deck.spells]) used.set(id, (used.get(id) ?? 0) + 1);
+  const room = booted ? copiesOf([...MONSTERS, ...SPELLS].map((card) => card.id)) : new Map<string, number>();
+  const inDeck = new Set([...used].filter(([id, n]) => n >= (room.get(id) ?? 1)).map(([id]) => id));
+  // Copies still to add (chủ game 09/11): a blue number like the x1 / x2 of the list, nothing when all copies are in or the card has one.
+  const copies = (id: string) => {
+    const left = (room.get(id) ?? 0) - (used.get(id) ?? 0);
+    // Only below the most the rules allow: all 3 copies still free, or 1 of 1, say nothing (chủ game 09/11).
+    if (left <= 0 || left >= copyCap(id)) return null;
+    const tone = spellCard(id) ? spellKind(id).tone : "#3ec6ff";
+    return (
+      <b className="dk-copies" style={{ "--tone": tone } as CSSProperties}>
+        {left}
+      </b>
+    );
+  };
+  // Copies in the deck it may not use (not owned, or a trial week over): the row is dimmed (chủ game 08/11).
+  const lacks = (id: string) => (used.get(id) ?? 0) > (room.get(id) ?? 0);
+  void owns;
+  const tradeBox = (id: string) =>
+    booted && (used.get(id) ?? 0) > 0 && lacks(id) ? (
+      <TradeBox
+        id={id}
+        onTrade={cardNumbers().has(id) ? () => setTrade(id) : undefined}
+        onShop={() => {
+          sessionStorage.setItem(SHOP_PACK_KEY, "1");
+          void navigate({ to: "/shop" });
+        }}
+      />
+    ) : null;
+  const sheetKind = (id: string): Kind => (spellCard(id) ? "spell" : "monster");
+  // A card the deck holds more of than it may use (trial cards, or not owned): Đổi sao / Cửa hàng stand where the arrows are,
+  // until the copies are bought or drawn, then the arrows come back (chủ game 08/11).
+  const asideOf = (id: string) => (
+    <>
+      {booted && lacks(id) ? (
+        tradeBox(id)
+      ) : (
+        <CopyArrows
+          count={used.get(id) ?? 0}
+          canAdd={booted && (used.get(id) ?? 0) < (room.get(id) ?? 0)}
+          onAdd={() => addCard({ id, kind: sheetKind(id) })}
+          onDrop={() => dropCard({ id, kind: sheetKind(id) })}
+        />
+      )}
+      <BalanceBox id={id} />
+    </>
+  );  // The starter deck's cards play as fakes until their real cards are owned: cut stats in red, spells 1 mana more.
   const fakes = new Set(booted ? fakeIds([...MONSTERS, ...SPELLS].map((card) => card.id)) : []);
   // Forms come from play, not the deck; a guest's cards not opened from packs yet are locked too (owner, 19/10).
   // Read on this phone after the first render, so the page the server sent matches.
@@ -219,30 +329,33 @@ function DeckPage() {
   const poolMonsters = q || mode === "monster" ? allMonsters.filter((card) => named(card.name) && passesFilter(card.id, filter, plans)) : [];
   const poolSpells = q || mode === "spell" ? allSpells.filter((card) => named(card.name)) : [];
 
-  const pickedMonsters = deck.monsters
+  const pickedMonsters = [...new Set(deck.monsters)]
     .map((id) => monsterCard(id))
     .filter((card): card is MonsterCard => !!card)
     .sort(byStars);
-  const pickedSpells = deck.spells
+  const pickedSpells = [...new Set(deck.spells)]
     .map((id) => spellCard(id))
     .filter((card): card is SpellCard => !!card)
     .sort(byMana);
 
   // The sheet opens on the click, after the finger is up, so that same tap cannot land on the sheet's backdrop.
-  function tap(pick: Pick) {
+  function tap(pick: Pick, from: "pool" | "list") {
     if (skipTap.current) {
       skipTap.current = false;
       return;
     }
+    sheetFrom.current = from;
     setSheet(pick);
   }
 
-  function save() {
-    if (!canSave) return;
-    saveDeck(deck);
-    setSaved(true);
-    window.clearTimeout(savedTimer.current);
-    savedTimer.current = window.setTimeout(() => setSaved(false), 3000);
+  function swipeSheet(dir: 1 | -1) {
+    const order: Pick[] =
+      sheetFrom.current === "pool"
+        ? [...poolMonsters.map((card) => ({ id: card.id, kind: "monster" as const })), ...poolSpells.map((card) => ({ id: card.id, kind: "spell" as const }))]
+        : [...pickedMonsters.map((card) => ({ id: card.id, kind: "monster" as const })), ...pickedSpells.map((card) => ({ id: card.id, kind: "spell" as const }))];
+    const next = neighbour(order, (one) => one.id === sheet?.id, dir);
+    if (!next) return false;
+    setSheet(next);
   }
 
   function rename(value: string) {
@@ -304,10 +417,11 @@ function DeckPage() {
               tabIndex={0}
               className={`dk-card${inDeck.has(card.id) ? " is-in" : ""}${locked.has(card.id) ? " is-locked" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
               onPointerDown={(event) => press(event, { id: card.id, kind: "monster" }, "pool", !inDeck.has(card.id) && !locked.has(card.id))}
-              onClick={() => tap({ id: card.id, kind: "monster" })}
+              onClick={() => tap({ id: card.id, kind: "monster" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace monster={card} hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
+              <CardFace monster={card} hand hideName fake={fakes.has(card.id)} mark={markFace(card.id)} />
+              {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />
@@ -322,10 +436,11 @@ function DeckPage() {
               tabIndex={0}
               className={`dk-card is-spell${inDeck.has(card.id) ? " is-in" : ""}${locked.has(card.id) ? " is-locked" : ""}${ghost?.id === card.id ? " is-lifted" : ""}`}
               onPointerDown={(event) => press(event, { id: card.id, kind: "spell" }, "pool", !inDeck.has(card.id) && !locked.has(card.id))}
-              onClick={() => tap({ id: card.id, kind: "spell" })}
+              onClick={() => tap({ id: card.id, kind: "spell" }, "pool")}
               onContextMenu={(event) => event.preventDefault()}
             >
-              <CardFace spellId={card.id} hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
+              <CardFace spellId={card.id} hand hideName gems={fakes.has(card.id) ? `${card.gems}+1` : undefined} mark={markFace(card.id)} />
+              {copies(card.id)}
               {locked.has(card.id) ? (
                 <span className="dk-lock" aria-hidden="true">
                   <LockIcon />
@@ -344,9 +459,14 @@ function DeckPage() {
                 key={card.id}
                 id={card.id}
                 kind="monster"
+                count={used.get(card.id) ?? 1}
+                canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
+                onAdd={() => addCard({ id: card.id, kind: "monster" })}
+                spare={!booted || (room.get(card.id) ?? 0) > 1 || (used.get(card.id) ?? 0) > 1}
+                off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "monster" }, "list", true)}
-                onTap={() => tap({ id: card.id, kind: "monster" })}
+                onTap={() => tap({ id: card.id, kind: "monster" }, "list")}
               />
             ))}
             {pickedSpells.map((card) => (
@@ -354,9 +474,14 @@ function DeckPage() {
                 key={card.id}
                 id={card.id}
                 kind="spell"
+                count={used.get(card.id) ?? 1}
+                canAdd={booted && !lacks(card.id) && (used.get(card.id) ?? 0) < (room.get(card.id) ?? 0)}
+                onAdd={() => addCard({ id: card.id, kind: "spell" })}
+                spare={!booted || (room.get(card.id) ?? 0) > 1 || (used.get(card.id) ?? 0) > 1}
+                off={booted && lacks(card.id)}
                 lifted={ghost?.id === card.id}
                 onPress={(event) => press(event, { id: card.id, kind: "spell" }, "list", true)}
-                onTap={() => tap({ id: card.id, kind: "spell" })}
+                onTap={() => tap({ id: card.id, kind: "spell" }, "list")}
               />
             ))}
             {total === 0 ? <p className="dk-rows-empty">{tr("Kéo lá từ kho xuống đây.")}</p> : null}
@@ -375,7 +500,7 @@ function DeckPage() {
               </button>
             ) : null}
           </label>
-          <DragTip />
+          <DragTip reset={() => { fullTries.current = 0; }} full={deck.monsters.length + deck.spells.length >= DECK_SIZE} ping={fullPing} />
           {/* Row 1: Quái, Phép. Row 2: Thống kê, Lọc, Lưu; Lưu sits right above Đổi hình nền (owner, 18/10). */}
           <div className="dk-pad">
             <div className="dk-tools is-main">
@@ -390,7 +515,7 @@ function DeckPage() {
             </div>
             <div className="dk-tools is-stack">
               <button type="button" className="dk-tool is-small" aria-label={tr("Các chiến thuật đang có trong bộ bài")} onClick={() => setPlansOpen(true)}>
-                <ToolGem glyph="histogram" rim="active" ring="#3ec6ff" deep="#0b2a4a" />
+                <ToolGem glyph="histogram" rim="green" ring="#3fcf6a" deep="#0b3a1a" />
               </button>
               <button
                 type="button"
@@ -399,10 +524,6 @@ function DeckPage() {
                 onClick={() => setFilterOpen((open) => !open)}
               >
                 <ToolGem glyph="funnel" rim="steel" ring="#b9bec8" deep="#2a2d33" />
-              </button>
-              <button type="button" className={`dk-tool is-small is-save${canSave ? "" : " is-off"}${saved ? " is-saved" : ""}`} aria-label={tr("Lưu")} disabled={!canSave} onClick={save}>
-                <ToolGem glyph={saved ? "check-mark" : "save"} rim="active" ring="#3ec6ff" deep="#0b2a4a" />
-                {short > 0 ? <b className="dk-count is-bad">-{short}</b> : null}
               </button>
             </div>
           </div>
@@ -416,7 +537,15 @@ function DeckPage() {
             {naming !== null ? (
               <input
                 className="dk-name-edit"
+                style={{ bottom: `${kb + 6}px` }}
                 autoFocus
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                name="deck-title"
+                data-lpignore="true"
+                data-form-type="other"
                 value={naming}
                 maxLength={40}
                 aria-label={tr("Tên bộ bài")}
@@ -432,15 +561,27 @@ function DeckPage() {
       </section>
       {ghost ? (
         <div className={`dk-ghost${ghostFits ? " is-fit" : ""}`} style={{ left: ghost.x, top: ghost.y }}>
-          {ghost.kind === "monster" ? <CardFace monster={ghostCard} hideName /> : <CardFace spellId={ghost.id} hideName />}
+          {ghost.kind === "monster" ? <CardFace monster={ghostCard} hand hideName /> : <CardFace spellId={ghost.id} hand hideName />}
         </div>
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
+          <CardMonsterSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={<BalanceBox id={sheet.id} />} note={DECK_NOTES[sheet.id]} asideFor={(id) => <BalanceBox id={id} />} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} />
+          <SpellSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
+      ) : null}
+      {trade ? (
+        <ExchangeAsk
+          id={trade}
+          albums={albums()}
+          onCancel={() => setTrade(null)}
+          onConfirm={() => {
+            exchangeCard(trade);
+            setTrade(null);
+            setOwns((n) => n + 1);
+          }}
+        />
       ) : null}
       {covering ? (
         <CoverPicker
@@ -463,7 +604,9 @@ function DeckPage() {
  */
 const TIP_KEY = "clash-deck-tip";
 
-function DragTip() {
+function DragTip({ full, ping, reset }: { full: boolean; ping: number; reset: () => void }) {
+  // Page 0 how to move cards; page 1 (tap the line) how the x1 / x2 on the right of a row adds copies; tap again to sink it.
+  const [page, setPage] = useState(0);
   const [sunk, setSunk] = useState(false);
   useEffect(() => {
     try {
@@ -472,30 +615,112 @@ function DragTip() {
       // Shown by default.
     }
   }, []);
+  // Full deck (page 3): shown at once when the deck fills and at every further try; back to page 0 when it is no longer full.
+  useEffect(() => {
+    if (ping > 0 && full) {
+      setSunk(false);
+      setPage(3);
+    }
+  }, [ping, full]);
+  useEffect(() => {
+    if (!full) {
+      reset();
+      if (page === 3) setPage(0);
+    }
+  }, [full]);
+  function keep(value: boolean) {
+    try {
+      localStorage.setItem(TIP_KEY, value ? "sunk" : "up");
+    } catch {
+      // Only this visit then.
+    }
+  }
   function flip() {
-    setSunk((now) => {
-      try {
-        localStorage.setItem(TIP_KEY, now ? "up" : "sunk");
-      } catch {
-        // Only this visit then.
-      }
-      return !now;
-    });
+    if (sunk) {
+      setSunk(false);
+      setPage(0);
+      keep(false);
+    } else if (page === 3) {
+      setPage(0);
+    } else if (page < 2) {
+      setPage(page + 1);
+    } else {
+      setSunk(true);
+      keep(true);
+    }
   }
   return (
     <button type="button" className={`dk-tip${sunk ? " is-sunk" : ""}`} aria-expanded={!sunk} onClick={flip}>
-      <span className="dk-tip-text">
+      <span className={`dk-tip-text${page === 3 ? " is-full" : ""}`} key={`${page}-${page === 3 ? ping : 0}`}>
         <i className="dk-tip-mark" aria-hidden="true">
           ?
         </i>
-        <span>
-          <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
-        </span>
+        {page === 0 ? (
+          <span>
+            <b>{tr("Kéo ngang")}</b> {tr("hoặc")} <b>{tr("Ấn giữ")}</b> {tr("để di chuyển lá bài")}
+          </span>
+        ) : page === 3 ? (
+          <span>
+            <b>{tr("Bộ bài")}</b> {tr("đã")} <em className="dk-tip-full">{tr("Full số lá")}</em>
+          </span>
+        ) : page === 1 ? (
+          <span>
+            <em className="dk-tip-x">x1, x2</em> {tr("bên phải lá bài, bấm vào đó để")} <b>{tr("thêm bản sao")}</b> {tr("vào bộ.")}
+          </span>
+        ) : (
+          <span>
+            {tr("Quái")} <em className="dk-tip-r3">{tr("3 sao")}</em>, <em className="dk-tip-r4">{tr("4 sao")}</em> {tr("và")} <em className="dk-tip-sp">{tr("phép mạnh")}</em> {tr("chỉ được đem")} <em className="dk-tip-one">{tr("1 bản duy nhất")}</em>.
+          </span>
+        )}
       </span>
       <span className="dk-tip-tab" aria-hidden="true">
         ?
       </span>
     </button>
+  );
+}
+
+/**
+ * A card of the deck it may not use (chủ game 08/11): not owned, or its trial week over. Đổi buys it for its price in
+ * stars; Cửa hàng opens the pack page (1 pack or 10).
+ */
+function TradeBox({ id, onTrade, onShop }: { id: string; onTrade?: () => void; onShop: () => void }) {
+  return (
+    <section className="cv-lockbox dk-trade">
+      <b>{tr("Chưa có đủ bản lá này")}</b>
+      <span className="dk-trade-btns">
+        {onTrade ? (
+          <button type="button" className="al-panel-view" onClick={onTrade}>
+            {tr("Đổi")} <i>★{exchangePrice(id)}</i>
+          </button>
+        ) : null}
+        <button type="button" className="al-panel-view" onClick={onShop}>
+          {tr("Cửa hàng")}
+        </button>
+      </span>
+    </section>
+  );
+}
+
+/**
+ * Two arrows on the card's sheet in the deck builder (chủ game 08/11): blue (left) puts one more copy in the deck and
+ * shows how many are in; red (right) takes one out. Blue dims when no copy is left to add, red when none is in.
+ */
+function CopyArrows({ count, canAdd, onAdd, onDrop }: { count: number; canAdd: boolean; onAdd: () => void; onDrop: () => void }) {
+  return (
+    <div className="dk-arrows">
+      <button type="button" className="dk-arrow is-add" disabled={!canAdd} aria-label={tr("Thêm 1 bản vào bộ")} onClick={onAdd}>
+        <img src="/ui/arrow-add.webp" alt="" draggable={false} />
+        {count > 0 ? (
+          <b key={count} className="dk-arrow-n">
+            {count}
+          </b>
+        ) : null}
+      </button>
+      <button type="button" className="dk-arrow is-del" disabled={count === 0} aria-label={tr("Bỏ 1 bản khỏi bộ")} onClick={onDrop}>
+        <img src="/ui/arrow-del.webp" alt="" draggable={false} />
+      </button>
+    </div>
   );
 }
 
@@ -506,7 +731,7 @@ function BalanceBox({ id }: { id: string }) {
   return (
     <section className={`msheet-balance is-${blocks[0].tone}`}>
       <b>{tr("Cân bằng sức mạnh")}</b>
-      <BalanceLines id={id} />
+      <BalanceLines id={id} newest />
     </section>
   );
 }

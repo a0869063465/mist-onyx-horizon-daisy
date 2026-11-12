@@ -1,21 +1,21 @@
 import { useState, type ReactNode } from "react";
-import { AlbumPic } from "@/components/collection/album-parts";
+import { KeywordRow } from "@/components/game/keyword-row";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
-import { artSrc, monsterCard, spellCard } from "@/lib/catalog";
+import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
-import { SHEET_SPOTS, type FieldKey } from "@/lib/layouts";
+import { SHEET_SPOTS, loadSpellHand, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
 import { relatedCards } from "@/lib/related";
 import { skillsOf } from "@/lib/skill-book";
 import { spellKind, spellSpeed } from "@/lib/spell-kinds";
 
 /** The power balance notes of a card (Tăng, Giảm, Thay đổi lối chơi), newest first, as the deck page showed them. */
-export function BalanceLines({ id }: { id: string }) {
-  const blocks = infoBlocks(id);
+export function BalanceLines({ id, newest = false }: { id: string; newest?: boolean }) {
+  const blocks = newest ? infoBlocks(id).slice(0, 1) : infoBlocks(id);
   return (
     <div className="power-lines">
       {blocks.map((block, index) => (
@@ -60,11 +60,10 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
     rim: `sp-${kind.key}`,
     ring: kind.tone,
     deep: "#14101c",
-    speed: spellSpeed(id) ? `/ui/speed-${spellSpeed(id)}.webp` : undefined,
     body: (
       <>
-        <p className="ink-spell">
-          <CopyText text={spell?.effect ?? ""} />
+        <p>
+          <CopyText text={spell?.effect ?? ""} firstTitle={false} inked />
         </p>
         {note ? <p className="msheet-note">{tr(note)}</p> : null}
       </>
@@ -102,6 +101,33 @@ export function FieldFace({ id }: { id: string }) {
         {spot("mdef", card.mdef)}
         {spot("atk", card.atk)}
         {spot("hp", card.hp)}
+        <KeywordRow cardId={id} />
+      </span>
+    </span>
+  );
+}
+
+/** A spell as it looks in the hand (art in the frame of its speed colour), for its sheet (chủ game 08/11). */
+export function SpellFace({ id, gems }: { id: string; gems?: number | string }) {
+  const spell = spellCard(id);
+  if (!spell) return null;
+  const n = parseInt(String(gems ?? spell.gems), 10) || 0;
+  const speed = spellSpeed(id);
+  const frame = speed ? `/ui/spell-frame-${speed}${n > 0 ? "" : "-nogem"}.png` : "/spell-frame-hand.png";
+  const at = loadSpellHand().gems;
+  return (
+    <span className="sheet-unit">
+      <span className="field-unit">
+        <img className="art" src={spellSrc(id)} alt="" draggable={false} />
+        <img className="frame is-spellframe" src={frame} alt="" draggable={false} />
+        {n > 0 ? (
+          <span
+            className="fstat is-gems"
+            style={{ left: `${at.x}%`, top: `${at.y - 1.5}%`, fontSize: cardText(at.size, "cqmin"), width: `${at.width}%`, height: `${at.height}%`, color: "#fff", textShadow: "0 0 4px #3ec6ff, 0 0 2px #000" }}
+          >
+            {n}
+          </span>
+        ) : null}
       </span>
     </span>
   );
@@ -109,7 +135,7 @@ export function FieldFace({ id }: { id: string }) {
 
 /** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
 /** `badgeFor`: drawn on the corner of a card's picture on its sheet (the collection's rarity tag). */
-export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode };
+export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode; onSwipe?: (dir: 1 | -1) => boolean | void };
 
 /**
  * A card's sheet with its related cards (owner, 19/10): tapping the card on the sheet opens the 3D fan of its family;
@@ -154,6 +180,7 @@ export function CardMonsterSheet({
   asideFor,
   noteFor,
   badgeFor,
+  onSwipe,
 }: {
   id: string;
   extras?: SheetExtra[];
@@ -182,6 +209,7 @@ export function CardMonsterSheet({
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
+      onSwipe={onBack ? undefined : onSwipe}
     />
   );
   // A sheet opened from the fan does not open another fan: its card goes back to the one it came from.
@@ -206,6 +234,7 @@ export function SpellSheet({
   asideFor,
   noteFor,
   badgeFor,
+  onSwipe,
 }: {
   id: string;
   gems?: number | string;
@@ -223,7 +252,7 @@ export function SpellSheet({
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
       name={spell.name}
-      card={<AlbumPic id={id} />}
+      card={<SpellFace id={id} gems={gems} />}
       count=""
       tag={{ gems: gems ?? spell.gems }}
       skills={[]}
@@ -234,6 +263,7 @@ export function SpellSheet({
       onClose={onClose}
       onArt={onArt}
       onBack={onBack}
+      onSwipe={onBack ? undefined : onSwipe}
     />
   );
   if (onBack) return sheet(onBack);

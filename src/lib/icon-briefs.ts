@@ -132,7 +132,7 @@ function lines(at: SkillAt): string[] {
     case "trai-tim-hai-long": {
       const step = name === "Đại hồng thuỷ huỷ diệt" ? 2 : name === "Con nước lớn tàn phá" ? 1 : 0;
       const pack = blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, [4, 5, 6][step], step)));
-      return step === 2 ? [deal(pack, " lên tất cả kẻ địch")] : step === 1 ? [deal(pack), "Thêm 1 kẻ địch ngẫu nhiên"] : [deal(pack)];
+      return step === 2 ? [deal(pack, " lên cả hàng của mục tiêu")] : step === 1 ? [deal(pack), "Thêm 1 kẻ địch ngẫu nhiên"] : [deal(pack)];
     }
     case "sua-hut-ma-phap":
       return [deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*cộng/, 3) + (mon?.stored ?? 0))))];

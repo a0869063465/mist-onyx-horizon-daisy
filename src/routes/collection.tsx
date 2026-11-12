@@ -5,6 +5,7 @@ import { CardVault } from "@/components/collection/card-vault";
 import { GlyphDefs } from "@/components/game/monster-sheet";
 import { tr, useLang } from "@/lib/i18n";
 import { useStars } from "@/lib/shop";
+import { stepTab, useSwipe } from "@/lib/swipe";
 
 export const Route = createFileRoute("/collection")({ component: CollectionPage });
 
@@ -18,21 +19,27 @@ function CollectionPage() {
   const [tab, setTab] = useState<"vault" | "album">("vault");
   const [booted, setBooted] = useState(false);
   useEffect(() => setBooted(true), []);
+  // Tab swipe is back, but only after a very long one (chủ game 08/11: better to miss than to switch by mistake).
+  const swipe = useSwipe(
+    (dir) => {
+      const next = stepTab<"vault" | "album">(["vault", "album"], tab, dir);
+      if (!next) return false;
+      setTab(next);
+    },
+    false,
+    () => Math.max(200, window.innerWidth * 0.5),
+  );
 
   return (
-    <main className="cv">
+    <>
+    <div className="cx-fill" aria-hidden="true" />
+    <main className={`cv cx is-${tab}`} {...swipe}>
       <GlyphDefs />
-      <header className="cv-head">
-        <Link to="/" className="cv-back" aria-label={tr("Trở về")}>
-          {"<<"}
-        </Link>
-        <h1>{tr("Bộ sưu tập")}</h1>
-        <span className="cv-wallet" aria-label={tr("Sao của bạn")}>
-          <i aria-hidden="true">★</i>
-          <b>{stars}</b>
-        </span>
-      </header>
-      <nav className="cv-tabs" role="tablist">
+      <Link to="/" className="cx-back" aria-label={tr("Trở về")} />
+      <span className="cx-wallet" aria-label={tr("Sao của bạn")}>
+        {stars}
+      </span>
+      <nav className="cx-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "vault"} className={tab === "vault" ? "on" : ""} onClick={() => setTab("vault")}>
           {tr("Kho bài")}
         </button>
@@ -42,5 +49,6 @@ function CollectionPage() {
       </nav>
       {booted ? tab === "vault" ? <CardVault /> : <AlbumTab /> : null}
     </main>
+    </>
   );
 }

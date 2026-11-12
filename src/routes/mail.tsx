@@ -9,12 +9,14 @@ import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
 import { cardName, useStars } from "@/lib/shop";
 import { playReward, playUi } from "@/lib/sfx";
+import { NewsBoard } from "@/components/news-board";
+import { stepTab, useSwipe } from "@/lib/swipe";
 
 const TABS: Array<{ key: MailKind; label: string; empty: string }> = [
   { key: "mail", label: "Thư", empty: "Chưa có thư." },
-  { key: "warn", label: "Báo vi phạm", empty: "Không có báo cáo vi phạm." },
-  { key: "gift", label: "Thư quà", empty: "Chưa có thư quà." },
   { key: "news", label: "Tin tức", empty: "Chưa có tin tức." },
+  { key: "gift", label: "Thư quà", empty: "Chưa có thư quà." },
+  { key: "warn", label: "Báo vi phạm", empty: "Không có báo cáo vi phạm." },
 ];
 
 export const Route = createFileRoute("/mail")({
@@ -53,6 +55,12 @@ function MailPage() {
     void navigate({ search: { tab: key }, replace: true });
   };
 
+  const swipe = useSwipe((dir) => {
+    const next = stepTab(TABS.map((one) => one.key), tab, dir);
+    if (!next) return false;
+    pick(next);
+  });
+
   const claimed = (id: string | null, result: Claimed | null) => {
     if (!result) return;
     playReward("done");
@@ -67,7 +75,7 @@ function MailPage() {
   };
 
   return (
-    <main className="ml" data-tab={tab}>
+    <main className="ml" data-tab={tab} {...swipe}>
       <i className="ml-corner is-tl" aria-hidden="true" />
       <i className="ml-corner is-tr" aria-hidden="true" />
       <i className="ml-corner is-bl" aria-hidden="true" />
@@ -94,6 +102,11 @@ function MailPage() {
         ))}
         <i className="ml-ink" aria-hidden="true" />
       </nav>
+      {tab === "news" ? (
+        <div className="ml-news">
+          <NewsBoard />
+        </div>
+      ) : (
       <section className="ml-pane" key={tab}>
         {here.length === 0 ? (
           <div className="ml-empty">
@@ -101,7 +114,7 @@ function MailPage() {
             <p>{tr(info.empty)}</p>
           </div>
         ) : (
-          <ul className={`ml-list${tab === "news" ? " is-news" : ""}`}>
+          <ul className="ml-list">
             {here.map((row, order) => (
               <li key={row.mail.id} style={{ ["--i" as string]: order }}>
                 <Row row={row} open={openId === row.mail.id} onOpen={() => show(row)} />
@@ -110,6 +123,7 @@ function MailPage() {
           </ul>
         )}
       </section>
+      )}
       {tab !== "news" || mode === "publisher" ? (
         <footer className="ml-foot">
           {mode === "publisher" ? (
@@ -293,7 +307,7 @@ function Slot({ gift, done }: { gift: Gift; done: boolean }) {
 function Reward({ got, onClose }: { got: Claimed; onClose: () => void }) {
   const items: Array<{ key: string; gift: Gift; note: string }> = [];
   if (got.stars > 0) items.push({ key: "stars", gift: { kind: "stars", n: got.stars }, note: `${tr("SAO")} ×${got.stars}` });
-  got.cards.forEach((card, index) => items.push({ key: `c${index}`, gift: { kind: "card", id: card.id }, note: card.fresh ? tr("MỚI") : tr("Đã có · hoàn +1★") }));
+  got.cards.forEach((card, index) => items.push({ key: `c${index}`, gift: { kind: "card", id: card.id }, note: card.fresh ? tr("MỚI") : card.copy ? tr("+1 bản") : tr("Đã có · hoàn +1★") }));
   return (
     <div className="ml-got" role="dialog" aria-label={tr("BẠN ĐÃ NHẬN ĐƯỢC")} onClick={onClose}>
       <h2>{tr("BẠN ĐÃ NHẬN ĐƯỢC")}</h2>

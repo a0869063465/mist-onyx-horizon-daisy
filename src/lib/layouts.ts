@@ -181,8 +181,8 @@ export const SHEET_SPOTS: Record<FieldKey, FieldSpot> = {
   name: { x: 50, y: 50, size: 10, width: 10, height: 10 },
   def: { x: 18.6, y: 51.9, size: 14, width: 10, height: 6 },
   mdef: { x: 18.6, y: 64.3, size: 14, width: 10, height: 6 },
-  atk: { x: 37.9, y: 88.3, size: 20, width: 14, height: 9 },
-  hp: { x: 86.1, y: 88.3, size: 20, width: 14, height: 9 },
+  atk: { x: 37.9, y: 86.8, size: 20, width: 14, height: 9 },
+  hp: { x: 86.1, y: 86.8, size: 20, width: 14, height: 9 },
   count: { x: 57.1, y: 8.1, size: 30, width: 96, height: 22 },
 };
 export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp", Spot> = {
@@ -524,6 +524,59 @@ export function loadSpellHand(): Record<SpellHandKey, Spot> {
 }
 export function saveSpellHand(layout: Record<SpellHandKey, Spot>) {
   saveSpots(SPELL_HAND_KEY, layout);
+}
+
+/** Vị trí và cỡ icon của 8 thẻ menu chính, chỉnh tay trong Tuỳ chỉnh (chủ game 06/11). dx/dy = độ lệch (rem) so với chỗ mặc định, size = chiều cao (rem). */
+export type MenuIconKey = "album" | "events" | "ranks" | "shop" | "gifts" | "missions" | "friends" | "mail";
+export type MenuIcon = { dx: number; dy: number; size: number };
+export const MENU_ICON_MARKS: Array<{ key: MenuIconKey; label: string }> = [
+  { key: "album", label: "Bộ sưu tập" },
+  { key: "events", label: "Sự kiện" },
+  { key: "ranks", label: "Bảng xếp hạng" },
+  { key: "shop", label: "Cửa hàng" },
+  { key: "gifts", label: "Phần thưởng" },
+  { key: "missions", label: "Nhiệm vụ" },
+  { key: "friends", label: "Bạn bè" },
+  { key: "mail", label: "Thư" },
+];
+export const DEFAULT_MENU_ICON: MenuIcon = { dx: 0, dy: 0, size: 3.5 };
+// Mặc định = số chủ game chỉnh tay rồi chụp lại (06/11, lần 2): dx, dy (rem, lệch so với chỗ gốc), size (rem).
+export const DEFAULT_MENU_ICONS: Record<MenuIconKey, MenuIcon> = {
+  album: { dx: -2.5, dy: 0.1, size: 3.1 },
+  events: { dx: -2.1, dy: 0.4, size: 3.1 },
+  ranks: { dx: -1.9, dy: 0.4, size: 3.3 },
+  shop: { dx: -2.0, dy: 0.6, size: 3.1 },
+  gifts: { dx: 1.9, dy: 0.7, size: 3.1 },
+  missions: { dx: 2.1, dy: 0.7, size: 3.1 },
+  friends: { dx: 1.7, dy: 0.7, size: 3.1 },
+  mail: { dx: 1.8, dy: 0.4, size: 3.1 },
+};
+const MENU_ICON_KEY = "clash-menu-icons-v1";
+function asMenuIcon(value: unknown, base: MenuIcon): MenuIcon {
+  const raw = (value ?? {}) as Partial<MenuIcon>;
+  const num = (item: unknown, fallback: number) => (typeof item === "number" && Number.isFinite(item) ? item : fallback);
+  return { dx: num(raw.dx, base.dx), dy: num(raw.dy, base.dy), size: Math.min(8, Math.max(1.5, num(raw.size, base.size))) };
+}
+export function loadMenuIcons(): Record<MenuIconKey, MenuIcon> {
+  const raw = read(MENU_ICON_KEY) as Partial<Record<MenuIconKey, unknown>> | null;
+  const next = {} as Record<MenuIconKey, MenuIcon>;
+  for (const mark of MENU_ICON_MARKS) next[mark.key] = asMenuIcon(raw?.[mark.key], DEFAULT_MENU_ICONS[mark.key]);
+  return next;
+}
+export function saveMenuIcons(layout: Record<MenuIconKey, MenuIcon>) {
+  localStorage.setItem(MENU_ICON_KEY, JSON.stringify(layout));
+}
+
+/** The sheet's card (chủ game 08/11): the field's frame and figures, but def and mdef where they were, atk and hp a little lower. */
+export function sheetSpots(): Record<FieldKey, FieldSpot> {
+  const f = fieldSpots();
+  return {
+    ...f,
+    def: SHEET_SPOTS.def,
+    mdef: SHEET_SPOTS.mdef,
+    atk: { ...f.atk, y: f.atk.y + 1.6 },
+    hp: { ...f.hp, y: f.hp.y + 1.6 },
+  };
 }
 
 /** Lá quái trên sân dùng đúng khung và vị trí số của lá trên tay (chủ game 03/11); số cam vào ô tối góc trên phải (chỗ ô sao). */

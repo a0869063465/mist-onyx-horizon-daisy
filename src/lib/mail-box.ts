@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { MAILS, MAIL_DAYS, type Mail, type MailKind } from "@/lib/mails";
-import { addOwned, addStars, ownedIds } from "@/lib/shop";
+import { rarityOf } from "@/lib/collection";
+import { noteCards } from "@/lib/mission-store";
+import { addOwned, addStars } from "@/lib/shop";
 
 /**
  * Thư (chủ game 31/10), the player's side: which letters this phone got, when, and what was read, claimed or deleted.
@@ -88,25 +90,26 @@ export function markRead(id: string) {
   save(box);
 }
 
-export type Claimed = { stars: number; refund: number; cards: Array<{ id: string; fresh: boolean }> };
+export type Claimed = { stars: number; refund: number; cards: Array<{ id: string; fresh: boolean; copy?: boolean }> };
 
 /** Gifts are kept at once (stars added, cards owned, a card owned already gives 1 star back), then the flag is set. */
 function take(row: MailRow, box: Box, into: Claimed) {
-  const owned = ownedIds();
   for (const gift of row.mail.gifts ?? []) {
     if (gift.kind === "stars") {
       addStars(gift.n);
       into.stars += gift.n;
-    } else if (owned.has(gift.id)) {
+      continue;
+    }
+    // Lá trùng thành thêm 1 bản tới trần, quá trần mới hoàn 1 sao (chủ game 08/11).
+    const gain = addOwned(gift.id);
+    if (gain === "full") {
       addStars(1);
       into.refund += 1;
-      into.cards.push({ id: gift.id, fresh: false });
-    } else {
-      addOwned(gift.id);
-      owned.add(gift.id);
-      into.cards.push({ id: gift.id, fresh: true });
     }
+    into.cards.push({ id: gift.id, fresh: gain === "new", copy: gain === "copy" });
   }
+  // Lá trong quà (cả lá trùng) tính vào nhiệm vụ tuần Thu thập lá bài / điểm SR, UR.
+  noteCards((row.mail.gifts ?? []).flatMap((gift) => (gift.kind === "card" ? [{ id: gift.id, tier: rarityOf(gift.id) }] : [])));
   box[row.mail.id].claimed = true;
   box[row.mail.id].read = true;
 }

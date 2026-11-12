@@ -16,6 +16,7 @@ import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as MailRouteImport } from './routes/mail'
+import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as PlayRouteImport } from './routes/play'
@@ -58,6 +59,11 @@ const MailRoute = MailRouteImport.update({
   path: '/mail',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MissionsRoute = MissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ModesRoute = ModesRouteImport.update({
   id: '/modes',
   path: '/modes',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
   '/play': typeof PlayRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
   '/play': typeof PlayRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
   '/play': typeof PlayRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/missions'
     | '/modes'
     | '/news'
     | '/play'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/missions'
     | '/modes'
     | '/news'
     | '/play'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/missions'
     | '/modes'
     | '/news'
     | '/play'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   HopThuRoute: typeof HopThuRoute
   MailRoute: typeof MailRoute
+  MissionsRoute: typeof MissionsRoute
   ModesRoute: typeof ModesRoute
   NewsRoute: typeof NewsRoute
   PlayRoute: typeof PlayRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/missions': {
+      id: '/missions'
+      path: '/missions'
+      fullPath: '/missions'
+      preLoaderRoute: typeof MissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/modes': {
       id: '/modes'
       path: '/modes'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   HopThuRoute: HopThuRoute,
   MailRoute: MailRoute,
+  MissionsRoute: MissionsRoute,
   ModesRoute: ModesRoute,
   NewsRoute: NewsRoute,
   PlayRoute: PlayRoute,
