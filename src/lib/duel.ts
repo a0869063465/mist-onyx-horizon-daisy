@@ -636,11 +636,15 @@ function unperiod(line: string) {
 
 const wardLines: string[] = [];
 
-function boardStats(state: Duel): Pick<MatchEvent, "hp" | "orb" | "stars"> {
+function boardStats(state: Duel): Pick<MatchEvent, "hp" | "orb" | "stars" | "clock" | "token" | "wait"> {
   return {
     hp: [state.players[0].hp, state.players[1].hp],
     orb: [state.players[0].orb, state.players[1].orb],
     stars: [state.players[0].stars, state.players[1].stars],
+    // Lịch sử trong trận (12/11): vòng và bên giữ token lúc việc này xảy ra. Chỉ để hiển thị.
+    clock: state.clock ?? 1,
+    token: state.round ?? state.turn,
+    wait: state.step === "respond" || Boolean(state.counterAsk),
   };
 }
 
@@ -654,6 +658,7 @@ type TraceEvent = {
   cause?: string | null;
   auto?: boolean;
   hit?: HitNote | null;
+  skill?: number;
 };
 
 function freshId(events: MatchEvent[]): string {
@@ -1116,7 +1121,7 @@ function withResults(before: Duel, after: Duel, flags: { blocked: boolean; refle
   return next;
 }
 
-function traceSkill(before: Duel, after: Duel, uid: string, targetUid: string | null): Duel {
+function traceSkill(before: Duel, after: Duel, uid: string, targetUid: string | null, skill = 0): Duel {
   if (after === before) return after;
   const mon = before.players.flatMap((player) => player.field).find((unit) => unit?.uid === uid) ?? null;
   const face = after.pending?.kind === "face" && Boolean(after.pending.skill);
@@ -1126,7 +1131,7 @@ function traceSkill(before: Duel, after: Duel, uid: string, targetUid: string | 
   if (!ok && after.upkeep && !before.upkeep && after.players === before.players) return after;
   if (!ok && after.fx === before.fx && after.pending === before.pending) return after;
   const target = face ? ({ kind: "face" } as const) : targetUid ? monsterTarget(before, targetUid) : null;
-  return traced(before, after, { kind: "skill", actor: before.turn, ok, cardId: mon?.cardId ?? null, target, end: null });
+  return traced(before, after, { kind: "skill", actor: before.turn, ok, cardId: mon?.cardId ?? null, target, end: null, skill });
 }
 
 function monsterTarget(state: Duel, uid: string | null | undefined): EventTarget {
@@ -5993,15 +5998,15 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
   if (counter) {
     const next = declareSkillCore(counter.state, uid, targetUid, skillIndex, extra);
     if (next === counter.state || (next.players === counter.state.players && next.pending === counter.state.pending)) return next === counter.state ? state : { ...state, live: next.live, log: next.log, stepNo: next.stepNo };
-    return counterEnd(traceSkill(state, next, uid, targetUid));
+    return counterEnd(traceSkill(state, next, uid, targetUid, skillIndex));
   }
   const gate = actGate(state, uid, skillIndex);
   if (gate) return gate;
   const next = declareSkillCore(state, uid, targetUid, skillIndex, extra);
-  if (next === state || next.step !== "respond") return traceSkill(state, next, uid, targetUid);
+  if (next === state || next.step !== "respond") return traceSkill(state, next, uid, targetUid, skillIndex);
   const mon = state.players[state.turn].field.find((unit) => unit?.uid === uid);
   const spent = mon && !skillIsFree(mon.cardId, skillIndex) ? markUsed(next, state.turn, uid) : next;
-  return traceSkill(state, spent, uid, targetUid);
+  return traceSkill(state, spent, uid, targetUid, skillIndex);
 }
 
 /**
@@ -8054,7 +8059,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
     };
     const tided = tideSkill(state, next, uid, targetUid, skillIndex);
     if (silent) return tided;
-    const marked = traceSkill(state, tided, uid, targetUid);
+    const marked = traceSkill(state, tided, uid, targetUid, skillIndex);
     return withResults(state, marked, { blocked: false, reflect: false, turn: false });
   } finally {
     charmDamage = previous;

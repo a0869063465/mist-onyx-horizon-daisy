@@ -1001,6 +1001,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: thanh chế độ cao hơn, chữ trên thanh viết hoa (ĐÁNH THƯỜNG, ĐÁNH TUỲ CHỌN, ĐÁNH XẾP HẠNG, ĐÁNH VỚI MÁY).",
   "Menu chính: phần hồ sơ và sao nâng lên cho không chạm thanh chế độ, 6 nút bên dời xuống cho khoảng cách đều hơn.",
   "Menu chính: nền video mới, áo choàng bay và chữ CLASH OF THE BEASTS to ở giữa.",
+  "Trong trận: nút Cài đặt mở bảng toàn màn 2 tab. Lịch sử: diễn biến từng vòng bằng hình lá, mũi tên và số máu, bấm dòng để đọc chi tiết. Cài đặt: ngôn ngữ, âm thanh, đầu hàng.",
 ];
 
 function remarkOf(notes: string[]) {

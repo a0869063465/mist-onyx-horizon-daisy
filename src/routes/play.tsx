@@ -46,6 +46,7 @@ import { createTrialDuel, trialFoe, trialLevels, trialVerdict } from "@/lib/tria
 import { markTutorialDone } from "@/lib/tutorial-list";
 import { absorb, freshScratch, loadHabits, saveHabits, watchSnap, type Scratch } from "@/lib/habits";
 import { newMatchId, noteFinishedAi, openingDecks, warmMatchHistory, type OpeningDecks } from "@/lib/match-history";
+import { MatchMenu } from "@/components/game/match-menu";
 import { setLang, tr, useLang } from "@/lib/i18n";
 import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
@@ -7978,48 +7979,26 @@ function PlayPage() {
           </div>
         ) : null}
         {help ? (
-          <div className="overlay">
-            <div className="sheet">
-              <h2>{tr("Cài đặt")}</h2>
-              <p className="tuner-note">{tr("Ngôn ngữ")}</p>
-              <div className="pad2">
-                <button type="button" className={`act alt press${language === "vi" ? " on" : ""}`} onClick={() => setLang("vi")}>Tiếng Việt</button>
-                <button type="button" className={`act alt press${language === "en" ? " on" : ""}`} onClick={() => setLang("en")}>English</button>
-              </div>
-              <button
-                type="button"
-                className="act press"
-                onClick={() => {
-                  setHelp(false);
-                  apply(concede(duel, viewer));
-                }}
-              >
-                {tr("Đầu hàng")}
-              </button>
-              <Link to="/" className="act alt press">
-                {tr("Về menu chính")}
-              </Link>
-              <button type="button" className="act alt press" onClick={() => setHelp(false)}>
-                {tr("Đóng")}
-              </button>
-              <div className="sound-row">
-                <button
-                  type="button"
-                  className={`sound-ico${sound ? "" : " is-off"}`}
-                  aria-label={sound ? "Tắt tiếng" : "Bật tiếng"}
-                  onClick={() => {
-                    const next = !sound;
-                    setSound(next);
-                    setSoundOn(next);
-                    if (next) playCue("draw");
-                  }}
-                >
-                  <SpeakerIcon muted={!sound} />
-                </button>
-              </div>
-              <p className="tuner-note credit-note">Icon kỹ năng: game-icons.net (CC BY 3.0)</p>
-            </div>
-          </div>
+          <MatchMenu
+            duel={duel}
+            viewer={viewer}
+            foeName={duel.faces?.[otherSide]?.name ?? (duel.mode === "ai" ? tr("Máy") : tr("Đối thủ"))}
+            language={language}
+            sound={sound}
+            canConcede={duel.winner === null}
+            onLang={setLang}
+            onSound={() => {
+              const next = !sound;
+              setSound(next);
+              setSoundOn(next);
+              if (next) playCue("draw");
+            }}
+            onConcede={() => {
+              setHelp(false);
+              apply(concede(duel, viewer));
+            }}
+            onClose={() => setHelp(false)}
+          />
         ) : null}
         {testOpen && duel.mode === "test" ? (
           <div className="overlay">
