@@ -559,7 +559,7 @@ export function MonsterSheet({
               </b>
               {shown.text ? (
                 <p className="ink-skill">
-                  <CopyText text={shown.text} firstTitle={false} inked />
+                  <CopyText text={shown.text} firstTitle={false} inked icons={["debuff", "sao-choi"]} />
                 </p>
               ) : null}
               {note && picked === "s0" ? <p className="msheet-note">{tr(note)}</p> : null}
