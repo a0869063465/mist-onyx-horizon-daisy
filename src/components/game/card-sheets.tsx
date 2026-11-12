@@ -63,7 +63,7 @@ export function spellKindExtra(id: string, gems?: number | string, note?: string
     body: (
       <>
         <p>
-          <CopyText text={spell?.effect ?? ""} firstTitle={false} inked icons={["debuff"]} />
+          <CopyText text={spell?.effect ?? ""} firstTitle={false} inked />
         </p>
         {note ? <p className="msheet-note">{tr(note)}</p> : null}
       </>

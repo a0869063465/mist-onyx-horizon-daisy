@@ -1,35 +1,8 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { applyCopySize, loadCopySize, parseCopy } from "@/lib/copy-mark";
 import { tr, useLang } from "@/lib/i18n";
 import { noticeParts } from "@/components/game/painted";
 import { addSheetInk } from "@/components/game/sheet-ink";
-import { KEYWORDS, type KeywordId } from "@/lib/keywords";
-
-/**
- * Icon keyword chèn giữa câu mô tả (chủ game 12/11): game tự tìm cụm chữ hợp rồi đặt icon ngay TRƯỚC cụm đó,
- * không đổi chữ lá. "giảm N thủ/công/…" = Debuff; "gây N sát thương", "gây sát thương phép/vật lý/chuẩn" = Sao chổi.
- */
-const INLINE_RULES: { id: KeywordId; re: RegExp }[] = [
-  { id: "debuff", re: /giảm (?:\d+%? )?(?:chỉ số|thủ phép|thủ|công|phòng ngự|máu tối đa|máu)/gi },
-  { id: "sao-choi", re: /gây (?:thêm )?(?:\d+ sát thương|sát thương (?:phép|vật lý|chuẩn|hỗn h[ơợ]p))/gi },
-];
-
-function inlineMarks(text: string, allow: KeywordId[]): Map<number, KeywordId> {
-  const marks = new Map<number, KeywordId>();
-  for (const rule of INLINE_RULES) {
-    if (!allow.includes(rule.id)) continue;
-    for (const hit of text.matchAll(rule.re)) if (hit.index !== undefined && !marks.has(hit.index)) marks.set(hit.index, rule.id);
-  }
-  return marks;
-}
-
-function KwInline({ id }: { id: KeywordId }) {
-  return (
-    <span className="kw-icon kw-inline" data-kw={id} aria-hidden="true">
-      <img src={KEYWORDS[id].src} alt="" draggable={false} />
-    </span>
-  );
-}
 
 export function CopySize() {
   useEffect(() => {
@@ -45,11 +18,7 @@ export function CopySize() {
  * `inked`: plain words that stand out (monster names, skills, damage kinds…) take the notice board's colours,
  * and the monster sheet's own colours are added only on the words those leave plain.
  */
-function wrap(ink: string | undefined, text: string, key: string) {
-  return ink ? <b key={key} className={`ink-${ink}`}>{text}</b> : <span key={key}>{text}</span>;
-}
-
-export function CopyText({ text, firstTitle = true, inked = false, icons = [] }: { text: string; firstTitle?: boolean; inked?: boolean; icons?: KeywordId[] }) {
+export function CopyText({ text, firstTitle = true, inked = false }: { text: string; firstTitle?: boolean; inked?: boolean }) {
   useLang();
   const bits = parseCopy(tr(text), firstTitle);
   const nodes = [];
@@ -83,25 +52,11 @@ export function CopyText({ text, firstTitle = true, inked = false, icons = [] }:
       continue;
     }
     if (inked && !bit.bold && !bit.under) {
-      const parts = addSheetInk(noticeParts(bit.text, false, true));
-      const marks = icons.length ? inlineMarks(parts.map((part) => part.text).join(""), icons) : new Map<number, KeywordId>();
-      let cursor = 0;
-      const pieces: ReactNode[] = [];
-      parts.forEach((part, at) => {
-        let rest = part.text;
-        let from = cursor;
-        cursor += rest.length;
-        let slice = 0;
-        for (let offset = 0; offset < rest.length; offset += 1) {
-          const id = marks.get(from + offset);
-          if (!id) continue;
-          if (offset > slice) pieces.push(wrap(part.ink, rest.slice(slice, offset), `${at}-${slice}`));
-          pieces.push(<KwInline key={`k${at}-${offset}`} id={id} />);
-          slice = offset;
-        }
-        pieces.push(wrap(part.ink, rest.slice(slice), `${at}-e`));
-      });
-      nodes.push(<span key={index}>{pieces}</span>);
+      nodes.push(
+        <span key={index}>
+          {addSheetInk(noticeParts(bit.text, false, true)).map((part, at) => (part.ink ? <b key={at} className={`ink-${part.ink}`}>{part.text}</b> : <span key={at}>{part.text}</span>))}
+        </span>,
+      );
       continue;
     }
     const body = bit.bold ? <strong>{bit.text}</strong> : bit.text;

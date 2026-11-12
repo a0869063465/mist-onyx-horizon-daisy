@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
-import { KEYWORDS } from "@/lib/keywords";
+import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
@@ -546,9 +546,11 @@ export function MonsterSheet({
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
-                {shown.keyword ? <span className="kw-icon msheet-kw" data-kw={shown.keyword} title={KEYWORDS[shown.keyword].label}>
-                  <img src={KEYWORDS[shown.keyword].src} alt="" draggable={false} />
-                </span> : null}
+                {titleKeywords(shown.keyword, shown.text).map((id) => (
+                  <span key={id} className="kw-icon msheet-kw" data-kw={id} title={KEYWORDS[id].label}>
+                    <img src={KEYWORDS[id].src} alt="" draggable={false} />
+                  </span>
+                ))}
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">
@@ -559,7 +561,7 @@ export function MonsterSheet({
               </b>
               {shown.text ? (
                 <p className="ink-skill">
-                  <CopyText text={shown.text} firstTitle={false} inked icons={["debuff", "sao-choi"]} />
+                  <CopyText text={shown.text} firstTitle={false} inked />
                 </p>
               ) : null}
               {note && picked === "s0" ? <p className="msheet-note">{tr(note)}</p> : null}
