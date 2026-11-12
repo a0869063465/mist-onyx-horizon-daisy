@@ -231,3 +231,23 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
 export function keywordsOf(cardId: string | undefined | null): KeywordId[] {
   return cardId ? (CARD_KEYWORDS[cardId] ?? []) : [];
 }
+
+/**
+ * Keyword ghi bằng chữ sau tên skill, dạng (x, y) (chủ game 12/11): keyword gắn tay đứng trước, rồi các keyword game tự
+ * tìm thấy trong mô tả theo thứ tự xuất hiện. Cùng luật với icon chèn giữa câu. Không đổi chữ lá.
+ */
+const SCAN_RULES: { id: KeywordId; re: RegExp }[] = [
+  { id: "sao-choi", re: /gây (?:thêm )?(?:\d+ sát thương|sát thương (?:phép|vật lý|chuẩn|hỗn h[ơợ]p))/i },
+  { id: "debuff", re: /giảm (?:\d+%? )?(?:chỉ số|thủ phép|thủ|công|phòng ngự|máu tối đa|máu)/i },
+];
+
+export function titleKeywords(own: KeywordId | undefined, text: string | undefined): KeywordId[] {
+  const list: KeywordId[] = own ? [own] : [];
+  const plain = (text ?? "").replace(/\*\*|__/g, "");
+  const found = SCAN_RULES.flatMap((rule) => {
+    const at = plain.search(rule.re);
+    return at >= 0 ? [{ id: rule.id, at }] : [];
+  }).sort((a, b) => a.at - b.at);
+  for (const hit of found) if (!list.includes(hit.id)) list.push(hit.id);
+  return list;
+}

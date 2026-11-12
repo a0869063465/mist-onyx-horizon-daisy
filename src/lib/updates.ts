@@ -1003,6 +1003,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: nền video mới, áo choàng bay và chữ CLASH OF THE BEASTS to ở giữa.",
   "Keyword hiển thị là hình vuông bo góc thay vì hình tròn. Glow nhẹ hơn một chút.",
   "Mô tả skill tự chèn icon keyword: trước cụm \"giảm N thủ, công…\" là Debuff, trước cụm \"gây N sát thương\" là Sao chổi. Icon Debuff đổi sang mũi tên chỉ xuống. Bỏ icon keyword ở đầu tên skill.",
+  "Sau tên skill ghi keyword dạng (Sao chổi, Debuff), mỗi chữ cùng màu glow keyword.",
 ];
 
 function remarkOf(notes: string[]) {

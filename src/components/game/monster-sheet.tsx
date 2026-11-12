@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { SKILL_ICONS } from "@/lib/skill-icons";
@@ -552,6 +553,22 @@ export function MonsterSheet({
                     <b>{cost}</b>
                   </span>
                 ) : null}
+                {(() => {
+                  const kws = titleKeywords(shown.keyword, shown.text);
+                  if (!kws.length) return null;
+                  return (
+                    <span className="msheet-kwtags">
+                      {"("}
+                      {kws.map((id, i) => (
+                        <Fragment key={id}>
+                          {i > 0 ? ", " : null}
+                          <span className="kw-name" data-kw={id}>{KEYWORDS[id].label}</span>
+                        </Fragment>
+                      ))}
+                      {")"}
+                    </span>
+                  );
+                })()}
               </b>
               {shown.text ? (
                 <p className="ink-skill">
