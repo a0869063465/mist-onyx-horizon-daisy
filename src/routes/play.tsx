@@ -7616,7 +7616,7 @@ function PlayPage() {
         ) : null}
         {handPick?.pile === "spell" && spellUseNow() && pickSpot ? (
           <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
-            <ActionButton action={{ key: "cast", label: "Dùng phép", tone: "purple", cost: spellUseNow()?.cost ?? 0, onPress: spellUseNow()?.run }} mini />
+            <HandUse icon="fairy-wand" kind="spell" label="Dùng phép" onUse={() => spellUseNow()?.run()} />
           </span>
         ) : null}
         {(pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (

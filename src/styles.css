@@ -13704,3 +13704,5 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   .stage .hand-card.is-open.is-spell > .card,
   .slot.is-picked { animation: none; }
 }
+/* Icon Dùng phép nằm trên lá phép (chủ game 12/11): giữ icon gọn như giữa lá, đặt phía trên như nút Triệu hồi. */
+.hand-acts .hand-use { position: static; transform: none; width: 2.9rem; pointer-events: auto; }
