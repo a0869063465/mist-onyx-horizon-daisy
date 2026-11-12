@@ -13686,3 +13686,6 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mx-tab:active, .mx-back:active { scale: 0.95; background-color: rgba(150, 215, 255, 0.28); box-shadow: 0 0 calc(var(--u) * 26) rgba(130, 205, 255, 0.75), inset 0 0 calc(var(--u) * 22) rgba(190, 235, 255, 0.55); }
 @media (hover: hover) { .mx-tab:hover, .mx-back:hover { background-color: rgba(150, 215, 255, 0.12); } .mx-card.is-q:hover { filter: brightness(1.08); } }
 @media (prefers-reduced-motion: reduce) { .mx-sweep.is-on, .mx-card.is-q img.mx-box { animation: none !important; } }
+
+/* Icon keyword chèn giữa câu mô tả (chủ game 12/11): cao ~78% icon trước dòng (2,15rem), tâm hình nằm trên đường giữa chữ (vertical-align: middle), lề âm để KHÔNG đẩy dòng lên. */
+.kw-inline { display: inline-grid; height: 2.05em; vertical-align: middle; margin: -0.6em 0.25em -0.6em 0; }

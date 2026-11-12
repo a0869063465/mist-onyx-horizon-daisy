@@ -231,19 +231,3 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
 export function keywordsOf(cardId: string | undefined | null): KeywordId[] {
   return cardId ? (CARD_KEYWORDS[cardId] ?? []) : [];
 }
-
-/**
- * Icon keyword cạnh tên skill (chủ game 12/11): keyword đã gắn tay đứng trước, rồi game tự tìm trong mô tả những chỗ hợp:
- * "giảm N thủ/công/…" = Debuff; "gây N sát thương" / "gây sát thương phép/vật lý/chuẩn" = Sao chổi. Không đổi chữ lá.
- */
-const SCAN_RULES: { id: KeywordId; re: RegExp }[] = [
-  { id: "sao-choi", re: /gây (?:thêm )?(?:\d+ sát thương|sát thương (?:phép|vật lý|chuẩn|hỗn h[ơợ]p))/i },
-  { id: "debuff", re: /giảm (?:\d+%? )?(?:chỉ số|thủ phép|thủ|công|phòng ngự|máu tối đa|máu)/i },
-];
-
-export function titleKeywords(own: KeywordId | undefined, text: string | undefined): KeywordId[] {
-  const list: KeywordId[] = own ? [own] : [];
-  const plain = (text ?? "").replace(/\*\*|__/g, "");
-  for (const rule of SCAN_RULES) if (!list.includes(rule.id) && rule.re.test(plain)) list.push(rule.id);
-  return list;
-}
