@@ -2,6 +2,11 @@
 
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
+## Tay bài + rút bài theo video Duel Links (13/11, CHƯA LÀM, chờ chủ game trả lời 3 câu + "ok")
+1. Việc vừa làm: áp `main` Lịch sử đợt 2 (`4e2f426`). Xem video `d237f77e-VID_20261112_195102.mp4` (28 giây, Duel Links, chỉ học nhịp): 0–2,5 s xấp nhảy ra giữa + mũi tên Draw; 3–7 s lá rút hiện to; 8 s lá dùng được trên tay chớp sáng; 10–15 s bấm lá = lá nhấc + bảng ngắn phía trên; 16 s mũi tên trắng trên lá, kéo lên = lá to giữa sân + nút Normal Summon/Set; 22,6 s bấm nút, lá loé rồi vào ô.
+2. Hiện trạng: đã nhận 1 video, chưa sửa code. Yêu cầu T1–T6: T1 xấp đứng yên + mũi tên khuyên rút vài giây, được không rút; T2 rút có âm + hiệu ứng, bảng ngắn hiện, bấm lại/bấm ngoài tắt, bấm icon skill đổi; T3 lá dùng được chớp; T4 chọn lá có âm, nhấc lên, bảng ngắn (tên, sao, mana, keyword, công/thủ/thủ phép/máu, 1 skill, dãy icon skill), bấm lá nhiều lần đổi skill; T5 mũi tên trắng, kéo ra như video, chỉ triệu hồi thường = 2 mũi tên lên xuống + vầng chớp, nhiều hình thức thì bấm chọn; T6 lá bay từ chỗ chọn ra sân.
+3. Việc sắp làm: chờ trả lời: (a) vấn đề của Hiến tế/Dung hợp là gì; (b) kéo lá ra có thay kéo thả vào ô (đèn pin) không; (c) bấm đôi mở bảng đầy đủ đổi thành bấm vào bảng ngắn được không. Đề xuất Fable 5.2 high.
+
 ## Lịch sử trận đợt 2 (13/11, Fable 5.2 high, nhánh `ccr-312058b5-foqipx`, ĐÃ LÀM, CHƯA áp `main`)
 1. Việc vừa làm (chủ game 13/11): quái bị hạ giữ hình + 2 vệt chém trắng mảnh (`.mm-slain`, bỏ đầu lâu); phép không có mục tiêu ghi sẵn thì lấy các lá bị trúng làm mục tiêu; nhiều mục tiêu = xấp lá (`Stack`, lá trên cùng là mục tiêu chính, ô số lá ở góc), bấm dòng mới bung từng mục tiêu (`mm-rest`) + chữ chi tiết (`Say`: dòng đầu là việc, mỗi kết quả 1 dòng, màu tên qua `Painted`); sát thương dội lại kẻ ra đòn hiện trên hình kẻ ra đòn; dải vòng ghi "Vòng N · Bạn/Đối thủ" (bên giữ lượt tấn công). `duel-log.ts`: Thu hồi quái thú = quái "về bộ bài" (`away`), không tính bị hạ.
 2. Hiện trạng: không ảnh/video mới. Chụp Chromium 412×915 bằng trận thử có chèn sự kiện giả (skill 3 mục tiêu, phép diện rộng, phép có mục tiêu, chặn). tsc sạch. Chưa thử trận thật có các cảnh đó, online, điện thoại. Mục tiêu là người chơi nằm trong xấp thì hiện trái tim đè lên lá (hiếm).
