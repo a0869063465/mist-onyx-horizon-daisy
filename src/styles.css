@@ -13550,50 +13550,50 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-row { position: absolute; right: 2%; bottom: 22%; height: 24%; z-index: 4; display: flex; flex-direction: row-reverse; align-items: center; gap: 2%; pointer-events: none; }
 .kw-row[data-n="2"] { height: 19%; }
 .kw-row[data-n="3"] { height: 16%; }
-.kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; /* nền mờ dần cho dễ nhìn icon, không lộ mép; vòng tròn tưởng tượng phía sau như hào quang (chủ game 10/11) */ background: radial-gradient(circle closest-side, transparent 0%, transparent 56%, color-mix(in srgb, var(--kw) 55%, transparent) 68%, var(--kw) 77%, color-mix(in srgb, var(--kw) 60%, transparent) 86%, color-mix(in srgb, var(--kw) 18%, transparent) 94%, transparent 100%), radial-gradient(circle closest-side, rgba(4, 4, 8, 0.9) 0%, rgba(4, 4, 8, 0.8) 45%, rgba(4, 4, 8, 0.55) 68%, rgba(4, 4, 8, 0.22) 84%, rgba(4, 4, 8, 0) 100%); }
+.kw-icon { --kw: #ffffff; display: grid; place-items: center; height: 100%; aspect-ratio: 1; box-sizing: border-box; /* hình vuông bo góc thay vòng tròn, glow nhẹ hơn một chút (chủ game 12/11) */ border-radius: 24%; background: linear-gradient(rgba(4, 4, 8, 0.72), rgba(4, 4, 8, 0.72)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--kw) 65%, transparent), inset 0 0 7px color-mix(in srgb, var(--kw) 30%, transparent), 0 0 6px color-mix(in srgb, var(--kw) 35%, transparent); }
 .kw-icon > img { display: block; width: 66%; height: 66%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
-.kw-icon[data-kw="cuoi-luot"] { --kw: #ff5a48; }
-.kw-icon[data-kw="linh-hon"] { --kw: #3fb4ff; }
-.kw-icon[data-kw="nhiem-vu"] { --kw: #ffc94d; }
-.kw-icon[data-kw="ben-bi"] { --kw: #2f6bff; }
-.kw-icon[data-kw="guom-mau"] { --kw: #ff5a48; }
-.kw-icon[data-kw="luc-luong"] { --kw: #ff8a1f; }
-.kw-icon[data-kw="hoi-phuc"] { --kw: #3cff4a; }
-.kw-icon[data-kw="doi-mo"] { --kw: #c14dff; }
-.kw-icon[data-kw="tao-bai"] { --kw: #3cff4a; }
-.kw-icon[data-kw="dau-luot"] { --kw: #3fb4ff; }
-.kw-icon[data-kw="bo-bai"] { --kw: #ff5a48; }
-.kw-icon[data-kw="xieng-xich"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="tan-cong"] { --kw: #ffc94d; }
-.kw-icon[data-kw="boc-thep"] { --kw: #ffc94d; }
-.kw-icon[data-kw="khong-lo"] { --kw: #ff5a48; }
-.kw-icon[data-kw="sieu-toc"] { --kw: #ff5a48; }
-.kw-icon[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="luon-lach-1"] { --kw: #3cff4a; }
-.kw-icon[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
-.kw-icon[data-kw="phep"] { --kw: #c14dff; }
-.kw-icon[data-kw="vinh-quang"] { --kw: #ffc94d; }
-.kw-icon[data-kw="si-khi"] { --kw: #3cff4a; }
-.kw-icon[data-kw="trieu-goi"] { --kw: #ffc94d; }
-.kw-icon[data-kw="hao-quang"] { --kw: #3cff4a; }
-.kw-icon[data-kw="sao-choi"] { --kw: #ff5a48; }
-.kw-icon[data-kw="ho-ve"] { --kw: #2f6bff; }
-.kw-icon[data-kw="thao-vat"] { --kw: #2f6bff; }
-.kw-icon[data-kw="trang-bi"] { --kw: #ffc94d; }
-.kw-icon[data-kw="da-tang"] { --kw: #b07a45; }
-.kw-icon[data-kw="debuff"] { --kw: #ff5a48; }
-.kw-icon[data-kw="buff"] { --kw: #3cff4a; }
-.kw-icon[data-kw="khe-uoc"] { --kw: #ffc94d; }
-.kw-icon[data-kw="lien-ket"] { --kw: #ffc94d; }
-.kw-icon[data-kw="bao-oan"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="phan-no"] { --kw: #ff5a48; }
-.kw-icon[data-kw="mui-mau"] { --kw: #ff8a1f; }
-.kw-icon[data-kw="dam-xuyen"] { --kw: #ff8a1f; }
-.kw-icon[data-kw="tan-pha"] { --kw: #ff5a48; }
-.kw-icon[data-kw="cau-mana"] { --kw: #3fb4ff; }
-.kw-icon[data-kw="linh-hoat"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="cuong-hoa-1"] { --kw: #3cff4a; }
-.kw-icon[data-kw="cuong-hoa-vinh-vien"] { --kw: #3cff4a; }
+.kw-icon[data-kw="cuoi-luot"], .kw-name[data-kw="cuoi-luot"] { --kw: #ff5a48; }
+.kw-icon[data-kw="linh-hon"], .kw-name[data-kw="linh-hon"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="nhiem-vu"], .kw-name[data-kw="nhiem-vu"] { --kw: #ffc94d; }
+.kw-icon[data-kw="ben-bi"], .kw-name[data-kw="ben-bi"] { --kw: #2f6bff; }
+.kw-icon[data-kw="guom-mau"], .kw-name[data-kw="guom-mau"] { --kw: #ff5a48; }
+.kw-icon[data-kw="luc-luong"], .kw-name[data-kw="luc-luong"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="hoi-phuc"], .kw-name[data-kw="hoi-phuc"] { --kw: #3cff4a; }
+.kw-icon[data-kw="doi-mo"], .kw-name[data-kw="doi-mo"] { --kw: #c14dff; }
+.kw-icon[data-kw="tao-bai"], .kw-name[data-kw="tao-bai"] { --kw: #3cff4a; }
+.kw-icon[data-kw="dau-luot"], .kw-name[data-kw="dau-luot"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="bo-bai"], .kw-name[data-kw="bo-bai"] { --kw: #ff5a48; }
+.kw-icon[data-kw="xieng-xich"], .kw-name[data-kw="xieng-xich"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="tan-cong"], .kw-name[data-kw="tan-cong"] { --kw: #ffc94d; }
+.kw-icon[data-kw="boc-thep"], .kw-name[data-kw="boc-thep"] { --kw: #ffc94d; }
+.kw-icon[data-kw="khong-lo"], .kw-name[data-kw="khong-lo"] { --kw: #ff5a48; }
+.kw-icon[data-kw="sieu-toc"], .kw-name[data-kw="sieu-toc"] { --kw: #ff5a48; }
+.kw-icon[data-kw="nanh-vuot"], .kw-name[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="luon-lach-1"], .kw-name[data-kw="luon-lach-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="luon-lach-2"], .kw-name[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="phep"], .kw-name[data-kw="phep"] { --kw: #c14dff; }
+.kw-icon[data-kw="vinh-quang"], .kw-name[data-kw="vinh-quang"] { --kw: #ffc94d; }
+.kw-icon[data-kw="si-khi"], .kw-name[data-kw="si-khi"] { --kw: #3cff4a; }
+.kw-icon[data-kw="trieu-goi"], .kw-name[data-kw="trieu-goi"] { --kw: #ffc94d; }
+.kw-icon[data-kw="hao-quang"], .kw-name[data-kw="hao-quang"] { --kw: #3cff4a; }
+.kw-icon[data-kw="sao-choi"], .kw-name[data-kw="sao-choi"] { --kw: #ff5a48; }
+.kw-icon[data-kw="ho-ve"], .kw-name[data-kw="ho-ve"] { --kw: #2f6bff; }
+.kw-icon[data-kw="thao-vat"], .kw-name[data-kw="thao-vat"] { --kw: #2f6bff; }
+.kw-icon[data-kw="trang-bi"], .kw-name[data-kw="trang-bi"] { --kw: #ffc94d; }
+.kw-icon[data-kw="da-tang"], .kw-name[data-kw="da-tang"] { --kw: #b07a45; }
+.kw-icon[data-kw="debuff"], .kw-name[data-kw="debuff"] { --kw: #ff5a48; }
+.kw-icon[data-kw="buff"], .kw-name[data-kw="buff"] { --kw: #3cff4a; }
+.kw-icon[data-kw="khe-uoc"], .kw-name[data-kw="khe-uoc"] { --kw: #ffc94d; }
+.kw-icon[data-kw="lien-ket"], .kw-name[data-kw="lien-ket"] { --kw: #ffc94d; }
+.kw-icon[data-kw="bao-oan"], .kw-name[data-kw="bao-oan"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="phan-no"], .kw-name[data-kw="phan-no"] { --kw: #ff5a48; }
+.kw-icon[data-kw="mui-mau"], .kw-name[data-kw="mui-mau"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="dam-xuyen"], .kw-name[data-kw="dam-xuyen"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="tan-pha"], .kw-name[data-kw="tan-pha"] { --kw: #ff5a48; }
+.kw-icon[data-kw="cau-mana"], .kw-name[data-kw="cau-mana"] { --kw: #3fb4ff; }
+.kw-icon[data-kw="linh-hoat"], .kw-name[data-kw="linh-hoat"] { --kw: #f2f6ff; }
+.kw-icon[data-kw="cuong-hoa-1"], .kw-name[data-kw="cuong-hoa-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="cuong-hoa-vinh-vien"], .kw-name[data-kw="cuong-hoa-vinh-vien"] { --kw: #3cff4a; }
 /* glow đỏ sáng và dày hơn vì trước đó quá chìm (chủ game 10/11); trắng, cam, xanh lá giữ nguyên */
 .kw-icon[data-kw="cuoi-luot"],
 .kw-icon[data-kw="guom-mau"],
@@ -13603,8 +13603,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="sao-choi"],
 .kw-icon[data-kw="debuff"],
 .kw-icon[data-kw="phan-no"],
-.kw-icon[data-kw="tan-pha"] { filter: drop-shadow(0 0 2px #ff5a48) drop-shadow(0 0 5px rgba(255, 90, 72, 0.75)); }
-.kw-icon[data-kw="hien-te-thuong"] { --kw: #ff8a1f; }
+.kw-icon[data-kw="tan-pha"] { filter: drop-shadow(0 0 2px rgba(255, 90, 72, 0.8)) drop-shadow(0 0 4px rgba(255, 90, 72, 0.5)); }
+.kw-icon[data-kw="hien-te-thuong"], .kw-name[data-kw="hien-te-thuong"] { --kw: #ff8a1f; }
 /* Glow đứng yên, màu theo từng keyword (chủ game 09/11) */
 
 /* Icon keyword đứng trước dòng mô tả của kỹ năng (chủ game 10/11): không nhỏ hơn 50% icon tốc độ cũ (2,6rem). */
@@ -13687,6 +13687,12 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 @media (hover: hover) { .mx-tab:hover, .mx-back:hover { background-color: rgba(150, 215, 255, 0.12); } .mx-card.is-q:hover { filter: brightness(1.08); } }
 @media (prefers-reduced-motion: reduce) { .mx-sweep.is-on, .mx-card.is-q img.mx-box { animation: none !important; } }
 
+/* Icon keyword chèn giữa câu mô tả (chủ game 12/11): cao ~78% icon trước dòng (2,15rem), tâm hình nằm trên đường giữa chữ (vertical-align: middle), lề âm để KHÔNG đẩy dòng lên. */
+.kw-inline { display: inline-grid; height: 2.05em; vertical-align: middle; margin: -0.6em 0.25em -0.6em 0; }
+
+/* Keyword ghi chữ sau tên skill: (x, y), mỗi chữ màu glow của keyword (chủ game 12/11). */
+.msheet-kwtags { margin-left: 0.45rem; font-size: 0.82em; font-weight: 600; color: rgba(255, 255, 255, 0.7); vertical-align: middle; white-space: nowrap; }
+.kw-name { color: var(--kw, #fff); text-shadow: 0 0 6px color-mix(in srgb, var(--kw, #fff) 55%, transparent); }
 /* ==== Bảng trong trận: Lịch sử + Cài đặt (chủ game 12/11). Toàn màn, phong cách menu chính: xanh đen, viền vàng mảnh,
    góc vát. Mọi cỡ tính theo bề ngang bảng (cqw). Lá của mình bên trái (xanh), lá đối thủ bên phải (đỏ). ==== */
 .mm {

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
-import { KEYWORDS } from "@/lib/keywords";
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
@@ -546,9 +546,6 @@ export function MonsterSheet({
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
-                {shown.keyword ? <span className="kw-icon msheet-kw" data-kw={shown.keyword} title={KEYWORDS[shown.keyword].label}>
-                  <img src={KEYWORDS[shown.keyword].src} alt="" draggable={false} />
-                </span> : null}
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">
@@ -556,10 +553,26 @@ export function MonsterSheet({
                     <b>{cost}</b>
                   </span>
                 ) : null}
+                {(() => {
+                  const kws = titleKeywords(shown.keyword, shown.text);
+                  if (!kws.length) return null;
+                  return (
+                    <span className="msheet-kwtags">
+                      {"("}
+                      {kws.map((id, i) => (
+                        <Fragment key={id}>
+                          {i > 0 ? ", " : null}
+                          <span className="kw-name" data-kw={id}>{KEYWORDS[id].label}</span>
+                        </Fragment>
+                      ))}
+                      {")"}
+                    </span>
+                  );
+                })()}
               </b>
               {shown.text ? (
                 <p className="ink-skill">
-                  <CopyText text={shown.text} firstTitle={false} inked />
+                  <CopyText text={shown.text} firstTitle={false} inked icons={["debuff", "sao-choi"]} />
                 </p>
               ) : null}
               {note && picked === "s0" ? <p className="msheet-note">{tr(note)}</p> : null}
