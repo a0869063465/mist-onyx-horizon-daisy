@@ -62,6 +62,12 @@ export type MatchEvent = {
   auto: boolean;
   hit: HitNote | null;
   look?: DecisionLook;
+  /** Lịch sử trong trận (12/11): vòng (`Duel.clock`), bên giữ token của vòng, và kỹ năng thứ mấy. Ván cũ không có. */
+  clock?: number;
+  token?: 0 | 1;
+  skill?: number;
+  /** Sau việc này trận còn chờ đáp trả (cửa sổ phản ứng hoặc Trả đòn): việc kế thuộc cùng một chuỗi. */
+  wait?: boolean;
 };
 
 export type LookMon = {
