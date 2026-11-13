@@ -21,6 +21,8 @@ export type LogHit = {
   blocked: boolean;
   reflect: boolean;
   delayed: boolean;
+  /** Quái rời sân mà không phải bị hạ (Thu hồi quái thú thu về bộ bài). */
+  away?: boolean;
 };
 
 export type LogAct = "draw" | "summon" | "fuse" | "attack" | "counter" | "skill" | "spell" | "block" | "cover" | "wall" | "reel" | "upkeep" | "effect" | "concede" | "win";
@@ -132,7 +134,11 @@ export function buildLog(duel: Duel, viewer: Side): LogRound[] {
         };
         const lines: LogLine[] = (block as LogBlock | null)?.lines ?? [];
         const owner = lines.find((line) => line.key === event.cause);
-        if (owner) owner.hits.push(hit);
+        if (owner) {
+          // Thu hồi quái thú thu quái về bộ bài: quái rời sân nhưng không phải bị hạ, không mất máu.
+          if (owner.act === "spell" && owner.card?.id === "thu-hoi-quai-thu" && hit.card) owner.hits.push({ ...hit, dealt: 0, dead: false, away: true });
+          else owner.hits.push(hit);
+        }
         else {
           // Sát thương không thuộc việc nào đang mở (hiệu ứng đầu vòng, nợ sát thương, môi trường…): một dòng riêng.
           const last: LogBlock | undefined = now.blocks[now.blocks.length - 1];

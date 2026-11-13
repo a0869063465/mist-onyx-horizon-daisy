@@ -8,11 +8,12 @@ import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { castName, type Duel, type Side } from "@/lib/duel";
-import { buildLog, type LogAct, type LogCard, type LogHit, type LogLine, type LogRound } from "@/lib/duel-log";
+import { buildLog, type LogAct, type LogCard, type LogHit, type LogLine, type LogRound, type LogTarget } from "@/lib/duel-log";
 import { tr } from "@/lib/i18n";
 import { bookSkill, skillsOf, type SkillShown } from "@/lib/skill-book";
 import { playUi } from "@/lib/sfx";
 import { Glyph } from "./monster-sheet";
+import { Painted } from "./painted";
 
 type Tab = "log" | "set";
 
@@ -123,9 +124,12 @@ function Pic({ card, viewer, mini = false, dead = false }: { card: LogCard; view
     <span className={`${base}${spellCard(card.id) && card.veil !== "hat" ? " is-spell" : ""}`}>
       <span className="mm-pic-art" style={{ backgroundImage: `url(${art})` }} />
       {dead ? (
-        <span className="mm-skull">
-          <Glyph name="animal-skull" fill="#fff" />
-        </span>
+        // Bị hạ: hình vẫn thấy, hai vệt chém trắng mảnh bắt chéo (thon hai đầu) và một đốm sáng ở chỗ giao.
+        <svg className="mm-slain" viewBox="0 0 100 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M8 8 Q55.5 55.5 92 112 Q44.5 64.5 8 8Z" />
+          <path d="M92 8 Q55.5 64.5 8 112 Q44.5 55.5 92 8Z" />
+          <path className="mm-slain-gem" d="M50 52 L55.500 60 L50 68 L44.500 60Z" />
+        </svg>
       ) : null}
     </span>
   );
@@ -141,6 +145,13 @@ function Face({ side, viewer, hp }: { side: Side; viewer: Side; hp?: number }) {
 }
 
 function Loss({ hit }: { hit: LogHit }) {
+  if (hit.away) {
+    return (
+      <span className="mm-loss is-away">
+        <Glyph name="card-exchange" fill="currentColor" />
+      </span>
+    );
+  }
   if (hit.blocked) {
     return (
       <span className="mm-loss is-blocked">
@@ -164,7 +175,7 @@ function sameCard(hit: LogHit, line: LogLine): boolean {
   return target.card.uid !== null ? hit.card.uid === target.card.uid : hit.card.id === target.card.id && hit.card.side === target.card.side;
 }
 
-function sentence(line: LogLine, viewer: Side): string {
+function headOf(line: LogLine, viewer: Side): string {
   const who = line.side === viewer ? "Bạn" : "Đối thủ";
   const name = cardName(line.card);
   const aim = line.target ? (line.target.face ? (line.target.side === viewer ? "bạn" : "đối thủ") : cardName(line.target.card)) : "";
@@ -217,13 +228,86 @@ function sentence(line: LogLine, viewer: Side): string {
     default:
       head = "Hiệu ứng";
   }
-  const parts = line.hits.map((hit) => {
-    const whom = hit.card ? cardName(hit.card) : hit.side === viewer ? "Bạn" : "Đối thủ";
-    if (hit.blocked) return `${whom} chặn hết`;
-    const tail = hit.dead ? ", bị hạ" : hit.card ? "" : ` (${hit.before} → ${hit.after})`;
-    return `${whom} mất ${hit.dealt} máu${hit.delayed ? " (trả dần)" : ""}${hit.reflect ? " (phản đòn)" : ""}${tail}`;
-  });
-  return parts.length ? `${head}: ${parts.join("; ")}` : head;
+  return head;
+}
+
+/** Chữ chi tiết khi bấm một dòng: in màu như bảng thông báo (tên quái cam, phép hồng, kỹ năng xanh), dòng đầu là
+ *  việc, mỗi kết quả một dòng ngắn. */
+function Say({ line, viewer }: { line: LogLine; viewer: Side }) {
+  return (
+    <span className="mm-say">
+      <span className="mm-say-head">
+        <Painted text={headOf(line, viewer)} />
+      </span>
+      {line.hits.map((hit, index) => (
+        <span key={index} className="mm-say-row">
+          {hit.card ? <Painted text={cardName(hit.card)} /> : <b className={hit.side === viewer ? "is-mine" : "is-foe"}>{hit.side === viewer ? "Bạn" : "Đối thủ"}</b>}
+          {hit.away ? (
+            <i>về bộ bài</i>
+          ) : hit.blocked ? (
+            <i className="is-ward">chặn hết</i>
+          ) : (
+            <>
+              <b className="mm-say-dmg">−{hit.dealt} máu</b>
+              {hit.card ? null : (
+                <i>
+                  {hit.before} → {hit.after}
+                </i>
+              )}
+              {hit.dead ? <i className="is-dead">bị hạ</i> : null}
+              {hit.reflect ? <i>phản đòn</i> : null}
+              {hit.delayed ? <i>trả dần</i> : null}
+            </>
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+type Aim = { target: LogTarget; hit?: LogHit };
+
+/** Mục tiêu của một dòng: mục tiêu chính đứng đầu, rồi mọi lá khác bị trúng. Sát thương dội lại chính kẻ ra đòn
+ *  (`self`) hiện trên hình kẻ ra đòn, không nằm trong xấp mục tiêu. */
+function aimsOf(line: LogLine): { aims: Aim[]; self?: LogHit } {
+  const main = line.hits.find((hit) => sameCard(hit, line));
+  const actor = line.act === "spell" ? null : line.card;
+  const self = actor ? line.hits.find((hit) => hit !== main && hit.card !== null && hit.card.id === actor.id && hit.card.side === actor.side) : undefined;
+  const aims: Aim[] = [];
+  if (line.target) aims.push({ target: line.target, hit: main });
+  for (const hit of line.hits) {
+    if (hit === main || hit === self) continue;
+    aims.push({ target: hit.card ? { face: false, card: hit.card } : { face: true, side: hit.side }, hit });
+  }
+  return { aims, self };
+}
+
+function Tile({ aim, viewer, mini = false }: { aim: Aim; viewer: Side; mini?: boolean }) {
+  if (aim.target.face) return <Face side={aim.target.side} viewer={viewer} hp={aim.hit ? aim.hit.after : undefined} />;
+  return <Pic card={aim.target.card} viewer={viewer} mini={mini} dead={Boolean(aim.hit?.dead)} />;
+}
+
+/** Một mục tiêu thì một hình; nhiều mục tiêu thì một xấp lá, lá trên cùng là mục tiêu chính, có số lá ở góc. */
+function Stack({ aims, viewer }: { aims: Aim[]; viewer: Side }) {
+  const [top, ...more] = aims;
+  const under = more.slice(0, 2);
+  const lone = more.length === 0;
+  return (
+    <span className={`mm-aim${lone && top.target.face ? " is-face" : ""}${lone ? "" : " is-stack"}`} style={{ ["--more" as string]: under.length }}>
+      {under
+        .map((aim, index) => (
+          <span key={index} className="mm-under" style={{ ["--k" as string]: index + 1 }}>
+            <Tile aim={{ target: aim.target }} viewer={viewer} />
+          </span>
+        ))
+        .reverse()}
+      <span className="mm-lead">
+        <Tile aim={top} viewer={viewer} />
+        {top.hit ? <Loss hit={top.hit} /> : null}
+      </span>
+      {lone ? null : <i className="mm-count">{aims.length}</i>}
+    </span>
+  );
 }
 
 function Line({ line, viewer, open, onTap }: { line: LogLine; viewer: Side; open: boolean; onTap: () => void }) {
@@ -232,11 +316,9 @@ function Line({ line, viewer, open, onTap }: { line: LogLine; viewer: Side; open
   const icon = skill?.icon ?? ACT_ICON[line.act];
   const tone = line.act === "skill" ? (skill?.slow ? "#ff5a4f" : (SKILL_TONE[skill?.kind ?? "active"] ?? ACT_TONE.skill)) : ACT_TONE[line.act];
   const label = line.act === "skill" ? (skill?.name ?? ACT_NAME.skill) : line.act === "spell" ? cardName(line.card) || ACT_NAME.spell : ACT_NAME[line.act];
-  const main = line.hits.find((hit) => sameCard(hit, line));
-  const rest = line.hits.filter((hit) => hit !== main);
-  const target = line.target;
+  const { aims, self } = aimsOf(line);
   const banner = line.act === "win" || line.act === "concede";
-  const solo = !target && !banner;
+  const solo = aims.length === 0 && !banner;
   return (
     <button
       type="button"
@@ -245,34 +327,36 @@ function Line({ line, viewer, open, onTap }: { line: LogLine; viewer: Side; open
       onClick={onTap}
     >
       <span className="mm-row">
-        {line.card ? <Pic card={line.card} viewer={viewer} mini={solo} /> : line.act === "effect" ? null : <Face side={line.side} viewer={viewer} />}
+        {line.card ? (
+          <span className="mm-actor">
+            <Pic card={line.card} viewer={viewer} mini={solo} dead={Boolean(self?.dead)} />
+            {self ? <Loss hit={self} /> : null}
+          </span>
+        ) : line.act === "effect" ? null : (
+          <Face side={line.side} viewer={viewer} />
+        )}
         <span className="mm-mid">
           <span className="mm-label">{tr(label)}</span>
           <span className="mm-way">
             <span className="mm-badge">
               <Glyph name={icon} fill="currentColor" />
             </span>
-            {target ? <span className="mm-arrow" /> : null}
+            {aims.length > 0 ? <span className="mm-arrow" /> : null}
           </span>
         </span>
-        {target ? (
-          <span className={`mm-aim${target.face ? " is-face" : ""}`}>
-            {target.face ? <Face side={target.side} viewer={viewer} hp={main ? main.after : undefined} /> : <Pic card={target.card} viewer={viewer} dead={Boolean(main?.dead)} />}
-            {main ? <Loss hit={main} /> : null}
-          </span>
-        ) : null}
+        {aims.length > 0 ? <Stack aims={aims} viewer={viewer} /> : null}
       </span>
-      {rest.length > 0 ? (
+      {open && aims.length > 1 ? (
         <span className="mm-rest">
-          {rest.map((hit, index) => (
+          {aims.map((aim, index) => (
             <span key={index} className="mm-chip">
-              {hit.card ? <Pic card={hit.card} viewer={viewer} mini dead={hit.dead} /> : <Face side={hit.side} viewer={viewer} hp={hit.after} />}
-              <Loss hit={hit} />
+              <Tile aim={aim} viewer={viewer} mini />
+              {aim.hit ? <Loss hit={aim.hit} /> : null}
             </span>
           ))}
         </span>
       ) : null}
-      {open ? <span className="mm-say">{sentence(line, viewer)}</span> : null}
+      {open ? <Say line={line} viewer={viewer} /> : null}
     </button>
   );
 }
@@ -286,7 +370,10 @@ function RoundHead({ round, viewer }: { round: LogRound; viewer: Side }) {
         <b>{round.hp[viewer]}</b>
         {round.token === viewer ? <Glyph name="sword-brandish" fill="currentColor" /> : null}
       </span>
-      <span className="mm-round-name">{round.clock === null ? tr("Diễn biến") : `${tr("Vòng")} ${round.clock}`}</span>
+      <span className="mm-round-name">
+        {round.clock === null ? tr("Diễn biến") : `${tr("Vòng")} ${round.clock}`}
+        {round.token === null ? null : <em className={round.token === viewer ? "is-mine" : "is-foe"}>{round.token === viewer ? tr("Bạn") : tr("Đối thủ")}</em>}
+      </span>
       <span className={`mm-round-hp is-foe${round.token === foe ? " has-token" : ""}`}>
         {round.token === foe ? <Glyph name="sword-brandish" fill="currentColor" /> : null}
         <b>{round.hp[foe]}</b>

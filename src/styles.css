@@ -13786,9 +13786,6 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mm-pic > img { width: calc(100% - 3px); height: calc(100% - 3px); object-fit: cover; }
 .mm-pic.is-veil > b { display: grid; place-items: center; font-size: 7cqw; font-weight: 700; color: #7fb5dd; background: radial-gradient(circle at 50% 40%, #1c486b, #071320 75%); text-shadow: 0 0 2cqw #4fb4ff; }
 .mm-pic.is-mini { width: 8.4cqw; height: 10cqw; }
-.mm-pic.is-dead .mm-pic-art { filter: grayscale(1) brightness(.45); }
-.mm-skull { position: absolute; inset: 0; display: grid; place-items: center; font-size: 7.4cqw; color: #fff; filter: drop-shadow(0 0 1.4cqw #ff3b30) drop-shadow(0 .3cqw .4cqw #000); }
-.mm-pic.is-mini .mm-skull { font-size: 5.2cqw; }
 
 /* Người chơi là mục tiêu: trái tim theo màu phe, số máu còn lại. */
 .mm-face { position: relative; flex: none; width: 12cqw; height: 12cqw; display: grid; place-items: center; font-size: 10.4cqw; }
@@ -13861,3 +13858,48 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mm-line.is-foe .mm-aim.is-face { flex-direction: row; }
 .mm-aim.is-face .mm-loss { position: static; transform: none; padding: 0; background: none; box-shadow: none; font-size: 5.6cqw; }
 .mm-face b { z-index: 1; }
+
+/* Lịch sử, đợt 2 (chủ game 13/11): quái bị hạ vẫn thấy hình + hai vệt chém trắng; nhiều mục tiêu = xấp lá;
+   chữ chi tiết in màu như bảng thông báo; dải vòng ghi rõ vòng của ai. */
+.mm-pic.is-dead .mm-pic-art { filter: brightness(.74) saturate(.7); }
+.mm-slain { position: absolute; inset: 1.5px; width: calc(100% - 3px); height: calc(100% - 3px); overflow: visible; pointer-events: none; filter: drop-shadow(0 0 .9cqw rgb(214 236 255 / .95)) drop-shadow(0 0 .3cqw rgb(8 20 36 / .9)); }
+.mm-slain path { fill: #fff; stroke: rgb(10 22 38 / .5); stroke-width: .8; vector-effect: non-scaling-stroke; opacity: .95; }
+.mm-slain .mm-slain-gem { fill: #eaf6ff; opacity: 1; }
+.mm-actor { position: relative; flex: none; display: grid; justify-items: center; }
+.mm-actor .mm-loss { position: absolute; left: 50%; bottom: -1.2cqw; transform: translateX(-50%); padding: .2cqw 1.2cqw; background: rgb(6 14 22 / .88); border-radius: 1.4cqw; box-shadow: 0 0 0 1px rgb(255 90 74 / .55); }
+.mm-lead { position: relative; z-index: 3; display: grid; justify-items: center; }
+.mm-aim.is-face .mm-lead { display: flex; align-items: center; gap: 1.4cqw; flex-direction: row-reverse; }
+.mm-line.is-foe .mm-aim.is-face .mm-lead { flex-direction: row; }
+.mm-aim.is-stack { --step: 3.1cqw; display: block; }
+.mm-line.is-mine .mm-aim.is-stack { padding-left: calc(var(--more) * var(--step)); }
+.mm-line.is-foe .mm-aim.is-stack { padding-right: calc(var(--more) * var(--step)); }
+.mm-under { position: absolute; top: 50%; z-index: calc(3 - var(--k)); transform: translateY(-50%) scale(calc(1 - var(--k) * .07)); filter: brightness(calc(1 - var(--k) * .16)); }
+.mm-line.is-mine .mm-under { left: calc((var(--more) - var(--k)) * var(--step)); transform-origin: left center; }
+.mm-line.is-foe .mm-under { right: calc((var(--more) - var(--k)) * var(--step)); transform-origin: right center; }
+.mm-under .mm-face b { display: none; }
+.mm-count { position: absolute; top: -1.4cqw; z-index: 4; min-width: 4.6cqw; padding: .3cqw 1cqw; font-style: normal; font-size: 3cqw; font-weight: 700; line-height: 1.2; text-align: center; color: #1c1404; background: linear-gradient(180deg, #fff3cf, #d9b66a); clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%); }
+.mm-line.is-mine .mm-count { right: -1.6cqw; }
+.mm-line.is-foe .mm-count { left: -1.6cqw; }
+.mm-aim.is-stack .mm-lead .mm-face + .mm-loss { position: absolute; left: 50%; bottom: -1.2cqw; transform: translateX(-50%); }
+.mm-loss.is-away { color: #9fd0ff; font-size: 4.4cqw; text-shadow: none; }
+.mm-aim .mm-loss.is-away { box-shadow: 0 0 0 1px rgb(159 208 255 / .6); }
+.mm-rest { animation: mm-in .18s both; }
+/* Chữ chi tiết: dòng đầu = việc, mỗi kết quả một dòng; màu tên theo bảng thông báo. */
+.mm-say { display: grid; gap: .8cqw; }
+.mm-say-head { font-weight: 700; color: #f3f6fa; }
+.mm-say-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1.6cqw; color: #c3d0dc; }
+.mm-line.is-foe .mm-say-row { justify-content: flex-end; }
+.mm-say-row::before { content: "›"; color: var(--tone); font-weight: 700; }
+.mm-say i { font-style: normal; color: #9fb2c4; }
+.mm-say i.is-dead { color: #fff; font-weight: 700; text-shadow: 0 0 1.2cqw rgb(214 236 255 / .8); }
+.mm-say i.is-ward { color: #f2cf6a; }
+.mm-say b { font-weight: 700; }
+.mm-say b.is-mine { color: var(--mine); } .mm-say b.is-foe { color: var(--foe); }
+.mm-say-dmg { color: #ff5a4a; }
+.mm-say b.ink-mon { color: #ff9a2e; } .mm-say b.ink-hide { color: #9a9a9a; } .mm-say b.ink-spell { color: #ff6fb4; } .mm-say b.ink-skill { color: #56c8ff; }
+.mm-say b.ink-mana { color: #9ef4ff; } .mm-say b.ink-atk { color: #ff5a4a; } .mm-say b.ink-phys { color: #ffe14a; } .mm-say b.ink-ward { color: #c9a0ff; } .mm-say b.ink-fuse { color: #f08cff; }
+/* Dải vòng: ghi rõ vòng của ai. */
+.mm-round-name { display: inline-flex; align-items: baseline; gap: 1.6cqw; }
+.mm-round-name em { font-style: normal; font-size: 3.1cqw; letter-spacing: .08em; -webkit-text-fill-color: currentColor; }
+.mm-round-name em::before { content: "·"; margin-right: 1.6cqw; color: var(--gold); }
+.mm-round-name em.is-mine { color: #8fd0ff; } .mm-round-name em.is-foe { color: #ff9a8c; }
