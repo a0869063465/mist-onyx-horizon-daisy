@@ -1006,6 +1006,9 @@ export const PENDING_NOTES: string[] = [
   "Keyword hiển thị là hình vuông bo góc thay vì hình tròn. Glow nhẹ hơn một chút.",
   "Mô tả skill tự chèn icon keyword: trước cụm \"giảm N thủ, công…\" là Debuff, trước cụm \"gây N sát thương\" là Sát thương. Icon Debuff đổi sang mũi tên chỉ xuống. Bỏ icon keyword ở đầu tên skill.",
   "Sau tên skill ghi keyword dạng (Sát thương, Debuff), mỗi chữ cùng màu glow keyword.",
+  "Rút bài: xấp bài có mũi tên Rút vài giây. Lá rút hiện ra giữa màn kèm bảng mô tả, bấm vào lá để xem từng kỹ năng, bấm ra ngoài thì lá về tay.",
+  "Tay bài xoè như quạt, lá dùng được chớp sáng. Bấm lá: lá nhấc lên, bảng mô tả ngắn hiện phía trên, bấm lại để xem kỹ năng kế. Bấm giữ để mở mô tả chi tiết.",
+  "Triệu hồi: kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng), lá hiện giữa sân với lựa chọn Triệu hồi, Hiến tế, Dung hợp và 2 mũi tên chọn hàng, rồi lá bay xuống ô.",
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
 ];

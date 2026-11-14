@@ -12,7 +12,7 @@ import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edit
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
 import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, SHORT_TOP, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
-import { playCue, playHit, setSound, soundOn, unlockSound } from "@/lib/sfx";
+import { playCue, playHit, playPack, playUi, setSound, soundOn, unlockSound } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
@@ -54,6 +54,8 @@ import { AttackEmblem } from "@/components/game/attack-emblem";
 import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
 import { DeckPile } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
+import { CardShow } from "@/components/game/card-show";
+import { HandPeek, type PeekInfo } from "@/components/game/hand-peek";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
 import { ownFace, roomFace } from "@/lib/match-faces";
@@ -326,7 +328,13 @@ type BoardSpot = { x: number; y: number; w: number };
  * burst into a flash and whiteout (flash), and the fused monster turns a little on its upright axis as it
  * appears (turn). Its sheet asks to summon (reveal), and it lays down onto the slot with lightning (land).
  */
-type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "land";
+type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "rows" | "land";
+/** Lá quái đưa từ tay ra giữa sân (chủ game 13/11): chọn hình thức triệu hồi (menu) rồi hàng (rows); `picks` = quân đã chọn
+ *  hiến tế; `leave` = lá đang bay về tay (home) hoặc đáp xuống ô (land). */
+type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks: string[] | null; leave: null | { kind: "home" } | { kind: "land"; slot: Slot } };
+/** Giữa lá hiện to giữa sân, theo % chiều cao bàn. */
+const SHOW_TOP = 47;
+const PEEK_TOP = 9;
 /** `third` and `c`: the third knight of a three-knight fusion and where it stands, so all three cards fly in. */
 type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
 
@@ -1808,7 +1816,15 @@ function PlayPage() {
   useEffect(() => setPickStage("menu"), [handPick]);
   const lastTap = useRef<{ pile: "reserve" | "spell"; index: number; at: number } | null>(null);
   // `slot` null: chosen from the Hiến tế button, the row arrows choose where it lands; a drop on a slot keeps that slot.
-  const [vowAsk, setVowAsk] = useState<{ index: number; slot: Slot | null; picks: string[] } | null>(null);
+  const [vowAsk, setVowAsk] = useState<{ index: number; slot: Slot | null; picks: string[]; stage?: boolean } | null>(null);
+  // Tay bài theo video (chủ game 13/11; Hướng dẫn giữ cách cũ): bấm lá = nhấc lá + bảng ngắn (`peekAt` = kỹ năng đang xem,
+  // bấm lại lá thì sang kỹ năng kế, hết thì về đầu); kéo lá quái ra = `stage` (lá to giữa sân + lựa chọn); lá vừa rút hiện
+  // giữa màn (`drawShows`, lần lượt từng lá) rồi mới về tay.
+  const [peekAt, setPeekAt] = useState(0);
+  const [stage, setStage] = useState<Staged | null>(null);
+  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string }>>([]);
+  const [drawLeave, setDrawLeave] = useState(false);
+  useEffect(() => setPeekAt(0), [handPick?.pile, handPick?.index, handPick?.id, drawShows[0]?.key]);
   const [fuseOn, setFuseOn] = useState(false);
   const [fuseDrag, setFuseDrag] = useState<{ x: number; y: number; moved: boolean } | null>(null);
   const [aim, setAim] = useState<Aim | null>(null);
@@ -2793,6 +2809,14 @@ function PlayPage() {
         ...now.reserve.slice(was.reserve.length).map((_, i) => `r:${was.reserve.length + i}`),
         ...now.hand.slice(was.hand.length).map((_, i) => `s:${was.hand.length + i}`),
       ].slice(-n);
+      // Lá mình rút hiện ra giữa màn trước rồi mới về tay (chủ game 13/11); Hướng dẫn, xem trận, xem lại giữ lá bay thẳng.
+      if (!tutorial && !replay && !watch) {
+        const shows = fresh.map((target) => ({ key: (flightId.current += 1), target }));
+        setDrawShows((list) => [...list, ...shows]);
+        playPack("flip", 0.26);
+        playPack("flash", 0.3);
+        return;
+      }
       fresh.forEach((target, i) => born.push({ id: (flightId.current += 1), side: "you", target, delay: i * 0.14 }));
     });
     if (born.length) setFlights((list) => [...list, ...born]);
@@ -3573,7 +3597,7 @@ function PlayPage() {
   }, [fuseAsk?.id, fuseAsk?.phase]);
 
   useEffect(() => {
-    if (!fuseShow || fuseShow.phase === "reveal" || fuseShow.phase === "land") return;
+    if (!fuseShow || fuseShow.phase === "reveal" || fuseShow.phase === "rows" || fuseShow.phase === "land") return;
     if (fuseShow.phase === "lift") playCue("fuseRite");
     const phase = fuseShow.phase;
     const [wait, after] = FUSE_BEATS[phase];
@@ -4251,6 +4275,18 @@ function PlayPage() {
       suppressClick.current = false;
       return;
     }
+    if (!tutorial) {
+      // Theo video (chủ game 13/11): bấm lá = nhấc lá + bảng ngắn; bấm lại = kỹ năng kế (hết thì về đầu). Bấm giữ mở bảng đầy đủ.
+      setInspect(null);
+      if (handPick?.pile === pile && handPick.index === index && handPick.id === id) {
+        setPeekAt((at) => at + 1);
+        playUi("soft");
+        return;
+      }
+      playUi("select");
+      setHandPick({ pile, index, id });
+      return;
+    }
     if (secondTap(pile, index)) {
       openSheet(pile, index);
       return;
@@ -4274,7 +4310,17 @@ function PlayPage() {
     torch.current = payload.kind === "unit" || payload.kind === "summon" ? lightTorch(event.clientX, event.clientY) : null;
     event.currentTarget.setPointerCapture(event.pointerId);
     window.clearTimeout(riteHold.current);
-    if (payload.kind === "summon") {
+    if (!tutorial && payload.kind !== "unit") {
+      // Bấm giữ lá trên tay mở bảng mô tả đầy đủ (chủ game 13/11, thay bấm đôi và bấm giữ hiến tế cũ).
+      const pile = payload.kind === "summon" ? "reserve" : "spell";
+      riteHold.current = window.setTimeout(() => {
+        if (origin.current.moved || grab.current !== payload) return;
+        suppressClick.current = true;
+        grab.current = null;
+        setStage(null);
+        openSheet(pile, payload.index);
+      }, 480);
+    } else if (payload.kind === "summon") {
       const level = duel?.players[viewer].reserve[payload.index]?.saved?.level ?? 1;
       if (vowCap(payload.card.id, level) > 0) {
         riteHold.current = window.setTimeout(() => {
@@ -4316,7 +4362,7 @@ function PlayPage() {
     if (payload.kind === "spell") return spellAimOf(payload.spellId) ? spellKeys(payload.spellId, payload.index) : keys;
     if (!duel || !canPlay || responding || duel.step !== "main" || queue) return keys;
     if (payload.kind === "summon") {
-      if (riteHand === payload.index) return keys;
+      if (!tutorial || riteHand === payload.index) return keys;
       for (const slot of [...ROW_SLOTS.front, ...ROW_SLOTS.back]) {
         if (!you.field[slot] && took(summon(duel, payload.index, slot))) keys.add(`${viewer}-${slot}`);
       }
@@ -4685,6 +4731,11 @@ function PlayPage() {
     if (payload.kind === "summon") {
       if (responding && duel.hold && payload.card.id === "cuc-bong-ma-quai" && slotEl && owner === viewer && slotEl.dataset.empty === "1") {
         setCottonAsk("hand");
+        return;
+      }
+      if (!tutorial) {
+        // Kéo lá ra khỏi tay (chủ game 13/11): lá hiện to giữa sân với các lựa chọn; không còn thả thẳng vào ô.
+        if (!at || !hitsHand(at.x, at.y)) openStage(payload.index);
         return;
       }
       const partner = foeUid ? you.field.find((unit) => unit?.uid === foeUid) : null;
@@ -5519,7 +5570,7 @@ function PlayPage() {
           resultId: recipe.result,
           phase: "lift",
           n: Date.now(),
-          a: boardSpot(document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
+          a: boardSpot(document.querySelector(".card-show") ?? document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
           b: slotSpot,
           at: slotSpot,
           ...trioOf(held.id, mon),
@@ -5570,6 +5621,86 @@ function PlayPage() {
     setHandPick(null);
     apply(summon(duel, index, slot));
   }
+
+  /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
+  const formOf = (mon: FieldMon) =>
+    mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
+  /** Kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng): lá hiện to giữa sân với các lựa chọn luật cho phép (chủ game 13/11). */
+  function openStage(index: number) {
+    const held = you.reserve[index];
+    const card = held ? monsterCard(held.id) : undefined;
+    if (!duel || !held || !card || stage || fuseShow || vowAsk) return;
+    if (queue && queueBlocked()) return;
+    const acts = handActions(index);
+    if (acts.length === 0) {
+      turnOneHint();
+      if (!needsDraw(card.stars) && canPlay && you.stars < card.stars && card.id !== "trieu-hoi-ac-ma" && you.draws >= 1) stuckHint(card.stars);
+    }
+    playPack("deal");
+    playUi("confirm");
+    setInspect(null);
+    setHandPick({ pile: "reserve", index, id: held.id });
+    setStage({ index, id: held.id, mode: acts.length === 0 ? "none" : acts.length === 1 && acts[0].key === "summon" ? "rows" : "menu", picks: null, leave: null });
+  }
+  const stageHeld = stage ? you.reserve[stage.index] : undefined;
+  const stageOk = Boolean(stage && stageHeld && stageHeld.id === stage.id);
+  const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : summonAt(stage.index)) : null;
+  const stageRows = stagePlace ? { front: rowSlot("front", stagePlace), back: rowSlot("back", stagePlace) } : null;
+  const closeStage = () => setStage((now) => (now && !now.leave ? { ...now, leave: { kind: "home" } } : now));
+  /** The staged card has flown: home to the hand, or onto its slot, where the summon really happens. */
+  const stageLeft = () => {
+    const done = stage;
+    setStage(null);
+    setHandPick(null);
+    if (!done || done.leave?.kind !== "land" || !duel) return;
+    apply(done.picks ? summonVow(duel, done.index, done.leave.slot, done.picks) : summon(duel, done.index, done.leave.slot));
+  };
+  const stageActs: SheetAction[] =
+    stage && stageOk && stage.mode === "menu"
+      ? handActions(stage.index).map((act) => ({
+          ...act,
+          rows: undefined,
+          onPress:
+            act.key === "summon"
+              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null } : now))
+              : act.key === "vow"
+                ? () => setVowAsk({ index: stage.index, slot: null, picks: [], stage: true })
+                : () => {
+                    act.onPress?.();
+                    setStage(null);
+                    setHandPick(null);
+                  },
+        }))
+      : [];
+  /** Bảng ngắn của một lá trên tay: quái (chỉ số + kỹ năng) hoặc phép (màu tốc độ + chữ lá). */
+  const peekOf = (pile: "reserve" | "spell", index: number): PeekInfo | null => {
+    if (pile === "spell") {
+      const card = spellCard(you.hand[index] ?? "");
+      if (!card) return null;
+      return { name: card.name, cardId: card.id, gems: you.tolls?.[index] ? `${card.gems}+1` : card.gems, skills: [], tone: speedTone(card.id), text: card.effect };
+    }
+    const held = you.reserve[index];
+    const card = held ? monsterCard(held.id) : undefined;
+    if (!held || !card) return null;
+    const live = reserveLive(held, card);
+    const shownAs = previewMon(duel, viewer, held);
+    const form = shownAs ? formOf(shownAs) : held.id;
+    return { name: live.name, cardId: form, stars: card.stars, gems: held.toll ? `${card.gems}+1` : card.gems, stats: live, skills: skillsOf(form, monsterCard(form)?.skill ?? card.skill ?? "") };
+  };
+  /** Tay xoè (chủ game 13/11): lá thứ `at` nghiêng và hạ theo vòm, lá giữa đứng thẳng. */
+  const fanStyle = (at: number): CSSProperties => {
+    const mid = (you.reserve.length + you.hand.length - 1) / 2;
+    const t = mid > 0 ? (at - mid) / mid : 0;
+    return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)}cqw` } as CSSProperties;
+  };
+  const drawShow = drawShows[0] ?? null;
+  const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
+  const pickPeek = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
+  const handRect = (target: string) => {
+    const pick = document.querySelector<HTMLElement>(`.hand [data-hand="${target}"]`);
+    pick?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    return pick?.querySelector(".hand-card")?.getBoundingClientRect();
+  };
 
   // Vuốt đổi lá trong bảng mô tả (chủ game 06/11), đi vòng tròn: tay bài (quái dự bị rồi phép); sân theo thứ tự quái hàng trước rồi hàng sau,
   // rồi lá môi trường và tường thành, của mình trước rồi sang sân địch; icon phản ứng thì chỉ đi qua các lá đang tham gia phản ứng.
@@ -5624,9 +5755,6 @@ function PlayPage() {
   };
   const board_env_spot = (mine: boolean) => (mine ? board.env : board.envFoe);
 
-  /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
-  const formOf = (mon: FieldMon) =>
-    mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   // Tapping the card on the sheet opens the 3D fan of its related cards (owner, 19/10: everywhere a sheet opens).
   const sheetFor = (mon: FieldMon, allies: Array<FieldMon | null>, actions: SheetAction[], onClose: () => void, note?: string, startSkill?: string, stay = false, onSwipe?: (dir: 1 | -1) => boolean | void) => (
     <RelatedFlow
@@ -5651,7 +5779,7 @@ function PlayPage() {
     />
   );
   const handMon = inspect?.pile === "reserve" && reserveHeld ? previewMon(duel, viewer, reserveHeld) : null;
-  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, handActions(inspect.index), () => setInspect(null), undefined, undefined, false, browse) : null;
+  const handSheet = handMon && inspect?.pile === "reserve" ? sheetFor(handMon, you.field, tutorial ? handActions(inspect.index) : [], () => setInspect(null), undefined, undefined, false, browse) : null;
   const lookMon = look?.uid ? [...you.field, ...foe.field].find((mon) => mon?.uid === look.uid) ?? null : null;
   const lookAllies = lookMon && you.field.some((mon) => mon?.uid === lookMon.uid) ? you.field : foe.field;
   const lookSheet = lookMon ? sheetFor(lookMon, lookAllies, [], () => setLook(null), look?.hot ? `${look.text}${look.hot}` : undefined, look?.skill, false, browse) : null;
@@ -6106,48 +6234,34 @@ function PlayPage() {
   const fuseThird = fuseShow?.third ? you.field.find((mon) => mon?.uid === fuseShow.third) ?? null : null;
   const fuseBorn = fuseShow ? previewMon(duel, viewer, { id: fuseShow.resultId, hp: monsterCard(fuseShow.resultId)?.hp ?? 1, maxHp: monsterCard(fuseShow.resultId)?.hp ?? 1 }) : null;
   // Dung hợp xong thì phải triệu hồi quái mới (chủ game 28/10): bảng không đóng được, nút Triệu hồi hiện mũi tên chọn hàng.
-  const fuseRows = fuseShow?.phase === "reveal" ? { front: rowSlot("front", fuseAt(fuseShow)), back: rowSlot("back", fuseAt(fuseShow)) } : null;
-  const fuseSheet =
-    fuseShow?.phase === "reveal" && fuseBorn && fuseRows
-      ? sheetFor(
-          fuseBorn,
-          you.field,
-          [{
-            key: "go",
-            label: "Triệu hồi",
-            tone: "fuse",
-            cost: 0,
-            rows: {
-              front: fuseRows.front !== null,
-              back: fuseRows.back !== null,
-              onRow: (row) => {
-                const slot = row === "front" ? fuseRows.front : fuseRows.back;
-                if (slot === null) return;
-                const at = boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), fuseShow.at);
-                const show = { ...fuseShow, slot, at };
-                setFuseShow({ ...show, phase: "land" });
-                // Lightning strikes the slot as the fused monster lands, with its thunder.
-                playCue("boltPrep", 0.35);
-                window.setTimeout(() => {
-                  apply(fuse(duel, show.index, show.uid, show.slot));
-                  setFuseShow(null);
-                  emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
-                  emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
-                  playCue("boltBoom");
-                  window.setTimeout(() => {
-                    emitFx({ t: "bolt", rank: "small", x: show.at.x - 7, y: show.at.y - 2 });
-                    emitFx({ t: "bolt", rank: "small", x: show.at.x + 7, y: show.at.y + 1 });
-                    playCue("boltSmall");
-                  }, 260);
-                }, 750);
-              },
-            },
-          }],
-          () => undefined,
-          undefined,
-          undefined,
-          true,
-        )
+  const fuseRows = fuseShow?.phase === "reveal" || fuseShow?.phase === "rows" ? { front: rowSlot("front", fuseAt(fuseShow)), back: rowSlot("back", fuseAt(fuseShow)) } : null;
+  /** Dung hợp xong (chủ game 13/11): xem bảng của quái mới (reveal), bấm ra ngoài thì chọn hàng trên / dưới (rows), rồi đáp xuống ô. */
+  const fuseLand = (row: SummonRow) => {
+    if (!fuseShow || !fuseRows) return;
+    const slot = row === "front" ? fuseRows.front : fuseRows.back;
+    if (slot === null) return;
+    const at = boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), fuseShow.at);
+    const show = { ...fuseShow, slot, at };
+    setFuseShow({ ...show, phase: "land" });
+    // Lightning strikes the slot as the fused monster lands, with its thunder.
+    playCue("boltPrep", 0.35);
+    window.setTimeout(() => {
+      apply(fuse(duel, show.index, show.uid, show.slot));
+      setFuseShow(null);
+      emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
+      emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
+      playCue("boltBoom");
+      window.setTimeout(() => {
+        emitFx({ t: "bolt", rank: "small", x: show.at.x - 7, y: show.at.y - 2 });
+        emitFx({ t: "bolt", rank: "small", x: show.at.x + 7, y: show.at.y + 1 });
+        playCue("boltSmall");
+      }, 260);
+    }, 750);
+  };
+  const fuseCard = fuseShow ? monsterCard(fuseShow.resultId) : undefined;
+  const fusePeek: PeekInfo | null =
+    fuseShow?.phase === "reveal" && fuseBorn && fuseCard
+      ? { name: fieldName(fuseBorn), cardId: fuseCard.id, stars: fuseCard.stars, stats: { atk: fuseCard.atk, def: fuseCard.def, mdef: fuseCard.mdef, hp: fuseCard.hp }, skills: skillsOf(fuseCard.id, fuseCard.skill ?? "") }
       : null;
 
   return (
@@ -6261,7 +6375,7 @@ function PlayPage() {
           helplessTap(Boolean(inspect) || Boolean((event.target as HTMLElement).closest(".face-pile")));
           startPress(event);
           // A touch anywhere but the hand puts the picked card back.
-          if (!(event.target as HTMLElement).closest(".hand, .hand-acts, .row-arrows")) setHandPick(null);
+          if (!(event.target as HTMLElement).closest(".hand, .hand-acts, .row-arrows, .hand-peek, .hand-arrow, .stage-back, .msheet-back")) setHandPick(null);
         }}
         onPointerDown={graspAsk}
         onPointerMove={dragAsk}
@@ -6538,6 +6652,8 @@ function PlayPage() {
             setVowAsk(null);
             setRiteHand(null);
           };
+          // Từ lá đưa ra giữa sân (chủ game 13/11): chọn xong quân tế thì về lại lá đó để chọn hàng trên / dưới.
+          const staged = Boolean(vowAsk.stage);
           // Dropped on a slot: it lands there. From the Hiến tế button: chọn quân tế trước, rồi mũi tên chọn hàng (chủ game 28/10).
           const picks = vowAsk.picks;
           const fixed = vowAsk.slot;
@@ -6588,10 +6704,17 @@ function PlayPage() {
                       mini
                       action={{
                         key: "vow",
-                        label: "Triệu hồi",
+                        label: staged ? "Hiến tế" : "Triệu hồi",
                         tone: "red",
                         cost: trial ? cost(trial) : 0,
-                        ...(fixed === null
+                        ...(staged
+                          ? {
+                              onPress: () => {
+                                setStage((now) => (now ? { ...now, mode: "rows", picks } : now));
+                                close();
+                              },
+                            }
+                          : fixed === null
                           ? {
                               rows: {
                                 front: front !== null,
@@ -7393,11 +7516,12 @@ function PlayPage() {
           }}
         >
           <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} />
+          {tutorial ? null : <DrawHint on={canDrawNow} />}
         </button>
         )}
         <div
-          style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))` }}
-          className={`hand is-strip${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
+          style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))`, ...({ "--step": Math.max(6.6, (58 - 17.8) / Math.max(1, you.reserve.length + you.hand.length - 1)) } as CSSProperties) }}
+          className={`hand is-strip${tutorial ? "" : ` is-fan${you.reserve.length + you.hand.length > 3 ? " is-lap" : ""}`}${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onScroll={(event) => {
             setHandPick(null);
@@ -7442,7 +7566,7 @@ function PlayPage() {
                 const react = cottonCard ? { label: "Bông mềm", go: () => setCottonAsk("hand") } : standCard ? { label: "Thế thân trên tay", go: () => apply(standIn(duel, index)) } : null;
                 const reactLook = react ? bookSkill(id, react.label, card.skill ?? "") : undefined;
                 return (
-                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`r:${index}`}>
+                  <div key={`${id}-${index}`} className={`hand-pick${picked && !tutorial ? " is-up" : ""}${stage?.index === index && stageOk ? " is-out" : ""}${drawShows.some((show) => show.target === `r:${index}`) ? " is-away" : ""}`} data-hand={`r:${index}`} style={fanStyle(index)}>
                     <button
                       type="button"
                       className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
@@ -7504,7 +7628,7 @@ function PlayPage() {
                 );
                 // One tap on a spell that can be used now shows its use icon (chủ game 28/10: "Bấm 1 lần hiện icon dùng phép").
                 return (
-                  <div key={`${id}-${index}`} className="hand-pick" data-hand={`s:${index}`}>
+                  <div key={`${id}-${index}`} className={`hand-pick${picked && !tutorial ? " is-up" : ""}${drawShows.some((show) => show.target === `s:${index}`) ? " is-away" : ""}`} data-hand={`s:${index}`} style={fanStyle(you.reserve.length + index)}>
                     {card}
                     {picked && (usable || slowUse) && !using ? (
                       <HandUse
@@ -7602,14 +7726,109 @@ function PlayPage() {
           ]}
           {you.reserve.length + you.hand.length === 0 ? <p className="hand-empty">{tr("Hết bài trên tay")}</p> : null}
         </div>
-        {pickStage === "menu" && pickActs.length > 1 && pickSpot && pickMon !== null ? (
+        {/* Tay bài theo video (chủ game 13/11): mũi tên trắng trên lá quái đang nhấc (kéo lá ra, hoặc bấm mũi tên), bảng ngắn
+            phía trên, lá kéo ra hiện to giữa sân với lựa chọn, lá vừa rút hiện giữa màn. */}
+        {!tutorial && handPick?.pile === "reserve" && pickSpot && !stage && !drawShow && !fuseShow && mine ? (
+          <button type="button" className="hand-arrow" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }} aria-label={tr("Đưa lá ra sân")} onClick={() => openStage(handPick.index)}>
+            <svg viewBox="0 0 60 34" aria-hidden="true">
+              <path d="M30 2 L58 22 L44 22 L44 32 L16 32 L16 22 L2 22 Z" />
+            </svg>
+          </button>
+        ) : null}
+        {stage && stageOk && stageHeld ? (
+          <div className="stage-back" onClick={(event) => event.target === event.currentTarget && closeStage()}>
+            <CardShow
+              key={`stage-${stage.index}-${stage.id}`}
+              from={() => document.querySelector(`.hand [data-reserve="${stage.index}"]`)?.getBoundingClientRect()}
+              leave={
+                stage.leave
+                  ? stage.leave.kind === "land"
+                    ? { land: true, to: ((slot) => () => document.querySelector(`[data-slot="${viewer}-${slot}"]`)?.getBoundingClientRect())(stage.leave.slot) }
+                    : { to: () => handRect(`r:${stage.index}`) }
+                  : null
+              }
+              onLeft={stageLeft}
+              top={SHOW_TOP}
+              under={
+                <div className={`stage-opts is-${stage.mode}`}>
+                  {stage.mode === "rows" && stageRows ? (
+                    <>
+                      <RowArrow row="front" off={stageRows.front === null} onPick={() => stageRows.front !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.front } }))} />
+                      <RowArrow row="back" off={stageRows.back === null} onPick={() => stageRows.back !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.back } }))} />
+                    </>
+                  ) : stage.mode === "menu" ? (
+                    stageActs.map((act) => <ActionButton key={act.key} action={act} mini />)
+                  ) : (
+                    <p className="stage-none">{tr("Chưa triệu hồi được.")}</p>
+                  )}
+                </div>
+              }
+            >
+              <button type="button" className="hand-card is-monster stage-face" onClick={() => (playUi("soft"), setPeekAt((at) => at + 1))}>
+                <CardFace monster={monsterCard(stageHeld.id)!} hand level={stageHeld.saved?.level ?? 1} live={reserveLive(stageHeld, monsterCard(stageHeld.id)!)} gems={stageHeld.toll ? `${monsterCard(stageHeld.id)!.gems}+1` : undefined} fake={stageHeld.fake} />
+              </button>
+            </CardShow>
+          </div>
+        ) : null}
+        {drawShow ? (
+          <div
+            className="stage-back is-draw"
+            onClick={(event) => {
+              if (drawLeave) return;
+              const n = drawPeek?.skills.length ?? 0;
+              // Bấm vào lá hoặc bảng: kỹ năng kế; hết kỹ năng, hoặc bấm ra ngoài: lá về tay.
+              if ((event.target as HTMLElement).closest(".card-show, .hand-peek") && peekAt + 1 < n) {
+                playUi("soft");
+                setPeekAt(peekAt + 1);
+              } else {
+                playPack("deal");
+                setDrawLeave(true);
+              }
+            }}
+          >
+            <CardShow
+              key={`draw-${drawShow.key}`}
+              flip
+              from={() => (document.querySelector(".face-pile .deck-pile img:last-of-type") ?? document.querySelector(".face-pile"))?.getBoundingClientRect()}
+              leave={drawLeave ? { to: () => handRect(drawShow.target) } : null}
+              onLeft={() => {
+                setDrawLeave(false);
+                setDrawShows((list) => list.slice(1));
+              }}
+              top={SHOW_TOP}
+            >
+              {drawShow.target.startsWith("r:") && you.reserve[Number(drawShow.target.slice(2))] && monsterCard(you.reserve[Number(drawShow.target.slice(2))].id) ? (
+                ((held) => (
+                  <span className="hand-card is-monster stage-face">
+                    <CardFace monster={monsterCard(held.id)!} hand level={held.saved?.level ?? 1} live={reserveLive(held, monsterCard(held.id)!)} gems={held.toll ? `${monsterCard(held.id)!.gems}+1` : undefined} fake={held.fake} />
+                  </span>
+                ))(you.reserve[Number(drawShow.target.slice(2))])
+              ) : you.hand[Number(drawShow.target.slice(2))] ? (
+                <span className="hand-card is-spell stage-face">
+                  <CardFace spellId={you.hand[Number(drawShow.target.slice(2))]} hand gems={you.tolls?.[Number(drawShow.target.slice(2))] ? `${spellCard(you.hand[Number(drawShow.target.slice(2))])?.gems ?? 0}+1` : undefined} />
+                </span>
+              ) : null}
+            </CardShow>
+            {drawPeek && !drawLeave ? <HandPeek info={drawPeek} at={peekAt} onPick={setPeekAt} top={PEEK_TOP} /> : null}
+          </div>
+        ) : null}
+        {pickPeek ? (
+          <HandPeek
+            info={pickPeek}
+            at={pickPeek.skills.length ? peekAt % pickPeek.skills.length : 0}
+            onPick={(index) => (playUi("soft"), setPeekAt(index))}
+            top={PEEK_TOP}
+            onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))}
+          />
+        ) : null}
+        {tutorial && pickStage === "menu" && pickActs.length > 1 && pickSpot && pickMon !== null ? (
           <span className="hand-acts" style={{ left: `${Math.min(80, Math.max(20, pickSpot.x))}%`, top: `${pickSpot.top}%` }}>
             {pickActs.map((act) => (
               <ActionButton key={act.key} action={act} mini />
             ))}
           </span>
         ) : null}
-        {(pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
+        {tutorial && (pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
           // Mũi tên chọn hàng (chủ game 28/10): ngoài lá, ngay trên mép trên lá, nằm cạnh nhau như ở nút Triệu hồi.
           <span className="row-arrows is-hand" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }}>
             <RowArrow row="front" off={pickShown.front === null} onPick={() => pickRow(pickMon, "front")} />
@@ -8125,12 +8344,39 @@ function PlayPage() {
                 ))}
               </span>
             ) : null}
-            {(fuseShow.phase === "turn" || fuseShow.phase === "land") && fuseBorn ? (
-              <div className="fuse3d-big" style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}>
+            {fuseShow.phase === "reveal" ? (
+              <i
+                className="fuse3d-catch"
+                onClick={() => {
+                  setPeekAt(0);
+                  setFuseShow({ ...fuseShow, phase: "rows" });
+                }}
+              />
+            ) : null}
+            {(fuseShow.phase === "turn" || fuseShow.phase === "reveal" || fuseShow.phase === "rows" || fuseShow.phase === "land") && fuseBorn ? (
+              <div
+                className="fuse3d-big"
+                style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}
+                onClick={fuseShow.phase === "reveal" ? () => (playUi("soft"), setPeekAt((at) => at + 1)) : undefined}
+              >
                 <CardFace monster={monsterCard(fuseShow.resultId)!} />
               </div>
             ) : null}
-            {fuseSheet}
+            {fusePeek ? (
+              <HandPeek
+                info={fusePeek}
+                at={fusePeek.skills.length ? peekAt % fusePeek.skills.length : 0}
+                onPick={(index) => (playUi("soft"), setPeekAt(index))}
+                top={PEEK_TOP}
+                onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))}
+              />
+            ) : null}
+            {fuseShow.phase === "rows" && fuseRows ? (
+              <div className="stage-opts is-rows is-fuse">
+                <RowArrow row="front" off={fuseRows.front === null} onPick={() => fuseLand("front")} />
+                <RowArrow row="back" off={fuseRows.back === null} onPick={() => fuseLand("back")} />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -8464,6 +8710,29 @@ function HandUse({ icon, kind, label, onUse }: { icon: string; kind: UnitActKind
         <Rim kind={kind} />
       </span>
     </button>
+  );
+}
+
+/** Mũi tên khuyên rút (chủ game 13/11): hiện trên xấp bài khi rút được, vài giây thì tắt; không rút cũng được. */
+function DrawHint({ on }: { on: boolean }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!on) {
+      setShown(false);
+      return;
+    }
+    setShown(true);
+    const timer = window.setTimeout(() => setShown(false), 4500);
+    return () => window.clearTimeout(timer);
+  }, [on]);
+  if (!shown) return null;
+  return (
+    <span className="draw-hint" aria-hidden="true">
+      <em>{tr("Rút")}</em>
+      <svg viewBox="0 0 60 40">
+        <path d="M16 2 L44 2 L44 16 L58 16 L30 38 L2 16 L16 16 Z" />
+      </svg>
+    </span>
   );
 }
 

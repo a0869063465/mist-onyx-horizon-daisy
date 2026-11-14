@@ -13931,3 +13931,114 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   .slot.is-block { animation: none; filter: drop-shadow(0 0 1.5px #ffd24a) drop-shadow(0 0 5px #ffd24a) drop-shadow(0 0 10px rgba(255, 210, 74, 0.8)); }
   .hand-card.is-castable > .card { animation: none; }
 }
+/* ===== Tay bài + rút bài theo video (chủ game 13/11) ===== */
+/* Tay xoè: lá nghiêng nhẹ theo vòm, hơn 3 lá thì gối lên nhau (lá sau đè lá trước); lá đang chọn dựng thẳng, nhấc lên. */
+.stage .hand.is-strip.is-fan .hand-pick {
+  transform: translateY(var(--drop, 0cqw)) rotate(var(--rot, 0deg));
+  transition: transform 0.14s ease-out;
+}
+.stage .hand.is-strip.is-fan.is-lap { gap: 0; }
+.stage .hand.is-strip.is-fan.is-lap .hand-pick + .hand-pick { margin-left: calc(var(--step, 17.8) * 1cqw - 17.8cqw); }
+.stage .hand.is-strip.is-fan .hand-pick.is-up { transform: translateY(-4.6cqw) scale(1.07); z-index: 6; }
+.stage .hand.is-strip .hand-pick.is-out { opacity: 0.26; }
+.stage .hand.is-strip .hand-pick.is-away { visibility: hidden; }
+.stage .hand.is-strip.is-fan .hand-card.is-open.is-monster,
+.stage .hand.is-strip.is-fan .hand-card.is-open.is-spell { background: none; }
+/* T3: lá dùng được chớp sáng theo nhịp (glow tắt gần hết rồi bừng lên), giữ màu glow của lá. */
+@keyframes hand-flash {
+  0%, 100% { filter: drop-shadow(0 0 1px var(--flash)) drop-shadow(0 0 3px color-mix(in srgb, var(--flash) 55%, transparent)); }
+  50% { filter: brightness(1.16) drop-shadow(0 0 2.5px #ffffff) drop-shadow(0 0 7px var(--flash)) drop-shadow(0 0 16px var(--flash)); }
+}
+.stage .hand.is-fan .hand-card.is-summonable > .card { --flash: #46e874; animation: hand-flash 1.05s ease-in-out infinite; }
+.stage .hand.is-fan .hand-card.is-castable > .card { --flash: var(--alert-color); animation: hand-flash 1.05s ease-in-out infinite; }
+/* Mũi tên trắng trên lá quái đang nhấc: kéo lá ra (hoặc bấm mũi tên) để đưa lá ra giữa sân. */
+.hand-arrow {
+  position: absolute;
+  z-index: 14;
+  width: 10.5cqw;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translate(-50%, calc(-100% - 5.6cqw));
+  animation: hand-arrow-bob 0.9s ease-in-out infinite;
+}
+.hand-arrow svg { display: block; width: 100%; filter: drop-shadow(0 0 3px #8fdcff) drop-shadow(0 0 8px rgba(120, 210, 255, 0.9)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.7)); }
+.hand-arrow path { fill: #ffffff; stroke: #cfefff; stroke-width: 1.5; stroke-linejoin: round; }
+@keyframes hand-arrow-bob { 50% { transform: translate(-50%, calc(-100% - 7.2cqw)); opacity: 0.78; } }
+/* Bảng mô tả ngắn phía trên. */
+.hand-peek {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  z-index: 75;
+  --peek: #5fd0ff;
+  display: grid;
+  gap: 1.1cqw;
+  padding: 2.2cqw 2.8cqw 2cqw;
+  color: #e9f2ff;
+  background: linear-gradient(180deg, rgba(10, 20, 44, 0.94), rgba(5, 10, 24, 0.94));
+  border: 1px solid color-mix(in srgb, var(--peek) 70%, #d8b25a);
+  clip-path: polygon(0 0, calc(100% - 3cqw) 0, 100% 3cqw, 100% 100%, 3cqw 100%, 0 calc(100% - 3cqw));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 3.2cqw 3cqw -2.4cqw color-mix(in srgb, var(--peek) 50%, transparent);
+  animation: hand-peek-in 0.16s ease-out both;
+}
+@keyframes hand-peek-in { from { opacity: 0; transform: translateY(-1.4cqw); } }
+.hp-head { display: flex; align-items: center; gap: 2cqw; }
+.hp-name { flex: 1; min-width: 0; font-size: 4.3cqw; line-height: 1.1; color: #ffe9a6; text-shadow: 0 2px 0 #000; }
+.hand-peek .tag-gem { height: 5cqw; }
+.hand-peek .msheet-tag b { font-size: 4.2cqw; }
+.hp-line { display: flex; align-items: center; gap: 1.6cqw; min-height: 6cqw; }
+.hp-kw { height: 7cqw; flex: none; }
+.hp-stats { display: flex; flex: 1; justify-content: space-between; gap: 1.6cqw; }
+.hp-stats span { display: inline-flex; align-items: baseline; gap: 1cqw; }
+.hp-stats i { font-style: normal; font-size: 2.9cqw; opacity: 0.78; }
+.hp-stats b { font-size: 4.6cqw; line-height: 1; text-shadow: 0 2px 0 #000; }
+.hp-stats .is-atk b { color: #ff9a2e; }
+.hp-stats .is-def b { color: #ffd24a; }
+.hp-stats .is-mdef b { color: #c77dff; }
+.hp-stats .is-hp b { color: #46e874; }
+.hp-desc { max-height: 21cqw; overflow-y: auto; font-size: 3.35cqw; line-height: 1.32; border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: 1.2cqw; }
+.hp-desc .msheet-desc-title { display: flex; align-items: center; gap: 1.4cqw; font-size: 3.7cqw; margin: 0 0 0.6cqw; }
+.hp-desc p { margin: 0; font-size: inherit; }
+.hp-icons { display: flex; flex-wrap: wrap; gap: 1.4cqw; zoom: 0.56; padding-top: 0.6cqw; }
+.hp-icons .sk3d { width: auto; opacity: 0.62; }
+.hp-icons .sk3d.on { opacity: 1; filter: drop-shadow(0 0 0.5rem var(--ring)); }
+/* Lá hiện to giữa sân: lá kéo ra khỏi tay (lựa chọn bên dưới) và lá vừa rút (lật từ lưng, loé sáng). */
+.stage-back { position: absolute; inset: 0; z-index: 58; background: radial-gradient(90% 60% at 50% 47%, rgba(3, 8, 20, 0.5), rgba(0, 0, 0, 0.66)); animation: msheet-fade 160ms ease-out both; }
+.card-show { position: absolute; left: 50%; z-index: 2; width: 40cqw; aspect-ratio: 0.72; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(140, 215, 255, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); will-change: transform; }
+.card-show-face, .card-show .stage-face { display: block; width: 100%; height: 100%; }
+.card-show .stage-face { padding: 0; border: 0; background: none; }
+.card-show .stage-face > .card { width: 100%; height: 100%; aspect-ratio: auto; }
+.card-show-back { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; border-radius: 6%; opacity: 0; pointer-events: none; }
+.card-show-burst {
+  position: absolute; left: 50%; z-index: 1; width: 96cqw; aspect-ratio: 1; transform: translate(-50%, -50%) scale(0.2); opacity: 0; pointer-events: none;
+  background: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.95), rgba(150, 225, 255, 0.6) 34%, rgba(80, 160, 255, 0.22) 62%, transparent 100%),
+    repeating-conic-gradient(from 8deg, rgba(255, 255, 255, 0.5) 0deg 4deg, transparent 4deg 22deg);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 30%, transparent 100%); mask-image: radial-gradient(circle closest-side, #000 30%, transparent 100%);
+  animation: card-show-burst 0.85s ease-out 0.28s both;
+}
+@keyframes card-show-burst { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); } 30% { opacity: 0.95; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.25) rotate(24deg); } }
+.stage-opts { position: absolute; left: 50%; top: calc(47% + 31cqw); z-index: 3; display: flex; align-items: center; justify-content: center; gap: 6cqw; transform: translateX(-50%); animation: hand-peek-in 0.2s ease-out 0.25s both; }
+.stage-opts.is-fuse { top: calc(44% + 36cqw); z-index: 9; }
+.stage-opts .row-arrow { position: relative; width: 14cqw; height: 15.5cqw; }
+.stage-opts .row-arrow::before, .stage-opts .act3d::before {
+  content: ""; position: absolute; inset: -22%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle closest-side, rgba(150, 230, 255, 0.85), rgba(70, 170, 255, 0.4) 55%, transparent 100%);
+  animation: stage-halo 0.95s ease-in-out infinite;
+}
+.stage-opts .row-arrow.is-off::before { display: none; }
+.stage-opts .act3d { position: relative; }
+@keyframes stage-halo { 0%, 100% { opacity: 0.25; transform: scale(0.86); } 50% { opacity: 1; transform: scale(1.08); } }
+.stage-none { margin: 0; padding: 1.4cqw 3cqw; font-size: 3.4cqw; font-weight: 800; color: #ffd9a0; background: rgba(5, 10, 24, 0.85); border: 1px solid rgba(255, 210, 120, 0.5); border-radius: 1.2cqw; }
+.fuse3d-catch { position: absolute; inset: 0; z-index: 7; }
+.fuse3d.is-reveal .fuse3d-big, .fuse3d.is-rows .fuse3d-big { animation: none; }
+/* T1: mũi tên khuyên rút trên xấp bài. */
+.draw-hint { position: absolute; left: 50%; bottom: 104%; z-index: 3; display: grid; justify-items: center; gap: 0.4cqw; width: 11cqw; transform: translateX(-50%); pointer-events: none; animation: draw-hint-bob 0.85s ease-in-out infinite, hand-peek-in 0.25s ease-out both; }
+.draw-hint em { font-style: normal; font-weight: 900; font-size: 3.3cqw; line-height: 1; color: #ffffff; text-shadow: 0 0 6px #4fb8ff, 0 2px 0 #06224a; letter-spacing: 0.04em; }
+.draw-hint svg { display: block; width: 100%; filter: drop-shadow(0 0 4px #7fd0ff) drop-shadow(0 0 10px rgba(90, 180, 255, 0.9)); }
+.draw-hint path { fill: #ffffff; stroke: #bfe6ff; stroke-width: 1.5; stroke-linejoin: round; }
+@keyframes draw-hint-bob { 50% { transform: translate(-50%, 1.6cqw); } }
+@media (prefers-reduced-motion: reduce) {
+  .hand-arrow, .draw-hint, .stage-opts .row-arrow::before, .stage-opts .act3d::before { animation: none; }
+}
+.fuse3d.is-reveal .fuse3d-big .socket.is-name, .fuse3d.is-rows .fuse3d-big .socket.is-name, .fuse3d.is-land .fuse3d-big .socket.is-name { opacity: 0; transition: opacity 0.2s; }
