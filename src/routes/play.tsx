@@ -7308,6 +7308,7 @@ function PlayPage() {
               prime={!!mon && isPrime(duel, mon, viewer)}
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer))}
+              ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
               forecast={mon ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
@@ -8798,6 +8799,7 @@ function BoardSlot({
   prime = false,
   hpOverride,
   alert = false,
+  ready = false,
   alertColor,
   veil = false,
   mask = false,
@@ -8836,6 +8838,8 @@ function BoardSlot({
   hpOverride?: number;
   prime?: boolean;
   alert?: boolean;
+  /** Chủ game 14/11: my monster that can still act in my attack round, green breathing glow like a summonable hand card. */
+  ready?: boolean;
   alertColor?: string;
   veil?: boolean;
   mask?: boolean;
@@ -8850,7 +8854,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert ? " is-ready" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}) };

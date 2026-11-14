@@ -13909,3 +13909,13 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mm-round-name em { font-style: normal; font-size: 3.1cqw; letter-spacing: .08em; -webkit-text-fill-color: currentColor; }
 .mm-round-name em::before { content: "·"; margin-right: 1.6cqw; color: var(--gold); }
 .mm-round-name em.is-mine { color: #8fd0ff; } .mm-round-name em.is-foe { color: #ff9a8c; }
+
+/* Chủ game 14/11: quái mình còn hành động được trong vòng tấn công = glow xanh lá thở, 1,5 giây một nhịp (cùng màu quái triệu hồi được trên tay). */
+@keyframes ready-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 3px #b8ffd0) drop-shadow(0 0 12px #46e874) drop-shadow(0 0 26px #46e874) drop-shadow(0 0 34px rgba(70, 232, 116, 0.9)); }
+}
+.slot.is-ready:not(.is-lunging):not(.is-thrust) { animation: ready-breathe 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-ready { animation: none; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+}
