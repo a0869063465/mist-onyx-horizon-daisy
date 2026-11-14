@@ -34,7 +34,7 @@ import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { AimPad, type PadBox, type PadDir } from "@/components/game/aim-pad";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
-import { spellKind, spellSpeed } from "@/lib/spell-kinds";
+import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
