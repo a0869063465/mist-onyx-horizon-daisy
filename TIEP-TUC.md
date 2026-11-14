@@ -4,8 +4,8 @@
 
 ## Luật L2 quái ẩn (14/11, CHƯA LÀM, đang hỏi lại, đề xuất Opus 5.5 high)
 1. Việc vừa làm: L1 xong (mục dưới). Chủ game mô tả L2: 3 kiểu quái ẩn (đếm 4 vòng rồi lật, về xấp, xáo, rút 1 + triệu hồi phản ứng miễn phí 1 quái ẩn trên tay; kích hoạt sau 2 vòng (3 nếu triệu hồi ở lượt đối thủ), tác dụng riêng từng quái; bị ngửa mặt thì làm như kiểu 1, máu/chỉ số/trạng thái giữ khi rút lại). Không có vòng triệu hồi, lá bay bình thường, glow trắng, đủ điều kiện kích hoạt thì chớp hồng. Chạy song song luật Biển sâu.
-2. Hiện trạng: không ảnh/video mới. Còn hỏi: danh sách quái từng kiểu, kiểu 2 tác dụng, chi phí triệu hồi phản ứng, điều kiện chớp hồng (cần gộp main trước).
-3. Việc sắp làm: chờ chủ game trả lời + đổi sang Opus 5.5 high rồi mới làm.
+2. Hiện trạng: không ảnh/video mới. Chủ game đã chốt (14/11): mọi quái ẩn đều chịu kiểu 1 (đếm 4 vòng, lật, về xấp, xáo, rút 1, triệu hồi phản ứng miễn phí NHƯNG phải đủ sao + đủ mana, thiếu thì mất lượt free); kiểu 3: bị đánh/skill thì giao tranh xong (kể cả Trả đòn) mới lật và về xấp, máu/chỉ số/debuff giữ; tự lật thì về xấp luôn, không mất máu; kiểu 2 kích hoạt sau 2 vòng thì chớp hồng; dù kiểu nào ngửa mặt cũng về xấp; Biển sâu chạy song song; quái 5 sao chưa cài (NHẮC chủ game khi muốn làm 5 sao). Còn thiếu: danh sách quái từng kiểu, tác dụng kiểu 2.
+3. Việc sắp làm: chờ danh sách quái + đổi sang Opus 5.5 high (gộp main trước phần chớp hồng).
 
 ## Luật L1 ngọc + Trả đòn (14/11, Opus 5.5, nhánh `ccr-01cc3477-yvbwzt`, ĐÃ LÀM, CHƯA áp `main`)
 1. Việc vừa làm: L1 chủ game chốt: sang vòng mới, bên KHÔNG giữ token tấn công +1 mana (cộng vào +1 cũ, nên +2); Trả đòn tốn thêm 1 mana (đánh thường 0→1, skill n→n+1), trả lúc chọn. duel.ts `ROUND_BONUS`, `COUNTER_FEE`, `endTurnCore` (bên giữ token cũ pour 2), `counterAffordable`/`payCounter`; `afterBlow`/`nextCounter` bỏ qua Trả đòn khi thiếu 1 mana (ghi "không đủ 1 gem để Trả đòn"); `pickCounter`, `counterStart` thu phí; kỹ năng Trả đòn thiếu mana (dò trước bằng `useSkillCore` khô) hoặc bị từ chối (`onlyNoted`) thì trả lại phí, vẫn còn được Trả đòn. Nút Trả đòn ghi "(+1 mana)". Máy tự Trả đòn cũng trả phí.
