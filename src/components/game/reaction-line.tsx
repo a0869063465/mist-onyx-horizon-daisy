@@ -217,6 +217,38 @@ function keepOff(flows: FlowSpec[], key: string, a: { x: number; y: number }, b:
 }
 
 /**
+ * P3.2 (chủ game 14/11): the light of Tấn công or a skill while still aiming: from the acting card to the target the
+ * neon sits on, in the colour of the button. It follows the neon as the arrows move it; once the action is queued the
+ * real flow of the chain takes over.
+ */
+export function AimFlow({ from, to, tone }: { from: { x: number; y: number; face: -1 | 0 | 1 }; to: EndSpot; tone: FlowTone }) {
+  const a = toBox(from.x, from.y);
+  const b = toBox(to.x, to.y);
+  const toward = unitDir(b.x - a.x, b.y - a.y);
+  const flow: FlowSpec = {
+    key: "aim",
+    a,
+    b,
+    out: from.face !== 0 ? { x: 0, y: from.face } : toward,
+    into: to.into,
+    tone,
+    done: false,
+    end: null,
+    late: 0,
+    strike: false,
+    delay: 0,
+    land: "flare",
+    moat: moatOf(to),
+    tail: 1,
+  };
+  return (
+    <div className="rx">
+      <FlowCanvas flows={[flow]} />
+    </div>
+  );
+}
+
+/**
  * Icon phản ứng (chủ game 23/10, in place of the fixed reaction line): each action of the wait shows as an icon by
  * the card that makes it (a spell on its side's half, by what it answers), with smoke flowing to what it acts on. A
  * tap shows the icon's notice beside it, coloured as on the notice board; two quick taps open its card (a skill's

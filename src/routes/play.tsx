@@ -181,7 +181,7 @@ import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, LAVA_BOARD_ART, LAVA_SHORT_ART, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
-import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
+import { AimFlow, ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
 import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
@@ -696,13 +696,11 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 
 /** How far an attacker lunges toward what it hits while the other side may answer: as far as it always did, less the
  *  room its reaction icon takes in front of it (chủ game 23/10). */
-const LUNGE_FACE = 0.42;
 /** Dòng chảy đợt 2: how far in front of the row it is aimed at a spread splits, as a share of the gap between the two
  *  front rows (chủ game 29/10: a quarter, so a spell that stops its trunk stands just before it on that side's half),
  *  and the ring round a player's health its light runs into, in % of the board's width. */
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
-const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
 const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
 
@@ -711,38 +709,10 @@ function lungeTravel(base: number, dx: number, dy: number): number {
   return Math.max(0.05, base - ICON_ROOM / dist);
 }
 
-function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
-  const pending = duel.pending;
-  if (duel.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee") || pending.attacker !== uid) return null;
-  const attacker = fieldMon(duel, uid);
-  if (attacker?.horn || attacker?.gaze) return null;
-  if (seaVeiled(duel, viewer, uid)) return null;
-  let fromSide: Side = 0;
-  let fromIndex = -1;
-  for (const side of [0, 1] as const) {
-    const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
-    if (index >= 0) {
-      fromSide = side;
-      fromIndex = index;
-    }
-  }
-  if (fromIndex < 0) return null;
-  const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
-  const foe = (1 - fromSide) as Side;
-  const visualFoe = screenSide(foe, viewer);
-  // Blocked, it lunges toward the blocker, and only a little: the blocker flies out to meet it, and the blow surges
-  // against the blocker's icon in the gap between them (dòng chảy đợt 2).
-  const blocker = duel.hold?.blocker ?? null;
-  const foeIndex = pending.kind === "melee" || blocker
-    ? duel.players[foe].field.findIndex((mon) => mon?.uid === (blocker ?? (pending.kind === "melee" ? pending.defender : "")))
-    : -1;
-  const to = pending.kind === "face" && !blocker ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
-  if (!to) return null;
-  const dx = to.x + to.w / 2 - (from.x + from.w / 2);
-  const dy = to.y + to.h / 2 - (from.y + from.h / 2);
-  let travel = lungeTravel(blocker ? LUNGE_BLOCKED : pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE, dx, dy);
-  if (blocker) travel = Math.min(travel, Math.max(0, blockRoom() / 2) / (Math.abs(dy) || 1));
-  return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
+/** Chủ game 14/11 (P3.1): a normal attack no longer flies up to hit: the attacker stands still like a monster that uses a
+ *  skill (its icon, flow and landing effects tell the story). Only a monster that blocks still flies out (`blockShift`). */
+function attackShift(_duel: Duel, _uid: string, _viewer: Side): { x: number; y: number } | null {
+  return null;
 }
 
 /** What is left of the middle band between the two front rows (in % of the board's height) once a blow's icon and
@@ -3247,7 +3217,6 @@ function PlayPage() {
         if (onOrb) orbLate.add(item.id);
         item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
       }
-      setThrust({ uid: landing.uid, ...landing.thrust });
       if (landing.kind === "face") {
         const struck = ([0, 1] as const).find((side) => duel.players[side].hp < prev.players[side].hp);
         if (struck !== undefined) {
@@ -3260,7 +3229,6 @@ function PlayPage() {
           }), 500);
         }
       }
-      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 50);
       window.setTimeout(() => {
         if (landing.kind === "face") emitFx({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
         else emitFx({ t: "clash", x: landing.at.x, y: landing.at.y });
@@ -8109,6 +8077,26 @@ function PlayPage() {
             </>
           ) : null)}
         {drag && snap ? <SnapTop keyName={snap} x={drag.x} y={drag.y} /> : null}
+        {(() => {
+          // P3.2: the neon's target already shows its light while Tấn công or a skill is aimed (not for drags or spells).
+          if (!duel || !aimLit || drag || snap || (aim?.kind !== "attack" && aim?.kind !== "skill")) return null;
+          const card = cardSpot(aim.uid);
+          if (!card) return null;
+          const foeSide = (viewer === 0 ? 1 : 0) as Side;
+          let end: FlowEnd | null = null;
+          if (aimLit === "face") end = { face: foeSide };
+          else {
+            const [sideText, slotText] = aimLit.split("-");
+            const uid = duel.players[Number(sideText) as Side]?.field[Number(slotText)]?.uid;
+            if (uid) end = { uid };
+          }
+          const from = { x: card.x, y: card.top ? card.y + card.h / 2 : card.y - card.h / 2 };
+          const to = end ? flowEnd(end, from) : null;
+          if (!to) return null;
+          const kind = aimKind();
+          const tone = kind === "attack" ? "red" : aim.kind === "skill" && allySkill(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "") ? "green" : "blue";
+          return <AimFlow from={{ ...from, face: card.top ? 1 : -1 }} to={to} tone={tone} />;
+        })()}
         {padBox && aimLit && !drag && !snap && (aim?.kind === "attack" || aim?.kind === "skill") ? (
           <AimPad
             box={padBox}

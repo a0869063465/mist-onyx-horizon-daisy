@@ -14042,3 +14042,20 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   .hand-arrow, .draw-hint, .stage-opts .row-arrow::before, .stage-opts .act3d::before { animation: none; }
 }
 .fuse3d.is-reveal .fuse3d-big .socket.is-name, .fuse3d.is-rows .fuse3d-big .socket.is-name, .fuse3d.is-land .fuse3d-big .socket.is-name { opacity: 0; transition: opacity 0.2s; }
+
+/* P3.3 (chủ game 14/11): mục tiêu hợp lệ chớp glow 1,5 giây: xanh lam = quái mình (buff chọn đồng minh), đỏ = quái địch.
+   Ô triệu hồi trống giữ kiểu cũ; ô đang được chọn (is-snap) giữ neon sáng đứng yên. */
+@keyframes target-blue {
+  0%, 100% { box-shadow: 0 0 0 2px #00122b, 0 0 0 3.5px #4aa8ff, 0 0 0.5rem 0.1rem color-mix(in srgb, #2f8dff 45%, transparent); }
+  50% { box-shadow: 0 0 0 2px #00122b, 0 0 0 4px #9fd0ff, 0 0 1.5rem 0.55rem color-mix(in srgb, #2f8dff 85%, transparent); }
+}
+@keyframes target-red {
+  0%, 100% { box-shadow: 0 0 0 2px #1a0000, 0 0 0 3.5px #ff4a4a, 0 0 0.5rem 0.1rem color-mix(in srgb, #ff2a2a 45%, transparent); }
+  50% { box-shadow: 0 0 0 2px #1a0000, 0 0 0 4px #ffa0a0, 0 0 1.5rem 0.55rem color-mix(in srgb, #ff2a2a 85%, transparent); }
+}
+.slot.is-hot:not(.is-summon):not(.is-snap) { background: transparent; outline: 0; border-radius: 0.6rem; }
+.slot[class*="slot-y"].is-hot:not(.is-summon):not(.is-snap) { animation: target-blue 1.5s ease-in-out infinite; }
+.slot[class*="slot-f"].is-hot:not(.is-summon):not(.is-snap) { animation: target-red 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-hot:not(.is-summon):not(.is-snap) { animation: none !important; }
+}

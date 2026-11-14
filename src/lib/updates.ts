@@ -1011,6 +1011,9 @@ export const PENDING_NOTES: string[] = [
   "Triệu hồi: kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng), lá hiện giữa sân với lựa chọn Triệu hồi, Hiến tế, Dung hợp và 2 mũi tên chọn hàng, rồi lá bay xuống ô.",
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
+  "Quái đánh giáp lá cà không bay lên nữa, đứng yên như quái dùng skill. Quái chặn vẫn lao ra.",
+  "Kéo bài hoặc bấm Tấn công, skill: mục tiêu hợp lệ chớp glow 1,5 giây, xanh lam với quái mình, đỏ với quái địch.",
+  "Bấm Tấn công hoặc skill: mục tiêu đang sáng neon hiện sẵn dòng chảy từ quái đang dùng, màu theo nút (Tấn công đỏ, skill xanh), đổi mục tiêu thì dòng chảy đổi theo.",
 ];
 
 function remarkOf(notes: string[]) {
