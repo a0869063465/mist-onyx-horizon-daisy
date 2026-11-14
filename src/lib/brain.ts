@@ -172,7 +172,8 @@ function moved(prev: Duel, next: Duel): boolean {
     next.gemWarn !== prev.gemWarn ||
     next.preyAsk !== prev.preyAsk ||
     next.birdAsk !== prev.birdAsk ||
-    next.plumeAsk !== prev.plumeAsk
+    next.plumeAsk !== prev.plumeAsk ||
+    next.lurkAsk !== prev.lurkAsk
   );
 }
 
@@ -236,6 +237,7 @@ function askOf(state: Duel): Side | null {
   if (state.gemWarn != null) return state.gemWarn;
   if (state.parley && state.step === "main") return null;
   if (state.swap) return state.swap.side;
+  if (state.lurkAsk) return state.lurkAsk.side;
   if (state.upkeep || state.legs || state.preyAsk || state.plumeAsk) return state.turn;
   return null;
 }

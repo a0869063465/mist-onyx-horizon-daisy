@@ -89,6 +89,7 @@ function seen(duel: Duel, viewer: Side, side: Side, id: string | null, uid: stri
   if (mons.length === 0) return { side, id, uid, veil: "none" };
   if (owner.hats) return { side, id: null, uid, veil: "hat" };
   if (owner.sea && SEA.has(id) && mons.some((mon) => mon && !mon.shown && !mon.cage)) return { side, id: null, uid, veil: "hidden" };
+  if (mons.some((mon) => mon?.lurk)) return { side, id: null, uid, veil: "hidden" };
   return { side, id, uid, veil: "none" };
 }
 

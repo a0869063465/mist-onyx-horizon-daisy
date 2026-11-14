@@ -175,6 +175,11 @@ import {
   boulder,
   gearCard,
   backSlot,
+  lurking,
+  lurkReady,
+  lurkChoices,
+  answerLurk,
+  wakeLurk,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
@@ -202,7 +207,7 @@ function seaVeiled(duel: Duel, viewer: Side, uid: string): boolean {
   for (const side of [0, 1] as const) {
     const mon = duel.players[side].field.find((unit) => unit?.uid === uid);
     if (!mon) continue;
-    return side !== viewer && Boolean(duel.players[side].sea && SEA_IDS.has(mon.cardId) && !mon.shown);
+    return side !== viewer && (Boolean(duel.players[side].sea && SEA_IDS.has(mon.cardId) && !mon.shown) || lurking(mon));
   }
   return false;
 }
@@ -266,6 +271,10 @@ function maskHats(text: string, duel: Duel, viewer: Side): string {
 }
 
 function veilNotice(text: string, duel: Duel, viewer: Side): string {
+  return maskLurk(veilSea(text, duel, viewer), duel, viewer);
+}
+
+function veilSea(text: string, duel: Duel, viewer: Side): string {
   text = maskHats(text, duel, viewer);
   const foe = duel.players[viewer === 0 ? 1 : 0];
   if (foe.field.some((mon) => mon && mon.cardId === "chien-binh-lan-khuat" && (mon.shown ?? 0) > 0)) {
@@ -304,6 +313,15 @@ function maskHidden(text: string, duel: Duel, viewer: Side): string {
   for (const name of [...SEA_NAMES].sort((a, b) => b.length - a.length)) {
     if (onFoe.has(name)) out = out.split(name).join("quái thú ẩn mình");
   }
+  return out;
+}
+
+/** Luật L2: quái ẩn đang úp trên sân đối thủ không lộ tên trong thông báo. */
+function maskLurk(text: string, duel: Duel, viewer: Side): string {
+  const foe = duel.players[viewer === 0 ? 1 : 0];
+  const names = [...new Set(foe.field.filter((mon) => mon && lurking(mon)).map((mon) => fieldName(mon!)))].filter(Boolean);
+  let out = text;
+  for (const name of names.sort((a, b) => b.length - a.length)) out = out.split(name).join("quái thú ẩn mình");
   return out;
 }
 
@@ -1393,7 +1411,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
       const was = before.field[index];
       const now = after.field[index];
       const spot = SLOT_POS[screenSide(side, viewer)][index];
-      if (!was && now) pops.push(`${side}-${index}`);
+      if (!was && now && !now.lurk) pops.push(`${side}-${index}`);
       if (was && now && now.uid === was.uid && now.hp !== was.hp) {
         const delta = now.hp - was.hp;
         const beam = delta < 0 ? laserOf(`mon:${was.uid}`) : undefined;
@@ -3068,7 +3086,7 @@ function PlayPage() {
       for (const side of [0, 1] as const) {
         const known = new Set(prev.players[side].field.map((mon) => mon?.uid));
         duel.players[side].field.forEach((mon, index) => {
-          if (!mon || known.has(mon.uid) || (monsterCard(mon.cardId)?.stars ?? 0) < 4) return;
+          if (!mon || known.has(mon.uid) || mon.lurk || (monsterCard(mon.cardId)?.stars ?? 0) < 4) return;
           const spot = SLOT_POS[screenSide(side, viewerNow)][index];
           if (spot) emitFx({ t: "rite", x: spot.x, y: spot.y, kind: "holy" });
         });
@@ -5344,7 +5362,7 @@ function PlayPage() {
       fieldTap.current = null;
       const holder = side === viewer ? you : foe;
       setAim(null);
-      const hidden = side !== viewer && holder.sea && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken");
+      const hidden = side !== viewer && ((holder.sea && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon));
       setLook(hidden ? { name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." } : { ...fieldLook(mon, holder.stars), uid: mon.uid });
       return;
     }
@@ -5390,7 +5408,7 @@ function PlayPage() {
       return;
     }
     const owner = side === viewer ? you : foe;
-    const veiled = side !== viewer && owner.sea && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken");
+    const veiled = side !== viewer && ((owner.sea && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon));
     if (veiled) {
       setLook({ name: "quái thú ẩn mình", text: "Không thấy kỹ năng hay chỉ số." });
       return;
@@ -6806,6 +6824,40 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
+        {duel.lurkAsk && duel.lurkAsk.side === viewer && !replay
+          ? (() => {
+              const choices = lurkChoices(duel, viewer);
+              if (choices.length === 0) {
+                return (
+                  <button type="button" className="lurk-back" onClick={() => apply(answerLurk(duel, null))}>
+                    <p className="lurk-none">{tr("Không có quái ẩn trên tay để thay thế")}</p>
+                  </button>
+                );
+              }
+              return (
+                <div className="lurk-back">
+                  <div className="lurk-panel">
+                    <h3>{tr("Triệu hồi phản ứng 1 quái ẩn")}</h3>
+                    <div className="lurk-grid">
+                      {choices.map((row) => {
+                        const card = monsterCard(row.id);
+                        if (!card) return null;
+                        return (
+                          <button key={`${row.id}-${row.index}`} type="button" className="lurk-card" disabled={!row.ok} onClick={() => apply(answerLurk(duel, row.index))}>
+                            <CardFace monster={card} hand />
+                            {row.why ? <small>{tr(row.why)}</small> : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button type="button" className="lurk-skip" onClick={() => apply(answerLurk(duel, null))}>
+                      {tr("Bỏ qua")}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()
+          : null}
         {duel.recall && duel.recall.side === viewer ? (
           <div className="overlay is-ask">
             <div className="ask-card">
@@ -7359,13 +7411,13 @@ function PlayPage() {
               shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
               thrust={Boolean(mon && thrust?.uid === mon.uid)}
               motion={motion}
-              veil={Boolean(duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken"))}
+              veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
               decoy={Boolean(mon && !mon.cage && mon.cardId === "chien-binh-lan-khuat" && (mon.shown ?? 0) > 0)}
               allies={duel.players[side].field}
               prime={!!mon && isPrime(duel, mon, side)}
               lockFlash={!!mon && lockFlash === mon.uid}
-              forecast={mon && !(duel.players[side].sea && !mon.cage && !mon.shown && SEA_KINDS.includes(mon.cardId)) && !(duel.players[side].hats && mon.cardId !== "mu") ? sight?.mons.get(mon.uid) : undefined}
+              forecast={mon && !lurking(mon) && !(duel.players[side].sea && !mon.cage && !mon.shown && SEA_KINDS.includes(mon.cardId)) && !(duel.players[side].hats && mon.cardId !== "mu") ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
               onUnit={onUnit}
             />
@@ -7425,7 +7477,8 @@ function PlayPage() {
               allies={you.field}
               prime={!!mon && isPrime(duel, mon, viewer)}
               lockFlash={!!mon && lockFlash === mon.uid}
-              alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer))}
+              alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer) || (lurkReady(mon) && duel.turn === viewer && duel.step === "main"))}
+              lurk={!!mon && lurking(mon)}
               ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               block={!!mon && !frozen && canIntercept && mon.row !== "back" && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
@@ -8596,6 +8649,10 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       });
     }
   }
+  // Luật L2: quái ẩn kiểu 2 đủ vòng chờ thì chớp hồng, bấm Kích hoạt.
+  if (attackable && !riposte && lurkReady(mon) && duel.step === "main" && duel.turn === side && mon.stun <= 0 && (mon.chain ?? 0) === 0) {
+    y.unshift({ key: "lurk-wake", label: "Kích hoạt", go: () => apply(wakeLurk(duel, uid)) });
+  }
   const strikeShown = attackable && sword && !noAttack && (visibleStats(mon, you.field).atk > 0 || boulder(mon));
   if (!strikeShown && y.length === 0 && z.length === 0) return null;
 
@@ -9067,6 +9124,7 @@ function BoardSlot({
   ready = false,
   block = false,
   alertColor,
+  lurk = false,
   veil = false,
   mask = false,
   decoy = false,
@@ -9109,6 +9167,8 @@ function BoardSlot({
   /** Chủ game 14/11: my monster that can block the blow now, yellow breathing glow. */
   block?: boolean;
   alertColor?: string;
+  /** Luật L2: quái ẩn của mình, glow trắng đứng yên. */
+  lurk?: boolean;
   veil?: boolean;
   mask?: boolean;
   decoy?: boolean;
@@ -9122,7 +9182,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert ? " is-ready" : ""}${block && !alert ? " is-block" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}) };

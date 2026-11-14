@@ -14042,3 +14042,16 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   .hand-arrow, .draw-hint, .stage-opts .row-arrow::before, .stage-opts .act3d::before { animation: none; }
 }
 .fuse3d.is-reveal .fuse3d-big .socket.is-name, .fuse3d.is-rows .fuse3d-big .socket.is-name, .fuse3d.is-land .fuse3d-big .socket.is-name { opacity: 0; transition: opacity 0.2s; }
+
+/* Luật L2 quái ẩn (chủ game 14/11): quái ẩn của mình glow trắng đứng yên; đủ vòng kích hoạt thì chớp hồng (is-alert). */
+.slot.is-lurk { filter: drop-shadow(0 0 1.5px #ffffff) drop-shadow(0 0 5px #ffffff) drop-shadow(0 0 10px rgba(255, 255, 255, 0.75)); }
+.lurk-back { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(4, 6, 12, 0.78); padding: 16px; }
+.lurk-panel { width: min(92vw, 26rem); max-height: 80vh; overflow: auto; background: linear-gradient(180deg, #1b2236, #0e1220); border: 1px solid #c9a34f; border-radius: 14px; padding: 14px; color: #f3ead2; text-align: center; }
+.lurk-panel h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.lurk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 0.8rem; }
+.lurk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; color: inherit; padding: 0; font-size: 0.72rem; }
+.lurk-card .card { width: 100%; }
+.lurk-card[disabled] { opacity: 0.4; }
+.lurk-card small { color: #ff9a9a; }
+.lurk-skip { padding: 0.5rem 1.4rem; border-radius: 999px; border: 1px solid #8a93a8; background: #222a3e; color: #f3ead2; }
+.lurk-none { color: #f3ead2; font-size: 1.05rem; text-align: center; max-width: 80vw; }
