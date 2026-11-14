@@ -483,6 +483,11 @@ function emptyPlayer(monsters: string[], spells: string[], fake: string[] = []):
   return player;
 }
 
+/** Luật L1 (chủ game 14/11): mana thêm cho bên không giữ token tấn công lúc sang vòng mới. */
+export const ROUND_BONUS = 1;
+/** Luật L1 (chủ game 14/11): Trả đòn tốn thêm chừng này mana (đánh thường 0 → 1, kỹ năng n → n + 1). */
+export const COUNTER_FEE = 1;
+
 function pour(orb: number, flask: number, gain: number): { orb: number; flask: number } {
   const pool = orb + Math.min(1, Math.max(0, flask)) + gain;
   const nextOrb = Math.min(3, pool);
@@ -3803,6 +3808,7 @@ function afterBlow(before: Duel, resolved: Duel, victimUid: string | null, attac
   if (!frontCounter(victim, attacker)) return resolved;
   // Đá tảng: đòn đánh qua lại đã xảy ra cùng lúc, không Trả đòn riêng nữa.
   if (boulder(victim) || boulder(attacker)) return resolved;
+  if (!counterAffordable(resolved, vicSide)) return note(resolved, `${cardOf(victim).name} không đủ ${COUNTER_FEE} gem để Trả đòn.`, "info");
   const asked = note({ ...resolved, counterAsk: { uid: victim.uid, from: attackerUid }, turn: vicSide }, `${cardOf(victim).name} được Trả đòn.`, "info");
   return asked.mode === "ai" && vicSide === 1 ? pickCounter(asked, "phys") : asked;
 }
@@ -3845,6 +3851,10 @@ function nextCounter(state: Duel): Duel {
     if (side === null || side === atkSide) continue;
     const victim = state.players[side].field.find((mon) => mon?.uid === uid) ?? null;
     if (!frontCounter(victim, attacker)) continue;
+    if (!counterAffordable(state, side)) {
+      state = note(state, `${cardOf(victim).name} không đủ ${COUNTER_FEE} gem để Trả đòn.`, "info");
+      continue;
+    }
     const asked = note(
       { ...state, counterAsk: { uid, from: queue.from }, counterQueue: { from: queue.from, uids: queue.uids.slice(index + 1) }, turn: side },
       `${cardOf(victim).name} được Trả đòn.`,
@@ -3855,14 +3865,29 @@ function nextCounter(state: Duel): Duel {
   return { ...state, counterQueue: null };
 }
 
+/** Đủ mana cho phí Trả đòn (luật L1) không. */
+function counterAffordable(state: Duel, side: Side): boolean {
+  return state.players[side].orb >= COUNTER_FEE;
+}
+
+/** Thu phí Trả đòn (luật L1, chủ game 14/11): trả ngay lúc chọn, thành công hay không cũng mất. */
+function payCounter(state: Duel, side: Side): Duel | null {
+  const paid = pay(state.players[side], COUNTER_FEE);
+  return paid ? patch(state, side, paid) : null;
+}
+
 /** Trả đòn bằng đòn đánh thường: gây sát thương vật lý bằng công của quái lên kẻ vừa ra đòn. */
 export function pickCounter(state: Duel, mode: "phys"): Duel {
   const ask = state.counterAsk;
   if (!ask || mode !== "phys") return state;
-  const side = ownerSide(state, ask.uid);
+  const owner = ownerSide(state, ask.uid);
   const fromSide = ownerSide(state, ask.from);
   const done = (next: Duel) => nextCounter({ ...next, counterAsk: null, skipped: [false, false] as [boolean, boolean] });
-  if (side === null || fromSide === null) return done(state);
+  if (owner === null || fromSide === null) return done(state);
+  const side = owner;
+  const charged = payCounter(state, side);
+  if (!charged) return note(state, `Trả đòn cần ${COUNTER_FEE} gem.`);
+  state = charged;
   const mon = state.players[side].field.find((unit) => unit?.uid === ask.uid) ?? null;
   const foe = state.players[fromSide];
   const attacker = foe.field.find((unit) => unit?.uid === ask.from) ?? null;
@@ -5995,7 +6020,13 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
   if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   const counter = counterStart(state, uid);
+  if (counter && "refused" in counter) return counter.refused;
   if (counter) {
+    // Luật L1: phí Trả đòn đã thu; kỹ năng sẽ hụt vì thiếu mana lúc nổ thì từ chối ngay, trả lại phí.
+    const dry = useSkillCore(counter.state, uid, targetUid, skillIndex, true, extra ?? "hit", true);
+    if (dry.players === counter.state.players && !dry.plumeAsk && /Cần \d+ (gem|mana)/.test(dry.live)) {
+      return { ...state, live: dry.live, log: dry.log, stepNo: dry.stepNo, fx: dry.fx, tone: dry.tone };
+    }
     const next = declareSkillCore(counter.state, uid, targetUid, skillIndex, extra);
     if (next === counter.state || (next.players === counter.state.players && next.pending === counter.state.pending)) return next === counter.state ? state : { ...state, live: next.live, log: next.log, stepNo: next.stepNo };
     return counterEnd(traceSkill(state, next, uid, targetUid, skillIndex));
@@ -6023,14 +6054,28 @@ function actGate(state: Duel, uid: string, skillIndex: number): Duel | null {
 }
 
 /** Trả đòn bằng kỹ năng: quái đang được Trả đòn dùng kỹ năng dù đã mệt hay không phải vòng của mình. */
-function counterStart(state: Duel, uid: string): { state: Duel } | null {
+function counterStart(state: Duel, uid: string): { state: Duel } | { refused: Duel } | null {
   const ask = state.counterAsk;
   if (!ask || ask.uid !== uid) return null;
   const side = ownerSide(state, uid);
   if (side === null) return null;
-  const player = state.players[side];
+  // Luật L1: kỹ năng dùng để Trả đòn tốn thêm 1 mana, thu trước khi kỹ năng tính mana của nó.
+  const charged = payCounter(state, side);
+  if (!charged) return { refused: note(state, `Trả đòn cần thêm ${COUNTER_FEE} gem.`) };
+  const player = charged.players[side];
   const field = player.field.map((mon) => (mon?.uid === uid ? { ...mon, dim: false } : mon));
   return { state: patch({ ...state, counterAsk: null, countering: side, turn: side }, side, { ...player, field }) };
+}
+
+/** `after` differs from `before` only in what a refusal note writes. */
+function onlyNoted(before: Duel, after: Duel): boolean {
+  const quiet = new Set(["live", "log", "stepNo", "seq", "fx", "tone", "starPing"]);
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<keyof Duel>;
+  for (const key of keys) {
+    if (quiet.has(key as string)) continue;
+    if (before[key] !== after[key]) return false;
+  }
+  return true;
 }
 
 /** Trả đòn xong (hoặc kỹ năng đang chờ phản ứng): xong hẳn thì quyền ở lại bên vừa Trả đòn. */
@@ -7995,9 +8040,15 @@ export function useSkill(state: Duel, uid: string, targetUid: string | null, ski
   const caster = state.step === "main" ? state.players[state.turn].field.find((unit) => unit?.uid === uid) ?? null : null;
   if (caster && waitSkill(caster.cardId, skillIndex)) return declareSkill(state, uid, targetUid, skillIndex, extra);
   const counter = counterStart(state, uid);
+  if (counter && "refused" in counter) return counter.refused;
   if (counter) {
     const next = run(counter.state);
-    return next === counter.state ? state : counterEnd(next);
+    if (next === counter.state) return state;
+    // The skill refused (only a note, nothing moved): the Trả đòn fee goes back too.
+    if (onlyNoted(counter.state, next)) {
+      return { ...state, live: next.live, log: next.log, stepNo: next.stepNo, fx: next.fx, tone: next.tone };
+    }
+    return counterEnd(next);
   }
   const gate = actGate(state, uid, skillIndex);
   if (gate) return gate;
@@ -9824,7 +9875,8 @@ function endTurnCore(state: Duel): Duel {
   const usedRelease = Boolean(next.gemUsed?.[foe]);
   const warnedRelease = Boolean(next.gemWarned?.[foe]);
   const staying = next.players[side];
-  const stayMana = pour(staying.orb, staying.flask, 1);
+  // Luật L1 (chủ game 14/11): vòng mới thuộc người kia thì bên này được thêm 1 mana, cộng vào 1 mana mỗi vòng.
+  const stayMana = pour(staying.orb, staying.flask, 1 + ROUND_BONUS);
   next = patch(next, side, { ...staying, ...stayMana });
   next = patch(next, foe, {
     ...incoming,

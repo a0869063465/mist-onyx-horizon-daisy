@@ -8669,7 +8669,7 @@ function UnitActs({ rows, box, soloRed, riposte = false, onSlide }: { rows: Unit
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
     <div className={`unit-acts${riposte ? " is-riposte" : ""}`} style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
-      {riposte ? <p className="riposte-title">{tr("Trả đòn")}</p> : null}
+      {riposte ? <p className="riposte-title">{tr("Trả đòn")} <small>{tr("(+1 mana)")}</small></p> : null}
       {rows.map((row) => (
         <button
           key={row.key}

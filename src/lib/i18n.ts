@@ -371,6 +371,7 @@ const PAIRS: Array<[string, string]> = [
   ["Hết lượt", "End turn"],
   ["Rút bài", "Draw"],
   ["Trả đòn", "Strike back"],
+  ["(+1 mana)", "(+1 mana)"],
   ["Bài", "Cards"],
   ["Hết bài trên tay", "No cards in hand"],
   ["Hãy Trả đòn trước.", "Strike back first."],

@@ -75,7 +75,7 @@ test("lượt đầu được tấn công; đánh xong quyền sang đối thủ
   assert.ok(done.players[1].hp < s.players[1].hp);
 });
 
-test("người không giữ token không tấn công được; cả hai bỏ lượt thì hết vòng, cả hai +1 mana", () => {
+test("người không giữ token không tấn công được; cả hai bỏ lượt thì hết vòng, cả hai +1 mana, bên không giữ token +1 nữa (L1)", () => {
   let s = board({ 0: ["khong-lo-mot-mat"] }, { 0: ["khong-lo-mot-mat"] });
   s = { ...s, players: s.players.map((p) => ({ ...p, orb: 0, flask: 0 })) };
   const passed = D.endTurn(s);
@@ -87,9 +87,42 @@ test("người không giữ token không tấn công được; cả hai bỏ lư
   const closed = D.endTurn(passed);
   assert.equal(closed.round, 1, "token sang người kia");
   assert.equal(closed.turn, 1);
-  assert.equal(closed.players[0].orb, 1);
+  assert.equal(closed.players[0].orb, 2, "vòng mới của bên kia: bên này +1 +1");
   assert.equal(closed.players[1].orb, 1);
   assert.equal(D.attackFace(closed, uid(closed, 1, 0)).pending?.kind, "face");
+});
+
+test("L1: Trả đòn bằng đánh thường tốn 1 mana; không đủ mana thì không được hỏi Trả đòn", () => {
+  const make = (orb) => {
+    let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 10, maxHp: 10 }] }, { 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 20, maxHp: 20 }] });
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? 3 : orb })) };
+    return D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  };
+  const open = make(2);
+  assert.equal(open.counterAsk?.uid, uid(open, 1, 0));
+  const hit = D.pickCounter(open, "phys");
+  assert.equal(hit.players[1].orb, 1, "trả 1 mana");
+  const broke = make(0);
+  assert.equal(broke.counterAsk ?? null, null, "0 mana thì không Trả đòn");
+  assert.match(broke.live, /không đủ/);
+});
+
+test("L1: Trả đòn bằng kỹ năng tốn thêm 1 mana (Hơi thở rồng 1 → 2)", () => {
+  const make = (orb) => {
+    let s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 0, mdef: 0, hp: 20, maxHp: 20 }] }, { 0: ["rong-con", { hp: 20, maxHp: 20, def: 0 }] });
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? 3 : orb })) };
+    return D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  };
+  const open = make(3);
+  assert.equal(open.counterAsk?.uid, uid(open, 1, 0));
+  const declared = D.declareSkill(open, uid(open, 1, 0), uid(open, 0, 0), 0);
+  assert.equal(declared.step, "respond", declared.live);
+  const settled = D.passResponse(declared);
+  assert.equal(settled.players[1].orb, 1, "3 - (1 + 1)");
+  const poor = make(1);
+  const refused = D.declareSkill(poor, uid(poor, 1, 0), uid(poor, 0, 0), 0);
+  assert.equal(refused.players[1].orb, 1, "thiếu mana cho kỹ năng: trả lại phí");
+  assert.equal(refused.counterAsk?.uid, uid(poor, 1, 0), "vẫn còn được Trả đòn bằng đánh thường");
 });
 
 test("bỏ lượt rồi đối thủ hành động thì đếm bỏ lượt lại từ đầu", () => {
