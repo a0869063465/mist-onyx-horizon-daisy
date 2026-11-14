@@ -1007,6 +1007,7 @@ export const PENDING_NOTES: string[] = [
   "Mô tả skill tự chèn icon keyword: trước cụm \"giảm N thủ, công…\" là Debuff, trước cụm \"gây N sát thương\" là Sát thương. Icon Debuff đổi sang mũi tên chỉ xuống. Bỏ icon keyword ở đầu tên skill.",
   "Sau tên skill ghi keyword dạng (Sát thương, Debuff), mỗi chữ cùng màu glow keyword.",
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
+  "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
 ];
 
 function remarkOf(notes: string[]) {

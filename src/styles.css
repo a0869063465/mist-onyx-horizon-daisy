@@ -3433,7 +3433,7 @@ button.trail-dot.is-on {
   animation: none;
 }
 .hand-card.is-alert > .card, .face-pile.is-alert > img, .face-pile.is-alert > .deck-pile, .slot.is-alert {
-  animation: react-breathe 1.5s ease-in-out infinite;
+  animation: react-breathe 1s ease-in-out infinite;
 }
 @keyframes react-breathe {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--alert-color) 80%, transparent)); }
@@ -13918,4 +13918,16 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .slot.is-ready:not(.is-lunging):not(.is-thrust) { animation: ready-breathe 1.5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .slot.is-ready { animation: none; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+}
+
+/* Chủ game 14/11: phản ứng chớp hồng nhịp 1 giây (react-breathe ở trên); quái chặn được = glow vàng 1 giây; phép dùng được ở lượt chính = chớp xanh lá 1,5 giây. */
+@keyframes block-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #ffd24a) drop-shadow(0 0 5px #ffd24a) drop-shadow(0 0 10px rgba(255, 210, 74, 0.8)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 3px #fff1b8) drop-shadow(0 0 12px #ffd24a) drop-shadow(0 0 26px #ffd24a) drop-shadow(0 0 34px rgba(255, 210, 74, 0.9)); }
+}
+.slot.is-block:not(.is-lunging):not(.is-thrust) { animation: block-breathe 1s ease-in-out infinite; }
+.hand-card.is-castable > .card { animation: ready-breathe 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-block { animation: none; filter: drop-shadow(0 0 1.5px #ffd24a) drop-shadow(0 0 5px #ffd24a) drop-shadow(0 0 10px rgba(255, 210, 74, 0.8)); }
+  .hand-card.is-castable > .card { animation: none; }
 }

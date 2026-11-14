@@ -34,7 +34,7 @@ import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { AimPad, type PadBox, type PadDir } from "@/components/game/aim-pad";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
 import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
-import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
+import { spellKind, spellSpeed } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
@@ -1256,14 +1256,9 @@ function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
 
 /** Glow colour of a monster's reaction skill: the rim colour of that skill (reaction skills are mostly the pink spell kind). */
 const SKILL_TONES: Record<string, string> = { active: "#2f9cf0", passive: "#a56cf0", risk: "#e8352c", spell: "#ff4fa6", note: "#e8c14a" };
-function reactTone(cardId: string): string {
-  const list = SKILL_BOOK[cardId] ?? [];
-  // Thế thân là skill siêu tốc (chủ game 03/11): glow trắng.
-  if (cardId === "the-than-cua-shien") return "#e9f3ff";
-  // Khiên thú sĩ cũng là skill siêu tốc (chủ game 04/11): glow trắng.
-  if (cardId === "chien-si-gam-nham") return "#e9f3ff";
-  const pick = list.find((entry) => entry.kind === "spell") ?? list[0];
-  return SKILL_TONES[pick?.kind ?? "spell"];
+function reactTone(_cardId: string): string {
+  // Chủ game 14/11: mọi quái phản ứng chớp hồng (cả Thế thân, Khiên thú sĩ).
+  return SKILL_TONES.spell;
 }
 
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
@@ -7309,6 +7304,7 @@ function PlayPage() {
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer))}
               ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
+              block={!!mon && !frozen && canIntercept && mon.row !== "back" && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
               forecast={mon ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
@@ -7452,7 +7448,7 @@ function PlayPage() {
                       className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
-                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": standCard ? "#e9f3ff" : SKILL_TONES.spell } as CSSProperties) : undefined}
+                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
                       onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}
                       onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                       onPointerMove={move}
@@ -7497,7 +7493,7 @@ function PlayPage() {
                   <button
                     type="button"
                     className={`hand-card press is-spell${open || picked ? " is-open" : ""}${ready ? " is-alert" : ""}${castable ? " is-castable" : ""}${drag?.kind === "spell" && drag.index === index ? " is-ghosting" : ""}`}
-                    style={ready || castable ? ({ "--alert-color": speedTone(id) } as CSSProperties) : undefined}
+                    style={ready ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
                     onClick={() => openHand("spell", index, id)}
                     onPointerDown={(event) => begin(event, { kind: "spell", index, spellId: id })}
                     onPointerMove={move}
@@ -8800,6 +8796,7 @@ function BoardSlot({
   hpOverride,
   alert = false,
   ready = false,
+  block = false,
   alertColor,
   veil = false,
   mask = false,
@@ -8840,6 +8837,8 @@ function BoardSlot({
   alert?: boolean;
   /** Chủ game 14/11: my monster that can still act in my attack round, green breathing glow like a summonable hand card. */
   ready?: boolean;
+  /** Chủ game 14/11: my monster that can block the blow now, yellow breathing glow. */
+  block?: boolean;
   alertColor?: string;
   veil?: boolean;
   mask?: boolean;
@@ -8854,7 +8853,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert ? " is-ready" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert ? " is-ready" : ""}${block && !alert ? " is-block" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}) };
