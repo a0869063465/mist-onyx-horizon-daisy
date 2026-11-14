@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { CastShow } from "@/components/game/cast-show";
+import { speedTone } from "@/lib/spell-kinds";
 import { Glyph, Rim } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
@@ -294,7 +296,8 @@ export function ReactionLine({
       if (!known) {
         landed = orb;
         born.current.set(orb.id, now);
-        if (orb.kind !== "attack") playLine("orb");
+        if (orb.kind === "spell" && orb.spell && cardOf(orb)) playLine("cast");
+        else if (orb.kind !== "attack") playLine("orb");
       }
       if (orb.end && orb.end !== was) ended.push(orb);
     }
@@ -567,7 +570,20 @@ export function ReactionLine({
           {hint}
         </p>
       ) : null}
-      {shown && showAt ? (
+      {shown && showAt && shown.kind === "spell" && shown.spell ? (
+        // K3 (chủ game 14/11): lá phép hiện to giữa sân trên vòng phép, rồi thu vào icon của nó.
+        <CastShow
+          key={shown.id}
+          tone={speedTone(shown.spell)}
+          to={{ dx: showAt.x - 50, dy: showAt.y - SHOW_Y, shrink: ICON / 38 }}
+          onEnd={() => {
+            showing.current = null;
+            setShow(null);
+          }}
+        >
+          {cardOf(shown)}
+        </CastShow>
+      ) : shown && showAt ? (
         <div
           key={shown.id}
           className="rx-show"

@@ -684,7 +684,7 @@ export function playIntro(cue: IntroCue, delay = 0) {
  * a spell or a skill lands on the line, a bright swell as an orb fires at its target, and a falling puff as an answer
  * stops one. Quiet, under the effects volume, so they sit under the spells' own sounds.
  */
-export type LineCue = "orb" | "fire" | "fizzle";
+export type LineCue = "orb" | "fire" | "fizzle" | "cast";
 
 export function playLine(cue: LineCue, delay = 0) {
   whenReady(() => {
@@ -693,7 +693,15 @@ export function playLine(cue: LineCue, delay = 0) {
     const vol = fxLoud();
     if (vol <= 0) return;
     const t = audio.currentTime + delay;
-    if (cue === "orb") {
+    if (cue === "cast") {
+      // K3: lá phép hiện giữa sân: hơi gió dâng, hợp âm vòng phép, chuông loé và vòng sóng toả ra.
+      noiseBurst(audio, t, 0.45, 500, 4200, 0.1 * vol);
+      for (const freq of [293.7, 440, 587.3]) pad(audio, t + 0.04, freq, 1.1, 0.03 * vol);
+      for (const [freq, at] of [[1174.7, 0.16], [1480, 0.22], [1760, 0.28], [2349.3, 0.34]] as const) bell(audio, t + at, freq, 0.9, 0.035 * vol);
+      shimmer(audio, t + 0.2, 0.9, 0.03 * vol);
+      noiseBurst(audio, t + 0.42, 0.4, 2600, 500, 0.07 * vol);
+      thump(audio, t + 0.42, 0.22 * vol);
+    } else if (cue === "orb") {
       noiseBurst(audio, t, 0.3, 700, 3000, 0.07 * vol);
       bell(audio, t + 0.06, 1318.5, 0.55, 0.022 * vol);
       bell(audio, t + 0.11, 1975.5, 0.45, 0.016 * vol);
@@ -765,7 +773,7 @@ export function playEnd(cue: EndCue, delay = 0) {
  * Attacks landing (chủ game 22/10, after LoR, made here): on a player, an electric crack where the blow hits, a zip as
  * the lightning runs along the edge, and a burst as it reaches the HP; two monsters colliding ring like steel.
  */
-export type HitCue = "zap" | "clash";
+export type HitCue = "zap" | "clash" | "dash" | "ram";
 
 export function playHit(cue: HitCue, delay = 0) {
   whenReady(() => {
@@ -791,6 +799,18 @@ export function playHit(cue: HitCue, delay = 0) {
       zip.stop(t + 0.41);
       crack(audio, t + 0.39, 0.5 * vol, true);
       bell(audio, t + 0.4, 1975.5, 0.5, 0.03 * vol);
+    } else if (cue === "dash") {
+      // Lấy đà rồi lao đi: tiếng gió rít lên.
+      noiseBurst(audio, t, 0.2, 700, 5600, 0.15 * vol);
+      noiseBurst(audio, t + 0.05, 0.14, 2400, 8200, 0.07 * vol);
+    } else if (cue === "ram") {
+      // Đòn tông: tiếng va nặng, kim loại rít và dư chấn.
+      thump(audio, t, 0.95 * vol);
+      noiseBurst(audio, t, 0.16, 6200, 1200, 0.3 * vol);
+      crack(audio, t + 0.012, 0.42 * vol, false);
+      for (const [freq, level] of [[880, 0.06], [1320, 0.05], [2090, 0.035], [2960, 0.022]] as const) bell(audio, t + 0.006, freq, 0.5, level * vol);
+      noiseBurst(audio, t + 0.06, 0.34, 1800, 260, 0.1 * vol);
+      thump(audio, t + 0.09, 0.35 * vol);
     } else {
       noiseBurst(audio, t, 0.12, 6000, 2200, 0.22 * vol);
       thump(audio, t, 0.5 * vol);

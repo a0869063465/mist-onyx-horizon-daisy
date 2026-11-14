@@ -386,6 +386,29 @@ export function ArenaFx() {
       shakeLight(0.7);
     };
 
+    /** Đòn tông (chủ game 14/11): lá lao vào mục tiêu; loé trắng, hai vòng sóng, tia lửa hất theo hướng lao, rung bàn. */
+    const ramHit = (x: number, y: number, ang: number) => {
+      const u = unit();
+      domes.push({ x, y, r: 10 * u, dir: 0, full: true, life: 0.5, max: 0.5, seed: rand(0, 1000) });
+      add({ x, y, life: 0.16, max: 0.16, size: 20 * u, grow: 2.2, color: "#ffffff", shape: "dot" });
+      add({ x, y, life: 0.3, max: 0.3, size: 11 * u, grow: 1.3, color: "#ffe9b0", shape: "dot" });
+      ring(x, y, "#ffffff", 2, 170, 0.32, 5, 0.9);
+      later(70, () => ring(x, y, "#ffd27a", 3, 110, 0.45, 3, 0.9));
+      mark({ kind: "pierce", x, y, ang, len: 26 * u, max: 0.26, pal: ZAP });
+      mark({ kind: "blade", x, y, ang: ang + 1.57, len: 15 * u, max: 0.3, pal: PAL.steel });
+      // Sparks thrown on along the blow, a few back toward the attacker.
+      for (let i = 0; i < 34; i++) {
+        const back = i % 5 === 0;
+        const a = ang + (back ? Math.PI : 0) + rand(-0.75, 0.75);
+        const s = rand(40, 120) * u * (back ? 0.5 : 1);
+        const life = rand(0.25, 0.55);
+        add({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: 0.86, life, max: life, size: rand(1.3, 2.8) * u, color: i % 3 === 0 ? "#ffffff" : i % 3 === 1 ? "#ffe08a" : "#9fe6ff", shape: "spark" });
+      }
+      bits(x, y, PAL.steel, 12, 60, { shape: "spark", life: 0.4 });
+      flash("#ffffff", 0.2, 0.16);
+      shakeLight(1.25);
+    };
+
     /** A jagged copy of a polyline: each leg cut into short pieces pushed sideways at random. */
     const jagged = (pts: Array<[number, number]>, step: number, amp: number, rnd: () => number) => {
       const out: Array<[number, number]> = [pts[0]];
@@ -548,6 +571,7 @@ export function ArenaFx() {
       if (e.t === "zap" || e.t === "clash") {
         if (reduced) return;
         if (e.t === "zap") zapHit(px(e.x), py(e.y), e.dir, e.path);
+        else if (e.ang !== undefined) ramHit(px(e.x), py(e.y), e.ang);
         else clashHit(px(e.x), py(e.y));
         wake();
         return;

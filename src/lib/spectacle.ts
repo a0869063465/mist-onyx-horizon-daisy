@@ -23,7 +23,7 @@ export type FxEvent =
    *  to the player's HP. Always played. */
   | { t: "zap"; x: number; y: number; dir: -1 | 1; path: Array<[number, number]>; pack?: FxPack }
   /** Two monsters colliding: an attack on a monster, or a blocker taking the hit (chủ game 22/10). Always played. */
-  | { t: "clash"; x: number; y: number; pack?: FxPack };
+  | { t: "clash"; x: number; y: number; /** A ramming blow (chủ game 14/11): the way the attacker came, in radians on the screen. */ ang?: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

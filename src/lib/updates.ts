@@ -1009,6 +1009,9 @@ export const PENDING_NOTES: string[] = [
   "Rút bài: xấp bài có mũi tên Rút vài giây. Lá rút hiện ra giữa màn kèm bảng mô tả, bấm vào lá để xem từng kỹ năng, bấm ra ngoài thì lá về tay.",
   "Tay bài xoè như quạt, lá dùng được chớp sáng. Bấm lá: lá nhấc lên, bảng mô tả ngắn hiện phía trên, bấm lại để xem kỹ năng kế. Bấm giữ để mở mô tả chi tiết.",
   "Triệu hồi: kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng), lá hiện giữa sân với lựa chọn Triệu hồi, Hiến tế, Dung hợp và 2 mũi tên chọn hàng, rồi lá bay xuống ô.",
+  "Đánh thường: quái lấy đà rồi lao tông thẳng vào mục tiêu, có vệt tốc độ, loé sáng, tia lửa, rung bàn và tiếng va.",
+  "Lá phép vừa dùng hiện to giữa sân trên vòng phép đang quay, toả vòng sóng theo màu tốc độ của phép.",
+  "Nút ba gạch dưới bộ bài đối thủ mở Lịch sử và Cài đặt. Bỏ nút Menu và Cài đặt ở hai góc trên."
 ];
 
 function remarkOf(notes: string[]) {
