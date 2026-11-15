@@ -6436,8 +6436,11 @@ function PlayPage() {
           : theirVote === "want"
             ? { note: "Đối thủ muốn chơi lại." }
             : {};
+  // Lá tự rút lượt đầu không nằm trong bảng đổi bài: bảng chỉ có 3 lá đầu, lá rút bay lên tay sau khi bảng đóng.
+  const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
+  const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const openerCards: OpenerCard[] = [
-    ...you.reserve.map((held, index): OpenerCard => {
+    ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
       return {
         key: `m${index}:${held.id}`,
@@ -6445,7 +6448,7 @@ function PlayPage() {
         can: pileLeft(you) > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
+    ...you.hand.filter((_, index) => index !== autoS).map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
