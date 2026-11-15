@@ -45,7 +45,7 @@ export const DEFAULT_BOARD: Record<HudKey, Mark> = byBoard<Record<HudKey, Mark>>
     foeFlask: { x: 92.5, y: 9.7, size: 3.2 },
     foeStars: { x: 81.7, y: 19, size: 3.6 },
     foeGems: { x: 88, y: 19, size: 3.2 },
-    foeHand: { x: 84, y: 29.5, size: 3.2 },
+    foeHand: { x: 84, y: 25.9, size: 3.2 },
     foeReserve: { x: 50, y: 3.9, size: 3.2 },
     youHp: { x: 10.6, y: 88.5, size: 5.6 },
     youOrb: { x: 89, y: 89.1, size: 6.2 },

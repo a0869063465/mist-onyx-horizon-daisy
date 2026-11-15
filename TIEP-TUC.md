@@ -5,6 +5,7 @@
 2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 (bàn B) và 412×732 (bàn A) trận Test: ô lá, máu, mana, sao, xấp bài, nút khớp ảnh. Chưa thử: trang Tuỳ chỉnh bàn, Hướng dẫn, màn rất ngắn/rộng, điện thoại, bể sáng/góc bo (hằng số cũ chưa đo lại cho 2 bàn), vị trí lá môi trường/tường thành/kiếm. Núi dung nham tạm dùng chung bàn mới (lửa dung nham tắt vì ảnh cũ lệch).
    Thêm 15/11: màu 2 bể sáng đổi theo màu sân mới (`FIELD_HSL` turn-light.tsx: xanh 207/97/29, đỏ 358/65/30); chụp bàn B bể xanh khớp, bể đỏ và bàn A chưa chụp, hằng số góc bể chưa đo lại.
    16/11: `board-b.jpg` thay ảnh mới 877×1794 (chủ game gửi): ô sao/mana bên đỏ hạ y≈32,6, bộ bài đỏ cách khung sao một khoảng (foeHand y 23, ở giữa khoảng trống từ ô mana tới khung sao), nút lịch sử (`.log-btn`, hiểu là 'ô lịch sử') y 37,6 giữa khung sao và mép sân; ô lá/máu/mana khớp ảnh cũ nên giữ. Chụp bàn B khớp; bàn A không đổi.
+   Bàn A (cùng ngày): xấp bài đỏ ở giữa khoảng trống dưới khung sao (foeHand y 25,9), nút lịch sử y 36,2 dưới xấp (cố định, không còn tính theo xấp).
 3. Việc sắp làm: chờ chủ game xem ảnh; chỉnh lệch; áp `main` khi được bảo.
 
 ## Màn Chọn bộ bài mới (15/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): phần 1–2 ĐÃ LÀM
