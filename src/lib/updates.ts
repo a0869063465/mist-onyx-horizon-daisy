@@ -109,7 +109,6 @@ const SEALED: UpdateRelease[] = [
       { n: 10, text: "Choáng và đã hành động không còn hiệu ứng bất lợi kéo dài." },
     ],
   },
-  "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
 ];
 
 /** Cũ ở trên, mới ở dưới. Đủ 10 dòng thì tự mở phiên bản mới. */
@@ -1014,6 +1013,7 @@ export const PENDING_NOTES: string[] = [
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
   "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
   "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
+  "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
 ];
 
 function remarkOf(notes: string[]) {
