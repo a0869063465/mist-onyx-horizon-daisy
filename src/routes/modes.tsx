@@ -286,23 +286,23 @@ function DeckSelectPage() {
       <LorDefs />
       <div className="dk2">
         <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
-        <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
-          <img src="/ui/deck/back.webp" alt="" draggable={false} />
-        </Link>
-        {friend ? (
-          <div className="lor-invite dk2-invite">
-            <span>
-              {friend.kind === "invite"
-                ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
-                : `${tr("Vào trận với")} ${tr(PLAYER_NAME)} ${friend.from}: ${tr("chọn bộ bài rồi Chơi ngay.")}`}
-              {friendNote ? <em className="lor-invite-note"> {tr(friendNote)}</em> : null}
-            </span>
-            <button type="button" onClick={dropFriend}>
-              {tr("Huỷ")}
-            </button>
-          </div>
-        ) : null}
-        <div className="dk2-bar">
+        <div className="dk2-stage" style={{ ["--rows" as string]: Math.max(2, Math.ceil(decks.length / 3)) }}>
+          <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
+            <img src="/ui/deck/back.webp" alt="" draggable={false} />
+          </Link>
+          {friend ? (
+            <div className="lor-invite dk2-invite">
+              <span>
+                {friend.kind === "invite"
+                  ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
+                  : `${tr("Vào trận với")} ${tr(PLAYER_NAME)} ${friend.from}: ${tr("chọn bộ bài rồi Chơi ngay.")}`}
+                {friendNote ? <em className="lor-invite-note"> {tr(friendNote)}</em> : null}
+              </span>
+              <button type="button" onClick={dropFriend}>
+                {tr("Huỷ")}
+              </button>
+            </div>
+          ) : null}
           <button type="button" className="dk2-btn dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
             <img src="/ui/deck/add.webp" alt="" draggable={false} />
           </button>
@@ -326,9 +326,7 @@ function DeckSelectPage() {
           >
             <img src="/ui/deck/edit.webp" alt="" draggable={false} />
           </button>
-        </div>
-        <section className="dk2-grid">
-          {decks.map((row) => {
+          {decks.map((row, i) => {
             const bad = Boolean(deckIssues(cardsOf(row)));
             const art = row.cover ? artSrc(row.cover, 1) : null;
             const on = row.n === active;
@@ -336,32 +334,26 @@ function DeckSelectPage() {
               <button
                 key={row.n}
                 type="button"
-                className={`dk2-deck${row.n === open ? " is-sel" : ""}${on ? " is-on" : ""}${bad ? " is-bad" : ""}`}
+                className={`dk2-deck dk2-c${i % 3} dk2-r${Math.floor(i / 3)}${row.n === open ? " is-sel" : ""}${on ? " is-on" : ""}${bad ? " is-bad" : ""}`}
                 onClick={() => setOpen(row.n)}
                 data-ui="select"
               >
-                <span className="dk2-stack">
-                  <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
-                  <img className="dk2-frame" src="/ui/deck/stack.webp" alt="" draggable={false} />
-                  <img className="dk2-frame-on" src="/ui/deck/stack-on.webp" alt="" draggable={false} />
-                  {bad ? (
-                    <img className="dk2-mark" src="/ui/deck/bang.webp" alt="" draggable={false} />
-                  ) : on ? (
-                    <>
-                      <img className="dk2-mark dk2-tick" src="/ui/deck/tick.webp" alt="" draggable={false} />
-                      <img className="dk2-mark-on" src="/ui/deck/tick-on.webp" alt="" draggable={false} />
-                    </>
-                  ) : null}
-                </span>
-                <span className="dk2-plate">
-                  <img className="dk2-plate-off" src="/ui/deck/plate.webp" alt="" draggable={false} />
-                  <img className="dk2-plate-on" src="/ui/deck/plate-on.webp" alt="" draggable={false} />
+                <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
+                <img className="dk2-off dk2-stack" src="/ui/deck/stack.webp" alt="" draggable={false} />
+                <img className="dk2-off dk2-plate" src="/ui/deck/plate.webp" alt="" draggable={false} />
+                <img className="dk2-glow" src="/ui/deck/deck-on.webp" alt="" draggable={false} />
+                <span className="dk2-name">
                   <GoldText text={row.name} capU={18} fitU={142} />
                 </span>
+                {bad ? (
+                  <img className="dk2-mark dk2-bang" src="/ui/deck/bang.webp" alt="" draggable={false} />
+                ) : on ? (
+                  <img className="dk2-mark dk2-tick" src="/ui/deck/tick.webp" alt="" draggable={false} />
+                ) : null}
               </button>
             );
           })}
-        </section>
+        </div>
       </div>
       {picking ? (
         <LorModal art={coverArt} onClose={() => setPicking(false)}>
