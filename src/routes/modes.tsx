@@ -279,12 +279,24 @@ function DeckSelectPage() {
     }
   }
 
+  // --k = bề ngang màn / 848 (số thuần) để nghiêng ảnh tranh theo bìa bằng matrix3d tính theo px của ảnh thiết kế
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = pageRef.current;
+    if (!el) return;
+    const set = () => el.style.setProperty("--k", String(el.clientWidth / 848));
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const coverArt = shown?.cover ? artSrc(shown.cover, 1) : null;
 
   return (
     <main className="dk2-page">
       <LorDefs />
-      <div className="dk2">
+      <div className="dk2" ref={pageRef}>
         <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
         <div className="dk2-stage" style={{ ["--rows" as string]: Math.max(2, Math.ceil(decks.length / 3)) }}>
           <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
