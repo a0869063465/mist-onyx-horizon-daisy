@@ -1012,6 +1012,7 @@ export const PENDING_NOTES: string[] = [
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
   "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
+  "Bảng mô tả lá có thêm tab Sở hữu: xem đang có mấy lá, nút Đến deck, Đến album, Nhận thêm lá này (gói quay; đánh NPC sắp có). Mở từ Bộ sưu tập thì vào tab Sở hữu trước, mở từ Chỉnh sửa bộ bài thì vào tab Kỹ năng (lá phép: Chức năng) trước.",
 ];
 
 function remarkOf(notes: string[]) {

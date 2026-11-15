@@ -5,7 +5,8 @@ import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
-import { artSrc, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
+import { OwnPanel } from "@/components/game/own-panel";
+import { artSrc, copyCap, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { SHEET_SPOTS, loadSpellHand, type FieldKey } from "@/lib/layouts";
 import { infoBlocks } from "@/lib/power-balance";
@@ -133,9 +134,23 @@ export function SpellFace({ id, gems }: { id: string; gems?: number | string }) 
   );
 }
 
+/**
+ * Where a sheet is opened (chủ game 15/11): each place has its own tabs and the tab it opens on. "collection" (Kho bài,
+ * Album, Cửa hàng, mở gói) has the Sở hữu tab and opens on it; "deck" (Chỉnh sửa bộ bài) has it but opens on the
+ * skills; no place (a match, the match summary, a friend's profile) has no Sở hữu tab. Cards with no copies to own
+ * (forms, 5 stars) have none either.
+ */
+export type SheetPlace = "collection" | "deck";
+
+/** The Sở hữu tab of a card for a place; undefined when the place or the card has none. */
+function ownTab(id: string, place: SheetPlace | undefined, onClose: () => void): { own?: ReactNode; ownFirst: boolean } {
+  if (!place || copyCap(id) === 0) return { ownFirst: false };
+  return { own: <OwnPanel id={id} onDeck={place === "deck" ? onClose : undefined} />, ownFirst: place === "collection" };
+}
+
 /** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
 /** `badgeFor`: drawn on the corner of a card's picture on its sheet (the collection's rarity tag). */
-export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode; onSwipe?: (dir: 1 | -1) => boolean | void };
+export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id: string) => string | undefined; badgeFor?: (id: string) => ReactNode; onSwipe?: (dir: 1 | -1) => boolean | void; place?: SheetPlace };
 
 /**
  * A card's sheet with its related cards (owner, 19/10): tapping the card on the sheet opens the 3D fan of its family;
@@ -143,7 +158,7 @@ export type SheetExtras = { asideFor?: (id: string) => ReactNode; noteFor?: (id:
  * back to the first sheet. A card with no family is only a picture. `sheet` draws the first sheet, given what a tap on
  * its card does.
  */
-export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor, badgeFor }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
+export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor, badgeFor, place }: { id: string; sheet: (onArt?: () => void) => ReactNode; onClose: () => void } & SheetExtras) {
   const family = relatedCards(id);
   const [view, setView] = useState<{ fan: string } | { open: string } | null>(null);
   // ✕ on a sheet opened from the fan closes the whole flow; when the first sheet cannot close (a fused monster waiting
@@ -158,9 +173,9 @@ export function RelatedFlow({ id, sheet, onClose, asideFor, noteFor, badgeFor }:
       {view && "fan" in view ? <CardCarousel ids={family} focus={view.fan} onOpen={(next) => setView({ open: next })} onClose={() => setView(null)} /> : null}
       {view && "open" in view ? (
         monsterCard(view.open) ? (
-          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={shut} />
+          <CardMonsterSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} place={place} onBack={() => setView({ fan: view.open })} onClose={shut} />
         ) : (
-          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} onBack={() => setView({ fan: view.open })} onClose={shut} />
+          <SpellSheet id={view.open} aside={asideFor?.(view.open)} note={noteFor?.(view.open)} badge={badgeFor?.(view.open)} place={place} onBack={() => setView({ fan: view.open })} onClose={shut} />
         )
       ) : null}
     </>
@@ -181,6 +196,7 @@ export function CardMonsterSheet({
   noteFor,
   badgeFor,
   onSwipe,
+  place,
 }: {
   id: string;
   extras?: SheetExtra[];
@@ -196,6 +212,7 @@ export function CardMonsterSheet({
   if (!card) return null;
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
+      {...ownTab(id, place, onClose)}
       name={card.name}
       card={<FieldFace id={id} />}
       count=""
@@ -214,7 +231,7 @@ export function CardMonsterSheet({
   );
   // A sheet opened from the fan does not open another fan: its card goes back to the one it came from.
   if (onBack) return sheet(onBack);
-  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} />;
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} place={place} />;
 }
 
 /**
@@ -235,6 +252,7 @@ export function SpellSheet({
   noteFor,
   badgeFor,
   onSwipe,
+  place,
 }: {
   id: string;
   gems?: number | string;
@@ -251,6 +269,8 @@ export function SpellSheet({
   if (!spell) return null;
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
+      {...ownTab(id, place, onClose)}
+      mainLabel="Chức năng"
       name={spell.name}
       card={<SpellFace id={id} gems={gems} />}
       count=""
@@ -267,5 +287,5 @@ export function SpellSheet({
     />
   );
   if (onBack) return sheet(onBack);
-  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} />;
+  return <RelatedFlow id={id} sheet={sheet} onClose={onClose} asideFor={asideFor} noteFor={noteFor} badgeFor={badgeFor} place={place} />;
 }

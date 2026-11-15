@@ -291,6 +291,9 @@ export function albumPages(album: Album, sets = cardSets()): PageItem[][] {
   return pages;
 }
 
+/** Set (to an album id) before going to the collection from a card's "Sở hữu" tab: the Album tab opens that album. */
+export const ALBUM_GOTO_KEY = "clash-goto-album";
+
 /** The album a card is in. */
 export function albumOf(id: string, list = albums()): Album | undefined {
   return list.find((album) => album.cards.some((card) => card.id === id));

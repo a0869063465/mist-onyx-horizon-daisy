@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AlbumTab } from "@/components/collection/album-shelf";
 import { CardVault } from "@/components/collection/card-vault";
 import { GlyphDefs } from "@/components/game/monster-sheet";
+import { ALBUM_GOTO_KEY } from "@/lib/collection";
 import { tr, useLang } from "@/lib/i18n";
 import { useStars } from "@/lib/shop";
 import { stepTab, useSwipe } from "@/lib/swipe";
@@ -18,7 +19,14 @@ function CollectionPage() {
   const stars = useStars();
   const [tab, setTab] = useState<"vault" | "album">("vault");
   const [booted, setBooted] = useState(false);
-  useEffect(() => setBooted(true), []);
+  useEffect(() => {
+    // From a card's "Đến album": open the Album tab (the tab itself opens the book).
+    const goto = () => sessionStorage.getItem(ALBUM_GOTO_KEY) && setTab("album");
+    goto();
+    setBooted(true);
+    window.addEventListener(ALBUM_GOTO_KEY, goto);
+    return () => window.removeEventListener(ALBUM_GOTO_KEY, goto);
+  }, []);
   // Tab swipe is back, but only after a very long one (chủ game 08/11: better to miss than to switch by mistake).
   const swipe = useSwipe(
     (dir) => {

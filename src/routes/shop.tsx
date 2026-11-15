@@ -200,9 +200,9 @@ function ShopPage() {
       {panel === "cards" ? <PackCards onTap={setSheet} onClose={() => setPanel(null)} /> : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} />
+          <CardMonsterSheet place="collection" id={sheet.id} onClose={() => setSheet(null)} />
         ) : (
-          <SpellSheet id={sheet.id} onClose={() => setSheet(null)} />
+          <SpellSheet place="collection" id={sheet.id} onClose={() => setSheet(null)} />
         )
       ) : null}
       {opening ? <PackOpening purchase={opening} onDone={() => setOpening(null)} /> : null}

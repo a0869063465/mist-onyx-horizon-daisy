@@ -231,9 +231,9 @@ export function CardVault() {
 
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <CardMonsterSheet place="collection" id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <SpellSheet place="collection" id={sheet.id} aside={lock(sheet.id)} asideFor={lock} badge={badge(sheet.id)} badgeFor={badge} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
     </section>
