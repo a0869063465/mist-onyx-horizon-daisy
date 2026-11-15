@@ -243,6 +243,7 @@ export function ReactionLine({
   forkOf,
   throwFrom,
   besideFree,
+  rouseLate = 0,
 }: {
   orbs: ChainOrb[];
   closing: boolean;
@@ -273,6 +274,8 @@ export function ReactionLine({
   throwFrom: (side: Side, wall?: string | null) => BoardPt;
   /** Whether no card stands right beside a monster's card in its row, to its left (-1) or right (+1) on the screen. */
   besideFree: (uid: string, dir: -1 | 1) => boolean;
+  /** K2: seconds a skill's icon waits before it fires, while its monster rouses. */
+  rouseLate?: number;
 }) {
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
@@ -309,7 +312,9 @@ export function ReactionLine({
     // An icon a flow wraps (Hấp thụ ma pháp, Phản nguyền against Virus ăn mòn) is swallowed as that flow reaches it, not
     // after the big card has landed (chủ game 30/10).
     const wrapped = (orb: ChainOrb) => orbs.some((other) => other.to.some((link) => link.wrap && "orb" in link.end && link.end.orb === orb.id));
-    const delays = ended.map((orb) => [orb.id, wrapped(orb) && orb.end === "fizzle" ? THROW + FIZZLE_AFTER : land > 0 ? land + (orb.end === "fizzle" ? FIZZLE_AFTER : 0) : 0] as const);
+    // K2: a skill that goes through fires once its monster has roused.
+    const roused = (orb: ChainOrb) => (orb.end === "fire" && orb.kind === "skill" && !orb.sent ? rouseLate : 0);
+    const delays = ended.map((orb) => [orb.id, wrapped(orb) && orb.end === "fizzle" ? THROW + FIZZLE_AFTER : Math.max(roused(orb), land > 0 ? land + (orb.end === "fizzle" ? FIZZLE_AFTER : 0) : 0)] as const);
     if (delays.some(([, wait]) => wait > 0)) setLate((map) => new Map([...map, ...delays]));
     for (const [index, orb] of ended.entries()) playLine(orb.end!, delays[index][1] + (orb.end === "fire" ? 0.1 : 0.08));
     // eslint-disable-next-line react-hooks/exhaustive-deps

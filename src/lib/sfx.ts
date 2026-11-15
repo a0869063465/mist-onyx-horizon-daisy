@@ -261,14 +261,15 @@ export function playTap() {
   });
 }
 
-export function playCue(kind: Cue, delay?: number, offset = 0) {
+export function playCue(kind: Cue, delay?: number, offset = 0, late = 0) {
+  // `late` (seconds) pushes the whole cue back, whatever its own delay: the skill's sounds wait for its monster to rouse.
   if (kind === "tap") return playTap();
-  if (kind === "riteSummon") return riteSummon(delay ?? 0);
-  if (kind === "fuseRite") return fuseRite(delay ?? 0);
+  if (kind === "riteSummon") return riteSummon((delay ?? 0) + late);
+  if (kind === "fuseRite") return fuseRite((delay ?? 0) + late);
   const clip = CLIPS[kind];
-  if (clip) return playClip(clip, delay ?? CLIP_DELAY[kind] ?? 0, kind === "poison", offset);
-  if (kind === "block" || kind === "hit") tone(140, 0, 0.12, "square", 0.07, 70);
-  if (kind === "star") tone(660, 0, 0.16, "triangle", 0.08, 990);
+  if (clip) return playClip(clip, (delay ?? CLIP_DELAY[kind] ?? 0) + late, kind === "poison", offset);
+  if (kind === "block" || kind === "hit") tone(140, late, 0.12, "square", 0.07, 70);
+  if (kind === "star") tone(660, late, 0.16, "triangle", 0.08, 990);
   if (kind === "win") {
     tone(523, 0, 0.16, "triangle", 0.08, 523);
     tone(659, 0.14, 0.16, "triangle", 0.08, 659);
@@ -320,6 +321,51 @@ function bell(audio: AudioContext, start: number, freq: number, dur: number, lev
   shine.start(start);
   osc.stop(start + dur + 0.02);
   shine.stop(start + dur + 0.02);
+}
+
+/** A heavy blow: a sub tone that falls fast, with a short click at its head. */
+function slam(audio: AudioContext, start: number, level: number) {
+  const osc = audio.createOscillator();
+  const body = audio.createOscillator();
+  const amp = audio.createGain();
+  osc.type = "sine";
+  body.type = "triangle";
+  osc.frequency.setValueAtTime(190, start);
+  osc.frequency.exponentialRampToValueAtTime(38, start + 0.3);
+  body.frequency.setValueAtTime(96, start);
+  body.frequency.exponentialRampToValueAtTime(30, start + 0.34);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level), start + 0.006);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + 0.42);
+  osc.connect(amp);
+  body.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  body.start(start);
+  osc.stop(start + 0.44);
+  body.stop(start + 0.44);
+}
+
+/** Struck steel: a square partial through a narrow band, sharp at the head, its pitch sagging a little as it rings. */
+function clang(audio: AudioContext, start: number, freq: number, dur: number, level: number) {
+  const osc = audio.createOscillator();
+  const band = audio.createBiquadFilter();
+  const amp = audio.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(freq * 1.03, start);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.985, start + dur);
+  band.type = "bandpass";
+  band.frequency.setValueAtTime(freq, start);
+  band.Q.value = 9;
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level * 2.2), start + 0.004);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level * 0.5), start + 0.06);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(band);
+  band.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
 }
 
 function thump(audio: AudioContext, start: number, level: number) {
@@ -684,7 +730,7 @@ export function playIntro(cue: IntroCue, delay = 0) {
  * a spell or a skill lands on the line, a bright swell as an orb fires at its target, and a falling puff as an answer
  * stops one. Quiet, under the effects volume, so they sit under the spells' own sounds.
  */
-export type LineCue = "orb" | "fire" | "fizzle" | "cast";
+export type LineCue = "orb" | "fire" | "fizzle" | "cast" | "note";
 
 export function playLine(cue: LineCue, delay = 0) {
   whenReady(() => {
@@ -701,6 +747,12 @@ export function playLine(cue: LineCue, delay = 0) {
       shimmer(audio, t + 0.2, 0.9, 0.03 * vol);
       noiseBurst(audio, t + 0.42, 0.4, 2600, 500, 0.07 * vol);
       thump(audio, t + 0.42, 0.22 * vol);
+    } else if (cue === "note") {
+      // K4: bảng báo việc đối thủ vừa làm: một hơi giấy lướt và hai nốt chuông trầm.
+      noiseBurst(audio, t, 0.16, 2400, 900, 0.06 * vol);
+      softPop(audio, t + 0.02, 392, 0.2, 0.05 * vol);
+      bell(audio, t + 0.07, 784, 0.5, 0.024 * vol);
+      bell(audio, t + 0.15, 1174.7, 0.5, 0.018 * vol);
     } else if (cue === "orb") {
       noiseBurst(audio, t, 0.3, 700, 3000, 0.07 * vol);
       bell(audio, t + 0.06, 1318.5, 0.55, 0.022 * vol);
@@ -773,7 +825,7 @@ export function playEnd(cue: EndCue, delay = 0) {
  * Attacks landing (chủ game 22/10, after LoR, made here): on a player, an electric crack where the blow hits, a zip as
  * the lightning runs along the edge, and a burst as it reaches the HP; two monsters colliding ring like steel.
  */
-export type HitCue = "zap" | "clash" | "dash" | "ram";
+export type HitCue = "zap" | "dash" | "ram" | "rouse";
 
 export function playHit(cue: HitCue, delay = 0) {
   whenReady(() => {
@@ -804,18 +856,21 @@ export function playHit(cue: HitCue, delay = 0) {
       noiseBurst(audio, t, 0.2, 700, 5600, 0.15 * vol);
       noiseBurst(audio, t + 0.05, 0.14, 2400, 8200, 0.07 * vol);
     } else if (cue === "ram") {
-      // Đòn tông: tiếng va nặng, kim loại rít và dư chấn.
-      thump(audio, t, 0.95 * vol);
-      noiseBurst(audio, t, 0.16, 6200, 1200, 0.3 * vol);
-      crack(audio, t + 0.012, 0.42 * vol, false);
-      for (const [freq, level] of [[880, 0.06], [1320, 0.05], [2090, 0.035], [2960, 0.022]] as const) bell(audio, t + 0.006, freq, 0.5, level * vol);
-      noiseBurst(audio, t + 0.06, 0.34, 1800, 260, 0.1 * vol);
-      thump(audio, t + 0.09, 0.35 * vol);
-    } else {
-      noiseBurst(audio, t, 0.12, 6000, 2200, 0.22 * vol);
-      thump(audio, t, 0.5 * vol);
-      for (const [freq, level] of [[1180, 0.05], [1760, 0.04], [2650, 0.028]] as const) bell(audio, t + 0.005, freq, 0.42, level * vol);
-      noiseBurst(audio, t + 0.03, 0.18, 4200, 900, 0.08 * vol);
+      // Đòn tông: cú va nặng có tiếng trầm rơi xuống, tiếng thép chát lệch tông (không phải chuông) và dư chấn lăn đi.
+      slam(audio, t, 1.1 * vol);
+      noiseBurst(audio, t, 0.07, 9000, 3000, 0.42 * vol);
+      noiseBurst(audio, t, 0.2, 5200, 700, 0.3 * vol);
+      for (const [freq, level, dur] of [[412, 0.07, 0.34], [633, 0.06, 0.3], [1017, 0.05, 0.42], [1694, 0.034, 0.5], [2731, 0.02, 0.36]] as const) clang(audio, t + 0.004, freq, dur, level * vol);
+      noiseBurst(audio, t + 0.07, 0.5, 900, 120, 0.16 * vol);
+      thump(audio, t + 0.11, 0.4 * vol);
+    } else if (cue === "rouse") {
+      // K2: quái phát huy kỹ năng: hơi tụ lại dâng lên, ba nốt chuông sáng dần, rồi một nhịp bung ra lúc nó ra đòn.
+      noiseBurst(audio, t, 0.42, 320, 3600, 0.1 * vol);
+      for (const freq of [220, 330]) pad(audio, t, freq, 0.62, 0.035 * vol);
+      for (const [freq, at] of [[659.3, 0.06], [880, 0.16], [1318.5, 0.26]] as const) bell(audio, t + at, freq, 0.5, 0.036 * vol);
+      slam(audio, t + 0.4, 0.5 * vol);
+      noiseBurst(audio, t + 0.4, 0.22, 1400, 6800, 0.13 * vol);
+      bell(audio, t + 0.41, 1760, 0.6, 0.04 * vol);
     }
   });
 }
