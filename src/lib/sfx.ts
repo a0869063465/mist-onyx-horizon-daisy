@@ -49,8 +49,8 @@ const CLIPS: Partial<Record<Cue, string>> = {
   // Núi dung nham (owner's file, 19/10): the eruption only, the first thunder cut off.
   eruption: "/sfx/eruption.mp3?v=1",
   // Kiếm cánh + khiên của bên giữ token (video chủ game, 30/10): hai cú, khiên hiện rồi kiếm cắm.
-  emblemYou: "/sfx/atk-you.mp3?v=1",
-  emblemFoe: "/sfx/atk-foe.mp3?v=1",
+  emblemYou: "/sfx/atk-you.mp3?v=2",
+  emblemFoe: "/sfx/atk-foe.mp3?v=2",
 };
 
 const CLIP_DELAY: Partial<Record<Cue, number>> = {};

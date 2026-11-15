@@ -7,6 +7,7 @@
    16/11: `board-b.jpg` thay ảnh mới 877×1794 (chủ game gửi): ô sao/mana bên đỏ hạ y≈32,6, bộ bài đỏ cách khung sao một khoảng (foeHand y 23, ở giữa khoảng trống từ ô mana tới khung sao), nút lịch sử (`.log-btn`, hiểu là 'ô lịch sử') y 37,6 giữa khung sao và mép sân; ô lá/máu/mana khớp ảnh cũ nên giữ. Chụp bàn B khớp; bàn A không đổi.
    Bàn A (cùng ngày): xấp bài đỏ ở giữa khoảng trống dưới khung sao (foeHand y 25,9), nút lịch sử y 36,2 dưới xấp (cố định, không còn tính theo xấp).
    Xấp bài xanh cả hai bàn: x 83,8 (cùng cột với khung sao), y A 64,8 / B 62,6 (`DEFAULT_STACK`), ở giữa mép sân trên và khung sao.
+   16/11: khiên kiếm có cánh đổi sang 2 video Grok mới (xanh `fdf53e4f`, đỏ `fbe302bb`; hình alpha + âm thay cả hai, bản `?v=2`); chụp bàn B bên xanh ổn, bên đỏ chỉ kiểm hình đứng yên.
 3. Việc sắp làm: chờ chủ game xem ảnh; chỉnh lệch; áp `main` khi được bảo.
 
 ## Màn Chọn bộ bài mới (15/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): phần 1–2 ĐÃ LÀM

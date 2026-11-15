@@ -7,8 +7,8 @@ export type EmblemSide = "you" | "foe";
 const LEAVE_MS = 300;
 
 /** Mốc nhịp chung của hai video (owner's Grok clips, 30/10): khiên hiện, cánh bung, kiếm cắm vào rồi đứng yên. */
-export const EMBLEM_VIDEO: Record<EmblemSide, string> = { you: "/ui/atk-you.webm?v=1", foe: "/ui/atk-foe.webm?v=1" };
-export const EMBLEM_STILL: Record<EmblemSide, string> = { you: "/ui/atk-you.webp?v=1", foe: "/ui/atk-foe.webp?v=1" };
+export const EMBLEM_VIDEO: Record<EmblemSide, string> = { you: "/ui/atk-you.webm?v=2", foe: "/ui/atk-foe.webm?v=2" };
+export const EMBLEM_STILL: Record<EmblemSide, string> = { you: "/ui/atk-you.webp?v=2", foe: "/ui/atk-foe.webp?v=2" };
 
 const reduced = () => typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 

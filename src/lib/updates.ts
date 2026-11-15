@@ -1032,6 +1032,7 @@ export const PENDING_NOTES: string[] = [
   "Luật mới: lượt đầu cả hai bên tự rút 1 lá (tốn 1 gem như rút tay), vòng 1 không rút thêm. Tạm ẩn gợi ý cũ của lượt 1.",
   "Lượt đầu: đổi bài xong, 3 lá bay lên tay hết, chậm một nhịp rồi lá tự rút mới bay lên tay.",
   "Lượt đầu: lá tự rút hiện giữa bàn như lần rút thường rồi mới về tay.",
+  "Khiên kiếm có cánh báo bên giữ lượt tấn công đổi sang hiệu ứng và âm thanh mới, hai bên xanh đỏ.",
 ];
 
 function remarkOf(notes: string[]) {
