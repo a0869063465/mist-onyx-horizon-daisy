@@ -1862,7 +1862,7 @@ function PlayPage() {
   // giữa màn (`drawShows`, lần lượt từng lá) rồi mới về tay.
   const [peekAt, setPeekAt] = useState(0);
   const [stage, setStage] = useState<Staged | null>(null);
-  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string }>>([]);
+  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string; wait?: boolean }>>([]);
   const [drawLeave, setDrawLeave] = useState(false);
   /** K3 (chủ game 14/11): a spell used outside the reaction chain shows big in the middle of the board, then fades. */
   const [castShow, setCastShow] = useState<{ key: string; id: string } | null>(null);
@@ -2845,8 +2845,14 @@ function PlayPage() {
       for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
       for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
       if (drawn) {
-        born.push({ id: (flightId.current += 1), side: "you", target: drawn, delay: AUTO_DRAW_AT });
-        playCue("draw", AUTO_DRAW_AT);
+        // Lá tự rút của lượt đầu cũng như lần rút thường (chủ game 15/11): hiện giữa màn rồi mới về tay, sau 3 lá đầu.
+        const key = (flightId.current += 1);
+        setDrawShows((list) => [...list, { key, target: drawn, wait: true }]);
+        window.setTimeout(() => {
+          setDrawShows((list) => list.map((show) => (show.key === key ? { ...show, wait: false } : show)));
+          playPack("flip", 0.26);
+          playPack("flash", 0.3);
+        }, AUTO_DRAW_AT * 1000);
       }
       if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
       setFlights((list) => [...list, ...born]);
@@ -5926,7 +5932,8 @@ function PlayPage() {
     const t = mid > 0 ? (at - mid) / mid : 0;
     return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)}cqw` } as CSSProperties;
   };
-  const drawShow = drawShows[0] ?? null;
+  // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
+  const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
   const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
   const pickPeek = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
   const handRect = (target: string) => {
