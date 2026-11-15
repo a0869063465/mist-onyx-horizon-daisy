@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DeckBox, LorDefs } from "@/components/deck-box";
+import { GoldText } from "@/components/gold-text";
 import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc } from "@/lib/catalog";
 import { deckIssues, saveDeck } from "@/lib/deck";
@@ -285,15 +286,11 @@ function DeckSelectPage() {
       <LorDefs />
       <div className="dk2">
         <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
-        <header className="dk2-head">
-          <Link to="/" className="dk2-oct dk2-back" aria-label={tr("Về sân")} data-ui="select">
-            <i className="dk2-in" />
-            <svg viewBox="0 0 40 28" aria-hidden="true"><path d="M20 4 8 14l12 10M34 4 22 14l12 10" /></svg>
-          </Link>
-          <h1 className="dk2-title">{tr("Chọn bộ bài của bạn")}</h1>
-        </header>
+        <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
+          <img src="/ui/deck/back.webp" alt="" draggable={false} />
+        </Link>
         {friend ? (
-          <div className="lor-invite">
+          <div className="lor-invite dk2-invite">
             <span>
               {friend.kind === "invite"
                 ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
@@ -306,73 +303,65 @@ function DeckSelectPage() {
           </div>
         ) : null}
         <div className="dk2-bar">
-          <button type="button" className="dk2-oct dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
-            <i className="dk2-in" />
-            <svg viewBox="0 0 48 48" aria-hidden="true">
-              <rect x="6" y="9" width="22" height="30" rx="3" />
-              <rect x="14" y="5" width="22" height="30" rx="3" />
-              <path d="M36 28v14M29 35h14" />
-            </svg>
+          <button type="button" className="dk2-btn dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
+            <img src="/ui/deck/add.webp" alt="" draggable={false} />
           </button>
           <button
             type="button"
-            className="dk2-oct dk2-wide is-lit"
+            className="dk2-btn dk2-choose"
             disabled={!shown || Boolean(deckIssues(cardsOf(shown)))}
             onClick={() => shown && setActive(shown.n)}
+            aria-label={tr("Chọn")}
             data-ui="confirm"
           >
-            <i className="dk2-in" />
-            <Glyph name="crossed-swords" fill="url(#dk2-gold)" />
-            <b>{tr("Chọn")}</b>
+            <img src="/ui/deck/choose.webp" alt="" draggable={false} />
           </button>
           <button
             type="button"
-            className="dk2-oct dk2-wide"
+            className="dk2-btn dk2-edit"
             disabled={!shown}
             onClick={() => shown && edit(shown.n)}
+            aria-label={tr("Chỉnh sửa")}
             data-ui="select"
           >
-            <i className="dk2-in" />
-            <Glyph name="quill-ink" fill="url(#dk2-gold)" />
-            <b>{tr("Chỉnh sửa")}</b>
+            <img src="/ui/deck/edit.webp" alt="" draggable={false} />
           </button>
         </div>
         <section className="dk2-grid">
           {decks.map((row) => {
             const bad = Boolean(deckIssues(cardsOf(row)));
             const art = row.cover ? artSrc(row.cover, 1) : null;
+            const on = row.n === active;
             return (
               <button
                 key={row.n}
                 type="button"
-                className={`dk2-deck${row.n === open ? " is-sel" : ""}${row.n === active ? " is-on" : ""}${bad ? " is-bad" : ""}`}
+                className={`dk2-deck${row.n === open ? " is-sel" : ""}${on ? " is-on" : ""}${bad ? " is-bad" : ""}`}
                 onClick={() => setOpen(row.n)}
                 data-ui="select"
               >
                 <span className="dk2-stack">
-                  <i className="dk2-layer l2" />
-                  <i className="dk2-layer l1" />
-                  <i className="dk2-front">
-                    <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
-                  </i>
-                  {bad ? <i className="dk2-badge is-bad">!</i> : row.n === active ? <i className="dk2-badge is-ok">✓</i> : null}
+                  <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
+                  <img className="dk2-frame" src="/ui/deck/stack.webp" alt="" draggable={false} />
+                  <img className="dk2-frame-on" src="/ui/deck/stack-on.webp" alt="" draggable={false} />
+                  {bad ? (
+                    <img className="dk2-mark" src="/ui/deck/bang.webp" alt="" draggable={false} />
+                  ) : on ? (
+                    <>
+                      <img className="dk2-mark dk2-tick" src="/ui/deck/tick.webp" alt="" draggable={false} />
+                      <img className="dk2-mark-on" src="/ui/deck/tick-on.webp" alt="" draggable={false} />
+                    </>
+                  ) : null}
                 </span>
                 <span className="dk2-plate">
-                  <i className="dk2-in" />
-                  <b>{row.name}</b>
+                  <img className="dk2-plate-off" src="/ui/deck/plate.webp" alt="" draggable={false} />
+                  <img className="dk2-plate-on" src="/ui/deck/plate-on.webp" alt="" draggable={false} />
+                  <GoldText text={row.name} capU={22} fitU={142} />
                 </span>
               </button>
             );
           })}
         </section>
-        <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
-          <defs>
-            <linearGradient id="dk2-gold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#ffe9a8" />
-              <stop offset="1" stopColor="#e0a43a" />
-            </linearGradient>
-          </defs>
-        </svg>
       </div>
       {picking ? (
         <LorModal art={coverArt} onClose={() => setPicking(false)}>

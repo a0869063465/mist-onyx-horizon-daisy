@@ -1,9 +1,9 @@
 # Việc đang dở (đọc trước khi làm)
 
 ## Màn Chọn bộ bài mới (15/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): phần 1–2 ĐÃ LÀM
-1. Việc vừa làm: `modes.tsx` render mới theo ảnh A5 (nền `public/ui/deck/bg.webp`, khung CSS `.dk2-*` cuối styles.css, font Montserrat 700 gradient vàng cho tiêu đề + tên bộ bài); ô "Bộ bài" (thứ 2 dưới màn chính) mở `/modes`; bấm bộ = chọn (glow xanh lá), Chọn = gắn tick (bộ lỗi disabled), Chỉnh sửa, Bộ bài mới; tạm ẩn Yêu thích, Xoá, đổi chế độ, Hướng dẫn.
-2. Hiện trạng: nhận ảnh A1–A5. Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy, tick bật), phần 3–4 = Opus 5.5 high.
-3. Việc sắp làm: SỬA LẠI giao diện bằng ảnh cắt nguyên từ A3/A4 (bỏ CSS tự vẽ); rồi PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình.
+1. Việc vừa làm (15/11, sửa lại): bỏ CSS tự vẽ, dùng ảnh cắt NGUYÊN từ A3/A4 (`public/ui/deck/`: back, add, choose, edit, stack, plate, tick, bang; stack-on, plate-on, tick-on = bản glow xanh lá từ A4, mờ dần quanh hình bằng `blur(S)`; script cắt nằm scratchpad, mất khi hết phiên: viền lấy bằng bao lồi (convex hull) các điểm vàng sáng, ô tranh lá trong suốt bằng flood-fill trong đường vàng mảnh). Nền A2 GIỮ NGUYÊN tiêu đề in sẵn (không xoá chữ). Tên bộ bài = `GoldText` (`src/components/gold-text.tsx`) ghép từng ký tự cắt từ A1 (`public/ui/deck/glyphs.webp` + `src/lib/deck-glyphs.json`, 196 ký tự: chữ hoa/thường, số, đủ dấu tiếng Việt); ký tự ngoài bảng (chấm, gạch nối…) để trống. Toạ độ theo `--u` = 1 px ảnh A5 (848 px). Tick xanh chỉ ở bộ đã Chọn, "!" đỏ ở bộ lỗi, nút Chọn xám khi bộ lỗi.
+2. Hiện trạng: nhận ảnh A1–A5. Chụp Chromium 412×915 khớp A5 (nút, lưới 3 cột, glow nhảy khi bấm bộ, tick). Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy mượt, tick bật), phần 3–4 = Opus 5.5 high. Chưa thử điện thoại thật; tên có ký tự ngoài bảng A1 thì bị trống.
+3. Việc sắp làm: chờ chủ game xem ảnh miếng cắt; rồi PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình (Opus 5.5 high).
 
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
