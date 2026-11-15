@@ -5,6 +5,8 @@
 2. Hiện trạng: nhận ảnh A1–A5. Chụp Chromium 412×915 khớp A5 (nút, lưới 3 cột, glow nhảy khi bấm bộ, tick). Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy mượt, tick bật), phần 3–4 = Opus 5.5 high. Chưa thử điện thoại thật; tên có ký tự ngoài bảng A1 thì bị trống.
 3. Việc sắp làm: chờ chủ game xem ảnh miếng cắt; rồi PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình (Opus 5.5 high).
 
+- PvP VÀO TRẬN NGAY 15/11 (Opus 5.5, ĐÃ LÀM, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): index.tsx `startPvp`: bộ có tick + chế độ trên thanh (`clash-play-mode`); Vs Máy thẳng `/play`; Đánh thường/Tuỳ chọn/lời mời bạn đặt `clash-go` → modes.tsx tự gọi `play(row)` (hàng chờ / bảng mã phòng); bộ lỗi thì mở `/modes`. Chỉnh sửa bộ không đổi tick (`EDIT_KEY` sessionStorage, deck.tsx chỉ `saveDeck` khi bộ đang sửa là bộ có tick). Chưa làm: hiệu ứng nút + chọn bộ (chờ chủ game nói kiểu).
+
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
 ## Luật L2 quái ẩn (14/11, Opus 5.5 high, nhánh `ccr-01cc3477-yvbwzt`, ĐÃ LÀM khung luật, CHƯA áp `main`)

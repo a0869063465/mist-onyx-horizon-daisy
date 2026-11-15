@@ -87,6 +87,7 @@ function DeckSelectPage() {
   const navigate = useNavigate();
   const [book, setBook] = useState<DeckEntry[]>([]);
   const [active, setActive] = useState<number | null>(null);
+  const goNow = useRef(false);
   const [booted, setBooted] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
   const [mode, setMode] = useState<PlayMode>("ai");
@@ -117,6 +118,11 @@ function DeckSelectPage() {
     setMode(loadMode());
     setFriend(loadFriendMatch());
     setBooted(true);
+    // PvP on the home screen (chủ game 15/11): start the ticked deck in the saved mode once the page has its state.
+    if (sessionStorage.getItem("clash-go")) {
+      sessionStorage.removeItem("clash-go");
+      goNow.current = true;
+    }
     // Chơi lại after an Đánh thường match (chủ game 22/10): straight back into the queue with the same deck.
     if (sessionStorage.getItem("clash-requeue")) {
       sessionStorage.removeItem("clash-requeue");
@@ -132,6 +138,13 @@ function DeckSelectPage() {
     if (!booted) return;
     saveBook({ decks: book, active });
   }, [book, active, booted]);
+
+  useEffect(() => {
+    if (!booted || !goNow.current) return;
+    goNow.current = false;
+    const row = book.find((item) => item.n === active);
+    if (row && !deckIssues(cardsOf(row))) play(row);
+  }, [booted]);
 
   const decks = deckOrder(book);
   const shown = book.find((row) => row.n === open) ?? null;

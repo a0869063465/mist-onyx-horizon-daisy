@@ -1014,6 +1014,7 @@ export const PENDING_NOTES: string[] = [
   "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
   "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
   "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
+  "Nút PvP ở màn chính vào trận ngay bằng bộ có dấu tick và chế độ đang chọn. Đánh thường vào hàng chờ, Tuỳ chọn mở bảng mã phòng. Bộ lỗi thì mở màn Chọn bộ bài.",
 ];
 
 function remarkOf(notes: string[]) {
