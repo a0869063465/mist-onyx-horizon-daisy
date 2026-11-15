@@ -1003,6 +1003,7 @@ export const PENDING_NOTES: string[] = [
   "Menu chính: nền video mới, áo choàng bay và chữ CLASH OF THE BEASTS to ở giữa.",
   "Luật mới: lượt đầu cả hai bên tự rút 1 lá (tốn 1 gem như rút tay), vòng 1 không rút thêm. Tạm ẩn gợi ý cũ của lượt 1.",
   "Lá bài phe mình đang chọn (tay quái, tay phép, quái trên sân) thở mạnh hơn. Lá phép bấm chọn thì nút Dùng phép nằm phía trên lá như nút Triệu hồi.",
+  "Lượt đầu: đổi bài xong, 3 lá bay lên tay hết, chậm một nhịp rồi lá tự rút mới bay lên tay.",
 ];
 
 function remarkOf(notes: string[]) {
