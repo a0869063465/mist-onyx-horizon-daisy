@@ -356,7 +356,7 @@ function DeckSelectPage() {
                 <span className="dk2-plate">
                   <img className="dk2-plate-off" src="/ui/deck/plate.webp" alt="" draggable={false} />
                   <img className="dk2-plate-on" src="/ui/deck/plate-on.webp" alt="" draggable={false} />
-                  <GoldText text={row.name} capU={22} fitU={142} />
+                  <GoldText text={row.name} capU={18} fitU={142} />
                 </span>
               </button>
             );
