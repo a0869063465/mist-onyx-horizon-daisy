@@ -22,9 +22,9 @@ type Rgb = [number, number, number];
 /**
  * Every colour of a tank comes from the colour of its own field (chủ game 01/11: "xanh phát triển sao thì đỏ như vậy"): the
  * same hue and saturation as the floor, the water at the floor's own lightness, the wisps (the waves) lighter, their edges
- * lighter again and the cores of the light runs nearly white. Measured on board-full.jpg (hue°, saturation %, lightness %).
+ * lighter again and the cores of the light runs nearly white. Measured on board-a/b.jpg, 15/11 (hue°, saturation %, lightness %).
  */
-const FIELD_HSL: Record<TankSide, [number, number, number]> = { you: [215, 99, 47], foe: [6, 92, 40] };
+const FIELD_HSL: Record<TankSide, [number, number, number]> = { you: [207, 97, 29], foe: [358, 65, 30] };
 function hslRgb(h: number, s: number, l: number): Rgb {
   const sat = Math.max(0, Math.min(1, s / 100));
   const light = Math.max(0, Math.min(1, l / 100));
