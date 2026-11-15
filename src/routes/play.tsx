@@ -85,6 +85,7 @@ import {
   castSpell,
   concede,
   createDuel,
+  openingDraw,
   declareSkill,
   dismissGlimpse,
   draw,
@@ -440,6 +441,10 @@ const HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = byB
 const ROW_SLOTS: Record<SummonRow, Slot[]> = { front: [0, 1, 2], back: [3, 4, 5] };
 /** Two taps on the same card in hand within this many ms open its sheet (chủ game 28/10). */
 const DOUBLE_TAP = 350;
+/** Gợi ý lượt 1 (t1-draw1, t1-draw0, t1-pass, t1-more): tạm ẩn từ 12/11, đặt false để bật lại. */
+const TURN_ONE_HINTS_OFF = true;
+/** Lá tự rút của lượt đầu bay sau 3 lá đầu (3 lá cách 0,15 giây + 0,62 giây bay) cộng một nhịp nghỉ (chủ game 13/11). */
+const AUTO_DRAW_AT = 1.5;
 
 let floaterSeq = 1;
 
@@ -1823,7 +1828,7 @@ function PlayPage() {
   // giữa màn (`drawShows`, lần lượt từng lá) rồi mới về tay.
   const [peekAt, setPeekAt] = useState(0);
   const [stage, setStage] = useState<Staged | null>(null);
-  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string }>>([]);
+  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string; wait?: boolean }>>([]);
   const [drawLeave, setDrawLeave] = useState(false);
   /** K3 (chủ game 14/11): a spell used outside the reaction chain shows big in the middle of the board, then fades. */
   const [castShow, setCastShow] = useState<{ key: string; id: string } | null>(null);
@@ -1978,6 +1983,8 @@ function PlayPage() {
   }
   /** Lượt 1: mọi hành động lặp lại (nhấp lá, kéo quái, bấm quái) nhắc người chơi bước tiếp theo. */
   function turnOneHint() {
+    // Tạm ẩn (chủ game 12/11): lượt đầu đã tự rút 1 lá nên các gợi ý cũ của lượt 1 không còn đúng.
+    if (TURN_ONE_HINTS_OFF) return;
     if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1) return;
     const mine = duel.players[viewer];
     const one = <b className="hint-s1">1 sao</b>;
@@ -2333,7 +2340,7 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
-      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : newMatch(mode);
+      const next = mode === "test" ? (loadTestDuel() ?? openingDraw(createDuel(loadDeck(), "test"))) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
         matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
@@ -2796,14 +2803,30 @@ function PlayPage() {
     const me = viewer;
     if (openerWas.current && !openerOpen && !duel.opener) {
       openerWas.current = false;
-      const mine = [...duel.players[me].reserve.map((_, i) => `r:${i}`), ...duel.players[me].hand.map((_, i) => `s:${i}`)].slice(0, OPENING_CARDS);
+      // Lá tự rút của lượt đầu (chủ game 13/11): 3 lá đầu bay lên tay hết, chậm 1 nhịp rồi lá rút mới bay riêng.
+      const you = duel.players[me];
+      const drawn = you.draws >= 1 ? (you.reserve.length > 2 ? `r:${you.reserve.length - 1}` : you.hand.length > 1 ? `s:${you.hand.length - 1}` : null) : null;
+      const mine = [...you.reserve.map((_, i) => `r:${i}`), ...you.hand.map((_, i) => `s:${i}`)].filter((target) => target !== drawn).slice(0, OPENING_CARDS);
       const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
       for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
-      setFlights((list) => [...list, ...born]);
       for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      if (drawn) {
+        // Lá tự rút của lượt đầu cũng như lần rút thường (chủ game 15/11): hiện giữa màn rồi mới về tay, sau 3 lá đầu.
+        const key = (flightId.current += 1);
+        setDrawShows((list) => [...list, { key, target: drawn, wait: true }]);
+        window.setTimeout(() => {
+          setDrawShows((list) => list.map((show) => (show.key === key ? { ...show, wait: false } : show)));
+          playPack("flip", 0.26);
+          playPack("flash", 0.3);
+        }, AUTO_DRAW_AT * 1000);
+      }
+      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
+      setFlights((list) => [...list, ...born]);
       return;
     }
     if (openerOpen) openerWas.current = true;
+    // Bảng đổi bài còn đóng dần: lá tự rút của lượt đầu chưa bay ở đây, nó bay sau 3 lá đầu (nhánh trên).
+    if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
     const born: DrawFlight[] = [];
     ([0, 1] as const).forEach((side) => {
@@ -4337,7 +4360,7 @@ function PlayPage() {
 
   function restartTest() {
     if (!duel || duel.mode !== "test") return;
-    const fresh = createDuel(loadDeck(), "test");
+    const fresh = openingDraw(createDuel(loadDeck(), "test"));
     setTestPast((list) => [...list, structuredClone(duel)].slice(-40));
     prevDuel.current = fresh;
     seenViewer.current = viewerSide(fresh, boardActor(fresh), netRef.current?.seat ?? null);
@@ -5875,7 +5898,8 @@ function PlayPage() {
     const t = mid > 0 ? (at - mid) / mid : 0;
     return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)}cqw` } as CSSProperties;
   };
-  const drawShow = drawShows[0] ?? null;
+  // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
+  const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
   const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
   const pickPeek = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
   const handRect = (target: string) => {
@@ -6385,8 +6409,11 @@ function PlayPage() {
           : theirVote === "want"
             ? { note: "Đối thủ muốn chơi lại." }
             : {};
+  // Lá tự rút lượt đầu không nằm trong bảng đổi bài: bảng chỉ có 3 lá đầu, lá rút bay lên tay sau khi bảng đóng.
+  const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
+  const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const openerCards: OpenerCard[] = [
-    ...you.reserve.map((held, index): OpenerCard => {
+    ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
       return {
         key: `m${index}:${held.id}`,
@@ -6394,7 +6421,7 @@ function PlayPage() {
         can: pileLeft(you) > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
+    ...you.hand.filter((_, index) => index !== autoS).map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the

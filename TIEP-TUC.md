@@ -14,6 +14,8 @@
 2. Hiện trạng: nhận ảnh A1–A5. Chụp Chromium 412×915 khớp A5 (nút, lưới 3 cột, glow nhảy khi bấm bộ, tick). Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy mượt, tick bật), phần 3–4 = Opus 5.5 high. Chưa thử điện thoại thật; tên có ký tự ngoài bảng A1 thì bị trống.
 3. Việc sắp làm: chờ chủ game xem ảnh miếng cắt; rồi PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình (Opus 5.5 high).
 
+- PvP VÀO TRẬN NGAY 15/11 (Opus 5.5, ĐÃ LÀM, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): index.tsx `startPvp`: bộ có tick + chế độ trên thanh (`clash-play-mode`); Vs Máy thẳng `/play`; Đánh thường/Tuỳ chọn/lời mời bạn đặt `clash-go` → modes.tsx tự gọi `play(row)` (hàng chờ / bảng mã phòng); bộ lỗi thì mở `/modes`. Chỉnh sửa bộ không đổi tick (`EDIT_KEY` sessionStorage, deck.tsx chỉ `saveDeck` khi bộ đang sửa là bộ có tick). HIỆU ỨNG ĐÃ LÀM 15/11 (chủ game chốt: glow TRƯỢT, tick nảy + tiếng, nút như màn chính): `public/ui/deck/glow.webp` = phần glow xanh cắt từ deck-on.webp (giữ pixel alpha<235 xanh lá, không đổi màu), `.dk2-ring` trượt 0,32 giây từ bộ cũ sang bộ mới rồi khung chọn hiện sau 0,3 giây (`pick`, `sliding`); Chọn = tick `is-pop` (scale 0→1,3→1) + `playIntro("mark")`; nút `press()` như `hit()` màn chính (lún, sáng, vòng `.dk2-hit`; khoá thì rung, dùng `aria-disabled`). Chụp Chromium 424×928 từng mốc.
+
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
 ## Hiệu ứng K1–K6 (14–15/11, Fable 5.2 high, nhánh `ccr-312058b5-foqipx`): ĐỢT A (K6, K3, K1) + ĐỢT B (K2, K4, K5) ĐÃ LÀM, CHƯA áp `main`
@@ -56,6 +58,11 @@
 1. Việc vừa làm: gộp vào `main` 4 nhánh dở + 4 keyword mới (Cầu mana, Linh hoạt, Cường hoá 1, Cường hoá vĩnh viễn). `tsc` 7 lỗi cũ.
 2. Hiện trạng: `round-rules` lúc 63/64 lúc 64/64: bài "Hấp thụ ma pháp nuốt Phục kích: kỹ năng vẫn vào, không ai đánh trả" chập chờn (ghi nhận từ trước, chưa xác định có do lần gộp này không). Chưa chụp bằng mắt 4 keyword mới.
 3. Việc sắp làm (chưa làm, phiên khác): (a) tìm nguyên nhân bài kiểm tra chập chờn (Opus 5.5 high); (b) gộp nhánh `ccr-902b4e60-v4q179` (sửa lỗi Hỗ công cộng vào skill + lá Tê giáp có cánh + luật trong `AGENTS.project.md`; chủ game đã duyệt, cần xem trước khi gộp; Sonnet 5.5 medium); (c) nhánh `thietke`/`vfx` (6 icon menu chưa dùng) và `quai-moi` (11 ảnh minh hoạ lá chưa có lá): giữ nguyên trên GitHub, chờ chủ game quyết; (d) nhánh `ccr-65a3d75a` (bản dọn gọn ghi chú) không gộp. Không xoá nhánh nào.
+
+## Lượt đầu tự rút 1 lá (12/11, Opus 5.5 high, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
+1. Việc vừa làm: `openingDraw` (duel.ts, tách `drawFor` từ `drawCore`): lúc bảng đổi bài đóng (`openerSwap` khi cả hai xong) mỗi bên tự rút 1 lá, tốn 1 gem, tính là lá rút vòng 1. Trận Test gọi lúc tạo trận (play.tsx). Hướng dẫn và Thực chiến không đổi (trận dựng sẵn). Gợi ý lượt 1 tắt bằng `TURN_ONE_HINTS_OFF` (play.tsx).
+2. Hiện trạng: round-rules 66/67 (bài Phục kích chập chờn cũ), tsc sạch, thử Vs Máy 412×915: mỗi bên 4 lá, 1 sao, còn 1 gem. Chưa thử online 2 máy, chưa xem lá bay của lá rút tự động.
+3. Việc sắp làm: chờ chủ game xem.
 
 ## Menu chính làm lại theo ảnh (11/11, Sonnet 5.5 medium, nhánh `claude/luat-moi-11-11-xcc8h9`, CHƯA áp `main`)
 1. Việc vừa làm: dựng lại `index.tsx` + `home-lobby.css` bằng ảnh nguyên liệu chủ game gửi (H3/H4/H5/H6/H7, chữ giữ trong ảnh), ảnh cắt ở `public/ui/home/` (btn-*, nav, pve, pvp, bar-*, dialog, star-*, avatar-frame; script cắt nằm ở scratchpad, mất khi hết phiên). Chữ hồ sơ dùng font Outfit + gradient đo từ H4 (tên #ECD7AC→#E4BD84→#BE884B, hạng xanh lá, số trắng), không huy hiệu hạng. Sao thường = số thật, sao hiếm = 0. Thanh chế độ đổi theo bảng chọn (H5, hộp bấm trong suốt đè ảnh, Xếp hạng không mở được); vầng xanh dưới thanh dưới theo mục vừa bấm.

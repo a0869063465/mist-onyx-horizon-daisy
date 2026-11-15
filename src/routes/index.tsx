@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { tr, useLang } from "@/lib/i18n";
 import { playUi } from "@/lib/sfx";
 import { useMail } from "@/lib/mail-box";
@@ -8,7 +8,9 @@ import { useEffect, useRef, useState } from "react";
 import "@/home-lobby.css";
 import { useStars } from "@/lib/shop";
 import { artSrc } from "@/lib/catalog";
-import { coverOf, loadBook } from "@/lib/deck-book";
+import { cardsOf, coverOf, loadBook } from "@/lib/deck-book";
+import { deckIssues, saveDeck } from "@/lib/deck";
+import { loadFriendMatch } from "@/lib/friend-state";
 import { START_RANK, rankFrame, rankLabel } from "@/lib/rank";
 import { playerId } from "@/lib/friend-state";
 import { FriendProfile } from "@/components/friend-profile";
@@ -71,6 +73,30 @@ function Home() {
     localStorage.setItem("clash-play-mode", mode);
     playUi("confirm");
     window.setTimeout(() => picker.current?.close(), reduced() ? 0 : 260);
+  }
+  const navigate = useNavigate();
+  // PvP (chủ game 15/11): straight into a match with the ticked deck and the mode on the bar. Vs Máy opens the match at
+  // once; Đánh thường and Tuỳ chọn need the queue / room screen, which live on Chọn bộ bài, so that page starts them.
+  // A ticked deck that is not valid opens Chọn bộ bài instead.
+  function startPvp() {
+    const book = loadBook();
+    const row = book.decks.find(entry => entry.n === book.active);
+    const cards = row ? cardsOf(row) : null;
+    const mode = selectedMode === "ranked" ? "quick" : selectedMode;
+    localStorage.setItem("clash-play-mode", mode);
+    if (!cards || deckIssues(cards)) {
+      void navigate({ to: "/modes" });
+      return;
+    }
+    if (mode === "ai" && !loadFriendMatch()) {
+      saveDeck(cards);
+      sessionStorage.setItem("clash-mode", "ai");
+      sessionStorage.removeItem("clash-net");
+      void navigate({ to: "/play" });
+      return;
+    }
+    sessionStorage.setItem("clash-go", "1");
+    void navigate({ to: "/modes" });
   }
   const [mine, setMine] = useState<string | null>(null);
   const [face, setFace] = useState<string | null>(null);
@@ -173,9 +199,9 @@ function Home() {
           <button type="button" className="lobby-btn is-locked is-wide" style={{ left: 0, top: `${(0 / 290) * 100}%`, width: `${(373 / 784) * 100}%`, height: `${(270 / 290) * 100}%` }} aria-label="PvE — Phiêu lưu (sắp có)" onPointerDown={event => { playUi("soft"); hit(event.currentTarget, true); }}>
             <img src="/ui/home/pve.webp" alt="PvE · Phiêu lưu" draggable={false} /><span className="lobby-ring" />
           </button>
-          <Link to="/modes" className="lobby-btn is-wide" style={{ left: `${((406 - 30) / 784) * 100}%`, top: `${(-9 / 290) * 100}%`, width: `${(408 / 784) * 100}%`, height: `${(288 / 290) * 100}%` }} aria-label="PvP — Đấu hạng" onPointerDown={event => { playUi("confirm"); hit(event.currentTarget, false); }}>
+          <button type="button" className="lobby-btn is-wide" style={{ left: `${((406 - 30) / 784) * 100}%`, top: `${(-9 / 290) * 100}%`, width: `${(408 / 784) * 100}%`, height: `${(288 / 290) * 100}%` }} aria-label="PvP — Đấu hạng" onPointerDown={event => { playUi("confirm"); hit(event.currentTarget, false); }} onClick={startPvp}>
             <img src="/ui/home/pvp.webp" alt="PvP · Đấu hạng" draggable={false} /><span className="lobby-ring" />
-          </Link>
+          </button>
         </div>
 
         <nav className="lobby-nav" style={box(NAV.x, NAV.y, NAV.w, NAV.h)} aria-label={tr("Điều hướng chính")}>

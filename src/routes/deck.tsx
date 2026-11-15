@@ -11,7 +11,7 @@ import { ExchangeAsk } from "@/components/collection/album-panels";
 import { albums, cardNumbers, exchangeCard, exchangePrice } from "@/lib/collection";
 import { SHOP_PACK_KEY } from "@/lib/shop";
 import { byMana, byStars, deckBalance, deckIssues, loadDeck, saveDeck, type BeastDeck, type DeckSide } from "@/lib/deck";
-import { cardsOf, coverChoices, coverOf, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
+import { cardsOf, coverChoices, coverOf, EDIT_KEY, freshDeck, loadBook, saveBook, type DeckEntry } from "@/lib/deck-book";
 import { ENV_FILTERS, filterOn, MONSTER_TYPES, NO_FILTER, passesFilter, plainName, STAR_FILTERS, type PoolFilter } from "@/lib/deck-filters";
 import { tr, useLang } from "@/lib/i18n";
 import { infoBlocks, markFace } from "@/lib/power-balance";
@@ -45,7 +45,9 @@ function validDeck(deck: BeastDeck): boolean {
 function DeckPage() {
   const [deck, setDeck] = useState<BeastDeck>(DEFAULT_DECK);
   const [book, setBook] = useState<DeckEntry[]>([]);
+  // `active` = the deck being edited; `playing` = the book's chosen deck (the tick on Chọn bộ bài), which editing never changes.
   const [active, setActive] = useState<number | null>(null);
+  const [playing, setPlaying] = useState<number | null>(null);
   const [booted, setBooted] = useState(false);
   const [mode, setMode] = useState<Kind>("monster");
   const [query, setQuery] = useState("");
@@ -84,16 +86,18 @@ function DeckPage() {
   const skipTap = useRef(false);
   // The deck as it was saved when the page opened, and the latest state, for the save on leaving (chủ game 08/11).
   const first = useRef<{ n: number | null; monsters: string[]; spells: string[] } | null>(null);
-  const latest = useRef({ deck, book, active });
-  latest.current = { deck, book, active };
+  const latest = useRef({ deck, book, active, playing });
+  latest.current = { deck, book, active, playing };
   const plans = useMemo(() => loadStrategies(), []);
   useLang();
 
   useEffect(() => {
     const stored = loadBook();
-    const found = stored.decks.find((row) => row.n === stored.active) ?? stored.decks[0];
+    const wanted = Number(sessionStorage.getItem(EDIT_KEY));
+    const found = stored.decks.find((row) => row.n === wanted) ?? stored.decks.find((row) => row.n === stored.active) ?? stored.decks[0];
     setBook(stored.decks);
     setActive(found?.n ?? null);
+    setPlaying(stored.active);
     const opened = found ? cardsOf(found) : loadDeck();
     first.current = { n: found?.n ?? null, monsters: [...opened.monsters], spells: [...opened.spells] };
     setDeck(opened);
@@ -112,31 +116,36 @@ function DeckPage() {
 
   useEffect(() => {
     if (!booted) return;
-    saveBook({ decks: book, active });
-  }, [book, active, booted]);
+    saveBook({ decks: book, active: playing ?? active });
+  }, [book, active, playing, booted]);
 
   // No Lưu button: leaving saves the deck. One that is not valid goes back to how it was when the page opened; if that one was
   // not valid either, it is saved as it stands.
   useEffect(() => {
     const finish = () => {
-      const { deck: now, book: rows, active: at } = latest.current;
+      const { deck: now, book: rows, active: at, playing: tick } = latest.current;
       const start = first.current;
       if (!start) return;
+      const keep = tick ?? at;
+      // Only the chosen deck is the one a match reads; editing another deck leaves the saved match deck alone.
+      const mine = keep === at;
       if (!validDeck(now)) {
         if (validDeck(start) && start.n === at) {
           const back = rows.map((row) => (row.n === at ? { ...row, monsters: start.monsters, spells: start.spells } : row));
-          saveBook({ decks: back, active: at });
-          saveDeck(start);
+          saveBook({ decks: back, active: keep });
+          if (mine) saveDeck(start);
           return;
         }
-        saveBook({ decks: rows, active: at });
+        saveBook({ decks: rows, active: keep });
       }
-      saveDeck(now);
+      if (mine) saveDeck(now);
     };
     window.addEventListener("pagehide", finish);
     return () => {
       window.removeEventListener("pagehide", finish);
       finish();
+      // Strict mode remounts at once, so the edit target is dropped a moment later.
+      setTimeout(() => sessionStorage.removeItem(EDIT_KEY), 0);
     };
   }, []);
 
@@ -369,6 +378,7 @@ function DeckPage() {
     const row = { ...freshDeck(book), name, monsters: deck.monsters, spells: deck.spells };
     setBook((current) => [...current, row]);
     setActive(row.n);
+    setPlaying((now) => now ?? row.n);
   }
 
   // The cover the player chose stays on the deck's box (Chọn bộ bài) while the deck can still show it.
@@ -380,6 +390,7 @@ function DeckPage() {
     const row = { ...freshDeck(book), monsters: deck.monsters, spells: deck.spells, cover: id, coverSet: true };
     setBook((current) => [...current, row]);
     setActive(row.n);
+    setPlaying((now) => now ?? row.n);
   }
 
   function toggle<K extends keyof PoolFilter>(key: K, value: PoolFilter[K][number]) {

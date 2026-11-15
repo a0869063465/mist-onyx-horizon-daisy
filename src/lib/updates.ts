@@ -1026,6 +1026,12 @@ export const PENDING_NOTES: string[] = [
   "Bàn đấu mới: hai bàn riêng cho màn 9:16 và màn dài 9:20, tự đổi theo màn, không cắt bàn nữa. Bố cục đã chỉnh tay trong Tuỳ chỉnh được đặt lại.",
   "Màu hai bể sáng chuyển lượt đổi theo màu sân của hai bàn đấu mới.",
   "Bàn đấu dài đổi ảnh mới: ô sao và mana bên đỏ hạ xuống, bộ bài đặt trên khung sao, nút lịch sử nằm dưới khung sao.",
+  "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
+  "Nút PvP ở màn chính vào trận ngay bằng bộ có dấu tick và chế độ đang chọn. Đánh thường vào hàng chờ, Tuỳ chọn mở bảng mã phòng. Bộ lỗi thì mở màn Chọn bộ bài.",
+  "Màn Chọn bộ bài: bấm bộ khác thì glow xanh lá trượt sang bộ đó. Bấm Chọn thì dấu tick nảy lên kèm tiếng. Các nút lún xuống và loé vòng sáng khi bấm, nút chưa bấm được thì rung.",
+  "Luật mới: lượt đầu cả hai bên tự rút 1 lá (tốn 1 gem như rút tay), vòng 1 không rút thêm. Tạm ẩn gợi ý cũ của lượt 1.",
+  "Lượt đầu: đổi bài xong, 3 lá bay lên tay hết, chậm một nhịp rồi lá tự rút mới bay lên tay.",
+  "Lượt đầu: lá tự rút hiện giữa bàn như lần rút thường rồi mới về tay.",
 ];
 
 function remarkOf(notes: string[]) {

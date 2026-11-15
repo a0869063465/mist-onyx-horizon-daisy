@@ -17,12 +17,14 @@ import {
   cardsOf,
   coverOf,
   deckOrder,
+  EDIT_KEY,
   freshDeck,
   loadBook,
   saveBook,
   type DeckEntry,
 } from "@/lib/deck-book";
 import { tr, useLang } from "@/lib/i18n";
+import { playIntro } from "@/lib/sfx";
 import { fakeIds } from "@/lib/owned-cards";
 import { joinRoom, leaveQueue, openRoom, seekMatch, type NetDeck } from "@/lib/net-room";
 import { inviteFriend } from "@/lib/friends";
@@ -64,6 +66,18 @@ function loadMode(): PlayMode {
   }
 }
 
+/** Press feel of the home screen buttons (chủ game 15/11): the picture squashes and brightens, a ring spreads; a locked one shakes. */
+function press(root: HTMLElement | null, locked = false) {
+  if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  root.querySelector<HTMLElement>(":scope > img")?.animate(
+    locked
+      ? [{ transform: "translateX(0)" }, { transform: "translateX(-4%)" }, { transform: "translateX(4%)" }, { transform: "translateX(-2%)" }, { transform: "translateX(0)" }]
+      : [{ transform: "scale(1)", filter: "brightness(1)" }, { transform: "scale(.9)", filter: "brightness(1.35)" }, { transform: "scale(1.06)", filter: "brightness(1.2)" }, { transform: "scale(1)", filter: "brightness(1)" }],
+    { duration: locked ? 320 : 380, easing: "ease-out" },
+  );
+  root.querySelector<HTMLElement>(":scope > .dk2-hit")?.animate([{ opacity: 0.95, transform: "scale(.78)" }, { opacity: 0, transform: "scale(1.22)" }], { duration: 460, easing: "ease-out" });
+}
+
 function reasonOf(error: unknown): string {
   const text = error instanceof Error ? error.message.trim() : "";
   return text ? ` (${text.slice(0, 120)})` : "";
@@ -86,8 +100,13 @@ function DeckSelectPage() {
   const navigate = useNavigate();
   const [book, setBook] = useState<DeckEntry[]>([]);
   const [active, setActive] = useState<number | null>(null);
+  const goNow = useRef(false);
   const [booted, setBooted] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
+  // The green glow slides from the deck picked before to the new one (chủ game 15/11), and the tick pops when Chọn moves it.
+  const [sliding, setSliding] = useState(false);
+  const [popped, setPopped] = useState<number | null>(null);
+  const slideTimer = useRef<number | undefined>(undefined);
   const [mode, setMode] = useState<PlayMode>("ai");
   const [picking, setPicking] = useState(false);
   const [asking, setAsking] = useState<number | null>(null);
@@ -116,6 +135,11 @@ function DeckSelectPage() {
     setMode(loadMode());
     setFriend(loadFriendMatch());
     setBooted(true);
+    // PvP on the home screen (chủ game 15/11): start the ticked deck in the saved mode once the page has its state.
+    if (sessionStorage.getItem("clash-go")) {
+      sessionStorage.removeItem("clash-go");
+      goNow.current = true;
+    }
     // Chơi lại after an Đánh thường match (chủ game 22/10): straight back into the queue with the same deck.
     if (sessionStorage.getItem("clash-requeue")) {
       sessionStorage.removeItem("clash-requeue");
@@ -132,14 +156,44 @@ function DeckSelectPage() {
     saveBook({ decks: book, active });
   }, [book, active, booted]);
 
+  useEffect(() => {
+    if (!booted || !goNow.current) return;
+    goNow.current = false;
+    const row = book.find((item) => item.n === active);
+    if (row && !deckIssues(cardsOf(row))) play(row);
+  }, [booted]);
+
   const decks = deckOrder(book);
   const shown = book.find((row) => row.n === open) ?? null;
+  const chooseLocked = !shown || Boolean(deckIssues(cardsOf(shown)));
+  const COLS = [46, 319, 579];
+  const openAt = decks.findIndex((row) => row.n === open);
+  const ringSpot = openAt < 0 ? null : { x: COLS[openAt % 3] - 57, y: 416 + 405 * Math.floor(openAt / 3) - 64 };
+
+  function pick(n: number) {
+    if (n === open) return;
+    if (open != null) {
+      setSliding(true);
+      window.clearTimeout(slideTimer.current);
+      slideTimer.current = window.setTimeout(() => setSliding(false), 420);
+    }
+    setOpen(n);
+  }
+
+  function choose() {
+    if (chooseLocked || !shown) return;
+    if (shown.n !== active) {
+      setPopped(shown.n);
+      playIntro("mark", 0.06);
+      window.setTimeout(() => setPopped((now) => (now === shown.n ? null : now)), 700);
+    }
+    setActive(shown.n);
+  }
   const modeInfo = (friend ? MODES.find((item) => item.key === "custom") : MODES.find((item) => item.key === mode)) ?? MODES[0];
 
-  // The builder opens the book's active deck; the state follows too, so the save after a change keeps it.
+  // The builder opens the deck asked for; the tick (the chosen deck) stays where it is (chủ game 15/11).
   function edit(n: number) {
-    setActive(n);
-    saveBook({ decks: book, active: n });
+    sessionStorage.setItem(EDIT_KEY, String(n));
     void navigate({ to: "/deck" });
   }
 
@@ -147,8 +201,8 @@ function DeckSelectPage() {
     const row = freshDeck(book);
     const next = [...book, row];
     setBook(next);
-    setActive(row.n);
-    saveBook({ decks: next, active: row.n });
+    saveBook({ decks: next, active: active ?? row.n });
+    sessionStorage.setItem(EDIT_KEY, String(row.n));
     void navigate({ to: "/deck" });
   }
 
@@ -299,8 +353,9 @@ function DeckSelectPage() {
       <div className="dk2" ref={pageRef}>
         <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
         <div className="dk2-stage" style={{ ["--rows" as string]: Math.max(2, Math.ceil(decks.length / 3)) }}>
-          <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
+          <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select" onPointerDown={(event) => press(event.currentTarget)}>
             <img src="/ui/deck/back.webp" alt="" draggable={false} />
+            <span className="dk2-hit" />
           </Link>
           {friend ? (
             <div className="lor-invite dk2-invite">
@@ -315,29 +370,43 @@ function DeckSelectPage() {
               </button>
             </div>
           ) : null}
-          <button type="button" className="dk2-btn dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
+          <button type="button" className="dk2-btn dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select" onPointerDown={(event) => press(event.currentTarget)}>
             <img src="/ui/deck/add.webp" alt="" draggable={false} />
+            <span className="dk2-hit" />
           </button>
           <button
             type="button"
             className="dk2-btn dk2-choose"
-            disabled={!shown || Boolean(deckIssues(cardsOf(shown)))}
-            onClick={() => shown && setActive(shown.n)}
+            aria-disabled={chooseLocked}
+            onPointerDown={(event) => press(event.currentTarget, chooseLocked)}
+            onClick={choose}
             aria-label={tr("Chọn")}
-            data-ui="confirm"
+            data-ui={chooseLocked ? "soft" : "confirm"}
           >
             <img src="/ui/deck/choose.webp" alt="" draggable={false} />
+            <span className="dk2-hit" />
           </button>
           <button
             type="button"
             className="dk2-btn dk2-edit"
-            disabled={!shown}
+            aria-disabled={!shown}
+            onPointerDown={(event) => press(event.currentTarget, !shown)}
             onClick={() => shown && edit(shown.n)}
             aria-label={tr("Chỉnh sửa")}
-            data-ui="select"
+            data-ui={shown ? "select" : "soft"}
           >
             <img src="/ui/deck/edit.webp" alt="" draggable={false} />
+            <span className="dk2-hit" />
           </button>
+          {ringSpot ? (
+            <img
+              className={`dk2-ring${sliding ? " is-on" : ""}`}
+              src="/ui/deck/glow.webp"
+              alt=""
+              draggable={false}
+              style={{ left: `calc(var(--u) * ${ringSpot.x})`, top: `calc(var(--u) * ${ringSpot.y})` }}
+            />
+          ) : null}
           {decks.map((row, i) => {
             const bad = Boolean(deckIssues(cardsOf(row)));
             const art = row.cover ? artSrc(row.cover, 1) : null;
@@ -347,7 +416,7 @@ function DeckSelectPage() {
                 key={row.n}
                 type="button"
                 className={`dk2-deck dk2-c${i % 3} dk2-r${Math.floor(i / 3)}${row.n === open ? " is-sel" : ""}${on ? " is-on" : ""}${bad ? " is-bad" : ""}`}
-                onClick={() => setOpen(row.n)}
+                onClick={() => pick(row.n)}
                 data-ui="select"
               >
                 <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
@@ -360,7 +429,7 @@ function DeckSelectPage() {
                 {bad ? (
                   <img className="dk2-mark dk2-bang" src="/ui/deck/bang.webp" alt="" draggable={false} />
                 ) : on ? (
-                  <img className="dk2-mark dk2-tick" src="/ui/deck/tick.webp" alt="" draggable={false} />
+                  <img className={`dk2-mark dk2-tick${popped === row.n ? " is-pop" : ""}`} src="/ui/deck/tick.webp" alt="" draggable={false} />
                 ) : null}
               </button>
             );

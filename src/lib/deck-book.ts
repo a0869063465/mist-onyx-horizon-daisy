@@ -109,6 +109,9 @@ function rotateTrial(book: DeckBook): DeckBook {
   return next;
 }
 
+/** Which deck the builder opens (sessionStorage); the book's `active` (the tick) is not touched by editing. */
+export const EDIT_KEY = "clash-deck-edit";
+
 export function saveBook(book: DeckBook) {
   localStorage.setItem(KEY, JSON.stringify({ active: book.active, decks: book.decks }));
 }
