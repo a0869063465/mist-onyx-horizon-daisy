@@ -1047,6 +1047,7 @@ export const PENDING_NOTES: string[] = [
   "Đòn đánh thường tông vào quái hoặc người chơi có âm va chạm mới.",
   "Quái bị hạ giờ chói sáng một nhịp rồi vỡ thành mảnh mang hình lá, có loé sáng và âm thanh mới.",
   "Rút bài: lá hiện giữa màn nằm trên bảng mô tả, bảng dài không còn đè lên lá.",
+  "Bảng mô tả lá có thêm tab Sở hữu: xem đang có mấy lá, nút Đến deck, Đến album, Nhận thêm lá này (gói quay; đánh NPC sắp có). Mở từ Bộ sưu tập thì vào tab Sở hữu trước, mở từ Chỉnh sửa bộ bài thì vào tab Kỹ năng (lá phép: Chức năng) trước.",
 ];
 
 function remarkOf(notes: string[]) {

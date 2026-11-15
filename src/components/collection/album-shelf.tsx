@@ -1,7 +1,8 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AlbumBook } from "@/components/collection/album-book";
 import { AlbumCover, CardsIcon } from "@/components/collection/album-parts";
 import {
+  ALBUM_GOTO_KEY,
   cardSets,
   claimedSets,
   claimSet,
@@ -32,6 +33,24 @@ export function AlbumTab() {
     null,
   );
   const fresh = useMemo(() => newCards(owned, seen), [owned, seen]);
+
+  // From a card's "Đến album" (tab Sở hữu): open that album's book straight away, also when this tab is already showing
+  // (the sheet's button then sends an event instead of the page being opened again).
+  useEffect(() => {
+    const goto = () => {
+      const id = sessionStorage.getItem(ALBUM_GOTO_KEY);
+      if (!id) return;
+      sessionStorage.removeItem(ALBUM_GOTO_KEY);
+      const album = list.find((item) => item.id === id);
+      if (!album) return;
+      setOpen(null);
+      window.setTimeout(() => openAlbum(album, null), 0);
+    };
+    goto();
+    window.addEventListener(ALBUM_GOTO_KEY, goto);
+    return () => window.removeEventListener(ALBUM_GOTO_KEY, goto);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The album's new cards arrive as it opens, so they count as looked at from then on.
   function openAlbum(album: Album, from: DOMRect | null) {

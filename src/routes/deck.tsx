@@ -577,9 +577,9 @@ function DeckPage() {
       ) : null}
       {sheet ? (
         sheet.kind === "monster" ? (
-          <CardMonsterSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <CardMonsterSheet place="deck" id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <SpellSheet place="deck" id={sheet.id} aside={asideOf(sheet.id)} note={DECK_NOTES[sheet.id]} asideFor={asideOf} noteFor={(id) => DECK_NOTES[id]} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
       {trade ? (

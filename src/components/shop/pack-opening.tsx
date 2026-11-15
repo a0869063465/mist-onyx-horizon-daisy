@@ -92,7 +92,7 @@ export function PackOpening({ purchase, onDone }: { purchase: Purchase; onDone: 
         </button>
       ) : null}
       {sheet ? (
-        sheet.kind === "monster" ? <CardMonsterSheet id={sheet.id} onClose={() => setSheet(null)} /> : <SpellSheet id={sheet.id} onClose={() => setSheet(null)} />
+        sheet.kind === "monster" ? <CardMonsterSheet place="collection" id={sheet.id} onClose={() => setSheet(null)} /> : <SpellSheet place="collection" id={sheet.id} onClose={() => setSheet(null)} />
       ) : null}
     </div>
   );
