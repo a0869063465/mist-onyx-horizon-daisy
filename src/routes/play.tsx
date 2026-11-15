@@ -6662,7 +6662,7 @@ function PlayPage() {
         <button
           type="button"
           className="log-btn press"
-          style={{ left: `${marks.foeHand.x}%`, top: `calc(${marks.foeHand.y + board.stack.height * 0.56}% + 5.4cqw)` }}
+          style={boardCut().id === "b" ? { left: `${marks.foeStars.x + 4.5}%`, top: "37.6%" } : { left: `${marks.foeHand.x}%`, top: `calc(${marks.foeHand.y + board.stack.height * 0.56}% + 5.4cqw)` }}
           aria-label={tr("Lịch sử và cài đặt")}
           onClick={() => (playUi("select"), setHelp(true))}
         >

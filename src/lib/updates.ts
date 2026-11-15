@@ -1025,6 +1025,7 @@ export const PENDING_NOTES: string[] = [
   "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
   "Bàn đấu mới: hai bàn riêng cho màn 9:16 và màn dài 9:20, tự đổi theo màn, không cắt bàn nữa. Bố cục đã chỉnh tay trong Tuỳ chỉnh được đặt lại.",
   "Màu hai bể sáng chuyển lượt đổi theo màu sân của hai bàn đấu mới.",
+  "Bàn đấu dài đổi ảnh mới: ô sao và mana bên đỏ hạ xuống, bộ bài đặt trên khung sao, nút lịch sử nằm dưới khung sao.",
 ];
 
 function remarkOf(notes: string[]) {
