@@ -1011,7 +1011,11 @@ export const PENDING_NOTES: string[] = [
   "Triệu hồi: kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng), lá hiện giữa sân với lựa chọn Triệu hồi, Hiến tế, Dung hợp và 2 mũi tên chọn hàng, rồi lá bay xuống ô.",
   "Đánh thường: quái lấy đà rồi lao tông thẳng vào mục tiêu, có vệt tốc độ, loé sáng, tia lửa, rung bàn và tiếng va.",
   "Lá phép vừa dùng hiện to giữa sân trên vòng phép đang quay, toả vòng sóng theo màu tốc độ của phép.",
-  "Nút ba gạch dưới bộ bài đối thủ mở Lịch sử và Cài đặt. Bỏ nút Menu và Cài đặt ở hai góc trên."
+  "Nút ba gạch dưới bộ bài đối thủ mở Lịch sử và Cài đặt. Bỏ nút Menu và Cài đặt ở hai góc trên.",
+  "Đòn tông có tiếng va riêng: bỏ tiếng trúng đòn, chớp đỏ và vết chém cũ bị trùng.",
+  "Kỹ năng: quái tụ sáng tại chỗ, bung về phía mục tiêu rồi hiệu ứng kỹ năng mới tới.",
+  "Đối thủ dùng phép hay kỹ năng: bảng ghi tên và tác dụng hiện ở đầu màn, bấm bất cứ đâu để tắt, tự tắt sau 4 giây.",
+  "Bấm kỹ năng hoặc phép: bảng xác nhận ghi tác dụng, OK rồi mới chọn mục tiêu, Huỷ để quay lại. Bật tắt trong Cài đặt của trận."
 ];
 
 function remarkOf(notes: string[]) {

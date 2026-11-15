@@ -519,7 +519,7 @@ export function MatchMenu({
                 </div>
               </section>
               <section className="mm-card">
-                <h3>{tr("Xác nhận trước khi dùng kỹ năng, phép")}</h3>
+                <h3>{tr("Xác nhận trước khi dùng")}</h3>
                 <div className="mm-pair">
                   <button type="button" className={`mm-opt${confirm ? " is-on" : ""}`} onClick={() => (confirm ? undefined : onConfirm())}>
                     {tr("Bật")}
