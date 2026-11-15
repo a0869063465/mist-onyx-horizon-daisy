@@ -14160,3 +14160,155 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   .slot.is-rouse .field-unit { animation: none; }
   .rouse-aura { display: none; }
 }
+
+/* K4 + K5 (chủ game 14/11): bảng báo việc đối thủ vừa làm và bảng xác nhận trước khi dùng kỹ năng / phép. Cùng một kiểu:
+   phiến đá xanh đêm viền vàng, mép sáng theo màu của kỹ năng hay tốc độ phép (--note). */
+.act-note {
+  --note: #62b8ff;
+  position: relative;
+  box-sizing: border-box;
+  width: min(92vw, 23.5rem);
+  padding: 0.62rem 0.8rem 0.7rem;
+  border-radius: 0.85rem;
+  color: #f4ecd6;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--note) 26%, transparent) 0, transparent 46%),
+    linear-gradient(180deg, #1b2440 0, #0d1226 100%);
+  border: 1px solid #d9b469;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(255, 236, 186, 0.16),
+    0 0.5rem 1.4rem rgba(0, 0, 0, 0.6),
+    0 0 1.1rem color-mix(in srgb, var(--note) 55%, transparent);
+  overflow: hidden;
+}
+.act-note::before,
+.act-note::after {
+  content: "";
+  position: absolute;
+  top: 0.32rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid #f1d58c;
+  background: var(--note);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0.4rem var(--note);
+}
+.act-note::before { left: 0.36rem; }
+.act-note::after { right: 0.36rem; }
+.an-shine {
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  pointer-events: none;
+  animation: an-shine 0.9s 0.12s ease-out both;
+}
+@keyframes an-shine { from { transform: translateX(0); } to { transform: translateX(460%); } }
+.an-head { display: flex; align-items: center; gap: 0.62rem; padding: 0 0.7rem; }
+.an-art {
+  flex: none;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #e6c373;
+  box-shadow: 0 0 0 1px #000, 0 0 0.55rem var(--note);
+  background: #0b0f1e;
+}
+.an-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
+.an-title { min-width: 0; display: flex; flex-direction: column; gap: 0.08rem; }
+.an-name {
+  display: flex;
+  align-items: center;
+  gap: 0.36rem;
+  font: 700 1.24rem/1.1 "Barlow Condensed", "Roboto Condensed", sans-serif;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--note) 62%, #ffffff);
+  text-shadow: 0 1px 0 #000, 0 0 0.5rem color-mix(in srgb, var(--note) 70%, transparent);
+}
+.an-gem { position: relative; flex: none; width: 1.7rem; height: 1.7rem; display: inline-grid; place-items: center; }
+.an-gem .unit-act-core { position: absolute; inset: 13%; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--note) 70%, #fff), color-mix(in srgb, var(--note) 55%, #000) 78%); color: #fff; }
+.an-gem .unit-act-core svg { width: 68%; height: 68%; }
+.an-gem .rim3d { position: absolute; inset: 0; width: 100%; height: 100%; }
+.an-who { font: 600 0.74rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #c9bb93; }
+.an-lines {
+  margin-top: 0.5rem;
+  padding: 0.42rem 0.6rem 0.1rem;
+  border-top: 1px solid rgba(217, 180, 105, 0.42);
+  font: 600 0.98rem/1.32 "Be Vietnam Pro", system-ui, sans-serif;
+  color: #f1ead8;
+}
+.an-lines p { margin: 0 0 0.26rem; position: relative; padding-left: 0.85rem; }
+.an-lines p::before {
+  content: "";
+  position: absolute;
+  left: 0.12rem;
+  top: 0.5em;
+  width: 0.34rem;
+  height: 0.34rem;
+  background: var(--note);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0.3rem var(--note);
+}
+.an-lines p.ink-skill { padding-left: 0; }
+.an-lines p.ink-skill::before { display: none; }
+
+/* K4: ở đầu màn, không chặn thao tác; vạch đếm 4 giây chạy dưới đáy. */
+.act-note.is-foe {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 0.45rem);
+  translate: -50% 0;
+  pointer-events: none;
+  animation: an-drop 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes an-drop { from { opacity: 0; translate: -50% -130%; } to { opacity: 1; translate: -50% 0; } }
+.an-clock {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--note), #fff3c4);
+  transform-origin: left center;
+  animation: an-clock 4s linear both;
+}
+@keyframes an-clock { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* K5: giữa sân, nền tối nhẹ; bấm ngoài bảng = Huỷ. */
+.act-ask-back {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 6, 16, 0.5);
+  animation: an-fade 0.16s ease-out both;
+}
+@keyframes an-fade { from { opacity: 0; } to { opacity: 1; } }
+.act-note.is-ask { animation: an-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.25) both; }
+@keyframes an-pop { from { opacity: 0; scale: 0.86; } to { opacity: 1; scale: 1; } }
+.an-btns { display: flex; gap: 0.6rem; margin-top: 0.55rem; padding: 0 0.3rem; }
+.an-btn {
+  flex: 1;
+  min-height: 2.5rem;
+  border-radius: 0.6rem;
+  border: 1px solid #8f94a8;
+  background: linear-gradient(180deg, #3a4160, #1f2438);
+  color: #e6e2d4;
+  font: 700 1.05rem/1 "Barlow Condensed", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 0 #000;
+}
+.an-btn.is-ok {
+  border-color: #f4dc98;
+  background: linear-gradient(180deg, #f6d57c, #c58a26);
+  color: #2a1700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 2px 0 #000, 0 0 0.7rem rgba(255, 205, 110, 0.55);
+}
+@media (prefers-reduced-motion: reduce) {
+  .act-note.is-foe, .act-note.is-ask, .an-shine { animation: none; }
+}

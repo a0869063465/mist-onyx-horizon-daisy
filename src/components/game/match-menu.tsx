@@ -389,9 +389,11 @@ export function MatchMenu({
   foeName,
   language,
   sound,
+  confirm,
   canConcede,
   onLang,
   onSound,
+  onConfirm,
   onConcede,
   onClose,
 }: {
@@ -400,9 +402,12 @@ export function MatchMenu({
   foeName: string;
   language: string;
   sound: boolean;
+  /** K5: hỏi xác nhận trước khi dùng kỹ năng / phép. */
+  confirm: boolean;
   canConcede: boolean;
   onLang: (lang: "vi" | "en") => void;
   onSound: () => void;
+  onConfirm: () => void;
   onConcede: () => void;
   onClose: () => void;
 }) {
@@ -509,6 +514,17 @@ export function MatchMenu({
                     {tr("Bật")}
                   </button>
                   <button type="button" className={`mm-opt${sound ? "" : " is-on"}`} onClick={() => (sound ? onSound() : undefined)}>
+                    {tr("Tắt")}
+                  </button>
+                </div>
+              </section>
+              <section className="mm-card">
+                <h3>{tr("Xác nhận trước khi dùng kỹ năng, phép")}</h3>
+                <div className="mm-pair">
+                  <button type="button" className={`mm-opt${confirm ? " is-on" : ""}`} onClick={() => (confirm ? undefined : onConfirm())}>
+                    {tr("Bật")}
+                  </button>
+                  <button type="button" className={`mm-opt${confirm ? "" : " is-on"}`} onClick={() => (confirm ? onConfirm() : undefined)}>
                     {tr("Tắt")}
                   </button>
                 </div>
