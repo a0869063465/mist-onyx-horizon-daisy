@@ -17,6 +17,11 @@
 
 - PvP VÀO TRẬN NGAY 15/11 (Opus 5.5, ĐÃ LÀM, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): index.tsx `startPvp`: bộ có tick + chế độ trên thanh (`clash-play-mode`); Vs Máy thẳng `/play`; Đánh thường/Tuỳ chọn/lời mời bạn đặt `clash-go` → modes.tsx tự gọi `play(row)` (hàng chờ / bảng mã phòng); bộ lỗi thì mở `/modes`. Chỉnh sửa bộ không đổi tick (`EDIT_KEY` sessionStorage, deck.tsx chỉ `saveDeck` khi bộ đang sửa là bộ có tick). HIỆU ỨNG ĐÃ LÀM 15/11 (chủ game chốt: glow TRƯỢT, tick nảy + tiếng, nút như màn chính): `public/ui/deck/glow.webp` = phần glow xanh cắt từ deck-on.webp (giữ pixel alpha<235 xanh lá, không đổi màu), `.dk2-ring` trượt 0,32 giây từ bộ cũ sang bộ mới rồi khung chọn hiện sau 0,3 giây (`pick`, `sliding`); Chọn = tick `is-pop` (scale 0→1,3→1) + `playIntro("mark")`; nút `press()` như `hit()` màn chính (lún, sáng, vòng `.dk2-hit`; khoá thì rung, dùng `aria-disabled`). Chụp Chromium 424×928 từng mốc.
 
+## Lag online Đánh thường (15/11, Opus 5.5, nhánh `ccr-312058b5-foqipx`): BƯỚC 1 ĐÃ LÀM, ĐÃ ÁP `main` 16/11
+1. Việc vừa làm: đối thủ đi xong hơn 10 giây mới tới lượt mình. Nguyên nhân: mỗi máy hỏi phòng 280 ms một lần không chờ lần trước xong, mỗi lần còn xoá phòng cũ + tải cả ván. Sửa: play.tsx vòng hỏi nối tiếp (`loop`, `pace`: 0,8 giây khi chờ đối thủ, 2 giây khi tới lượt mình); net-room.ts `pollRoom` nhận `since` (chỉ trả ván khi `rev` mới hơn), `sweep` chuyển sang lúc mở phòng/ghép trận.
+2. Hiện trạng: thử 2 trình duyệt trên máy chạy thử: nước đi tới máy kia ~0,8 giây, lần hỏi không đổi ~250 byte (trước ~6 KB). Chưa thử trên Vercel/Neon thật, điện thoại.
+3. Việc sắp làm: chờ chủ game thử; nếu còn lag: bước 2 (gửi phần đổi thay cả ván, Opus 5.5 high) và kiểm vùng Vercel/Neon.
+
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
 ## Hiệu ứng K1–K6 (14–15/11, Fable 5.2 high, nhánh `ccr-312058b5-foqipx`): ĐỢT A (K6, K3, K1) + ĐỢT B (K2, K4, K5) ĐÃ LÀM, CHƯA áp `main`

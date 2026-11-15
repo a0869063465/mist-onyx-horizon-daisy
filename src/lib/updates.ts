@@ -1033,6 +1033,7 @@ export const PENDING_NOTES: string[] = [
   "Lượt đầu: đổi bài xong, 3 lá bay lên tay hết, chậm một nhịp rồi lá tự rút mới bay lên tay.",
   "Lượt đầu: lá tự rút hiện giữa bàn như lần rút thường rồi mới về tay.",
   "Khiên kiếm có cánh báo bên giữ lượt tấn công đổi sang hiệu ứng và âm thanh mới, hai bên xanh đỏ.",
+  "Đánh thường, Tuỳ chọn: nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ hơn 10 giây).",
 ];
 
 function remarkOf(notes: string[]) {
