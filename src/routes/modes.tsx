@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DeckBox, LorDefs } from "@/components/deck-box";
+import { GoldText } from "@/components/gold-text";
 import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc } from "@/lib/catalog";
 import { deckIssues, saveDeck } from "@/lib/deck";
@@ -111,6 +112,7 @@ function DeckSelectPage() {
       }),
     );
     setActive(stored.active);
+    setOpen(stored.active);
     setMode(loadMode());
     setFriend(loadFriendMatch());
     setBooted(true);
@@ -277,114 +279,94 @@ function DeckSelectPage() {
     }
   }
 
+  // --k = bề ngang màn / 848 (số thuần) để nghiêng ảnh tranh theo bìa bằng matrix3d tính theo px của ảnh thiết kế
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = pageRef.current;
+    if (!el) return;
+    const set = () => el.style.setProperty("--k", String(el.clientWidth / 848));
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const coverArt = shown?.cover ? artSrc(shown.cover, 1) : null;
 
   return (
-    <main className="lor-page">
+    <main className="dk2-page">
       <LorDefs />
-      <div className="lor-main">
-        <header className="lor-head">
-          <Link to="/" className="lor-stone is-back" aria-label={tr("Về sân")}>
-            {"<<"}
+      <div className="dk2" ref={pageRef}>
+        <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
+        <div className="dk2-stage" style={{ ["--rows" as string]: Math.max(2, Math.ceil(decks.length / 3)) }}>
+          <Link to="/" className="dk2-btn dk2-back" aria-label={tr("Về sân")} data-ui="select">
+            <img src="/ui/deck/back.webp" alt="" draggable={false} />
           </Link>
-          <h1>{tr("Chọn bộ bài của bạn")}</h1>
-          <Link to="/guide" className="lor-stone is-help">
-            {tr("Hướng dẫn")}
-          </Link>
-        </header>
-        {friend ? (
-          <div className="lor-invite">
-            <span>
-              {friend.kind === "invite"
-                ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
-                : `${tr("Vào trận với")} ${tr(PLAYER_NAME)} ${friend.from}: ${tr("chọn bộ bài rồi Chơi ngay.")}`}
-              {friendNote ? <em className="lor-invite-note"> {tr(friendNote)}</em> : null}
-            </span>
-            <button type="button" onClick={dropFriend}>
-              {tr("Huỷ")}
-            </button>
-          </div>
-        ) : null}
-        <div className="lor-bar">
-          <button type="button" className="lor-stone" onClick={makeDeck}>
-            {tr("Bộ bài mới")}
-          </button>
-        </div>
-        <section className="lor-grid">
-          {decks.map((row) => (
-            <button
-              key={row.n}
-              type="button"
-              className={`lor-deck${row.n === open ? " on" : ""}`}
-              onClick={() => setOpen(row.n)}
-            >
-              <DeckBox cover={row.cover} spells={row.spells} fav={row.fav} warn={Boolean(deckIssues(cardsOf(row)))} trial={trialMark(row)} />
-              <span className="lor-deck-name">{row.name}</span>
-            </button>
-          ))}
-        </section>
-      </div>
-      {shown ? (
-        <div
-          className="lor-drawer-back is-band"
-          onClick={(event) => event.target === event.currentTarget && setOpen(null)}
-        >
-          <aside className="lor-drawer" role="dialog" aria-label={shown.name}>
-            <button type="button" className="lor-pill" onClick={() => !friend && setPicking(true)}>
-              {tr(modeInfo.label)}
-            </button>
-            <div className="lor-drawer-body">
-              <div className="lor-portrait-row">
-                <span
-                  className="lor-portrait"
-                  style={coverArt ? { backgroundImage: `url(${coverArt})` } : undefined}
-                />
-              </div>
-              <div className="lor-stage">
-                <div className="lor-side">
-                  <button
-                    type="button"
-                    className={`lor-square is-fav${shown.fav ? " on" : ""}`}
-                    aria-pressed={Boolean(shown.fav)}
-                    onClick={() => toggleFav(shown.n)}
-                  >
-                    <Glyph name="round-star" fill="url(#lor-star)" />
-                  </button>
-                  <span>{tr("Yêu thích")}</span>
-                </div>
-                <div className="lor-stage-box">
-                  <DeckBox cover={shown.cover} spells={shown.spells} fav={shown.fav} warn={Boolean(deckIssues(cardsOf(shown)))} trial={trialMark(shown)} />
-                </div>
-                <div className="lor-side">
-                  <button type="button" className="lor-square" onClick={() => edit(shown.n)}>
-                    <Glyph name="quill-ink" fill="url(#lor-silver)" />
-                  </button>
-                  <span>{tr("Chỉnh sửa")}</span>
-                </div>
-              </div>
-              <h2 className="lor-title">{shown.name}</h2>
-              <button
-                type="button"
-                className="lor-play"
-                data-ui="confirm"
-                disabled={Boolean(deckIssues(cardsOf(shown))) || (Boolean(friend) && busy)}
-                onClick={() => play(shown)}
-              >
-                {tr("Chơi ngay")}
+          {friend ? (
+            <div className="lor-invite dk2-invite">
+              <span>
+                {friend.kind === "invite"
+                  ? `${tr("Mời")} ${tr(PLAYER_NAME)} ${friend.to}: ${tr("chọn bộ bài rồi Chơi ngay.")}`
+                  : `${tr("Vào trận với")} ${tr(PLAYER_NAME)} ${friend.from}: ${tr("chọn bộ bài rồi Chơi ngay.")}`}
+                {friendNote ? <em className="lor-invite-note"> {tr(friendNote)}</em> : null}
+              </span>
+              <button type="button" onClick={dropFriend}>
+                {tr("Huỷ")}
               </button>
-              {friend && friendNote ? <p className="lor-note">{tr(friendNote)}</p> : null}
             </div>
-            <button
-              type="button"
-              className="lor-square is-delete"
-              aria-label={tr("Xoá bộ bài")}
-              onClick={() => setAsking(shown.n)}
-            >
-              <Glyph name="trash-can" fill="url(#lor-silver)" />
-            </button>
-          </aside>
+          ) : null}
+          <button type="button" className="dk2-btn dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
+            <img src="/ui/deck/add.webp" alt="" draggable={false} />
+          </button>
+          <button
+            type="button"
+            className="dk2-btn dk2-choose"
+            disabled={!shown || Boolean(deckIssues(cardsOf(shown)))}
+            onClick={() => shown && setActive(shown.n)}
+            aria-label={tr("Chọn")}
+            data-ui="confirm"
+          >
+            <img src="/ui/deck/choose.webp" alt="" draggable={false} />
+          </button>
+          <button
+            type="button"
+            className="dk2-btn dk2-edit"
+            disabled={!shown}
+            onClick={() => shown && edit(shown.n)}
+            aria-label={tr("Chỉnh sửa")}
+            data-ui="select"
+          >
+            <img src="/ui/deck/edit.webp" alt="" draggable={false} />
+          </button>
+          {decks.map((row, i) => {
+            const bad = Boolean(deckIssues(cardsOf(row)));
+            const art = row.cover ? artSrc(row.cover, 1) : null;
+            const on = row.n === active;
+            return (
+              <button
+                key={row.n}
+                type="button"
+                className={`dk2-deck dk2-c${i % 3} dk2-r${Math.floor(i / 3)}${row.n === open ? " is-sel" : ""}${on ? " is-on" : ""}${bad ? " is-bad" : ""}`}
+                onClick={() => setOpen(row.n)}
+                data-ui="select"
+              >
+                <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
+                <img className="dk2-off dk2-stack" src="/ui/deck/stack.webp" alt="" draggable={false} />
+                <img className="dk2-off dk2-plate" src="/ui/deck/plate.webp" alt="" draggable={false} />
+                <img className="dk2-glow" src="/ui/deck/deck-on.webp" alt="" draggable={false} />
+                <span className="dk2-name">
+                  <GoldText text={row.name} capU={18} fitU={142} />
+                </span>
+                {bad ? (
+                  <img className="dk2-mark dk2-bang" src="/ui/deck/bang.webp" alt="" draggable={false} />
+                ) : on ? (
+                  <img className="dk2-mark dk2-tick" src="/ui/deck/tick.webp" alt="" draggable={false} />
+                ) : null}
+              </button>
+            );
+          })}
         </div>
-      ) : null}
+      </div>
       {picking ? (
         <LorModal art={coverArt} onClose={() => setPicking(false)}>
           <h2 className="lor-modal-title">{tr(modeInfo.label)}</h2>

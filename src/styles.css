@@ -3433,7 +3433,7 @@ button.trail-dot.is-on {
   animation: none;
 }
 .hand-card.is-alert > .card, .face-pile.is-alert > img, .face-pile.is-alert > .deck-pile, .slot.is-alert {
-  animation: react-breathe 1.5s ease-in-out infinite;
+  animation: react-breathe 1s ease-in-out infinite;
 }
 @keyframes react-breathe {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--alert-color) 80%, transparent)); }
@@ -13910,6 +13910,27 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mm-round-name em::before { content: "·"; margin-right: 1.6cqw; color: var(--gold); }
 .mm-round-name em.is-mine { color: #8fd0ff; } .mm-round-name em.is-foe { color: #ff9a8c; }
 
+/* Chủ game 14/11: quái mình còn hành động được trong vòng tấn công = glow xanh lá thở, 1,5 giây một nhịp (cùng màu quái triệu hồi được trên tay). */
+@keyframes ready-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 3px #b8ffd0) drop-shadow(0 0 12px #46e874) drop-shadow(0 0 26px #46e874) drop-shadow(0 0 34px rgba(70, 232, 116, 0.9)); }
+}
+.slot.is-ready:not(.is-lunging):not(.is-thrust) { animation: ready-breathe 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-ready { animation: none; filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+}
+
+/* Chủ game 14/11: phản ứng chớp hồng nhịp 1 giây (react-breathe ở trên); quái chặn được = glow vàng 1 giây; phép dùng được ở lượt chính = chớp xanh lá 1,5 giây. */
+@keyframes block-breathe {
+  0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px #ffd24a) drop-shadow(0 0 5px #ffd24a) drop-shadow(0 0 10px rgba(255, 210, 74, 0.8)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 3px #fff1b8) drop-shadow(0 0 12px #ffd24a) drop-shadow(0 0 26px #ffd24a) drop-shadow(0 0 34px rgba(255, 210, 74, 0.9)); }
+}
+.slot.is-block:not(.is-lunging):not(.is-thrust) { animation: block-breathe 1s ease-in-out infinite; }
+.hand-card.is-castable > .card { animation: ready-breathe 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-block { animation: none; filter: drop-shadow(0 0 1.5px #ffd24a) drop-shadow(0 0 5px #ffd24a) drop-shadow(0 0 10px rgba(255, 210, 74, 0.8)); }
+  .hand-card.is-castable > .card { animation: none; }
+}
 /* ===== Tay bài + rút bài theo video (chủ game 13/11) ===== */
 /* Tay xoè: lá nghiêng nhẹ theo vòm, hơn 3 lá thì gối lên nhau (lá sau đè lá trước); lá đang chọn dựng thẳng, nhấc lên. */
 .stage .hand.is-strip.is-fan .hand-pick {
@@ -14312,3 +14333,55 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 @media (prefers-reduced-motion: reduce) {
   .act-note.is-foe, .act-note.is-ask, .an-shine { animation: none; }
 }
+/* Luật L2 quái ẩn (chủ game 14/11): quái ẩn của mình glow trắng đứng yên; đủ vòng kích hoạt thì chớp hồng (is-alert). */
+.slot.is-lurk { filter: drop-shadow(0 0 1.5px #ffffff) drop-shadow(0 0 5px #ffffff) drop-shadow(0 0 10px rgba(255, 255, 255, 0.75)); }
+.lurk-back { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(4, 6, 12, 0.78); padding: 16px; }
+.lurk-panel { width: min(92vw, 26rem); max-height: 80vh; overflow: auto; background: linear-gradient(180deg, #1b2236, #0e1220); border: 1px solid #c9a34f; border-radius: 14px; padding: 14px; color: #f3ead2; text-align: center; }
+.lurk-panel h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.lurk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 0.8rem; }
+.lurk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; color: inherit; padding: 0; font-size: 0.72rem; }
+.lurk-card .card { width: 100%; }
+.lurk-card[disabled] { opacity: 0.4; }
+.lurk-card small { color: #ff9a9a; }
+.lurk-skip { padding: 0.5rem 1.4rem; border-radius: 999px; border: 1px solid #8a93a8; background: #222a3e; color: #f3ead2; }
+.lurk-none { color: #f3ead2; font-size: 1.05rem; text-align: center; max-width: 80vw; }
+
+/* ===== Màn Chọn bộ bài mới (chủ game 15/11): ảnh cắt NGUYÊN từ ảnh 1:1 chủ game gửi, 1 đơn vị --u = 1 px ảnh A5 (848 px) ===== */
+.dk2-page { position: fixed; inset: 0; display: grid; place-items: center; background: #02101f; overflow: hidden; }
+.dk2 { --u: calc(100cqw / 848); position: relative; width: min(100vw, 100dvh * 0.457); height: 100dvh; max-height: calc(100vw * 2.19); container-type: inline-size; overflow-y: auto; overflow-x: hidden; color: #f4e3b2; }
+.dk2-bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
+.dk2 img { display: block; max-width: none; -webkit-user-drag: none; user-select: none; }
+.dk2-stage { position: relative; width: 100%; height: calc(var(--u) * (416 + 405 * var(--rows) + 120)); }
+.dk2-btn { position: absolute; display: block; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.14s ease, filter 0.2s ease; }
+.dk2-btn img { width: 100%; height: 100%; }
+.dk2-btn:active:not(:disabled) { transform: scale(0.95); filter: brightness(1.25); }
+.dk2-btn:disabled { filter: grayscale(0.7) brightness(0.65); cursor: not-allowed; }
+.dk2-back { left: calc(var(--u) * 30); top: calc(var(--u) * 82); width: calc(var(--u) * 112); height: calc(var(--u) * 90); z-index: 3; }
+.dk2-invite { position: absolute; left: calc(var(--u) * 30); right: calc(var(--u) * 30); top: calc(var(--u) * 172); z-index: 3; }
+.dk2-add { left: calc(var(--u) * 36); top: calc(var(--u) * 214); width: calc(var(--u) * 124); height: calc(var(--u) * 116); }
+.dk2-choose { left: calc(var(--u) * 165); top: calc(var(--u) * 210); width: calc(var(--u) * 313); height: calc(var(--u) * 120); }
+.dk2-edit { left: calc(var(--u) * 480); top: calc(var(--u) * 214); width: calc(var(--u) * 340); height: calc(var(--u) * 116); }
+/* Ô bộ bài: gốc (0,0) = góc trên trái lá trước. Cột x = 46 / 319 / 579, hàng y = 416 + 405 * hàng */
+.dk2-deck { position: absolute; display: block; width: calc(var(--u) * 213); height: calc(var(--u) * 324); padding: 0; border: 0; background: none; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; transition: transform 0.18s ease; }
+.dk2-deck:active { transform: scale(0.96); }
+.dk2-c0 { left: calc(var(--u) * 46); } .dk2-c1 { left: calc(var(--u) * 319); } .dk2-c2 { left: calc(var(--u) * 579); }
+.dk2-r0 { top: calc(var(--u) * 416); } .dk2-r1 { top: calc(var(--u) * 821); } .dk2-r2 { top: calc(var(--u) * 1226); } .dk2-r3 { top: calc(var(--u) * 1631); }
+.dk2-art { position: absolute; left: 0; top: 0; width: 160px; height: 216px; transform-origin: 0 0; transform: scale(var(--k, 0.5)) matrix3d(0.901334,-0.116922,0,-0.00037568,-0.045859,0.940259,0,-0.00012474,0,0,1,0,17.6143,36.4286,0,1); background: #0d2b4d center / cover no-repeat; }
+.dk2-stack { position: absolute; left: calc(var(--u) * -10); top: calc(var(--u) * -10); width: calc(var(--u) * 234); height: calc(var(--u) * 272); pointer-events: none; }
+.dk2-plate { position: absolute; left: calc(var(--u) * -6); top: calc(var(--u) * 262); width: calc(var(--u) * 234); height: calc(var(--u) * 70); pointer-events: none; }
+.dk2-c2 .dk2-plate { left: calc(var(--u) * -3); }
+.dk2-glow { position: absolute; left: calc(var(--u) * -57); top: calc(var(--u) * -64); width: calc(var(--u) * 316); height: calc(var(--u) * 438); opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+.dk2-name { position: absolute; left: calc(var(--u) * 2); top: calc(var(--u) * 264); width: calc(var(--u) * 216); height: calc(var(--u) * 59); display: block; pointer-events: none; }
+.dk2-c2 .dk2-name { left: calc(var(--u) * 5); }
+.dk2-mark { position: absolute; pointer-events: none; }
+.dk2-tick { left: calc(var(--u) * 132); top: calc(var(--u) * -23); width: calc(var(--u) * 83); height: calc(var(--u) * 86); }
+.dk2-bang { left: calc(var(--u) * 116); top: calc(var(--u) * -20); width: calc(var(--u) * 81); height: calc(var(--u) * 84); }
+.gold-text { position: absolute; left: 50%; transform: translateX(-50%); display: block; pointer-events: none; filter: drop-shadow(0 calc(var(--u) * 1.5) calc(var(--u) * 1.5) rgba(0, 0, 0, 0.55)); }
+.gold-text i { position: absolute; background-image: url(/ui/deck/glyphs.webp); background-repeat: no-repeat; }
+/* Bộ đang chọn: ảnh glow xanh lá nguyên bản của chủ game */
+.dk2-off { transition: opacity 0.25s ease; }
+.dk2-deck.is-sel .dk2-off { opacity: 0; }
+.dk2-deck.is-sel .dk2-glow { opacity: 1; }
+.dk2-deck.is-sel .dk2-art { transform: scale(var(--k, 0.5)) matrix3d(0.966076,-0.105899,0,-0.00035314,-0.042055,0.943111,0,-0.00014348,0,0,1,0,8.5063,34.3803,0,1); }
+.dk2-deck.is-bad .dk2-art { filter: saturate(0.75); }
+@media (prefers-reduced-motion: reduce) { .dk2-btn, .dk2-deck, .dk2-off, .dk2-glow { transition: none; } }

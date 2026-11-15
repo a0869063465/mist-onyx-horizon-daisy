@@ -1015,7 +1015,11 @@ export const PENDING_NOTES: string[] = [
   "Đòn tông có tiếng va riêng: bỏ tiếng trúng đòn, chớp đỏ và vết chém cũ bị trùng.",
   "Kỹ năng: quái tụ sáng tại chỗ, bung về phía mục tiêu rồi hiệu ứng kỹ năng mới tới.",
   "Đối thủ dùng phép hay kỹ năng: bảng ghi tên và tác dụng hiện ở đầu màn, bấm bất cứ đâu để tắt, tự tắt sau 4 giây.",
-  "Bấm kỹ năng hoặc phép: bảng xác nhận ghi tác dụng, OK rồi mới chọn mục tiêu, Huỷ để quay lại. Bật tắt trong Cài đặt của trận."
+  "Bấm kỹ năng hoặc phép: bảng xác nhận ghi tác dụng, OK rồi mới chọn mục tiêu, Huỷ để quay lại. Bật tắt trong Cài đặt của trận.",
+  "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
+  "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
+  "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
+  "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
 ];
 
 function remarkOf(notes: string[]) {
