@@ -2417,13 +2417,13 @@ function PlayPage() {
     let voting = false;
     const tick = async () => {
       const wantDeck = join.seat === "host" && (againRef.current || liveDuel.current?.again?.[0] === "want");
-      const room = await pollRoom({ data: { code: join.code, seat: join.seat, ...(wantDeck ? { deck: true } : {}) } });
+      const room = await pollRoom({ data: { code: join.code, seat: join.seat, since: rev.current, ...(wantDeck ? { deck: true } : {}) } });
       if (stop) return;
       if (room.phase === "gone") {
         setWait("Mã không còn. Hãy tạo mã mới.");
         return;
       }
-      if (join.seat === "host" && room.guestDeck && !room.duel && !opening.current) {
+      if (join.seat === "host" && room.guestDeck && room.phase === "wait" && !opening.current) {
         opening.current = true;
         const deck = loadDeck();
         const opened: Duel = { ...createDuel(deck, "net", room.guestDeck), faces: [ownFace(deck), roomFace(room.guestDeck)] };
@@ -2489,11 +2489,28 @@ function PlayPage() {
       // The room keeps the other side's vote; the next poll brings both.
       if (pushed?.ok) voteSent.current = last.mid ?? null;
     };
-    void tick();
-    const timer = window.setInterval(() => void tick(), 280);
+    // Lag Đánh thường (chủ game 15/11): an ask every 280 ms whatever happened to the one before piled the asks up on the
+    // server for over 10 s. Now the next ask waits for the last one: soon (0,8 s) while the other side is to act, slower
+    // (2 s) while this side is.
+    const mine: Side = join.seat === "host" ? 0 : 1;
+    const pace = () => {
+      const live = liveDuel.current;
+      if (!live || live.winner !== null || live.opener) return 800;
+      return boardActor(live) === mine ? 2000 : 800;
+    };
+    let timer = 0;
+    const loop = async () => {
+      try {
+        await tick();
+      } catch {
+        // A lost ask: the next one tries again.
+      }
+      if (!stop) timer = window.setTimeout(() => void loop(), pace());
+    };
+    void loop();
     return () => {
       stop = true;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
   }, []);
 

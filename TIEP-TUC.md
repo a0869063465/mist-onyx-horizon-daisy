@@ -5,6 +5,11 @@
 2. Hiện trạng: nhận ảnh A1–A5. Chụp Chromium 412×915 khớp A5 (nút, lưới 3 cột, glow nhảy khi bấm bộ, tick). Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy mượt, tick bật), phần 3–4 = Opus 5.5 high. Chưa thử điện thoại thật; tên có ký tự ngoài bảng A1 thì bị trống.
 3. Việc sắp làm: chờ chủ game xem ảnh miếng cắt; rồi PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình (Opus 5.5 high).
 
+## Lag online Đánh thường (15/11, Opus 5.5, nhánh `ccr-312058b5-foqipx`): BƯỚC 1 ĐÃ LÀM, CHƯA áp `main`
+1. Việc vừa làm: chủ game báo đối thủ đi xong hơn 10 giây mới tới lượt mình (cùng wifi). Nguyên nhân: mỗi máy hỏi phòng 280 ms một lần không chờ lần trước xong, mỗi lần còn xoá phòng cũ + tải cả ván, nên dồn ở máy chủ. Sửa: play.tsx vòng hỏi nối tiếp (`loop`, `pace`: 0,8 giây khi chờ đối thủ/đổi bài/hết trận, 2 giây khi tới lượt mình); net-room.ts `pollRoom` nhận `since` (chỉ trả ván khi `rev` mới hơn, cột `started` cho `phase`), bỏ lệnh xoá mỗi lần hỏi (`sweep` khi mở phòng/ghép trận).
+2. Hiện trạng: thử 2 trình duyệt Đánh thường trên máy chạy thử (PGLite): nước đi tới máy kia ~0,8 giây, lần hỏi không đổi chỉ ~250 byte (trước ~6 KB). tsc sạch, round-rules 72/72. Chưa thử trên Vercel/Neon thật, chưa thử điện thoại. Màn Chọn bộ bài mới chưa có nút vào trận (thử bằng lối Chơi lại).
+3. Việc sắp làm: chờ chủ game thử trên bản xuất bản; bước 2 (gửi phần đổi thay cả ván) và kiểm vùng Vercel/Neon nếu còn lag.
+
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
 ## Hiệu ứng K1–K6 (14–15/11, Fable 5.2 high, nhánh `ccr-312058b5-foqipx`): ĐỢT A (K6, K3, K1) + ĐỢT B (K2, K4, K5) ĐÃ LÀM, CHƯA áp `main`
