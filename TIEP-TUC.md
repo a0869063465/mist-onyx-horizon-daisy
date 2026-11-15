@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Màn Chọn bộ bài mới (15/11, Sonnet 5.5 medium, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`): phần 1–2 ĐÃ LÀM
+1. Việc vừa làm: `modes.tsx` render mới theo ảnh A5 (nền `public/ui/deck/bg.webp`, khung CSS `.dk2-*` cuối styles.css, font Montserrat 700 gradient vàng cho tiêu đề + tên bộ bài); ô "Bộ bài" (thứ 2 dưới màn chính) mở `/modes`; bấm bộ = chọn (glow xanh lá), Chọn = gắn tick (bộ lỗi disabled), Chỉnh sửa, Bộ bài mới; tạm ẩn Yêu thích, Xoá, đổi chế độ, Hướng dẫn.
+2. Hiện trạng: nhận ảnh A1–A5. Chưa làm: PvP vào trận ngay (đang mở `/modes`), hiệu ứng nút + chọn bộ (glow nhảy, tick bật), phần 3–4 = Opus 5.5 high.
+3. Việc sắp làm: PvP → vào trận ngay bằng bộ có tick + chế độ đang chọn (ai/quick/custom/test); hiệu ứng. Chờ chủ game đổi mô hình.
+
 **Danh sách ý chưa làm gom từ các phiên cũ, có đánh số để chủ game gọi: `docs/y-chua-lam.md` (đọc file này khi chủ game hỏi "còn việc gì dở").**
 
 ## Luật L2 quái ẩn (14/11, Opus 5.5 high, nhánh `ccr-01cc3477-yvbwzt`, ĐÃ LÀM khung luật, CHƯA áp `main`)

@@ -1012,6 +1012,7 @@ export const PENDING_NOTES: string[] = [
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
   "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
+  "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
 ];
 
 function remarkOf(notes: string[]) {

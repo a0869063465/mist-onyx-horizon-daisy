@@ -111,6 +111,7 @@ function DeckSelectPage() {
       }),
     );
     setActive(stored.active);
+    setOpen(stored.active);
     setMode(loadMode());
     setFriend(loadFriendMatch());
     setBooted(true);
@@ -280,17 +281,16 @@ function DeckSelectPage() {
   const coverArt = shown?.cover ? artSrc(shown.cover, 1) : null;
 
   return (
-    <main className="lor-page">
+    <main className="dk2-page">
       <LorDefs />
-      <div className="lor-main">
-        <header className="lor-head">
-          <Link to="/" className="lor-stone is-back" aria-label={tr("Về sân")}>
-            {"<<"}
+      <div className="dk2">
+        <img className="dk2-bg" src="/ui/deck/bg.webp" alt="" draggable={false} />
+        <header className="dk2-head">
+          <Link to="/" className="dk2-oct dk2-back" aria-label={tr("Về sân")} data-ui="select">
+            <i className="dk2-in" />
+            <svg viewBox="0 0 40 28" aria-hidden="true"><path d="M20 4 8 14l12 10M34 4 22 14l12 10" /></svg>
           </Link>
-          <h1>{tr("Chọn bộ bài của bạn")}</h1>
-          <Link to="/guide" className="lor-stone is-help">
-            {tr("Hướng dẫn")}
-          </Link>
+          <h1 className="dk2-title">{tr("Chọn bộ bài của bạn")}</h1>
         </header>
         {friend ? (
           <div className="lor-invite">
@@ -305,86 +305,75 @@ function DeckSelectPage() {
             </button>
           </div>
         ) : null}
-        <div className="lor-bar">
-          <button type="button" className="lor-stone" onClick={makeDeck}>
-            {tr("Bộ bài mới")}
+        <div className="dk2-bar">
+          <button type="button" className="dk2-oct dk2-add" onClick={makeDeck} aria-label={tr("Bộ bài mới")} data-ui="select">
+            <i className="dk2-in" />
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <rect x="6" y="9" width="22" height="30" rx="3" />
+              <rect x="14" y="5" width="22" height="30" rx="3" />
+              <path d="M36 28v14M29 35h14" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="dk2-oct dk2-wide is-lit"
+            disabled={!shown || Boolean(deckIssues(cardsOf(shown)))}
+            onClick={() => shown && setActive(shown.n)}
+            data-ui="confirm"
+          >
+            <i className="dk2-in" />
+            <Glyph name="crossed-swords" fill="url(#dk2-gold)" />
+            <b>{tr("Chọn")}</b>
+          </button>
+          <button
+            type="button"
+            className="dk2-oct dk2-wide"
+            disabled={!shown}
+            onClick={() => shown && edit(shown.n)}
+            data-ui="select"
+          >
+            <i className="dk2-in" />
+            <Glyph name="quill-ink" fill="url(#dk2-gold)" />
+            <b>{tr("Chỉnh sửa")}</b>
           </button>
         </div>
-        <section className="lor-grid">
-          {decks.map((row) => (
-            <button
-              key={row.n}
-              type="button"
-              className={`lor-deck${row.n === open ? " on" : ""}`}
-              onClick={() => setOpen(row.n)}
-            >
-              <DeckBox cover={row.cover} spells={row.spells} fav={row.fav} warn={Boolean(deckIssues(cardsOf(row)))} trial={trialMark(row)} />
-              <span className="lor-deck-name">{row.name}</span>
-            </button>
-          ))}
-        </section>
-      </div>
-      {shown ? (
-        <div
-          className="lor-drawer-back is-band"
-          onClick={(event) => event.target === event.currentTarget && setOpen(null)}
-        >
-          <aside className="lor-drawer" role="dialog" aria-label={shown.name}>
-            <button type="button" className="lor-pill" onClick={() => !friend && setPicking(true)}>
-              {tr(modeInfo.label)}
-            </button>
-            <div className="lor-drawer-body">
-              <div className="lor-portrait-row">
-                <span
-                  className="lor-portrait"
-                  style={coverArt ? { backgroundImage: `url(${coverArt})` } : undefined}
-                />
-              </div>
-              <div className="lor-stage">
-                <div className="lor-side">
-                  <button
-                    type="button"
-                    className={`lor-square is-fav${shown.fav ? " on" : ""}`}
-                    aria-pressed={Boolean(shown.fav)}
-                    onClick={() => toggleFav(shown.n)}
-                  >
-                    <Glyph name="round-star" fill="url(#lor-star)" />
-                  </button>
-                  <span>{tr("Yêu thích")}</span>
-                </div>
-                <div className="lor-stage-box">
-                  <DeckBox cover={shown.cover} spells={shown.spells} fav={shown.fav} warn={Boolean(deckIssues(cardsOf(shown)))} trial={trialMark(shown)} />
-                </div>
-                <div className="lor-side">
-                  <button type="button" className="lor-square" onClick={() => edit(shown.n)}>
-                    <Glyph name="quill-ink" fill="url(#lor-silver)" />
-                  </button>
-                  <span>{tr("Chỉnh sửa")}</span>
-                </div>
-              </div>
-              <h2 className="lor-title">{shown.name}</h2>
+        <section className="dk2-grid">
+          {decks.map((row) => {
+            const bad = Boolean(deckIssues(cardsOf(row)));
+            const art = row.cover ? artSrc(row.cover, 1) : null;
+            return (
               <button
+                key={row.n}
                 type="button"
-                className="lor-play"
-                data-ui="confirm"
-                disabled={Boolean(deckIssues(cardsOf(shown))) || (Boolean(friend) && busy)}
-                onClick={() => play(shown)}
+                className={`dk2-deck${row.n === open ? " is-sel" : ""}${row.n === active ? " is-on" : ""}${bad ? " is-bad" : ""}`}
+                onClick={() => setOpen(row.n)}
+                data-ui="select"
               >
-                {tr("Chơi ngay")}
+                <span className="dk2-stack">
+                  <i className="dk2-layer l2" />
+                  <i className="dk2-layer l1" />
+                  <i className="dk2-front">
+                    <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
+                  </i>
+                  {bad ? <i className="dk2-badge is-bad">!</i> : row.n === active ? <i className="dk2-badge is-ok">✓</i> : null}
+                </span>
+                <span className="dk2-plate">
+                  <i className="dk2-in" />
+                  <b>{row.name}</b>
+                </span>
               </button>
-              {friend && friendNote ? <p className="lor-note">{tr(friendNote)}</p> : null}
-            </div>
-            <button
-              type="button"
-              className="lor-square is-delete"
-              aria-label={tr("Xoá bộ bài")}
-              onClick={() => setAsking(shown.n)}
-            >
-              <Glyph name="trash-can" fill="url(#lor-silver)" />
-            </button>
-          </aside>
-        </div>
-      ) : null}
+            );
+          })}
+        </section>
+        <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
+          <defs>
+            <linearGradient id="dk2-gold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#ffe9a8" />
+              <stop offset="1" stopColor="#e0a43a" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
       {picking ? (
         <LorModal art={coverArt} onClose={() => setPicking(false)}>
           <h2 className="lor-modal-title">{tr(modeInfo.label)}</h2>

@@ -14055,3 +14055,60 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .lurk-card small { color: #ff9a9a; }
 .lurk-skip { padding: 0.5rem 1.4rem; border-radius: 999px; border: 1px solid #8a93a8; background: #222a3e; color: #f3ead2; }
 .lurk-none { color: #f3ead2; font-size: 1.05rem; text-align: center; max-width: 80vw; }
+
+/* ===== Màn Chọn bộ bài mới (chủ game 15/11, theo ảnh A1–A5) ===== */
+.dk2-page { position: fixed; inset: 0; display: grid; place-items: center; background: #02101f; overflow: hidden; }
+.dk2 { position: relative; width: min(100vw, 100dvh * 0.457); height: 100dvh; max-height: calc(100vw * 2.19); container-type: inline-size; overflow-y: auto; overflow-x: hidden; padding: 3.2cqw 4cqw 8cqw; color: #f4e3b2; }
+.dk2-bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
+.dk2-head { display: flex; align-items: center; gap: 3.4cqw; margin-top: 2cqw; }
+.dk2-title, .dk2-plate b {
+  font-family: "Montserrat", "Be Vietnam Pro", sans-serif; font-weight: 700; letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #fff1bf 0%, #f6c85a 52%, #c98a24 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0.25cqw 0.2cqw rgba(0, 0, 0, 0.7));
+}
+.dk2-title { margin: 0; font-size: 5.7cqw; line-height: 1.1; text-transform: uppercase; }
+/* Ô hình bát giác viền vàng: lớp ngoài là vàng, lớp trong .dk2-in là nền xanh */
+.dk2-oct { --c: 3.2cqw; position: relative; display: grid; place-items: center; border: 0; padding: 0; cursor: pointer; background: linear-gradient(180deg, #ffe19a, #b9791f 55%, #f0c25c);
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c));
+  transition: transform 0.14s ease, filter 0.2s ease; -webkit-tap-highlight-color: transparent; }
+.dk2-oct .dk2-in { position: absolute; inset: 0.7cqw; background: linear-gradient(180deg, #15416c, #0a2748 70%, #0b2a4b);
+  clip-path: polygon(calc(var(--c) - 0.5cqw) 0, calc(100% - var(--c) + 0.5cqw) 0, 100% calc(var(--c) - 0.5cqw), 100% calc(100% - var(--c) + 0.5cqw), calc(100% - var(--c) + 0.5cqw) 100%, calc(var(--c) - 0.5cqw) 100%, 0 calc(100% - var(--c) + 0.5cqw), 0 calc(var(--c) - 0.5cqw)); }
+.dk2-oct > *:not(.dk2-in) { position: relative; z-index: 1; }
+.dk2-oct:active:not(:disabled) { transform: scale(0.95); filter: brightness(1.25); }
+.dk2-oct:disabled { filter: grayscale(0.7) brightness(0.65); cursor: not-allowed; }
+.dk2-back { width: 15cqw; height: 10.6cqw; }
+.dk2-back svg { width: 6.2cqw; fill: none; stroke: #f6d98a; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0.3cqw 0.3cqw #000a); }
+.dk2-bar { display: grid; grid-template-columns: 12.4cqw 1fr 1fr; gap: 2.6cqw; margin: 5.2cqw 0 6cqw; }
+.dk2-add { height: 12.4cqw; }
+.dk2-add svg { width: 7.6cqw; fill: none; stroke: #f2cd72; stroke-width: 3; stroke-linecap: round; }
+.dk2-wide { height: 12.4cqw; grid-auto-flow: column; justify-content: center; gap: 2.4cqw; }
+.dk2-wide .glyph, .dk2-wide svg { width: 7cqw; height: 7cqw; }
+.dk2-wide b { font-family: "Montserrat", sans-serif; font-size: 4.3cqw; background: linear-gradient(180deg, #fff1bf, #e9b64a); -webkit-background-clip: text; background-clip: text; color: transparent; text-transform: uppercase; }
+.dk2-wide.is-lit::after { content: ""; position: absolute; left: 6%; right: 6%; top: 0.5cqw; bottom: 0.5cqw; z-index: 2; pointer-events: none; border-top: 0.35cqw solid rgba(120, 220, 255, 0.9); border-bottom: 0.35cqw solid rgba(120, 220, 255, 0.9); border-radius: 50%; opacity: 0.75; }
+.dk2-wide.is-lit:disabled::after { opacity: 0.15; }
+.dk2-wide.is-lit { filter: drop-shadow(0 0 1.6cqw rgba(60, 190, 255, 0.55)); }
+.dk2-wide.is-lit:not(:disabled) .dk2-in { box-shadow: inset 0 0.6cqw 1.4cqw rgba(70, 200, 255, 0.45), inset 0 -0.6cqw 1.4cqw rgba(70, 200, 255, 0.45); }
+/* Lưới bộ bài */
+.dk2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7cqw 3cqw; align-items: start; }
+.dk2-deck { position: relative; display: grid; justify-items: center; gap: 2.2cqw; background: none; border: 0; padding: 0 0 1cqw; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; transition: transform 0.18s ease; }
+.dk2-deck:active { transform: scale(0.96); }
+.dk2-stack { position: relative; display: block; width: 24cqw; aspect-ratio: 3 / 4; filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.55)); transition: filter 0.28s ease, transform 0.28s ease; }
+.dk2-layer, .dk2-front { position: absolute; display: block; border-radius: 1.1cqw; background: linear-gradient(180deg, #f6d77e, #b9791f 60%, #e3b04a);
+  clip-path: polygon(0 0, 92% 0, 100% 7%, 100% 100%, 0 100%); }
+.dk2-layer.l2 { inset: -3% -9% 5% 11%; transform: rotate(3deg); filter: brightness(0.7); }
+.dk2-layer.l1 { inset: -1.5% -5% 3% 5%; transform: rotate(1.5deg); filter: brightness(0.85); }
+.dk2-front { inset: 0 3% 0 0; padding: 0.8cqw; }
+.dk2-art { position: absolute; inset: 0.8cqw; border-radius: 0.8cqw; background: #0d2b4d center / cover no-repeat; clip-path: polygon(0 0, 91% 0, 100% 7%, 100% 100%, 0 100%); }
+.dk2-plate { --c: 2.4cqw; position: relative; display: grid; place-items: center; width: 28.5cqw; height: 7.4cqw; background: linear-gradient(180deg, #ffe19a, #b9791f 55%, #f0c25c);
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% 50%, calc(100% - var(--c)) 100%, var(--c) 100%, 0 50%); }
+.dk2-plate .dk2-in { position: absolute; inset: 0.55cqw; background: linear-gradient(180deg, #123b66, #082340);
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% 50%, calc(100% - var(--c)) 100%, var(--c) 100%, 0 50%); }
+.dk2-plate b { position: relative; z-index: 1; font-size: 2.55cqw; max-width: 24cqw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk2-badge { position: absolute; top: -3cqw; right: -5cqw; display: grid; place-items: center; width: 8.6cqw; height: 8.6cqw; border-radius: 50%; font-style: normal; font-weight: 800; font-size: 5.6cqw; line-height: 1; color: #fff4d0; border: 0.9cqw solid #e8b94d; box-shadow: 0 0.5cqw 1.2cqw #000a, inset 0 0 1.6cqw #0007; z-index: 2; }
+.dk2-badge.is-ok { background: radial-gradient(circle at 40% 30%, #3fae2f, #17610f); }
+.dk2-badge.is-bad { background: radial-gradient(circle at 40% 30%, #e23b2c, #8a0f08); }
+/* Bộ đang chọn: glow xanh lá */
+.dk2-deck.is-sel .dk2-stack { filter: drop-shadow(0 0 1.1cqw #8be84e) drop-shadow(0 0 3.4cqw rgba(110, 230, 60, 0.75)); transform: translateY(-0.8cqw) scale(1.04); }
+.dk2-deck.is-sel .dk2-plate { filter: drop-shadow(0 0 1.4cqw rgba(110, 230, 60, 0.85)); }
+.dk2-deck.is-bad .dk2-art { filter: saturate(0.75); }
+@media (prefers-reduced-motion: reduce) { .dk2-stack, .dk2-oct, .dk2-deck { transition: none; } }
