@@ -696,3 +696,11 @@ Chỉ lập kế hoạch. Các nhánh xử lý khác làm sau.
 
 Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại nút; bảo vật lấy ở đâu và dùng mấy lần; chìa lấy ở đâu; AI tăng khó theo tầng hay cố định; trang bị lấy từ đâu; mất khi thua hay khi xong.
 Đề xuất mô hình và nỗ lực: luật mê cung, bảo vật và AI: Opus 5.5 high; giao diện và chữ: Sonnet 5.5 medium. Chờ chủ game duyệt.
+
+## MÊ CUNG PVE (06/11–15/11, chủ game; CHƯA CÓ CODE, chờ "ok" bắt đầu phần 1)
+
+- Đặc tả đã chốt nằm ở `docs/maze/` (`dac-ta.md` vị trí, tường, cổng, quái, sương mù, chết/reset, khay; `bao-vat.md` 7 bảo vật sơ lược; `do-kho.md` 4 mức độ; `cells.json` toạ độ 49 ô trên ảnh mê cung 1142×1377).
+- Tọa độ ô: cột 1–7 trái sang phải, hàng A–G dưới lên; cửa vào (1,A). Cổng đỏ T3 một chiều (1,C) → (6,C), xanh dương T1 (1,E)↔(4,A), xanh lá T2 (3,G)↔(5,A). Lối nhanh nhất chỉ gặp Lv1 (1,C), Lv2 (6,A), Lv3 (6,D).
+- Lưới ô lấy giữa các hàng tường làm chuẩn; chân nhân vật đứng giữa tâm ô và điểm nửa đoạn từ tâm tới cạnh dưới (`fx`,`fy` trong `cells.json`).
+- Còn để sau: cách mở lại mê cung bị khoá, quy tắc 7 ngày, buff khi reset, bảo vật, Cửa hàng PVE, hiệu ứng vào trận, bộ bài quái.
+- Kế hoạch: phần 1 logic (Sonnet 5.5 medium), phần 2 màn `/maze`, phần 3 nối màn đấu bài; làm xong từng phần thì dừng.
