@@ -92,7 +92,7 @@ export const DEFAULT_REACTION: Notice = byBoard<Notice>({
   a: { x: 64, y: 42.5, w: 22, h: 12, font: 3.2, hidden: false },
   b: { x: 64, y: 43.5, w: 22, h: 12, font: 3.2, hidden: false },
 });
-export const DEFAULT_STACK: Spot = byBoard<Spot>({ a: spot(85, 63.5, 2.6, 15, 7.2), b: spot(85, 63, 2.6, 15, 7.2) });
+export const DEFAULT_STACK: Spot = byBoard<Spot>({ a: spot(83.8, 64.8, 2.6, 15, 7.2), b: spot(83.8, 62.6, 2.6, 15, 7.2) });
 export const DEFAULT_ENV: Spot = byBoard<Spot>({ a: spot(73.4, 55.1, 2.2, 16, 4), b: spot(73.4, 54.7, 2.2, 16, 4) });
 export const DEFAULT_ENV_FOE: Spot = byBoard<Spot>({ a: spot(74.1, 41.8, 2.2, 16, 4), b: spot(74.1, 43.4, 2.2, 16, 4) });
 /** Tường thành (chủ game 01/11): chỗ lá đầu tiên, tâm; các lá sau nối dọc về phía giữa sân. Mặc định = một bước dọc cạnh lá môi trường. */
