@@ -297,7 +297,16 @@ export function MonsterSheet({
   startSkill,
   stay = false,
   onSwipe,
+  own,
+  ownFirst = false,
+  mainLabel = "Kỹ năng",
 }: {
+  /** Tab "Sở hữu" (chủ game 15/11): its panel, shown on the right of the card. Without it the sheet has no tab bar. */
+  own?: ReactNode;
+  /** The sheet opens on the "Sở hữu" tab (the collection) instead of the skills (a match, the deck builder). */
+  ownFirst?: boolean;
+  /** Name of the tab that holds what the sheet showed before the tabs: "Kỹ năng" for a monster, "Chức năng" for a spell. */
+  mainLabel?: string;
   name: string;
   card: ReactNode;
   /** The orange number the monster shows on the field; empty hides the badge. */
@@ -327,6 +336,9 @@ export function MonsterSheet({
   onSwipe?: (dir: 1 | -1) => boolean | void;
 }) {
   const [slide, setSlide] = useState<0 | 1 | -1>(0);
+  const [tab, setTab] = useState<"main" | "own">(own && ownFirst ? "own" : "main");
+  useEffect(() => setTab(own && ownFirst ? "own" : "main"), [name]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onOwn = !!own && tab === "own";
   const swipe = useSwipe((dir) => {
     if (!onSwipe) return false;
     if (onSwipe(dir) === false) return false;
@@ -499,7 +511,17 @@ export function MonsterSheet({
             ✕
           </button>
         )}
-        {skills.length || extras.length ? (
+        {own ? (
+          <nav className="msheet-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={!onOwn} className={!onOwn ? "on" : ""} onClick={() => setTab("main")}>
+              {tr(mainLabel)}
+            </button>
+            <button type="button" role="tab" aria-selected={onOwn} className={onOwn ? "on" : ""} onClick={() => setTab("own")}>
+              {tr("Sở hữu")}
+            </button>
+          </nav>
+        ) : null}
+        {!onOwn && (skills.length || extras.length) ? (
           <div className="msheet-skills">
             {row(groups, true)}
           </div>
@@ -532,8 +554,8 @@ export function MonsterSheet({
                 </span>
               ) : null}
             </div>
-            {aside}
-            {actions.length ? (
+            {onOwn ? own : aside}
+            {!onOwn && actions.length ? (
               <div className="msheet-acts">
                 {actions.map((action) => (
                   <ActionButton key={action.key} action={action} />
@@ -542,7 +564,7 @@ export function MonsterSheet({
             ) : null}
           </div>
         </div>
-        <div className="msheet-desc">
+        {onOwn ? null : <div className="msheet-desc">
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
@@ -593,7 +615,7 @@ export function MonsterSheet({
           ) : (
             <p className="msheet-empty">{tr("Không có kỹ năng.")}</p>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

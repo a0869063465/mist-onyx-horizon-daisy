@@ -14413,3 +14413,50 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk2-deck.is-sel .dk2-art { transition: transform 0s linear 0.3s; transform: scale(var(--k, 0.5)) matrix3d(0.966076,-0.105899,0,-0.00035314,-0.042055,0.943111,0,-0.00014348,0,0,1,0,8.5063,34.3803,0,1); }
 .dk2-deck.is-bad .dk2-art { filter: saturate(0.75); }
 @media (prefers-reduced-motion: reduce) { .dk2-btn, .dk2-deck, .dk2-off, .dk2-glow, .dk2-ring, .dk2-art { transition: none !important; } .dk2-ring { display: none; } .dk2-tick.is-pop { animation: none; } }
+/* Tabs of a card's sheet (chủ game 15/11): Kỹ năng (Chức năng for a spell) and Sở hữu. */
+.msheet-tabs { display: flex; gap: 0.35rem; margin: 0 2.4rem 0.6rem 0; }
+.msheet-tabs > button {
+  flex: 1;
+  min-width: 0;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, #232c40, #131a28);
+  color: #b9b09a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.12s, color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.msheet-tabs > button.on {
+  color: #fff4cf;
+  border-color: #e9c46a;
+  background: linear-gradient(180deg, #4a3a14, #2a1f08);
+  box-shadow: 0 0 10px rgba(233, 196, 106, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.msheet-tabs > button:active { transform: scale(0.95); }
+/* Tab Sở hữu, on the right of the card. */
+.own-panel { display: grid; gap: 0.55rem; align-content: start; }
+.own-count { margin: 0; font-size: 1.05rem; font-weight: 800; color: #f2ead6; }
+.own-count b { color: #7be88a; font-size: 1.3rem; }
+.own-title { margin: 0; font-size: 1rem; font-weight: 900; color: #f6d77e; }
+.own-label { margin: 0.2rem 0 0; font-size: 0.8rem; font-weight: 700; color: #aeb7cc; text-transform: uppercase; letter-spacing: 0.05em; }
+.own-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; }
+.own-list li { padding: 0.3rem 0.55rem; border-radius: 0.45rem; background: rgba(255, 255, 255, 0.07); font-weight: 700; }
+.own-list li.is-none { color: #8d93a3; font-weight: 600; }
+.own-btn {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(233, 196, 106, 0.5);
+  border-radius: 0.6rem;
+  background: linear-gradient(180deg, #2c3652, #172033);
+  color: #f6e7b8;
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 2px 0 #05070c, inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.12s, filter 0.15s;
+}
+.own-btn:active { transform: translateY(1px) scale(0.97); filter: brightness(1.2); }
+.own-btn:disabled { opacity: 0.4; }
+.own-btn.is-get { border-color: #5fd57a; color: #c9f7d2; background: linear-gradient(180deg, #1f4a2c, #12301c); }
+.own-btn.is-back { margin-top: 0.3rem; }
