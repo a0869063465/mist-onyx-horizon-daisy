@@ -439,6 +439,8 @@ const ROW_SLOTS: Record<SummonRow, Slot[]> = { front: [0, 1, 2], back: [3, 4, 5]
 const DOUBLE_TAP = 350;
 /** Gợi ý lượt 1 (t1-draw1, t1-draw0, t1-pass, t1-more): tạm ẩn từ 12/11, đặt false để bật lại. */
 const TURN_ONE_HINTS_OFF = true;
+/** Lá tự rút của lượt đầu bay sau 3 lá đầu (3 lá cách 0,15 giây + 0,62 giây bay) cộng một nhịp nghỉ (chủ game 13/11). */
+const AUTO_DRAW_AT = 1.5;
 
 /** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
 const FLOOR_ART = "/board-floor.jpg";
@@ -2835,14 +2837,24 @@ function PlayPage() {
     const me = viewer;
     if (openerWas.current && !openerOpen && !duel.opener) {
       openerWas.current = false;
-      const mine = [...duel.players[me].reserve.map((_, i) => `r:${i}`), ...duel.players[me].hand.map((_, i) => `s:${i}`)].slice(0, OPENING_CARDS);
+      // Lá tự rút của lượt đầu (chủ game 13/11): 3 lá đầu bay lên tay hết, chậm 1 nhịp rồi lá rút mới bay riêng.
+      const you = duel.players[me];
+      const drawn = you.draws >= 1 ? (you.reserve.length > 2 ? `r:${you.reserve.length - 1}` : you.hand.length > 1 ? `s:${you.hand.length - 1}` : null) : null;
+      const mine = [...you.reserve.map((_, i) => `r:${i}`), ...you.hand.map((_, i) => `s:${i}`)].filter((target) => target !== drawn).slice(0, OPENING_CARDS);
       const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
       for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
-      setFlights((list) => [...list, ...born]);
       for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      if (drawn) {
+        born.push({ id: (flightId.current += 1), side: "you", target: drawn, delay: AUTO_DRAW_AT });
+        playCue("draw", AUTO_DRAW_AT);
+      }
+      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
+      setFlights((list) => [...list, ...born]);
       return;
     }
     if (openerOpen) openerWas.current = true;
+    // Bảng đổi bài còn đóng dần: lá tự rút của lượt đầu chưa bay ở đây, nó bay sau 3 lá đầu (nhánh trên).
+    if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
     const born: DrawFlight[] = [];
     ([0, 1] as const).forEach((side) => {
