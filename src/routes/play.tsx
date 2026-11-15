@@ -12,7 +12,7 @@ import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edit
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
 import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, SHORT_TOP, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
-import { playCue, playHit, playPack, playUi, setSound, soundOn, unlockSound } from "@/lib/sfx";
+import { playCue, playHit, playLine, playPack, playUi, setSound, soundOn, unlockSound, type Cue } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
 import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
@@ -55,6 +55,9 @@ import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
 import { DeckPile } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
 import { CardShow } from "@/components/game/card-show";
+import { ConfirmNote, FoeNote, type NoteHead } from "@/components/game/act-notes";
+import { confirmOn, setConfirmOn } from "@/lib/confirm-ask";
+import { CastShow } from "@/components/game/cast-show";
 import { HandPeek, type PeekInfo } from "@/components/game/hand-peek";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
@@ -186,11 +189,11 @@ import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, LAVA_BOARD_ART, LAVA_SHORT_ART, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
-import { ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
+import { AimFlow, ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
 import { RelatedFlow, SpellSheet } from "@/components/game/card-sheets";
 import { SEA_KINDS } from "@/lib/env-kinds";
-import { emitFx, LASER_MS } from "@/lib/spectacle";
+import { emitFx, LASER_MS, type FxEvent } from "@/lib/spectacle";
 import { fireBlastOn } from "@/lib/fx-prefs";
 import { pushReplay, pushWatch, readReplay, readWatch } from "@/lib/friends";
 import { markReplay, recordGame } from "@/lib/profile";
@@ -714,13 +717,11 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 
 /** How far an attacker lunges toward what it hits while the other side may answer: as far as it always did, less the
  *  room its reaction icon takes in front of it (chủ game 23/10). */
-const LUNGE_FACE = 0.42;
 /** Dòng chảy đợt 2: how far in front of the row it is aimed at a spread splits, as a share of the gap between the two
  *  front rows (chủ game 29/10: a quarter, so a spell that stops its trunk stands just before it on that side's half),
  *  and the ring round a player's health its light runs into, in % of the board's width. */
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
-const LUNGE_MELEE = 0.56;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
 const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
 
@@ -729,38 +730,10 @@ function lungeTravel(base: number, dx: number, dy: number): number {
   return Math.max(0.05, base - ICON_ROOM / dist);
 }
 
-function attackShift(duel: Duel, uid: string, viewer: Side): { x: number; y: number } | null {
-  const pending = duel.pending;
-  if (duel.step !== "respond" || !pending || (pending.kind !== "face" && pending.kind !== "melee") || pending.attacker !== uid) return null;
-  const attacker = fieldMon(duel, uid);
-  if (attacker?.horn || attacker?.gaze) return null;
-  if (seaVeiled(duel, viewer, uid)) return null;
-  let fromSide: Side = 0;
-  let fromIndex = -1;
-  for (const side of [0, 1] as const) {
-    const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
-    if (index >= 0) {
-      fromSide = side;
-      fromIndex = index;
-    }
-  }
-  if (fromIndex < 0) return null;
-  const from = SLOT_BOX[screenSide(fromSide, viewer)][fromIndex];
-  const foe = (1 - fromSide) as Side;
-  const visualFoe = screenSide(foe, viewer);
-  // Blocked, it lunges toward the blocker, and only a little: the blocker flies out to meet it, and the blow surges
-  // against the blocker's icon in the gap between them (dòng chảy đợt 2).
-  const blocker = duel.hold?.blocker ?? null;
-  const foeIndex = pending.kind === "melee" || blocker
-    ? duel.players[foe].field.findIndex((mon) => mon?.uid === (blocker ?? (pending.kind === "melee" ? pending.defender : "")))
-    : -1;
-  const to = pending.kind === "face" && !blocker ? HP_BOX[visualFoe] : foeIndex >= 0 ? SLOT_BOX[visualFoe][foeIndex] : null;
-  if (!to) return null;
-  const dx = to.x + to.w / 2 - (from.x + from.w / 2);
-  const dy = to.y + to.h / 2 - (from.y + from.h / 2);
-  let travel = lungeTravel(blocker ? LUNGE_BLOCKED : pending.kind === "face" ? LUNGE_FACE : LUNGE_MELEE, dx, dy);
-  if (blocker) travel = Math.min(travel, Math.max(0, blockRoom() / 2) / (Math.abs(dy) || 1));
-  return { x: (dx * travel * 100) / from.w, y: (dy * travel * 100) / from.h };
+/** Chủ game 14/11 (P3.1): a normal attack no longer flies up to hit: the attacker stands still like a monster that uses a
+ *  skill (its icon, flow and landing effects tell the story). Only a monster that blocks still flies out (`blockShift`). */
+function attackShift(_duel: Duel, _uid: string, _viewer: Side): { x: number; y: number } | null {
+  return null;
 }
 
 /** What is left of the middle band between the two front rows (in % of the board's height) once a blow's icon and
@@ -851,7 +824,7 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
  */
 type Landing =
   | { kind: "face"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
-  | { kind: "clash"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; target: { x: number; y: number } };
+  | { kind: "clash"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; target: { x: number; y: number }; ang: number };
 
 const HELL_IDS = new Set(["mat-do-tan-pha", "rong-ac-ma"]);
 const BOARD_EDGE = 4;
@@ -863,6 +836,48 @@ function seatOf(duel: Duel, uid: string): { side: Side; index: number } | null {
   for (const side of [0, 1] as const) {
     const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
     if (index >= 0) return { side, index };
+  }
+  return null;
+}
+
+/** The card a monster on the field shows as: Tê giác bé con grown up is its grown card. */
+function formOf(mon: FieldMon) {
+  return mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
+}
+
+/** The light of a skill by its kind (K2, K4): brighter than the metal of its rim, so it reads as a glow. */
+const SKILL_GLOW: Record<string, string> = { active: "#62b8ff", risk: "#ff8f3d", spell: "#ff6bb5", slow: "#ff5a4a" };
+
+type SkillFacts = { cardId: string; name: string; icon: string; kind: string; slow: boolean };
+/** The skill a monster is using, as its sheet names it: by its number among the monster's skills ("lash" = Roi điện). */
+function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | null): SkillFacts | null {
+  const cardId = mon ? formOf(mon) : fallbackId;
+  if (!cardId) return null;
+  const card = monsterCard(cardId);
+  const book = skillsOf(cardId, card?.skill ?? "");
+  const label = skill === "lash" ? chipLabel(cardId, "lash") : skill !== null ? castName(cardId, skill) : "";
+  // A skill the rules name after its monster is the only one it can use.
+  const sole = () => {
+    const usable = book.filter((row) => row.kind !== "passive" && row.kind !== "note");
+    return usable.length === 1 ? usable[0] : undefined;
+  };
+  const hit = label
+    ? bookSkill(cardId, label, card?.skill ?? "") ?? (label.trim().toLowerCase() === card?.name.trim().toLowerCase() ? sole() : undefined)
+    : book.find((row) => row.kind === "active" || row.kind === "risk");
+  const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
+  return { cardId, name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind, slow: Boolean(hit?.slow) };
+}
+
+/** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
+ *  toward its target, and only then (ROUSE_MS) does the skill's own effect, its sound and its numbers land. */
+const ROUSE_MS = 720;
+const ROUSE_CAST = 400;
+
+/** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
+function attackTerms(mon: FieldMon): string | null {
+  if (mon.cardId === "khong-lo-mot-mat" && !mon.horn && !mon.gaze && !mon.bolt) {
+    const cost = /Tiêu hao\s*(\d+)\s*mana/i.exec(plainCopy(monsterCard(mon.cardId)?.skill ?? ""))?.[1] ?? "1";
+    return `Tiêu hao ${cost} mana để tấn công`;
   }
   return null;
 }
@@ -895,7 +910,9 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
     const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
     const target = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
     const at = { x: from.x + (target.x - from.x) * 0.8, y: from.y + (target.y - from.y) * 0.8 };
-    return { kind: "clash", uid: attacker.uid, thrust: toward(target, 0.72), at, target };
+    // The way the blow travels on the screen (the board is taller than wide), for the sparks and the speed trail.
+    const ang = Math.atan2((target.y - from.y) / boardAspect(), target.x - from.x);
+    return { kind: "clash", uid: attacker.uid, thrust: toward(target, 0.76), at, target, ang };
   }
   if (next.players[foe].hp >= prev.players[foe].hp) return null;
   const top = screenSide(foe, viewer) === 1;
@@ -1842,6 +1859,15 @@ function PlayPage() {
   const [stage, setStage] = useState<Staged | null>(null);
   const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string }>>([]);
   const [drawLeave, setDrawLeave] = useState(false);
+  /** K3 (chủ game 14/11): a spell used outside the reaction chain shows big in the middle of the board, then fades. */
+  const [castShow, setCastShow] = useState<{ key: string; id: string } | null>(null);
+  // K4: việc đối thủ vừa làm (phép, kỹ năng); K5: bảng xác nhận trước khi mình dùng kỹ năng / phép.
+  const [foeNote, setFoeNote] = useState<{ key: string; head: NoteHead; lines: string[] } | null>(null);
+  const [useAsk, setUseAsk] = useState<{ head: NoteHead; lines: string[]; text?: string; go: () => void } | null>(null);
+  const [confirmUse, setConfirmUse] = useState(true);
+  useEffect(() => setConfirmUse(confirmOn()), []);
+  // Bàn đổi (đối thủ đi, hết lượt) thì bảng xác nhận đang mở không còn đúng nữa.
+  useEffect(() => setUseAsk(null), [duel]);
   useEffect(() => setPeekAt(0), [handPick?.pile, handPick?.index, handPick?.id, drawShows[0]?.key]);
   const [fuseOn, setFuseOn] = useState(false);
   const [fuseDrag, setFuseDrag] = useState<{ x: number; y: number; moved: boolean } | null>(null);
@@ -1895,7 +1921,7 @@ function PlayPage() {
   const [lockFlash, setLockFlash] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
-  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number } | null>(null);
+  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
   const sentAlly = duel?.step === "respond" ? duel.hold?.ambush?.ally ?? null : null;
@@ -2927,6 +2953,114 @@ function PlayPage() {
     if (duel.winner !== null && prev.winner === null && !(!tutorial && !trial && (duel.mode === "ai" || duel.mode === "net"))) playCue(duel.winner === viewerNow ? "win" : "lose");
     if (rose !== undefined) playCue("star");
     const spent = spentSpell(prev, duel);
+    // K2 (chủ game 14/11): kỹ năng đã chờ trong chuỗi vừa được thông qua (cả hai bỏ qua): quái dùng nó tụ sáng tại chỗ, giật về
+    // phía mục tiêu, rồi hiệu ứng, âm và số của kỹ năng mới tới (`pre` ms sau). Bị chặn, bị hoá giải, vòng quay / máy quay
+    // mở ra thì không.
+    const rouse = (() => {
+      const cast = prev.pending;
+      if (quiet || tutorial || prev.mid !== duel.mid || prev.step !== "respond" || !cast || duel.pending) return null;
+      if (cast.kind !== "beam" && cast.kind !== "gnaw-skill" && !(cast.kind === "face" && cast.skill)) return null;
+      if (prev.hold?.ambush || (duel.reel && !prev.reel) || (duel.wheel && !prev.wheel)) return null;
+      const known = new Set((prev.events ?? []).map((row) => row.id));
+      if (!(duel.events ?? []).some((row) => !known.has(row.id) && row.kind === "pass")) return null;
+      if (duel.fx !== prev.fx && /chặn kỹ năng|Hấp thụ ma pháp/.test(duel.live)) return null;
+      const uid = cast.kind === "face" ? cast.attacker : cast.caster;
+      const seat = seatOf(prev, uid);
+      const mon = fieldMon(prev, uid);
+      if (!seat || !mon) return null;
+      const row = screenSide(seat.side, viewerNow);
+      const home = SLOT_BOX[row][seat.index];
+      const from = { x: home.x + home.w / 2, y: home.y + home.h / 2 };
+      const aim = aimPoint(prev, cast, viewerNow) ?? { x: from.x, y: from.y + (row === 0 ? -20 : 20) };
+      const dx = aim.x - from.x;
+      const dy = (aim.y - from.y) / boardAspect();
+      const far = Math.hypot(dx, dy);
+      const reach = 2.6;
+      const jolt = far < 1 ? { x: 0, y: 0 } : { x: (((dx / far) * reach) * 100) / home.w, y: (((dy / far) * reach * boardAspect()) * 100) / home.h };
+      const index = cast.kind === "face" ? (mon.cardId === "may-quay-thuong" ? 1 : 0) : cast.kind === "beam" ? cast.index : 0;
+      const facts = skillFacts(mon, mon.cardId, index);
+      const tone = SKILL_GLOW[facts?.slow ? "slow" : facts?.kind ?? "active"] ?? SKILL_GLOW.active;
+      return { uid, from, jolt, ang: far < 1 ? undefined : Math.atan2(dy, dx), tone };
+    })();
+    const pre = rouse ? ROUSE_MS : 0;
+    const cueAt = (kind: Cue, delay?: number, offset = 0) => playCue(kind, delay, offset, pre / 1000);
+    const fxAt = (event: FxEvent) => {
+      if (pre) window.setTimeout(() => emitFx(event), pre);
+      else emitFx(event);
+    };
+    if (rouse) {
+      const { uid, jolt, tone } = rouse;
+      setThrust({ uid, x: 0, y: 0, phase: "rouse", tone });
+      window.setTimeout(() => setThrust((now) => (now?.uid === uid && now.phase === "rouse" ? { uid, ...jolt, phase: "cast", tone } : now)), ROUSE_CAST);
+      window.setTimeout(() => setThrust((now) => (now?.uid === uid && now.phase === "cast" ? { uid, x: 0, y: 0, phase: "cast", tone } : now)), ROUSE_CAST + 120);
+      window.setTimeout(() => setThrust((now) => (now?.uid === uid && now.phase === "cast" ? null : now)), ROUSE_MS + 140);
+      emitFx({ t: "rouse", x: rouse.from.x, y: rouse.from.y, color: tone, ang: rouse.ang });
+      playHit("rouse");
+      // Máu trên lá và trên viên máu giữ số cũ tới lúc hiệu ứng của kỹ năng chạm.
+      const held: Record<string, number> = {};
+      for (const side of [0, 1] as const) {
+        if (duel.players[side].hp !== prev.players[side].hp) held[`face:${side}`] = prev.players[side].hp;
+        for (const was of prev.players[side].field) {
+          const now = was ? fieldMon(duel, was.uid) : null;
+          if (was && now && now.hp !== was.hp) held[`mon:${was.uid}`] = was.hp;
+        }
+      }
+      const keys = Object.keys(held);
+      if (keys.length) {
+        setHpHold((now) => ({ ...now, ...held }));
+        window.setTimeout(() => setHpHold((now) => {
+          const rest = { ...now };
+          for (const key of keys) delete rest[key];
+          return rest;
+        }), ROUSE_MS);
+      }
+    }
+    // K3: phép không vào chuỗi phản ứng (dùng ở bước chính, có tác dụng ngay) cũng hiện to giữa sân; phép vào chuỗi do
+    // ReactionLine lo (lá thu vào icon của nó).
+    const castNow = (duel.events ?? []).slice((prev.events ?? []).length).find((row) => row.kind === "spell" && row.ok && row.cardId);
+    if (castNow?.cardId && prev.mid === duel.mid && duel.step !== "respond" && prev.step !== "respond") {
+      setCastShow({ key: castNow.id, id: castNow.cardId });
+      playLine("cast");
+    }
+    // K4 (chủ game 14/11): đối thủ vừa dùng một phép hay một kỹ năng (vào chuỗi hay không): bảng ghi tên và việc nó làm.
+    const foeAct = (() => {
+      if (tutorial || duel.mode === "test" || duel.mode === "hotseat" || prev.mid !== duel.mid || quiet) return null;
+      const known = new Set((prev.events ?? []).map((row) => row.id));
+      const rows = (duel.events ?? []).filter((row) => !known.has(row.id) && row.ok && row.actor !== viewerNow && row.cardId && (row.kind === "spell" || row.kind === "skill"));
+      return rows[rows.length - 1] ?? null;
+    })();
+    if (foeAct?.cardId) {
+      const actor = foeAct.actor as Side;
+      if (foeAct.kind === "spell") {
+        const card = SPELLS.find((spell) => spell.id === foeAct.cardId);
+        const brief = spellBrief(duel, foeAct.cardId, actor).split("\n").slice(1).filter(Boolean);
+        if (card) {
+          setFoeNote({ key: foeAct.id, head: { name: card.name, tone: speedTone(card.id), art: spellSrc(card.id), who: tr("Phép của đối thủ") }, lines: brief });
+          playLine("note", 0.12);
+        }
+      } else {
+        const pending = duel.pending;
+        const waiting = pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.caster : pending?.kind === "face" ? pending.attacker : "";
+        const held = waiting ? fieldMon(duel, waiting) : null;
+        const mon =
+          (held && held.cardId === foeAct.cardId ? held : null) ??
+          duel.players[actor].field.find((unit) => unit?.cardId === foeAct.cardId) ??
+          prev.players[actor].field.find((unit) => unit?.cardId === foeAct.cardId) ??
+          null;
+        const facts = skillFacts(mon, foeAct.cardId, foeAct.skill ?? 0);
+        if (facts?.name && !(mon && seaVeiled(duel, viewerNow, mon.uid))) {
+          const target = foeAct.target?.kind === "monster" && foeAct.target.uid ? fieldMon(duel, foeAct.target.uid) : null;
+          const brief = skillBrief({ duel, cardId: facts.cardId, name: facts.name, mon, target }).split("\n").slice(1).filter(Boolean);
+          const card = monsterCard(facts.cardId);
+          setFoeNote({
+            key: foeAct.id,
+            head: { name: facts.name, tone: SKILL_GLOW[facts.slow ? "slow" : facts.kind] ?? SKILL_GLOW.active, icon: facts.icon, kind: facts.slow ? "slow" : facts.kind, art: artSrc(facts.cardId, mon?.level ?? 1), who: card ? tr(card.name) : "" },
+            lines: brief,
+          });
+          playLine("note", 0.12);
+        }
+      }
+    }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
     const attackNow = duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending : null;
@@ -2986,13 +3120,13 @@ function PlayPage() {
     const lashWas = prev.pending?.kind === "lash" ? prev.pending : null;
     const lashOpen = Boolean(lashNow && !lashWas);
     const lashBoom = Boolean(lashWas && !lashNow && !/Hấp thụ ma pháp nuốt/.test(said));
-    if (quiet && (lunged || beam)) playCue("veil");
+    if (quiet && (lunged || beam)) cueAt("veil");
     const prepGun =
       (beam && duel.pending?.kind === "beam" && skillLook(beamCaster, duel.pending.index) === "gun") ||
       (hellFace && attackNow ? skillLook(fieldMon(duel, attackNow.attacker)?.cardId ?? "", 0) === "gun" : false);
     // Núi dung nham: the eruption, then the fire spell's explosion part on every target hit (owner, 19/10).
     if (!quiet && duel.lava && duel.lava.seq !== prev.lava?.seq) {
-      playCue("eruption");
+      cueAt("eruption");
       duel.lava.hits.forEach((hit, order) => {
         let point: { x: number; y: number } | null = null;
         if (hit.uid === null) {
@@ -3005,14 +3139,20 @@ function PlayPage() {
           point = index >= 0 ? (SLOT_POS[screenSide(hit.side, viewerNow)][index] ?? null) : null;
         }
         window.setTimeout(() => {
-          playCue("swordBoom");
-          if (point && fireBlastOn()) emitFx({ t: "fire", x: point.x, y: point.y });
+          cueAt("swordBoom");
+          if (point && fireBlastOn()) fxAt({ t: "fire", x: point.x, y: point.y });
         }, 2300 + order * 280);
       });
     }
-    if (!quiet && firePrep && !prepGun) playCue("firePrep");
-    if (!quiet && (blocked || gnawed)) playCue("block");
-    if (!quiet && struck && spent !== "phuc-kich" && !curseBoom) playCue("hit");
+    if (!quiet && firePrep && !prepGun) cueAt("firePrep");
+    if (!quiet && (blocked || gnawed)) cueAt("block");
+    // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
+    // lightning to reach it.
+    const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
+    const landing = quiet ? null : attackLanding(prev, duel, viewerNow, hud);
+    // Đòn tông có tiếng riêng (lao + va): tiếng trúng đòn cũ không phát chồng lên nó (chủ game 14/11).
+    const rammed = landing?.kind === "clash";
+    if (!quiet && struck && spent !== "phuc-kich" && !curseBoom && !rammed) cueAt("hit");
     const struckMelee = prev.pending?.kind === "melee" ? prev.pending : null;
     const riderHit = Boolean(struck && struckMelee && (fieldMon(prev, struckMelee.attacker)?.cardId === "ky-si-cuoi-rong" || fieldMon(prev, prev.hold?.blocker ?? struckMelee.defender)?.cardId === "ky-si-cuoi-rong"));
     if (!quiet && riderHit && struckMelee) {
@@ -3032,21 +3172,21 @@ function PlayPage() {
           if (spot) points.push(spot);
         }
       }
-      window.setTimeout(() => playCue("swordBoom"), 512);
+      window.setTimeout(() => cueAt("swordBoom"), 512);
       window.setTimeout(() => {
-        if (fireBlastOn()) for (const point of points) emitFx({ t: "fire", x: point.x, y: point.y });
+        if (fireBlastOn()) for (const point of points) fxAt({ t: "fire", x: point.x, y: point.y });
       }, 320);
     }
-    if (!quiet && spent === "phuc-kich" && /phục kích/.test(said)) playCue("attack");
+    if (!quiet && spent === "phuc-kich" && /phục kích/.test(said)) cueAt("attack");
     if (!quiet && lunged && !hornNow && !gazing && !hellFace && !whipNow && spent !== "phuc-kich") {
-      playCue("attack");
+      cueAt("attack");
       const swung = duel.pending?.kind === "melee" ? duel.pending : null;
       const riderSwing = Boolean(swung && (fieldMon(duel, swung.attacker)?.cardId === "ky-si-cuoi-rong" || fieldMon(duel, duel.hold?.blocker ?? swung.defender)?.cardId === "ky-si-cuoi-rong"));
-      if (riderSwing) playCue("firePrep", 0, 0.4);
+      if (riderSwing) cueAt("firePrep", 0, 0.4);
     }
-    if (!quiet && lunged && whipNow) playCue("reflect");
-    if (!quiet && lunged && gazing) playCue("boltPrep");
-    if (!quiet && lunged && hornNow) playCue("boltPrep");
+    if (!quiet && lunged && whipNow) cueAt("reflect");
+    if (!quiet && lunged && gazing) cueAt("boltPrep");
+    if (!quiet && lunged && hornNow) cueAt("boltPrep");
     const vowed = !/Không đủ máu để hiến tế/.test(said) && /bị hiến tế|hiến tế\.|hiến tế hết máu/.test(said);
     const soulBlood = ([0, 1] as const).some((side) => {
       if (prev.players[side].hp - duel.players[side].hp < 2) return false;
@@ -3055,26 +3195,26 @@ function PlayPage() {
         return mon?.cardId === "ke-giam-ho-linh-hon" && (mon.vows ?? 0) > (was?.vows ?? 0);
       });
     });
-    if (vowed || soulBlood) playCue("sacrifice");
-    if (!quiet && /dùng Ẩn mình/.test(said)) playCue("sacrifice");
-    if (!quiet && /thành Chiến binh huyền thoại/.test(said)) playCue("dispel");
+    if (vowed || soulBlood) cueAt("sacrifice");
+    if (!quiet && /dùng Ẩn mình/.test(said)) cueAt("sacrifice");
+    if (!quiet && /thành Chiến binh huyền thoại/.test(said)) cueAt("dispel");
     if (fireBlastOn()) {
       for (const side of [0, 1] as const) {
         duel.players[side].field.forEach((mon, index) => {
           const was = prev.players[side].field[index];
           if (mon?.cardId !== "ky-si-bong-toi" || (mon.path ?? 0) <= 0 || (was?.path ?? 0) > 0) return;
           const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-          if (spot) emitFx({ t: "fire", x: spot.x, y: spot.y });
+          if (spot) fxAt({ t: "fire", x: spot.x, y: spot.y });
         });
       }
       if (duel.rite && duel.rite.seq !== prev.rite?.seq) {
         const spot = SLOT_POS[screenSide(duel.rite.side, viewerNow)][duel.rite.slot];
-        if (spot) emitFx({ t: "fire", x: spot.x, y: spot.y });
+        if (spot) fxAt({ t: "fire", x: spot.x, y: spot.y });
       }
       if (duel.ashes && duel.ashes.seq !== prev.ashes?.seq) {
         for (const slot of duel.ashes.slots) {
           const spot = SLOT_POS[screenSide(duel.ashes.side, viewerNow)][slot];
-          if (spot) emitFx({ t: "fire", x: spot.x, y: spot.y });
+          if (spot) fxAt({ t: "fire", x: spot.x, y: spot.y });
         }
       }
     }
@@ -3088,7 +3228,7 @@ function PlayPage() {
         duel.players[side].field.forEach((mon, index) => {
           if (!mon || known.has(mon.uid) || mon.lurk || (monsterCard(mon.cardId)?.stars ?? 0) < 4) return;
           const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-          if (spot) emitFx({ t: "rite", x: spot.x, y: spot.y, kind: "holy" });
+          if (spot) fxAt({ t: "rite", x: spot.x, y: spot.y, kind: "holy" });
         });
       }
     }
@@ -3099,132 +3239,132 @@ function PlayPage() {
       const at = duel.players[side].field.findIndex((mon) => mon && !known.has(mon.uid));
       const spot = at >= 0 ? SLOT_POS[screenSide(side, viewerNow)][at] : null;
       if (spot) {
-        window.setTimeout(() => emitFx({ t: "rite", x: spot.x, y: spot.y }), 450);
-        playCue("riteSummon", 0.45);
+        window.setTimeout(() => fxAt({ t: "rite", x: spot.x, y: spot.y }), 450);
+        cueAt("riteSummon", 0.45);
       }
     }
-    if (drew) playCue("draw");
-    if (summoned) playCue("summon");
-    if (!quiet && /tích luỹ năng lượng/i.test(said)) playCue("spellRise");
-    if (!quiet && /Lộ diện quái dự bị/.test(said)) playCue("dispel");
-    if (!quiet && /thăng cấp/.test(said)) playCue("dispel");
-    if (!quiet && /Nở ra/.test(said)) playCue("dispel");
-    if (!quiet && /hồi \d+ và \+\d+ phòng ngự/.test(said)) playCue("dispel");
-    if (!quiet && /nhân đôi phòng ngự/.test(said)) playCue("shield");
-    if (!quiet && /cướp \d+ máu tối đa/.test(said)) playCue("dispel");
-    if (!quiet && /phù hộ/.test(said)) playCue("spellRise");
-    if (!quiet && /cuộn thế thủ/.test(said)) playCue("shield");
-    if (!quiet && /xòe thế công/.test(said)) playCue("spellRise");
-    if (!quiet && /Hoá kén/.test(said)) playCue("shield");
-    if (!quiet && /sẽ đỡ đòn và phép|ngừng đỡ|tạo khiên/.test(said)) playCue("shield");
+    if (drew) cueAt("draw");
+    if (summoned) cueAt("summon");
+    if (!quiet && /tích luỹ năng lượng/i.test(said)) cueAt("spellRise");
+    if (!quiet && /Lộ diện quái dự bị/.test(said)) cueAt("dispel");
+    if (!quiet && /thăng cấp/.test(said)) cueAt("dispel");
+    if (!quiet && /Nở ra/.test(said)) cueAt("dispel");
+    if (!quiet && /hồi \d+ và \+\d+ phòng ngự/.test(said)) cueAt("dispel");
+    if (!quiet && /nhân đôi phòng ngự/.test(said)) cueAt("shield");
+    if (!quiet && /cướp \d+ máu tối đa/.test(said)) cueAt("dispel");
+    if (!quiet && /phù hộ/.test(said)) cueAt("spellRise");
+    if (!quiet && /cuộn thế thủ/.test(said)) cueAt("shield");
+    if (!quiet && /xòe thế công/.test(said)) cueAt("spellRise");
+    if (!quiet && /Hoá kén/.test(said)) cueAt("shield");
+    if (!quiet && /sẽ đỡ đòn và phép|ngừng đỡ|tạo khiên/.test(said)) cueAt("shield");
     for (const side of [0, 1] as const) {
       duel.players[side].field.forEach((mon, index) => {
         const was = prev.players[side].field[index];
         if (!mon?.ward || mon.ward === was?.ward) return;
         const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-        if (spot) emitFx({ t: "shield", kind: mon.ward, x: spot.x, y: spot.y });
+        if (spot) fxAt({ t: "shield", kind: mon.ward, x: spot.x, y: spot.y });
       });
     }
-    if (!quiet && /quét cả sân/.test(said)) playCue("timeFlow");
-    else if (!quiet && /cường hoá và tiêu diệt|tiến hoá .+ dạng cuối|cường hoá .+, tăng 35%/.test(said)) playCue("timeBoost");
-    else if (!quiet && /lão hoá .+, (tăng|giảm) 35%/i.test(said)) playCue("timeAge");
+    if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");
+    else if (!quiet && /cường hoá và tiêu diệt|tiến hoá .+ dạng cuối|cường hoá .+, tăng 35%/.test(said)) cueAt("timeBoost");
+    else if (!quiet && /lão hoá .+, (tăng|giảm) 35%/i.test(said)) cueAt("timeAge");
     if (!quiet && /nạp tia sáng huỷ diệt/.test(said)) {
-      playCue("boltPrep");
-      playCue("boltSmall");
+      cueAt("boltPrep");
+      cueAt("boltSmall");
       for (const side of [0, 1] as const) {
         duel.players[side].field.forEach((mon, index) => {
           const was = prev.players[side].field[index];
           if (!mon?.gaze || was?.gaze) return;
           const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-          if (spot) emitFx({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
+          if (spot) fxAt({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
         });
       }
     }
-    if (!quiet && doomCast) playCue("boltPrep");
-    if (!quiet && lashOpen) playCue("reflect");
+    if (!quiet && doomCast) cueAt("boltPrep");
+    if (!quiet && lashOpen) cueAt("reflect");
     if (!quiet && lashBoom && lashWas) {
-      playCue("boltSmall");
+      cueAt("boltSmall");
       for (const uid of [lashWas.bird, lashWas.foe]) {
         for (const side of [0, 1] as const) {
           const index = duel.players[side].field.findIndex((mon) => mon?.uid === uid);
           const was = index >= 0 ? index : prev.players[side].field.findIndex((mon) => mon?.uid === uid);
           const spot = was >= 0 ? SLOT_POS[screenSide(side, viewerNow)][was] : null;
-          if (spot) emitFx({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
+          if (spot) fxAt({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
         }
       }
     }
-    if (!quiet && /Thu hồi quái/.test(said)) playCue("dispel");
-    else if (!quiet && beamKill) playCue("spellRise");
-    else if (!quiet && damageStart) playCue("spellRise");
+    if (!quiet && /Thu hồi quái/.test(said)) cueAt("dispel");
+    else if (!quiet && beamKill) cueAt("spellRise");
+    else if (!quiet && damageStart) cueAt("spellRise");
     else if (!quiet && hellBoom) {
-      if (!(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun")) playCue("swordBoom");
-    } else if (!quiet && demonBoom) playCue("swordBoom");
+      if (!(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun")) cueAt("swordBoom");
+    } else if (!quiet && demonBoom) cueAt("swordBoom");
     else if (!quiet && swordBoom) {
       if (!(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun")) {
-        if (!cameFromBeam) playCue("spellRise");
-        playCue("swordBoom", cameFromBeam ? 0 : 0.24);
+        if (!cameFromBeam) cueAt("spellRise");
+        cueAt("swordBoom", cameFromBeam ? 0 : 0.24);
       }
     } else if (!quiet && gazeBoom && attackWas) {
-      playCue("laserBoom");
+      cueAt("laserBoom");
       const from = slotPoint(prev, attackWas.attacker, viewerNow);
       const drops = laserDrops(prev, duel, viewerNow);
       const hit = drops[0];
       const to = hit ?? (attackWas.kind === "melee" ? slotPoint(prev, attackWas.defender, viewerNow) : aimPoint(prev, attackWas, viewerNow));
-      if (from && to) emitFx({ t: "laser", x1: from.x, y1: from.y, x2: to.x, y2: to.y });
+      if (from && to) fxAt({ t: "laser", x1: from.x, y1: from.y, x2: to.x, y2: to.y });
       const boltAt = to ?? hit;
       laserTimers.current.push(window.setTimeout(() => {
-        playCue("boltSmall");
-        if (boltAt) emitFx({ t: "bolt", rank: "small", self: hit?.spot === "self", x: boltAt.x, y: boltAt.y });
+        cueAt("boltSmall");
+        if (boltAt) fxAt({ t: "bolt", rank: "small", self: hit?.spot === "self", x: boltAt.x, y: boltAt.y });
       }, LASER_MS));
     }
     else if (!quiet && whipBoom && attackWas) {
-      playCue("boltBoom");
+      cueAt("boltBoom");
       const mine = attackWas.attacker;
       for (const side of [0, 1] as const) {
         const index = prev.players[side].field.findIndex((mon) => mon?.uid === mine);
         const spot = index >= 0 ? SLOT_POS[screenSide(side, viewerNow)][index] : null;
-        if (spot) emitFx({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
+        if (spot) fxAt({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
       }
       if (attackWas.kind === "melee") {
         for (const side of [0, 1] as const) {
           const index = prev.players[side].field.findIndex((mon) => mon?.uid === attackWas.defender);
           const spot = index >= 0 ? SLOT_POS[screenSide(side, viewerNow)][index] : null;
-          if (spot) emitFx({ t: "bolt", rank: "big", x: spot.x, y: spot.y });
+          if (spot) fxAt({ t: "bolt", rank: "big", x: spot.x, y: spot.y });
         }
       } else {
         const face = aimPoint(prev, attackWas, viewerNow);
-        if (face) emitFx({ t: "bolt", rank: "big", x: face.x, y: face.y });
+        if (face) fxAt({ t: "bolt", rank: "big", x: face.x, y: face.y });
       }
     }
     else if (!quiet && hornBoom) {
-      if (!wasHorn) playCue("boltPrep");
-      playCue("boltSmall", wasHorn ? 0 : 0.24);
+      if (!wasHorn) cueAt("boltPrep");
+      cueAt("boltSmall", wasHorn ? 0 : 0.24);
     }
     else if (!quiet && monsterKill && !waterCast && !whipNow && !whipBoom && !/Sấm lôi phá/.test(said) && !/Sấm sét tận thế/.test(said) && !/Roi điện/.test(said) && !/Roi sấm/.test(said) && !(duel.skill && skillLook(duel.skill.id, duel.skill.index) === "gun") && !/cường hoá và tiêu diệt/.test(said) && !/quét cả sân/.test(said)) {
-      if (!cameFromBeam) playCue("spellRise");
-      playCue("spellBoom");
-    } else if (!quiet && curseBoom) playCue("swordBoom");
+      if (!cameFromBeam) cueAt("spellRise");
+      cueAt("spellBoom");
+    } else if (!quiet && curseBoom) cueAt("swordBoom");
     else if (!quiet && spent === "sung-loi-pha") {
-      playCue("boltPrep");
-      playCue("boltSmall", 0.24);
+      cueAt("boltPrep");
+      cueAt("boltSmall", 0.24);
       window.setTimeout(() => {
         for (const side of [0, 1] as const) {
           duel.players[side].field.forEach((mon, index) => {
             const was = prev.players[side].field[index];
             if (!mon?.horn || was?.horn) return;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-            if (spot) emitFx({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
+            if (spot) fxAt({ t: "bolt", rank: "small", self: side === viewerNow, x: spot.x, y: spot.y });
           });
         }
       }, 240);
     }
-    else if (!quiet && (BIND_SPELLS.has(spent) || beeBind || beeLand)) playCue("chain");
-    else if (!quiet && REFLECT_SPELLS.has(spent)) playCue("reflect");
-    else if (!quiet && spent === "giap-co-khi" && /bị phản vào/.test(said)) playCue("reflect");
-    else if (!quiet && DISPEL_SPELLS.has(spent)) playCue("dispel");
-    if (!quiet && /thổi độc|Thổi độc/.test(said) && /sát thương phép/.test(said)) playCue("poison", 1.15);
-    else if (!quiet && /sát thương phép/.test(said) && /bào mòn/.test(said)) playCue("poison", 1.15);
-    else if (!quiet && /trúng độc|chết vì độc|bị bào mòn|chết vì bào mòn|Virus ăn mòn (bắt đầu|gây|tiêu diệt|loại)/.test(said)) playCue("poison");
+    else if (!quiet && (BIND_SPELLS.has(spent) || beeBind || beeLand)) cueAt("chain");
+    else if (!quiet && REFLECT_SPELLS.has(spent)) cueAt("reflect");
+    else if (!quiet && spent === "giap-co-khi" && /bị phản vào/.test(said)) cueAt("reflect");
+    else if (!quiet && DISPEL_SPELLS.has(spent)) cueAt("dispel");
+    if (!quiet && /thổi độc|Thổi độc/.test(said) && /sát thương phép/.test(said)) cueAt("poison", 1.15);
+    else if (!quiet && /sát thương phép/.test(said) && /bào mòn/.test(said)) cueAt("poison", 1.15);
+    else if (!quiet && /trúng độc|chết vì độc|bị bào mòn|chết vì bào mòn|Virus ăn mòn (bắt đầu|gây|tiêu diệt|loại)/.test(said)) cueAt("poison");
     const pendingChanged = duel.pending !== prev.pending;
     const armingGun = Boolean(duel.reel?.kind === "gun" && !prev.reel);
     const started = pendingChanged && duel.pending ? shotLook(duel, duel.pending) : null;
@@ -3237,7 +3377,6 @@ function PlayPage() {
     const boomFx = boomSpell ? spellFxLook(boomSpell) : null;
     const spellCard = Boolean((doomLook && doomLook !== "none") || (boomFx && boomFx !== "none") || (fromSpell && fromSpell !== "none" && !stamped && !finished));
     const look = started || finished || stamped || (fromSpell && fromSpell !== "none" ? fromSpell : null) || (doomLook && doomLook !== "none" ? doomLook : null) || (boomFx && boomFx !== "none" ? boomFx : null);
-    const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
     const wait = killWait(prev, duel, look, spellCard);
     const rawShown = showEffects(prev, duel, viewerNow, hud);
     const shown = rawShown && quiet
@@ -3253,11 +3392,11 @@ function PlayPage() {
           },
         }
       : rawShown;
-    // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
-    // lightning to reach it.
-    const landing = quiet ? null : attackLanding(prev, duel, viewerNow, hud);
-    const LAND_MS = 110;
+    // Đòn tông (chủ game 14/11): quái đánh quái lấy đà lùi nhẹ (WIND) rồi lao thẳng vào mục tiêu (RAM), tới nơi mới nổ.
+    const WIND_MS = landing?.kind === "clash" ? 150 : 0;
+    const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
+    if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
     if (landing && shown) {
       for (const item of shown.floaters) {
         if (item.heal) continue;
@@ -3265,7 +3404,12 @@ function PlayPage() {
         if (onOrb) orbLate.add(item.id);
         item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
       }
-      setThrust({ uid: landing.uid, ...landing.thrust });
+      if (landing.kind === "clash") {
+        const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
+        setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
+        window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), WIND_MS);
+        playHit("dash", (WIND_MS - 40) / 1000);
+      }
       if (landing.kind === "face") {
         const struck = ([0, 1] as const).find((side) => duel.players[side].hp < prev.players[side].hp);
         if (struck !== undefined) {
@@ -3278,18 +3422,19 @@ function PlayPage() {
           }), 500);
         }
       }
-      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 50);
+      if (landing.kind === "clash") window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
       window.setTimeout(() => {
-        if (landing.kind === "face") emitFx({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
-        else emitFx({ t: "clash", x: landing.at.x, y: landing.at.y });
+        if (landing.kind === "face") fxAt({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
+        else fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
       }, LAND_MS);
-      playHit(landing.kind === "face" ? "zap" : "clash", LAND_MS / 1000);
+      playHit(landing.kind === "face" ? "zap" : "ram", LAND_MS / 1000);
     }
     const fxSourceUid = strikeUid(prev) || strikeUid(duel);
     const fxCard = (fxSourceUid ? (fieldMon(prev, fxSourceUid) ?? fieldMon(duel, fxSourceUid))?.cardId : undefined)
       ?? (spent || boomSpell || duel.skill?.id || undefined);
     if (shown) {
-      if (shown.shake && !quiet) emitFx({ t: "shake", act: "shake", spot: "center", power: 1 });
+      // Đòn tông tự rung lúc chạm: không rung trước.
+      if (shown.shake && !quiet && !rammed) fxAt({ t: "shake", act: "shake", spot: "center", power: 1 });
       const casting = shown.burst?.tone === "heal" ? "healSpell" : shown.burst ? "spell" : null;
       const grouped = look === "spell" || look === "fire" || look === "gun" || look === "bolt" || look === "spark" || look === "tide-small" || look === "tide-mid" || look === "tide-big";
       if (!quiet && duel.fx !== prev.fx) {
@@ -3299,7 +3444,7 @@ function PlayPage() {
             if (index < 0) continue;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
             if (!spot) continue;
-            emitFx({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
+            fxAt({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
           }
         }
       }
@@ -3310,10 +3455,12 @@ function PlayPage() {
         if (orbLate.has(item.id)) continue;
         // Hồi máu, buff và tự tăng chỉ số dùng video hồi máu (chủ game 06/11); tăng máu tối đa giữ vòng cũ.
         if (item.hush) continue;
-        if (item.heal && !item.grow) emitFx({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
-        else if (item.heal) emitFx({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
+        // Đòn tông: vụ nổ ở chỗ chạm thay chớp đỏ cũ trên lá bị trúng.
+        if (rammed && !item.heal && item.text !== "Hạ") continue;
+        if (item.heal && !item.grow) fxAt({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
+        else if (item.heal) fxAt({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
         else {
-          emitFx({
+          fxAt({
             t: "burst",
             act,
             spot: item.spot,
@@ -3329,7 +3476,7 @@ function PlayPage() {
         const [raw, indexRaw] = key.split("-");
         const side = Number(raw) as Side;
         const spot = SLOT_POS[screenSide(side, viewerNow)][Number(indexRaw)];
-        if (spot) emitFx({ t: "ring", act: "summon", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y, color: "#ffb347", power: 1.15, card: duel.players[side].field[Number(indexRaw)]?.cardId });
+        if (spot) fxAt({ t: "ring", act: "summon", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y, color: "#ffb347", power: 1.15, card: duel.players[side].field[Number(indexRaw)]?.cardId });
       }
       for (const uid of shown.motion.lunges) {
         let fromSide: Side = 0;
@@ -3361,9 +3508,11 @@ function PlayPage() {
             : foeIndex >= 0
               ? SLOT_POS[screenSide(foeSide, viewerNow)][foeIndex]
               : null;
-        if (from && to && duel.pending?.kind !== "beam") {
+        // Vệt cam + vết chém lúc vừa lao ra chỉ còn ở đòn đánh thẳng người chơi: quái đánh quái (và quái chặn) giờ nổ một lần
+        // lúc đòn tông chạm (chủ game 14/11: thay mới thì bỏ hiệu ứng cũ).
+        if (from && to && pending?.kind === "face" && !blocking) {
           const shooter = fieldMon(duel, uid);
-          if (!shooter?.horn && !shooter?.gaze) emitFx({ t: "beam", act: "attack", x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: "#ff8a00", card: shooter?.cardId });
+          if (!shooter?.horn && !shooter?.gaze) fxAt({ t: "beam", act: "attack", x1: from.x, y1: from.y, x2: to.x, y2: to.y, color: "#ff8a00", card: shooter?.cardId });
         }
       }
     }
@@ -3422,12 +3571,12 @@ function PlayPage() {
               if (best && best.d < 9) rows.set(best.key, { x: best.x, y: best.y });
               else rows.set(`${hit.x}-${hit.y}`, { x: hit.x, y: hit.y });
             }
-            for (const row of rows.values()) emitFx({ t: "tide", rank, x: row.x, y: row.y });
-          } else for (const hit of hits) emitFx({ t: "tide", rank, x: hit.x, y: hit.y });
+            for (const row of rows.values()) fxAt({ t: "tide", rank, x: row.x, y: row.y });
+          } else for (const hit of hits) fxAt({ t: "tide", rank, x: hit.x, y: hit.y });
         }
       } else if (look === "fire" || look === "gun") {
         const opening = look === "gun" ? openingGun : openingFire;
-        if (!quiet && look === "gun") playCue(opening ? "gunPrep" : "gunBoom");
+        if (!quiet && look === "gun") cueAt(opening ? "gunPrep" : "gunBoom");
         if (!opening && (look === "gun" || fireBlastOn())) {
           const shot = finished ? prev.pending : duel.pending;
           const board = finished ? prev : duel;
@@ -3464,15 +3613,15 @@ function PlayPage() {
               const key = `${Math.round(point.x)}-${Math.round(point.y)}`;
               if (seen.has(key)) continue;
               seen.add(key);
-              emitFx({ t: "fire", x: point.x, y: point.y });
+              fxAt({ t: "fire", x: point.x, y: point.y });
             }
-          } else for (const hit of where) emitFx({ t: "fire", x: hit.x, y: hit.y });
+          } else for (const hit of where) fxAt({ t: "fire", x: hit.x, y: hit.y });
         }
       } else if ((look === "bolt" || look === "spark") && !started) {
         const rank = look === "bolt" ? "big" : "small";
-        if (look === "bolt") playCue("boltBoom");
+        if (look === "bolt") cueAt("boltBoom");
         const where = hits.length ? hits : [{ x: 53, y: 30 }];
-        for (const hit of where) emitFx({ t: "bolt", rank, self: rank === "small" && hit.spot === "self", x: hit.x, y: hit.y });
+        for (const hit of where) fxAt({ t: "bolt", rank, self: rank === "small" && hit.spot === "self", x: hit.x, y: hit.y });
       } else if (!started && duel.skill?.id === "ma-dao-si" && (duel.skill.vols?.length ?? 0) > 1) {
         const count = duel.skill.vols?.length ?? 0;
         const id = duel.skill.hits?.[0];
@@ -3480,20 +3629,20 @@ function PlayPage() {
         if (point) {
           for (let i = 0; i < count; i += 1) {
             window.setTimeout(() => {
-              emitFx({ t: "burst", act: "spell", spot: "target", x: point.x, y: point.y, color: "#ff4d4d", power: 1.1, card: fxCard });
+              fxAt({ t: "burst", act: "spell", spot: "target", x: point.x, y: point.y, color: "#ff4d4d", power: 1.1, card: fxCard });
             }, i * 420);
           }
         }
-        emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
-        for (let i = 1; i < count; i += 1) playCue("spellBoom", i * 0.42);
+        fxAt({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+        for (let i = 1; i < count; i += 1) cueAt("spellBoom", i * 0.42);
       } else if (!started && (hits.length > 0 || finished || stamped || look === "spell")) {
         const rageCast = duel.skill?.id === "con-thinh-no-cua-hai-vuong" || (prev.pending?.kind === "beam" && fieldMon(prev, prev.pending.caster)?.cardId === "con-thinh-no-cua-hai-vuong");
         if (rageCast && hits.length > 0) {
           // Cơn thịnh nộ của hải thần: video xoáy nước thay nổ đỏ (chủ game 06/11).
-          for (const hit of hits) emitFx({ t: "tide", rank: "rage", x: hit.x, y: hit.y });
+          for (const hit of hits) fxAt({ t: "tide", rank: "rage", x: hit.x, y: hit.y });
         } else {
-          for (const hit of hits) emitFx({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
-          emitFx({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
+          for (const hit of hits) fxAt({ t: "burst", act: "spell", spot: "target", x: hit.x, y: hit.y, color: "#ff4d4d", power: 1.1, card: fxCard });
+          fxAt({ t: "ring", act: "spell", spot: "center", x: 42, y: 44, color: "#ffd36a", power: 1.7, card: fxCard });
         }
       }
     }
@@ -3512,7 +3661,7 @@ function PlayPage() {
     const token = wave.current + 1;
     wave.current = token;
     if (shown.shake) {
-      const late = landing ? LAND_MS : 0;
+      const late = (landing ? LAND_MS : 0) + pre;
       window.setTimeout(() => setShake(true), late);
       window.setTimeout(() => setShake(false), 640 + late);
     }
@@ -3545,17 +3694,22 @@ function PlayPage() {
       const beamed = shown.falls.filter((fall) => fall.laser);
       const rest = shown.falls.filter((fall) => !fall.laser);
       if (beamed.length) arm(beamed, LASER_MS);
-      if (rest.length) arm(rest, Math.max(0, wait) + Math.max(0, ...rest.map((fall) => fall.hold ?? 0)));
+      if (rest.length) arm(rest, pre + Math.max(0, wait) + Math.max(0, ...rest.map((fall) => fall.hold ?? 0)));
     }
     if (shown.burst) {
-      setBurst(shown.burst);
-      window.setTimeout(() => setBurst((current) => (current?.id === shown.burst?.id ? null : current)), 1600);
+      const flare = shown.burst;
+      if (pre) window.setTimeout(() => setBurst(flare), pre);
+      else setBurst(flare);
+      window.setTimeout(() => setBurst((current) => (current?.id === flare.id ? null : current)), 1600 + pre);
     }
     if (shown.motion.pops.length || shown.motion.lunges.length || shown.motion.hits.length) {
-      setMotion(shown.motion);
+      // Lá bị tông giật lúc đòn chạm, không giật trước.
+      const late = rammed ? LAND_MS : pre;
+      if (late) window.setTimeout(() => wave.current === token && setMotion(shown.motion), late);
+      else setMotion(shown.motion);
       window.setTimeout(() => {
         if (wave.current === token) setMotion({ pops: [], lunges: [], hits: [] });
-      }, 1400);
+      }, 1400 + late);
     }
   }, [duel]);
 
@@ -5199,6 +5353,52 @@ function PlayPage() {
     return { keys, options, box: built.box };
   }
 
+  /**
+   * K5 (chủ game 14/11): bấm một nút của quái trên sân thì bảng xác nhận ghi nút đó làm gì; OK mới chạy (chọn mục tiêu),
+   * Huỷ về lại danh sách. Đánh thường chỉ hỏi với quái có điều kiện riêng (Khổng lồ 1 mắt tốn mana). Tắt trong Cài đặt thì
+   * chạy thẳng; nút không có gì để ghi cũng chạy thẳng.
+   */
+  function askRow(uid: string, row: UnitRow) {
+    const mon = duel ? fieldMon(duel, uid) : null;
+    if (!duel || !mon || !confirmUse || tutorial) {
+      row.go();
+      return;
+    }
+    const card = monsterCard(mon.cardId);
+    const art = artSrc(formOf(mon), mon.level ?? 1);
+    if (row.key === "attack") {
+      const terms = attackTerms(mon);
+      if (!terms) {
+        row.go();
+        return;
+      }
+      playUi("select");
+      setUseAsk({ head: { name: row.label, tone: "#ff7a5c", icon: row.icon, kind: "attack", art, who: card ? tr(card.name) : "" }, lines: [terms], go: row.go });
+      return;
+    }
+    const hit = bookSkill(mon.cardId, row.label, card?.skill ?? "");
+    const name = hit?.name ?? row.label;
+    const lines = skillBrief({ duel, cardId: formOf(mon), name, mon, target: null, ask: true }).split("\n").slice(1).filter(Boolean);
+    if (lines.length === 0 && !hit?.text) {
+      row.go();
+      return;
+    }
+    const kind = hit?.slow ? "slow" : row.kind;
+    playUi("select");
+    setUseAsk({ head: { name, tone: SKILL_GLOW[kind] ?? SKILL_GLOW.active, icon: row.icon, kind, art, who: card ? tr(card.name) : "" }, lines, text: lines.length ? undefined : hit?.text, go: row.go });
+  }
+  /** K5: the same for a spell used by its button on the card in hand. */
+  function askSpell(id: string, go: () => void) {
+    const card = spellCard(id);
+    if (!duel || !card || !confirmUse || tutorial) {
+      go();
+      return;
+    }
+    const lines = spellBrief(duel, id, viewer).split("\n").slice(1).filter(Boolean);
+    playUi("select");
+    setUseAsk({ head: { name: card.name, tone: speedTone(id), art: spellSrc(id), who: tr("Phép") }, lines, text: lines.length ? undefined : card.effect, go });
+  }
+
   /** The drop list: only the buttons that take this target, each firing at it. */
   function dropRows(ask: { uid: string; key: string }): { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number } } | null {
     const plan = dropPlan(ask.uid);
@@ -5641,8 +5841,6 @@ function PlayPage() {
   }
 
   /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
-  const formOf = (mon: FieldMon) =>
-    mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
   /** Kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng): lá hiện to giữa sân với các lựa chọn luật cho phép (chủ game 13/11). */
   function openStage(index: number) {
     const held = you.reserve[index];
@@ -6112,21 +6310,10 @@ function PlayPage() {
   /** The skill an icon stands for, as on the monster sheet: its name, glyph and kind. */
   const iconSkill = (orb: ChainOrb): { name: string; icon: string; kind: string; brief: string } | null => {
     const mon = orb.source ? fieldMon(duel, orb.source) : null;
-    const cardId = mon ? formOf(mon) : orb.cardId;
-    if (!cardId) return null;
-    const card = monsterCard(cardId);
-    const book = skillsOf(cardId, card?.skill ?? "");
-    const label = orb.skill === "lash" ? chipLabel(cardId, "lash") : orb.skill !== null ? castName(cardId, orb.skill) : "";
-    // A skill the rules name after its monster is the only one it can use.
-    const sole = () => {
-      const usable = book.filter((row) => row.kind !== "passive" && row.kind !== "note");
-      return usable.length === 1 ? usable[0] : undefined;
-    };
-    const hit = label
-      ? bookSkill(cardId, label, card?.skill ?? "") ?? (label.trim().toLowerCase() === card?.name.trim().toLowerCase() ? sole() : undefined)
-      : book.find((row) => row.kind === "active" || row.kind === "risk");
-    const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
-    const name = hit?.name ?? label;
+    const facts = skillFacts(mon, orb.cardId, orb.skill);
+    if (!facts) return null;
+    const { cardId, name, kind } = facts;
+    const hit = facts;
     // Its results as it stands now; once the caster has gone (Mộ voi ma mút gives itself), what it said last.
     const pending = duel.pending;
     const extra = pending?.kind === "beam" && orb.source && pending.caster === orb.source ? pending.extra ?? null : null;
@@ -6479,12 +6666,6 @@ function PlayPage() {
             </button>
           )),
         )}
-        <Link to="/" className="back-link">
-          Menu
-        </Link>
-        <button type="button" className="help-btn press" onClick={() => setHelp(true)}>
-          Cài đặt
-        </button>
         {duel.mode === "test" ? (
           <div className="test-tools">
             <button
@@ -6510,6 +6691,37 @@ function PlayPage() {
             <DeckPile count={pileLeft(foe)} side="foe" />
           </div>
         )}
+        {/* Nút ba gạch (chủ game 14/11): mở bảng Lịch sử + Cài đặt; đứng ngay dưới bộ bài địch, về phía giữa sân. Thay nút
+            Menu và Cài đặt ở hai góc trên (Về menu chính và Đầu hàng nằm trong tab Cài đặt của bảng). */}
+        <button
+          type="button"
+          className="log-btn press"
+          style={{ left: `${marks.foeHand.x}%`, top: `calc(${marks.foeHand.y + board.stack.height * 0.56}% + 5.4cqw)` }}
+          aria-label={tr("Lịch sử và cài đặt")}
+          onClick={() => (playUi("select"), setHelp(true))}
+        >
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <defs>
+              <linearGradient id="log-btn-gold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#fff3c4" />
+                <stop offset="0.45" stopColor="#f0c860" />
+                <stop offset="1" stopColor="#9a6a1c" />
+              </linearGradient>
+              <radialGradient id="log-btn-core" cx="0.5" cy="0.35" r="0.75">
+                <stop offset="0" stopColor="#27406e" />
+                <stop offset="0.6" stopColor="#101c38" />
+                <stop offset="1" stopColor="#060b18" />
+              </radialGradient>
+            </defs>
+            <path d="M24 2 L42 12 L46 24 L42 36 L24 46 L6 36 L2 24 L6 12 Z" fill="url(#log-btn-core)" stroke="url(#log-btn-gold)" strokeWidth="2.4" strokeLinejoin="round" />
+            <path d="M24 6.5 L39 14.6 L42 24 L39 33.4 L24 41.5 L9 33.4 L6 24 L9 14.6 Z" fill="none" stroke="#f0c860" strokeOpacity="0.35" strokeWidth="1" />
+            <g fill="url(#log-btn-gold)">
+              <path d="M13 15.6 L35 15.6 L37 17.5 L35 19.4 L13 19.4 L11 17.5 Z" />
+              <path d="M13 22.1 L35 22.1 L37 24 L35 25.9 L13 25.9 L11 24 Z" />
+              <path d="M13 28.6 L35 28.6 L37 30.5 L35 32.4 L13 32.4 L11 30.5 Z" />
+            </g>
+          </svg>
+        </button>
         {marksView.map(([key, value]) => {
           const orbKey = key === "youOrb" || key === "foeOrb";
           const flaskKey = key === "youFlask" || key === "foeFlask";
@@ -6649,6 +6861,7 @@ function PlayPage() {
             forkOf={forkFor}
             throwFrom={throwFrom}
             besideFree={besideFree}
+            rouseLate={tutorial ? 0 : ROUSE_CAST / 1000}
           />
         ) : null}
         {askUpkeep && upkeepUnit && !gemHold ? (
@@ -7397,7 +7610,7 @@ function PlayPage() {
               mon={shown}
               frozen={frozen}
               fading={Boolean(held?.fading)}
-              hpOverride={shown ? laserHp[`mon:${shown.uid}`] : undefined}
+              hpOverride={shown ? (laserHp[`mon:${shown.uid}`] ?? hpHold[`mon:${shown.uid}`]) : undefined}
               side={side}
               near={false}
               index={index}
@@ -7408,8 +7621,10 @@ function PlayPage() {
               attack={foeHot && drag?.kind !== "spell" && aim?.kind !== "spell"}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
               snapped={snap === `${side}-${index}` || (!snap && !drag && aimLit === `${side}-${index}`)}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
-              thrust={Boolean(mon && thrust?.uid === mon.uid)}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : shown && thrust?.uid === shown.uid ? thrust : null}
+              thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
+              ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
+              rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
               motion={motion}
               veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
@@ -7457,7 +7672,7 @@ function PlayPage() {
               mon={shown}
               frozen={frozen}
               fading={Boolean(held?.fading)}
-              hpOverride={shown ? laserHp[`mon:${shown.uid}`] : undefined}
+              hpOverride={shown ? (laserHp[`mon:${shown.uid}`] ?? hpHold[`mon:${shown.uid}`]) : undefined}
               side={viewer}
               near
               index={index}
@@ -7470,8 +7685,10 @@ function PlayPage() {
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               snapped={snap === `${viewer}-${index}` || (!snap && !drag && aimLit === `${viewer}-${index}`)}
               attack={false}
-              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : null}
-              thrust={Boolean(mon && thrust?.uid === mon.uid)}
+              shift={mon ? (attackShift(duel, mon.uid, viewer) ?? blockShift(duel, mon.uid, viewer) ?? coverShifts.get(mon.uid) ?? (pounce === mon.uid ? ambushShift(duel, mon.uid, viewer) : null) ?? (thrust?.uid === mon.uid ? thrust : null)) : shown && thrust?.uid === shown.uid ? thrust : null}
+              thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
+              ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
+              rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
               motion={motion}
               veil={false}
               allies={you.field}
@@ -7693,83 +7910,86 @@ function PlayPage() {
                             openSheet("spell", index);
                             return;
                           }
-                          setHandPick(null);
-                          if (id === "ke-dao-mo") {
-                            openDig(index);
-                            return;
-                          }
-                          if (id === "hoan-doi") {
-                            setSwapPick([]);
-                            apply(castSpell(duel, index, aimedUid(duel)));
-                            return;
-                          }
-                          if (slowUse && id === "sung-loi-pha") {
-                            setAim({ kind: "spell", index, spellId: id });
-                            holdNotice("Chọn quái để gắn sừng.");
-                            return;
-                          }
-                          if (slowUse && id === "phan-nguyen") {
-                            const cursed = you.field.filter((mon) => mon && harmShift(mon));
-                            if (cursed.length === 0) {
-                              holdNotice("Không có đồng minh đang mang trạng thái xấu.");
+                          const run = () => {
+                            setHandPick(null);
+                            if (id === "ke-dao-mo") {
+                              openDig(index);
                               return;
                             }
-                            // One cursed ally is picked by itself; from two the player chooses (chủ game 30/10).
-                            if (cursed.length === 1 && cursed[0]) {
-                              setAim({ kind: "spell", index, spellId: id, from: cursed[0].uid });
-                              holdNotice("Chọn quái đối thủ để chuyển trạng thái.");
+                            if (id === "hoan-doi") {
+                              setSwapPick([]);
+                              apply(castSpell(duel, index, aimedUid(duel)));
                               return;
                             }
-                            setAim({ kind: "spell", index, spellId: id });
-                            holdNotice("Chọn đồng minh đang mang trạng thái xấu.");
-                            return;
-                          }
-                          if (slowUse && SLOW_AIM.has(id)) {
-                            setAim({ kind: "spell", index, spellId: id });
-                            holdNotice("Chọn một quái đối thủ.");
-                            return;
-                          }
-                          if (slowUse) {
-                            apply(castSpell(duel, index, null));
-                            return;
-                          }
-                          if (id === "la-chan-phan-don") {
-                            // Như mọi phép có mục tiêu (V8B): bấm hoặc rê trên sân tới kẻ địch sáng neon.
-                            setAim({ kind: "spell", index, spellId: id });
-                            holdNotice("Chọn một kẻ địch để phản đòn.");
-                            return;
-                          }
-                          if (id === "ngan-chan-phong-ngu") {
-                            if (shelterPicks(duel).length === 0) {
-                              holdNotice("Chưa có quái nào lao ra chặn hoặc che.");
+                            if (slowUse && id === "sung-loi-pha") {
+                              setAim({ kind: "spell", index, spellId: id });
+                              holdNotice("Chọn quái để gắn sừng.");
                               return;
                             }
-                            playCue("chain");
-                            setAim({ kind: "spell", index, spellId: id });
-                            return;
-                          }
-                          if (id === "hop-ma-thuat") {
-                            startBox(index);
-                            return;
-                          }
-                          if (id === "phuc-kich") {
-                            // Chọn mục tiêu theo video chủ game (30/10): icon giữa sân + dòng mô tả, đồng minh dùng được sáng viền.
-                            if (!you.field.some((unit) => unit && ambushReady(unit))) {
-                              holdNotice("Không có đồng minh nào ra đòn được.");
+                            if (slowUse && id === "phan-nguyen") {
+                              const cursed = you.field.filter((mon) => mon && harmShift(mon));
+                              if (cursed.length === 0) {
+                                holdNotice("Không có đồng minh đang mang trạng thái xấu.");
+                                return;
+                              }
+                              // One cursed ally is picked by itself; from two the player chooses (chủ game 30/10).
+                              if (cursed.length === 1 && cursed[0]) {
+                                setAim({ kind: "spell", index, spellId: id, from: cursed[0].uid });
+                                holdNotice("Chọn quái đối thủ để chuyển trạng thái.");
+                                return;
+                              }
+                              setAim({ kind: "spell", index, spellId: id });
+                              holdNotice("Chọn đồng minh đang mang trạng thái xấu.");
                               return;
                             }
-                            playCue("chain");
-                            setAim({ kind: "spell", index, spellId: id });
-                            return;
-                          }
-                          const pending = duel.pending;
-                          const caster = pending && ("caster" in pending ? pending.caster : "attacker" in pending ? pending.attacker : null);
-                          const foeMon = foe.field.find((mon) => mon && mon.uid !== caster) ?? foe.field.find((mon) => mon) ?? null;
-                          const aimed = aimedUid(duel);
-                          const aimedFoe = aimed && foe.field.some((mon) => mon?.uid === aimed) ? aimed : null;
-                          const aimedAlly = aimed && you.field.some((mon) => mon?.uid === aimed) ? aimed : null;
-                          const target = id === "ngan-chan-phong-ngu" ? aimedFoe ?? foeMon?.uid ?? null : id === "co-may-thoi-gian" || id === "giap-co-khi" ? aimedAlly : null;
-                          apply(castSpell(duel, index, target));
+                            if (slowUse && SLOW_AIM.has(id)) {
+                              setAim({ kind: "spell", index, spellId: id });
+                              holdNotice("Chọn một quái đối thủ.");
+                              return;
+                            }
+                            if (slowUse) {
+                              apply(castSpell(duel, index, null));
+                              return;
+                            }
+                            if (id === "la-chan-phan-don") {
+                              // Như mọi phép có mục tiêu (V8B): bấm hoặc rê trên sân tới kẻ địch sáng neon.
+                              setAim({ kind: "spell", index, spellId: id });
+                              holdNotice("Chọn một kẻ địch để phản đòn.");
+                              return;
+                            }
+                            if (id === "ngan-chan-phong-ngu") {
+                              if (shelterPicks(duel).length === 0) {
+                                holdNotice("Chưa có quái nào lao ra chặn hoặc che.");
+                                return;
+                              }
+                              playCue("chain");
+                              setAim({ kind: "spell", index, spellId: id });
+                              return;
+                            }
+                            if (id === "hop-ma-thuat") {
+                              startBox(index);
+                              return;
+                            }
+                            if (id === "phuc-kich") {
+                              // Chọn mục tiêu theo video chủ game (30/10): icon giữa sân + dòng mô tả, đồng minh dùng được sáng viền.
+                              if (!you.field.some((unit) => unit && ambushReady(unit))) {
+                                holdNotice("Không có đồng minh nào ra đòn được.");
+                                return;
+                              }
+                              playCue("chain");
+                              setAim({ kind: "spell", index, spellId: id });
+                              return;
+                            }
+                            const pending = duel.pending;
+                            const caster = pending && ("caster" in pending ? pending.caster : "attacker" in pending ? pending.attacker : null);
+                            const foeMon = foe.field.find((mon) => mon && mon.uid !== caster) ?? foe.field.find((mon) => mon) ?? null;
+                            const aimed = aimedUid(duel);
+                            const aimedFoe = aimed && foe.field.some((mon) => mon?.uid === aimed) ? aimed : null;
+                            const aimedAlly = aimed && you.field.some((mon) => mon?.uid === aimed) ? aimed : null;
+                            const target = id === "ngan-chan-phong-ngu" ? aimedFoe ?? foeMon?.uid ?? null : id === "co-may-thoi-gian" || id === "giap-co-khi" ? aimedAlly : null;
+                            apply(castSpell(duel, index, target));
+                          };
+                          askSpell(id, run);
                         }}
                       />
                     ) : null}
@@ -7864,6 +8084,44 @@ function PlayPage() {
             </CardShow>
             {drawPeek && !drawLeave ? <HandPeek info={drawPeek} at={peekAt} onPick={setPeekAt} top={PEEK_TOP} /> : null}
           </div>
+        ) : null}
+        {castShow ? (
+          <div className="cast-layer">
+            <CastShow key={castShow.key} tone={speedTone(castShow.id)} onEnd={() => setCastShow((now) => (now?.key === castShow.key ? null : now))}>
+              <CardFace spellId={castShow.id} />
+            </CastShow>
+          </div>
+        ) : null}
+        {foeNote ? (
+          <FoeNote key={foeNote.key} head={foeNote.head} lines={foeNote.lines.map((line, index) => <Painted key={index} text={line} />)} onClose={() => setFoeNote((now) => (now?.key === foeNote.key ? null : now))} />
+        ) : null}
+        {useAsk ? (
+          <ConfirmNote
+            head={useAsk.head}
+            body={
+              useAsk.lines.length ? (
+                useAsk.lines.map((line, index) => (
+                  <p key={index}>
+                    <Painted text={line} />
+                  </p>
+                ))
+              ) : (
+                <p className="ink-skill">
+                  <CopyText text={useAsk.text ?? ""} firstTitle={false} inked />
+                </p>
+              )
+            }
+            onOk={() => {
+              const go = useAsk.go;
+              setUseAsk(null);
+              playUi("confirm");
+              go();
+            }}
+            onCancel={() => {
+              setUseAsk(null);
+              playUi("soft");
+            }}
+          />
         ) : null}
         {pickPeek ? (
           <HandPeek
@@ -7968,12 +8226,13 @@ function PlayPage() {
             onLure={() => undefined}
             setAim={setAim}
             apply={apply}
+            onAsk={askRow}
           />
         ) : null}
         {dropMenu && !duel.counterAsk
           ? (() => {
               const built = dropRows(dropMenu);
-              return built ? <UnitActs rows={built.rows} box={built.box} soloRed={false} /> : null;
+              return built ? <UnitActs rows={built.rows} box={built.box} soloRed={false} onAsk={(row) => askRow(dropMenu.uid, row)} /> : null;
             })()
           : null}
         {aim?.kind === "menu" && !duel.counterAsk ? (
@@ -8000,6 +8259,7 @@ function PlayPage() {
             onLure={(uid) => setLureAsk(uid)}
             setAim={setAim}
             apply={apply}
+            onAsk={askRow}
           />
         ) : null}
         {lookSheet ?? (look ? (
@@ -8162,6 +8422,26 @@ function PlayPage() {
             </>
           ) : null)}
         {drag && snap ? <SnapTop keyName={snap} x={drag.x} y={drag.y} /> : null}
+        {(() => {
+          // P3.2: the neon's target already shows its light while Tấn công or a skill is aimed (not for drags or spells).
+          if (!duel || !aimLit || drag || snap || (aim?.kind !== "attack" && aim?.kind !== "skill")) return null;
+          const card = cardSpot(aim.uid);
+          if (!card) return null;
+          const foeSide = (viewer === 0 ? 1 : 0) as Side;
+          let end: FlowEnd | null = null;
+          if (aimLit === "face") end = { face: foeSide };
+          else {
+            const [sideText, slotText] = aimLit.split("-");
+            const uid = duel.players[Number(sideText) as Side]?.field[Number(slotText)]?.uid;
+            if (uid) end = { uid };
+          }
+          const from = { x: card.x, y: card.top ? card.y + card.h / 2 : card.y - card.h / 2 };
+          const to = end ? flowEnd(end, from) : null;
+          if (!to) return null;
+          const kind = aimKind();
+          const tone = kind === "attack" ? "red" : aim.kind === "skill" && allySkill(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "") ? "green" : "blue";
+          return <AimFlow from={{ ...from, face: card.top ? 1 : -1 }} to={to} tone={tone} />;
+        })()}
         {padBox && aimLit && !drag && !snap && (aim?.kind === "attack" || aim?.kind === "skill") ? (
           <AimPad
             box={padBox}
@@ -8254,6 +8534,13 @@ function PlayPage() {
             foeName={duel.faces?.[otherSide]?.name ?? (duel.mode === "ai" ? tr("Máy") : tr("Đối thủ"))}
             language={language}
             sound={sound}
+            confirm={confirmUse}
+            onConfirm={() => {
+              const next = !confirmUse;
+              setConfirmOn(next);
+              setConfirmUse(next);
+              playUi("soft");
+            }}
             canConcede={duel.winner === null}
             onLang={setLang}
             onSound={() => {
@@ -8696,6 +8983,7 @@ function UnitChips({
   onSlide,
   setAim,
   apply,
+  onAsk,
 }: {
   duel: Duel;
   uid: string;
@@ -8711,14 +8999,16 @@ function UnitChips({
   onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void;
   setAim: (aim: Aim | null) => void;
   apply: (next: Duel) => void;
+  /** K5: a press goes through the confirm panel first. */
+  onAsk?: (uid: string, row: UnitRow) => void;
 }) {
   const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, setAim, apply });
   if (!built) return null;
-  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} />;
+  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
 }
 
 /** The list of buttons above a monster on the field (tapped, or dragged onto a target). */
-function UnitActs({ rows, box, soloRed, riposte = false, onSlide }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void }) {
+function UnitActs({ rows, box, soloRed, riposte = false, onSlide, onAsk }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void; /** K5: a press goes through the confirm panel first. */ onAsk?: (row: UnitRow) => void }) {
   const wide = Math.max(box.w + 8, 31);
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
@@ -8729,7 +9019,7 @@ function UnitActs({ rows, box, soloRed, riposte = false, onSlide }: { rows: Unit
           key={row.key}
           type="button"
           className={`unit-act is-${row.kind} press`}
-          onClick={row.go}
+          onClick={onAsk ? () => onAsk(row) : row.go}
           onPointerDown={row.slide && onSlide ? (event) => onSlide(row.slide!, row.go, event) : undefined}
         >
           <span className="unit-act-ico">
@@ -9114,6 +9404,8 @@ function BoardSlot({
   attack,
   shift = null,
   thrust = false,
+  ramAng,
+  rouseTone,
   motion,
   ghosting,
   frozen = false,
@@ -9154,7 +9446,11 @@ function BoardSlot({
   attack: boolean;
   shift?: { x: number; y: number } | null;
   /** The last thrust of a landing blow: a quick move in place of the slow lunge. */
-  thrust?: boolean;
+  thrust?: false | "back" | "ram" | "rouse" | "cast";
+  /** K2: the light of the skill this monster is rousing for. */
+  rouseTone?: string;
+  /** The way a ramming blow travels on the screen (radians): the speed trail streams the other way. */
+  ramAng?: number;
   motion: Motion;
   ghosting?: boolean;
   frozen?: boolean;
@@ -9182,10 +9478,10 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust ? " is-thrust" : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
-  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}) };
+  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };
   const slotProps = {
     "data-slot": `${side}-${index}`,
     "data-owner": side,
@@ -9246,6 +9542,8 @@ function BoardSlot({
       onPointerMove={frozen ? undefined : onPointerMove}
       onPointerUp={frozen ? undefined : onPointerUp}
     >
+      {thrust === "rouse" || thrust === "cast" ? <i className="rouse-aura" aria-hidden="true" /> : null}
+      {thrust === "ram" && ramAng !== undefined ? <i className="ram-trail" style={{ "--ang": `${ramAng}rad` } as CSSProperties} aria-hidden="true" /> : null}
       <span
         className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >

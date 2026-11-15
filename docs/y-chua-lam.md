@@ -83,3 +83,12 @@ Lá đã đặt tên và mô tả, phần lớn chưa code: Pháp sư Hắc Hỗ
 - Máy (AI) chưa dùng Hấp thụ ma pháp để nuốt phép; chưa hiểu Giáp cơ khí / Cỗ máy thời gian dạng chờ.
 - Đánh thường online 2 máy: chưa thử.
 - Việc ngoài game anh ghi ở nhánh cũ (ngủ trước 8 rưỡi, bật video): không phải việc code, tôi không đưa vào.
+
+## Z1. Làm lại khung mô tả lá thành các tab (anh viết 15/11, làm lại trên tài khoản khác)
+
+Nhánh `ccr-3802e949-4nybtg` (commit `3b2c44b`, `fed7556`, `TIEP-TUC.md` mục BÀN GIAO) đã có khung tab + tab Sở hữu, giao diện tạm, CHƯA áp `main`. Chi tiết yêu cầu của anh và các mốc 1 sao nằm trong `TIEP-TUC.md` trên nhánh đó, mục "Làm lại khung mô tả quái thành 3 tab".
+
+- Quái: 4 tab Chức năng / Kỹ năng / Chỉ số / Sở hữu. Phép: 2 tab Chức năng / Sở hữu. Bấm một lần đổi trạng thái, hết vòng quay lại đầu.
+- Đã có: thanh tab, tab Sở hữu (x/y lá, Đến deck, Đến album, Nhận thêm lá này), bấm mô tả đổi icon kế.
+- Chưa làm: tab Chức năng (anh viết vài lá mẫu trước), tab Chỉ số (đa giác 8 đỉnh, mốc 1 sao, khung Cân bằng dời sang trái lá), in chìm icon skill nội tại không chính thức, tab trong bảng trận.
+- Giao diện (nhìn) do người khác thiết kế; phần tính chỉ số "sát thương" cần Opus 5.5.
