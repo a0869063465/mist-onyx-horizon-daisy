@@ -37,6 +37,7 @@ import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { settleWin, type MatchReward } from "@/lib/missions";
+import { finishMazeBattle, takeMazeBattle, type MazeBattleTicket } from "@/lib/maze-store";
 import { MissionPanel } from "@/components/game/mission-panel";
 import { EndScene } from "@/components/game/end-scene";
 import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
@@ -1746,6 +1747,8 @@ function PlayPage() {
   /** Hết trận (chủ game 22/10): the losing side's HP on screen, where the end scene bursts it. */
   const [scene, setScene] = useState<{ win: boolean; at: { x: number; y: number }; tone: "red" | "blue" } | null>(null);
   const paidMatch = useRef<{ mid: string; reward: MatchReward | null } | null>(null);
+  /** Trận mê cung (chủ game 15/11): đánh quái ở /maze, hết trận quay về /maze. */
+  const mazeFight = useRef<MazeBattleTicket | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
   const [busy, setBusy] = useState(false);
   const [hand, setHand] = useState<"reserve" | "spell">("reserve");
@@ -2206,6 +2209,7 @@ function PlayPage() {
     } catch {
       join = null;
     }
+    const ticket = takeMazeBattle();
     if (!join?.code || (join.seat !== "host" && join.seat !== "guest")) {
       const saved = sessionStorage.getItem("clash-mode");
       if (saved === TUTORIAL_MODE) {
@@ -2229,6 +2233,8 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
+      // Vé chỉ đọc được một lần; React chạy hiệu ứng 2 lần ở bản dev nên giữ vé đã lấy.
+      mazeFight.current = mode === "ai" ? (ticket ?? mazeFight.current) : null;
       const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
@@ -2597,7 +2603,10 @@ function PlayPage() {
       });
       sendReplay(duel);
     }
-    const earns = !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
+    // Trận mê cung: ghi thắng/thua cho /maze; phần thưởng của mê cung chưa có nên không tính nhiệm vụ, sao.
+    const maze = duel.mode === "ai" ? mazeFight.current : null;
+    if (maze) finishMazeBattle({ monsterId: maze.monsterId, won: duel.winner === mine });
+    const earns = !maze && !tutorial && !trial && (duel.mode === "ai" || duel.mode === "net") && duel.winner === mine && Boolean(duel.mid);
     let paid: MatchReward | null = null;
     if (earns && duel.mid) {
       if (paidMatch.current?.mid === duel.mid) paid = paidMatch.current.reward;
@@ -7514,8 +7523,8 @@ function PlayPage() {
             seconds={matchSeconds}
             you={summarySeat(viewer)}
             foe={summarySeat(viewer === 0 ? 1 : 0)}
-            again={againLook}
-            onContinue={leaveMatch}
+            again={mazeFight.current ? { off: true } : againLook}
+            onContinue={mazeFight.current ? () => void navigate({ to: "/maze" }) : leaveMatch}
             onAgain={playAgain}
           />
         ) : null}

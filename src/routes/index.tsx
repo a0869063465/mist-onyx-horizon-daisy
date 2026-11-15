@@ -5,6 +5,7 @@ import { artSrc } from "@/lib/catalog";
 import { START_RANK, rankBadge, rankLabel } from "@/lib/rank";
 import { coverOf, loadBook } from "@/lib/deck-book";
 import { playUi } from "@/lib/sfx";
+import { useAppMode } from "@/lib/app-mode";
 import { MissionBoard } from "@/components/game/mission-panel";
 import { useMail } from "@/lib/mail-box";
 import { playerId, takeProfileBack, usePulse } from "@/lib/friend-state";
@@ -35,6 +36,7 @@ function Home() {
     if (back) setMine(back);
   }, []);
   const [face, setFace] = useState<string | null>(null);
+  const mode = useAppMode();
   useLang();
   const mails = useMail();
   const friends = usePulse();
@@ -120,11 +122,19 @@ function Home() {
           </div>
           {/* Nút Chơi chia đôi (chủ game 31/10): PvP vào trang chơi cũ, PvE là chế độ mới, đang khoá. */}
           <div className="home-play">
-            <button type="button" className="home-pill is-pve" disabled aria-disabled="true" aria-label="PvE">
-              <img src="/ui/menu-play-pve.webp" alt="" draggable={false} />
-              <b>PvE</b>
-              <LockIcon />
-            </button>
+            {/* Mê cung PvE (15/11): đang thử, chỉ nhà phát hành vào được; khách vẫn khoá. */}
+            {mode === "publisher" ? (
+              <Link to="/maze" className="home-pill is-pve" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvE">
+                <img src="/ui/menu-play-pve.webp" alt="" draggable={false} />
+                <b>PvE</b>
+              </Link>
+            ) : (
+              <button type="button" className="home-pill is-pve" disabled aria-disabled="true" aria-label="PvE">
+                <img src="/ui/menu-play-pve.webp" alt="" draggable={false} />
+                <b>PvE</b>
+                <LockIcon />
+              </button>
+            )}
             <Link to="/modes" className="home-pill is-pvp" data-sfx onPointerDown={() => playUi("confirm")} aria-label="PvP">
               <img src="/ui/menu-play-pvp.webp" alt="" draggable={false} />
               <b>PvP</b>
