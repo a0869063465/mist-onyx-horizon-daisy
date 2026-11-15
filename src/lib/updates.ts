@@ -109,6 +109,7 @@ const SEALED: UpdateRelease[] = [
       { n: 10, text: "Choáng và đã hành động không còn hiệu ứng bất lợi kéo dài." },
     ],
   },
+  "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
 ];
 
 /** Cũ ở trên, mới ở dưới. Đủ 10 dòng thì tự mở phiên bản mới. */

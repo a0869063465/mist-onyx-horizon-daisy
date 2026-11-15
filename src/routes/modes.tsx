@@ -17,6 +17,7 @@ import {
   cardsOf,
   coverOf,
   deckOrder,
+  EDIT_KEY,
   freshDeck,
   loadBook,
   saveBook,
@@ -136,10 +137,9 @@ function DeckSelectPage() {
   const shown = book.find((row) => row.n === open) ?? null;
   const modeInfo = (friend ? MODES.find((item) => item.key === "custom") : MODES.find((item) => item.key === mode)) ?? MODES[0];
 
-  // The builder opens the book's active deck; the state follows too, so the save after a change keeps it.
+  // The builder opens the deck asked for; the tick (the chosen deck) stays where it is (chủ game 15/11).
   function edit(n: number) {
-    setActive(n);
-    saveBook({ decks: book, active: n });
+    sessionStorage.setItem(EDIT_KEY, String(n));
     void navigate({ to: "/deck" });
   }
 
@@ -147,8 +147,8 @@ function DeckSelectPage() {
     const row = freshDeck(book);
     const next = [...book, row];
     setBook(next);
-    setActive(row.n);
-    saveBook({ decks: next, active: row.n });
+    saveBook({ decks: next, active: active ?? row.n });
+    sessionStorage.setItem(EDIT_KEY, String(row.n));
     void navigate({ to: "/deck" });
   }
 
