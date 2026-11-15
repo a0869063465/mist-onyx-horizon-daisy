@@ -1015,6 +1015,7 @@ export const PENDING_NOTES: string[] = [
   "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
   "Bấm Chỉnh sửa một bộ bài không còn đổi dấu tick chọn sang bộ đó. Bộ đang chọn để chơi vẫn giữ nguyên.",
   "Nút PvP ở màn chính vào trận ngay bằng bộ có dấu tick và chế độ đang chọn. Đánh thường vào hàng chờ, Tuỳ chọn mở bảng mã phòng. Bộ lỗi thì mở màn Chọn bộ bài.",
+  "Màn Chọn bộ bài: bấm bộ khác thì glow xanh lá trượt sang bộ đó. Bấm Chọn thì dấu tick nảy lên kèm tiếng. Các nút lún xuống và loé vòng sáng khi bấm, nút chưa bấm được thì rung.",
 ];
 
 function remarkOf(notes: string[]) {
