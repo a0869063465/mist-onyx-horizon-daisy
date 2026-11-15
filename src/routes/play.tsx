@@ -10,7 +10,7 @@ import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
-import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, SHORT_TOP, type BoardCut } from "@/lib/board-cut";
+import { blueStart, boardAspect, boardCut, boardRatio, byBoard, planCut, redEnd, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, playLine, playPack, playUi, setSound, soundOn, unlockSound, type Cue } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
@@ -187,7 +187,7 @@ import {
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
-import { bottomArt, LAVA_BOARD_ART, LAVA_SHORT_ART, topArt } from "@/lib/env-boards";
+import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { AimFlow, ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
@@ -413,69 +413,35 @@ type Burst = { id: number; tone: "spell" | "heal"; text: string };
  * 6 ô mỗi bên trên bàn mới (ảnh board-full.jpg của Grok, chủ game chọn 28/10): số theo phần trăm của chính ảnh bàn.
  * Ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
  */
-const RAW_SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
-  0: [
-    { x: 16.4, y: 69.46 },
-    { x: 38.75, y: 69.46 },
-    { x: 60.9, y: 69.46 },
-    { x: 16.4, y: 81.81 },
-    { x: 38.75, y: 81.81 },
-    { x: 60.9, y: 81.81 },
-  ],
-  1: [
-    { x: 19.15, y: 33.08 },
-    { x: 40.85, y: 33.08 },
-    { x: 62.35, y: 33.08 },
-    { x: 19.6, y: 20.91 },
-    { x: 41.3, y: 20.91 },
-    { x: 61.8, y: 20.91 },
-  ],
-};
+const SLOT_COLS = [13.1, 33.7, 53.6] as const;
+const SLOT_W = 15.3;
+/** Một bảng ô cho một bàn: `foeRows` / `youRows` = [hàng trước, hàng sau] mỗi hàng {y đầu, cao}. Đo từ ảnh bàn (chủ game 15/11). */
+function slotTables(foeRows: [{ y: number; h: number }, { y: number; h: number }], youRows: [{ y: number; h: number }, { y: number; h: number }]) {
+  const boxes = (rows: [{ y: number; h: number }, { y: number; h: number }]) => [
+    ...SLOT_COLS.map((x) => ({ x, y: rows[0].y, w: SLOT_W, h: rows[0].h })),
+    ...SLOT_COLS.map((x) => ({ x, y: rows[1].y, w: SLOT_W, h: rows[1].h })),
+  ];
+  const pos = (list: Array<{ x: number; y: number; w: number; h: number }>) => list.map((box) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 }));
+  const you = boxes(youRows);
+  const foe = boxes(foeRows);
+  return { box: { 0: you, 1: foe }, pos: { 0: pos(you), 1: pos(foe) } };
+}
+const SLOT_A = slotTables([{ y: 25, h: 11.8 }, { y: 12, h: 11.7 }], [{ y: 59.4, h: 11.6 }, { y: 72.2, h: 11.5 }]);
+const SLOT_B = slotTables([{ y: 28.8, h: 10.2 }, { y: 17.5, h: 10.2 }], [{ y: 58.5, h: 10.2 }, { y: 69.8, h: 9.9 }]);
+const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = byBoard({ a: SLOT_A.pos, b: SLOT_B.pos });
+const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = byBoard({ a: SLOT_A.box, b: SLOT_B.box });
+/** Khung quanh viên máu của từng bên: góc trên trái + cỡ (phần trăm bàn). */
+const HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = byBoard({
+  a: { 0: { x: 4.5, y: 85, w: 12.3, h: 6.9 }, 1: { x: 7.3, y: 2.3, w: 12.3, h: 6.9 } },
+  b: { 0: { x: 3.3, y: 90.7, w: 13.5, h: 6.6 }, 1: { x: 7.1, y: 8.7, w: 13.5, h: 6.6 } },
+});
 
 /** Ô của từng hàng phía mình, từ trái sang (bảng trên: ô 0–2 hàng trước, 3–5 hàng sau, x tăng dần). */
 const ROW_SLOTS: Record<SummonRow, Slot[]> = { front: [0, 1, 2], back: [3, 4, 5] };
 /** Two taps on the same card in hand within this many ms open its sheet (chủ game 28/10). */
 const DOUBLE_TAP = 350;
 
-/** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
-const FLOOR_ART = "/board-floor.jpg";
-const SHORT_ART = "/board-short.jpg";
-const SLOT_POS = cutView(RAW_SLOT_POS, (raw, cut) => ({
-  0: raw[0].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
-  1: raw[1].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
-}));
-
 let floaterSeq = 1;
-
-const RAW_SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
-  0: [
-    { x: 7.5, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 29.85, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 52, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 7.5, y: 76.2, w: 17.8, h: 11.23 },
-    { x: 29.85, y: 76.2, w: 17.8, h: 11.23 },
-    { x: 52, y: 76.2, w: 17.8, h: 11.23 },
-  ],
-  1: [
-    { x: 10.3, y: 27.49, w: 17.7, h: 11.18 },
-    { x: 32.1, y: 27.49, w: 17.5, h: 11.18 },
-    { x: 53.5, y: 27.49, w: 17.7, h: 11.18 },
-    { x: 10.8, y: 15.35, w: 17.6, h: 11.12 },
-    { x: 32.5, y: 15.35, w: 17.6, h: 11.12 },
-    { x: 53, y: 15.35, w: 17.6, h: 11.12 },
-  ],
-};
-
-const RAW_HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = {
-  0: { x: 5, y: 87.7, w: 12, h: 7 },
-  1: { x: 5, y: 5.3, w: 12, h: 7 },
-};
-
-const SLOT_BOX = cutView(RAW_SLOT_BOX, (raw, cut) => ({
-  0: raw[0].map((box) => cutBox(box, cut)),
-  1: raw[1].map((box) => cutBox(box, cut)),
-}));
-const HP_BOX = cutView(RAW_HP_BOX, (raw, cut) => ({ 0: cutBox(raw[0], cut), 1: cutBox(raw[1], cut) }));
 
 const TRAIL_INK = {
   atk: "#ff3b3b",
@@ -723,11 +689,11 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
-const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
+const iconRoom = () => (ICON / boardRatio() + 1.2) * 1.6;
 
 function lungeTravel(base: number, dx: number, dy: number): number {
   const dist = Math.hypot(dx * 0.9, dy * 1.6 * boardCut().v) || 1;
-  return Math.max(0.05, base - ICON_ROOM / dist);
+  return Math.max(0.05, base - iconRoom() / dist);
 }
 
 /** Chủ game 14/11 (P3.1): a normal attack no longer flies up to hit: the attacker stands still like a monster that uses a
@@ -1801,7 +1767,7 @@ function PlayPage() {
   useLayoutEffect(() => {
     const measure = () => {
       const high = window.innerHeight;
-      const next = planCut(Math.min(window.innerWidth, (high * 9) / 16), high);
+      const next = planCut(window.innerWidth, high, window.innerWidth);
       setCut((prev) => (sameCut(prev, next) ? prev : next));
     };
     measure();
@@ -3817,8 +3783,8 @@ function PlayPage() {
   // Miệng bể nằm giữa dải đá còn nhìn thấy giữa hai đáy. Không đi qua `ry(TANK_OPEN)`: khi màn ngắn cả đoạn giữa sân bị bỏ dồn
   // về một điểm, bể hai bên dẹp lại thành một vạch (chủ game 01/11, bên đỏ).
   const tankGeo = useMemo<Record<TankSide, TankGeo>>(() => {
-    const foeBase = ry(TANK_BASE.foe, cut);
-    const youBase = ry(TANK_BASE.you, cut);
+    const foeBase = tankBase().foe;
+    const youBase = tankBase().you;
     // Sâu bằng khoảng một ô gạch ở mọi màn (chủ game 01/11, bản màn cắt trông ổn): màn đủ dài không để bể sâu cả nửa dải đá; màn
     // bị cắt thì dải đá còn ít nên bể nông hơn thế.
     const depth = Math.min((youBase - foeBase) / 2, rh(TANK_DEPTH, cut));
@@ -6569,7 +6535,7 @@ function PlayPage() {
       <section
         className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && !spellAimOf(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
-        style={{ "--board-v": cut.v, "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
+        style={{ "--board-ratio": boardRatio(cut), "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
@@ -7790,7 +7756,7 @@ function PlayPage() {
         </button>
         )}
         <div
-          style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))`, ...({ "--step": Math.max(6.6, (58 - 17.8) / Math.max(1, you.reserve.length + you.hand.length - 1)) } as CSSProperties) }}
+          style={{ top: `calc(${100 - 11.4 * (2.2235 / boardRatio())}% - var(--hand-up, 0px))`, height: `calc(${11.4 * (2.2235 / boardRatio())}% + var(--hand-up, 0px))`, ...({ "--step": Math.max(6.6, (58 - 17.8) / Math.max(1, you.reserve.length + you.hand.length - 1)) } as CSSProperties) }}
           className={`hand is-strip${tutorial ? "" : ` is-fan${you.reserve.length + you.hand.length > 3 ? " is-lap" : ""}`}${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onScroll={(event) => {
@@ -9230,7 +9196,8 @@ const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
  *  edges of the screen, each bottom flush with the edge of that side's area (chủ game 30/10: no gap between), both open
  *  toward the middle. */
 const TANK_WALLS = [0, 100] as const;
-const TANK_BASE = { foe: 40.3, you: 62.3 } as const;
+/** Đáy mỗi bể = mép dải đá của bên đó (đọc theo bàn đang dùng). */
+const tankBase = () => ({ foe: redEnd(), you: blueStart() });
 /** Độ sâu bể (phần trăm chiều cao bàn đầy đủ): khoảng một ô gạch, ~54 px trên màn rộng 390. */
 const TANK_DEPTH = 6.2;
 
@@ -9245,139 +9212,9 @@ function pinMedal(spot: { x: number; y: number; width: number; size: number }): 
   return { left: `${spot.x}%`, top: `${spot.y}%`, "--medal": `${spot.width * (spot.size || 1)}cqw` } as CSSProperties;
 }
 
-/** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
-/**
- * Lớp lửa cháy (chủ game 09/11): video dung nham phủ lên phần dung nham của nền bàn. Video 720×1280 khớp ảnh `board-lava.jpg` theo phép
- * co giãn 1,168 lần (đo bằng so khớp điểm ảnh): nó phủ từ 10,0% tới 89,94% chiều cao ảnh, nên chỉ nửa dung nham mới có lửa;
- * dải đá giữa sân, phần trên cùng và phần dưới cùng đứng yên. Cắt bàn theo đúng ranh đỏ/trắng như ảnh.
- */
-const FIRE_TOP = 10.0;
-const FIRE_BOTTOM = 89.94;
-function LavaFire({ half, cut }: { half: "top" | "bottom"; cut: BoardCut }) {
-  const [calm, setCalm] = useState(true);
-  useEffect(() => {
-    setCalm(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-  if (calm) return null;
-  const band = cut.to - cut.from;
-  const at = (y: number) => (half === "top" ? (y - cut.top) / cut.v : (y - cut.top - band) / cut.v);
-  const from = half === "top" ? Math.max(FIRE_TOP, cut.top) : BLUE_START;
-  const to = half === "top" ? RED_END : FIRE_BOTTOM;
-  const start = Math.max(0, at(from));
-  const end = Math.min(100, at(to));
-  if (end - start < 1) return null;
-  const edge = 1.4;
-  const softStart = (half === "top" ? from > cut.top : true) ? edge : 0;
-  const softEnd = (half === "top" ? true : to < cut.top + band + 100 * cut.v) ? edge : 0;
-  const mask = `linear-gradient(to bottom, transparent 0, #000 ${softStart}cqh, #000 calc(100% - ${softEnd}cqh), transparent 100%)`;
-  return (
-    <div className="lava-fire" style={{ top: `${start}cqh`, height: `${end - start}cqh`, maskImage: mask, WebkitMaskImage: mask }}>
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        aria-hidden="true"
-        style={{ top: `${at(FIRE_TOP) - start}cqh`, height: `${(FIRE_BOTTOM - FIRE_TOP) / cut.v}cqh` }}
-      >
-        <source src="/lava-fire.mp4" type="video/mp4" />
-        <source src="/lava-fire.webm" type="video/webm" />
-      </video>
-    </div>
-  );
-}
-
-/** Chỗ nối hai ảnh bàn (giữa dải đá, phần trăm chiều cao): hai ảnh có cùng dải đá nên nối mờ chỗ này không thấy đường. */
-const SEAM_Y = 52.4;
-const SEAM_FADE = 1.4;
-function BoardArt({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
-  const fire = (
-    <>
-      {src === LAVA_BOARD_ART ? <LavaFire half="top" cut={cut} /> : null}
-      {(bottom ?? src) === LAVA_BOARD_ART ? <LavaFire half="bottom" cut={cut} /> : null}
-    </>
-  );
-  return (
-    <>
-      <BoardImages src={src} bottom={bottom} cut={cut} />
-      {fire}
-    </>
-  );
-}
-
-function BoardImages({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
-  const other = bottom && bottom !== src ? bottom : null;
-  if (cut.v === 1) {
-    return (
-      <>
-        <img className="board-art" src={src} alt="" />
-        {other ? (
-          <img
-            className="board-art"
-            src={other}
-            alt=""
-            style={{ maskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)`, WebkitMaskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)` }}
-          />
-        ) : null}
-      </>
-    );
-  }
-  // Bàn thấp: ảnh đã bỏ SHORT_TOP phần trăm đầu, toạ độ vẫn tính theo bàn đầy đủ (trừ SHORT_TOP khi đặt vị trí ảnh).
-  if (cut.short) src = src === LAVA_BOARD_ART ? LAVA_SHORT_ART : SHORT_ART;
-  const lost = cut.short ? SHORT_TOP : 0;
-  const size = `100% ${(100 - lost) / cut.v}cqh`;
-  const at = (imageY: number) => `0 ${-(imageY - lost) / cut.v}cqh`;
-  const redEnd = (RED_END - cut.top) / cut.v;
-  if (cut.to - cut.from < 0.01) {
-    const seam = (SEAM_Y - cut.top) / cut.v;
-    const fade = SEAM_FADE / cut.v;
-    return (
-      <>
-        <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />
-        {other ? (
-          <div
-            className="board-art-slice"
-            style={{
-              top: 0,
-              bottom: 0,
-              backgroundImage: `url(${other})`,
-              backgroundSize: `100% ${100 / cut.v}cqh`,
-              backgroundPosition: `0 ${-cut.top / cut.v}cqh`,
-              maskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
-              WebkitMaskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
-            }}
-          />
-        ) : null}
-      </>
-    );
-  }
-  // Floor layer under the gap between the halves; its middle sits where the middle of the original floor was.
-  const gap = (BLUE_START - cut.to) / cut.v;
-  const gapMiddle = redEnd + gap / 2;
-  const floorMiddle = (RED_END + BLUE_START) / 2;
-  const reach = 3;
-  const floorTop = redEnd - reach;
-  const floorY = floorMiddle + (floorTop - gapMiddle) * cut.v;
-  const feather = 0.8;
-  // Nửa dưới bằng ảnh riêng (ảnh đầy đủ, không phải bản thấp): vị trí tính theo ảnh đầy đủ.
-  const lowerArt = other ?? src;
-  const lowerSize = other ? `100% ${100 / cut.v}cqh` : size;
-  const lowerAt = other ? `0 ${-BLUE_START / cut.v}cqh` : at(BLUE_START);
-  return (
-    <>
-      <div className="board-art-slice" style={{ top: `${floorTop}cqh`, height: `${gap + reach * 2}cqh`, backgroundImage: `url(${FLOOR_ART})`, backgroundSize: size, backgroundPosition: at(floorY) }} />
-      <div
-        className="board-art-slice"
-        style={{ top: 0, height: `${redEnd}cqh`, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top), maskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)` }}
-      />
-      <div
-        className="board-art-slice"
-        style={{ top: `${redEnd + gap}cqh`, bottom: 0, backgroundImage: `url(${lowerArt})`, backgroundSize: lowerSize, backgroundPosition: lowerAt, maskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)` }}
-      />
-    </>
-  );
+/** Ảnh bàn đang dùng (A hoặc B, board-cut.ts): luôn hiện đủ, không cắt (chủ game 15/11). Môi trường Núi dung nham tạm dùng chung bàn này. */
+function BoardArt({ src }: { src: string; bottom?: string; cut?: BoardCut }) {
+  return <img className="board-art" src={src} alt="" />;
 }
 
 /** V6 (chủ game 03/11): viền neon của ô đang chọn nằm TRÊN lá đang kéo, không bị lá che. */

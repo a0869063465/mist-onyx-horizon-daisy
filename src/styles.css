@@ -2024,11 +2024,12 @@
   justify-content: center;
 }
 .board {
-  --board-w: min(100vw, calc(100dvh * 9 / 16));
+  --board-ratio: 2.044;
+  --board-w: min(100vw, calc(100dvh / var(--board-ratio)));
   position: relative;
   flex: none;
   width: var(--board-w);
-  height: calc(var(--board-w) * 1870 / 841 * var(--board-v, 1));
+  height: calc(var(--board-w) * var(--board-ratio));
   overflow: hidden;
   touch-action: none;
   user-select: none;

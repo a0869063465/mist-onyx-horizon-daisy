@@ -1023,6 +1023,7 @@ export const PENDING_NOTES: string[] = [
   "Bấm Tấn công hoặc skill: mục tiêu đang sáng neon hiện sẵn dòng chảy từ quái đang dùng, màu theo nút (Tấn công đỏ, skill xanh), đổi mục tiêu thì dòng chảy đổi theo.",
   "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
   "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
+  "Bàn đấu mới: hai bàn riêng cho màn 9:16 và màn dài 9:20, tự đổi theo màn, không cắt bàn nữa. Bố cục đã chỉnh tay trong Tuỳ chỉnh được đặt lại.",
 ];
 
 function remarkOf(notes: string[]) {

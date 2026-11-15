@@ -1,58 +1,60 @@
 /**
- * Màn thiếu chiều dọc (chủ game 28/10): bàn 841 x 1870 bị cắt bớt thay vì xén phần trên.
- * 1) cắt phía trên tới sát cầu máu / cầu mana của đối thủ;
- * 2) còn thiếu thì hai nửa đỏ và xanh xích lại gần nhau, đè lên nền sân không có đĩa (`board-floor.jpg`) lót ở dưới.
- * Mọi số vị trí trong game vẫn là phần trăm của ảnh bàn đầy đủ; `ry` đổi sang phần trăm của bàn đã cắt.
+ * Hai bàn đấu (chủ game 15/11): `board-a.jpg` 942 x 1670 cho màn tỉ lệ 9:16, `board-b.jpg` 877 x 1793 cho màn dài hơn (9:20).
+ * Không còn cắt bàn: bàn luôn hiện đủ, co đều theo bề ngang (màn thấp hơn thì co theo bề cao). Mọi số vị trí trong game là
+ * phần trăm của ảnh bàn đang dùng; bảng số riêng từng bàn đặt qua `byBoard`. Các hàm `ry`, `rh`, `cutBox`, `cutView` giữ lại
+ * để code cũ chạy tiếp, nhưng nay là phép nhân 1 (không cắt).
  */
-export const BOARD_PX = { w: 841, h: 1870 };
-/** Bàn đầy đủ: cao bằng 2,2235 lần bề ngang. */
-export const FULL_RATIO = BOARD_PX.h / BOARD_PX.w;
+export type BoardId = "a" | "b";
 
-/** Cắt ở trên tối đa tới đây (phần trăm chiều cao ảnh): chạm mép trên cầu mana của đối thủ. */
-export const TOP_KEEP = 5;
-/**
- * Bàn thấp (chủ game 01/11): `board-short.jpg` là bàn cũ đã bỏ 112 px đầu (5,99% chiều cao) và vẽ lại khay đỏ thấp hơn.
- * Mọi chỗ khác trùng điểm ảnh với `board-full.jpg`. Màn cần cắt từ ngần này trở lên thì dùng ảnh đó, còn thấp nữa mới cắt tiếp.
- */
-export const SHORT_TOP = 5.99;
-export const SHORT_PX_H = 1758;
-/** Khay đỏ của bàn thấp nằm thấp hơn khay cũ chừng này (phần trăm của bàn đầy đủ). */
-export const SHORT_TRAY_DROP = 2.8;
-/** Mép dưới nửa đỏ (hết lớp đất cam) và mép trên nửa xanh, theo ảnh bàn. */
-export const RED_END = 42.6;
-export const BLUE_START = 62.2;
-/** Hai nửa chừa lại ít nhất chừng này nền sân giữa chúng. */
-const MIN_GAP = 1.5;
+export type BoardVariant = {
+  id: BoardId;
+  /** Cỡ ảnh gốc (điểm ảnh). */
+  w: number;
+  h: number;
+  art: string;
+  /** Dải đá giữa sân: mép dưới nửa đỏ và mép trên nửa xanh (phần trăm chiều cao ảnh). */
+  redEnd: number;
+  blueStart: number;
+};
+
+export const BOARDS: Record<BoardId, BoardVariant> = {
+  a: { id: "a", w: 942, h: 1670, art: "/board-a.jpg", redEnd: 39.5, blueStart: 56.9 },
+  b: { id: "b", w: 877, h: 1793, art: "/board-b.jpg", redEnd: 41.5, blueStart: 56.3 },
+};
+
+/** Màn có cao/rộng từ ngần này trở lên dùng bàn B, nhỏ hơn dùng bàn A (giữa 1,773 của A và 2,044 của B). */
+export const BOARD_SWITCH = 1.91;
 
 export type BoardCut = {
-  /** Phần trăm bỏ ở đầu ảnh. */
+  id: BoardId;
+  /** Giữ chỗ cho code cũ: không cắt nên luôn 0, `from` = `to`, `v` = 1. */
   top: number;
-  /** Đoạn nền sân bỏ đi giữa hai nửa, phần trăm của ảnh đầy đủ: từ `from` tới `to`. */
   from: number;
   to: number;
-  /** Phần của bàn đầy đủ còn lại (0–1). */
   v: number;
-  /** Dùng ảnh bàn thấp (`board-short.jpg`) thay ảnh đầy đủ. */
   short?: boolean;
 };
 
-export const NO_CUT: BoardCut = { top: 0, from: RED_END, to: RED_END, v: 1 };
+function noCut(id: BoardId): BoardCut {
+  return { id, top: 0, from: BOARDS[id].redEnd, to: BOARDS[id].redEnd, v: 1 };
+}
 
-/** Cắt cho bàn rộng `boardW` px trên màn cao `screenH` px. */
-export function planCut(boardW: number, screenH: number): BoardCut {
-  const full = boardW * FULL_RATIO;
-  // Dư một chút để làm tròn điểm ảnh không chừa khe ở mép trên (thừa thì mép trên bị xén, không thấy).
-  const need = Math.max(0, (1 - screenH / full) * 100 + 0.2);
-  if (need <= 0.2 || !Number.isFinite(need)) return NO_CUT;
-  const short = need >= SHORT_TOP;
-  const top = short ? SHORT_TOP : Math.min(need, TOP_KEEP);
-  const band = Math.min(need - top, BLUE_START - RED_END - MIN_GAP);
-  const v = 1 - (top + band) / 100;
-  return { top, from: RED_END, to: RED_END + band, v, short };
+const CUTS: Record<BoardId, BoardCut> = { a: noCut("a"), b: noCut("b") };
+export const NO_CUT: BoardCut = CUTS.b;
+
+/** Bàn nào dùng cho màn rộng `screenW` cao `screenH` (px). */
+export function pickBoard(screenW: number, screenH: number): BoardId {
+  return screenH / Math.max(1, screenW) >= BOARD_SWITCH ? "b" : "a";
+}
+
+/** Giữ tên cũ: trả "vết cắt" (nay chỉ chọn bàn) cho màn `screenW` x `screenH`; tham số đầu là bề ngang bàn cũ (bỏ qua). */
+export function planCut(_boardW: number, screenH: number, screenW = 0): BoardCut {
+  const w = screenW || _boardW;
+  return CUTS[pickBoard(w, screenH)];
 }
 
 export function sameCut(a: BoardCut, b: BoardCut): boolean {
-  return a.top === b.top && Boolean(a.short) === Boolean(b.short) && a.from === b.from && a.to === b.to && a.v === b.v;
+  return a.id === b.id;
 }
 
 let current: BoardCut = NO_CUT;
@@ -65,25 +67,41 @@ export function boardCut(): BoardCut {
   return current;
 }
 
-/** Chiều cao một vị trí của ảnh đầy đủ (phần trăm) -> phần trăm của bàn đã cắt. Điểm trong dải bỏ dồn về chỗ nối. */
-export function ry(y: number, cut: BoardCut = current): number {
-  const band = cut.to - cut.from;
-  // Điểm rơi vào đoạn bỏ đi thì dồn về giữa chỗ nền sân còn lại giữa hai nửa.
-  const shown = y <= cut.from ? y - cut.top : y >= cut.to ? y - cut.top - band : cut.from - cut.top + (BLUE_START - cut.to) / 2;
-  return shown / cut.v;
+/** Bàn đang dùng. */
+export function board(cut: BoardCut = current): BoardVariant {
+  return BOARDS[cut.id];
 }
 
-/** Một độ cao (phần trăm của bàn đầy đủ) -> phần trăm của bàn đã cắt. */
-export function rh(h: number, cut: BoardCut = current): number {
-  return h / cut.v;
+/** Bàn đang dùng cho màn hiện tại của trình duyệt (cho trang không đo màn như Tuỳ chỉnh). */
+export function boardOfWindow(): BoardCut {
+  if (typeof window === "undefined") return current;
+  return CUTS[pickBoard(window.innerWidth, window.innerHeight)];
+}
+
+export const redEnd = (cut: BoardCut = current) => BOARDS[cut.id].redEnd;
+export const blueStart = (cut: BoardCut = current) => BOARDS[cut.id].blueStart;
+
+/** Cao chia rộng của ảnh bàn đang dùng. */
+export function boardRatio(cut: BoardCut = current): number {
+  const b = BOARDS[cut.id];
+  return b.h / b.w;
 }
 
 /** Bề ngang bàn chia bề cao bàn đang hiện. */
 export function boardAspect(cut: BoardCut = current): number {
-  return BOARD_PX.w / BOARD_PX.h / cut.v;
+  return 1 / boardRatio(cut);
 }
 
-/** Bản đồ bảng toạ độ `raw` theo vết cắt hiện tại; tính lại khi vết cắt đổi. */
+/** Không cắt: vị trí giữ nguyên. */
+export function ry(y: number, _cut: BoardCut = current): number {
+  return y;
+}
+
+export function rh(h: number, _cut: BoardCut = current): number {
+  return h;
+}
+
+/** Bản đồ bảng toạ độ `raw` theo bàn đang dùng; tính lại khi đổi bàn. */
 export function cutView<T extends object>(raw: T, map: (raw: T, cut: BoardCut) => T): T {
   let seen: BoardCut | null = null;
   let out = raw;
@@ -97,7 +115,21 @@ export function cutView<T extends object>(raw: T, map: (raw: T, cut: BoardCut) =
   return new Proxy({} as T, { get: (_, key) => (get() as Record<string | symbol, unknown>)[key] });
 }
 
+/** Bảng riêng từng bàn: đọc bảng của bàn đang dùng. Đọc, liệt kê khoá và trải (`...`) đều chạy. */
+export function byBoard<T extends object>(tables: Record<BoardId, T>): T {
+  const now = () => tables[current.id];
+  return new Proxy({} as T, {
+    get: (_, key) => (now() as Record<string | symbol, unknown>)[key],
+    has: (_, key) => key in now(),
+    ownKeys: () => Reflect.ownKeys(now()),
+    getOwnPropertyDescriptor: (_, key) => {
+      const desc = Object.getOwnPropertyDescriptor(now(), key);
+      return desc ? { ...desc, configurable: true } : undefined;
+    },
+  });
+}
+
 /** Ô có góc trên trái (x, y) và cỡ (w, h). */
-export function cutBox<B extends { y: number; h: number }>(box: B, cut: BoardCut): B {
-  return { ...box, y: ry(box.y, cut), h: rh(box.h, cut) };
+export function cutBox<B extends { y: number; h: number }>(box: B, _cut: BoardCut): B {
+  return box;
 }

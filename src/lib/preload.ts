@@ -1,5 +1,5 @@
 import { artSrc, monsterCard, spellCard, spellSrc } from "./catalog.ts";
-import { ENV_BOARDS, DEFAULT_BOARD_ART, bottomArt, topArt } from "./env-boards.ts";
+import { ENV_BOARDS, BOARD_ARTS, bottomArt, topArt } from "./env-boards.ts";
 import { FIRST_TRACK, MATCH_TRACKS } from "./music.ts";
 import { soundJobs } from "./sfx.ts";
 import type { Duel } from "./duel.ts";
@@ -71,9 +71,7 @@ export const FX_VIDEOS = [
 const CORE_PICTURES = [
   "/home-bg-video.jpg",
   "/title.png",
-  DEFAULT_BOARD_ART,
-  "/board-floor.jpg",
-  "/board-short.jpg",
+  ...BOARD_ARTS,
   "/ui/act-pass.webp?v=1",
   "/ui/act-turn.webp?v=1",
   "/ui/act-round.webp?v=1",
