@@ -3,7 +3,7 @@ import { KeywordRow } from "@/components/game/keyword-row";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CardCarousel } from "@/components/game/card-carousel";
 import { CopyText } from "@/components/game/copy-text";
-import { Glyph, MonsterSheet, type SheetAction, type SheetExtra } from "@/components/game/monster-sheet";
+import { Glyph, MonsterSheet, type SheetAction, type SheetExtra, type SheetTab } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { OwnPanel } from "@/components/game/own-panel";
 import { artSrc, copyCap, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
@@ -143,9 +143,15 @@ export function SpellFace({ id, gems }: { id: string; gems?: number | string }) 
 export type SheetPlace = "collection" | "deck";
 
 /** The Sở hữu tab of a card for a place; undefined when the place or the card has none. */
-function ownTab(id: string, place: SheetPlace | undefined, onClose: () => void): { own?: ReactNode; ownFirst: boolean } {
-  if (!place || copyCap(id) === 0) return { ownFirst: false };
-  return { own: <OwnPanel id={id} onDeck={place === "deck" ? onClose : undefined} />, ownFirst: place === "collection" };
+function ownTab(id: string, place: SheetPlace | undefined, onClose: () => void, mainLabel: string): { tabs?: SheetTab[]; firstTab?: string } {
+  if (!place || copyCap(id) === 0) return {};
+  return {
+    tabs: [
+      { key: "skills", label: mainLabel },
+      { key: "own", label: "Sở hữu", panel: <OwnPanel id={id} onDeck={place === "deck" ? onClose : undefined} /> },
+    ],
+    firstTab: place === "collection" ? "own" : "skills",
+  };
 }
 
 /** What a sheet opened from the fan shows beside the card and under its first skill (the deck builder's notes). */
@@ -212,7 +218,7 @@ export function CardMonsterSheet({
   if (!card) return null;
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
-      {...ownTab(id, place, onClose)}
+      {...ownTab(id, place, onClose, "Kỹ năng")}
       name={card.name}
       card={<FieldFace id={id} />}
       count=""
@@ -269,8 +275,7 @@ export function SpellSheet({
   if (!spell) return null;
   const sheet = (onArt?: () => void) => (
     <MonsterSheet
-      {...ownTab(id, place, onClose)}
-      mainLabel="Chức năng"
+      {...ownTab(id, place, onClose, "Chức năng")}
       name={spell.name}
       card={<SpellFace id={id} gems={gems} />}
       count=""

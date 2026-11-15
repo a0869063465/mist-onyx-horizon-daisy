@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
@@ -280,6 +280,9 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
 /** Most icons in one row of skills. */
 const MAX_ROW = 4;
 
+/** A tab of a card's sheet: `panel` is drawn right of the card; "skills" (no panel) is the skills view itself. */
+export type SheetTab = { key: string; label: string; panel?: ReactNode; left?: ReactNode };
+
 export function MonsterSheet({
   name,
   card,
@@ -297,16 +300,13 @@ export function MonsterSheet({
   startSkill,
   stay = false,
   onSwipe,
-  own,
-  ownFirst = false,
-  mainLabel = "Kỹ năng",
+  tabs,
+  firstTab,
 }: {
-  /** Tab "Sở hữu" (chủ game 15/11): its panel, shown on the right of the card. Without it the sheet has no tab bar. */
-  own?: ReactNode;
-  /** The sheet opens on the "Sở hữu" tab (the collection) instead of the skills (a match, the deck builder). */
-  ownFirst?: boolean;
-  /** Name of the tab that holds what the sheet showed before the tabs: "Kỹ năng" for a monster, "Chức năng" for a spell. */
-  mainLabel?: string;
+  /** Tabs of the sheet (chủ game 15/11). Without them the sheet is the skills view alone, with no tab bar. */
+  tabs?: SheetTab[];
+  /** The tab the sheet opens on (the collection: "own"; the deck builder: the first one). */
+  firstTab?: string;
   name: string;
   card: ReactNode;
   /** The orange number the monster shows on the field; empty hides the badge. */
@@ -336,9 +336,13 @@ export function MonsterSheet({
   onSwipe?: (dir: 1 | -1) => boolean | void;
 }) {
   const [slide, setSlide] = useState<0 | 1 | -1>(0);
-  const [tab, setTab] = useState<"main" | "own">(own && ownFirst ? "own" : "main");
-  useEffect(() => setTab(own && ownFirst ? "own" : "main"), [name]); // eslint-disable-line react-hooks/exhaustive-deps
-  const onOwn = !!own && tab === "own";
+  const startTab = tabs ? (tabs.some((item) => item.key === firstTab) ? firstTab! : tabs[0].key) : "skills";
+  const [tab, setTab] = useState(startTab);
+  useEffect(() => setTab(startTab), [name]); // eslint-disable-line react-hooks/exhaustive-deps
+  const current = tabs?.find((item) => item.key === tab);
+  // "skills" is the sheet as it was: skill icons on top, the text of the tapped icon below. Any other tab keeps the card and
+  // puts its own panel on the right (and, for the stats tab, a column on the left).
+  const onSkills = !tabs || tab === "skills" || !current?.panel;
   const swipe = useSwipe((dir) => {
     if (!onSwipe) return false;
     if (onSwipe(dir) === false) return false;
@@ -497,6 +501,13 @@ export function MonsterSheet({
       );
     });
   };
+  // Tapping the text under the icons moves to the next icon, and back to the first after the last (chủ game 15/11).
+  const order = [...skills.map((_, index) => `s${index}`), ...extras.map((item) => `x:${item.key}`)];
+  const cycle = (event: MouseEvent) => {
+    if (order.length < 2 || (event.target as HTMLElement).closest("button, a")) return;
+    const at = order.indexOf(picked);
+    setPicked(order[(at + 1) % order.length]);
+  };
   return (
     <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()} {...(onSwipe ? swipe : {})}>
       <GlyphDefs />
@@ -511,22 +522,22 @@ export function MonsterSheet({
             ✕
           </button>
         )}
-        {own ? (
+        {tabs && tabs.length > 1 ? (
           <nav className="msheet-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={!onOwn} className={!onOwn ? "on" : ""} onClick={() => setTab("main")}>
-              {tr(mainLabel)}
-            </button>
-            <button type="button" role="tab" aria-selected={onOwn} className={onOwn ? "on" : ""} onClick={() => setTab("own")}>
-              {tr("Sở hữu")}
-            </button>
+            {tabs.map((item) => (
+              <button key={item.key} type="button" role="tab" aria-selected={item.key === tab} className={item.key === tab ? "on" : ""} onClick={() => setTab(item.key)}>
+                {tr(item.label)}
+              </button>
+            ))}
           </nav>
         ) : null}
-        {!onOwn && (skills.length || extras.length) ? (
+        {onSkills && (skills.length || extras.length) ? (
           <div className="msheet-skills">
             {row(groups, true)}
           </div>
         ) : null}
-        <div className="msheet-mid">
+        <div className={`msheet-mid${current?.left && !onSkills ? " has-left" : ""}`}>
+          {!onSkills && current?.left ? <div className="msheet-left">{current.left}</div> : null}
           <div
             className={`msheet-card${onArt ? " is-fan" : ""}`}
             role={onArt ? "button" : undefined}
@@ -554,8 +565,8 @@ export function MonsterSheet({
                 </span>
               ) : null}
             </div>
-            {onOwn ? own : aside}
-            {!onOwn && actions.length ? (
+            {onSkills ? aside : current?.panel}
+            {onSkills && actions.length ? (
               <div className="msheet-acts">
                 {actions.map((action) => (
                   <ActionButton key={action.key} action={action} />
@@ -564,7 +575,7 @@ export function MonsterSheet({
             ) : null}
           </div>
         </div>
-        {onOwn ? null : <div className="msheet-desc">
+        {onSkills ? <div className="msheet-desc" onClick={cycle}>
           {shown ? (
             <>
               <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
@@ -615,7 +626,7 @@ export function MonsterSheet({
           ) : (
             <p className="msheet-empty">{tr("Không có kỹ năng.")}</p>
           )}
-        </div>}
+        </div> : null}
       </div>
     </div>
   );
