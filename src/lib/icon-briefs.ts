@@ -29,6 +29,8 @@ export type SkillAt = {
   target: FieldMon | null;
   /** The notice as it fired, once it has. */
   result?: string;
+  /** K5: asked before a target is picked: what it does to "1 kẻ địch", in order. */
+  ask?: boolean;
   /** The part picked as it was cast (Thiên thần hộ mệnh's kind of shield). */
   extra?: string | null;
 };
@@ -103,6 +105,7 @@ function lines(at: SkillAt): string[] {
   switch (cardId) {
     case "rong-phun-hoa-cau":
       if (name !== "Hoả cầu") return [];
+      if (at.ask) return [`Giảm ${skillLoss(cardId, "mdef", 1)} thủ phép của 1 kẻ địch`, `Sau đó, ${deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, 3)))).replace("Gây", "gây")}`];
       return [...(target ? [`Giảm ${skillLoss(cardId, "mdef", 1)} thủ phép`] : []), deal(blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, 3))))];
     case "rong-con":
     case "rong-ngan-tuoi":

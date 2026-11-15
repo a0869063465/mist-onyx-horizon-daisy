@@ -1009,11 +1009,20 @@ export const PENDING_NOTES: string[] = [
   "Rút bài: xấp bài có mũi tên Rút vài giây. Lá rút hiện ra giữa màn kèm bảng mô tả, bấm vào lá để xem từng kỹ năng, bấm ra ngoài thì lá về tay.",
   "Tay bài xoè như quạt, lá dùng được chớp sáng. Bấm lá: lá nhấc lên, bảng mô tả ngắn hiện phía trên, bấm lại để xem kỹ năng kế. Bấm giữ để mở mô tả chi tiết.",
   "Triệu hồi: kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng), lá hiện giữa sân với lựa chọn Triệu hồi, Hiến tế, Dung hợp và 2 mũi tên chọn hàng, rồi lá bay xuống ô.",
+  "Đánh thường: quái lấy đà rồi lao tông thẳng vào mục tiêu, có vệt tốc độ, loé sáng, tia lửa, rung bàn và tiếng va.",
+  "Lá phép vừa dùng hiện to giữa sân trên vòng phép đang quay, toả vòng sóng theo màu tốc độ của phép.",
+  "Nút ba gạch dưới bộ bài đối thủ mở Lịch sử và Cài đặt. Bỏ nút Menu và Cài đặt ở hai góc trên.",
+  "Đòn tông có tiếng va riêng: bỏ tiếng trúng đòn, chớp đỏ và vết chém cũ bị trùng.",
+  "Kỹ năng: quái tụ sáng tại chỗ, bung về phía mục tiêu rồi hiệu ứng kỹ năng mới tới.",
+  "Đối thủ dùng phép hay kỹ năng: bảng ghi tên và tác dụng hiện ở đầu màn, bấm bất cứ đâu để tắt, tự tắt sau 4 giây.",
+  "Bấm kỹ năng hoặc phép: bảng xác nhận ghi tác dụng, OK rồi mới chọn mục tiêu, Huỷ để quay lại. Bật tắt trong Cài đặt của trận.",
   "Trong vòng tấn công của mình, quái trên sân còn hành động được có glow xanh lá chớp 1,5 giây một nhịp.",
   "Phản ứng chớp hồng nhịp 1 giây (quái và phép). Quái chặn được đòn có glow vàng 1 giây. Phép dùng được ở lượt chính chớp xanh lá.",
   "Quái đánh giáp lá cà không bay lên nữa, đứng yên như quái dùng skill. Quái chặn vẫn lao ra.",
   "Kéo bài hoặc bấm Tấn công, skill: mục tiêu hợp lệ chớp glow 1,5 giây, xanh lam với quái mình, đỏ với quái địch.",
   "Bấm Tấn công hoặc skill: mục tiêu đang sáng neon hiện sẵn dòng chảy từ quái đang dùng, màu theo nút (Tấn công đỏ, skill xanh), đổi mục tiêu thì dòng chảy đổi theo.",
+  "Luật mới: sang vòng mới, bên không giữ lượt tấn công được thêm 1 mana. Trả đòn tốn thêm 1 mana (đánh thường 1, kỹ năng thêm 1), không đủ mana thì không Trả đòn.",
+  "Màn Chọn bộ bài đổi giao diện mới: bấm ô Bộ bài ở thanh dưới màn chính. Bấm bộ để chọn (glow xanh lá), nút Chọn gắn dấu tick, Chỉnh sửa, bộ lỗi có dấu !.",
 ];
 
 function remarkOf(notes: string[]) {

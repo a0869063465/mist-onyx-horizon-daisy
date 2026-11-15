@@ -96,9 +96,9 @@ function Home() {
     { key: "mail", label: "Thư", img: "mail", at: [671, 842, 138, 139], to: "/mail", dot: mails.some(row => !row.read || row.owing) },
     { key: "friends", label: "Bạn bè", img: "friends", at: [672, 1001, 138, 137], to: "/friends", dot: friends.asks > 0 },
   ];
-  const navItems: { label: string; to?: "/deck" | "/shop" | "/collection"; left: number; width: number }[] = [
+  const navItems: { label: string; to?: "/deck" | "/modes" | "/shop" | "/collection"; left: number; width: number }[] = [
     { label: "Sự kiện", left: 0, width: 196 },
-    { label: "Bộ bài", to: "/deck", left: 196, width: 195 },
+    { label: "Bộ bài", to: "/modes", left: 196, width: 195 },
     { label: "Cửa hàng", to: "/shop", left: 391, width: 214 },
     { label: "Bộ sưu tập", to: "/collection", left: 605, width: 171 },
   ];

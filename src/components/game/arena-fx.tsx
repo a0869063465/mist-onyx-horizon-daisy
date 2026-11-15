@@ -375,15 +375,67 @@ export function ArenaFx() {
       );
     };
 
-    const clashHit = (x: number, y: number) => {
+    /** Đòn tông (chủ game 14/11): lá lao vào mục tiêu; loé trắng, hai vòng sóng, tia lửa hất theo hướng lao, rung bàn. */
+    const ramHit = (x: number, y: number, ang: number) => {
       const u = unit();
-      domes.push({ x, y, r: 8.5 * u, dir: 0, full: true, life: 0.45, max: 0.45, seed: rand(0, 1000) });
-      add({ x, y, life: 0.2, max: 0.2, size: 10 * u, grow: 1.6, color: "#ffffff", shape: "dot" });
-      ring(x, y, "#e8fbff", 2, 120, 0.38, 4, 0.8);
-      bits(x, y, ZAP, 22, 68, { shape: "spark", life: 0.45 });
-      bits(x, y, PAL.steel, 10, 50, { shape: "spark", life: 0.4 });
-      flash("#bfeaff", 0.1, 0.18);
-      shakeLight(0.7);
+      domes.push({ x, y, r: 10 * u, dir: 0, full: true, life: 0.5, max: 0.5, seed: rand(0, 1000) });
+      add({ x, y, life: 0.16, max: 0.16, size: 20 * u, grow: 2.2, color: "#ffffff", shape: "dot" });
+      add({ x, y, life: 0.3, max: 0.3, size: 11 * u, grow: 1.3, color: "#ffe9b0", shape: "dot" });
+      ring(x, y, "#ffffff", 2, 170, 0.32, 5, 0.9);
+      later(70, () => ring(x, y, "#ffd27a", 3, 110, 0.45, 3, 0.9));
+      mark({ kind: "pierce", x, y, ang, len: 26 * u, max: 0.26, pal: ZAP });
+      mark({ kind: "blade", x, y, ang: ang + 1.57, len: 15 * u, max: 0.3, pal: PAL.steel });
+      // Sparks thrown on along the blow, a few back toward the attacker.
+      for (let i = 0; i < 34; i++) {
+        const back = i % 5 === 0;
+        const a = ang + (back ? Math.PI : 0) + rand(-0.75, 0.75);
+        const s = rand(40, 120) * u * (back ? 0.5 : 1);
+        const life = rand(0.25, 0.55);
+        add({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: 0.86, life, max: life, size: rand(1.3, 2.8) * u, color: i % 3 === 0 ? "#ffffff" : i % 3 === 1 ? "#ffe08a" : "#9fe6ff", shape: "spark" });
+      }
+      bits(x, y, PAL.steel, 12, 60, { shape: "spark", life: 0.4 });
+      flash("#ffffff", 0.2, 0.16);
+      shakeLight(1.25);
+    };
+
+    /**
+     * K2 (chủ game 14/11): quái phát huy kỹ năng. Trước khi hiệu ứng của kỹ năng bay đi, chính lá quái tụ sáng: vòng phép
+     * dưới chân, hạt sáng bị hút vào lá, cột sáng dâng lên; 0,4 giây sau nó bung ra một nhịp về phía mục tiêu (`ang`).
+     */
+    const ROUSE_CAST = 400;
+    const rouse = (x: number, y: number, color: string, ang?: number) => {
+      const u = unit();
+      const pal: Pal = { core: "#ffffff", mid: color, deep: color, bit: "spark" };
+      sigil(x, y + 5 * u, pal, 13, 0.75);
+      pillar(x, y + 7 * u, color, 7, 40, 0.5);
+      ring(x, y, color, 24, -52, 0.4, 3, 0.9);
+      later(130, () => ring(x, y, "#ffffff", 19, -46, 0.3, 2, 0.9));
+      // Motes drawn in to the card from all round it.
+      for (let i = 0; i < 26; i++) {
+        const a = (i / 26) * Math.PI * 2 + rand(-0.1, 0.1);
+        const r = rand(13, 21) * u;
+        const life = rand(0.26, 0.38);
+        later(i * 9, () =>
+          add({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r * 1.25, vx: (-Math.cos(a) * r) / life, vy: (-Math.sin(a) * r * 1.25) / life, drag: 1, life, max: life, size: rand(1.4, 2.6) * u, color: i % 3 === 0 ? "#ffffff" : color, shape: "spark" }),
+        );
+      }
+      for (let i = 0; i < 10; i++) {
+        add({ x: x + rand(-6, 6) * u, y: y + rand(2, 9) * u, vy: rand(-46, -24) * u, drag: 0.97, life: rand(0.4, 0.62), max: 0.62, size: rand(1.2, 2.2) * u, color: i % 2 ? "#ffffff" : color, shape: "mote" });
+      }
+      later(ROUSE_CAST, () => {
+        add({ x, y, life: 0.14, max: 0.14, size: 8 * u, grow: 1.1, color: "#ffffff", shape: "dot" });
+        ring(x, y, "#ffffff", 3, 150, 0.3, 4, 0.9);
+        later(60, () => ring(x, y, color, 4, 100, 0.42, 3, 0.9));
+        const n = 22;
+        for (let i = 0; i < n; i++) {
+          const a = ang === undefined ? rand(0, Math.PI * 2) : ang + rand(-0.55, 0.55);
+          const s = rand(50, 130) * u;
+          const life = rand(0.22, 0.46);
+          add({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: 0.87, life, max: life, size: rand(1.2, 2.6) * u, color: i % 3 === 0 ? "#ffffff" : color, shape: "spark" });
+        }
+        flash(color, 0.12, 0.2);
+        shakeLight(0.45);
+      });
     };
 
     /** A jagged copy of a polyline: each leg cut into short pieces pushed sideways at random. */
@@ -548,7 +600,13 @@ export function ArenaFx() {
       if (e.t === "zap" || e.t === "clash") {
         if (reduced) return;
         if (e.t === "zap") zapHit(px(e.x), py(e.y), e.dir, e.path);
-        else clashHit(px(e.x), py(e.y));
+        else ramHit(px(e.x), py(e.y), e.ang);
+        wake();
+        return;
+      }
+      if (e.t === "rouse") {
+        if (reduced) return;
+        rouse(px(e.x), py(e.y), e.color, e.ang);
         wake();
         return;
       }
@@ -836,7 +894,7 @@ export function ArenaFx() {
         ctx.strokeStyle = r.color;
         ctx.lineWidth = Math.max(0.5, r.w * k);
         ctx.beginPath();
-        ctx.ellipse(r.x, r.y, r.r, r.r * r.squash, 0, 0, Math.PI * 2);
+        ctx.ellipse(r.x, r.y, Math.max(0, r.r), Math.max(0, r.r) * r.squash, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
       for (let i = orbs.length - 1; i >= 0; i--) {
