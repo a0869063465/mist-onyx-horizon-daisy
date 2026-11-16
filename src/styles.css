@@ -14537,7 +14537,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 .mz-necklace { position: relative; }
 .mz-necklace img { max-height: 4.6rem; }
-.mz-dpad { position: absolute; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 50%; border: 0.1rem solid #d9a936; background: rgba(12, 26, 61, 0.92); color: #ffe9a8; font-size: 0.8rem; padding: 0; cursor: pointer; z-index: 2; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 0.4rem rgba(230, 184, 74, 0.6); }
+.mz-dpad { position: absolute; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 50%; border: 0.1rem solid rgba(217, 169, 54, 0.45); background: rgba(12, 26, 61, 0.25); color: rgba(255, 233, 168, 0.7); font-size: 0.8rem; padding: 0; cursor: pointer; z-index: 2; -webkit-tap-highlight-color: transparent; box-shadow: none; }
 .mz-dpad:active:not(:disabled) { transform: scale(0.9); filter: brightness(1.3); }
 .mz-dpad:disabled { opacity: 0.25; box-shadow: none; cursor: default; }
 .mz-dpad.is-up { top: -0.2rem; left: 50%; margin-left: -0.95rem; }
