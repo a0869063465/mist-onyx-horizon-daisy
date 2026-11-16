@@ -206,7 +206,7 @@ export function bossGateOpen(state: MazeState): boolean {
 const withVisit = (visited: CellKey[], k: CellKey) => (visited.includes(k) ? visited : [...visited, k]);
 
 /** Sau khi đứng ở ô k (không còn đang đánh): nếu là ô cổng chưa im thì hiện khung chọn. */
-function portalPromptAt(state: MazeState, k: CellKey): PortalPrompt | null {
+export function portalPromptAt(state: MazeState, k: CellKey): PortalPrompt | null {
   const portal = PORTALS[k];
   if (!portal || state.portalQuiet === k) return null;
   return { pair: portal.pair, from: k, to: portal.to };
@@ -302,7 +302,8 @@ export function resolveBattle(state: MazeState, won: boolean): MazeResult {
       next = { ...next, bossUnlocked: true };
       events.push({ type: "boss_unlocked" });
     }
-    next = { ...next, prompt: portalPromptAt(next, next.at) };
+    // Thắng cũng lùi 1 ô về chỗ đứng trước khi vào ô quái.
+    next = { ...next, at: battle.from, portalQuiet: battle.from, prompt: null };
     return done(next, events);
   }
   // Thua: mất 1 mạng, quay về ô đứng trước khi bước vào ô quái.

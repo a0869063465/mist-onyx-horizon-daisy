@@ -39,7 +39,7 @@ export const Route = createFileRoute("/maze")({ component: MazePage });
  */
 const W = 1142;
 const H = 1377;
-const STEP_MS = 420;
+const STEP_MS = 720;
 const WARP_MS = 320;
 const ENTRY_MS = 1500;
 type Box = { x: number; y: number; w: number; h: number; fx: number; fy: number };
@@ -279,24 +279,6 @@ function MazePage() {
             />
           )}
           <Fog lit={vis.lit} />
-          {free &&
-            DIRS.map((dir) => {
-              const next = neighbor(maze.at, dir);
-              if (!next || blockedReason(maze, dir)) return null;
-              const c = CELL[next];
-              return (
-                <button
-                  key={dir}
-                  type="button"
-                  className="mz-step"
-                  aria-label={dir}
-                  style={{ ...pct(c.x, c.y), width: `${(c.w / W) * 100}%`, height: `${(c.h / H) * 100}%` }}
-                  onClick={() => step(dir)}
-                >
-                  <span>{ARROW[dir]}</span>
-                </button>
-              );
-            })}
           {ready ? (
             <div
               className={`mz-hero${glide ? " is-glide" : ""}${warp ? " is-warp" : ""}`}
@@ -330,6 +312,15 @@ function MazePage() {
       <section className="mz-tray" aria-label={tr("Bảo vật")}>
         <div className="mz-necklace">
           <img src="/maze/item-necklace.webp" alt={tr("Dây chuyền")} draggable={false} />
+          {DIRS.map((dir) => {
+            const next = neighbor(maze.at, dir);
+            const on = free && !!next && !blockedReason(maze, dir);
+            return (
+              <button key={dir} type="button" className={`mz-dpad is-${dir}`} aria-label={dir} disabled={!on} onClick={() => step(dir)}>
+                {ARROW[dir]}
+              </button>
+            );
+          })}
         </div>
         <div className="mz-pick">
           <span>{tr("Quái")}</span>

@@ -18,6 +18,7 @@ import {
   neighbor,
   openChest,
   resolveBattle,
+  portalPromptAt,
   visibility,
   wallBetween,
 } from "./maze.ts";
@@ -36,8 +37,11 @@ function walk(start: MazeState, dirs: Dir[]) {
   return { state, events };
 }
 const win = (state: MazeState) => {
+  const at = state.pending?.at;
   const res = resolveBattle(state, true);
   assert.ok(res.ok);
+  // Thắng thì lùi 1 ô; các bài cũ đi tiếp từ ô quái nên đặt lại ô đó.
+  if (at) return { ...res, state: { ...res.state, at, prompt: portalPromptAt({ ...res.state, at }, at) } };
   return res;
 };
 
