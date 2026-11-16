@@ -14482,11 +14482,11 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mz-obj { position: absolute; height: auto; transform: translate(-50%, -50%); pointer-events: none; user-select: none; transition: opacity 0.45s ease; }
 .mz-obj.is-monster { transform: translate(-50%, -58%); }
 .mz-obj.is-portal { transform: translate(-50%, -56%); }
-.mz-hero { position: absolute; aspect-ratio: 152 / 278; transform: translate(-50%, -100%); pointer-events: none; z-index: 3; transition: opacity 0.3s ease, transform 0.3s ease; }
+.mz-hero { position: absolute; aspect-ratio: 1 / 1; transform: translate(-50%, -100%); pointer-events: none; z-index: 3; transition: opacity 0.3s ease, transform 0.3s ease; }
 .mz-hero.is-glide { transition: left 0.72s linear, top 0.72s linear, height 0.72s linear, opacity 0.3s ease, transform 0.3s ease; }
-.mz-hero img { position: absolute; left: 50%; bottom: 0; height: 100%; width: auto; transform: translateX(-50%); user-select: none; filter: drop-shadow(0 0.25rem 0.2rem rgba(0, 0, 0, 0.55)); }
-.mz-hero img.is-walk { animation: mz-walk 0.72s ease-in-out; transform-origin: 50% 100%; }
-@keyframes mz-walk { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(0); } 12% { transform: translateX(-50%) translateY(-4.5%) rotate(-3deg); } 25% { transform: translateX(-50%) translateY(0) rotate(0); } 37% { transform: translateX(-50%) translateY(-4.5%) rotate(3deg); } 50% { transform: translateX(-50%) translateY(0) rotate(0); } 62% { transform: translateX(-50%) translateY(-4.5%) rotate(-3deg); } 75% { transform: translateX(-50%) translateY(0) rotate(0); } 87% { transform: translateX(-50%) translateY(-4.5%) rotate(3deg); } }
+.mz-sprite { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 800% 100%; background-position: 0 0; filter: drop-shadow(0 0.25rem 0.2rem rgba(0, 0, 0, 0.55)); }
+.mz-sprite.is-walk { animation: mz-run 0.72s steps(8, end); }
+@keyframes mz-run { from { background-position-x: 0; } to { background-position-x: 114.2857%; } }
 .mz-hero.is-warp { opacity: 0; transform: translate(-50%, -100%) scale(0.4, 1.4); }
 .mz-step { position: absolute; transform: translate(-50%, -50%); z-index: 4; background: transparent; border: 0; padding: 0; display: grid; place-items: center; color: rgba(255, 244, 200, 0.85); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mz-step span { font-size: 0.9rem; text-shadow: 0 0 0.3rem #000, 0 0 0.5rem #e6b84a; animation: mz-bob 1.2s ease-in-out infinite; }

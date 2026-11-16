@@ -27,7 +27,7 @@ import {
 import { clearMaze, loadMaze, saveMaze, startMazeBattle, takeMazeResult } from "@/lib/maze-store";
 import { useAppMode } from "@/lib/app-mode";
 import { tr, useLang } from "@/lib/i18n";
-import { playIntro, playUi } from "@/lib/sfx";
+import { playCue, playIntro, playUi } from "@/lib/sfx";
 
 export const Route = createFileRoute("/maze")({ component: MazePage });
 
@@ -86,6 +86,13 @@ function MazePage() {
   // Nhân vật lướt giữa các ô; tắt lúc mới mở trang, lúc dịch chuyển và lúc reset (nhảy thẳng).
   const [glide, setGlide] = useState(false);
   const [walk, setWalk] = useState(0);
+  // Hai bước chân mỗi ô: một tiếng ở đầu, một ở giữa nhịp.
+  useEffect(() => {
+    if (!walk) return;
+    playCue("mazeStep");
+    const id = window.setTimeout(() => playCue("mazeStep"), STEP_MS / 2);
+    return () => window.clearTimeout(id);
+  }, [walk]);
   const [warp, setWarp] = useState(false);
   const [entry, setEntry] = useState<{ x: number; y: number; level: number; boss: boolean } | null>(null);
   const [note, setNote] = useState<{ text: string; id: number } | null>(null);
@@ -284,7 +291,7 @@ function MazePage() {
               className={`mz-hero${glide ? " is-glide" : ""}${warp ? " is-warp" : ""}`}
               style={{ ...pct(hero.fx, hero.fy), height: `${((hero.h * 1.15) / H) * 100}%` }}
             >
-              <img key={walk} className={walk ? "is-walk" : ""} src={`/maze/hero-${face}.webp`} alt="" draggable={false} />
+              <i key={walk} className={`mz-sprite${walk ? " is-walk" : ""}`} style={{ backgroundImage: `url(/maze/walk-${face}.webp)` }} />
             </div>
           ) : null}
         </div>
