@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Cụm 3 nút mới (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
+1. Việc vừa làm: thay hình cụm nút bằng 2 ảnh chủ game (cắt nguyên `public/ui/act2/`: eye-red = huỷ, eye-gold = xem trước, arrow = chuyển lượt, ok). Chỉ thay mặt NHẮM của mắt (mở vẫn `OracleOrb` cũ), mũi tên/OK cùng chỗ nút OK cũ (OK thay tick khi `ticking`; đồng hồ cát hết vòng giữ ảnh cũ, chờ chủ game đưa lại). Mắt vàng ấn giữ xem trước, buông tắt (`onPointerDown/Up`). Hàng chờ xong 2 giây không làm gì: `okFlare` → `.is-flare` (2 vòng sapphire + vàng nở ra + mặt nút sáng, lặp tới khi bấm/làm gì khác).
+2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 bàn B: 3 nút đúng chỗ ảnh 1; hào quang chụp bằng cách ép class (chưa chạy luồng hàng chờ thật), chưa thử giữ mắt bằng cảm ứng, bàn A, điện thoại.
+3. Việc sắp làm: chờ chủ game xem; đưa ảnh đồng hồ cát và mắt mở nếu muốn đổi.
+
 ## Hai bàn đấu mới A/B (15/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 16/11, khiên kiếm mới cũng đã áp)
 1. Việc vừa làm: thay bàn bằng 2 ảnh chủ game gửi: `public/board-a.jpg` (942×1670, màn cao/rộng < 1,91) và `board-b.jpg` (877×1793, màn dài hơn, đầu ảnh là dải tối cố ý). Bỏ cắt bàn: `board-cut.ts` viết lại (`BOARDS`, `pickBoard`, `byBoard` = bảng riêng từng bàn, `ry/rh` thành phép nhân 1). Số đo từ ảnh: ô lá + viên máu (play.tsx `SLOT_A/B`, `HP_BOX`), mặc định HUD/nút/kiếm/hồ sơ/lá môi trường (layouts.ts, theo mép dải đá), bể sáng đáy = mép dải đá, tay bài, tỉ lệ `.board` (`--board-ratio`). Bố cục lưu riêng từng bàn (`clash-board-layout-v12-a|b`), bản cũ bị bỏ.
 2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 (bàn B) và 412×732 (bàn A) trận Test: ô lá, máu, mana, sao, xấp bài, nút khớp ảnh. Chưa thử: trang Tuỳ chỉnh bàn, Hướng dẫn, màn rất ngắn/rộng, điện thoại, bể sáng/góc bo (hằng số cũ chưa đo lại cho 2 bàn), vị trí lá môi trường/tường thành/kiếm. Núi dung nham tạm dùng chung bàn mới (lửa dung nham tắt vì ảnh cũ lệch).

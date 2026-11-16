@@ -1033,6 +1033,7 @@ export const PENDING_NOTES: string[] = [
   "Lượt đầu: đổi bài xong, 3 lá bay lên tay hết, chậm một nhịp rồi lá tự rút mới bay lên tay.",
   "Lượt đầu: lá tự rút hiện giữa bàn như lần rút thường rồi mới về tay.",
   "Khiên kiếm có cánh báo bên giữ lượt tấn công đổi sang hiệu ứng và âm thanh mới, hai bên xanh đỏ.",
+  "Cụm nút bên phải sân đổi hình mới: mắt đỏ (huỷ), mắt vàng (xem trước), mũi tên chuyển lượt và OK. Con mắt giờ ấn giữ để xem trước, buông tay là tắt. Đẩy lên hàng chờ rồi 2 giây không làm gì thì OK chớp toả hào quang.",
 ];
 
 function remarkOf(notes: string[]) {
