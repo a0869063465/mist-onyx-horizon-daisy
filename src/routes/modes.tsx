@@ -544,6 +544,9 @@ function netDeck(row: DeckEntry): NetDeck {
  * down it, with the mode, "Đang trong hàng chờ đối thủ", the deck's portrait, the time waited and Huỷ. It waits
  * until paired or cancelled. The background is /queue-bg.jpg (the owner's picture, portrait) over the deck's art.
  */
+/** Chủ game 16/11: 4 video loop cùng khung đầu cuối thay ảnh bộ bài lúc chờ trận; hết một đoạn thì bốc ngẫu nhiên đoạn kế. */
+const QUEUE_FACES = 4;
+
 function QueueScreen({
   deck,
   art,
@@ -559,6 +562,7 @@ function QueueScreen({
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
   );
   const [seconds, setSeconds] = useState(0);
+  const [face, setFace] = useState(() => ({ n: 1 + Math.floor(Math.random() * QUEUE_FACES), k: 0 }));
   const [note, setNote] = useState("");
   const done = useRef(false);
   const matched = useRef(onMatched);
@@ -607,7 +611,16 @@ function QueueScreen({
       <section className="lor-queue-box">
         <h2>{tr("Đánh thường")}</h2>
         <p className="lor-queue-sub">{tr("Đang trong hàng chờ đối thủ")}</p>
-        <span className="lor-queue-face" style={art ? { backgroundImage: `url(${art})` } : undefined} />
+        <video
+          key={face.k}
+          className="lor-queue-face"
+          src={`/ui/queue/face-${face.n}.mp4`}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={() => setFace((now) => ({ n: 1 + Math.floor(Math.random() * QUEUE_FACES), k: now.k + 1 }))}
+        />
         <p className="lor-queue-time">
           {tr("Đang tìm trận đấu:")} <b>{time}</b>
         </p>
