@@ -14311,7 +14311,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   width: 100%;
   background: linear-gradient(90deg, var(--note), #fff3c4);
   transform-origin: left center;
-  animation: an-clock 4s linear both;
+  animation: an-clock 8s linear both;
 }
 @keyframes an-clock { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
