@@ -3937,6 +3937,14 @@ function PlayPage() {
 
   if (duel) turnClock.current = duel.clock ?? 1;
 
+  // Chủ game 16/11: đã đẩy lên hàng chờ mà 2 giây không làm gì thì nút OK chớp toả hào quang.
+  const [okFlare, setOkFlare] = useState(false);
+  useEffect(() => {
+    setOkFlare(false);
+    if (!queue) return;
+    const t = window.setTimeout(() => setOkFlare(true), 2000);
+    return () => window.clearTimeout(t);
+  }, [queue, aim, vowAsk, hornAsk, knightAsk, chronoAsk, digPick, peek]);
   if (!duel) {
     return (
       <main className="stage">
@@ -8184,11 +8192,26 @@ function PlayPage() {
               style={pinMedal(board.drawMon)}
               onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : queue ? cancelQueue() : withdrawOn ? withdrawMirror() : undefined)}
             >
-              <OracleOrb kind="cancel" state={queue || markId || picking || withdrawOn ? "open" : "shut"} />
+              {queue || markId || picking || withdrawOn ? <OracleOrb kind="cancel" state="open" /> : <img className="act-new is-eye" src="/ui/act2/eye-red.webp?v=1" alt="" draggable={false} style={{ "--w": 8.25 } as CSSProperties} />}
             </button>
           )}
           {replay || board.drawSpell.hidden ? null : (
-            <button type="button" className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!eyeOn} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
+            <button
+              type="button"
+              className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`}
+              aria-label={tr("Xem trước")}
+              disabled={!eyeOn}
+              style={pinMedal(board.drawSpell)}
+              onPointerDown={(e) => {
+                // Chủ game 16/11: ấn và giữ để xem trước, buông tay là tắt.
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+                setPeek(true);
+              }}
+              onPointerUp={() => setPeek(false)}
+              onPointerCancel={() => setPeek(false)}
+              onLostPointerCapture={() => setPeek(false)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               {peek && eyeOn ? (
                 <span className="oracle-smoke" aria-hidden="true">
                   <i />
@@ -8198,13 +8221,13 @@ function PlayPage() {
                   <i />
                 </span>
               ) : null}
-              <OracleOrb kind="eye" state={eyeOn ? (peek ? "look" : "open") : "shut"} />
+              {eyeOn ? <OracleOrb kind="eye" state={peek ? "look" : "open"} /> : <img className="act-new is-eye" src="/ui/act2/eye-gold.webp?v=1" alt="" draggable={false} style={{ "--w": 8.25 } as CSSProperties} />}
             </button>
           )}
           {!replay && mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
             <button
               type="button"
-              className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
+              className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}${okFlare && ticking ? " is-flare" : ""}`}
               style={pinMedal(board.endTurn)}
               aria-label={ticking ? "OK" : tr("Hết lượt")}
               onClick={() => {
@@ -8225,7 +8248,14 @@ function PlayPage() {
                 else apply(endTurn(duel));
               }}
             >
-              <img className="medal act-face" src={ticking ? "/ui/act-pass.webp?v=1" : closesRound ? "/ui/act-round.webp?v=1" : "/ui/act-turn.webp?v=1"} alt="" draggable={false} />
+              {ticking ? (
+                <img className="act-new is-ok" src="/ui/act2/ok.webp?v=1" alt="" draggable={false} style={{ "--w": 14, "--h": 15.2 } as CSSProperties} />
+              ) : closesRound ? (
+                <img className="medal act-face" src="/ui/act-round.webp?v=1" alt="" draggable={false} />
+              ) : (
+                <img className="act-new is-arrow" src="/ui/act2/arrow.webp?v=1" alt="" draggable={false} style={{ "--w": 13.8, "--h": 14.6 } as CSSProperties} />
+              )}
+              {ticking ? <span className="act-halo" aria-hidden="true" /> : null}
               {/* Như video chủ game (30/10): đang chọn mục tiêu / đã xếp chờ xác nhận. */}
               {markId ? <span className="act-caption">{tr("Chọn mục tiêu")}</span> : queue ? <span className="act-caption">{tr("Xác nhận")}</span> : null}
             </button>

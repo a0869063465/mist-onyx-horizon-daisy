@@ -115,9 +115,9 @@ export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = byBoard<Record<ActK
     youDef: spot(11.7, 54.9, 1, 10.2, 4.6),
   },
   b: {
-    drawMon: spot(78.6, 76.5, 1, 8.4, 4.7),
-    drawSpell: spot(78.4, 81.5, 1, 8.4, 4.7),
-    endTurn: spot(91.2, 79.5, 1, 14.4, 7.7),
+    drawMon: spot(76.2, 76.5, 1, 8.4, 4.7),
+    drawSpell: spot(76.2, 81.5, 1, 8.4, 4.7),
+    endTurn: spot(88, 79, 1, 14.4, 7.7),
     foeFace: spot(88.3, 43.8, 1, 11.5, 5.2),
     youFace: spot(11.5, 54.4, 1, 11.5, 5.2),
     foeAtk: spot(91.9, 43.9, 1, 19.8, 9.2),

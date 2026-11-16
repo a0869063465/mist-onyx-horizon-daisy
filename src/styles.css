@@ -14413,6 +14413,66 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .dk2-deck.is-sel .dk2-art { transition: transform 0s linear 0.3s; transform: scale(var(--k, 0.5)) matrix3d(0.966076,-0.105899,0,-0.00035314,-0.042055,0.943111,0,-0.00014348,0,0,1,0,8.5063,34.3803,0,1); }
 .dk2-deck.is-bad .dk2-art { filter: saturate(0.75); }
 @media (prefers-reduced-motion: reduce) { .dk2-btn, .dk2-deck, .dk2-off, .dk2-glow, .dk2-ring, .dk2-art { transition: none !important; } .dk2-ring { display: none; } .dk2-tick.is-pop { animation: none; } }
+
+/* Cụm 3 nút mới (chủ game 16/11): ảnh cắt nguyên, mắt đỏ = huỷ, mắt vàng = xem trước (ấn giữ), mũi tên = chuyển lượt, OK = xác nhận.
+   Cỡ ảnh = px ảnh 848 → cqw (px / 8,48). Mặt mở của mắt và đồng hồ cát giữ ảnh cũ. */
+.stage .actions .act-new {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--w) * 1cqw);
+  height: calc(var(--h, var(--w)) * 1cqw);
+  max-width: none;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.55));
+}
+.stage .actions .act.medal-act.is-arrow .act-new,
+.stage .actions .act.medal-act.is-pass .act-new { animation: none; }
+.stage .actions .act.medal-act.is-arrow .medal { animation: none; }
+.stage .actions.is-spread > .oracle-act .act-new { width: calc(var(--w) * 1cqw); }
+.stage .actions.is-spread > .oracle-act { overflow: visible; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; }
+/* Toả hào quang của OK: 2 vòng xanh sapphire + vàng nở ra rồi tan, mặt nút sáng lên theo nhịp. */
+.act-halo { display: none; }
+.stage .actions .act.medal-act.is-flare .act-halo {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(14cqw);
+  height: calc(14cqw);
+  margin: -7cqw 0 0 -7cqw;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 0.45cqw solid rgb(255 214 120 / 0.9);
+  box-shadow: 0 0 2.2cqw 0.6cqw rgb(74 168 255 / 0.85), inset 0 0 2cqw rgb(74 168 255 / 0.7);
+  animation: ok-halo 1.5s ease-out infinite;
+}
+.stage .actions .act.medal-act.is-flare .act-halo::after {
+  content: "";
+  position: absolute;
+  inset: -0.45cqw;
+  border-radius: 50%;
+  border: 0.3cqw solid rgb(130 205 255 / 0.9);
+  box-shadow: 0 0 1.6cqw rgb(255 214 120 / 0.8);
+  animation: ok-halo 1.5s ease-out 0.5s infinite;
+}
+.stage .actions .act.medal-act.is-flare .act-new {
+  animation: ok-flash 1.5s ease-in-out infinite;
+}
+@keyframes ok-halo {
+  0% { transform: scale(0.85); opacity: 0.95; }
+  100% { transform: translate(0, 0) scale(2.15); opacity: 0; }
+}
+@keyframes ok-flash {
+  0%, 100% { filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.55)); }
+  35% { filter: drop-shadow(0 0 1.4cqw rgb(255 220 140 / 0.95)) drop-shadow(0 0 3cqw rgb(74 168 255 / 0.9)) brightness(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage .actions .act.medal-act.is-flare .act-halo, .stage .actions .act.medal-act.is-flare .act-halo::after, .stage .actions .act.medal-act.is-flare .act-new { animation: none; }
+}
+
 /* ---------- Mê cung PvE (phần 2a) ---------- */
 .mz { position: fixed; inset: 0; background: #02040a; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; color: #f3e3b0; font-family: inherit; }
 .mz-back { position: absolute; top: calc(env(safe-area-inset-top) + 0.6rem); left: 0.6rem; z-index: 5; padding: 0.3rem 0.7rem; border-radius: 0.5rem; background: rgba(8, 14, 30, 0.8); border: 1px solid #b8923c; color: #f3e3b0; text-decoration: none; font-weight: 700; }
