@@ -1051,6 +1051,8 @@ export const PENDING_NOTES: string[] = [
   "Tab Sở hữu của bảng mô tả lá đổi giao diện mới: tên, số lá đang có, ô đồng hồ cát khi dùng thử, ô khóa mở bảng Mở khóa, trái tim yêu thích khi sở hữu, nút Deck, Album, Nhận thêm.",
   "Tab Sở hữu của bảng mô tả lá: nút bấm có hiệu ứng lún, nảy, vòng sáng vàng và tiếng riêng; nút khoá hoặc thiếu sao thì rung; nút Nhận thêm có vệt sáng quét mời bấm.",
   "Bảng mô tả ngắn khi đối thủ dùng phép hoặc kỹ năng hiện lâu hơn: 8 giây thay vì 4 giây.",
+  "Sừng lôi phá đổi luật: gắn sừng là +3 công ngay, bỏ đánh Lan và bảng chọn. Đòn đánh vẫn thành sát thương phép.",
+  "Sừng lôi phá có hiệu ứng mới: lá bay từ tay ra, nhập vào quái, nổ sáng xanh lá, lá quái hiện to và số công chạy lên. Quái có công phép thì số công màu tím sáng.",
 ];
 
 function remarkOf(notes: string[]) {

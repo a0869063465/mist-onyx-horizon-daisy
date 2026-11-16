@@ -553,6 +553,9 @@ test("Sừng lôi phá chỉ dùng trong vòng tấn công của mình", () => {
   assert.equal(at(off, 0, 0).horn ?? null, null);
   const on = D.castSpell(s, 0, uid(s, 0, 0));
   assert.ok(at(on, 0, 0).horn, on.live);
+  // Chủ game 16/11: gắn sừng là +3 công ngay, không còn bảng chọn Lan / +3.
+  assert.equal(at(on, 0, 0).atk, at(s, 0, 0).atk + 3);
+  assert.ok(!at(on, 0, 0).hornNew);
 });
 
 const BIG = {
