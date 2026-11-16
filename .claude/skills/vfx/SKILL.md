@@ -27,6 +27,8 @@ description: Cài hoặc sửa hiệu ứng (VFX) từ video chủ game gửi. �
 | `7d71e086` (3,0 s) | hạt tụ, nổ nước toả đều | Con nước lớn tàn phá | `fx/thuy-no.webm`, `sfx/thuy-no.mp3` (`tideBurst`) |
 | `0552b72a` (3,0 s) | xoáy nước chém bắn sang phải | Cơn thịnh nộ của hải thần (Cơn thịnh nộ của hải vương) | `fx/thuy-xoay.webm`, `sfx/thuy-xoay.mp3` (`tideSwirl`) |
 | `6a822d23` (3,1 s) | vòng sáng xanh lục + dấu cộng | hồi máu, buff, tự tăng chỉ số (KHÔNG gồm tăng máu tối đa, giữ vòng cũ) | `fx/hoi-mau.webm`, `sfx/hoi-mau.mp3` (`heal`, gain +12 dB vì video rất nhỏ tiếng) |
+| `fdf53e4f` xanh / `fbe302bb` đỏ (3,0 s, 1104×832, giữ nguyên khung) | khiên kiếm có cánh hiện rồi đứng yên | icon bên giữ lượt tấn công (`AttackEmblem`) | `ui/atk-you.webm` `atk-foe.webm` + khung cuối `.webp`, `sfx/atk-you.mp3` (+4,6 dB) `atk-foe.mp3` (+12 dB) (cue `emblemYou`/`emblemFoe`, `?v=2`) |
+| Grok `1c7685dd` (hình) + Grok `542fe607` (âm), 16/11 | lá bật sáng xanh lơ toả tia rồi tắt (hình tách khỏi lá trong video: trừ khung tĩnh, ngoài lá giữ nguyên, trong lá chỉ giữ phần chói trắng làm mờ) | quái đưa kỹ năng lên hàng chờ (mình + đối thủ), kèm lá nhấc lên khỏi sân (`.is-lift`, 1,8 s) | `fx/phat-quang.webm` (600×600, lá 300 px rộng ở 50% / 44,8%, 2 s từ mốc 0,3 s của video), `sfx/phat-quang.mp3` (âm từ mốc 0,55 s của video 2, +21,5 dB; cú đập 0,96 s của video 2 khớp mốc chói 0,71 s của video 1) (cue `flare`, `FlareBlast`) |
 | `03aa4a8f` (3,0 s) | khói độc lục | Thổi độc (CHƯA gắn) | |
 
 Đo điểm phát lực (% khung video): xoáy nước (63; 51) lúc 1,1–1,5 s → `.tide-vid.is-rage { translate(-63%, -51%) }`; cột nước rơi (50; ~57) và nổ nước (50; ~55) nằm giữa ngang, cao hơn tâm lá khoảng 2% chiều cao bàn (giữ `translate(-50%, -78%)` vì vòng sóng đáy nằm ở ~85% khung).

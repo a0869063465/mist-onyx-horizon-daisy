@@ -1,5 +1,5 @@
 import { artSrc, monsterCard, spellCard, spellSrc } from "./catalog.ts";
-import { ENV_BOARDS, DEFAULT_BOARD_ART, bottomArt, topArt } from "./env-boards.ts";
+import { ENV_BOARDS, BOARD_ARTS, bottomArt, topArt } from "./env-boards.ts";
 import { FIRST_TRACK, MATCH_TRACKS } from "./music.ts";
 import { soundJobs } from "./sfx.ts";
 import type { Duel } from "./duel.ts";
@@ -56,6 +56,7 @@ export const FX_VIDEOS = [
   "/fx/lua-no.mp4?v=2",
   "/fx/dai-hong-thuy.webm?v=1",
   "/fx/hoi-mau.webm?v=1",
+  "/fx/phat-quang.webm?v=1",
   "/fx/thuy-tru.webm?v=1",
   "/fx/thuy-no.webm?v=1",
   "/fx/thuy-xoay.webm?v=1",
@@ -63,22 +64,24 @@ export const FX_VIDEOS = [
   "/fx/set-dien.mp4?v=1",
   "/fx/set-to.mp4?v=1",
   "/fx/hien-te-vong.mp4?v=2",
-  "/ui/atk-you.webm?v=1",
-  "/ui/atk-foe.webm?v=1",
+  "/ui/atk-you.webm?v=2",
+  "/ui/atk-foe.webm?v=2",
   "/ui/box-open.webm?v=1",
 ];
 
 const CORE_PICTURES = [
   "/home-bg-video.jpg",
   "/title.png",
-  DEFAULT_BOARD_ART,
-  "/board-floor.jpg",
-  "/board-short.jpg",
+  ...BOARD_ARTS,
   "/ui/act-pass.webp?v=1",
   "/ui/act-turn.webp?v=1",
   "/ui/act-round.webp?v=1",
-  "/ui/atk-you.webp?v=1",
-  "/ui/atk-foe.webp?v=1",
+  "/ui/act2/eye-red.webp?v=1",
+  "/ui/act2/eye-gold.webp?v=1",
+  "/ui/act2/arrow.webp?v=1",
+  "/ui/act2/ok.webp?v=1",
+  "/ui/atk-you.webp?v=2",
+  "/ui/atk-foe.webp?v=2",
   "/board-bleed.jpg",
   "/card-frame.png",
   "/spell-frame.png",

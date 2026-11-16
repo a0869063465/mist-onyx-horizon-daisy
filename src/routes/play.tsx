@@ -5,12 +5,12 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
-import { BLUE_START, boardAspect, boardCut, cutBox, cutView, planCut, rh, ry, sameCut, setBoardCut, NO_CUT, RED_END, SHORT_TOP, type BoardCut } from "@/lib/board-cut";
+import { blueStart, boardAspect, boardCut, boardRatio, byBoard, planCut, redEnd, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
 import { fieldBindsFor } from "@/lib/field-chips";
 import { playCue, playHit, playLine, playPack, playUi, setSound, soundOn, unlockSound, type Cue } from "@/lib/sfx";
 import { loadDeck } from "@/lib/deck";
@@ -39,6 +39,7 @@ import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { noteMatch, type MatchGain } from "@/lib/mission-store";
+import { finishMazeBattle, takeMazeBattle, type MazeBattleTicket } from "@/lib/maze-store";
 import { MissionAfter, missionRowsOf } from "@/components/game/mission-after";
 import { EndScene } from "@/components/game/end-scene";
 import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
@@ -85,6 +86,7 @@ import {
   castSpell,
   concede,
   createDuel,
+  openingDraw,
   declareSkill,
   dismissGlimpse,
   draw,
@@ -187,7 +189,7 @@ import {
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
-import { bottomArt, LAVA_BOARD_ART, LAVA_SHORT_ART, topArt } from "@/lib/env-boards";
+import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
 import { AimFlow, ICON, ReactionLine, branchRoutes, coverPoint, keyOf, type EndSpot, type IconLook, type IconSpot } from "@/components/game/reaction-line";
 import { stepChain, type ChainOrb, type FlowEnd, type FlowLink } from "@/lib/reaction-chain";
@@ -413,69 +415,39 @@ type Burst = { id: number; tone: "spell" | "heal"; text: string };
  * 6 ô mỗi bên trên bàn mới (ảnh board-full.jpg của Grok, chủ game chọn 28/10): số theo phần trăm của chính ảnh bàn.
  * Ô 0–2 là hàng trước (sát giữa sân), ô 3–5 là hàng sau (sát tay).
  */
-const RAW_SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = {
-  0: [
-    { x: 16.4, y: 69.46 },
-    { x: 38.75, y: 69.46 },
-    { x: 60.9, y: 69.46 },
-    { x: 16.4, y: 81.81 },
-    { x: 38.75, y: 81.81 },
-    { x: 60.9, y: 81.81 },
-  ],
-  1: [
-    { x: 19.15, y: 33.08 },
-    { x: 40.85, y: 33.08 },
-    { x: 62.35, y: 33.08 },
-    { x: 19.6, y: 20.91 },
-    { x: 41.3, y: 20.91 },
-    { x: 61.8, y: 20.91 },
-  ],
-};
+const SLOT_COLS = [13.1, 33.7, 53.6] as const;
+const SLOT_W = 15.3;
+/** Một bảng ô cho một bàn: `foeRows` / `youRows` = [hàng trước, hàng sau] mỗi hàng {y đầu, cao}. Đo từ ảnh bàn (chủ game 15/11). */
+function slotTables(foeRows: [{ y: number; h: number }, { y: number; h: number }], youRows: [{ y: number; h: number }, { y: number; h: number }]) {
+  const boxes = (rows: [{ y: number; h: number }, { y: number; h: number }]) => [
+    ...SLOT_COLS.map((x) => ({ x, y: rows[0].y, w: SLOT_W, h: rows[0].h })),
+    ...SLOT_COLS.map((x) => ({ x, y: rows[1].y, w: SLOT_W, h: rows[1].h })),
+  ];
+  const pos = (list: Array<{ x: number; y: number; w: number; h: number }>) => list.map((box) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 }));
+  const you = boxes(youRows);
+  const foe = boxes(foeRows);
+  return { box: { 0: you, 1: foe }, pos: { 0: pos(you), 1: pos(foe) } };
+}
+const SLOT_A = slotTables([{ y: 25, h: 11.8 }, { y: 12, h: 11.7 }], [{ y: 59.4, h: 11.6 }, { y: 72.2, h: 11.5 }]);
+const SLOT_B = slotTables([{ y: 28.8, h: 10.2 }, { y: 17.5, h: 10.2 }], [{ y: 58.5, h: 10.2 }, { y: 69.8, h: 9.9 }]);
+const SLOT_POS: Record<Side, Array<{ x: number; y: number }>> = byBoard({ a: SLOT_A.pos, b: SLOT_B.pos });
+const SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = byBoard({ a: SLOT_A.box, b: SLOT_B.box });
+/** Khung quanh viên máu của từng bên: góc trên trái + cỡ (phần trăm bàn). */
+const HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = byBoard({
+  a: { 0: { x: 4.5, y: 85, w: 12.3, h: 6.9 }, 1: { x: 7.3, y: 2.3, w: 12.3, h: 6.9 } },
+  b: { 0: { x: 3.3, y: 90.7, w: 13.5, h: 6.6 }, 1: { x: 7.1, y: 8.7, w: 13.5, h: 6.6 } },
+});
 
 /** Ô của từng hàng phía mình, từ trái sang (bảng trên: ô 0–2 hàng trước, 3–5 hàng sau, x tăng dần). */
 const ROW_SLOTS: Record<SummonRow, Slot[]> = { front: [0, 1, 2], back: [3, 4, 5] };
 /** Two taps on the same card in hand within this many ms open its sheet (chủ game 28/10). */
 const DOUBLE_TAP = 350;
-
-/** Màn thiếu chiều dọc thì bàn bị cắt (board-cut.ts): các bảng toạ độ dưới đây tự đổi theo vết cắt hiện tại. */
-const FLOOR_ART = "/board-floor.jpg";
-const SHORT_ART = "/board-short.jpg";
-const SLOT_POS = cutView(RAW_SLOT_POS, (raw, cut) => ({
-  0: raw[0].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
-  1: raw[1].map((spot) => ({ ...spot, y: ry(spot.y, cut) })),
-}));
+/** Gợi ý lượt 1 (t1-draw1, t1-draw0, t1-pass, t1-more): tạm ẩn từ 12/11, đặt false để bật lại. */
+const TURN_ONE_HINTS_OFF = true;
+/** Lá tự rút của lượt đầu bay sau 3 lá đầu (3 lá cách 0,15 giây + 0,62 giây bay) cộng một nhịp nghỉ (chủ game 13/11). */
+const AUTO_DRAW_AT = 1.5;
 
 let floaterSeq = 1;
-
-const RAW_SLOT_BOX: Record<Side, Array<{ x: number; y: number; w: number; h: number }>> = {
-  0: [
-    { x: 7.5, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 29.85, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 52, y: 63.9, w: 17.8, h: 11.12 },
-    { x: 7.5, y: 76.2, w: 17.8, h: 11.23 },
-    { x: 29.85, y: 76.2, w: 17.8, h: 11.23 },
-    { x: 52, y: 76.2, w: 17.8, h: 11.23 },
-  ],
-  1: [
-    { x: 10.3, y: 27.49, w: 17.7, h: 11.18 },
-    { x: 32.1, y: 27.49, w: 17.5, h: 11.18 },
-    { x: 53.5, y: 27.49, w: 17.7, h: 11.18 },
-    { x: 10.8, y: 15.35, w: 17.6, h: 11.12 },
-    { x: 32.5, y: 15.35, w: 17.6, h: 11.12 },
-    { x: 53, y: 15.35, w: 17.6, h: 11.12 },
-  ],
-};
-
-const RAW_HP_BOX: Record<Side, { x: number; y: number; w: number; h: number }> = {
-  0: { x: 5, y: 87.7, w: 12, h: 7 },
-  1: { x: 5, y: 5.3, w: 12, h: 7 },
-};
-
-const SLOT_BOX = cutView(RAW_SLOT_BOX, (raw, cut) => ({
-  0: raw[0].map((box) => cutBox(box, cut)),
-  1: raw[1].map((box) => cutBox(box, cut)),
-}));
-const HP_BOX = cutView(RAW_HP_BOX, (raw, cut) => ({ 0: cutBox(raw[0], cut), 1: cutBox(raw[1], cut) }));
 
 const TRAIL_INK = {
   atk: "#ff3b3b",
@@ -723,11 +695,11 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
-const ICON_ROOM = (ICON * (841 / 1870) + 1.2) * 1.6;
+const iconRoom = () => (ICON / boardRatio() + 1.2) * 1.6;
 
 function lungeTravel(base: number, dx: number, dy: number): number {
   const dist = Math.hypot(dx * 0.9, dy * 1.6 * boardCut().v) || 1;
-  return Math.max(0.05, base - ICON_ROOM / dist);
+  return Math.max(0.05, base - iconRoom() / dist);
 }
 
 /** Chủ game 14/11 (P3.1): a normal attack no longer flies up to hit: the attacker stands still like a monster that uses a
@@ -823,7 +795,7 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
  * monster (attacked or blocking), the two cards collide. Hellfire balls and shots keep their own looks.
  */
 type Landing =
-  | { kind: "face"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
+  | { kind: "face"; uid: string; thrust: { x: number; y: number }; ang: number; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
   | { kind: "clash"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; target: { x: number; y: number }; ang: number };
 
 const HELL_IDS = new Set(["mat-do-tan-pha", "rong-ac-ma"]);
@@ -871,6 +843,8 @@ function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: numb
 /** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
  *  toward its target, and only then (ROUSE_MS) does the skill's own effect, its sound and its numbers land. */
 const ROUSE_MS = 720;
+/** Chủ game 16/11: a monster whose skill is queued lifts off the board and flares (the clip is 2 s long; it lifts as the light builds, drops once it fades). */
+const FLARE_MS = 1800;
 const ROUSE_CAST = 400;
 
 /** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
@@ -925,7 +899,8 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
   const at = { x: from.x + (orb.x - from.x) * reach, y: edgeY };
   const edgeX = orb.x < 50 ? BOARD_EDGE : 100 - BOARD_EDGE;
   const path: Array<[number, number]> = [[at.x, at.y], [edgeX, at.y], [edgeX, orb.y], [orb.x, orb.y]];
-  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), at, dir: top ? -1 : 1, path, orb };
+  const faceAng = Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x);
+  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), ang: faceAng, at, dir: top ? -1 : 1, path, orb };
 }
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
@@ -1801,7 +1776,7 @@ function PlayPage() {
   useLayoutEffect(() => {
     const measure = () => {
       const high = window.innerHeight;
-      const next = planCut(Math.min(window.innerWidth, (high * 9) / 16), high);
+      const next = planCut(window.innerWidth, high, window.innerWidth);
       setCut((prev) => (sameCut(prev, next) ? prev : next));
     };
     measure();
@@ -1827,6 +1802,8 @@ function PlayPage() {
   /** Hết trận: whether the end scene is past. */
   const [endStep, setEndStep] = useState<"wait" | "scene" | "missions" | "done">("wait");
   const [gain, setGain] = useState<MatchGain | null>(null);
+  /** Trận mê cung (chủ game 15/11): đánh quái ở /maze, hết trận quay về /maze. */
+  const mazeFight = useRef<MazeBattleTicket | null>(null);
   /** Hết trận (chủ game 22/10): the losing side's HP on screen, where the end scene bursts it. */
   const [scene, setScene] = useState<{ win: boolean; at: { x: number; y: number }; tone: "red" | "blue" } | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
@@ -1857,7 +1834,7 @@ function PlayPage() {
   // giữa màn (`drawShows`, lần lượt từng lá) rồi mới về tay.
   const [peekAt, setPeekAt] = useState(0);
   const [stage, setStage] = useState<Staged | null>(null);
-  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string }>>([]);
+  const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string; wait?: boolean }>>([]);
   const [drawLeave, setDrawLeave] = useState(false);
   /** K3 (chủ game 14/11): a spell used outside the reaction chain shows big in the middle of the board, then fades. */
   const [castShow, setCastShow] = useState<{ key: string; id: string } | null>(null);
@@ -1921,6 +1898,7 @@ function PlayPage() {
   const [lockFlash, setLockFlash] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
+  const [lift, setLift] = useState<string | null>(null);
   const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
@@ -2012,6 +1990,8 @@ function PlayPage() {
   }
   /** Lượt 1: mọi hành động lặp lại (nhấp lá, kéo quái, bấm quái) nhắc người chơi bước tiếp theo. */
   function turnOneHint() {
+    // Tạm ẩn (chủ game 12/11): lượt đầu đã tự rút 1 lá nên các gợi ý cũ của lượt 1 không còn đúng.
+    if (TURN_ONE_HINTS_OFF) return;
     if (!duel || !hintOk() || !canPlay || (duel.clock ?? 1) > 1) return;
     const mine = duel.players[viewer];
     const one = <b className="hint-s1">1 sao</b>;
@@ -2344,6 +2324,7 @@ function PlayPage() {
     } catch {
       join = null;
     }
+    const mazeTicket = takeMazeBattle();
     if (!join?.code || (join.seat !== "host" && join.seat !== "guest")) {
       const saved = sessionStorage.getItem("clash-mode");
       if (saved === TUTORIAL_MODE) {
@@ -2367,7 +2348,9 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
-      const next = mode === "test" ? (loadTestDuel() ?? createDuel(loadDeck(), "test")) : newMatch(mode);
+      // Vé mê cung chỉ đọc được một lần; React chạy hiệu ứng 2 lần ở bản dev nên giữ vé đã lấy.
+      mazeFight.current = mode === "ai" ? (mazeTicket ?? mazeFight.current) : null;
+      const next = mode === "test" ? (loadTestDuel() ?? openingDraw(createDuel(loadDeck(), "test"))) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
         matchRef.current = { id: newMatchId(), startedAt: Date.now(), decks: openingDecks(next.players), saved: false };
@@ -2387,13 +2370,13 @@ function PlayPage() {
     let voting = false;
     const tick = async () => {
       const wantDeck = join.seat === "host" && (againRef.current || liveDuel.current?.again?.[0] === "want");
-      const room = await pollRoom({ data: { code: join.code, seat: join.seat, ...(wantDeck ? { deck: true } : {}) } });
+      const room = await pollRoom({ data: { code: join.code, seat: join.seat, since: rev.current, ...(wantDeck ? { deck: true } : {}) } });
       if (stop) return;
       if (room.phase === "gone") {
         setWait("Mã không còn. Hãy tạo mã mới.");
         return;
       }
-      if (join.seat === "host" && room.guestDeck && !room.duel && !opening.current) {
+      if (join.seat === "host" && room.guestDeck && room.phase === "wait" && !opening.current) {
         opening.current = true;
         const deck = loadDeck();
         const opened: Duel = { ...createDuel(deck, "net", room.guestDeck), faces: [ownFace(deck), roomFace(room.guestDeck)] };
@@ -2459,11 +2442,28 @@ function PlayPage() {
       // The room keeps the other side's vote; the next poll brings both.
       if (pushed?.ok) voteSent.current = last.mid ?? null;
     };
-    void tick();
-    const timer = window.setInterval(() => void tick(), 280);
+    // Lag Đánh thường (chủ game 15/11): an ask every 280 ms whatever happened to the one before piled the asks up on the
+    // server for over 10 s. Now the next ask waits for the last one: soon (0,8 s) while the other side is to act, slower
+    // (2 s) while this side is.
+    const mine: Side = join.seat === "host" ? 0 : 1;
+    const pace = () => {
+      const live = liveDuel.current;
+      if (!live || live.winner !== null || live.opener) return 800;
+      return boardActor(live) === mine ? 2000 : 800;
+    };
+    let timer = 0;
+    const loop = async () => {
+      try {
+        await tick();
+      } catch {
+        // A lost ask: the next one tries again.
+      }
+      if (!stop) timer = window.setTimeout(() => void loop(), pace());
+    };
+    void loop();
     return () => {
       stop = true;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -2735,6 +2735,8 @@ function PlayPage() {
       });
       sendReplay(duel);
     }
+    // Trận mê cung: ghi thắng/thua để /maze áp khi quay về.
+    if (duel.mode === "ai" && mazeFight.current) finishMazeBattle({ monsterId: mazeFight.current.monsterId, won: duel.winner === mine });
     // Nhiệm vụ (chủ game 05/11): mọi trận Vs Máy, Đánh thường, Tuỳ chọn đã kết thúc (thua, đầu hàng cũng tính) là đã chơi;
     // thắng Đánh thường là thắng PvP. Mỗi trận tính 1 lần (theo mid), chưa hiện bảng sau trận.
     if ((duel.mode === "ai" || duel.mode === "net") && duel.mid && !tutorial && !trial) {
@@ -2830,14 +2832,30 @@ function PlayPage() {
     const me = viewer;
     if (openerWas.current && !openerOpen && !duel.opener) {
       openerWas.current = false;
-      const mine = [...duel.players[me].reserve.map((_, i) => `r:${i}`), ...duel.players[me].hand.map((_, i) => `s:${i}`)].slice(0, OPENING_CARDS);
+      // Lá tự rút của lượt đầu (chủ game 13/11): 3 lá đầu bay lên tay hết, chậm 1 nhịp rồi lá rút mới bay riêng.
+      const you = duel.players[me];
+      const drawn = you.draws >= 1 ? (you.reserve.length > 2 ? `r:${you.reserve.length - 1}` : you.hand.length > 1 ? `s:${you.hand.length - 1}` : null) : null;
+      const mine = [...you.reserve.map((_, i) => `r:${i}`), ...you.hand.map((_, i) => `s:${i}`)].filter((target) => target !== drawn).slice(0, OPENING_CARDS);
       const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
       for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
-      setFlights((list) => [...list, ...born]);
       for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      if (drawn) {
+        // Lá tự rút của lượt đầu cũng như lần rút thường (chủ game 15/11): hiện giữa màn rồi mới về tay, sau 3 lá đầu.
+        const key = (flightId.current += 1);
+        setDrawShows((list) => [...list, { key, target: drawn, wait: true }]);
+        window.setTimeout(() => {
+          setDrawShows((list) => list.map((show) => (show.key === key ? { ...show, wait: false } : show)));
+          playPack("flip", 0.26);
+          playPack("flash", 0.3);
+        }, AUTO_DRAW_AT * 1000);
+      }
+      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
+      setFlights((list) => [...list, ...born]);
       return;
     }
     if (openerOpen) openerWas.current = true;
+    // Bảng đổi bài còn đóng dần: lá tự rút của lượt đầu chưa bay ở đây, nó bay sau 3 lá đầu (nhánh trên).
+    if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
     const born: DrawFlight[] = [];
     ([0, 1] as const).forEach((side) => {
@@ -3060,6 +3078,26 @@ function PlayPage() {
           playLine("note", 0.12);
         }
       }
+    }
+    // Chủ game 16/11: quái vừa đưa kỹ năng lên hàng chờ (mình hoặc đối thủ) phát quang một lần, cùng lúc bảng rút gọn của kỹ năng.
+    const flare = (() => {
+      const now = duel.pending;
+      if (quiet || tutorial || prev.mid !== duel.mid || !now) return null;
+      if (now.kind !== "beam" && now.kind !== "gnaw-skill" && !(now.kind === "face" && now.skill)) return null;
+      const uid = now.kind === "face" ? now.attacker : now.caster;
+      const was = prev.pending;
+      if (was && (was.kind === "face" ? was.attacker : was.kind === "beam" || was.kind === "gnaw-skill" ? was.caster : "") === uid) return null;
+      const seat = seatOf(duel, uid);
+      const mon = fieldMon(duel, uid);
+      if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) return null;
+      const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+      return { uid, x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w };
+    })();
+    if (flare) {
+      emitFx({ t: "flare", x: flare.x, y: flare.y, w: flare.w });
+      const { uid } = flare;
+      setLift(uid);
+      window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
@@ -3393,7 +3431,7 @@ function PlayPage() {
         }
       : rawShown;
     // Đòn tông (chủ game 14/11): quái đánh quái lấy đà lùi nhẹ (WIND) rồi lao thẳng vào mục tiêu (RAM), tới nơi mới nổ.
-    const WIND_MS = landing?.kind === "clash" ? 150 : 0;
+    const WIND_MS = landing ? 150 : 0;
     const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
@@ -3404,7 +3442,7 @@ function PlayPage() {
         if (onOrb) orbLate.add(item.id);
         item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
       }
-      if (landing.kind === "clash") {
+      {
         const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
         setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
         window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), WIND_MS);
@@ -3422,7 +3460,7 @@ function PlayPage() {
           }), 500);
         }
       }
-      if (landing.kind === "clash") window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
       window.setTimeout(() => {
         if (landing.kind === "face") fxAt({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
         else fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
@@ -3817,8 +3855,8 @@ function PlayPage() {
   // Miệng bể nằm giữa dải đá còn nhìn thấy giữa hai đáy. Không đi qua `ry(TANK_OPEN)`: khi màn ngắn cả đoạn giữa sân bị bỏ dồn
   // về một điểm, bể hai bên dẹp lại thành một vạch (chủ game 01/11, bên đỏ).
   const tankGeo = useMemo<Record<TankSide, TankGeo>>(() => {
-    const foeBase = ry(TANK_BASE.foe, cut);
-    const youBase = ry(TANK_BASE.you, cut);
+    const foeBase = tankBase().foe;
+    const youBase = tankBase().you;
     // Sâu bằng khoảng một ô gạch ở mọi màn (chủ game 01/11, bản màn cắt trông ổn): màn đủ dài không để bể sâu cả nửa dải đá; màn
     // bị cắt thì dải đá còn ít nên bể nông hơn thế.
     const depth = Math.min((youBase - foeBase) / 2, rh(TANK_DEPTH, cut));
@@ -3923,6 +3961,14 @@ function PlayPage() {
 
   if (duel) turnClock.current = duel.clock ?? 1;
 
+  // Chủ game 16/11: đã đẩy lên hàng chờ mà 2 giây không làm gì thì nút OK chớp toả hào quang.
+  const [okFlare, setOkFlare] = useState(false);
+  useEffect(() => {
+    setOkFlare(false);
+    if (!queue) return;
+    const t = window.setTimeout(() => setOkFlare(true), 2000);
+    return () => window.clearTimeout(t);
+  }, [queue, aim, vowAsk, hornAsk, knightAsk, chronoAsk, digPick, peek]);
   if (!duel) {
     return (
       <main className="stage">
@@ -4371,7 +4417,7 @@ function PlayPage() {
 
   function restartTest() {
     if (!duel || duel.mode !== "test") return;
-    const fresh = createDuel(loadDeck(), "test");
+    const fresh = openingDraw(createDuel(loadDeck(), "test"));
     setTestPast((list) => [...list, structuredClone(duel)].slice(-40));
     prevDuel.current = fresh;
     seenViewer.current = viewerSide(fresh, boardActor(fresh), netRef.current?.seat ?? null);
@@ -5912,7 +5958,8 @@ function PlayPage() {
     const t = mid > 0 ? (at - mid) / mid : 0;
     return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)}cqw` } as CSSProperties;
   };
-  const drawShow = drawShows[0] ?? null;
+  // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
+  const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
   const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
   const pickPeek = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
   const handRect = (target: string) => {
@@ -6422,8 +6469,11 @@ function PlayPage() {
           : theirVote === "want"
             ? { note: "Đối thủ muốn chơi lại." }
             : {};
+  // Lá tự rút lượt đầu không nằm trong bảng đổi bài: bảng chỉ có 3 lá đầu, lá rút bay lên tay sau khi bảng đóng.
+  const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
+  const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const openerCards: OpenerCard[] = [
-    ...you.reserve.map((held, index): OpenerCard => {
+    ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
       return {
         key: `m${index}:${held.id}`,
@@ -6431,7 +6481,7 @@ function PlayPage() {
         can: pileLeft(you) > 0,
       };
     }),
-    ...you.hand.map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
+    ...you.hand.filter((_, index) => index !== autoS).map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
@@ -6572,7 +6622,7 @@ function PlayPage() {
       <section
         className={`board${shake ? " is-shaking" : ""}${fuseShow ? " is-fusing" : ""}${drag?.kind === "spell" && !spellAimOf(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index) ? " is-aiming" : ""}`}
         aria-label="Bàn đấu"
-        style={{ "--board-v": cut.v, "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
+        style={{ "--board-ratio": boardRatio(cut), "--alert-size": `${loadAlertLook().glow}px`, "--alert-border": `${loadAlertLook().border}px`, ...(askAt ? { "--ask-x": `${askAt.x}%`, "--ask-y": `${askAt.y}%`, "--ask-bottom": "auto" } : {}) } as CSSProperties}
         onPointerDownCapture={(event) => {
           // A drag that ended on the field leaves no click behind; a fresh touch must not be swallowed for it.
           suppressClick.current = false;
@@ -6699,7 +6749,7 @@ function PlayPage() {
         <button
           type="button"
           className="log-btn press"
-          style={{ left: `${marks.foeHand.x}%`, top: `calc(${marks.foeHand.y + board.stack.height * 0.56}% + 5.4cqw)` }}
+          style={boardCut().id === "b" ? { left: `${marks.foeStars.x + 4.5}%`, top: "37.6%" } : { left: `${marks.foeHand.x}%`, top: "36.2%" }}
           aria-label={tr("Lịch sử và cài đặt")}
           onClick={() => (playUi("select"), setHelp(true))}
         >
@@ -7628,6 +7678,7 @@ function PlayPage() {
               thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
               ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
               rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
+              lifted={Boolean(shown && lift === shown.uid)}
               motion={motion}
               veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
@@ -7692,6 +7743,7 @@ function PlayPage() {
               thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
               ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
               rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
+              lifted={Boolean(shown && lift === shown.uid)}
               motion={motion}
               veil={false}
               allies={you.field}
@@ -7793,7 +7845,7 @@ function PlayPage() {
         </button>
         )}
         <div
-          style={{ top: `calc(${ry(88.6)}% - var(--hand-up, 0px))`, height: `calc(${rh(11.4)}% + var(--hand-up, 0px))`, ...({ "--step": Math.max(6.6, (58 - 17.8) / Math.max(1, you.reserve.length + you.hand.length - 1)) } as CSSProperties) }}
+          style={{ top: `calc(${100 - 11.4 * (2.2235 / boardRatio())}% - var(--hand-up, 0px))`, height: `calc(${11.4 * (2.2235 / boardRatio())}% + var(--hand-up, 0px))`, ...({ "--step": Math.max(6.6, (58 - 17.8) / Math.max(1, you.reserve.length + you.hand.length - 1)) } as CSSProperties) }}
           className={`hand is-strip${tutorial ? "" : ` is-fan${you.reserve.length + you.hand.length > 3 ? " is-lap" : ""}`}${you.reserve.length + you.hand.length > 3 ? " is-paged" : ""}${openerOpen || (duel.opener && (duel.mode === "ai" || duel.mode === "net")) ? " is-dealing" : ""}${riteHand !== null ? " is-rite" : ""}`}
           ref={handStrip}
           onScroll={(event) => {
@@ -8169,11 +8221,26 @@ function PlayPage() {
               style={pinMedal(board.drawMon)}
               onClick={() => (swapAsk ? cancelQueue() : picking ? cancelPick() : queue ? cancelQueue() : withdrawOn ? withdrawMirror() : undefined)}
             >
-              <OracleOrb kind="cancel" state={queue || markId || picking || withdrawOn ? "open" : "shut"} />
+              {queue || markId || picking || withdrawOn ? <OracleOrb kind="cancel" state="open" /> : <img className="act-new is-eye" src="/ui/act2/eye-red.webp?v=1" alt="" draggable={false} style={{ "--w": 8.25 } as CSSProperties} />}
             </button>
           )}
           {replay || board.drawSpell.hidden ? null : (
-            <button type="button" className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`} aria-label={tr("Xem trước")} disabled={!eyeOn} style={pinMedal(board.drawSpell)} onClick={() => setPeek((on) => !on)}>
+            <button
+              type="button"
+              className={`oracle-act${eyeOn ? " is-live" : ""}${peek && eyeOn ? " is-peek" : ""}`}
+              aria-label={tr("Xem trước")}
+              disabled={!eyeOn}
+              style={pinMedal(board.drawSpell)}
+              onPointerDown={(e) => {
+                // Chủ game 16/11: ấn và giữ để xem trước, buông tay là tắt.
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+                setPeek(true);
+              }}
+              onPointerUp={() => setPeek(false)}
+              onPointerCancel={() => setPeek(false)}
+              onLostPointerCapture={() => setPeek(false)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               {peek && eyeOn ? (
                 <span className="oracle-smoke" aria-hidden="true">
                   <i />
@@ -8183,13 +8250,13 @@ function PlayPage() {
                   <i />
                 </span>
               ) : null}
-              <OracleOrb kind="eye" state={eyeOn ? (peek ? "look" : "open") : "shut"} />
+              {eyeOn ? <OracleOrb kind="eye" state={peek ? "look" : "open"} /> : <img className="act-new is-eye" src="/ui/act2/eye-gold.webp?v=1" alt="" draggable={false} style={{ "--w": 8.25 } as CSSProperties} />}
             </button>
           )}
           {!replay && mine && !board.endTurn.hidden && !askUpkeep && !gemHold && !dueKnight && !knightAsk && !duel.recall && !duel.counterAsk && ((duel.step === "main" && duel.turn === viewer) || (responding && duel.hold) || queue) ? (
             <button
               type="button"
-              className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}`}
+              className={`act medal-act press ${ticking ? "is-pass" : closesRound ? "is-end" : "is-end is-arrow"}${okFlare && ticking ? " is-flare" : ""}`}
               style={pinMedal(board.endTurn)}
               aria-label={ticking ? "OK" : tr("Hết lượt")}
               onClick={() => {
@@ -8210,7 +8277,14 @@ function PlayPage() {
                 else apply(endTurn(duel));
               }}
             >
-              <img className="medal act-face" src={ticking ? "/ui/act-pass.webp?v=1" : closesRound ? "/ui/act-round.webp?v=1" : "/ui/act-turn.webp?v=1"} alt="" draggable={false} />
+              {ticking ? (
+                <img className="act-new is-ok" src="/ui/act2/ok.webp?v=1" alt="" draggable={false} style={{ "--w": 14, "--h": 15.2 } as CSSProperties} />
+              ) : closesRound ? (
+                <img className="medal act-face" src="/ui/act-round.webp?v=1" alt="" draggable={false} />
+              ) : (
+                <img className="act-new is-arrow" src="/ui/act2/arrow.webp?v=1" alt="" draggable={false} style={{ "--w": 13.8, "--h": 14.6 } as CSSProperties} />
+              )}
+              {ticking ? <span className="act-halo" aria-hidden="true" /> : null}
               {/* Như video chủ game (30/10): đang chọn mục tiêu / đã xếp chờ xác nhận. */}
               {markId ? <span className="act-caption">{tr("Chọn mục tiêu")}</span> : queue ? <span className="act-caption">{tr("Xác nhận")}</span> : null}
             </button>
@@ -8624,8 +8698,8 @@ function PlayPage() {
             seconds={matchSeconds}
             you={summarySeat(viewer)}
             foe={summarySeat(viewer === 0 ? 1 : 0)}
-            again={againLook}
-            onContinue={leaveMatch}
+            again={mazeFight.current ? { off: true } : againLook}
+            onContinue={mazeFight.current ? () => void navigate({ to: "/maze" }) : leaveMatch}
             onAgain={playAgain}
           />
         ) : null}
@@ -8651,6 +8725,7 @@ function PlayPage() {
         <ArenaFx />
         <FireBurst />
         <HealBlast />
+        <FlareBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
@@ -8818,6 +8893,12 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       if (!sword && harmSkill(card.id, chip.skill)) continue;
       // Skill chậm (chủ game 29/10): a skill that lands on several is not for striking back; its button is hidden.
       if (riposte && slowSkill(duel, uid, chip.skill)) continue;
+      // Trả đòn: kỹ năng có mục tiêu đánh ngay vào kẻ ra đòn, không chọn mục tiêu, không qua hàng chờ.
+      if (riposte && chip.aims && duel.counterAsk) {
+        const from = duel.counterAsk.from;
+        y.push({ key: chip.key, label: chip.label, go: () => apply(useSkill(duel, uid, from, chip.skill)) });
+        continue;
+      }
       y.push({ key: chip.key, label: chip.label, go: chip.go, ...(chip.aims ? { slide: aimed(chip.skill) } : {}) });
     }
   }
@@ -9233,7 +9314,8 @@ const FOE_FAN = { lift: 0.7, most: 7, turn: 6, gap: 5.6, drop: 0.2 } as const;
  *  edges of the screen, each bottom flush with the edge of that side's area (chủ game 30/10: no gap between), both open
  *  toward the middle. */
 const TANK_WALLS = [0, 100] as const;
-const TANK_BASE = { foe: 40.3, you: 62.3 } as const;
+/** Đáy mỗi bể = mép dải đá của bên đó (đọc theo bàn đang dùng). */
+const tankBase = () => ({ foe: redEnd(), you: blueStart() });
 /** Độ sâu bể (phần trăm chiều cao bàn đầy đủ): khoảng một ô gạch, ~54 px trên màn rộng 390. */
 const TANK_DEPTH = 6.2;
 
@@ -9248,139 +9330,9 @@ function pinMedal(spot: { x: number; y: number; width: number; size: number }): 
   return { left: `${spot.x}%`, top: `${spot.y}%`, "--medal": `${spot.width * (spot.size || 1)}cqw` } as CSSProperties;
 }
 
-/** The board picture: whole, or (a short screen) the red and blue halves drawn over the floor layer without the compass. */
-/**
- * Lớp lửa cháy (chủ game 09/11): video dung nham phủ lên phần dung nham của nền bàn. Video 720×1280 khớp ảnh `board-lava.jpg` theo phép
- * co giãn 1,168 lần (đo bằng so khớp điểm ảnh): nó phủ từ 10,0% tới 89,94% chiều cao ảnh, nên chỉ nửa dung nham mới có lửa;
- * dải đá giữa sân, phần trên cùng và phần dưới cùng đứng yên. Cắt bàn theo đúng ranh đỏ/trắng như ảnh.
- */
-const FIRE_TOP = 10.0;
-const FIRE_BOTTOM = 89.94;
-function LavaFire({ half, cut }: { half: "top" | "bottom"; cut: BoardCut }) {
-  const [calm, setCalm] = useState(true);
-  useEffect(() => {
-    setCalm(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-  if (calm) return null;
-  const band = cut.to - cut.from;
-  const at = (y: number) => (half === "top" ? (y - cut.top) / cut.v : (y - cut.top - band) / cut.v);
-  const from = half === "top" ? Math.max(FIRE_TOP, cut.top) : BLUE_START;
-  const to = half === "top" ? RED_END : FIRE_BOTTOM;
-  const start = Math.max(0, at(from));
-  const end = Math.min(100, at(to));
-  if (end - start < 1) return null;
-  const edge = 1.4;
-  const softStart = (half === "top" ? from > cut.top : true) ? edge : 0;
-  const softEnd = (half === "top" ? true : to < cut.top + band + 100 * cut.v) ? edge : 0;
-  const mask = `linear-gradient(to bottom, transparent 0, #000 ${softStart}cqh, #000 calc(100% - ${softEnd}cqh), transparent 100%)`;
-  return (
-    <div className="lava-fire" style={{ top: `${start}cqh`, height: `${end - start}cqh`, maskImage: mask, WebkitMaskImage: mask }}>
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        aria-hidden="true"
-        style={{ top: `${at(FIRE_TOP) - start}cqh`, height: `${(FIRE_BOTTOM - FIRE_TOP) / cut.v}cqh` }}
-      >
-        <source src="/lava-fire.mp4" type="video/mp4" />
-        <source src="/lava-fire.webm" type="video/webm" />
-      </video>
-    </div>
-  );
-}
-
-/** Chỗ nối hai ảnh bàn (giữa dải đá, phần trăm chiều cao): hai ảnh có cùng dải đá nên nối mờ chỗ này không thấy đường. */
-const SEAM_Y = 52.4;
-const SEAM_FADE = 1.4;
-function BoardArt({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
-  const fire = (
-    <>
-      {src === LAVA_BOARD_ART ? <LavaFire half="top" cut={cut} /> : null}
-      {(bottom ?? src) === LAVA_BOARD_ART ? <LavaFire half="bottom" cut={cut} /> : null}
-    </>
-  );
-  return (
-    <>
-      <BoardImages src={src} bottom={bottom} cut={cut} />
-      {fire}
-    </>
-  );
-}
-
-function BoardImages({ src, bottom, cut }: { src: string; bottom?: string; cut: BoardCut }) {
-  const other = bottom && bottom !== src ? bottom : null;
-  if (cut.v === 1) {
-    return (
-      <>
-        <img className="board-art" src={src} alt="" />
-        {other ? (
-          <img
-            className="board-art"
-            src={other}
-            alt=""
-            style={{ maskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)`, WebkitMaskImage: `linear-gradient(to bottom, transparent ${SEAM_Y - SEAM_FADE}%, #000 ${SEAM_Y + SEAM_FADE}%)` }}
-          />
-        ) : null}
-      </>
-    );
-  }
-  // Bàn thấp: ảnh đã bỏ SHORT_TOP phần trăm đầu, toạ độ vẫn tính theo bàn đầy đủ (trừ SHORT_TOP khi đặt vị trí ảnh).
-  if (cut.short) src = src === LAVA_BOARD_ART ? LAVA_SHORT_ART : SHORT_ART;
-  const lost = cut.short ? SHORT_TOP : 0;
-  const size = `100% ${(100 - lost) / cut.v}cqh`;
-  const at = (imageY: number) => `0 ${-(imageY - lost) / cut.v}cqh`;
-  const redEnd = (RED_END - cut.top) / cut.v;
-  if (cut.to - cut.from < 0.01) {
-    const seam = (SEAM_Y - cut.top) / cut.v;
-    const fade = SEAM_FADE / cut.v;
-    return (
-      <>
-        <div className="board-art-slice" style={{ top: 0, bottom: 0, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top) }} />
-        {other ? (
-          <div
-            className="board-art-slice"
-            style={{
-              top: 0,
-              bottom: 0,
-              backgroundImage: `url(${other})`,
-              backgroundSize: `100% ${100 / cut.v}cqh`,
-              backgroundPosition: `0 ${-cut.top / cut.v}cqh`,
-              maskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
-              WebkitMaskImage: `linear-gradient(to bottom, transparent ${seam - fade}cqh, #000 ${seam + fade}cqh)`,
-            }}
-          />
-        ) : null}
-      </>
-    );
-  }
-  // Floor layer under the gap between the halves; its middle sits where the middle of the original floor was.
-  const gap = (BLUE_START - cut.to) / cut.v;
-  const gapMiddle = redEnd + gap / 2;
-  const floorMiddle = (RED_END + BLUE_START) / 2;
-  const reach = 3;
-  const floorTop = redEnd - reach;
-  const floorY = floorMiddle + (floorTop - gapMiddle) * cut.v;
-  const feather = 0.8;
-  // Nửa dưới bằng ảnh riêng (ảnh đầy đủ, không phải bản thấp): vị trí tính theo ảnh đầy đủ.
-  const lowerArt = other ?? src;
-  const lowerSize = other ? `100% ${100 / cut.v}cqh` : size;
-  const lowerAt = other ? `0 ${-BLUE_START / cut.v}cqh` : at(BLUE_START);
-  return (
-    <>
-      <div className="board-art-slice" style={{ top: `${floorTop}cqh`, height: `${gap + reach * 2}cqh`, backgroundImage: `url(${FLOOR_ART})`, backgroundSize: size, backgroundPosition: at(floorY) }} />
-      <div
-        className="board-art-slice"
-        style={{ top: 0, height: `${redEnd}cqh`, backgroundImage: `url(${src})`, backgroundSize: size, backgroundPosition: at(cut.top), maskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to bottom, #000 calc(100% - ${feather}cqh), transparent)` }}
-      />
-      <div
-        className="board-art-slice"
-        style={{ top: `${redEnd + gap}cqh`, bottom: 0, backgroundImage: `url(${lowerArt})`, backgroundSize: lowerSize, backgroundPosition: lowerAt, maskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)`, WebkitMaskImage: `linear-gradient(to top, #000 calc(100% - ${feather}cqh), transparent)` }}
-      />
-    </>
-  );
+/** Ảnh bàn đang dùng (A hoặc B, board-cut.ts): luôn hiện đủ, không cắt (chủ game 15/11). Môi trường Núi dung nham tạm dùng chung bàn này. */
+function BoardArt({ src }: { src: string; bottom?: string; cut?: BoardCut }) {
+  return <img className="board-art" src={src} alt="" />;
 }
 
 /** V6 (chủ game 03/11): viền neon của ô đang chọn nằm TRÊN lá đang kéo, không bị lá che. */
@@ -9409,6 +9361,7 @@ function BoardSlot({
   thrust = false,
   ramAng,
   rouseTone,
+  lifted = false,
   motion,
   ghosting,
   frozen = false,
@@ -9452,6 +9405,8 @@ function BoardSlot({
   thrust?: false | "back" | "ram" | "rouse" | "cast";
   /** K2: the light of the skill this monster is rousing for. */
   rouseTone?: string;
+  /** Chủ game 16/11: the card is lifted off the board for a moment while it flares (its skill is queued). */
+  lifted?: boolean;
   /** The way a ramming blow travels on the screen (radians): the speed trail streams the other way. */
   ramAng?: number;
   motion: Motion;
@@ -9481,7 +9436,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };

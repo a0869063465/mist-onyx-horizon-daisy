@@ -1,4 +1,4 @@
-import { BLUE_START, boardCut, NO_CUT, RED_END, rh, ry, SHORT_TRAY_DROP } from "./board-cut.ts";
+import { board, byBoard } from "./board-cut.ts";
 import { boardEnv, ENV_BOARDS } from "./env-boards.ts";
 export type HudKey =
   | "foeHp"
@@ -37,20 +37,37 @@ export function markScale(key: HudKey): number {
   return COUNT_MARKS.includes(key) ? 2 : 1;
 }
 
-export const DEFAULT_BOARD: Record<HudKey, Mark> = {
-  foeHp: { x: 13.5, y: 10, size: 5.6 },
-  foeOrb: { x: 84.7, y: 9.6, size: 6.2 },
-  foeFlask: { x: 91.7, y: 13.4, size: 3.2 },
-  foeStars: { x: 81.4, y: 20.5, size: 3.6 },
-  foeGems: { x: 91.7, y: 20.7, size: 3.2 },
-  foeHand: { x: 84, y: 26.8, size: 3.2 },
-  foeReserve: { x: 51.6, y: 7.2, size: 3.2 },
-  youHp: { x: 9.6, y: 91.4, size: 5.6 },
-  youOrb: { x: 89.3, y: 91.1, size: 6.2 },
-  youFlask: { x: 93.3, y: 95.5, size: 3.2 },
-  youStars: { x: 85.3, y: 75.6, size: 3.6 },
-  youGems: { x: 96.2, y: 75.5, size: 3.2 },
-};
+/** Số mặc định theo hai bàn (chủ game 15/11): A = màn 9:16, B = màn dài 9:20; đo từ ảnh `board-a.jpg` / `board-b.jpg`. */
+export const DEFAULT_BOARD: Record<HudKey, Mark> = byBoard<Record<HudKey, Mark>>({
+  a: {
+    foeHp: { x: 13.5, y: 5.7, size: 5.6 },
+    foeOrb: { x: 86.5, y: 5.7, size: 6.2 },
+    foeFlask: { x: 92.5, y: 9.7, size: 3.2 },
+    foeStars: { x: 81.7, y: 19, size: 3.6 },
+    foeGems: { x: 88, y: 19, size: 3.2 },
+    foeHand: { x: 84, y: 25.9, size: 3.2 },
+    foeReserve: { x: 50, y: 3.9, size: 3.2 },
+    youHp: { x: 10.6, y: 88.5, size: 5.6 },
+    youOrb: { x: 89, y: 89.1, size: 6.2 },
+    youFlask: { x: 93.5, y: 93.4, size: 3.2 },
+    youStars: { x: 81.8, y: 74.1, size: 3.6 },
+    youGems: { x: 90, y: 74.1, size: 3.2 },
+  },
+  b: {
+    foeHp: { x: 13.9, y: 12, size: 5.6 },
+    foeOrb: { x: 85.5, y: 12, size: 6.2 },
+    foeFlask: { x: 92.4, y: 15.4, size: 3.2 },
+    foeStars: { x: 79.4, y: 32.6, size: 3.6 },
+    foeGems: { x: 86.8, y: 32.6, size: 3.2 },
+    foeHand: { x: 82, y: 23, size: 3.2 },
+    foeReserve: { x: 49.6, y: 10, size: 3.2 },
+    youHp: { x: 10, y: 94.1, size: 5.6 },
+    youOrb: { x: 88.9, y: 92.9, size: 6.2 },
+    youFlask: { x: 93.2, y: 97.3, size: 3.2 },
+    youStars: { x: 79.6, y: 70.5, size: 3.6 },
+    youGems: { x: 87.3, y: 70.5, size: 3.2 },
+  },
+});
 
 export type Spot = { x: number; y: number; size: number; width: number; height: number; hidden?: boolean };
 export type Notice = { x: number; y: number; w: number; h: number; font: number; hidden?: boolean };
@@ -60,31 +77,55 @@ export type FaceKey = "foeFace" | "youFace" | "foeAtk" | "youAtk" | "foeDef" | "
 /** Bố cục bàn Grok (chủ game 28/10): mỗi nút, chân dung, kiếm, khiên có ghim riêng; `actions` cũ giữ để đọc bố cục đã lưu. */
 export type BoardLayout = { marks: Record<HudKey, Mark>; notice: Notice; reaction: Notice; stack: Spot; env: Spot; envFoe: Spot; wall: Spot; wallFoe: Spot; trail: Trail; actions: Spot } & Record<ActKey | FaceKey, Spot>;
 
-// Bàn mới 841 x 1870 (chủ game 28/10): số mặc định theo bố cục của bàn Grok.
-export const DEFAULT_NOTICE: Notice = { x: 16, y: 42, w: 64, h: 10, font: 3.2, hidden: false };
-export const DEFAULT_TRAIL: Trail = { x: 6.6, y: 46.3, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false };
-export const DEFAULT_REACTION: Notice = { x: 64, y: 44, w: 22, h: 12, font: 3.2, hidden: false };
-export const DEFAULT_STACK: Spot = { x: 85, y: 69.1, size: 2.6, width: 15, height: 7.2, hidden: false };
-export const DEFAULT_ENV: Spot = { x: 73.4, y: 59.2, size: 2.2, width: 16, height: 4, hidden: false };
-export const DEFAULT_ENV_FOE: Spot = { x: 74.1, y: 43.4, size: 2.2, width: 16, height: 4, hidden: false };
+// Hai bàn mới (chủ game 15/11): số mặc định đo từ ảnh. Lá môi trường, tường thành, kiếm, hồ sơ nằm trong dải đá giữa sân,
+// đo từ mép dải (bàn A: 39,5 đến 56,9; bàn B: 41,5 đến 56,3) rồi co theo bề dày dải.
+const spot = (x: number, y: number, size: number, width: number, height: number): Spot => ({ x, y, size, width, height, hidden: false });
+export const DEFAULT_NOTICE: Notice = byBoard<Notice>({
+  a: { x: 16, y: 41.5, w: 64, h: 10, font: 3.2, hidden: false },
+  b: { x: 16, y: 43, w: 64, h: 10, font: 3.2, hidden: false },
+});
+export const DEFAULT_TRAIL: Trail = byBoard<Trail>({
+  a: { x: 6.6, y: 44, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false },
+  b: { x: 6.6, y: 44.5, w: 10, h: 10, dot: 1.4, glow: 3, hidden: false },
+});
+export const DEFAULT_REACTION: Notice = byBoard<Notice>({
+  a: { x: 64, y: 42.5, w: 22, h: 12, font: 3.2, hidden: false },
+  b: { x: 64, y: 43.5, w: 22, h: 12, font: 3.2, hidden: false },
+});
+export const DEFAULT_STACK: Spot = byBoard<Spot>({ a: spot(83.8, 64.8, 2.6, 15, 7.2), b: spot(83.8, 62.6, 2.6, 15, 7.2) });
+export const DEFAULT_ENV: Spot = byBoard<Spot>({ a: spot(73.4, 55.1, 2.2, 16, 4), b: spot(73.4, 54.7, 2.2, 16, 4) });
+export const DEFAULT_ENV_FOE: Spot = byBoard<Spot>({ a: spot(74.1, 41.8, 2.2, 16, 4), b: spot(74.1, 43.4, 2.2, 16, 4) });
 /** Tường thành (chủ game 01/11): chỗ lá đầu tiên, tâm; các lá sau nối dọc về phía giữa sân. Mặc định = một bước dọc cạnh lá môi trường. */
-export const DEFAULT_WALL: Spot = { x: 73.4, y: 54.4, size: 2.2, width: 16, height: 4, hidden: false };
-export const DEFAULT_WALL_FOE: Spot = { x: 74.1, y: 48.2, size: 2.2, width: 16, height: 4, hidden: false };
+export const DEFAULT_WALL: Spot = byBoard<Spot>({ a: spot(73.4, 51, 2.2, 16, 4), b: spot(73.4, 51.3, 2.2, 16, 4) });
+export const DEFAULT_WALL_FOE: Spot = byBoard<Spot>({ a: spot(74.1, 45.8, 2.2, 16, 4), b: spot(74.1, 46.9, 2.2, 16, 4) });
 /** Rút bài / Hết lượt block. Centre x/y; size scales the button text. Default matches the stylesheet. */
-export const DEFAULT_ACTIONS: Spot = { x: 94.4, y: 50, size: 1, width: 11, height: 20, hidden: false };
+export const DEFAULT_ACTIONS: Spot = spot(94.4, 50, 1, 11, 20);
 
-// Thông số chủ game chỉnh trên bàn Grok (28/10). Chỗ hai nút rút cũ giờ là nút X đỏ (drawMon) và con mắt (drawSpell).
-export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = {
-  drawMon: { x: 78.6, y: 79.7, size: 1, width: 8.4, height: 4.7, hidden: false },
-  drawSpell: { x: 78.4, y: 84.8, size: 1, width: 8.4, height: 4.7, hidden: false },
-  endTurn: { x: 91.2, y: 83, size: 1, width: 14.4, height: 7.7, hidden: false },
-  foeFace: { x: 88.3, y: 43.9, size: 1, width: 11.5, height: 5.2, hidden: false },
-  youFace: { x: 11.5, y: 58.8, size: 1, width: 11.5, height: 5.2, hidden: false },
-  foeAtk: { x: 91.9, y: 44.1, size: 1, width: 19.8, height: 9.2, hidden: false },
-  youAtk: { x: 90.2, y: 57.8, size: 1, width: 19.8, height: 9.2, hidden: false },
-  foeDef: { x: 88.6, y: 43.9, size: 1, width: 10.2, height: 4.6, hidden: false },
-  youDef: { x: 11.7, y: 59, size: 1, width: 10.2, height: 4.6, hidden: false },
-};
+// Chỗ hai nút rút cũ giờ là nút X đỏ (drawMon) và con mắt (drawSpell).
+export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = byBoard<Record<ActKey | FaceKey, Spot>>({
+  a: {
+    drawMon: spot(78.6, 78.5, 1, 8.4, 4.7),
+    drawSpell: spot(78.4, 83.5, 1, 8.4, 4.7),
+    endTurn: spot(91.2, 81.2, 1, 14.4, 7.7),
+    foeFace: spot(88.3, 42.2, 1, 11.5, 5.2),
+    youFace: spot(11.5, 54.7, 1, 11.5, 5.2),
+    foeAtk: spot(91.9, 42.4, 1, 19.8, 9.2),
+    youAtk: spot(90.2, 53.9, 1, 19.8, 9.2),
+    foeDef: spot(88.6, 42.2, 1, 10.2, 4.6),
+    youDef: spot(11.7, 54.9, 1, 10.2, 4.6),
+  },
+  b: {
+    drawMon: spot(76.2, 76.5, 1, 8.4, 4.7),
+    drawSpell: spot(76.2, 81.5, 1, 8.4, 4.7),
+    endTurn: spot(88, 79, 1, 14.4, 7.7),
+    foeFace: spot(88.3, 43.8, 1, 11.5, 5.2),
+    youFace: spot(11.5, 54.4, 1, 11.5, 5.2),
+    foeAtk: spot(91.9, 43.9, 1, 19.8, 9.2),
+    youAtk: spot(90.2, 53.7, 1, 19.8, 9.2),
+    foeDef: spot(88.6, 43.8, 1, 10.2, 4.6),
+    youDef: spot(11.7, 54.5, 1, 10.2, 4.6),
+  },
+});
 export const BOARD_ACTS: Array<{ key: ActKey; label: string }> = [
   { key: "drawMon", label: "Nút X (huỷ)" },
   { key: "drawSpell", label: "Nút con mắt" },
@@ -99,19 +140,28 @@ export const BOARD_FACES: Array<{ key: FaceKey; label: string; kind: "face" | "a
   { key: "youDef", label: "Phòng thủ bạn", kind: "def" },
 ];
 
-export const DEFAULT_BOARD_LAYOUT: BoardLayout = {
-  ...DEFAULT_SPOTS,
-  marks: DEFAULT_BOARD,
-  notice: DEFAULT_NOTICE,
-  trail: DEFAULT_TRAIL,
-  reaction: DEFAULT_REACTION,
-  stack: DEFAULT_STACK,
-  env: DEFAULT_ENV,
-  envFoe: DEFAULT_ENV_FOE,
-  wall: DEFAULT_WALL,
-  wallFoe: DEFAULT_WALL_FOE,
-  actions: DEFAULT_ACTIONS,
-};
+/** Bố cục mặc định của bàn đang dùng. */
+export function defaultBoardLayout(): BoardLayout {
+  return {
+    ...DEFAULT_SPOTS,
+    marks: { ...DEFAULT_BOARD },
+    notice: { ...DEFAULT_NOTICE },
+    trail: { ...DEFAULT_TRAIL },
+    reaction: { ...DEFAULT_REACTION },
+    stack: { ...DEFAULT_STACK },
+    env: { ...DEFAULT_ENV },
+    envFoe: { ...DEFAULT_ENV_FOE },
+    wall: { ...DEFAULT_WALL },
+    wallFoe: { ...DEFAULT_WALL_FOE },
+    actions: { ...DEFAULT_ACTIONS },
+  };
+}
+/** Giữ tên cũ: đọc luôn ra bố cục mặc định của bàn đang dùng. */
+export const DEFAULT_BOARD_LAYOUT: BoardLayout = new Proxy({} as BoardLayout, {
+  get: (_, key) => (defaultBoardLayout() as unknown as Record<string | symbol, unknown>)[key],
+  ownKeys: () => Reflect.ownKeys(defaultBoardLayout()),
+  getOwnPropertyDescriptor: (_, key) => ({ configurable: true, enumerable: true, value: (defaultBoardLayout() as unknown as Record<string | symbol, unknown>)[key] }),
+});
 
 export type CardKey = "stars" | "gems" | "def" | "mdef" | "atk" | "hp" | "name" | "fresh";
 
@@ -194,7 +244,8 @@ export const HAND_SPOTS: Record<"stars" | "gems" | "def" | "mdef" | "atk" | "hp"
   hp: { x: 86.2, y: 86.8, size: 19, width: 18, height: 22 },
 };
 
-const BOARD_KEY = "clash-board-layout-v11";
+/** Bố cục bàn lưu riêng từng bàn (A / B, chủ game 15/11); khoá v11 của bàn cũ không còn được đọc. */
+const boardStoreKey = () => `clash-board-layout-v12-${board().id}`;
 const ALERT_KEY = "clash-alert-size";
 
 export type AlertLook = { glow: number; border: number };
@@ -297,7 +348,7 @@ function asStack(value: unknown): Spot {
 
 /** Bố cục bàn dùng CHUNG cho mọi môi trường (chủ game 01/11): khoá riêng từng môi trường cũ không còn được đọc. */
 function boardKey(env?: string) {
-  return env ? `${BOARD_KEY}:${env}` : BOARD_KEY;
+  return env ? `${boardStoreKey()}:${env}` : boardStoreKey();
 }
 
 function asActions(value: unknown): Spot {
@@ -308,7 +359,7 @@ function asActions(value: unknown): Spot {
 /** Layout of the board: one for every environment (the parameter is kept for old callers and ignored). */
 export function loadBoard(_env?: string): BoardLayout {
   publishLayout();
-  const raw = read(BOARD_KEY) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
+  const raw = read(boardStoreKey()) as Partial<BoardLayout> & Partial<Record<HudKey, Mark>> | null;
   const marks = { ...DEFAULT_BOARD };
   const source = raw?.marks ?? (raw && typeof raw.foeHp?.x === "number" ? raw : DEFAULT_BOARD);
   for (const key of Object.keys(DEFAULT_BOARD) as HudKey[]) {
@@ -340,7 +391,7 @@ function spotsOf(raw: Partial<Record<ActKey | FaceKey, Spot>> | null): Record<Ac
 }
 
 export function saveBoard(layout: BoardLayout, _env?: string) {
-  localStorage.setItem(BOARD_KEY, JSON.stringify(layout));
+  localStorage.setItem(boardStoreKey(), JSON.stringify(layout));
 }
 
 /** Drop an environment's own layout so it follows the default board layout again. */
@@ -361,7 +412,7 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
   const bottom = loadBoard(boardEnv(bottomEnv));
   const marks = { ...bottom.marks };
   for (const key of TOP_MARKS) marks[key] = top.marks[key];
-  return cutLayout({
+  return ({
     marks,
     notice: top.notice,
     trail: top.trail,
@@ -382,44 +433,6 @@ export function matchBoard(topEnv: string | null | undefined, bottomEnv: string 
     foeAtk: top.foeAtk,
     foeDef: top.foeDef,
   });
-}
-
-/** Bàn bị cắt bớt (board-cut.ts): đổi mọi vị trí sang phần trăm của bàn đã cắt. Tâm của vị trí quyết định nó nằm ở đâu. */
-function cutLayout(layout: BoardLayout): BoardLayout {
-  const cut = boardCut();
-  if (cut === NO_CUT || cut.v === 1) return layout;
-  const marks = {} as BoardLayout["marks"];
-  for (const key of Object.keys(layout.marks) as HudKey[]) marks[key] = { ...layout.marks[key], y: ry(layout.marks[key].y + (cut.short && key === "foeReserve" ? SHORT_TRAY_DROP : 0), cut) };
-  const box = <B extends { y: number; h: number }>(value: B): B => ({ ...value, y: ry(value.y + value.h / 2, cut) - rh(value.h, cut) / 2, h: rh(value.h, cut) });
-  // Mọi ô (nút, xấp bài, lá môi trường) neo theo tâm, như màn Tuỳ chỉnh (`.tune-pin` dịch -50%, -50%).
-  const spot = (value: Spot): Spot => ({ ...value, y: ry(value.y, cut), height: rh(value.height, cut) });
-  // Lá môi trường, tường thành và kiếm gắn cứng vào sân của bên mình (chủ game 01/11): bên đỏ đo từ mép dưới sân đỏ,
-  // bên xanh đo từ mép trên sân xanh, nên dù cắt bàn cỡ nào khoảng cách tới sân vẫn như bàn đầy đủ.
-  const strip = (value: Spot, side: "foe" | "you"): Spot => {
-    const y = side === "foe" ? ry(RED_END, cut) + (value.y - RED_END) / cut.v : ry(BLUE_START, cut) - (BLUE_START - value.y) / cut.v;
-    return { ...value, y, height: rh(value.height, cut) };
-  };
-  return {
-    marks,
-    notice: box(layout.notice),
-    trail: box(layout.trail),
-    reaction: box(layout.reaction),
-    stack: spot(layout.stack),
-    env: strip(layout.env, "you"),
-    envFoe: strip(layout.envFoe, "foe"),
-    wall: strip(layout.wall, "you"),
-    wallFoe: strip(layout.wallFoe, "foe"),
-    actions: spot(layout.actions),
-    drawMon: spot(layout.drawMon),
-    drawSpell: spot(layout.drawSpell),
-    endTurn: spot(layout.endTurn),
-    foeFace: spot(layout.foeFace),
-    youFace: spot(layout.youFace),
-    foeAtk: strip(layout.foeAtk, "foe"),
-    youAtk: strip(layout.youAtk, "you"),
-    foeDef: spot(layout.foeDef),
-    youDef: spot(layout.youDef),
-  };
 }
 
 function loadSpots<K extends string>(key: string, defaults: Record<K, Spot>): Record<K, Spot> {
@@ -485,7 +498,6 @@ const PUBLISH_REV = "1";
 export function publishLayout() {
   if (typeof localStorage === "undefined") return;
   if (localStorage.getItem(PUBLISH_KEY) === PUBLISH_REV) return;
-  saveBoard(DEFAULT_BOARD_LAYOUT);
   saveCard(DEFAULT_CARD);
   saveSpell(DEFAULT_SPELL);
   saveField(DEFAULT_FIELD);

@@ -26,7 +26,9 @@ export type FxEvent =
   | { t: "clash"; x: number; y: number; /** A ramming blow (chủ game 14/11): the way the attacker came, in radians on the screen. */ ang: number; pack?: FxPack }
   /** K2 (chủ game 14/11): a monster rousing as its skill goes off, before the skill's own effect: light gathers on its
    *  card, then bursts out toward the target (`ang`, radians on the screen). Always played. */
-  | { t: "rouse"; x: number; y: number; color: string; ang?: number; pack?: FxPack };
+  | { t: "rouse"; x: number; y: number; color: string; ang?: number; pack?: FxPack }
+  /** Chủ game 16/11: quái vừa lên hàng chờ phản ứng với kỹ năng: phát quang một lần quanh lá (video + âm của chủ game). `w` = bề ngang lá, % bàn. */
+  | { t: "flare"; x: number; y: number; w: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

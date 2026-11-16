@@ -61,7 +61,8 @@ import {
   type SpellKey,
   type Spot,
 } from "@/lib/layouts";
-import { DEFAULT_BOARD_ART, ENV_BOARDS } from "@/lib/env-boards";
+import { ENV_BOARDS } from "@/lib/env-boards";
+import { board as boardOf, boardOfWindow, setBoardCut } from "@/lib/board-cut";
 
 export const Route = createFileRoute("/tune")({ component: TunePage });
 
@@ -406,6 +407,8 @@ function Pad({
 }
 
 function BoardTune({ onBack }: { onBack: () => void }) {
+  // Bàn nào dùng cho màn này (A hoặc B): chọn trước khi đọc bố cục (chủ game 15/11).
+  setBoardCut(boardOfWindow());
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<BoardPick | null>(null);
   const [layout, setLayout] = useState<BoardLayout>(() => loadBoard());
@@ -542,7 +545,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
       <p className="tuner-note">Một bố cục dùng chung cho mọi môi trường.</p>
       <div ref={stage} className="tune-stage tune-board">
         {/* Trận đang dùng bàn Grok cho mọi môi trường (chủ game 28/10: khoan làm môi trường). */}
-        <img src={DEFAULT_BOARD_ART} alt="" />
+        <img src={boardOf().art} alt="" />
         <button
           type="button"
           className={`tune-notice${picked === "notice" ? " on" : ""}${layout.notice.hidden ? " is-hidden" : ""}`}

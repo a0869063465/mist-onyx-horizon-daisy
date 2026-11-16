@@ -16,6 +16,7 @@ import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HopThuRouteImport } from './routes/hop-thu'
 import { Route as MailRouteImport } from './routes/mail'
+import { Route as MazeRouteImport } from './routes/maze'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as NewsRouteImport } from './routes/news'
@@ -57,6 +58,11 @@ const HopThuRoute = HopThuRouteImport.update({
 const MailRoute = MailRouteImport.update({
   id: '/mail',
   path: '/mail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MazeRoute = MazeRouteImport.update({
+  id: '/maze',
+  path: '/maze',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MissionsRoute = MissionsRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/maze': typeof MazeRoute
   '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/maze': typeof MazeRoute
   '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/hop-thu': typeof HopThuRoute
   '/mail': typeof MailRoute
+  '/maze': typeof MazeRoute
   '/missions': typeof MissionsRoute
   '/modes': typeof ModesRoute
   '/news': typeof NewsRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/maze'
     | '/missions'
     | '/modes'
     | '/news'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/maze'
     | '/missions'
     | '/modes'
     | '/news'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/hop-thu'
     | '/mail'
+    | '/maze'
     | '/missions'
     | '/modes'
     | '/news'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   HopThuRoute: typeof HopThuRoute
   MailRoute: typeof MailRoute
+  MazeRoute: typeof MazeRoute
   MissionsRoute: typeof MissionsRoute
   ModesRoute: typeof ModesRoute
   NewsRoute: typeof NewsRoute
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/mail'
       fullPath: '/mail'
       preLoaderRoute: typeof MailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maze': {
+      id: '/maze'
+      path: '/maze'
+      fullPath: '/maze'
+      preLoaderRoute: typeof MazeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/missions': {
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   HopThuRoute: HopThuRoute,
   MailRoute: MailRoute,
+  MazeRoute: MazeRoute,
   MissionsRoute: MissionsRoute,
   ModesRoute: ModesRoute,
   NewsRoute: NewsRoute,

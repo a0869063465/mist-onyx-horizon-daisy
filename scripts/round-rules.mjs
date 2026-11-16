@@ -133,13 +133,21 @@ test("L1: Trả đòn bằng kỹ năng tốn thêm 1 mana (Hơi thở rồng 1 
   const open = make(3);
   assert.equal(open.counterAsk?.uid, uid(open, 1, 0));
   const declared = D.declareSkill(open, uid(open, 1, 0), uid(open, 0, 0), 0);
-  assert.equal(declared.step, "respond", declared.live);
-  const settled = D.passResponse(declared);
-  assert.equal(settled.players[1].orb, 1, "3 - (1 + 1)");
+  assert.equal(declared.step, "main", "Trả đòn đánh ngay, không qua hàng chờ: " + declared.live);
+  assert.equal(declared.hold, null);
+  assert.equal(declared.players[1].orb, 1, "3 - (1 + 1)");
   const poor = make(1);
   const refused = D.declareSkill(poor, uid(poor, 1, 0), uid(poor, 0, 0), 0);
   assert.equal(refused.players[1].orb, 1, "thiếu mana cho kỹ năng: trả lại phí");
   assert.equal(refused.counterAsk?.uid, uid(poor, 1, 0), "vẫn còn được Trả đòn bằng đánh thường");
+});
+
+test("Trả đòn bằng Hoả cầu: tự nhắm kẻ ra đòn, đánh ngay, đối thủ không phản được", () => {
+  let s = board({ 0: ["hoa-an-thit-nguoi", { atk: 3, hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["rong-phun-hoa-cau", { hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3 })), counterAsk: { uid: uid(s, 1, 0), from: uid(s, 0, 0) }, turn: 1 };
+  const next = D.useSkill(s, uid(s, 1, 0), uid(s, 0, 0), 1);
+  assert.equal(next.hold, null, next.live);
+  assert.ok(at(next, 0, 0).hp < 20, next.live);
 });
 
 test("bỏ lượt rồi đối thủ hành động thì đếm bỏ lượt lại từ đầu", () => {
@@ -389,9 +397,9 @@ test("Trả đòn bằng kỹ năng (Rồng con dùng Hơi thở rồng), xong q
   const open = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
   assert.equal(open.counterAsk?.uid, uid(s, 1, 0));
   const declared = D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0);
-  assert.equal(declared.step, "respond", declared.live);
+  assert.equal(declared.step, "main", "Trả đòn đánh ngay, không qua hàng chờ: " + declared.live);
   assert.equal(declared.counterAsk, null);
-  const done = D.passResponse(declared);
+  const done = declared;
   assert.ok(at(done, 0, 0).hp < 20, "kẻ đánh trúng hơi thở");
   assert.equal(done.counterAsk ?? null, null, "không trả đòn ngược lại");
   assert.equal(done.turn, 1);
@@ -534,7 +542,7 @@ test("skill chậm: kỹ năng diện rộng không dùng để Trả đòn", ()
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 1), true);
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 0), false);
   assert.match(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 1).live, /Kỹ năng chậm/);
-  assert.notEqual(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0).step, "main", "kỹ năng một mục tiêu vẫn trả đòn được");
+  assert.ok(at(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0), 0, 0).hp < 20, "kỹ năng một mục tiêu vẫn trả đòn được");
 });
 
 test("Sừng lôi phá chỉ dùng trong vòng tấn công của mình", () => {
@@ -1191,6 +1199,28 @@ test("Đại hồng thuỷ huỷ diệt: chọn 1 quái, chỉ cả hàng của 
       else assert.equal(mon.hp, 40, `ô ${slot} không được dính | ${done.live}`);
     }
   }
+});
+
+test("luật 12/11: đổi bài xong, cả hai bên tự rút 1 lá, tốn 1 gem, vòng 1 không rút thêm", () => {
+  let s = D.createDuel(undefined, "ai");
+  assert.ok(s.opener, "trận Vs Máy còn bảng đổi bài của người chơi");
+  assert.equal(s.players[0].draws, 0, "chưa đổi bài thì chưa rút");
+  const hand0 = s.players[0].reserve.length + s.players[0].hand.length;
+  const hand1 = s.players[1].reserve.length + s.players[1].hand.length;
+  const pile0 = D.pileLeft(s.players[0]);
+  const orb = [s.players[0].orb, s.players[1].orb];
+  s = D.openerSwap(s, 0, { reserve: [], hand: [] });
+  assert.equal(s.opener, null);
+  for (const side of [0, 1]) {
+    const p = s.players[side];
+    assert.equal(p.draws, 1, `bên ${side} đã rút`);
+    assert.equal(p.orb, orb[side] - 1, `bên ${side} trả 1 gem`);
+  }
+  assert.equal(s.players[0].reserve.length + s.players[0].hand.length, hand0 + 1);
+  assert.equal(s.players[1].reserve.length + s.players[1].hand.length, hand1 + 1);
+  assert.equal(D.pileLeft(s.players[0]), pile0 - 1);
+  const again = D.draw(s);
+  assert.equal(again.players[0].draws, 1, "vòng 1 không rút thêm");
 });
 
 test("luật 0.2: Vãy phá giáp trừ 2 thủ TRƯỚC rồi mới tính sát thương", () => {

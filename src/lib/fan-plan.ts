@@ -1,3 +1,4 @@
+import { boardRatio } from "./board-cut.ts";
 import type { BoxPt } from "@/components/game/flow-canvas";
 
 /**
@@ -128,7 +129,7 @@ function drawnRoute(mirror: boolean, card: FanCard, fork: { x: number; y: number
   let pts = DRAWN.map(([x, y]) => ({ x: mapX(flipX(x)), y: fork.y + (y - DRAWN_FORK.y) * stretch }));
   pts[pts.length - 1] = meet;
   // It starts at the fork: the start moves there, the rest of it less and less.
-  const K = 1870 / 841;
+  const K = boardRatio();
   const lens = [0];
   for (let i = 1; i < pts.length; i += 1) lens.push(lens[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, (pts[i].y - pts[i - 1].y) * K));
   const total = lens[lens.length - 1] || 1;
