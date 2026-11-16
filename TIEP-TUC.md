@@ -16,6 +16,11 @@
    16/11 (sau): canh cụm 3 nút vào giữa khoảng từ mép ngoài ô lá tới viền vàng ngoài bàn (x tâm cụm ≈ 83,5%; mắt x 76,2–76,4, mũi tên/OK x 88–88,2; CHỈ bàn B; bàn A chủ game bảo trả như cũ (78,6/78,4/91,2)).
 3. Việc sắp làm: chờ chủ game xem; đưa ảnh đồng hồ cát và mắt mở nếu muốn đổi.
 
+## Lá rút bị bảng mô tả đè (16/11, Sonnet 5.5, nhánh `ccr-312058b5-foqipx`, CHƯA áp `main`)
+1. Việc vừa làm: lá rút hiện giữa màn (`.card-show`) z-index 2 thấp hơn bảng mô tả ngắn (`.hand-peek` z 75) nên bảng dài đè lên lá; nâng `.card-show` lên 80 (styles.css).
+2. Hiện trạng: không ảnh/video mới. Chỉ sửa CSS, chưa chụp bằng mắt, chưa thử điện thoại.
+3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
+
 ## Hai bàn đấu mới A/B (15/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 16/11, khiên kiếm mới cũng đã áp)
 1. Việc vừa làm: thay bàn bằng 2 ảnh chủ game gửi: `public/board-a.jpg` (942×1670, màn cao/rộng < 1,91) và `board-b.jpg` (877×1793, màn dài hơn, đầu ảnh là dải tối cố ý). Bỏ cắt bàn: `board-cut.ts` viết lại (`BOARDS`, `pickBoard`, `byBoard` = bảng riêng từng bàn, `ry/rh` thành phép nhân 1). Số đo từ ảnh: ô lá + viên máu (play.tsx `SLOT_A/B`, `HP_BOX`), mặc định HUD/nút/kiếm/hồ sơ/lá môi trường (layouts.ts, theo mép dải đá), bể sáng đáy = mép dải đá, tay bài, tỉ lệ `.board` (`--board-ratio`). Bố cục lưu riêng từng bàn (`clash-board-layout-v12-a|b`), bản cũ bị bỏ.
 2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 (bàn B) và 412×732 (bàn A) trận Test: ô lá, máu, mana, sao, xấp bài, nút khớp ảnh. Chưa thử: trang Tuỳ chỉnh bàn, Hướng dẫn, màn rất ngắn/rộng, điện thoại, bể sáng/góc bo (hằng số cũ chưa đo lại cho 2 bàn), vị trí lá môi trường/tường thành/kiếm. Núi dung nham tạm dùng chung bàn mới (lửa dung nham tắt vì ảnh cũ lệch).
