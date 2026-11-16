@@ -8,7 +8,7 @@ export const MUSIC_EVENT = "clash-music-level";
 export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal";
 
 const CLIPS: Partial<Record<Cue, string>> = {
-  summon: "/sfx/user-summon.ogg?v=4",
+  summon: "/sfx/trieu-hoi.mp3?v=1",
   attack: "/sfx/user-attack.ogg?v=4",
   draw: "/sfx/user-draw.ogg?v=4",
   block: "/sfx/user-block.ogg?v=6",
