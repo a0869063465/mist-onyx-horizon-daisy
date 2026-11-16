@@ -11,30 +11,33 @@ import { PACK, packPool } from "@/lib/shop";
  * go from here. "Nhận thêm lá này" hides the rest and shows the packs it comes from and the NPCs that can be fought
  * for it (no NPC exists yet, so that part says "Sắp có"), with a back button.
  */
+/** "Nhận thêm lá này": the packs the card comes from and the NPCs that can be fought for it. */
+export function GetView({ id, onBack }: { id: string; onBack: () => void }) {
+  const inPack = packPool().some((entry) => entry.id === id);
+  return (
+    <div className="own-panel">
+      <h3 className="own-title">{tr("Nhận thêm lá này")}</h3>
+      <p className="own-label">{tr("Gói quay")}</p>
+      <ul className="own-list">{inPack ? <li>{tr(PACK.name)}</li> : <li className="is-none">{tr("Không có trong gói nào")}</li>}</ul>
+      <p className="own-label">{tr("Đánh NPC")}</p>
+      <ul className="own-list">
+        <li className="is-none">{tr("Sắp có")}</li>
+      </ul>
+      <button type="button" className="own-btn is-back" onClick={onBack}>
+        {tr("Trở lại")}
+      </button>
+    </div>
+  );
+}
+
 export function OwnPanel({ id, onDeck }: { id: string; /** On the deck builder itself: "Đến deck" only closes the sheet. */ onDeck?: () => void }) {
   const go = useNavigate();
   const [view, setView] = useState<"main" | "get">("main");
   const have = ownedCopiesOf(id);
   const cap = copyCap(id);
   const album = albumOf(id);
-  const inPack = packPool().some((entry) => entry.id === id);
 
-  if (view === "get") {
-    return (
-      <div className="own-panel">
-        <h3 className="own-title">{tr("Nhận thêm lá này")}</h3>
-        <p className="own-label">{tr("Gói quay")}</p>
-        <ul className="own-list">{inPack ? <li>{tr(PACK.name)}</li> : <li className="is-none">{tr("Không có trong gói nào")}</li>}</ul>
-        <p className="own-label">{tr("Đánh NPC")}</p>
-        <ul className="own-list">
-          <li className="is-none">{tr("Sắp có")}</li>
-        </ul>
-        <button type="button" className="own-btn is-back" onClick={() => setView("main")}>
-          {tr("Trở lại")}
-        </button>
-      </div>
-    );
-  }
+  if (view === "get") return <GetView id={id} onBack={() => setView("main")} />;
   return (
     <div className="own-panel">
       <p className="own-count">

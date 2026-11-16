@@ -14460,3 +14460,33 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .own-btn:disabled { opacity: 0.4; }
 .own-btn.is-get { border-color: #5fd57a; color: #c9f7d2; background: linear-gradient(180deg, #1f4a2c, #12301c); }
 .own-btn.is-back { margin-top: 0.3rem; }
+/* Tab Sở hữu theo ảnh linh kiện chủ game 16/11 (public/ui/own). Đơn vị --u = 1 px ảnh thiết kế 848 px. */
+.os-back { z-index: 60; padding: 0; }
+.os-wrap { --wu: calc(min(100vw, 600px) / 848); position: relative; top: calc(var(--wu) * 15); width: min(100vw, 600px); container-type: inline-size; }
+.os { --u: calc(100cqw / 848); position: relative; width: 100%; color: #f4e3b2; user-select: none; -webkit-user-select: none; animation: msheet-pop 260ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+.os-frame { position: absolute; border-style: solid; border-width: calc(var(--u) * 110); border-image: url(/ui/own/frame.webp) 110 fill / calc(var(--u) * 110) stretch; box-sizing: border-box; pointer-events: none; }
+.os-img { position: absolute; max-width: none; display: block; pointer-events: none; }
+.os-card { position: absolute; }
+.os-card .msheet-rarity { left: calc(var(--u) * -20); top: calc(var(--u) * -14); transform: scale(1.28); transform-origin: 0 0; }
+.os-name { position: absolute; pointer-events: none; }
+.os-name-line { position: relative; }
+.os-name .gold-text, .os-count .gold-text, .os-left .gold-text, .os-price .gold-text { left: 0; transform: none; }
+.os-count { position: absolute; display: grid; }
+.os-count .gold-text { left: 50%; transform: translateX(-50%); }
+.os-left, .os-price { position: absolute; display: block; }
+.os-left .gold-text, .os-price .gold-text { left: 50%; transform: translateX(-50%); }
+.os-stars { position: absolute; display: flex; align-items: center; gap: calc(var(--u) * 12); pointer-events: none; }
+.os-stars .tag-star { width: calc(var(--u) * 70); height: calc(var(--u) * 66); flex: none; }
+.os-stars b { font-size: calc(var(--u) * 66); min-width: 0; }
+.os-slot { position: absolute; }
+.os-tab, .os-hit { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, filter 0.12s ease; }
+.os-hit:disabled { opacity: 0.45; cursor: default; }
+.os-hit:active:not(:disabled), .os-tab:active { transform: scale(0.965); filter: brightness(1.25); }
+.os-tab-img { position: absolute; max-width: none; pointer-events: none; }
+.os-tab-on { transition: opacity 0.22s ease; }
+.os-bar { transition: left 0.28s cubic-bezier(.3,.7,.3,1), width 0.28s cubic-bezier(.3,.7,.3,1); }
+.os-get { position: absolute; z-index: 3; padding: calc(var(--u) * 24); border-radius: calc(var(--u) * 36); background: #0a1428; overflow: auto; font-size: calc(var(--u) * 26); }
+.os-dim { position: absolute; inset: calc(var(--u) * -400) calc(var(--u) * -200); z-index: 5; background: rgba(2, 5, 12, 0.62); }
+.os-dialog { position: absolute; left: calc(var(--u) * 200); top: calc(var(--u) * 400); width: calc(var(--u) * 848); height: calc(var(--u) * 975); }
+.os-buy.is-poor { filter: grayscale(1) brightness(0.8); cursor: default; }
+@media (prefers-reduced-motion: reduce) { .os, .os-bar, .os-tab-on { animation: none; transition: none; } }

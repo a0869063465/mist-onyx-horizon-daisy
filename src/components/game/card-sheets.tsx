@@ -6,6 +6,7 @@ import { CopyText } from "@/components/game/copy-text";
 import { Glyph, MonsterSheet, type SheetAction, type SheetExtra, type SheetTab } from "@/components/game/monster-sheet";
 import { ReactGlyph } from "@/components/game/react-glyph";
 import { OwnPanel } from "@/components/game/own-panel";
+import { OwnScreen } from "@/components/game/own-screen";
 import { artSrc, copyCap, monsterCard, spellCard, spellSrc } from "@/lib/catalog";
 import { tr } from "@/lib/i18n";
 import { SHEET_SPOTS, loadSpellHand, type FieldKey } from "@/lib/layouts";
@@ -148,7 +149,12 @@ function ownTab(id: string, place: SheetPlace | undefined, onClose: () => void, 
   return {
     tabs: [
       { key: "skills", label: mainLabel },
-      { key: "own", label: "Sở hữu", panel: <OwnPanel id={id} onDeck={place === "deck" ? onClose : undefined} /> },
+      {
+        key: "own",
+        label: "Sở hữu",
+        panel: <OwnPanel id={id} onDeck={place === "deck" ? onClose : undefined} />,
+        screen: (ctx) => <OwnScreen id={id} {...ctx} onDeck={place === "deck" ? onClose : undefined} />,
+      },
     ],
     firstTab: place === "collection" ? "own" : "skills",
   };
