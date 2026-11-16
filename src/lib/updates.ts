@@ -1039,6 +1039,7 @@ export const PENDING_NOTES: string[] = [
   "Quái đánh thường vào người chơi giờ lùi lấy đà rồi bay tông tới mép sân, rồi tia điện mới chạy tới viên máu (trước chỉ có tia điện).",
   "Trả đòn bằng kỹ năng có mục tiêu (như Hoả cầu): bấm skill là đánh ngay kẻ ra đòn, không chọn mục tiêu, không cần bấm chuyển, không qua hàng chờ nên đối thủ không phản lại được.",
   "Đánh thường, Tuỳ chọn: sau khi bạn đi xong, nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ thêm khoảng 2 giây).",
+  "Đánh thường, Tuỳ chọn: máy chủ chuyển về Singapore, nước đi qua lại nhanh hơn.",
   "Đánh thường: lúc chờ tìm trận, rồng chuyển động trên nền xanh đen, không còn khung, mỗi lần chạy ngẫu nhiên một trong 4 đoạn.",
   "Âm triệu hồi quái thú đổi sang âm mới, ngắn gọn hơn.",
   "Sửa lỗi kéo quái vào chặn đòn đánh người chơi: thả lên flow đỏ có lúc không nhận, nay thả lên đòn là chặn.",
