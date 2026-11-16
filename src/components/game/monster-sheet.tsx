@@ -281,7 +281,24 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
 const MAX_ROW = 4;
 
 /** A tab of a card's sheet: `panel` is drawn right of the card; "skills" (no panel) is the skills view itself. */
-export type SheetTab = { key: string; label: string; panel?: ReactNode; left?: ReactNode };
+export type SheetTab = {
+  key: string;
+  label: string;
+  panel?: ReactNode;
+  left?: ReactNode;
+  /** A tab drawn as a whole screen of its own (chủ game 16/11: the Sở hữu screen from the owner's pieces). */
+  screen?: (ctx: SheetScreenCtx) => ReactNode;
+};
+export type SheetScreenCtx = {
+  name: string;
+  card: ReactNode;
+  badge?: ReactNode;
+  stars?: number;
+  tabs: { key: string; label: string }[];
+  tab: string;
+  onTab: (key: string) => void;
+  onClose: () => void;
+};
 
 export function MonsterSheet({
   name,
@@ -508,6 +525,9 @@ export function MonsterSheet({
     const at = order.indexOf(picked);
     setPicked(order[(at + 1) % order.length]);
   };
+  if (tabs && current?.screen && tab === current.key) {
+    return <>{current.screen({ name, card, badge, stars: tag?.stars, tabs: tabs.map((item) => ({ key: item.key, label: item.label })), tab, onTab: setTab, onClose: onBack ?? onClose })}</>;
+  }
   return (
     <div className="msheet-back" onClick={(event) => event.target === event.currentTarget && (onBack ?? (stay ? undefined : onClose))?.()} {...(onSwipe ? swipe : {})}>
       <GlyphDefs />
