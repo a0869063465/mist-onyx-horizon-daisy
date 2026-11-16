@@ -2092,6 +2092,9 @@ const NOT_BEAST = new Set([
   "ma-dao-si",
 ]);
 
+/** Sừng lôi phá: công cộng ngay lúc gắn (chủ game 16/11). */
+export const HORN_ATK = 3;
+
 export function hornFit(cardId: string) {
   return !NOT_BEAST.has(cardId);
 }
@@ -3405,6 +3408,12 @@ function guardStrikeKind(mon: FieldMon, roster?: string[]): "phys" | "spell" {
 /** Keyword Đòn đánh phép (chủ game 09/11): đòn đánh thường của quái này gây sát thương phép. */
 function magicStrike(mon: FieldMon): boolean {
   return keywordsOf(mon.cardId).includes("phep");
+}
+
+/** Công phép (chủ game 16/11): đòn đánh thường của quái này gây sát thương phép (đang mang Sừng lôi phá, hoặc keyword
+ *  Đòn đánh phép). Số công của nó hiện màu tím sáng. */
+export function spellAtk(mon: FieldMon): boolean {
+  return Boolean(mon.horn) || magicStrike(mon);
 }
 
 /** Keyword Đâm xuyên (chủ game 09/11): đòn đánh thường hạ quái thì sát thương thừa đánh thẳng lên người chơi. */
@@ -6764,8 +6773,10 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   if (card.id === "sung-loi-pha") {
     const ally = next.players[side].field.find((mon) => mon?.uid === targetUid) ?? null;
     if (!ally || !hornFit(ally.cardId)) return state;
-    const field = next.players[side].field.map((mon) => (mon?.uid === ally.uid ? { ...mon, horn: "plain" as const, hornNew: true } : mon));
-    return note(patch(next, side, { ...next.players[side], field }), `${cardOf(ally).name} mang Sừng lôi phá. Đòn đánh thành sát thương phép.`, "info");
+    // Chủ game 16/11 (đổi luật): bỏ đánh Lan và bảng chọn; gắn sừng là +3 công ngay, đòn đánh thường thành sát thương
+    // phép như cũ. `hornNew` không còn được đặt nên bảng Lan / +3 (hornAsk, armHorn) không mở nữa (giữ code, không xoá).
+    const field = next.players[side].field.map((mon) => (mon?.uid === ally.uid ? { ...mon, horn: "plain" as const, atk: mon.atk + HORN_ATK, raised: markRaised(mon, { atk: HORN_ATK }) } : mon));
+    return note(patch(next, side, { ...next.players[side], field }), `${cardOf(ally).name} mang Sừng lôi phá: +${HORN_ATK} công. Đòn đánh thành sát thương phép.`, "info");
   }
   if (card.id === "bien-sau") {
     const field = next.players[side].field.map((mon) => (mon && isSea(mon.cardId) ? { ...mon, wet: 99 } : mon));
