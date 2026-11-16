@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Lá đối thủ đánh ra bay khỏi tay (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
+1. Việc vừa làm: `FoePlay` (draw-flights.tsx, `DrawFlight.play` "mon"|"spell"): quái đối thủ bay úp từ khay xuống ô rồi lật; phép loé sáng rồi tan trên khay. Phát hiện trong useLayoutEffect `drawPrev` (play.tsx). Trước đó: quái đánh người chơi lùi lấy đà rồi tông tới mép sân; màn tìm trận Đánh thường dùng 4 video rồng ngẫu nhiên nền xanh đen.
+2. Hiện trạng: tsc sạch; chưa chụp Chromium, chưa thử quái ẩn/hoán đổi/dung hợp của đối thủ.
+3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
+
 ## Quái bị hạ vỡ thành mảnh (16/11, Sonnet 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 1. Việc vừa làm: video Grok `41a2d123` (lá hồng chói rồi vỡ) làm hiệu ứng hạ quái, cách A (mảnh mang hình lá thật). `public/fx/vo-mask.webp` + `vo-sang.webp` (9×6 khung, tạo bằng script scratchpad `kill/make.py`, đo độ nở mảnh `SCALES`), `public/sfx/vo-la.mp3`; `card-shatter.tsx` (`CardShatter`, rAF theo khung); play.tsx `shatters` (arm() của `falls`: thay chớp mờ + `burst kill` cũ, giữ đường cũ khi `quiet` hoặc giảm chuyển động), `BoardSlot bare`, cue `shatter`; chói 0,3 s rồi vỡ (cắt đoạn đầu 0,9 s của video), số "Hạ" trễ 0,29 s.
 2. Hiện trạng: nhận 1 video. Chụp Chromium (màn 290×600, screencast chỉ lấy khung 800×600): lá thật vỡ, mảnh nở và mờ 2,25 s, loé lúc vỡ. Chưa nghe âm, chưa thử đối thủ chết bằng phép/skill nhiều mục tiêu, nhiều quái chết cùng lúc, điện thoại thật.

@@ -1044,6 +1044,7 @@ export const PENDING_NOTES: string[] = [
   "Quái đánh thường vào người chơi giờ lao thẳng tới viên máu rồi nổ ngay tại viên máu (bỏ tia điện chạy dọc mép sân).",
   "Đòn đánh thường tông vào quái hoặc người chơi có âm va chạm mới.",
   "Quái bị hạ giờ chói sáng một nhịp rồi vỡ thành mảnh mang hình lá, có loé sáng và âm thanh mới.",
+  "Lá đối thủ đánh ra giờ thấy rõ rời tay: quái bay úp xuống ô rồi lật mặt, phép loé sáng rồi tan trên khay bài.",
 ];
 
 function remarkOf(notes: string[]) {

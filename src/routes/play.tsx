@@ -2862,6 +2862,21 @@ function PlayPage() {
     if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
     const born: DrawFlight[] = [];
+    // Chủ game 16/11: lá đối thủ đánh ra rời khay bài thấy rõ: quái bay úp xuống ô rồi lật, phép loé sáng rồi tan.
+    {
+      const foeSide = (1 - me) as Side;
+      const wasFoe = prev.players[foeSide];
+      const nowFoe = duel.players[foeSide];
+      const known = new Set(wasFoe.field.map((mon) => mon?.uid));
+      if (nowFoe.reserve.length < wasFoe.reserve.length) {
+        nowFoe.field.forEach((mon, index) => {
+          if (mon && !known.has(mon.uid) && !(mon.lurk) && !seaVeiled(duel, me, mon.uid)) {
+            born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "mon", slot: `${screenSide(foeSide, me)}-${index}` });
+          }
+        });
+      }
+      if (nowFoe.hand.length < wasFoe.hand.length) born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "spell" });
+    }
     ([0, 1] as const).forEach((side) => {
       const was = prev.players[side];
       const now = duel.players[side];
