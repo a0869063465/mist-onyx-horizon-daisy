@@ -204,7 +204,7 @@ test("cổng hai chiều: dịch chuyển rồi đứng ở cổng đích không
   assert.equal(res.events[0].type, "teleport_used");
 });
 
-test("sương mù: tầm nhìn 1 ô bị tường chắn, nhớ 3 ô đi qua sớm nhất ngoài tầm nhìn", () => {
+test("sương mù: tầm nhìn 1 ô bị tường chắn, nhớ 3 ô mới đi gần nhất", () => {
   let state = createMaze();
   let vis = visibility(state);
   assert.deepEqual([...vis.view].sort(), ["1A", "1B", "2A"]);
@@ -214,18 +214,17 @@ test("sương mù: tầm nhìn 1 ô bị tường chắn, nhớ 3 ô đi qua s�
   state = win(state).state;
   vis = visibility(state);
   assert.deepEqual([...vis.view].sort(), ["1B", "1C"], "tường chắn ở phải và trên ô (1,C)");
-  assert.deepEqual(vis.early, ["1A"]);
+  assert.deepEqual(vis.early, ["1B", "1A"], "ô mới đi gần nhất trước");
   assert.equal(vis.lit.length, 3);
 
-  // Đi dài hơn: nhớ đúng 3 ô sớm nhất, ô trong tầm nhìn không chiếm chỗ.
-  const long: MazeState = { ...createMaze(), at: "4B", visited: ["1A", "2A", "3A", "4A", "4B"] };
+  // Đi dài: 4 ô mới đi gần nhất (gồm ô đang đứng) trừ ô đang đứng = 3 ô theo sau, không cố định ở đầu đường.
+  const long: MazeState = { ...createMaze(), at: "4B", visited: ["1A", "2A", "3A", "4A", "4B"], trail: ["1A", "2A", "3A", "4A", "4B"] };
   vis = visibility(long);
-  assert.deepEqual(vis.early, ["1A", "2A", "3A"]);
-  assert.ok(vis.view.includes("4A"));
-  const inView: MazeState = { ...createMaze(), at: "2A", visited: ["1A", "2A", "3A", "4A"] };
-  vis = visibility(inView);
-  assert.ok(vis.view.includes("1A") && vis.view.includes("3A"));
-  assert.deepEqual(vis.early, ["4A"], "1A và 3A đang nhìn thấy nên 4A thay vào");
+  assert.deepEqual(vis.early, ["4A", "3A", "2A"]);
+  // Đi qua lại ô cũ: ô trùng không tính hai lần.
+  const back: MazeState = { ...createMaze(), at: "3A", visited: ["1A", "2A", "3A"], trail: ["1A", "2A", "3A", "2A", "3A", "2A", "3A"] };
+  vis = visibility(back);
+  assert.deepEqual(vis.early, ["2A", "1A"], "chỉ có 3 ô khác nhau gần nhất: 3A, 2A, 1A");
 });
 
 test("mở rương chỉ ở ô có rương, một lần", () => {
