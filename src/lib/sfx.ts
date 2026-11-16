@@ -5,10 +5,10 @@ const MUSIC_KEY = "clash-vol-music";
 /** Sent when the sound switch or the music volume changes, so the music follows at once. */
 export const MUSIC_EVENT = "clash-music-level";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "mazeStep" | "flare";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "mazeStep" | "flare" | "ramHit" | "shatter";
 
 const CLIPS: Partial<Record<Cue, string>> = {
-  summon: "/sfx/user-summon.ogg?v=4",
+  summon: "/sfx/trieu-hoi.mp3?v=1",
   attack: "/sfx/user-attack.ogg?v=4",
   draw: "/sfx/user-draw.ogg?v=4",
   block: "/sfx/user-block.ogg?v=6",
@@ -31,6 +31,10 @@ const CLIPS: Partial<Record<Cue, string>> = {
   heal: "/sfx/hoi-mau.mp3?v=1",
   // Chủ game 16/11: quái phát động kỹ năng lên hàng chờ; âm lấy từ video Grok 2, hình từ video Grok 1.
   flare: "/sfx/phat-quang.mp3?v=1",
+  // Chủ game 16/11: âm đòn đánh thường tông vào (Grok 17-00-10, cắt 0,85–1,7 giây), thay tiếng tổng hợp cũ.
+  ramHit: "/sfx/tong.mp3?v=1",
+  // Chủ game 16/11: quái bị hạ (video Grok 17-37-50, âm cắt từ khung 16, lúc vỡ ở 0,29 giây).
+  shatter: "/sfx/vo-la.mp3?v=1",
   reflect: "/sfx/guong-vo.mp3?v=1",
   chain: "/sfx/xich.mp3?v=2",
   dispel: "/sfx/giai-tru.mp3?v=1",
@@ -348,28 +352,6 @@ function slam(audio: AudioContext, start: number, level: number) {
   body.start(start);
   osc.stop(start + 0.44);
   body.stop(start + 0.44);
-}
-
-/** Struck steel: a square partial through a narrow band, sharp at the head, its pitch sagging a little as it rings. */
-function clang(audio: AudioContext, start: number, freq: number, dur: number, level: number) {
-  const osc = audio.createOscillator();
-  const band = audio.createBiquadFilter();
-  const amp = audio.createGain();
-  osc.type = "square";
-  osc.frequency.setValueAtTime(freq * 1.03, start);
-  osc.frequency.exponentialRampToValueAtTime(freq * 0.985, start + dur);
-  band.type = "bandpass";
-  band.frequency.setValueAtTime(freq, start);
-  band.Q.value = 9;
-  amp.gain.setValueAtTime(0.0001, start);
-  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level * 2.2), start + 0.004);
-  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, level * 0.5), start + 0.06);
-  amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-  osc.connect(band);
-  band.connect(amp);
-  amp.connect(audio.destination);
-  osc.start(start);
-  osc.stop(start + dur + 0.02);
 }
 
 function thump(audio: AudioContext, start: number, level: number) {
@@ -832,6 +814,7 @@ export function playEnd(cue: EndCue, delay = 0) {
 export type HitCue = "zap" | "dash" | "ram" | "rouse";
 
 export function playHit(cue: HitCue, delay = 0) {
+  if (cue === "ram") return playCue("ramHit", delay);
   whenReady(() => {
     const audio = ctx;
     if (!audio) return;
@@ -859,14 +842,6 @@ export function playHit(cue: HitCue, delay = 0) {
       // Lấy đà rồi lao đi: tiếng gió rít lên.
       noiseBurst(audio, t, 0.2, 700, 5600, 0.15 * vol);
       noiseBurst(audio, t + 0.05, 0.14, 2400, 8200, 0.07 * vol);
-    } else if (cue === "ram") {
-      // Đòn tông: cú va nặng có tiếng trầm rơi xuống, tiếng thép chát lệch tông (không phải chuông) và dư chấn lăn đi.
-      slam(audio, t, 1.1 * vol);
-      noiseBurst(audio, t, 0.07, 9000, 3000, 0.42 * vol);
-      noiseBurst(audio, t, 0.2, 5200, 700, 0.3 * vol);
-      for (const [freq, level, dur] of [[412, 0.07, 0.34], [633, 0.06, 0.3], [1017, 0.05, 0.42], [1694, 0.034, 0.5], [2731, 0.02, 0.36]] as const) clang(audio, t + 0.004, freq, dur, level * vol);
-      noiseBurst(audio, t + 0.07, 0.5, 900, 120, 0.16 * vol);
-      thump(audio, t + 0.11, 0.4 * vol);
     } else if (cue === "rouse") {
       // K2: quái phát huy kỹ năng: hơi tụ lại dâng lên, ba nốt chuông sáng dần, rồi một nhịp bung ra lúc nó ra đòn.
       noiseBurst(audio, t, 0.42, 320, 3600, 0.1 * vol);

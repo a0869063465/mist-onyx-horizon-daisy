@@ -92,3 +92,11 @@ Nhánh `ccr-3802e949-4nybtg` (commit `3b2c44b`, `fed7556`, `TIEP-TUC.md` mục B
 - Đã có: thanh tab, tab Sở hữu (x/y lá, Đến deck, Đến album, Nhận thêm lá này), bấm mô tả đổi icon kế.
 - Chưa làm: tab Chức năng (anh viết vài lá mẫu trước), tab Chỉ số (đa giác 8 đỉnh, mốc 1 sao, khung Cân bằng dời sang trái lá), in chìm icon skill nội tại không chính thức, tab trong bảng trận.
 - Giao diện (nhìn) do người khác thiết kế; phần tính chỉ số "sát thương" cần Opus 5.5.
+
+## Z2. Lỗi: kéo Hiệp sĩ của vua vào chặn Khủng long vãy kiếm không được (anh báo 16/11, làm trên tài khoản khác)
+
+Cảnh: máy dùng Khủng long vãy kiếm đánh người chơi; anh kéo Hiệp sĩ của vua lên chặn thì không chặn được.
+
+- Đây là báo lỗi (chưa rõ nguyên nhân, chưa kiểm). Luật hiện có: quái hàng trước chặn đòn/skill nhắm người chơi hoặc quái hàng sau; mỗi quái chặn 1 lần/vòng; `keywordBarred` có thể cấm chặn theo keyword (Khủng long vãy kiếm có Debuff); cần xem Hiệp sĩ của vua có đang mệt/bị khống chế, hay skill của Khủng long có bị coi là không chặn được.
+- Việc làm: tái hiện trong trận Test, tìm lý do `assignBlock` từ chối (hoặc giao diện không cho thả), sửa nếu trái luật; chưa chắc thì hỏi anh.
+- Đề xuất: Sonnet 5.5 medium (tìm lỗi), Opus 5.5 high nếu đụng luật chặn.
