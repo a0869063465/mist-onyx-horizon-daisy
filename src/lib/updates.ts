@@ -1049,6 +1049,7 @@ export const PENDING_NOTES: string[] = [
   "Rút bài: lá hiện giữa màn nằm trên bảng mô tả, bảng dài không còn đè lên lá.",
   "Bảng mô tả lá có thêm tab Sở hữu: xem đang có mấy lá, nút Đến deck, Đến album, Nhận thêm lá này (gói quay; đánh NPC sắp có). Mở từ Bộ sưu tập thì vào tab Sở hữu trước, mở từ Chỉnh sửa bộ bài thì vào tab Kỹ năng (lá phép: Chức năng) trước.",
   "Tab Sở hữu của bảng mô tả lá đổi giao diện mới: tên, số lá đang có, ô đồng hồ cát khi dùng thử, ô khóa mở bảng Mở khóa, trái tim yêu thích khi sở hữu, nút Deck, Album, Nhận thêm.",
+  "Tab Sở hữu của bảng mô tả lá: nút bấm có hiệu ứng lún, nảy, vòng sáng vàng và tiếng riêng; nút khoá hoặc thiếu sao thì rung; nút Nhận thêm có vệt sáng quét mời bấm.",
 ];
 
 function remarkOf(notes: string[]) {

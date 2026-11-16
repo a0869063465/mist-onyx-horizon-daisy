@@ -286,7 +286,7 @@ export function playCue(kind: Cue, delay?: number, offset = 0, late = 0) {
   if (kind === "lose") tone(220, 0, 0.35, "sine", 0.08, 110);
 }
 
-export type UiCue = "confirm" | "select" | "soft";
+export type UiCue = "confirm" | "select" | "soft" | "rune" | "charm" | "seal" | "gem" | "deny";
 
 function noiseBurst(audio: AudioContext, start: number, dur: number, from: number, to: number, level: number) {
   const frames = Math.max(1, Math.floor(audio.sampleRate * dur));
@@ -948,6 +948,26 @@ export function playUi(cue: UiCue) {
       softPop(audio, t + 0.07, 784, 0.24, 0.08 * vol);
     } else if (cue === "select") {
       softPop(audio, t, 659.3, 0.12, 0.08 * vol);
+    } else if (cue === "rune") {
+      // Đổi tab: một nốt chuông thuỷ tinh mỏng, trượt nhẹ (như khắc dấu ấn)
+      bell(audio, t, 1318.5, 0.5, 0.022 * vol);
+      softPop(audio, t, 740, 0.1, 0.05 * vol);
+    } else if (cue === "charm") {
+      // Trái tim yêu thích: hai nốt chuông đi lên, lấp lánh
+      bell(audio, t, 1174.7, 0.6, 0.03 * vol);
+      bell(audio, t + 0.07, 1568, 0.7, 0.026 * vol);
+      shimmer(audio, t, 0.35, 0.012 * vol);
+    } else if (cue === "seal") {
+      // Ô khoá / mở bảng Mở khoá: tiếng khớp ấn trầm kèm chuông
+      thump(audio, t, 0.12 * vol);
+      bell(audio, t + 0.05, 880, 0.7, 0.026 * vol);
+    } else if (cue === "gem") {
+      // Nút Thuê / Mua: viên ngọc va nhẹ
+      softPop(audio, t, 784, 0.14, 0.09 * vol);
+      bell(audio, t + 0.04, 1568, 0.55, 0.03 * vol);
+    } else if (cue === "deny") {
+      // Nút khoá hoặc thiếu sao: một cú gõ trầm, tắt nhanh
+      softPop(audio, t, 190, 0.16, 0.1 * vol);
     } else {
       softPop(audio, t, 587.3, 0.08, 0.05 * vol);
     }
