@@ -104,9 +104,9 @@ export const DEFAULT_ACTIONS: Spot = spot(94.4, 50, 1, 11, 20);
 // Chỗ hai nút rút cũ giờ là nút X đỏ (drawMon) và con mắt (drawSpell).
 export const DEFAULT_SPOTS: Record<ActKey | FaceKey, Spot> = byBoard<Record<ActKey | FaceKey, Spot>>({
   a: {
-    drawMon: spot(76.4, 77.8, 1, 8.4, 4.7),
-    drawSpell: spot(76.4, 82.1, 1, 8.4, 4.7),
-    endTurn: spot(88.2, 80, 1, 14.4, 7.7),
+    drawMon: spot(78.6, 78.5, 1, 8.4, 4.7),
+    drawSpell: spot(78.4, 83.5, 1, 8.4, 4.7),
+    endTurn: spot(91.2, 81.2, 1, 14.4, 7.7),
     foeFace: spot(88.3, 42.2, 1, 11.5, 5.2),
     youFace: spot(11.5, 54.7, 1, 11.5, 5.2),
     foeAtk: spot(91.9, 42.4, 1, 19.8, 9.2),
