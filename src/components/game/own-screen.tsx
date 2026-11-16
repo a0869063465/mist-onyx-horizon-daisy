@@ -6,6 +6,7 @@ import { copyCap } from "@/lib/catalog";
 import { albumOf, ALBUM_GOTO_KEY } from "@/lib/collection";
 import { isFavCard, toggleFavCard } from "@/lib/fav-cards";
 import { tr } from "@/lib/i18n";
+import { playUi, type UiCue } from "@/lib/sfx";
 import { ownedCopiesOf, trialTag } from "@/lib/owned-cards";
 import { useStars } from "@/lib/shop";
 import { trialEnds } from "@/lib/trial-deck";
@@ -69,6 +70,31 @@ function nameLines(name: string): string[] {
     }
   }
   return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
+}
+
+/**
+ * Phản hồi khi bấm (chủ game 16/11: giống nút màn chính, KHÔNG có vệt quét khi chạm; vệt quét chỉ ở nút mời bấm):
+ * hình lún rồi nảy, vòng sáng vàng toả ra, kèm tiếng. Nút khoá / thiếu sao thì rung và tiếng trầm.
+ */
+function feel(el: HTMLElement | null, cue: UiCue, mode: "tap" | "pop" | "deny" = "tap") {
+  playUi(mode === "deny" ? "deny" : cue);
+  if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const img = el.querySelector<HTMLElement>(":scope > img");
+  if (mode === "deny") {
+    img?.animate([{ transform: "translateX(0)" }, { transform: "translateX(-4%)" }, { transform: "translateX(4%)" }, { transform: "translateX(-2%)" }, { transform: "translateX(0)" }], { duration: 320, easing: "ease-out" });
+    return;
+  }
+  img?.animate(
+    mode === "pop"
+      ? [{ transform: "scale(1)", filter: "brightness(1)" }, { transform: "scale(.84)", filter: "brightness(1.4)" }, { transform: "scale(1.2)", filter: "brightness(1.35)" }, { transform: "scale(1)", filter: "brightness(1)" }]
+      : [{ transform: "scale(1)", filter: "brightness(1)" }, { transform: "scale(.93)", filter: "brightness(1.3)" }, { transform: "scale(1.04)", filter: "brightness(1.15)" }, { transform: "scale(1)", filter: "brightness(1)" }],
+    { duration: mode === "pop" ? 420 : 340, easing: "ease-out" },
+  );
+  const ring = document.createElement("i");
+  ring.className = "os-ring";
+  el.appendChild(ring);
+  const run = ring.animate([{ opacity: 0.95, transform: "scale(.82)" }, { opacity: 0, transform: "scale(1.2)" }], { duration: 460, easing: "ease-out" });
+  run.onfinish = () => ring.remove();
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -149,13 +175,13 @@ export function OwnScreen({
             if (!found) return null;
             const on = found.key === tab;
             return (
-              <button key={item.key} type="button" role="tab" aria-selected={on} aria-label={item.label} className="os-tab" style={box(item.x, 520, item.w, 56)} onClick={() => onTab(found.key)}>
+              <button key={item.key} type="button" role="tab" aria-selected={on} aria-label={item.label} className="os-tab" style={box(item.x, 520, item.w, 56)} onClick={() => { if (found.key !== tab) feel(null, "rune"); onTab(found.key); }}>
                 <img className="os-tab-img" src={`/ui/own/tab-${item.key}-off.webp`} alt="" draggable={false} style={{ left: `calc(var(--u) * ${item.text[0] - item.x})`, width: `calc(var(--u) * ${item.text[1]})`, top: 0 }} />
                 <img className="os-tab-img os-tab-on" src={`/ui/own/tab-${item.key}-on.webp`} alt="" draggable={false} style={{ left: `calc(var(--u) * ${item.text[0] - item.x})`, width: `calc(var(--u) * ${item.text[1]})`, top: 0, opacity: on ? 1 : 0 }} />
               </button>
             );
           })}
-          <button type="button" className="os-hit" aria-label="Đóng" style={at("x")} onClick={onClose}>
+          <button type="button" className="os-hit" aria-label="Đóng" style={at("x")} onClick={(event) => { feel(event.currentTarget, "soft"); onClose(); }}>
             <img className="os-img" src="/ui/own/x.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
           </button>
 
@@ -190,7 +216,11 @@ export function OwnScreen({
               aria-label={tr("Yêu thích")}
               aria-pressed={fav}
               style={at("slot")}
-              onClick={() => setFav(toggleFavCard(id))}
+              onClick={(event) => {
+                const on = toggleFavCard(id);
+                setFav(on);
+                feel(event.currentTarget, "charm", "pop");
+              }}
             >
               <img className="os-img" src={fav ? "/ui/own/heart-on.webp" : "/ui/own/heart-off.webp"} alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
             </button>
@@ -202,22 +232,40 @@ export function OwnScreen({
               </div>
             </div>
           ) : (
-            <button type="button" className="os-hit" aria-label={tr("Mở khóa")} style={at("slot")} onClick={() => setDialog(true)}>
+            <button
+              type="button"
+              className="os-hit"
+              aria-label={tr("Mở khóa")}
+              style={at("slot")}
+              onClick={(event) => {
+                feel(event.currentTarget, "seal");
+                setDialog(true);
+              }}
+            >
               <img className="os-img" src="/ui/own/lock.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
             </button>
           )}
 
-          <button type="button" className="os-hit" aria-label="Deck" style={at("btn-deck")} onClick={() => (onDeck ? onDeck() : go({ to: "/deck" }))}>
+          <button type="button" className="os-hit" aria-label="Deck" style={at("btn-deck")} onClick={(event) => {
+              feel(event.currentTarget, "select");
+              if (onDeck) onDeck();
+              else go({ to: "/deck" });
+            }}
+          >
             <img className="os-img" src="/ui/own/btn-deck.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
           </button>
           <button
             type="button"
             className="os-hit"
             aria-label="Album"
-            disabled={!album}
+            aria-disabled={!album}
             style={at("btn-album")}
-            onClick={() => {
-              if (!album) return;
+            onClick={(event) => {
+              if (!album) {
+                feel(event.currentTarget, "deny", "deny");
+                return;
+              }
+              feel(event.currentTarget, "select");
               sessionStorage.setItem(ALBUM_GOTO_KEY, album.id);
               go({ to: "/collection" });
               window.dispatchEvent(new Event(ALBUM_GOTO_KEY));
@@ -225,7 +273,16 @@ export function OwnScreen({
           >
             <img className="os-img" src="/ui/own/btn-album.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
           </button>
-          <button type="button" className="os-hit" aria-label={tr("Nhận thêm lá này")} style={at("btn-get")} onClick={() => setGetting(true)}>
+          <button
+            type="button"
+            className="os-hit os-cta"
+            aria-label={tr("Nhận thêm lá này")}
+            style={at("btn-get")}
+            onClick={(event) => {
+              feel(event.currentTarget, "confirm");
+              setGetting(true);
+            }}
+          >
             <img className="os-img" src="/ui/own/btn-get.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
           </button>
 
@@ -236,16 +293,16 @@ export function OwnScreen({
           ) : null}
 
           {dialog ? (
-            <div className="os-dim" onClick={() => setDialog(false)}>
+            <div className="os-dim" onClick={() => { playUi("soft"); setDialog(false); }}>
               <div className="os-dialog" onClick={(event) => event.stopPropagation()}>
                 <img className="os-img" src="/ui/own/dialog.webp" alt="" draggable={false} style={at("dialog")} />
-                <button type="button" className="os-hit" aria-label="Đóng" style={box(634, 787, 64, 64)} onClick={() => setDialog(false)}>
+                <button type="button" className="os-hit" aria-label="Đóng" style={box(634, 787, 64, 64)} onClick={(event) => { feel(event.currentTarget, "soft"); setDialog(false); }}>
                   <img className="os-img" src="/ui/own/x.webp" alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
                 </button>
                 {PRICES.map((row) => {
                   const lack = poor < row.price;
                   return (
-                    <button key={row.key} type="button" className={`os-hit os-buy${lack ? " is-poor" : ""}`} aria-label={`${row.key} ${row.price}`} aria-disabled={lack} style={at(`btn-${row.key}`)}>
+                    <button key={row.key} type="button" className={`os-hit os-buy${lack ? " is-poor" : ""}`} aria-label={`${row.key} ${row.price}`} aria-disabled={lack} style={at(`btn-${row.key}`)} onClick={(event) => feel(event.currentTarget, "gem", lack ? "deny" : "tap")}>
                       <img className="os-img" src={`/ui/own/btn-${row.key}.webp`} alt="" draggable={false} style={{ inset: 0, width: "100%", height: "100%" }} />
                       <span className="os-price" style={{ left: `calc(var(--u) * 409)`, width: `calc(var(--u) * 100)`, top: `calc(var(--u) * 24)`, height: `calc(var(--u) * 40)` }}>
                         <GoldText text={String(row.price)} capU={24} fitU={64} />
