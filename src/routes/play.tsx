@@ -59,6 +59,7 @@ import { CardShow } from "@/components/game/card-show";
 import { ConfirmNote, FoeNote, type NoteHead } from "@/components/game/act-notes";
 import { confirmOn, setConfirmOn } from "@/lib/confirm-ask";
 import { CastShow } from "@/components/game/cast-show";
+import { CardShatter, SHATTER_BURST, SHATTER_MS } from "@/components/game/card-shatter";
 import { HandPeek, type PeekInfo } from "@/components/game/hand-peek";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
@@ -1916,6 +1917,8 @@ function PlayPage() {
   const [hpHold, setHpHold] = useState<Record<string, number>>({});
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const [linger, setLinger] = useState<Linger[]>([]);
+  /** Chủ game 16/11: monsters being shattered (the video effect), kept apart from the slot so a new summon there is not hidden. */
+  const [shatters, setShatters] = useState<Array<{ id: number; side: Side; index: number; mon: FieldMon }>>([]);
   const [laserHp, setLaserHp] = useState<Record<string, number>>({});
   const [burst, setBurst] = useState<Burst | null>(null);
   const [chain, setChain] = useState<ChainOrb[]>([]);
@@ -3715,6 +3718,16 @@ function PlayPage() {
         });
         window.setTimeout(() => {
           const ids = new Set(falls.map((fall) => fall.floater.id));
+          const calm = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+          if (!quiet && !calm) {
+            // Chủ game 16/11: the card shatters (video, its own flash and sound) in place of the old fade and burst.
+            setLinger((current) => current.filter((item) => !ids.has(item.id)));
+            setShatters((current) => [...current, ...falls.map((fall) => ({ id: fall.floater.id, side: fall.side, index: fall.index, mon: fall.mon }))]);
+            setFloaters((current) => [...current, ...falls.map((fall) => ({ ...fall.floater, delay: SHATTER_BURST }))]);
+            playCue("shatter");
+            window.setTimeout(() => setFloaters((current) => current.filter((item) => !ids.has(item.id))), 1500 + Math.round(SHATTER_BURST * 1000));
+            return;
+          }
           setLinger((current) => current.map((item) => (ids.has(item.id) ? { ...item, fading: true } : item)));
           if (!quiet) {
             setFloaters((current) => [...current, ...falls.map((fall) => fall.floater)]);
@@ -7779,6 +7792,15 @@ function PlayPage() {
             />
           );
         })}
+        {shatters.map((item) => {
+          const seat = SLOT_BOX[item.side === viewer ? 0 : 1][item.index];
+          if (!seat) return null;
+          return (
+            <CardShatter key={item.id} box={seat} onDone={() => setShatters((current) => current.filter((row) => row.id !== item.id))}>
+              <BoardSlot mon={item.mon} frozen bare side={item.side} near={item.side === viewer} index={item.index} layout={fieldLayout} hot={false} attack={false} motion={{ pops: [], lunges: [], hits: [] }} allies={[]} onSlot={() => undefined} onUnit={() => undefined} />
+            </CardShatter>
+          );
+        })}
         <div className={`lane${drag?.kind === "unit" || aim?.kind === "attack" ? " is-hot" : ""}`} />
         <div className="floaters">
           {floaters.filter((item) => !item.heal).map((item) => (
@@ -9364,6 +9386,7 @@ function BoardSlot({
   ghosting,
   frozen = false,
   fading = false,
+  bare = false,
   prime = false,
   hpOverride,
   alert = false,
@@ -9411,6 +9434,8 @@ function BoardSlot({
   ghosting?: boolean;
   frozen?: boolean;
   fading?: boolean;
+  /** Drawn to fill its parent, without the slot attributes: the card inside the shatter effect. */
+  bare?: boolean;
   hpOverride?: number;
   prime?: boolean;
   alert?: boolean;
@@ -9437,8 +9462,8 @@ function BoardSlot({
   const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
-  const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };
-  const slotProps = {
+  const place: CSSProperties = bare ? { left: 0, top: 0, width: "100%", height: "100%" } : { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };
+  const slotProps = bare ? {} : {
     "data-slot": `${side}-${index}`,
     "data-owner": side,
     "data-index": index,

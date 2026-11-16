@@ -14564,3 +14564,22 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mz-dpad.is-down { bottom: -0.2rem; left: 50%; margin-left: -0.95rem; }
 .mz-dpad.is-left { left: -0.3rem; top: 50%; margin-top: -0.95rem; }
 .mz-dpad.is-right { right: -0.3rem; top: 50%; margin-top: -0.95rem; }
+
+/* Quái bị hạ (chủ game 16/11): lá vỡ thành mảnh theo video, xem card-shatter.tsx. */
+.shatter { position: absolute; z-index: 14; pointer-events: none; }
+.shatter-mask {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-size: 900% 600%;
+  mask-size: 900% 600%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.shatter-card { position: absolute; transform-origin: 50% 50%; will-change: transform; }
+.shatter .slot { position: absolute; transition: none; animation: none; z-index: auto; }
+.shatter-light {
+  position: absolute;
+  inset: 0;
+  background-size: 900% 600%;
+  background-repeat: no-repeat;
+}

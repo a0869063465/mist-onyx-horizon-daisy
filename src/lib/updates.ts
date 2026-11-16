@@ -1042,6 +1042,7 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi kéo quái vào chặn đòn đánh người chơi: thả lên flow đỏ có lúc không nhận, nay thả lên đòn là chặn.",
   "Quái đánh thường vào người chơi giờ lao thẳng tới viên máu rồi nổ ngay tại viên máu (bỏ tia điện chạy dọc mép sân).",
   "Đòn đánh thường tông vào quái hoặc người chơi có âm va chạm mới.",
+  "Quái bị hạ giờ chói sáng một nhịp rồi vỡ thành mảnh mang hình lá, có loé sáng và âm thanh mới.",
 ];
 
 function remarkOf(notes: string[]) {
