@@ -15,6 +15,10 @@
 2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 bàn B: 3 nút đúng chỗ ảnh 1; hào quang chụp bằng cách ép class (chưa chạy luồng hàng chờ thật), chưa thử giữ mắt bằng cảm ứng, bàn A, điện thoại.
    16/11 (sau): canh cụm 3 nút vào giữa khoảng từ mép ngoài ô lá tới viền vàng ngoài bàn (x tâm cụm ≈ 83,5%; mắt x 76,2–76,4, mũi tên/OK x 88–88,2; CHỈ bàn B; bàn A chủ game bảo trả như cũ (78,6/78,4/91,2)).
 3. Việc sắp làm: chờ chủ game xem; đưa ảnh đồng hồ cát và mắt mở nếu muốn đổi.
+## Khung mô tả lá: tab Sở hữu + bảng Mở khóa theo ảnh linh kiện mới (16/11, đề xuất Sonnet 5.5 high, nhánh `ccr-312058b5-foqipx`, CHƯA LÀM, chờ chủ game duyệt mô hình)
+1. Việc vừa làm: skill `giao-dien` thêm bước 0 (kiểm kích thước ảnh, hỏi kỹ trước khi làm). Đã hỏi xong, chủ game trả lời hết.
+2. Hiện trạng: nhận 6 ảnh linh kiện đặt sẵn 848×1855 (Mở khóa, hộp+tim+Deck/Album/Nhận thêm, tab 4 trạng thái, X+đồng hồ, ô khóa liên kết, Thuê/Mua) + 2 ảnh mới (khung lá co giãn có đường kẻ ngọc, ô đồng hồ cát không chữ) + ảnh phông dấu câu (có ":" và "/"). Chốt: ô sở hữu 3 trạng thái cùng chỗ: chưa có lá = ô bẻ khóa (bấm hiện bảng Mở khóa); đang thuê = đồng hồ cát (bấm không làm gì; thuê chỉ 1 lá); sở hữu vĩnh viễn ≥1 lá = tim (đỏ yêu thích / rỗng); chữ vẽ bằng phông tên deck (thêm ":" "/" cắt từ ảnh phông dấu câu vào `deck-glyphs.json`); che chữ "1/1" in sẵn rồi vẽ lại; khung cắt co giãn (4 góc + giữa), đường kẻ ngọc cắt rời; glow giữ nguyên; Thuê/Mua thiếu sao thì xám; tab cắt rời đường kẻ nền + gạch vàng + chữ tối/vàng để gạch trượt như tab Hộp thư; làm từng tab một, tab Sở hữu trước.
+3. Việc sắp làm: chờ chủ game duyệt mô hình rồi làm tab Sở hữu + bảng Mở khóa, gửi ảnh so với mẫu rồi dừng.
 
 ## Lá rút bị bảng mô tả đè (16/11, Sonnet 5.5, nhánh `ccr-312058b5-foqipx`, CHƯA áp `main`)
 1. Việc vừa làm: lá rút hiện giữa màn (`.card-show`) z-index 2 thấp hơn bảng mô tả ngắn (`.hand-peek` z 75) nên bảng dài đè lên lá; nâng `.card-show` lên 80 (styles.css).
