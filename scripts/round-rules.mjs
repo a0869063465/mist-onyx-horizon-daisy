@@ -133,13 +133,21 @@ test("L1: Trả đòn bằng kỹ năng tốn thêm 1 mana (Hơi thở rồng 1 
   const open = make(3);
   assert.equal(open.counterAsk?.uid, uid(open, 1, 0));
   const declared = D.declareSkill(open, uid(open, 1, 0), uid(open, 0, 0), 0);
-  assert.equal(declared.step, "respond", declared.live);
-  const settled = D.passResponse(declared);
-  assert.equal(settled.players[1].orb, 1, "3 - (1 + 1)");
+  assert.equal(declared.step, "main", "Trả đòn đánh ngay, không qua hàng chờ: " + declared.live);
+  assert.equal(declared.hold, null);
+  assert.equal(declared.players[1].orb, 1, "3 - (1 + 1)");
   const poor = make(1);
   const refused = D.declareSkill(poor, uid(poor, 1, 0), uid(poor, 0, 0), 0);
   assert.equal(refused.players[1].orb, 1, "thiếu mana cho kỹ năng: trả lại phí");
   assert.equal(refused.counterAsk?.uid, uid(poor, 1, 0), "vẫn còn được Trả đòn bằng đánh thường");
+});
+
+test("Trả đòn bằng Hoả cầu: tự nhắm kẻ ra đòn, đánh ngay, đối thủ không phản được", () => {
+  let s = board({ 0: ["hoa-an-thit-nguoi", { atk: 3, hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["rong-phun-hoa-cau", { hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3 })), counterAsk: { uid: uid(s, 1, 0), from: uid(s, 0, 0) }, turn: 1 };
+  const next = D.useSkill(s, uid(s, 1, 0), uid(s, 0, 0), 1);
+  assert.equal(next.hold, null, next.live);
+  assert.ok(at(next, 0, 0).hp < 20, next.live);
 });
 
 test("bỏ lượt rồi đối thủ hành động thì đếm bỏ lượt lại từ đầu", () => {
@@ -389,9 +397,9 @@ test("Trả đòn bằng kỹ năng (Rồng con dùng Hơi thở rồng), xong q
   const open = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
   assert.equal(open.counterAsk?.uid, uid(s, 1, 0));
   const declared = D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0);
-  assert.equal(declared.step, "respond", declared.live);
+  assert.equal(declared.step, "main", "Trả đòn đánh ngay, không qua hàng chờ: " + declared.live);
   assert.equal(declared.counterAsk, null);
-  const done = D.passResponse(declared);
+  const done = declared;
   assert.ok(at(done, 0, 0).hp < 20, "kẻ đánh trúng hơi thở");
   assert.equal(done.counterAsk ?? null, null, "không trả đòn ngược lại");
   assert.equal(done.turn, 1);
@@ -534,7 +542,7 @@ test("skill chậm: kỹ năng diện rộng không dùng để Trả đòn", ()
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 1), true);
   assert.equal(D.slowSkill(open, uid(s, 1, 0), 0), false);
   assert.match(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 1).live, /Kỹ năng chậm/);
-  assert.notEqual(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0).step, "main", "kỹ năng một mục tiêu vẫn trả đòn được");
+  assert.ok(at(D.declareSkill(open, uid(s, 1, 0), uid(s, 0, 0), 0), 0, 0).hp < 20, "kỹ năng một mục tiêu vẫn trả đòn được");
 });
 
 test("Sừng lôi phá chỉ dùng trong vòng tấn công của mình", () => {

@@ -8863,6 +8863,12 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       if (!sword && harmSkill(card.id, chip.skill)) continue;
       // Skill chậm (chủ game 29/10): a skill that lands on several is not for striking back; its button is hidden.
       if (riposte && slowSkill(duel, uid, chip.skill)) continue;
+      // Trả đòn: kỹ năng có mục tiêu đánh ngay vào kẻ ra đòn, không chọn mục tiêu, không qua hàng chờ.
+      if (riposte && chip.aims && duel.counterAsk) {
+        const from = duel.counterAsk.from;
+        y.push({ key: chip.key, label: chip.label, go: () => apply(useSkill(duel, uid, from, chip.skill)) });
+        continue;
+      }
       y.push({ key: chip.key, label: chip.label, go: chip.go, ...(chip.aims ? { slide: aimed(chip.skill) } : {}) });
     }
   }
