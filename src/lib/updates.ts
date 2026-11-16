@@ -1035,6 +1035,7 @@ export const PENDING_NOTES: string[] = [
   "Khiên kiếm có cánh báo bên giữ lượt tấn công đổi sang hiệu ứng và âm thanh mới, hai bên xanh đỏ.",
   "Đánh thường, Tuỳ chọn: nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ hơn 10 giây).",
   "Cụm nút bên phải sân đổi hình mới: mắt đỏ (huỷ), mắt vàng (xem trước), mũi tên chuyển lượt và OK. Con mắt giờ ấn giữ để xem trước, buông tay là tắt. Đẩy lên hàng chờ rồi 2 giây không làm gì thì OK chớp toả hào quang.",
+  "Quái đưa kỹ năng lên hàng chờ thì lá nhấc lên khỏi sân rồi phát quang, có âm thanh mới.",
 ];
 
 function remarkOf(notes: string[]) {

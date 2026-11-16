@@ -5,7 +5,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -843,6 +843,8 @@ function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: numb
 /** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
  *  toward its target, and only then (ROUSE_MS) does the skill's own effect, its sound and its numbers land. */
 const ROUSE_MS = 720;
+/** Chủ game 16/11: a monster whose skill is queued lifts off the board and flares (the clip is 2 s long; it lifts as the light builds, drops once it fades). */
+const FLARE_MS = 1800;
 const ROUSE_CAST = 400;
 
 /** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
@@ -1895,6 +1897,7 @@ function PlayPage() {
   const [lockFlash, setLockFlash] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
+  const [lift, setLift] = useState<string | null>(null);
   const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
@@ -3074,6 +3077,26 @@ function PlayPage() {
           playLine("note", 0.12);
         }
       }
+    }
+    // Chủ game 16/11: quái vừa đưa kỹ năng lên hàng chờ (mình hoặc đối thủ) phát quang một lần, cùng lúc bảng rút gọn của kỹ năng.
+    const flare = (() => {
+      const now = duel.pending;
+      if (quiet || tutorial || prev.mid !== duel.mid || !now) return null;
+      if (now.kind !== "beam" && now.kind !== "gnaw-skill" && !(now.kind === "face" && now.skill)) return null;
+      const uid = now.kind === "face" ? now.attacker : now.caster;
+      const was = prev.pending;
+      if (was && (was.kind === "face" ? was.attacker : was.kind === "beam" || was.kind === "gnaw-skill" ? was.caster : "") === uid) return null;
+      const seat = seatOf(duel, uid);
+      const mon = fieldMon(duel, uid);
+      if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) return null;
+      const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+      return { uid, x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w };
+    })();
+    if (flare) {
+      emitFx({ t: "flare", x: flare.x, y: flare.y, w: flare.w });
+      const { uid } = flare;
+      setLift(uid);
+      window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
@@ -7651,6 +7674,7 @@ function PlayPage() {
               thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
               ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
               rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
+              lifted={Boolean(shown && lift === shown.uid)}
               motion={motion}
               veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
@@ -7715,6 +7739,7 @@ function PlayPage() {
               thrust={shown && thrust?.uid === shown.uid ? (thrust.phase ?? "ram") : false}
               ramAng={shown && thrust?.uid === shown.uid ? thrust.ang : undefined}
               rouseTone={shown && thrust?.uid === shown.uid ? thrust.tone : undefined}
+              lifted={Boolean(shown && lift === shown.uid)}
               motion={motion}
               veil={false}
               allies={you.field}
@@ -8696,6 +8721,7 @@ function PlayPage() {
         <ArenaFx />
         <FireBurst />
         <HealBlast />
+        <FlareBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
@@ -9325,6 +9351,7 @@ function BoardSlot({
   thrust = false,
   ramAng,
   rouseTone,
+  lifted = false,
   motion,
   ghosting,
   frozen = false,
@@ -9368,6 +9395,8 @@ function BoardSlot({
   thrust?: false | "back" | "ram" | "rouse" | "cast";
   /** K2: the light of the skill this monster is rousing for. */
   rouseTone?: string;
+  /** Chủ game 16/11: the card is lifted off the board for a moment while it flares (its skill is queued). */
+  lifted?: boolean;
   /** The way a ramming blow travels on the screen (radians): the speed trail streams the other way. */
   ramAng?: number;
   motion: Motion;
@@ -9397,7 +9426,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };

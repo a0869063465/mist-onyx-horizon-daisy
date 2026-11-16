@@ -14174,6 +14174,17 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   32% { transform: scale(1.18) translateY(-5%); filter: brightness(1.6) drop-shadow(0 0 8px var(--rouse, #62b8ff)); }
   100% { transform: scale(1.12) translateY(-3%); filter: brightness(1.32) drop-shadow(0 0 14px var(--rouse, #62b8ff)) drop-shadow(0 0 4px #ffffff); }
 }
+/* Chủ game 16/11 (theo video Master Duel): lá nhấc lên khỏi bàn lúc ánh sáng dâng, giữ trong lúc phát quang, rồi hạ xuống.
+   Dùng thuộc tính translate/scale riêng để không đụng transform của K2. */
+.slot.is-lift { z-index: 11; }
+.slot.is-lift .field-unit { animation: lift-flare 1800ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes lift-flare {
+  0% { translate: 0 0; scale: 1; filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)); }
+  22% { translate: 0 -7%; scale: 1.14; filter: drop-shadow(0 0.9rem 0.45rem rgba(0, 0, 0, 0.55)); }
+  80% { translate: 0 -7%; scale: 1.14; filter: drop-shadow(0 0.9rem 0.45rem rgba(0, 0, 0, 0.55)); }
+  100% { translate: 0 0; scale: 1; filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)); }
+}
+@media (prefers-reduced-motion: reduce) { .slot.is-lift .field-unit { animation: none; } }
 .slot.is-thrust.is-cast { transition: transform 110ms cubic-bezier(0.6, 0, 0.9, 0.45); }
 .slot.is-thrust.is-cast .field-unit {
   transform: scale(1.12) translateY(-3%);
@@ -14534,3 +14545,12 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .mz-entry-title b { white-space: nowrap; font-size: 2.2rem; letter-spacing: 0.12em; color: #fff3c8; text-shadow: 0 0 0.6rem rgba(var(--tint), 1), 0 0.15rem 0 #4a2a00; }
 .mz-entry-title small { font-size: 1rem; font-weight: 700; color: rgb(var(--tint)); text-shadow: 0 0 0.4rem #000; }
 @keyframes mz-title { 0% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Phát quang khi quái lên hàng chờ (chủ game 16/11): video 600×600, lá ở giữa; tâm lá ở 50% ngang, 44,8% dọc. */
+.flare-blast {
+  position: absolute;
+  z-index: 14;
+  transform: translate(-50%, -44.8%);
+  pointer-events: none;
+  object-fit: contain;
+}
