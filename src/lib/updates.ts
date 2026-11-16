@@ -1036,6 +1036,7 @@ export const PENDING_NOTES: string[] = [
   "Đánh thường, Tuỳ chọn: nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ hơn 10 giây).",
   "Cụm nút bên phải sân đổi hình mới: mắt đỏ (huỷ), mắt vàng (xem trước), mũi tên chuyển lượt và OK. Con mắt giờ ấn giữ để xem trước, buông tay là tắt. Đẩy lên hàng chờ rồi 2 giây không làm gì thì OK chớp toả hào quang.",
   "Trả đòn bằng kỹ năng có mục tiêu (như Hoả cầu): bấm skill là đánh ngay kẻ ra đòn, không chọn mục tiêu, không cần bấm chuyển, không qua hàng chờ nên đối thủ không phản lại được.",
+  "Đánh thường, Tuỳ chọn: sau khi bạn đi xong, nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ thêm khoảng 2 giây).",
 ];
 
 function remarkOf(notes: string[]) {

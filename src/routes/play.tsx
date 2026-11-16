@@ -2091,6 +2091,7 @@ function PlayPage() {
   const riteHold = useRef(0);
   const netRef = useRef<{ code: string; seat: NetSeat } | null>(null);
   const rev = useRef(0);
+  const netWake = useRef<(() => void) | null>(null);
   const pushGen = useRef(0);
   const opening = useRef(false);
   // Chơi lại in Tuỳ chọn (chủ game 22/10): this side's vote goes to the room once per match; the host then opens the
@@ -2448,20 +2449,35 @@ function PlayPage() {
       return boardActor(live) === mine ? 2000 : 800;
     };
     let timer = 0;
+    let busy = false;
     const loop = async () => {
+      busy = true;
       try {
         await tick();
       } catch {
         // A lost ask: the next one tries again.
       }
+      busy = false;
       if (!stop) timer = window.setTimeout(() => void loop(), pace());
+    };
+    // The wait is set after each ask, so a 2 s wait chosen while it was this side's turn stayed on after the move was
+    // sent: the other side's answer was seen up to 2 s late (chủ game 16/11). When the match changes, set the wait again.
+    netWake.current = () => {
+      if (stop || busy) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void loop(), pace());
     };
     void loop();
     return () => {
+      netWake.current = null;
       stop = true;
       window.clearTimeout(timer);
     };
   }, []);
+
+  useEffect(() => {
+    netWake.current?.();
+  }, [duel?.turn, duel?.round, duel?.winner]);
 
   useEffect(() => {
     if (duel?.mode === "test") sessionStorage.setItem(TEST_DUEL_KEY, JSON.stringify(duel));
