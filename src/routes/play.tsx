@@ -795,7 +795,7 @@ function lungedAttackerPoint(duel: Duel, viewer: Side): { x: number; y: number }
  * monster (attacked or blocking), the two cards collide. Hellfire balls and shots keep their own looks.
  */
 type Landing =
-  | { kind: "face"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
+  | { kind: "face"; uid: string; thrust: { x: number; y: number }; ang: number; at: { x: number; y: number }; dir: -1 | 1; path: Array<[number, number]>; orb: { x: number; y: number } }
   | { kind: "clash"; uid: string; thrust: { x: number; y: number }; at: { x: number; y: number }; target: { x: number; y: number }; ang: number };
 
 const HELL_IDS = new Set(["mat-do-tan-pha", "rong-ac-ma"]);
@@ -899,7 +899,8 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
   const at = { x: from.x + (orb.x - from.x) * reach, y: edgeY };
   const edgeX = orb.x < 50 ? BOARD_EDGE : 100 - BOARD_EDGE;
   const path: Array<[number, number]> = [[at.x, at.y], [edgeX, at.y], [edgeX, orb.y], [orb.x, orb.y]];
-  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), at, dir: top ? -1 : 1, path, orb };
+  const faceAng = Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x);
+  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), ang: faceAng, at, dir: top ? -1 : 1, path, orb };
 }
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
@@ -3430,7 +3431,7 @@ function PlayPage() {
         }
       : rawShown;
     // Đòn tông (chủ game 14/11): quái đánh quái lấy đà lùi nhẹ (WIND) rồi lao thẳng vào mục tiêu (RAM), tới nơi mới nổ.
-    const WIND_MS = landing?.kind === "clash" ? 150 : 0;
+    const WIND_MS = landing ? 150 : 0;
     const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
@@ -3441,7 +3442,7 @@ function PlayPage() {
         if (onOrb) orbLate.add(item.id);
         item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
       }
-      if (landing.kind === "clash") {
+      {
         const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
         setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
         window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), WIND_MS);
@@ -3459,7 +3460,7 @@ function PlayPage() {
           }), 500);
         }
       }
-      if (landing.kind === "clash") window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
       window.setTimeout(() => {
         if (landing.kind === "face") fxAt({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
         else fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
