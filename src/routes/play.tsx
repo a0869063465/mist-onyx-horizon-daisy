@@ -39,6 +39,7 @@ import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
 import { markTrial, TRIAL_KEY, TRIAL_MODE } from "@/lib/appraisal";
 import { noteMatch, type MatchGain } from "@/lib/mission-store";
+import { finishMazeBattle, takeMazeBattle, type MazeBattleTicket } from "@/lib/maze-store";
 import { MissionAfter, missionRowsOf } from "@/components/game/mission-after";
 import { EndScene } from "@/components/game/end-scene";
 import { MatchSummary, type SummaryAgain, type SummarySeat } from "@/components/game/match-summary";
@@ -1798,6 +1799,8 @@ function PlayPage() {
   /** Hết trận: whether the end scene is past. */
   const [endStep, setEndStep] = useState<"wait" | "scene" | "missions" | "done">("wait");
   const [gain, setGain] = useState<MatchGain | null>(null);
+  /** Trận mê cung (chủ game 15/11): đánh quái ở /maze, hết trận quay về /maze. */
+  const mazeFight = useRef<MazeBattleTicket | null>(null);
   /** Hết trận (chủ game 22/10): the losing side's HP on screen, where the end scene bursts it. */
   const [scene, setScene] = useState<{ win: boolean; at: { x: number; y: number }; tone: "red" | "blue" } | null>(null);
   const [tutView, setTutView] = useState<TutView | null>(null);
@@ -2317,6 +2320,7 @@ function PlayPage() {
     } catch {
       join = null;
     }
+    const mazeTicket = takeMazeBattle();
     if (!join?.code || (join.seat !== "host" && join.seat !== "guest")) {
       const saved = sessionStorage.getItem("clash-mode");
       if (saved === TUTORIAL_MODE) {
@@ -2340,6 +2344,8 @@ function PlayPage() {
         }
       }
       const mode = saved === "hotseat" || saved === "test" ? saved : "ai";
+      // Vé mê cung chỉ đọc được một lần; React chạy hiệu ứng 2 lần ở bản dev nên giữ vé đã lấy.
+      mazeFight.current = mode === "ai" ? (mazeTicket ?? mazeFight.current) : null;
       const next = mode === "test" ? (loadTestDuel() ?? openingDraw(createDuel(loadDeck(), "test"))) : newMatch(mode);
       if (next.mode === "ai" && next.step === "main" && next.winner === null) {
         warmMatchHistory();
@@ -2360,13 +2366,13 @@ function PlayPage() {
     let voting = false;
     const tick = async () => {
       const wantDeck = join.seat === "host" && (againRef.current || liveDuel.current?.again?.[0] === "want");
-      const room = await pollRoom({ data: { code: join.code, seat: join.seat, ...(wantDeck ? { deck: true } : {}) } });
+      const room = await pollRoom({ data: { code: join.code, seat: join.seat, since: rev.current, ...(wantDeck ? { deck: true } : {}) } });
       if (stop) return;
       if (room.phase === "gone") {
         setWait("Mã không còn. Hãy tạo mã mới.");
         return;
       }
-      if (join.seat === "host" && room.guestDeck && !room.duel && !opening.current) {
+      if (join.seat === "host" && room.guestDeck && room.phase === "wait" && !opening.current) {
         opening.current = true;
         const deck = loadDeck();
         const opened: Duel = { ...createDuel(deck, "net", room.guestDeck), faces: [ownFace(deck), roomFace(room.guestDeck)] };
@@ -2432,11 +2438,28 @@ function PlayPage() {
       // The room keeps the other side's vote; the next poll brings both.
       if (pushed?.ok) voteSent.current = last.mid ?? null;
     };
-    void tick();
-    const timer = window.setInterval(() => void tick(), 280);
+    // Lag Đánh thường (chủ game 15/11): an ask every 280 ms whatever happened to the one before piled the asks up on the
+    // server for over 10 s. Now the next ask waits for the last one: soon (0,8 s) while the other side is to act, slower
+    // (2 s) while this side is.
+    const mine: Side = join.seat === "host" ? 0 : 1;
+    const pace = () => {
+      const live = liveDuel.current;
+      if (!live || live.winner !== null || live.opener) return 800;
+      return boardActor(live) === mine ? 2000 : 800;
+    };
+    let timer = 0;
+    const loop = async () => {
+      try {
+        await tick();
+      } catch {
+        // A lost ask: the next one tries again.
+      }
+      if (!stop) timer = window.setTimeout(() => void loop(), pace());
+    };
+    void loop();
     return () => {
       stop = true;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -2708,6 +2731,8 @@ function PlayPage() {
       });
       sendReplay(duel);
     }
+    // Trận mê cung: ghi thắng/thua để /maze áp khi quay về.
+    if (duel.mode === "ai" && mazeFight.current) finishMazeBattle({ monsterId: mazeFight.current.monsterId, won: duel.winner === mine });
     // Nhiệm vụ (chủ game 05/11): mọi trận Vs Máy, Đánh thường, Tuỳ chọn đã kết thúc (thua, đầu hàng cũng tính) là đã chơi;
     // thắng Đánh thường là thắng PvP. Mỗi trận tính 1 lần (theo mid), chưa hiện bảng sau trận.
     if ((duel.mode === "ai" || duel.mode === "net") && duel.mid && !tutorial && !trial) {
@@ -8644,8 +8669,8 @@ function PlayPage() {
             seconds={matchSeconds}
             you={summarySeat(viewer)}
             foe={summarySeat(viewer === 0 ? 1 : 0)}
-            again={againLook}
-            onContinue={leaveMatch}
+            again={mazeFight.current ? { off: true } : againLook}
+            onContinue={mazeFight.current ? () => void navigate({ to: "/maze" }) : leaveMatch}
             onAgain={playAgain}
           />
         ) : null}

@@ -161,26 +161,32 @@ export const pushDuel = createServerFn({ method: "POST" })
     return { ok: true as const, rev: Number(saved[0].rev) };
   });
 
-/** `deck`: the host also gets the guest's deck after the match has opened (Chơi lại opens the next one). */
+/**
+ * `deck`: the host also gets the guest's deck after the match has opened (Chơi lại opens the next one).
+ * `since`: the rev this phone already has; the match is sent only when the room holds a newer one (lag Đánh thường,
+ * chủ game 15/11: the whole match on every ask piled the asks up). Old rooms are swept when a room opens, not here.
+ */
 export const pollRoom = createServerFn({ method: "POST" })
-  .validator((data: { code: string; seat: NetSeat; deck?: boolean }) => data)
+  .validator((data: { code: string; seat: NetSeat; deck?: boolean; since?: number }) => data)
   .handler(async ({ data }) => {
     const sql = await db();
     const now = Date.now();
-    await sql`delete from clash_rooms where updated_at < ${now - TTL}`;
     const rows = await sql<RoomRow>`
-      select host_deck, guest_deck, duel, rev, updated_at from clash_rooms where code = ${data.code}
+      select host_deck, guest_deck, rev, updated_at,
+        case when rev > ${Number(data.since) || 0} then duel else null end as duel,
+        duel is not null as started
+      from clash_rooms where code = ${data.code}
     `;
-    const room = rows[0];
+    const room = rows[0] as (RoomRow & { started: boolean }) | undefined;
     if (!room) return { phase: "gone" as const, rev: 0, duel: "", guestDeck: null };
     if (now - Number(room.updated_at) > 60_000) {
       await sql`update clash_rooms set updated_at = ${now} where code = ${data.code}`;
     }
     return {
-      phase: room.duel ? ("play" as const) : ("wait" as const),
+      phase: room.started ? ("play" as const) : ("wait" as const),
       rev: Number(room.rev),
       duel: room.duel ?? "",
-      guestDeck: data.seat === "host" && (!room.duel || data.deck) ? readDeck(room.guest_deck) : null,
+      guestDeck: data.seat === "host" && (!room.started || data.deck) ? readDeck(room.guest_deck) : null,
     };
   });
 
@@ -220,6 +226,7 @@ export const seekMatch = createServerFn({ method: "POST" })
       order by joined_at
       limit 5
     `;
+    if (others.length) await sweep();
     for (const other of others) {
       const meHost = Math.random() < 0.5;
       const hostDeck = meHost ? deck : other.deck;
