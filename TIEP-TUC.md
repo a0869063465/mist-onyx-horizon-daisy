@@ -1007,3 +1007,4 @@ Câu hỏi còn mở: vị trí nút vào mê cung; luật bước đi; loại n
 1. Việc vừa làm: chủ game báo vẫn lag nhẹ, chuyển lượt chậm ~2 giây. Nguyên nhân: play.tsx `pace()` chỉ tính lại sau mỗi lần hỏi, nên hẹn 2 giây chọn lúc tới lượt mình vẫn giữ sau khi mình đi xong. Sửa: `netWake` tính lại hẹn giờ khi `turn`/`round`/`winner` đổi.
 2. Hiện trạng: tsc sạch. Chưa thử 2 máy, Vercel/Neon, điện thoại. Chưa làm bước 2 (Opus 5.5 high).
 3. Việc sắp làm: chờ chủ game thử; nếu còn lag thì bước 2.
+   16/11 (sau, Opus 5.5): chủ game báo vẫn chậm 1–3 giây. Nghi chính: máy chủ Vercel không đặt vùng (`vercel.json` không có `regions` = mặc định Mỹ iad1), mỗi nước đi qua Mỹ; db.ts dùng `pg` (TCP) nên máy chủ mới bật phải bắt tay lại với Neon (giải thích lúc chậm hơn 3 giây). Đang hỏi chủ game vùng Neon + vùng hàm Vercel. Đề xuất: đặt cả hai ở Singapore (`regions: ["sin1"]`), đổi `pg` sang trình điều khiển HTTP của Neon, gộp 2 câu hỏi DB của `pushDuel`.
