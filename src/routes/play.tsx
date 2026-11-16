@@ -5059,7 +5059,10 @@ function PlayPage() {
       return;
     }
     const pending = duel.pending;
-    const reactEl = hit?.closest("[data-react]") as HTMLElement | null;
+    // Lớp ánh sáng / lá đang lao có thể nằm đè lên icon đòn: xét mọi lớp tại điểm thả, không chỉ lớp trên cùng.
+    const stack = at ? document.elementsFromPoint(at.x, at.y).filter((node) => !node.closest(".ghost")) : [];
+    const reactEl = (hit?.closest("[data-react]") ?? stack.map((node) => node.closest("[data-react]")).find(Boolean) ?? null) as HTMLElement | null;
+    const beamEl = hit?.closest("[data-beam]") ?? stack.map((node) => node.closest("[data-beam]")).find(Boolean) ?? null;
     if (payload.kind === "unit" && responding && duel.hold?.priority === viewer) {
       const guard = you.field.find((unit) => unit?.uid === payload.uid);
       const aimed =
@@ -5070,7 +5073,7 @@ function PlayPage() {
             : null;
       const kazura = aimed ? you.field.some((unit) => unit?.uid === aimed && unit.cardId === "kazura") : false;
       const ontoHer = Boolean(foeUid && you.field.some((unit) => unit?.uid === foeUid && unit.cardId === "kazura"));
-      const ontoShot = Boolean(reactEl) || Boolean(hit?.closest("[data-beam]")) || (pending && "attacker" in pending && foeUid === pending.attacker);
+      const ontoShot = Boolean(reactEl) || Boolean(beamEl) || (pending && "attacker" in pending && foeUid === pending.attacker);
       if (guard?.cardId === "kizuran" && kazura && (ontoHer || ontoShot)) {
         apply(setCover(duel, guard.uid, true));
         return;
@@ -5115,7 +5118,7 @@ function PlayPage() {
     const intercept = responding && duel.hold?.priority === viewer && (pending?.kind === "face" || coverBack);
     if (intercept && pending) {
       const attackerUid = "attacker" in pending ? pending.attacker : "caster" in pending ? pending.caster : "";
-      const onShot = coverBack || Boolean(hit?.closest("[data-beam], [data-react]")) || (foeUid !== "" && foeUid === attackerUid);
+      const onShot = coverBack || Boolean(beamEl) || Boolean(reactEl) || (foeUid !== "" && foeUid === attackerUid);
       if (onShot) {
         offerBlock(payload.uid);
         return;
