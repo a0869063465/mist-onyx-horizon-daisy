@@ -1035,8 +1035,16 @@ export const PENDING_NOTES: string[] = [
   "Khiên kiếm có cánh báo bên giữ lượt tấn công đổi sang hiệu ứng và âm thanh mới, hai bên xanh đỏ.",
   "Đánh thường, Tuỳ chọn: nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ hơn 10 giây).",
   "Cụm nút bên phải sân đổi hình mới: mắt đỏ (huỷ), mắt vàng (xem trước), mũi tên chuyển lượt và OK. Con mắt giờ ấn giữ để xem trước, buông tay là tắt. Đẩy lên hàng chờ rồi 2 giây không làm gì thì OK chớp toả hào quang.",
+  "Quái đưa kỹ năng lên hàng chờ thì lá nhấc lên khỏi sân rồi phát quang, có âm thanh mới.",
+  "Quái đánh thường vào người chơi giờ lùi lấy đà rồi bay tông tới mép sân, rồi tia điện mới chạy tới viên máu (trước chỉ có tia điện).",
   "Trả đòn bằng kỹ năng có mục tiêu (như Hoả cầu): bấm skill là đánh ngay kẻ ra đòn, không chọn mục tiêu, không cần bấm chuyển, không qua hàng chờ nên đối thủ không phản lại được.",
   "Đánh thường, Tuỳ chọn: sau khi bạn đi xong, nước đi của đối thủ hiện nhanh hơn (trước đây có lúc chờ thêm khoảng 2 giây).",
+  "Đánh thường: lúc chờ tìm trận, rồng chuyển động trên nền xanh đen, không còn khung, mỗi lần chạy ngẫu nhiên một trong 4 đoạn.",
+  "Âm triệu hồi quái thú đổi sang âm mới, ngắn gọn hơn.",
+  "Sửa lỗi kéo quái vào chặn đòn đánh người chơi: thả lên flow đỏ có lúc không nhận, nay thả lên đòn là chặn.",
+  "Quái đánh thường vào người chơi giờ lao thẳng tới viên máu rồi nổ ngay tại viên máu (bỏ tia điện chạy dọc mép sân).",
+  "Đòn đánh thường tông vào quái hoặc người chơi có âm va chạm mới.",
+  "Quái bị hạ giờ chói sáng một nhịp rồi vỡ thành mảnh mang hình lá, có loé sáng và âm thanh mới.",
 ];
 
 function remarkOf(notes: string[]) {

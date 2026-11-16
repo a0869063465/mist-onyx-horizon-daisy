@@ -1,5 +1,15 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Quái bị hạ vỡ thành mảnh (16/11, Sonnet 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
+1. Việc vừa làm: video Grok `41a2d123` (lá hồng chói rồi vỡ) làm hiệu ứng hạ quái, cách A (mảnh mang hình lá thật). `public/fx/vo-mask.webp` + `vo-sang.webp` (9×6 khung, tạo bằng script scratchpad `kill/make.py`, đo độ nở mảnh `SCALES`), `public/sfx/vo-la.mp3`; `card-shatter.tsx` (`CardShatter`, rAF theo khung); play.tsx `shatters` (arm() của `falls`: thay chớp mờ + `burst kill` cũ, giữ đường cũ khi `quiet` hoặc giảm chuyển động), `BoardSlot bare`, cue `shatter`; chói 0,3 s rồi vỡ (cắt đoạn đầu 0,9 s của video), số "Hạ" trễ 0,29 s.
+2. Hiện trạng: nhận 1 video. Chụp Chromium (màn 290×600, screencast chỉ lấy khung 800×600): lá thật vỡ, mảnh nở và mờ 2,25 s, loé lúc vỡ. Chưa nghe âm, chưa thử đối thủ chết bằng phép/skill nhiều mục tiêu, nhiều quái chết cùng lúc, điện thoại thật.
+3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
+
+## Phát quang khi quái lên hàng chờ (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
+1. Việc vừa làm: chủ game đưa 2 video Grok (hình `1c7685dd`, âm `542fe607`) + video Master Duel (chỉ học nhịp: lá nhấc lên khỏi sân rồi phát sáng). `public/fx/phat-quang.webm` (600×600, lá rộng 300 px ở tâm 50% / 44,8%; tách khỏi lá trong video: trừ khung tĩnh, ngoài lá giữ nguyên, trong lá chỉ giữ phần chói trắng làm mờ) + `public/sfx/phat-quang.mp3` (cú đập 0,96 s của video 2 khớp mốc chói 0,71 s của video 1). `FlareBlast` (spectacle.tsx, sự kiện `flare`, cue `flare`) rộng gấp đôi lá; play.tsx `flare` (cạnh `foeAct`): quái vừa đưa skill lên hàng chờ (`pending` beam/gnaw-skill/face có skill, cả mình lẫn đối thủ, không Hướng dẫn, không quái ẩn) → emit + `lift` (`FLARE_MS` 1,8 s) → `.slot.is-lift .field-unit` (translate/scale riêng: nhấc 7%, phồng 1,14, bóng đổ, hạ xuống). Không đụng K2 (rouse).
+2. Hiện trạng: chụp Chromium 412×915: phát quang khớp lá (video bơm tay), đưa skill Hơi thở rồng của Rồng con lên hàng chờ thì có 1 `flare-blast` + 1 `is-lift`. Chưa xác minh bằng mắt đủ 1,8 s (khung chụp 2x chậm), chưa thử đối thủ, 2 máy, điện thoại.
+3. Việc sắp làm: chờ chủ game xem; chỉnh nhịp nhấc/hạ nếu cần.
+
 ## Cụm 3 nút mới (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
 1. Việc vừa làm: thay hình cụm nút bằng 2 ảnh chủ game (cắt nguyên `public/ui/act2/`: eye-red = huỷ, eye-gold = xem trước, arrow = chuyển lượt, ok). Chỉ thay mặt NHẮM của mắt (mở vẫn `OracleOrb` cũ), mũi tên/OK cùng chỗ nút OK cũ (OK thay tick khi `ticking`; đồng hồ cát hết vòng giữ ảnh cũ, chờ chủ game đưa lại). Mắt vàng ấn giữ xem trước, buông tắt (`onPointerDown/Up`). Hàng chờ xong 2 giây không làm gì: `okFlare` → `.is-flare` (2 vòng sapphire + vàng nở ra + mặt nút sáng, lặp tới khi bấm/làm gì khác).
 2. Hiện trạng: nhận 2 ảnh. Chụp Chromium 412×915 bàn B: 3 nút đúng chỗ ảnh 1; hào quang chụp bằng cách ép class (chưa chạy luồng hàng chờ thật), chưa thử giữ mắt bằng cảm ứng, bàn A, điện thoại.

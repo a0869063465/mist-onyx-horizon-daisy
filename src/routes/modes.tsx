@@ -544,6 +544,23 @@ function netDeck(row: DeckEntry): NetDeck {
  * down it, with the mode, "Đang trong hàng chờ đối thủ", the deck's portrait, the time waited and Huỷ. It waits
  * until paired or cancelled. The background is /queue-bg.jpg (the owner's picture, portrait) over the deck's art.
  */
+/** Chủ game 16/11: 4 video loop cùng khung đầu cuối thay ảnh bộ bài lúc chờ trận; hết một đoạn thì bốc ngẫu nhiên đoạn kế. */
+const QUEUE_FACES = 4;
+
+/** Cả 4 đoạn nằm sẵn, đoạn đang chạy hiện, đoạn kế tua về đầu rồi chạy: không dựng lại video nên không giật. */
+function QueueClip({ src, on, k, onEnded }: { src: string; on: boolean; k: number; onEnded: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    if (on) {
+      video.currentTime = 0;
+      void video.play().catch(() => undefined);
+    } else video.pause();
+  }, [on, k]);
+  return <video ref={ref} className={`lor-queue-clip${on ? " is-on" : ""}`} src={src} muted playsInline preload="auto" onEnded={on ? onEnded : undefined} />;
+}
+
 function QueueScreen({
   deck,
   art,
@@ -559,6 +576,7 @@ function QueueScreen({
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
   );
   const [seconds, setSeconds] = useState(0);
+  const [face, setFace] = useState(() => ({ n: 1 + Math.floor(Math.random() * QUEUE_FACES), k: 0 }));
   const [note, setNote] = useState("");
   const done = useRef(false);
   const matched = useRef(onMatched);
@@ -602,12 +620,14 @@ function QueueScreen({
   const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   return (
     <div className="lor-queue" role="dialog" aria-label={tr("Đánh thường")}>
-      {art ? <span className="lor-queue-art" style={{ backgroundImage: `url(${art})` }} /> : null}
-      <span className="lor-queue-bg" />
       <section className="lor-queue-box">
         <h2>{tr("Đánh thường")}</h2>
         <p className="lor-queue-sub">{tr("Đang trong hàng chờ đối thủ")}</p>
-        <span className="lor-queue-face" style={art ? { backgroundImage: `url(${art})` } : undefined} />
+        <span className="lor-queue-face">
+          {Array.from({ length: QUEUE_FACES }, (_, i) => (
+            <QueueClip key={i} src={`/ui/queue/face-${i + 1}.mp4`} on={face.n === i + 1} k={face.k} onEnded={() => setFace((now) => ({ n: 1 + Math.floor(Math.random() * QUEUE_FACES), k: now.k + 1 }))} />
+          ))}
+        </span>
         <p className="lor-queue-time">
           {tr("Đang tìm trận đấu:")} <b>{time}</b>
         </p>

@@ -469,7 +469,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -821,6 +821,39 @@ export function HealBlast() {
           muted
           playsInline
           style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Chủ game 16/11: quái lên hàng chờ phát quang một lần. Video 600×600 có lá ở giữa (lá 300 px rộng, tâm ở 50% / 44,8%). */
+export function FlareBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "flare") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
+      playCue("flare");
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="flare-blast"
+          src={fxUrl("/fx/phat-quang.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w * 2}%` }}
           onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
         />
       ))}
