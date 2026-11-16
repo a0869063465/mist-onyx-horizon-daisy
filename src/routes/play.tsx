@@ -900,7 +900,8 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
   const edgeX = orb.x < 50 ? BOARD_EDGE : 100 - BOARD_EDGE;
   const path: Array<[number, number]> = [[at.x, at.y], [edgeX, at.y], [edgeX, orb.y], [orb.x, orb.y]];
   const faceAng = Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x);
-  return { kind: "face", uid: attacker.uid, thrust: toward(orb, reach * 0.9), ang: faceAng, at, dir: top ? -1 : 1, path, orb };
+  // Chủ game 16/11: đòn đánh người chơi tông thẳng vào viên máu (lá lao tới tận viên), nổ ngay tại viên, không còn tia điện dọc mép.
+  return { kind: "face", uid: attacker.uid, thrust: toward(orb, 1), ang: faceAng, at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path, orb };
 }
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
@@ -3189,7 +3190,7 @@ function PlayPage() {
     const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
     const landing = quiet ? null : attackLanding(prev, duel, viewerNow, hud);
     // Đòn tông có tiếng riêng (lao + va): tiếng trúng đòn cũ không phát chồng lên nó (chủ game 14/11).
-    const rammed = landing?.kind === "clash";
+    const rammed = Boolean(landing);
     if (!quiet && struck && spent !== "phuc-kich" && !curseBoom && !rammed) cueAt("hit");
     const struckMelee = prev.pending?.kind === "melee" ? prev.pending : null;
     const riderHit = Boolean(struck && struckMelee && (fieldMon(prev, struckMelee.attacker)?.cardId === "ky-si-cuoi-rong" || fieldMon(prev, prev.hold?.blocker ?? struckMelee.defender)?.cardId === "ky-si-cuoi-rong"));
@@ -3438,9 +3439,7 @@ function PlayPage() {
     if (landing && shown) {
       for (const item of shown.floaters) {
         if (item.heal) continue;
-        const onOrb = landing.kind === "face" && Math.abs(item.x - landing.orb.x) < 0.5 && Math.abs(item.y - landing.orb.y) < 0.5;
-        if (onOrb) orbLate.add(item.id);
-        item.delay = Math.max(item.delay ?? 0, onOrb ? 0.5 : LAND_MS / 1000);
+        item.delay = Math.max(item.delay ?? 0, LAND_MS / 1000);
       }
       {
         const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
@@ -3457,15 +3456,14 @@ function PlayPage() {
             const rest = { ...now };
             delete rest[key];
             return rest;
-          }), 500);
+          }), LAND_MS + 60);
         }
       }
       window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
       window.setTimeout(() => {
-        if (landing.kind === "face") fxAt({ t: "zap", x: landing.at.x, y: landing.at.y, dir: landing.dir, path: landing.path });
-        else fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
+        fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
       }, LAND_MS);
-      playHit(landing.kind === "face" ? "zap" : "ram", LAND_MS / 1000);
+      playHit("ram", LAND_MS / 1000);
     }
     const fxSourceUid = strikeUid(prev) || strikeUid(duel);
     const fxCard = (fxSourceUid ? (fieldMon(prev, fxSourceUid) ?? fieldMon(duel, fxSourceUid))?.cardId : undefined)

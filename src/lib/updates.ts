@@ -1040,6 +1040,7 @@ export const PENDING_NOTES: string[] = [
   "Trả đòn bằng kỹ năng có mục tiêu (như Hoả cầu): bấm skill là đánh ngay kẻ ra đòn, không chọn mục tiêu, không cần bấm chuyển, không qua hàng chờ nên đối thủ không phản lại được.",
   "Âm triệu hồi quái thú đổi sang âm mới, ngắn gọn hơn.",
   "Sửa lỗi kéo quái vào chặn đòn đánh người chơi: thả lên flow đỏ có lúc không nhận, nay thả lên đòn là chặn.",
+  "Quái đánh thường vào người chơi giờ lao thẳng tới viên máu rồi nổ ngay tại viên máu (bỏ tia điện chạy dọc mép sân).",
 ];
 
 function remarkOf(notes: string[]) {
