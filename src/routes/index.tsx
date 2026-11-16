@@ -196,7 +196,7 @@ function Home() {
         </div>
 
         <div className="lobby-play" style={box(30, 1430, 784, 290)} aria-label={tr("Chơi")}>
-          <button type="button" className="lobby-btn is-locked is-wide" style={{ left: 0, top: `${(0 / 290) * 100}%`, width: `${(373 / 784) * 100}%`, height: `${(270 / 290) * 100}%` }} aria-label="PvE — Phiêu lưu (sắp có)" onPointerDown={event => { playUi("soft"); hit(event.currentTarget, true); }}>
+          <button type="button" className="lobby-btn is-wide" style={{ left: 0, top: `${(0 / 290) * 100}%`, width: `${(373 / 784) * 100}%`, height: `${(270 / 290) * 100}%` }} aria-label="PvE — Phiêu lưu" onPointerDown={event => { playUi("confirm"); hit(event.currentTarget, false); }} onClick={() => void navigate({ to: "/maze" })}>
             <img src="/ui/home/pve.webp" alt="PvE · Phiêu lưu" draggable={false} /><span className="lobby-ring" />
           </button>
           <button type="button" className="lobby-btn is-wide" style={{ left: `${((406 - 30) / 784) * 100}%`, top: `${(-9 / 290) * 100}%`, width: `${(408 / 784) * 100}%`, height: `${(288 / 290) * 100}%` }} aria-label="PvP — Đấu hạng" onPointerDown={event => { playUi("confirm"); hit(event.currentTarget, false); }} onClick={startPvp}>

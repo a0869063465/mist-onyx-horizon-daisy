@@ -132,6 +132,8 @@ export interface MazeState {
   at: CellKey;
   /** Các ô đã đặt chân tới, theo thứ tự lần đầu tới. */
   visited: CellKey[];
+  /** Nhật ký đường đi (ô nhân vật đứng, theo thứ tự thời gian); sương mù lấy các ô mới đi gần nhất. */
+  trail?: CellKey[];
   defeated: string[];
   chestsOpened: string[];
   buffs: Buff[];
@@ -177,6 +179,7 @@ export function createMaze(attempt = 1): MazeState {
     lives: LIVES,
     at: START,
     visited: [START],
+    trail: [START],
     defeated: [],
     chestsOpened: [],
     buffs: [],
@@ -203,10 +206,11 @@ export function bossGateOpen(state: MazeState): boolean {
   return lv(1) && lv(2) && lv(3);
 }
 
+const withTrail = (state: MazeState, k: CellKey) => [...(state.trail ?? state.visited), k].slice(-64);
 const withVisit = (visited: CellKey[], k: CellKey) => (visited.includes(k) ? visited : [...visited, k]);
 
 /** Sau khi đứng ở ô k (không còn đang đánh): nếu là ô cổng chưa im thì hiện khung chọn. */
-function portalPromptAt(state: MazeState, k: CellKey): PortalPrompt | null {
+export function portalPromptAt(state: MazeState, k: CellKey): PortalPrompt | null {
   const portal = PORTALS[k];
   if (!portal || state.portalQuiet === k) return null;
   return { pair: portal.pair, from: k, to: portal.to };
@@ -214,7 +218,7 @@ function portalPromptAt(state: MazeState, k: CellKey): PortalPrompt | null {
 
 function enterCell(state: MazeState, from: CellKey, target: CellKey): MazeResult {
   const events: MazeEvent[] = [];
-  let next: MazeState = { ...state, at: target, visited: withVisit(state.visited, target), portalQuiet: null, prompt: null };
+  let next: MazeState = { ...state, at: target, visited: withVisit(state.visited, target), trail: withTrail(state, target), portalQuiet: null, prompt: null };
   const intoBoss = BOSS_CELLS.includes(target) && !BOSS_CELLS.includes(from);
   if (intoBoss && bossAlive(state)) {
     events.push({ type: "boss_entered", cell: target });
@@ -255,7 +259,7 @@ export function confirmPortal(state: MazeState): MazeResult {
   const prompt = state.prompt;
   if (!prompt) return fail(state, "no-prompt");
   const events: MazeEvent[] = [{ type: "teleport_used", pair_id: prompt.pair, from: prompt.from, to: prompt.to }];
-  const base: MazeState = { ...state, prompt: null, at: prompt.to, visited: withVisit(state.visited, prompt.to), portalQuiet: prompt.to };
+  const base: MazeState = { ...state, prompt: null, at: prompt.to, visited: withVisit(state.visited, prompt.to), trail: withTrail(state, prompt.to), portalQuiet: prompt.to };
   const mon = monsterAt(base, prompt.to);
   if (mon) {
     events.push({ type: "encounter", monster_id: mon.id, level: mon.level, cell: prompt.to });
@@ -302,13 +306,14 @@ export function resolveBattle(state: MazeState, won: boolean): MazeResult {
       next = { ...next, bossUnlocked: true };
       events.push({ type: "boss_unlocked" });
     }
-    next = { ...next, prompt: portalPromptAt(next, next.at) };
+    // Thắng cũng lùi 1 ô về chỗ đứng trước khi vào ô quái.
+    next = { ...next, at: battle.from, trail: withTrail(next, battle.from), portalQuiet: battle.from, prompt: null };
     return done(next, events);
   }
   // Thua: mất 1 mạng, quay về ô đứng trước khi bước vào ô quái.
   const lives = state.lives - 1;
   events.push({ type: "player_died", lives });
-  const back: MazeState = { ...state, pending: null, lives, at: battle.from, portalQuiet: battle.from, prompt: null };
+  const back: MazeState = { ...state, pending: null, lives, at: battle.from, trail: withTrail(state, battle.from), portalQuiet: battle.from, prompt: null };
   if (lives > 0) return done(back, events);
   if (state.attempt < 2) {
     const fresh = resetMaze(state);
@@ -323,7 +328,7 @@ export function resolveBattle(state: MazeState, won: boolean): MazeResult {
 export interface Visibility {
   /** Ô nhân vật đứng và các ô kề không bị tường chắn. */
   view: CellKey[];
-  /** 3 ô đi qua sớm nhất mà không nằm trong tầm nhìn. */
+  /** 3 ô nhân vật mới đi qua gần nhất (trước ô đang đứng). */
   early: CellKey[];
   /** Hợp của hai nhóm trên: các ô được sáng. */
   lit: CellKey[];
@@ -334,10 +339,12 @@ export function visibility(state: MazeState): Visibility {
     const next = neighbor(state.at, dir);
     if (next && !wallBetween(state.at, next)) view.push(next);
   }
-  const early: CellKey[] = [];
-  for (const k of state.visited) {
-    if (early.length >= FOG_MEMORY) break;
-    if (!view.includes(k)) early.push(k);
+  // 4 ô mới đi gần nhất (bỏ ô trùng), trừ ô đang đứng (đã nằm trong tầm nhìn) còn 3 ô theo sau.
+  const recent: CellKey[] = [];
+  for (const k of [...(state.trail ?? state.visited)].reverse()) {
+    if (recent.length > FOG_MEMORY) break;
+    if (!recent.includes(k)) recent.push(k);
   }
-  return { view, early, lit: [...view, ...early] };
+  const early = recent.filter((k) => k !== state.at).slice(0, FOG_MEMORY);
+  return { view, early, lit: [...new Set([...view, ...early])] };
 }

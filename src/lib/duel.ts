@@ -6047,6 +6047,8 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
   if (second) return second;
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
   if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
+  // Trả đòn bằng kỹ năng đánh ngay vào kẻ ra đòn, không qua hàng chờ (chủ game 15/11).
+  if (state.counterAsk?.uid === uid) return useSkill(state, uid, state.counterAsk.from, skillIndex, false, extra);
   const counter = counterStart(state, uid);
   if (counter && "refused" in counter) return counter.refused;
   if (counter) {
@@ -6097,7 +6099,7 @@ function counterStart(state: Duel, uid: string): { state: Duel } | { refused: Du
 
 /** `after` differs from `before` only in what a refusal note writes. */
 function onlyNoted(before: Duel, after: Duel): boolean {
-  const quiet = new Set(["live", "log", "stepNo", "seq", "fx", "tone", "starPing"]);
+  const quiet = new Set(["live", "log", "stepNo", "seq", "fx", "tone", "starPing", "events", "skill"]);
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<keyof Duel>;
   for (const key of keys) {
     if (quiet.has(key as string)) continue;

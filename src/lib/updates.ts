@@ -1037,6 +1037,7 @@ export const PENDING_NOTES: string[] = [
   "Cụm nút bên phải sân đổi hình mới: mắt đỏ (huỷ), mắt vàng (xem trước), mũi tên chuyển lượt và OK. Con mắt giờ ấn giữ để xem trước, buông tay là tắt. Đẩy lên hàng chờ rồi 2 giây không làm gì thì OK chớp toả hào quang.",
   "Quái đưa kỹ năng lên hàng chờ thì lá nhấc lên khỏi sân rồi phát quang, có âm thanh mới.",
   "Quái đánh thường vào người chơi giờ lùi lấy đà rồi bay tông tới mép sân, rồi tia điện mới chạy tới viên máu (trước chỉ có tia điện).",
+  "Trả đòn bằng kỹ năng có mục tiêu (như Hoả cầu): bấm skill là đánh ngay kẻ ra đòn, không chọn mục tiêu, không cần bấm chuyển, không qua hàng chờ nên đối thủ không phản lại được.",
 ];
 
 function remarkOf(notes: string[]) {
