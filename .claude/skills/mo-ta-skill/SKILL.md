@@ -18,9 +18,11 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   Rút gọn: W0 là chính dòng chat của sếp; Claude tự nhận ra sếp chưa hài lòng/đang dạy để đánh W; Q rút từ ví dụ của sếp, chỉ phần liên quan trực tiếp đến cách làm.
 - **W2** (17/11) Chủ game: "C1 đọc kỹ lại đi (đây là giọng không hài lòng đấy), " và () có bao gồm thời điểm kích hoạt không. C2 (tím) trở về trước, vậy là có phải cả dòng không"
   Rút gọn: ĐỌC KỸ ví dụ trước khi hỏi. Điều gì tự suy được từ chính ví dụ (dấu ngoặc kép mở, (màu) đóng bao đúng đoạn nào) thì không hỏi sếp. "Đọc kỹ lại đi" = sếp chưa hài lòng, đúng là hiệu lệnh đánh W.
+- **W3** (17/11) Chủ game: "Bạn thấy (đây là câu cú mình lại phải sửa lại cho bạn) quy tắc trước không. () là 1 màu, tức là trước () có gì. Có duy nhất từ Nội tại: đúng không. Vậy thì làm sao."
+  Rút gọn: lặp lại lỗi W2: mình lại kết thúc bằng câu hỏi mà ví dụ đã trả lời. Trước khi hỏi, thử trả lời bằng chính ví dụ; trả lời được thì KHÔNG hỏi, chỉ nêu kết luận. (màu) là MỘT màu cho mọi thứ đứng trước nó (tính từ ngoặc kép mở, hoặc đầu dòng nếu không có ngoặc). Trước (tím) chỉ có "Nội tại:" nên tím chỉ là "Nội tại:".
 
 ## Bài học cách làm (Q)
-- **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô ngược về đầu dòng: "Nội tại:" tím.
+- **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô MỘT màu cho mọi thứ đứng trước nó tới đầu dòng; trước (tím) chỉ có "Nội tại:" nên chỉ "Nội tại:" tím (không phải cả dòng).
 - **Q1** (Ví dụ 1, sếp xác nhận) Bố cục skill: mỗi nhãn một dòng, thứ tự "Thời điểm kích hoạt:", "Nội dung:", "Nội tại:". Skill không có loại nào thì không ghi nhãn đó.
 - **Q2** (Ví dụ 1) Dấu ":" và chữ nhãn đứng trước nó đều gạch chân (nhãn "Nội tại:" vừa tím vừa gạch chân).
 - **Q3** (Ví dụ 1) Tô màu theo vai trò của cụm: từng thời điểm kích hoạt = vàng; mana = xanh lam gồm cả số ("Tiêu hao 1 mana"); đối tượng đòn đánh = đỏ ("Các đòn đánh thường"); chỉ số kèm số = cam ("1 công"). Từ nối như "tăng vĩnh viễn" không tô.
