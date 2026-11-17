@@ -33,7 +33,7 @@ import { AimMark } from "@/components/game/aim-mark";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { AimPad, type PadBox, type PadDir } from "@/components/game/aim-pad";
 import { TurnLight, type TankGeo, type TankSide, type TitleCue } from "@/components/game/turn-light";
-import { SKILL_BOOK, bookSkill, skillsOf } from "@/lib/skill-book";
+import { SKILL_BOOK, bookSkill, skillCost, skillsOf } from "@/lib/skill-book";
 import { spellKind, spellSpeed, speedTone } from "@/lib/spell-kinds";
 import { skillBrief, spellBrief } from "@/lib/icon-briefs";
 import { createTutorialDuel, TUTORIAL_MODE } from "@/lib/tutorial";
@@ -5419,18 +5419,24 @@ function PlayPage() {
       row.go();
       return;
     }
+    // Chủ game 17/11: thêm dòng "Tiêu hao x mana" (số lấy từ chữ skill, như icon trên bảng quái); không có phí thì không ghi.
+    const cost = skillCost(hit?.text ?? "");
+    if (cost && !lines.some((line) => /tiêu hao/i.test(line))) lines.push(`${tr("Tiêu hao")} ${cost} mana`);
     const kind = hit?.slow ? "slow" : row.kind;
     playUi("select");
     setUseAsk({ head: { name, tone: SKILL_GLOW[kind] ?? SKILL_GLOW.active, icon: row.icon, kind, art, who: card ? tr(card.name) : "" }, lines, text: lines.length ? undefined : hit?.text, go: row.go });
   }
   /** K5: the same for a spell used by its button on the card in hand. */
-  function askSpell(id: string, go: () => void) {
+  function askSpell(id: string, go: () => void, toll = false) {
     const card = spellCard(id);
     if (!duel || !card || !confirmUse || tutorial) {
       go();
       return;
     }
     const lines = spellBrief(duel, id, viewer).split("\n").slice(1).filter(Boolean);
+    // Chủ game 17/11: khung OK/Huỷ ghi thêm "Tiêu hao x mana" (phép có phí +1 thì cộng vào); 0 mana thì không ghi.
+    const cost = card.gems + (toll ? 1 : 0);
+    if (cost > 0) lines.push(`${tr("Tiêu hao")} ${cost} mana`);
     playUi("select");
     setUseAsk({ head: { name: card.name, tone: speedTone(id), art: spellSrc(id), who: tr("Phép") }, lines, text: lines.length ? undefined : card.effect, go });
   }
@@ -8029,7 +8035,7 @@ function PlayPage() {
                             const target = id === "ngan-chan-phong-ngu" ? aimedFoe ?? foeMon?.uid ?? null : id === "co-may-thoi-gian" || id === "giap-co-khi" ? aimedAlly : null;
                             apply(castSpell(duel, index, target));
                           };
-                          askSpell(id, run);
+                          askSpell(id, run, tolled);
                         }}
                       />
                     ) : null}
@@ -8509,13 +8515,6 @@ function PlayPage() {
             onStep={(dir) => {
               const next = stepLit(dir);
               if (next) setAimLit(next);
-            }}
-            onOk={() => {
-              const key = aimLit;
-              setAimLit(null);
-              setPadBox(null);
-              holdNotice("");
-              slideFire.current(key);
             }}
           />
         ) : null}
