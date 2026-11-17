@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Skill `mo-ta-skill` (17/11, Sonnet 5.5 low, nhánh `ccr-fc1ee7ec-gspefp`, ĐÃ DỰNG KHUNG)
+1. Việc vừa làm: tạo `.claude/skills/mo-ta-skill/SKILL.md` (luật cứng lấy từ `docs/luat-la-bai.md` + AGENTS; cách làm; mục ví dụ trống).
+2. Hiện trạng: chưa có ví dụ nào; Claude chỉ soạn NHÁP, không tự sửa chữ lá.
+3. Việc sắp làm: chủ game đưa ví dụ dần, Claude chép nguyên văn vào mục "Ví dụ chủ game đã duyệt" + rút quy tắc.
+
 ## Nhãn UR/SR đè bảng lọc trong Bộ sưu tập (17/11, Sonnet 5.5 medium, nhánh `ccr-fc1ee7ec-gspefp`, CHƯA áp `main`)
 1. Việc vừa làm: gốc = `.cv-tag` z-index 6 nằm trong `.cv-pool` (không là khung xếp lớp riêng) nên đè lên `.cv-drop` (cũng z 6, đứng sau trong DOM). Sửa: `isolation: isolate` cho `.cv-pool` và `.cx .cv-pool` (styles.css) + 1 dòng PENDING_NOTES.
 2. Hiện trạng: nhận 2 ảnh (bảng Sở hữu có nhãn SR đè chữ "Nhận thêm lá này"; bảng lọc bị nhãn UR/SR đè). Chưa chụp Chromium (chưa `npm ci`). Ảnh 1 là bố cục tab Sở hữu CŨ (chữ "Trở lại", Deck/Album); code hiện tại dùng `own-screen.tsx`, nhãn đặt trong `.os-card` nên nhiều khả năng bản chủ game đang xem chưa có bản mới: chưa xác nhận.
