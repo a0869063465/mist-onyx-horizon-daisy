@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Khung mô tả quái: đồng bộ kiểu tab Sở hữu + hàng icon (17/11, CHƯA LÀM, chỉ ghi, làm trên tài khoản khác)
+1. Việc vừa làm: bàn và ghi yêu cầu vào `docs/y-chua-lam.md` mục Z3 (đọc mục đó trước khi làm).
+2. Hiện trạng: chưa nhận ảnh 1:1 của tab Kỹ năng; anh còn câu C2 dở. Không sửa code.
+3. Việc sắp làm: hỏi anh ảnh + C2, rồi Sonnet 5.5 high làm từng tab (Kỹ năng trước), xong dừng gửi ảnh.
+
 ## Lá đối thủ đánh ra bay khỏi tay (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
 1. Việc vừa làm: `FoePlay` (draw-flights.tsx, `DrawFlight.play` "mon"|"spell"): quái đối thủ bay úp từ khay xuống ô rồi lật; phép loé sáng rồi tan trên khay. Phát hiện trong useLayoutEffect `drawPrev` (play.tsx). Trước đó: quái đánh người chơi lùi lấy đà rồi tông tới mép sân; màn tìm trận Đánh thường dùng 4 video rồng ngẫu nhiên nền xanh đen.
 2. Hiện trạng: tsc sạch; chưa chụp Chromium, chưa thử quái ẩn/hoán đổi/dung hợp của đối thủ.
