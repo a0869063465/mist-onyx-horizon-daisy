@@ -61,16 +61,18 @@ function Home() {
   const [selectedMode, setSelectedMode] = useState<LobbyMode>("quick");
   useEffect(() => {
     const saved = localStorage.getItem("clash-play-mode");
-    if (saved === "ai" || saved === "quick" || saved === "custom") setSelectedMode(saved);
+    if (localStorage.getItem("clash-home-ranked") === "1") setSelectedMode("ranked");
+    else if (saved === "ai" || saved === "quick" || saved === "custom") setSelectedMode(saved);
   }, []);
   function selectMode(mode: LobbyMode, el: HTMLElement | null) {
-    hit(el, mode === "ranked");
-    if (mode === "ranked") {
-      playUi("soft");
-      return;
-    }
+    hit(el, false);
     setSelectedMode(mode);
-    localStorage.setItem("clash-play-mode", mode);
+    // Xếp hạng (chủ game 17/11): chỉ giữ hình, bấm Chơi là vào chế độ Test. Không ghi vào `clash-play-mode` để màn Chọn bộ bài không đọc nhầm.
+    if (mode === "ranked") localStorage.setItem("clash-home-ranked", "1");
+    else {
+      localStorage.removeItem("clash-home-ranked");
+      localStorage.setItem("clash-play-mode", mode);
+    }
     playUi("confirm");
     window.setTimeout(() => picker.current?.close(), reduced() ? 0 : 260);
   }
@@ -82,10 +84,18 @@ function Home() {
     const book = loadBook();
     const row = book.decks.find(entry => entry.n === book.active);
     const cards = row ? cardsOf(row) : null;
-    const mode = selectedMode === "ranked" ? "quick" : selectedMode;
-    localStorage.setItem("clash-play-mode", mode);
+    const test = selectedMode === "ranked";
+    const mode = test ? "quick" : selectedMode;
+    if (!test) localStorage.setItem("clash-play-mode", mode);
     if (!cards || deckIssues(cards)) {
       void navigate({ to: "/modes" });
+      return;
+    }
+    if (test) {
+      saveDeck(cards);
+      sessionStorage.setItem("clash-mode", "test");
+      sessionStorage.removeItem("clash-net");
+      void navigate({ to: "/play" });
       return;
     }
     if (mode === "ai" && !loadFriendMatch()) {
