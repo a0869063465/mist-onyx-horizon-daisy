@@ -9877,6 +9877,7 @@ button.watch-back {
 
 /* The cards: four to a row; a card not owned yet is dimmed (no lock: the lock is for Giám định). */
 .cv-pool {
+  isolation: isolate;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -13341,6 +13342,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .cx-tool .cv-tool-count { top: -4%; right: -4%; }
 .cx .cx-drop { left: 6.3%; right: 6.3%; top: 21.2%; max-height: 62%; }
 .cx .cv-pool {
+  isolation: isolate; /* tag z-index stays inside the grid, so it never paints over the filter drop or a sheet (chủ game 17/11) */
   position: absolute; left: 6.1%; width: 87.5%; top: 21.4%; height: 64.2%;
   padding: calc(1 * var(--cqw)) 0 calc(4 * var(--cqw)); border: 0; background: none; box-shadow: none; overflow-y: auto; scrollbar-width: none;
 }

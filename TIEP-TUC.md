@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Nhãn UR/SR đè bảng lọc trong Bộ sưu tập (17/11, Sonnet 5.5 medium, nhánh `ccr-fc1ee7ec-gspefp`, CHƯA áp `main`)
+1. Việc vừa làm: gốc = `.cv-tag` z-index 6 nằm trong `.cv-pool` (không là khung xếp lớp riêng) nên đè lên `.cv-drop` (cũng z 6, đứng sau trong DOM). Sửa: `isolation: isolate` cho `.cv-pool` và `.cx .cv-pool` (styles.css) + 1 dòng PENDING_NOTES.
+2. Hiện trạng: nhận 2 ảnh (bảng Sở hữu có nhãn SR đè chữ "Nhận thêm lá này"; bảng lọc bị nhãn UR/SR đè). Chưa chụp Chromium (chưa `npm ci`). Ảnh 1 là bố cục tab Sở hữu CŨ (chữ "Trở lại", Deck/Album); code hiện tại dùng `own-screen.tsx`, nhãn đặt trong `.os-card` nên nhiều khả năng bản chủ game đang xem chưa có bản mới: chưa xác nhận.
+3. Việc sắp làm: chủ game xem lại sau khi bản mới lên; nếu bảng Sở hữu còn bị đè thì báo kèm ảnh.
+
 ## Phiên mới 17/11 (Haiku 5.5, nhánh `ccr-fc1ee7ec-gspefp`, chỉ đọc + ghi, không sửa code)
 1. Việc vừa làm: đọc CLAUDE.md, AGENTS.project.md, TIEP-TUC.md; kiểm git: nhánh đã gộp `main` (945cac5 nằm trong `main`), cây làm việc sạch.
 2. Hiện trạng: không có ảnh/video mới. Việc iPad 3:4 đã áp `main`, còn chờ chủ game thử trên iPad thật (F1–F4, màn 9:20).
