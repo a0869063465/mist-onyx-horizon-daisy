@@ -13986,7 +13986,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .hp-icons .sk3d.on { opacity: 1; filter: drop-shadow(0 0 0.5rem var(--ring)); }
 /* Lá hiện to giữa sân: lá kéo ra khỏi tay (lựa chọn bên dưới) và lá vừa rút (lật từ lưng, loé sáng). */
 .stage-back { position: absolute; inset: 0; z-index: 58; background: radial-gradient(90% 60% at 50% 47%, rgba(3, 8, 20, 0.5), rgba(0, 0, 0, 0.66)); animation: msheet-fade 160ms ease-out both; }
-.card-show { position: absolute; left: 50%; z-index: 2; width: 40cqw; aspect-ratio: 0.72; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(140, 215, 255, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); will-change: transform; }
+.card-show { position: absolute; left: 50%; z-index: 80; width: 40cqw; aspect-ratio: 0.72; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(140, 215, 255, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); will-change: transform; }
 .card-show-face, .card-show .stage-face { display: block; width: 100%; height: 100%; }
 .card-show .stage-face { padding: 0; border: 0; background: none; }
 .card-show .stage-face > .card { width: 100%; height: 100%; aspect-ratio: auto; }
@@ -14302,7 +14302,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   width: 100%;
   background: linear-gradient(90deg, var(--note), #fff3c4);
   transform-origin: left center;
-  animation: an-clock 4s linear both;
+  animation: an-clock 8s linear both;
 }
 @keyframes an-clock { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
@@ -14563,3 +14563,118 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   background-size: 900% 600%;
   background-repeat: no-repeat;
 }
+/* Tabs of a card's sheet (chủ game 15/11): Kỹ năng (Chức năng for a spell) and Sở hữu. */
+.msheet-tabs { display: flex; gap: 0.35rem; margin: 0 2.4rem 0.6rem 0; }
+.msheet-tabs > button {
+  flex: 1;
+  min-width: 0;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, #232c40, #131a28);
+  color: #b9b09a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.12s, color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.msheet-tabs > button.on {
+  color: #fff4cf;
+  border-color: #e9c46a;
+  background: linear-gradient(180deg, #4a3a14, #2a1f08);
+  box-shadow: 0 0 10px rgba(233, 196, 106, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.msheet-tabs > button:active { transform: scale(0.95); }
+/* Tab Sở hữu, on the right of the card. */
+.own-panel { display: grid; gap: 0.55rem; align-content: start; }
+.own-count { margin: 0; font-size: 1.05rem; font-weight: 800; color: #f2ead6; }
+.own-count b { color: #7be88a; font-size: 1.3rem; }
+.own-title { margin: 0; font-size: 1rem; font-weight: 900; color: #f6d77e; }
+.own-label { margin: 0.2rem 0 0; font-size: 0.8rem; font-weight: 700; color: #aeb7cc; text-transform: uppercase; letter-spacing: 0.05em; }
+.own-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; }
+.own-list li { padding: 0.3rem 0.55rem; border-radius: 0.45rem; background: rgba(255, 255, 255, 0.07); font-weight: 700; }
+.own-list li.is-none { color: #8d93a3; font-weight: 600; }
+.own-btn {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(233, 196, 106, 0.5);
+  border-radius: 0.6rem;
+  background: linear-gradient(180deg, #2c3652, #172033);
+  color: #f6e7b8;
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 2px 0 #05070c, inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.12s, filter 0.15s;
+}
+.own-btn:active { transform: translateY(1px) scale(0.97); filter: brightness(1.2); }
+.own-btn:disabled { opacity: 0.4; }
+.own-btn.is-get { border-color: #5fd57a; color: #c9f7d2; background: linear-gradient(180deg, #1f4a2c, #12301c); }
+.own-btn.is-back { margin-top: 0.3rem; }
+/* Tab Sở hữu theo ảnh linh kiện chủ game 16/11 (public/ui/own). Đơn vị --u = 1 px ảnh thiết kế 848 px. */
+.os-back { z-index: 60; padding: 0; }
+.os-wrap { --wu: calc(min(100vw, 600px) / 848); position: relative; top: calc(var(--wu) * 15); width: min(100vw, 600px); container-type: inline-size; }
+.os { --u: calc(100cqw / 848); position: relative; width: 100%; color: #f4e3b2; user-select: none; -webkit-user-select: none; animation: msheet-pop 260ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+.os-frame { position: absolute; border-style: solid; border-width: calc(var(--u) * 110); border-image: url(/ui/own/frame.webp) 110 fill / calc(var(--u) * 110) stretch; box-sizing: border-box; pointer-events: none; }
+.os-img { position: absolute; max-width: none; display: block; pointer-events: none; }
+.os-card { position: absolute; }
+.os-card .msheet-rarity { left: calc(var(--u) * -20); top: calc(var(--u) * -14); transform: scale(1.28); transform-origin: 0 0; }
+.os-name { position: absolute; pointer-events: none; }
+.os-name-line { position: relative; }
+.os-name .gold-text, .os-count .gold-text, .os-left .gold-text, .os-price .gold-text { left: 0; transform: none; }
+.os-count { position: absolute; display: grid; }
+.os-count .gold-text { left: 50%; transform: translateX(-50%); }
+.os-left, .os-price { position: absolute; display: block; }
+.os-left .gold-text, .os-price .gold-text { left: 50%; transform: translateX(-50%); }
+.os-stars { position: absolute; display: flex; align-items: center; gap: calc(var(--u) * 12); pointer-events: none; }
+.os-stars .tag-star { width: calc(var(--u) * 70); height: calc(var(--u) * 66); flex: none; }
+.os-stars b { font-size: calc(var(--u) * 66); min-width: 0; }
+.os-slot { position: absolute; }
+.os-tab, .os-hit { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, filter 0.12s ease; }
+.os-hit:disabled, .os-hit[aria-disabled="true"]:not(.os-buy) { opacity: 0.45; cursor: default; }
+/* Vòng sáng vàng toả ra khi bấm (không phải vệt quét) */
+.os-ring { position: absolute; inset: -3%; border-radius: calc(var(--u) * 40); border: 2px solid #ffe3a0; box-shadow: 0 0 calc(var(--u) * 14) #ffc760, inset 0 0 calc(var(--u) * 10) #ffc76088; opacity: 0; pointer-events: none; }
+/* Vệt quét chỉ ở nút MỜI bấm (Nhận thêm), chạy chậm, không phải lúc chạm (chủ game 16/11) */
+.os-cta::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background: linear-gradient(105deg, transparent 42%, rgba(255, 243, 200, 0.6) 50%, transparent 58%) 160% 0 / 260% 100% no-repeat; -webkit-mask: url(/ui/own/btn-get.webp) center / 100% 100% no-repeat; mask: url(/ui/own/btn-get.webp) center / 100% 100% no-repeat; animation: os-cta 4.6s ease-in-out 1.2s infinite; }
+@keyframes os-cta { 0% { background-position: 160% 0; } 24% { background-position: -60% 0; } 100% { background-position: -60% 0; } }
+@keyframes os-rise { from { opacity: 0; transform: scale(0.9) translateY(calc(var(--u) * 24)); } }
+@keyframes os-fade { from { opacity: 0; } }
+.os-hit:active:not(:disabled), .os-tab:active { transform: scale(0.965); filter: brightness(1.25); }
+.os-tab-img { position: absolute; max-width: none; pointer-events: none; }
+.os-tab-on { transition: opacity 0.22s ease; }
+.os-bar { transition: left 0.28s cubic-bezier(.3,.7,.3,1), width 0.28s cubic-bezier(.3,.7,.3,1); }
+.os-get { position: absolute; z-index: 3; padding: calc(var(--u) * 24); border-radius: calc(var(--u) * 36); background: #0a1428; overflow: auto; font-size: calc(var(--u) * 26); }
+.os-dim { animation: os-fade 0.2s ease-out both; position: absolute; inset: calc(var(--u) * -400) calc(var(--u) * -200); z-index: 5; background: rgba(2, 5, 12, 0.62); }
+.os-dialog { animation: os-rise 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; position: absolute; left: calc(var(--u) * 200); top: calc(var(--u) * 400); width: calc(var(--u) * 848); height: calc(var(--u) * 975); }
+.os-buy.is-poor { filter: grayscale(1) brightness(0.8); cursor: default; }
+@media (prefers-reduced-motion: reduce) { .os, .os-bar, .os-tab-on, .os-dim, .os-dialog { animation: none; transition: none; } .os-cta::after { display: none; } }
+
+/* Lá trang bị nhập vào quái (chủ game 16/11, theo video; equip-show.tsx): lá phép bay từ tay ra bên phải, lá quái được bốc
+   lên bên trái, lá phép chui vào, lá chớp trắng, nổ tia màu nhóm phép, lá hiện to và số công chạy lên. */
+.equip-layer { position: absolute; inset: 0; z-index: 57; pointer-events: none; --equip: #2fd072; }
+.equip-mon, .equip-gear { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; will-change: transform; }
+.equip-gear { z-index: 2; filter: drop-shadow(0 0 1.6cqw color-mix(in srgb, var(--equip) 80%, transparent)) drop-shadow(0 5px 6px rgb(0 0 0 / 0.6)); }
+.equip-gear > .hand-card { display: block; width: 100%; height: 100%; aspect-ratio: auto; padding: 0; border: 0; background: none; }
+.equip-gear > .hand-card > .card { width: 100%; height: 100%; aspect-ratio: auto; }
+.equip-mon { z-index: 1; }
+.equip-mon > .equip-copy { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; transition: none; transform: none; animation: none; outline: 0; filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.6)); }
+.equip-mon > .equip-copy .field-unit { transition: none; transform: none; animation: none; filter: none; opacity: 1; visibility: visible; }
+.equip-white { position: absolute; inset: 0 1% 1% 1%; z-index: 2; border-radius: 6%; background: #ffffff; box-shadow: 0 0 12cqmin 6cqmin rgb(255 255 255 / 0.85); opacity: 0; container-type: normal; }
+.equip-spark { position: absolute; top: 97%; z-index: 3; width: 22%; aspect-ratio: 1; border-radius: 50%; opacity: 0; background: radial-gradient(circle closest-side, #ffffff 0 38%, rgb(255 255 255 / 0.7) 55%, color-mix(in srgb, var(--equip) 55%, transparent) 78%, transparent 100%); }
+.equip-spark.is-l { left: 14%; }
+.equip-spark.is-r { left: 86%; }
+.equip-burst {
+  position: absolute; left: 50%; top: 50%; z-index: 0; width: 640%; aspect-ratio: 1; opacity: 0;
+  background:
+    radial-gradient(circle closest-side, #ffffff 0 12%, color-mix(in srgb, var(--equip) 70%, #ffffff) 22%, color-mix(in srgb, var(--equip) 55%, transparent) 46%, transparent 78%),
+    repeating-conic-gradient(from 4deg, color-mix(in srgb, var(--equip) 85%, #ffffff) 0deg 3deg, transparent 3deg 13deg, color-mix(in srgb, var(--equip) 60%, transparent) 13deg 15deg, transparent 15deg 29deg);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 20%, rgb(0 0 0 / 0.75) 55%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 20%, rgb(0 0 0 / 0.75) 55%, transparent 100%);
+}
+.equip-halo { position: absolute; inset: -6%; z-index: 0; border-radius: 10%; opacity: 0; box-shadow: 0 0 5cqw 1.6cqw color-mix(in srgb, var(--equip) 70%, transparent), 0 0 1.4cqw 0.4cqw #ffffff; }
+.equip-copy .fstat.is-climbing { filter: brightness(1.5); transform: translate(-50%, -50%) scale(1.25); }
+.equip-copy .fstat.is-landed { animation: equip-landed 0.22s ease-out both; }
+@keyframes equip-landed { 0% { filter: brightness(2.4); } 100% { filter: brightness(1); } }
+
+/* Công phép (chủ game 16/11): quái mà đòn đánh thường gây sát thương phép (đang mang Sừng lôi phá, keyword Đòn đánh phép)
+   thì số công màu tím sáng, đè cả màu xanh buff. */
+.field-unit .fstat.is-atk.is-spellatk, .sheet-unit .fstat.is-atk.is-spellatk { --tier: #b45cff; color: #ecd4ff; filter: none; text-shadow: 0 0.04em 0 #3a1470, 0 0 0.32em #c77dff, 0 0 0.16em #b45cff, 0 0 0.6em #9a3dff; }

@@ -43,11 +43,11 @@ function Head({ head }: { head: NoteHead }) {
 }
 
 /** How long a note of the opponent's action stays when nothing closes it (chủ game 14/11). */
-const NOTE_MS = 4000;
+const NOTE_MS = 8000;
 
 /**
  * K4 (chủ game 14/11): đối thủ vừa dùng một phép hay một kỹ năng: bảng nhỏ ở đầu màn ghi tên và việc nó làm, mỗi kết quả
- * một dòng, chữ tô màu như bảng thông báo. Tắt khi bấm bất cứ đâu, khi có bảng mới (nơi gọi đổi `key`), hoặc sau 4 giây.
+ * một dòng, chữ tô màu như bảng thông báo. Tắt khi bấm bất cứ đâu, khi có bảng mới (nơi gọi đổi `key`), hoặc sau 8 giây.
  */
 export function FoeNote({ head, lines, onClose }: { head: NoteHead; lines: ReactNode[]; onClose: () => void }) {
   const close = useRef(onClose);

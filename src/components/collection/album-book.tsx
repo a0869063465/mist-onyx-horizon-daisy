@@ -338,9 +338,9 @@ export function AlbumBook({
       ) : null}
       {sheet ? (
         monsterCard(sheet) ? (
-          <CardMonsterSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <CardMonsterSheet place="collection" id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         ) : (
-          <SpellSheet id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
+          <SpellSheet place="collection" id={sheet} aside={asideFor(sheet)} asideFor={asideFor} badge={badgeFor(sheet)} badgeFor={badgeFor} onClose={() => setSheet(null)} onSwipe={swipeSheet} />
         )
       ) : null}
       {ask ? <ExchangeAsk id={ask} albums={albums} onCancel={() => setAsk(null)} onConfirm={() => buy(ask)} /> : null}

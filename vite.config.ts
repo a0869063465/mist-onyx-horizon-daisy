@@ -249,6 +249,8 @@ export default defineConfig(({ command, isPreview }) => ({
       ? [
           nitro({
             preset: "vercel",
+            // Lag online (chủ game 16/11): Neon sits in Singapore, so the function runs there too (default is US iad1).
+            vercel: { functions: { regions: ["sin1"] } },
             // Auto-registers server/middleware/* (the PWA install page +
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.

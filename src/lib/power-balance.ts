@@ -428,6 +428,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     wave: 33,
     stats: { hp: { from: 6, to: 4 } },
   },
+  {
+    id: "sung-loi-pha",
+    at: "2026-11-16",
+    wave: 34,
+    tone: "shift",
+    notes: ["Gắn sừng là +3 công ngay", "Bỏ đánh Lan và bảng chọn Lan / +3"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

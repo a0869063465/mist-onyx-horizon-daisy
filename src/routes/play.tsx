@@ -60,6 +60,7 @@ import { ConfirmNote, FoeNote, type NoteHead } from "@/components/game/act-notes
 import { confirmOn, setConfirmOn } from "@/lib/confirm-ask";
 import { CastShow } from "@/components/game/cast-show";
 import { CardShatter, SHATTER_BURST, SHATTER_MS } from "@/components/game/card-shatter";
+import { EquipShow, EQUIP_MS } from "@/components/game/equip-show";
 import { HandPeek, type PeekInfo } from "@/components/game/hand-peek";
 import { brainStep, runAct } from "@/lib/brain";
 import { think } from "@/lib/brain-client";
@@ -135,6 +136,7 @@ import {
   answerSoul,
   soulAskLine,
   armHorn,
+  spellAtk,
   setCover,
   skillManaCost,
   skillFigure,
@@ -955,6 +957,10 @@ function fieldMon(duel: Duel, uid: string) {
   }
   return null;
 }
+
+/** Chủ game 16/11: gắn Sừng lôi phá chạy hiệu ứng nhập lá mới (EquipShow). Hiệu ứng cũ lúc gắn (lá phép to giữa sân, tia sét
+ *  nhỏ, hai tiếng sét, video hồi máu) chỉ ẨN bằng cờ này, không xoá: đặt false là về như cũ. */
+const HORN_EQUIP_SHOW = true;
 
 function hornFx() {
   const fx = spellFxLook("sung-loi-pha");
@@ -1840,6 +1846,7 @@ function PlayPage() {
   const [drawLeave, setDrawLeave] = useState(false);
   /** K3 (chủ game 14/11): a spell used outside the reaction chain shows big in the middle of the board, then fades. */
   const [castShow, setCastShow] = useState<{ key: string; id: string } | null>(null);
+  const [equipShow, setEquipShow] = useState<{ key: string; spellId: string; uid: string; slot: string; from: "hand" | "foe"; atkFrom: number; atkTo: number; fromBlue: boolean } | null>(null);
   // K4: việc đối thủ vừa làm (phép, kỹ năng); K5: bảng xác nhận trước khi mình dùng kỹ năng / phép.
   const [foeNote, setFoeNote] = useState<{ key: string; head: NoteHead; lines: string[] } | null>(null);
   const [useAsk, setUseAsk] = useState<{ head: NoteHead; lines: string[]; text?: string; go: () => void } | null>(null);
@@ -2099,6 +2106,7 @@ function PlayPage() {
   const riteHold = useRef(0);
   const netRef = useRef<{ code: string; seat: NetSeat } | null>(null);
   const rev = useRef(0);
+  const netWake = useRef<(() => void) | null>(null);
   const pushGen = useRef(0);
   const opening = useRef(false);
   // Chơi lại in Tuỳ chọn (chủ game 22/10): this side's vote goes to the room once per match; the host then opens the
@@ -2456,20 +2464,35 @@ function PlayPage() {
       return boardActor(live) === mine ? 2000 : 800;
     };
     let timer = 0;
+    let busy = false;
     const loop = async () => {
+      busy = true;
       try {
         await tick();
       } catch {
         // A lost ask: the next one tries again.
       }
+      busy = false;
       if (!stop) timer = window.setTimeout(() => void loop(), pace());
+    };
+    // The wait is set after each ask, so a 2 s wait chosen while it was this side's turn stayed on after the move was
+    // sent: the other side's answer was seen up to 2 s late (chủ game 16/11). When the match changes, set the wait again.
+    netWake.current = () => {
+      if (stop || busy) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void loop(), pace());
     };
     void loop();
     return () => {
+      netWake.current = null;
       stop = true;
       window.clearTimeout(timer);
     };
   }, []);
+
+  useEffect(() => {
+    netWake.current?.();
+  }, [duel?.turn, duel?.round, duel?.winner]);
 
   useEffect(() => {
     if (duel?.mode === "test") sessionStorage.setItem(TEST_DUEL_KEY, JSON.stringify(duel));
@@ -3055,7 +3078,28 @@ function PlayPage() {
     // K3: phép không vào chuỗi phản ứng (dùng ở bước chính, có tác dụng ngay) cũng hiện to giữa sân; phép vào chuỗi do
     // ReactionLine lo (lá thu vào icon của nó).
     const castNow = (duel.events ?? []).slice((prev.events ?? []).length).find((row) => row.kind === "spell" && row.ok && row.cardId);
-    if (castNow?.cardId && prev.mid === duel.mid && duel.step !== "respond" && prev.step !== "respond") {
+    // Lá trang bị nhập vào quái (chủ game 16/11): thay lá phép to giữa sân cho Sừng lôi phá. Quái đang bị che (Biển sâu, Mũ
+    // ma pháp, quái ẩn) của đối thủ thì giữ cách cũ để không lộ lá.
+    const equipNow = (() => {
+      if (!HORN_EQUIP_SHOW || spent !== "sung-loi-pha" || prev.mid !== duel.mid) return null;
+      for (const side of [0, 1] as const) {
+        for (let index = 0; index < duel.players[side].field.length; index += 1) {
+          const mon = duel.players[side].field[index];
+          const was = prev.players[side].field[index];
+          if (!mon?.horn || !was || was.uid !== mon.uid || was.horn) continue;
+          if (side !== viewerNow && (seaVeiled(duel, viewerNow, mon.uid) || duel.players[side].hats || mon.lurk)) return null;
+          const before = visibleStats(was, prev.players[side].field);
+          const after = visibleStats(mon, duel.players[side].field);
+          return { key: `${duel.fx}:${mon.uid}`, spellId: spent, uid: mon.uid, slot: `${side}-${index}`, from: side === viewerNow ? ("hand" as const) : ("foe" as const), atkFrom: before.atk, atkTo: after.atk, fromBlue: Boolean(before.blueAtk) };
+        }
+      }
+      return null;
+    })();
+    if (equipNow) {
+      setEquipShow(equipNow);
+      playCue("equipMerge");
+    }
+    if (castNow?.cardId && !equipNow && prev.mid === duel.mid && duel.step !== "respond" && prev.step !== "respond") {
       setCastShow({ key: castNow.id, id: castNow.cardId });
       playLine("cast");
     }
@@ -3401,7 +3445,7 @@ function PlayPage() {
       if (!cameFromBeam) cueAt("spellRise");
       cueAt("spellBoom");
     } else if (!quiet && curseBoom) cueAt("swordBoom");
-    else if (!quiet && spent === "sung-loi-pha") {
+    else if (!quiet && spent === "sung-loi-pha" && !equipNow) {
       cueAt("boltPrep");
       cueAt("boltSmall", 0.24);
       window.setTimeout(() => {
@@ -3449,6 +3493,8 @@ function PlayPage() {
           },
         }
       : rawShown;
+    // Nhập lá trang bị: số +N chỉ bay lên khi lá quái đã về ô, và không kèm video hồi máu (tia nổ của hiệu ứng mới thay).
+    if (equipNow && shown) for (const item of shown.floaters) if (item.heal) { item.hush = true; item.delay = EQUIP_MS / 1000; }
     // Đòn tông (chủ game 14/11): quái đánh quái lấy đà lùi nhẹ (WIND) rồi lao thẳng vào mục tiêu (RAM), tới nơi mới nổ.
     const WIND_MS = landing ? 150 : 0;
     const LAND_MS = 110 + WIND_MS;
@@ -8175,6 +8221,25 @@ function PlayPage() {
             {drawPeek && !drawLeave ? <HandPeek info={drawPeek} at={peekAt} onPick={setPeekAt} top={PEEK_TOP} /> : null}
           </div>
         ) : null}
+        {equipShow ? (
+          <>
+            <style>{`[data-uid="${equipShow.uid}"] .field-unit { visibility: hidden; }`}</style>
+            <EquipShow
+              key={equipShow.key}
+              slot={equipShow.slot}
+              from={equipShow.from}
+              tone={speedTone(equipShow.spellId)}
+              atkFrom={equipShow.atkFrom}
+              atkTo={equipShow.atkTo}
+              fromBlue={equipShow.fromBlue}
+              onEnd={() => setEquipShow((now) => (now?.key === equipShow.key ? null : now))}
+            >
+              <span className="hand-card is-spell">
+                <CardFace spellId={equipShow.spellId} hand />
+              </span>
+            </EquipShow>
+          </>
+        ) : null}
         {castShow ? (
           <div className="cast-layer">
             <CastShow key={castShow.key} tone={speedTone(castShow.id)} onEnd={() => setCastShow((now) => (now?.key === castShow.key ? null : now))}>
@@ -9307,7 +9372,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
   const spot = (key: FieldKey, value: number, blue: boolean, cut = false) =>
     value === 0 ? null : (
       <span
-        className={`fstat is-${key}${value < 0 || cut ? " is-red" : blue ? " is-blue" : ""}`}
+        className={`fstat is-${key}${value < 0 || cut ? " is-red" : key === "atk" && spellAtk(mon) ? " is-spellatk" : blue ? " is-blue" : ""}`}
         style={{
           left: `${spotsNow[key].x}%`,
           top: `${spotsNow[key].y}%`,
@@ -9499,7 +9564,7 @@ function BoardSlot({
     const red = !shift && ((typeof value === "number" && value < 0) || cut);
     return (
     <span
-      className={`fstat${key === "def" || key === "mdef" || key === "atk" || key === "hp" ? ` is-${key}` : ""}${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && !shift && blue ? " is-blue" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`}
+      className={`fstat${key === "def" || key === "mdef" || key === "atk" || key === "hp" ? ` is-${key}` : ""}${key === "name" ? " fname" : ""}${key === "count" ? " is-count" : ""}${hold ? " is-hold" : ""}${tokenName && key === "name" ? " is-token" : ""}${red ? " is-red" : ""}${!red && !shift && key === "atk" && spellAtk(mon) ? " is-spellatk" : !red && !shift && blue ? " is-blue" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`}
       style={{
         left: `${layout[key].x}%`,
         top: `${layout[key].y}%`,
