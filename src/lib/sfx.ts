@@ -56,7 +56,7 @@ const CLIPS: Partial<Record<Cue, string>> = {
   eruption: "/sfx/eruption.mp3?v=1",
   // Kiếm cánh + khiên của bên giữ token (video chủ game, 30/10): hai cú, khiên hiện rồi kiếm cắm.
   emblemYou: "/sfx/atk-you.mp3?v=2",
-  equipMerge: "/sfx/equip-merge.mp3",
+  equipMerge: "/sfx/equip-merge.mp3?v=2",
   emblemFoe: "/sfx/atk-foe.mp3?v=2",
   // Bước chân trong mê cung (tách từ video nhân vật chủ game gửi 16/11).
   mazeStep: "/sfx/maze-step.mp3?v=1",
