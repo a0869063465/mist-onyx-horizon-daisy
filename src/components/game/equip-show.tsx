@@ -13,6 +13,8 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 export const EQUIP_SLOW = 2;
 const K = EQUIP_SLOW;
 export const EQUIP_MS = 1600 * K;
+/** Độ nghiêng sang bên: video KHÔNG có (lá chỉ xoay quanh trục đứng), chủ game 17/11 hỏi nên tắt (0). Muốn bật lại thì đặt 1. */
+const TILT = 0;
 const T = { merged: 520 * K, spark: 620 * K, flash: 790 * K, burst: 840 * K, turn: 950 * K, edge: 992 * K, big: 1040 * K, counted: 1230 * K, back: 1400 * K, backEdge: 1448 * K };
 /** Width of the big card, of the board's width; the centre of the two cards on the stage, in parts of the board. */
 const BIG_W = 0.46;
@@ -93,7 +95,7 @@ export function EquipShow({
     // thẳng một mạch; đoạn nghỉ giữ nguyên tư thế.
     const track = (w: number, h: number) => {
       const out: Keyframe[] = [];
-      const tf = (q: Pose) => `translate(${q.x - w / 2}px, ${q.y - h / 2}px) perspective(900px) rotateY(${q.ry ?? 0}deg) rotateZ(${q.rz ?? 0}deg) scale(${q.s})`;
+      const tf = (q: Pose) => `translate(${q.x - w / 2}px, ${q.y - h / 2}px) perspective(900px) rotateY(${q.ry ?? 0}deg) rotateZ(${(q.rz ?? 0) * TILT}deg) scale(${q.s})`;
       const push = (t: number, q: Pose) => out.push({ offset: Math.min(1, t / EQUIP_MS), transform: tf(q), opacity: q.o ?? 1 });
       const tween = (t0: number, t1: number, a: Pose, b: Pose, move = ease.inOut, lift = 0, grow = move, steps = 14) => {
         for (let i = 0; i <= steps; i += 1) {
