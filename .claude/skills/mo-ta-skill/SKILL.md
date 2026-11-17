@@ -22,10 +22,19 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   Rút gọn: lặp lại lỗi W2: mình lại kết thúc bằng câu hỏi mà ví dụ đã trả lời. Trước khi hỏi, thử trả lời bằng chính ví dụ; trả lời được thì KHÔNG hỏi, chỉ nêu kết luận. (màu) là MỘT màu cho mọi thứ đứng trước nó (tính từ ngoặc kép mở, hoặc đầu dòng nếu không có ngoặc). Trước (tím) chỉ có "Nội tại:" nên tím chỉ là "Nội tại:".
 
 ## Bài học cách làm (Q)
-- **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô MỘT màu cho mọi thứ đứng trước nó tới đầu dòng; trước (tím) chỉ có "Nội tại:" nên chỉ "Nội tại:" tím (không phải cả dòng).
+- **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô MỘT màu cho mọi thứ đứng trước nó tới đầu dòng; trước (tím) chỉ có "Nội tại:" nên chỉ "Nội tại:" tím (không phải cả dòng). Ví dụ 2 áp lại đúng cách đọc này: "Tiêu hao 1 mana" (xanh lam), "Trong những lượt này" (cam), "Số cam:" (cam), "Thế thân" (cam) là cả phần đứng trước (màu) tính từ đầu dòng.
 - **Q1** (Ví dụ 1, sếp xác nhận) Bố cục skill: mỗi nhãn một dòng, thứ tự "Thời điểm kích hoạt:", "Nội dung:", "Nội tại:". Skill không có loại nào thì không ghi nhãn đó.
 - **Q2** (Ví dụ 1) Dấu ":" và chữ nhãn đứng trước nó đều gạch chân (nhãn "Nội tại:" vừa tím vừa gạch chân).
-- **Q3** (Ví dụ 1) Tô màu theo vai trò của cụm: từng thời điểm kích hoạt = vàng; mana = xanh lam gồm cả số ("Tiêu hao 1 mana"); đối tượng đòn đánh = đỏ ("Các đòn đánh thường"); chỉ số kèm số = cam ("1 công"). Từ nối như "tăng vĩnh viễn" không tô.
+- **Q3** (Ví dụ 1, mở rộng ở Ví dụ 2) Tô màu theo vai trò của cụm, MỖI LẦN xuất hiện đều tô (thế thân xuất hiện 3 lần đều cam):
+  - vàng: cụm về hành động tấn công/chặn đòn: "Khi phát động tấn công", "Khi lao ra chặn đòn", "khi phát động tấn công", "không thể chặn đòn";
+  - xanh lam: mana, gồm cả số ("Tiêu hao 1 mana");
+  - đỏ: "Các đòn đánh thường", "đòn đánh này", "hứng chịu sát thương";
+  - cam: chỉ số kèm số ("1 công"), số lượt ("4 lượt", "Trong những lượt này", "số lượt ẩn thân còn lại"), "thế thân", "chân thân", "Số cam:";
+  - xanh lá: trạng thái ("ở trạng thái tĩnh");
+  - xám: "sát thương chuẩn";
+  - tím: nhãn "Nội tại:".
+  Từ nối ("tăng vĩnh viễn", "thay cho mình", "bỏ", "ở lại", "không thể bị chặn và sát thương gây ra là", "kỹ năng phát động") không tô.
+- **Q4** (Ví dụ 2) Bố cục đầy đủ của skill chủ động: dòng "Thời điểm kích hoạt:"; dòng mana riêng, không nhãn, cả dòng xanh lam; dòng "Nội dung:" (nhiều dòng thì dòng tiếp không nhãn, bắt đầu thẳng bằng câu); một dòng trống; tiêu đề "Lưu ý" (không dấu ":"); mỗi dòng Lưu ý giải thích một thứ vừa nhắc ("Số cam:" giải thích số cam, "Thế thân" giải thích thế thân). Ở Ví dụ 1 (nội tại) mana nằm sau nhãn "Nội dung:" trong ngoặc kép; chưa phân biệt luật, theo ví dụ gần nhất.
 
 ## Nền dự án (có sẵn từ AGENTS.project.md và docs/luat-la-bai.md, không mang mã W/Q)
 Đọc `docs/luat-la-bai.md` mục 2 (khuôn chữ lá) và mục 5 (quy tắc viết) trước khi viết.
@@ -59,3 +68,19 @@ Dấu : và nội dung trước nó định dạng gạch chân.
 ```
 Mã rút ra: Q0, Q1, Q2, Q3 (đã sửa lại sau W2).
 Lệch với tài liệu cũ: `docs/luat-la-bai.md` mục 9 ghi vàng = thủ, hồng = điều kiện phát động (Thế thân), "tăng" của Đập phá = xanh lá; ví dụ này tô vàng "Khi phát động tấn công"/"Khi lao ra chặn đòn" và không tô "tăng". Chưa sửa tài liệu, chờ lệnh. Chữ hiện trong `catalog.ts` (dòng "Đòn đánh thường chủ động… Tiêu hao 1 mana. Những lần bị động thì không tốn.") khác hẳn và KHÔNG được sửa khi chưa có lệnh.
+
+### Chiến binh lẫn khuất — Ẩn mình (17/11) — Ví dụ 2
+Chữ chủ game viết (nguyên văn, kể cả dấu ngoặc):
+```
+Ẩn mình của chiến binh lẫn khuất
+Thời điểm kích hoạt: kỹ năng phát động "ở trạng thái tĩnh(xanh lá)
+Tiêu hao 1 mana (xanh lam)
+Nội dung: tạo "1 thế thân(cam) thay cho mình, "hứng chịu sát thương(đỏ) thay cho trong "4 lượt(cam). 
+Trong những lượt này(cam), "khi phát động tấn công(vàng), "chân thân(cam) bỏ "thế thân(cam) ở lại, "đòn đánh này(đỏ) không thể bị chặn và sát thương gây ra là "sát thương chuẩn(xám)
+
+Lưu ý
+Số cam:(cam) là "số lượt ẩn thân còn lại(cam)
+Thế thân(cam) thì "không thể chặn đòn(vàng)
+```
+Mã rút ra: áp Q0, Q2; mở rộng Q3; thêm Q4.
+Chữ hiện trong `catalog.ts` (dòng 350: "Ẩn mình: Tiêu hao 1 mana. Tạo ra thế thân… Số cam cho thấy quá trình ẩn thân đang bắt đầu.") khác ví dụ (ví dụ thêm 4 lượt, "ở trạng thái tĩnh", chân thân bỏ thế thân, Lưu ý). KHÔNG sửa khi chưa có lệnh. Giữ nguyên văn "thay cho trong" như sếp viết.
