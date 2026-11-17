@@ -1056,6 +1056,7 @@ export const PENDING_NOTES: string[] = [
   "Hiệu ứng nhập lá của Sừng lôi phá chậm lại gấp đôi và tự nhiên hơn: lá bay theo cung, nhấc lên có đà, đặt xuống có nảy nhẹ.",
   "Chế độ Xếp hạng ở menu tạm thời mở chế độ Test khi bấm Chơi.",
   "Lá đối thủ đánh ra giờ thấy rõ rời tay: quái bay úp xuống ô rồi lật mặt, phép loé sáng rồi tan trên khay bài.",
+  "Sửa lỗi trên iPad và Safari: hiệu ứng hồi máu, phát quang, sóng nước và kiếm cánh hết bị khung nền đen.",
 ];
 
 function remarkOf(notes: string[]) {

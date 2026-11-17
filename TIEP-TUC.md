@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
+1. Việc vừa làm: F3/F4 (hồi máu, phát quang, sóng nước, kiếm cánh xanh/đỏ nền đen) do Safari không phát WebM VP9 alpha. `flatFx()`/`alphaSrc()` trong preload.ts: Safari/iOS dùng bản MP4 nền đen (`public/fx/{hoi-mau,phat-quang,thuy-tru,thuy-no,thuy-xoay,dai-hong-thuy}.mp4`, `public/ui/atk-you|foe.mp4`) + `html[data-flatfx]` trộn `screen` (cuối styles.css); `fxUrl` tự đổi; hộp ma thuật (`box-fx.tsx`) bỏ video trên Safari.
+2. Hiện trạng: nhận 1 video iPad. Chưa thử trên iPad thật (mới kiểm khung mp4 có hình). F1 (kéo quái/mũi tên lệch) và F2 (số máu to giữa màn khi địch triệu hồi) CHƯA tái hiện được trên Chromium 768×1024, chưa sửa; nghi đơn vị `cqw`/`cqmin` trên Safari cũ.
+3. Việc sắp làm: hỏi chủ game đời iPad + iOS, bản web hay app cài; chờ thử F3/F4; rồi tìm F1/F2.
+
 ## Lá đối thủ đánh ra bay khỏi tay (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
 1. Việc vừa làm: `FoePlay` (draw-flights.tsx, `DrawFlight.play` "mon"|"spell"): quái đối thủ bay úp từ khay xuống ô rồi lật; phép loé sáng rồi tan trên khay. Phát hiện trong useLayoutEffect `drawPrev` (play.tsx). Trước đó: quái đánh người chơi lùi lấy đà rồi tông tới mép sân; màn tìm trận Đánh thường dùng 4 video rồng ngẫu nhiên nền xanh đen.
 2. Hiện trạng: tsc sạch; chưa chụp Chromium, chưa thử quái ẩn/hoán đổi/dung hợp của đối thủ.

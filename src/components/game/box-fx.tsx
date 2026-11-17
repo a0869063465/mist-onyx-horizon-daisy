@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { fxUrl } from "@/lib/preload";
+import { flatFx, fxUrl } from "@/lib/preload";
 
 /** Video tủ (chủ game 02/11): khung 640×920 cắt từ video gốc; ô xanh (nay trong suốt) là chỗ lá đứng. */
 export const BOX_VIDEO = "/ui/box-open.webm?v=1";
@@ -44,7 +44,8 @@ export function BoxFx({ host, spots, onDone }: { host: HTMLElement; spots: BoxSp
       copy.style.transform = "none";
       box.appendChild(copy);
     });
-    const safety = window.setTimeout(onDone, 16000);
+    // Safari cannot show the transparent cabinet clip: skip it, the trade itself already happened.
+    const safety = window.setTimeout(onDone, flatFx() ? 500 : 16000);
     return () => window.clearTimeout(safety);
     // Once per trade: the spots are fixed when it starts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,7 +62,7 @@ export function BoxFx({ host, spots, onDone }: { host: HTMLElement; spots: BoxSp
         return (
           <div key={index}>
             <div className="box-fx-ghost" data-ghost style={{ left: spot.rect.left, top: spot.rect.top, width: spot.rect.width, height: spot.rect.height }} />
-            <video
+            {flatFx() ? null : <video
               className="box-fx-video"
               src={fxUrl(BOX_VIDEO)}
               muted
@@ -79,7 +80,7 @@ export function BoxFx({ host, spots, onDone }: { host: HTMLElement; spots: BoxSp
               }}
               onEnded={finish}
               onError={finish}
-            />
+            />}
           </div>
         );
       })}

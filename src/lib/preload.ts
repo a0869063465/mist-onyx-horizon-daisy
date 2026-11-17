@@ -12,8 +12,31 @@ const pictures = new Map<string, HTMLImageElement>();
 const clips = new Map<string, string>();
 const clipJobs = new Map<string, Promise<unknown>>();
 
+/**
+ * Safari (iPad/iPhone/macOS) cannot play VP9-with-alpha WebM: the transparent part shows as black. There the clips play
+ * as black-background MP4 and the CSS blends them with `screen` (html[data-flatfx]).
+ */
+let flatCache: boolean | null = null;
+export function flatFx(): boolean {
+  if (flatCache !== null) return flatCache;
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const safari = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
+  flatCache = ios || safari;
+  if (flatCache && typeof document !== "undefined") document.documentElement.dataset.flatfx = "1";
+  return flatCache;
+}
+
+/** Alpha clips that have a black-background MP4 twin (the box clip has none). */
+const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|phat-quang|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
+export function alphaSrc(src: string): string {
+  return flatFx() && FLAT_TWINS.test(src) ? src.replace(".webm", ".mp4") : src;
+}
+
 export function fxUrl(src: string): string {
-  return clips.get(src) ?? src;
+  const real = alphaSrc(src);
+  return clips.get(real) ?? real;
 }
 
 /** A music track as an in-memory file once fetched (the music player asks with fxUrl); fetches it otherwise. */
@@ -126,7 +149,7 @@ export function gameJobs(): Job[] {
   return [
     font,
     ...[...new Set([...CORE_PICTURES, ...boards])].map((src) => () => picture(src)),
-    ...FX_VIDEOS.map((src) => () => clip(src)),
+    ...FX_VIDEOS.map((src) => alphaSrc(src)).filter((src) => !(flatFx() && src.includes("box-open"))).map((src) => () => clip(src)),
     ...soundJobs(),
     () => clip(FIRST_TRACK),
   ];

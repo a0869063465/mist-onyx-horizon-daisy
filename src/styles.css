@@ -14678,3 +14678,10 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 /* Công phép (chủ game 16/11): quái mà đòn đánh thường gây sát thương phép (đang mang Sừng lôi phá, keyword Đòn đánh phép)
    thì số công màu tím sáng, đè cả màu xanh buff. */
 .field-unit .fstat.is-atk.is-spellatk, .sheet-unit .fstat.is-atk.is-spellatk { --tier: #b45cff; color: #ecd4ff; filter: none; text-shadow: 0 0.04em 0 #3a1470, 0 0 0.32em #c77dff, 0 0 0.16em #b45cff, 0 0 0.6em #9a3dff; }
+
+/* Safari: alpha WebM becomes black-background MP4, so black must vanish by blending. */
+html[data-flatfx] .heal-blast,
+html[data-flatfx] .flare-blast,
+html[data-flatfx] .tide-vid,
+html[data-flatfx] .tide-wave,
+html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
