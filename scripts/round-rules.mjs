@@ -1337,6 +1337,19 @@ test("L2 kiểu 2: đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) 
   });
 });
 
+test("Dung hợp: ra quái N sao cần người chơi từ N-1 sao (rồng ác ma 5 sao cần 4 sao)", () => {
+  let s = board({ 0: ["mat-do-tan-pha", {}] }, {});
+  s = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, reserve: [{ id: "trieu-hoi-ac-ma" }] } : p)) };
+  const need = C.monsterCard("rong-ac-ma").stars - 1;
+  const set = (n) => ({ ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, stars: n } : p)) });
+  const uidA = at(s, 0, 0).uid;
+  const low = D.fuse(set(need - 1), 0, uidA, 1);
+  assert.equal(low.players[0].reserve.length, 1, "thiếu sao: không dung hợp");
+  assert.match(low.live, /Cần/);
+  const ok = D.fuse(set(need), 0, uidA, 1);
+  assert.equal(ok.players[0].reserve.length, 0, "đủ N-1 sao: dung hợp được");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

@@ -1061,6 +1061,7 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi số chỉ số to bất thường giữa màn hình khi đối thủ triệu hồi quái.",
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
+  "Dung hợp chặt hơn: ra quái N sao thì người chơi phải có ít nhất N-1 sao (ví dụ ra quái 5 sao cần 4 sao). Áp cho mọi dung hợp.",
 ];
 
 function remarkOf(notes: string[]) {
