@@ -4,8 +4,8 @@ import { tr } from "@/lib/i18n";
 
 /**
  * Chọn mục tiêu bằng 4 mũi tên (chủ game 10/11): sau khi bấm Tấn công hoặc một skill, trên lá quái đang dùng hiện 4 mũi
- * tên bay từ tâm ra phải, trái, trên, dưới (hướng không có mục tiêu thì ẩn) và một nút tròn OK ở giữa. Mũi tên dời đèn
- * neon sang mục tiêu kế theo hướng đó; OK là chọn mục tiêu đang sáng. Màu theo màu icon của nút đã bấm.
+ * tên bay từ tâm ra phải, trái, trên, dưới (hướng không có mục tiêu thì ẩn) (nút OK ở giữa đã bỏ 17/11, chủ game). Mũi tên dời đèn
+ * neon sang mục tiêu kế theo hướng đó; chọn mục tiêu đang sáng bằng cách bấm vào chính nó. Màu theo màu icon của nút đã bấm.
  */
 export type PadDir = "up" | "down" | "left" | "right";
 
@@ -33,7 +33,7 @@ const ARROW = `M${UP.map(([x, y]) => `${x} ${y}`).join("L")}Z`;
 
 export type PadBox = { left: number; top: number; width: number; height: number };
 
-export function AimPad({ box, kind, open, onStep, onOk }: { box: PadBox; kind: UnitActKind; open: Record<PadDir, boolean>; onStep: (dir: PadDir) => void; onOk: () => void }) {
+export function AimPad({ box, kind, open, onStep }: { box: PadBox; kind: UnitActKind; open: Record<PadDir, boolean>; onStep: (dir: PadDir) => void }) {
   const id = `ap${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const tone = TONES[kind] ?? TONES.active;
   const size = Math.max(22, Math.min(34, box.width * 0.42));
@@ -84,25 +84,6 @@ export function AimPad({ box, kind, open, onStep, onOk }: { box: PadBox; kind: U
           </button>
         ) : null,
       )}
-      <button
-        type="button"
-        className="aim-pad-ok"
-        aria-label="OK"
-        onClick={(event) => {
-          event.stopPropagation();
-          onOk();
-        }}
-      >
-        <svg viewBox="-36 -36 72 72" aria-hidden="true">
-          {defs}
-          <circle r="31" fill={`url(#${id}-fill)`} stroke="#ffffff" strokeWidth="3.2" />
-          <ellipse cy="-13" rx="22" ry="14" fill={`url(#${id}-gloss)`} />
-          <circle r="25" fill="none" stroke="#ffffff" strokeOpacity="0.55" strokeWidth="2" />
-          <text y="8" textAnchor="middle" className="aim-pad-ok-text">
-            OK
-          </text>
-        </svg>
-      </button>
     </div>
   );
 }

@@ -1056,6 +1056,8 @@ export const PENDING_NOTES: string[] = [
   "Hiệu ứng nhập lá của Sừng lôi phá chậm lại gấp đôi và tự nhiên hơn: lá bay theo cung, nhấc lên có đà, đặt xuống có nảy nhẹ.",
   "Chế độ Xếp hạng ở menu tạm thời mở chế độ Test khi bấm Chơi.",
   "Lá đối thủ đánh ra giờ thấy rõ rời tay: quái bay úp xuống ô rồi lật mặt, phép loé sáng rồi tan trên khay bài.",
+  "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
+  "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
 ];
 
 function remarkOf(notes: string[]) {
