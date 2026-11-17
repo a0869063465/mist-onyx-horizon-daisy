@@ -14,9 +14,9 @@ export const EQUIP_SLOW = 2;
 const K = EQUIP_SLOW;
 export const EQUIP_MS = 1600 * K;
 /** Độ nghiêng sang bên: video KHÔNG có (lá chỉ xoay quanh trục đứng), chủ game 17/11 hỏi nên tắt (0). Muốn bật lại thì đặt 1. */
-const TILT = 0;
+const TILT = 1;
 /** Chuyển động "tự nhiên" tôi tự thêm 17/11 (cung bay, ấn xuống, vượt rồi yên, phồng, lơ lửng, bóng, nảy, nằm yên). Chủ game 17/11 bảo ẩn để so với bản gốc theo video (chỉ chậm lại). Đặt true để trả lại. */
-const NATURAL = false;
+const NATURAL = true;
 const T_IN = 210 * EQUIP_SLOW;
 const T = { merged: 520 * K, spark: 620 * K, flash: 790 * K, burst: 840 * K, turn: 950 * K, edge: 992 * K, big: 1040 * K, counted: 1230 * K, back: 1400 * K, backEdge: 1448 * K };
 /** Width of the big card, of the board's width; the centre of the two cards on the stage, in parts of the board. */
