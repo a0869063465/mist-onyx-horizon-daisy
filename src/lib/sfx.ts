@@ -50,7 +50,7 @@ const CLIPS: Partial<Record<Cue, string>> = {
   eruption: "/sfx/eruption.mp3?v=1",
   // Kiếm cánh + khiên của bên giữ token (video chủ game, 30/10): hai cú, khiên hiện rồi kiếm cắm.
   emblemYou: "/sfx/atk-you.mp3?v=2",
-  equipMerge: "/sfx/equip-merge.mp3?v=3",
+  equipMerge: "/sfx/equip-merge.mp3?v=4",
   emblemFoe: "/sfx/atk-foe.mp3?v=2",
 };
 
