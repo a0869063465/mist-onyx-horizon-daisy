@@ -100,3 +100,16 @@ Cảnh: máy dùng Khủng long vãy kiếm đánh người chơi; anh kéo Hi�
 - Đây là báo lỗi (chưa rõ nguyên nhân, chưa kiểm). Luật hiện có: quái hàng trước chặn đòn/skill nhắm người chơi hoặc quái hàng sau; mỗi quái chặn 1 lần/vòng; `keywordBarred` có thể cấm chặn theo keyword (Khủng long vãy kiếm có Debuff); cần xem Hiệp sĩ của vua có đang mệt/bị khống chế, hay skill của Khủng long có bị coi là không chặn được.
 - Việc làm: tái hiện trong trận Test, tìm lý do `assignBlock` từ chối (hoặc giao diện không cho thả), sửa nếu trái luật; chưa chắc thì hỏi anh.
 - Đề xuất: Sonnet 5.5 medium (tìm lỗi), Opus 5.5 high nếu đụng luật chặn.
+
+## Z3. Khung mô tả quái: đồng bộ kiểu tab Sở hữu, hàng icon, chuyển tab (anh bàn 17/11, CHƯA LÀM, làm trên tài khoản khác)
+
+Việc vừa bàn: tab Sở hữu là màn riêng dựng từ ảnh linh kiện (`OwnScreen`, `public/ui/own/`, toạ độ ảnh 848); tab Kỹ năng/Chức năng còn khung `.msheet` cũ nên đổi tab thì cả khung đổi kiểu. Anh chốt hướng làm theo skill `giao-dien` (cắt nguyên ảnh 1:1 anh đặt sẵn, từng tab một, tab Kỹ năng trước; chưa có ảnh 1:1 của tab Kỹ năng/Chức năng/Chỉ số, phải xin anh) và thanh tab + nút X + khung ngoài nằm trong một lớp đứng yên, chỉ nội dung đổi, gạch vàng trượt, để chuyển tab mượt.
+
+Anh đã trả lời / yêu cầu:
+- Quái TỐI ĐA 2 DÒNG icon kỹ năng. Máy quay thưởng đang ra 2 dòng (4 + 3), không phải 3 (anh nhớ bản cũ 1+3+3 đã sửa).
+- C3 (SỬA, anh đã đồng ý): chuỗi icon nối nhau (Máy quay thưởng: Số 7, Kiếm, Khiên, Thập tự, Số 6) hiện bị cắt đôi qua 2 dòng, thanh dọc nối `.sk3d-drop` dài và trông đứt. Phải sửa: đoạn nối trên/dưới ngắn tương đương đoạn nối ngang, không đứt, không xa.
+- C1: nếu được thì dời hàng icon xuống SANG BÊN PHẢI lá (cạnh hình lá), thay vì nằm phía trên. Vùng icon chiều cao cố định cho 2 dòng (quái 1 dòng cũng cùng khung); khung ngoài một cỡ, chỉ phần mô tả cuộn khi dài.
+- C2: anh còn câu trả lời dở (viết "C2 ..."): hỏi lại anh trước khi làm.
+- Icon nội tại phụ (số 6, số 7, chữ thập của Máy quay thưởng, biển lặng của Cơn thịnh nộ của hải vương: chỉ bổ sung ý nghĩa cho skill chính, không phải skill thật): anh từng bảo làm mờ (kế hoạch 15/11, C8). Đã tìm trên MỌI nhánh remote: chỉ có chữ ghi trong `TIEP-TUC.md`/`docs/y-chua-lam.md`, KHÔNG có commit code nào làm mờ hay danh sách skill phụ (chưa ai làm). Anh nói giờ thì ẨN HẲN khỏi hàng icon, chỉ hiện mô tả khi bấm chuyển sang (không xuất hiện như icon). Cần lập danh sách skill phụ cho anh duyệt trước khi ẩn.
+- Chuyển skill: hiện chỉ bấm trong khung skill mới chuyển được; anh muốn bấm Ở ĐÂU CŨNG chuyển được (kể cả đổi tab trong khung).
+- Đề xuất: Sonnet 5.5 high cho giao diện; làm từng bước, xong dừng gửi ảnh; không làm khi chưa có ảnh 1:1 và câu trả lời C2.

@@ -1059,6 +1059,8 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi trên iPad và Safari: hiệu ứng hồi máu, phát quang, sóng nước và kiếm cánh hết bị khung nền đen.",
   "Sửa gốc lỗi trên iPad và Safari cũ: bố cục, kéo quái, mũi tên chọn mục tiêu và số hiện giữa màn nay tính đúng kích thước màn hình.",
   "Sửa lỗi số chỉ số to bất thường giữa màn hình khi đối thủ triệu hồi quái.",
+  "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
+  "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
 ];
 
 function remarkOf(notes: string[]) {

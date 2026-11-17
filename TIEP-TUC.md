@@ -1,11 +1,15 @@
 # Việc đang dở (đọc trước khi làm)
 
-## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
+## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 17/11)
 1. Việc vừa làm: F3/F4 (hồi máu, phát quang, sóng nước, kiếm cánh xanh/đỏ nền đen) do Safari không phát WebM VP9 alpha. `flatFx()`/`alphaSrc()` trong preload.ts: Safari/iOS dùng bản MP4 nền đen (`public/fx/{hoi-mau,phat-quang,thuy-tru,thuy-no,thuy-xoay,dai-hong-thuy}.mp4`, `public/ui/atk-you|foe.mp4`) + `html[data-flatfx]` trộn `screen` (cuối styles.css); `fxUrl` tự đổi; hộp ma thuật (`box-fx.tsx`) bỏ video trên Safari.
 2. Hiện trạng: nhận 1 video iPad. Chưa thử trên iPad thật (mới kiểm khung mp4 có hình). F1 (kéo quái/mũi tên lệch) và F2 (số máu to giữa màn khi địch triệu hồi) CHƯA tái hiện được trên Chromium 768×1024, chưa sửa; nghi đơn vị `cqw`/`cqmin` trên Safari cũ.
    17/11 (sau, chủ game: sửa gốc, không vá lẻ): GỐC F1/F2 = Safari <16 không có đơn vị cqw/cqh/cqmin (và <15.4 không có dvh) mà ~650 chỗ trong styles.css/home-lobby.css/tsx dùng. Đã đổi hết sang `var(--cqw|--cqh|--cqmin|--dvh1)` (:root = đơn vị thật; `@supports not` = vw/vh); `src/lib/cq-polyfill.ts` + `CqFallback` (__root) đo từng container (`--cq-type` cạnh `container-type`) bằng ResizeObserver và đặt biến inline. TSX: `calc(${x} * var(--cqw))`, `cardText` dùng `var(--${unit})`. Thử ép `?cqtest=1` trên Chromium 768×1024 và 412×915: giống bản thường. Luật: viết đơn vị mới thì dùng `var(--cqw)`, KHÔNG viết `cqw` trần.
    17/11 (sau nữa): chủ game báo màn 9:20 cũng hiện số đỏ khổng lồ khi địch triệu hồi (chưa áp `main`). Tái hiện được trên Chromium 412×915: GỐC THẬT của F2 = `FoePlay` (draw-flights.tsx) nhân bản `.field-unit` ra `body`, ngoài ô `.slot` là khung đo cqw nên số chỉ số tính theo cả màn hình. Sửa: khung bay `.draw-flight.is-unit` tự là container (`--cq-type`), kích cỡ lấy từ `offsetWidth/Height` (rect lúc đó bị `summon-pop` co nửa). Luật: nhân bản phần tử dùng cqw ra ngoài thì phải bọc trong container.
 3. Việc sắp làm: chủ game thử lại trên iPad (F1–F4) và màn 9:20; chưa thử máy thật.
+## Khung mô tả quái: đồng bộ kiểu tab Sở hữu + hàng icon (17/11, CHƯA LÀM, chỉ ghi, làm trên tài khoản khác)
+1. Việc vừa làm: bàn và ghi yêu cầu vào `docs/y-chua-lam.md` mục Z3 (đọc mục đó trước khi làm).
+2. Hiện trạng: chưa nhận ảnh 1:1 của tab Kỹ năng; anh còn câu C2 dở. Không sửa code.
+3. Việc sắp làm: hỏi anh ảnh + C2, rồi Sonnet 5.5 high làm từng tab (Kỹ năng trước), xong dừng gửi ảnh.
 
 ## Lá đối thủ đánh ra bay khỏi tay (16/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, CHƯA áp `main`)
 1. Việc vừa làm: `FoePlay` (draw-flights.tsx, `DrawFlight.play` "mon"|"spell"): quái đối thủ bay úp từ khay xuống ô rồi lật; phép loé sáng rồi tan trên khay. Phát hiện trong useLayoutEffect `drawPrev` (play.tsx). Trước đó: quái đánh người chơi lùi lấy đà rồi tông tới mép sân; màn tìm trận Đánh thường dùng 4 video rồng ngẫu nhiên nền xanh đen.
