@@ -16,12 +16,14 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   Rút gọn: quy tắc trong skill này đánh mã, W = luật công ty, Q = cách Claude làm việc, số từ 0.
 - **W1** (17/11) Chủ game: "W0 chính là dòng chat đó luôn, bạn phải tự đánh số thông minh cái bạn nhận ra là mình (sếp của bạn) chưa hài lòng, và dạy bạn. Q là cái mình ví dụ, bạn nhận ra và học được liên quan trực tiếp đến cách làm."
   Rút gọn: W0 là chính dòng chat của sếp; Claude tự nhận ra sếp chưa hài lòng/đang dạy để đánh W; Q rút từ ví dụ của sếp, chỉ phần liên quan trực tiếp đến cách làm.
+- **W2** (17/11) Chủ game: "C1 đọc kỹ lại đi (đây là giọng không hài lòng đấy), " và () có bao gồm thời điểm kích hoạt không. C2 (tím) trở về trước, vậy là có phải cả dòng không"
+  Rút gọn: ĐỌC KỸ ví dụ trước khi hỏi. Điều gì tự suy được từ chính ví dụ (dấu ngoặc kép mở, (màu) đóng bao đúng đoạn nào) thì không hỏi sếp. "Đọc kỹ lại đi" = sếp chưa hài lòng, đúng là hiệu lệnh đánh W.
 
 ## Bài học cách làm (Q)
-- **Q0** (từ Ví dụ 1) Cách ĐỌC ví dụ của sếp: cụm chữ trong dấu ngoặc kép, kèm (màu) ngay sau = cụm đó tô màu đó. Chữ không có (màu) thì không tô.
-- **Q1** (Ví dụ 1) Bố cục skill: mỗi nhãn một dòng, theo thứ tự "Thời điểm kích hoạt:", "Nội dung:", "Nội tại:". Đập phá có đủ ba. Skill thiếu loại nào thì bỏ nhãn đó (CHƯA chắc, hỏi sếp lần đầu gặp).
-- **Q2** (Ví dụ 1) Dấu ":" và chữ nhãn đứng trước nó đều gạch chân.
-- **Q3** (Ví dụ 1) Tô màu theo vai trò của cụm: thời điểm kích hoạt = vàng (mỗi thời điểm một cụm riêng, "Khi phát động tấn công" và "Khi lao ra chặn đòn"); mana = xanh lam, gồm cả số ("Tiêu hao 1 mana"); đối tượng đòn đánh = đỏ ("Các đòn đánh thường"); chỉ số kèm số = cam ("1 công"); nhãn "Nội tại" = tím (CHƯA chắc: nhãn hay cả dòng). Từ nối như "tăng vĩnh viễn" không tô.
+- **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô ngược về đầu dòng: "Nội tại:" tím.
+- **Q1** (Ví dụ 1, sếp xác nhận) Bố cục skill: mỗi nhãn một dòng, thứ tự "Thời điểm kích hoạt:", "Nội dung:", "Nội tại:". Skill không có loại nào thì không ghi nhãn đó.
+- **Q2** (Ví dụ 1) Dấu ":" và chữ nhãn đứng trước nó đều gạch chân (nhãn "Nội tại:" vừa tím vừa gạch chân).
+- **Q3** (Ví dụ 1) Tô màu theo vai trò của cụm: từng thời điểm kích hoạt = vàng; mana = xanh lam gồm cả số ("Tiêu hao 1 mana"); đối tượng đòn đánh = đỏ ("Các đòn đánh thường"); chỉ số kèm số = cam ("1 công"). Từ nối như "tăng vĩnh viễn" không tô.
 
 ## Nền dự án (có sẵn từ AGENTS.project.md và docs/luat-la-bai.md, không mang mã W/Q)
 Đọc `docs/luat-la-bai.md` mục 2 (khuôn chữ lá) và mục 5 (quy tắc viết) trước khi viết.
@@ -53,5 +55,5 @@ Nội dung: "Tiêu hao 1 mana (xanh lam)
 Nội tại: (tím) "Các đòn đánh thường (đỏ) tăng vĩnh viễn "1 công (cam).
 Dấu : và nội dung trước nó định dạng gạch chân.
 ```
-Mã rút ra: Q0, Q1, Q2, Q3.
-Lệch với tài liệu cũ (chờ sếp nói): `docs/luat-la-bai.md` mục 9 ghi vàng = thủ, hồng = điều kiện phát động (Thế thân), "tăng" của Đập phá = xanh lá; ví dụ này dùng vàng cho thời điểm kích hoạt và không tô "tăng". Chữ hiện trong `catalog.ts` (dòng "Đòn đánh thường chủ động… Tiêu hao 1 mana. Những lần bị động thì không tốn.") khác hẳn và KHÔNG được sửa khi chưa có lệnh.
+Mã rút ra: Q0, Q1, Q2, Q3 (đã sửa lại sau W2).
+Lệch với tài liệu cũ: `docs/luat-la-bai.md` mục 9 ghi vàng = thủ, hồng = điều kiện phát động (Thế thân), "tăng" của Đập phá = xanh lá; ví dụ này tô vàng "Khi phát động tấn công"/"Khi lao ra chặn đòn" và không tô "tăng". Chưa sửa tài liệu, chờ lệnh. Chữ hiện trong `catalog.ts` (dòng "Đòn đánh thường chủ động… Tiêu hao 1 mana. Những lần bị động thì không tốn.") khác hẳn và KHÔNG được sửa khi chưa có lệnh.
