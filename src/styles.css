@@ -12236,6 +12236,8 @@ button.watch-back {
   margin: 0;
 }
 .draw-flight > .draw-copy { pointer-events: none; }
+/* Bản sao của lá trên sân nằm ngoài ô `.slot` (khung đo cqw), nên khung bay tự làm khung đo, không thì số chỉ số tính theo cả màn hình. */
+.draw-flight.is-unit { container-type: size; --cq-type: size; }
 .draw-flight > .draw-back {
   z-index: 2;
   display: block;

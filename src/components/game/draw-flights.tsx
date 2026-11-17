@@ -232,13 +232,18 @@ function FoePlay({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) 
     copy.classList.add("draw-copy");
     el.prepend(copy);
     unit.style.visibility = "hidden";
-    el.style.left = `${slot.left}px`;
-    el.style.top = `${slot.top}px`;
-    el.style.width = `${slot.width}px`;
-    el.style.height = `${slot.height}px`;
-    const dx = from.left + from.width / 2 - (slot.left + slot.width / 2);
-    const dy = from.top + from.height / 2 - (slot.top + slot.height / 2);
-    const s0 = from.width / slot.width;
+    // Size = the slot's real layout size (the rect can be caught mid summon-pop, half grown); the centre comes from the rect.
+    const w = unit.offsetWidth || slot.width;
+    const h = unit.offsetHeight || slot.height;
+    const cx = slot.left + slot.width / 2;
+    const cy = slot.top + slot.height / 2;
+    el.style.left = `${cx - w / 2}px`;
+    el.style.top = `${cy - h / 2}px`;
+    el.style.width = `${w}px`;
+    el.style.height = `${h}px`;
+    const dx = from.left + from.width / 2 - cx;
+    const dy = from.top + from.height / 2 - cy;
+    const s0 = from.width / w;
     const timing = { duration: 640, delay, fill: "both" as const };
     const fly = el.animate(
       [
@@ -282,7 +287,7 @@ function FoePlay({ flight, onDone }: { flight: DrawFlight; onDone: (id: number) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <div ref={ref} className={`draw-flight is-foe is-play${flight.play === "spell" ? " is-spell" : ""}`}>
+    <div ref={ref} className={`draw-flight is-foe is-play${flight.play === "spell" ? " is-spell" : " is-unit"}`}>
       <img className="draw-back" src="/ui/card-back-foe.webp" alt="" draggable={false} />
     </div>
   );
