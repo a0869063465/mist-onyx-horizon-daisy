@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Phiên mới 17/11 (Haiku 5.5, nhánh `ccr-fc1ee7ec-gspefp`, chỉ đọc + ghi, không sửa code)
+1. Việc vừa làm: đọc CLAUDE.md, AGENTS.project.md, TIEP-TUC.md; kiểm git: nhánh đã gộp `main` (945cac5 nằm trong `main`), cây làm việc sạch.
+2. Hiện trạng: không có ảnh/video mới. Việc iPad 3:4 đã áp `main`, còn chờ chủ game thử trên iPad thật (F1–F4, màn 9:20).
+3. Việc sắp làm: chờ chủ game báo kết quả thử iPad. Khi có việc code: Haiku 5.5 KHÔNG nằm trong mô hình đã chốt, cần chủ game chọn mô hình + nỗ lực trước khi làm.
+
 ## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 17/11)
 1. Việc vừa làm: F3/F4 (hồi máu, phát quang, sóng nước, kiếm cánh xanh/đỏ nền đen) do Safari không phát WebM VP9 alpha. `flatFx()`/`alphaSrc()` trong preload.ts: Safari/iOS dùng bản MP4 nền đen (`public/fx/{hoi-mau,phat-quang,thuy-tru,thuy-no,thuy-xoay,dai-hong-thuy}.mp4`, `public/ui/atk-you|foe.mp4`) + `html[data-flatfx]` trộn `screen` (cuối styles.css); `fxUrl` tự đổi; hộp ma thuật (`box-fx.tsx`) bỏ video trên Safari.
 2. Hiện trạng: nhận 1 video iPad. Chưa thử trên iPad thật (mới kiểm khung mp4 có hình). F1 (kéo quái/mũi tên lệch) và F2 (số máu to giữa màn khi địch triệu hồi) CHƯA tái hiện được trên Chromium 768×1024, chưa sửa; nghi đơn vị `cqw`/`cqmin` trên Safari cũ.
