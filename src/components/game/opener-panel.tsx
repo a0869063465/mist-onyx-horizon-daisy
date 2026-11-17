@@ -126,7 +126,7 @@ export function OpenerPanel({
           const marked = phase === "pick" && picked.includes(index);
           const motion = swapped && (phase === "out" || phase === "in") ? ` is-${phase}` : "";
           return (
-            <div key={index} className={`op-slot${marked ? " is-marked" : ""}${motion}`} style={{ "--to-pile": `${PILE_X - (19 + index * 31)}cqw` } as CSSProperties}>
+            <div key={index} className={`op-slot${marked ? " is-marked" : ""}${motion}`} style={{ "--to-pile": `calc(${PILE_X - (19 + index * 31)} * var(--cqw))` } as CSSProperties}>
               <button type="button" className="op-card" disabled={phase !== "pick" || !card.can} onClick={() => toggle(index)}>
                 <span className="op-flip">
                   <span className="op-front">{card.face}</span>

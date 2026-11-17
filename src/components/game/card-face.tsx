@@ -10,7 +10,7 @@ const NAME_FLOOR = 0.58;
 
 /** Card text size from a layout number, scaled by the --card-text factor in styles.css. */
 export function cardText(size: number, unit = "cqw") {
-  return `calc(${size}${unit} * var(--card-text, 1))`;
+  return `calc(${size} * var(--${unit}) * var(--card-text, 1))`;
 }
 
 function FittedName({ spot, value }: { spot: Spot; value: string }) {

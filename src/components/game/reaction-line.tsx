@@ -574,12 +574,12 @@ export function ReactionLine({
               {
                 left: `${spot.x}%`,
                 top: `${spot.y}%`,
-                width: `${ICON}cqw`,
-                height: `${ICON}cqw`,
+                width: `calc(${ICON} * var(--cqw))`,
+                height: `calc(${ICON} * var(--cqw))`,
                 "--late": `${lateOf(orb).toFixed(2)}s`,
                 "--ring": `var(--flow-${orb.tone})`,
                 "--appear": `${spot.appear.toFixed(2)}s`,
-                ...(hand ? { "--hx": `${(hand.x - spot.x).toFixed(2)}cqw`, "--hy": `${(hand.y - spot.y).toFixed(2)}cqh` } : {}),
+                ...(hand ? { "--hx": `calc(${(hand.x - spot.x).toFixed(2)} * var(--cqw))`, "--hy": `calc(${(hand.y - spot.y).toFixed(2)} * var(--cqh))` } : {}),
               } as CSSProperties
             }
             onPointerDown={(event) => event.stopPropagation()}
@@ -628,7 +628,7 @@ export function ReactionLine({
             {
               left: `${showLeft(showAt.x)}%`,
               top: `${SHOW_Y}%`,
-              width: `${SHOW_W}cqw`,
+              width: `calc(${SHOW_W} * var(--cqw))`,
               "--from": showLeft(showAt.x) === SHOW_LEFT ? "-30%" : "30%",
               "--dx": showAt.x - (showLeft(showAt.x) + SHOW_W / 2),
               "--dy": showAt.y - SHOW_Y,

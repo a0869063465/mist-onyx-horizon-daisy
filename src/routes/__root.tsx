@@ -5,6 +5,7 @@ import { SoundTap } from "@/components/sound-tap";
 import { MenuMusic } from "@/components/menu-music";
 import { OfflineApp } from "@/components/offline-app";
 import { FullScreen } from "@/components/full-screen";
+import { CqFallback } from "@/components/cq-fallback";
 import { WebGuard } from "@/components/web-guard";
 import { FriendPulse } from "@/components/friend-pulse";
 import { CopySize } from "@/components/game/copy-text";
@@ -48,6 +49,7 @@ export const Route = createRootRoute({
         <MenuMusic />
         <OfflineApp />
         <FullScreen />
+        <CqFallback />
         <WebGuard />
         <CopySize />
         <AuthProvider>

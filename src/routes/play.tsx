@@ -6028,7 +6028,7 @@ function PlayPage() {
   const fanStyle = (at: number): CSSProperties => {
     const mid = (you.reserve.length + you.hand.length - 1) / 2;
     const t = mid > 0 ? (at - mid) / mid : 0;
-    return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)}cqw` } as CSSProperties;
+    return { "--rot": `${(t * Math.min(9, 3.2 * mid)).toFixed(2)}deg`, "--drop": `calc(${(t * t * Math.min(2.2, 0.7 * mid)).toFixed(2)} * var(--cqw))` } as CSSProperties;
   };
   // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
   const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
@@ -6728,7 +6728,7 @@ function PlayPage() {
             <div className={`foe-fan${faces ? " is-open" : ""}`} aria-label={`${count} ${tr("lá trên tay")}`} style={{ left: `${at.x}%`, top: `${at.y - rh(FOE_FAN.lift)}%` }}>
               {Array.from({ length: shown }, (_, i) => {
                 const k = i - (shown - 1) / 2;
-                return <img key={i} src={faces?.[i] || "/ui/card-back-foe.webp"} alt="" draggable={false} style={{ transform: `translateX(${k * FOE_FAN.gap}cqw) translateY(${k * k * FOE_FAN.drop}cqw) rotate(${k * FOE_FAN.turn}deg)` }} />;
+                return <img key={i} src={faces?.[i] || "/ui/card-back-foe.webp"} alt="" draggable={false} style={{ transform: `translateX(calc(${k * FOE_FAN.gap} * var(--cqw))) translateY(calc(${k * k * FOE_FAN.drop} * var(--cqw))) rotate(${k * FOE_FAN.turn}deg)` }} />;
               })}
             </div>
           );
@@ -6756,7 +6756,7 @@ function PlayPage() {
               onClick={() => setInspect({ pile: "env", id })}
             >
               <img src={spellSrc(id)} alt="" draggable={false} />
-              <span style={{ fontSize: `${spot.size}cqmin` }}>{card.name}</span>
+              <span style={{ fontSize: `calc(${spot.size} * var(--cqmin))` }}>{card.name}</span>
             </button>
           );
         })}
@@ -6812,7 +6812,7 @@ function PlayPage() {
           </div>
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
-          <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `${board.stack.size}cqmin` }}>
+          <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `calc(${board.stack.size} * var(--cqmin))` }}>
             <DeckPile count={pileLeft(foe)} side="foe" />
           </div>
         )}
@@ -6878,7 +6878,7 @@ function PlayPage() {
           const seen = hpSide !== null && sight ? sight.hp[hpSide] : null;
           const shift = seen !== null && hpSide !== null ? seen - duel.players[hpSide].hp : 0;
           return (
-            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `${marks[key].size * markScale(key)}cqmin`, color: shift ? undefined : color }}>
+            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `calc(${marks[key].size * markScale(key)} * var(--cqmin))`, color: shift ? undefined : color }}>
               <b>{shift ? seen : value}</b>
             </div>
           );
@@ -6931,7 +6931,7 @@ function PlayPage() {
               width: `${board.notice.w}%`,
               height: `${board.notice.h}%`,
               right: "auto",
-              fontSize: `${board.notice.font}cqmin`,
+              fontSize: `calc(${board.notice.font} * var(--cqmin))`,
             }}
             onPointerDown={(event) => {
               const box = event.currentTarget;
@@ -7902,7 +7902,7 @@ function PlayPage() {
             top: `${board.stack.y}%`,
             width: `${board.stack.width}%`,
             height: `${board.stack.height}%`,
-            fontSize: `${board.stack.size}cqmin`,
+            fontSize: `calc(${board.stack.size} * var(--cqmin))`,
           }}
           aria-label={tr("Rút bài")}
           onClick={() => {
@@ -9427,7 +9427,7 @@ function pinBox(spot: { x: number; y: number; width: number; height: number; siz
 
 /** A round 3D button on a board pin: as wide as the pin. */
 function pinMedal(spot: { x: number; y: number; width: number; size: number }): CSSProperties {
-  return { left: `${spot.x}%`, top: `${spot.y}%`, "--medal": `${spot.width * (spot.size || 1)}cqw` } as CSSProperties;
+  return { left: `${spot.x}%`, top: `${spot.y}%`, "--medal": `calc(${spot.width * (spot.size || 1)} * var(--cqw))` } as CSSProperties;
 }
 
 /** Ảnh bàn đang dùng (A hoặc B, board-cut.ts): luôn hiện đủ, không cắt (chủ game 15/11). Môi trường Núi dung nham tạm dùng chung bàn này. */

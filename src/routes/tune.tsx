@@ -554,7 +554,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.notice.y}%`,
             width: `${layout.notice.w}%`,
             height: `${layout.notice.h}%`,
-            fontSize: `${layout.notice.font}cqw`,
+            fontSize: `calc(${layout.notice.font} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "notice";
@@ -616,7 +616,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.stack.y}%`,
             width: `${layout.stack.width}%`,
             height: `${layout.stack.height}%`,
-            fontSize: `${layout.stack.size}cqw`,
+            fontSize: `calc(${layout.stack.size} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "stack";
@@ -642,7 +642,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.env.y}%`,
             width: `${layout.env.width}%`,
             height: `${layout.env.height}%`,
-            fontSize: `${layout.env.size}cqw`,
+            fontSize: `calc(${layout.env.size} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "env";
@@ -668,7 +668,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.envFoe.y}%`,
             width: `${layout.envFoe.width}%`,
             height: `${layout.envFoe.height}%`,
-            fontSize: `${layout.envFoe.size}cqw`,
+            fontSize: `calc(${layout.envFoe.size} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "envFoe";
@@ -694,7 +694,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.wall.y}%`,
             width: `${layout.wall.width}%`,
             height: `${layout.wall.height}%`,
-            fontSize: `${layout.wall.size}cqw`,
+            fontSize: `calc(${layout.wall.size} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "wall";
@@ -720,7 +720,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             top: `${layout.wallFoe.y}%`,
             width: `${layout.wallFoe.width}%`,
             height: `${layout.wallFoe.height}%`,
-            fontSize: `${layout.wallFoe.size}cqw`,
+            fontSize: `calc(${layout.wallFoe.size} * var(--cqw))`,
           }}
           onPointerDown={(event) => {
             drag.current = "wallFoe";
@@ -773,7 +773,7 @@ function BoardTune({ onBack }: { onBack: () => void }) {
             key={mark.key}
             type="button"
             className={`tune-pin${picked === mark.key ? " on" : ""}${layout.marks[mark.key].hidden ? " is-hidden" : ""}`}
-            style={{ left: `${layout.marks[mark.key].x}%`, top: `${layout.marks[mark.key].y}%`, fontSize: `${layout.marks[mark.key].size * markScale(mark.key)}cqw` }}
+            style={{ left: `${layout.marks[mark.key].x}%`, top: `${layout.marks[mark.key].y}%`, fontSize: `calc(${layout.marks[mark.key].size * markScale(mark.key)} * var(--cqw))` }}
             onPointerDown={(event) => {
               drag.current = mark.key;
               setPicked(mark.key);

@@ -93,7 +93,7 @@ export function MatchIntro({ top, bottom, onDone }: { top: IntroSide; bottom: In
       <div className="vs-dim" />
       <div className="vs-rain" aria-hidden="true">
         {RAIN.map((drop, i) => (
-          <i key={i} style={{ left: `${drop.x}%`, "--size": `${drop.size}cqw`, "--delay": `${drop.delay}s`, "--fall": `${drop.fall}s` } as CSSProperties} />
+          <i key={i} style={{ left: `${drop.x}%`, "--size": `calc(${drop.size} * var(--cqw))`, "--delay": `${drop.delay}s`, "--fall": `${drop.fall}s` } as CSSProperties} />
         ))}
       </div>
       {side("top", top)}

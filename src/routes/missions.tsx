@@ -154,7 +154,7 @@ function WeeklyCard({ row, at, weekly }: { row: ListedMission; at: number; weekl
         <b
           className={`mx-dig is-${view}`}
           aria-hidden="true"
-          style={{ left: `${digit[0]}%`, top: `${digit[1] + 0.6}%`, fontSize: `${(digit[2] * 196) / 900 / 0.69}cqw` }}
+          style={{ left: `${digit[0]}%`, top: `${digit[1] + 0.6}%`, fontSize: `calc(${(digit[2] * 196) / 900 / 0.69} * var(--cqw))` }}
         >
           {Math.max(0, left)}
         </b>
