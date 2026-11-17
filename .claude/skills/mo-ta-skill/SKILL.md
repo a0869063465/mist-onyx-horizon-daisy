@@ -20,6 +20,8 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   Rút gọn: ĐỌC KỸ ví dụ trước khi hỏi. Điều gì tự suy được từ chính ví dụ (dấu ngoặc kép mở, (màu) đóng bao đúng đoạn nào) thì không hỏi sếp. "Đọc kỹ lại đi" = sếp chưa hài lòng, đúng là hiệu lệnh đánh W.
 - **W3** (17/11) Chủ game: "Bạn thấy (đây là câu cú mình lại phải sửa lại cho bạn) quy tắc trước không. () là 1 màu, tức là trước () có gì. Có duy nhất từ Nội tại: đúng không. Vậy thì làm sao."
   Rút gọn: lặp lại lỗi W2: mình lại kết thúc bằng câu hỏi mà ví dụ đã trả lời. Trước khi hỏi, thử trả lời bằng chính ví dụ; trả lời được thì KHÔNG hỏi, chỉ nêu kết luận. (màu) là MỘT màu cho mọi thứ đứng trước nó (tính từ ngoặc kép mở, hoặc đầu dòng nếu không có ngoặc). Trước (tím) chỉ có "Nội tại:" nên tím chỉ là "Nội tại:".
+- **W4** (17/11) Chủ game: "Lưu ý là vào icon lưu ý, không phải trong skill, dòng trống là tách ra để bạn biết"
+  Rút gọn: sếp phải sửa mình vì mình hiểu sai bố cục. Phần "Lưu ý" là nội dung của icon Lưu ý (`NOTE(...)` trong `skill-book.ts`, lấy dòng ghi chú từ chữ lá), KHÔNG phải một phần của skill. Dòng trống trong ví dụ của sếp chỉ để tách cho Claude biết, không phải bố cục hiển thị. Đừng suy bố cục từ khoảng trắng hay tiêu đề mà sếp không giải thích.
 
 ## Bài học cách làm (Q)
 - **Q0** (Ví dụ 1, sửa theo W2) Cách ĐỌC ví dụ của sếp: dấu ngoặc kép MỞ rồi (màu) ĐÓNG bao đúng cụm được tô màu đó; chữ ngoài cặp đó không tô. Nhãn "Thời điểm kích hoạt" đứng ngoài ngoặc nên KHÔNG tô, chỉ "Khi phát động tấn công" và "Khi lao ra chặn đòn" tô vàng. (màu) mà không có ngoặc kép mở thì tô MỘT màu cho mọi thứ đứng trước nó tới đầu dòng; trước (tím) chỉ có "Nội tại:" nên chỉ "Nội tại:" tím (không phải cả dòng). Ví dụ 2 áp lại đúng cách đọc này: "Tiêu hao 1 mana" (xanh lam), "Trong những lượt này" (cam), "Số cam:" (cam), "Thế thân" (cam) là cả phần đứng trước (màu) tính từ đầu dòng.
@@ -34,7 +36,7 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   - xám: "sát thương chuẩn";
   - tím: nhãn "Nội tại:".
   Từ nối ("tăng vĩnh viễn", "thay cho mình", "bỏ", "ở lại", "không thể bị chặn và sát thương gây ra là", "kỹ năng phát động") không tô.
-- **Q4** (Ví dụ 2) Bố cục đầy đủ của skill chủ động: dòng "Thời điểm kích hoạt:"; dòng mana riêng, không nhãn, cả dòng xanh lam; dòng "Nội dung:" (nhiều dòng thì dòng tiếp không nhãn, bắt đầu thẳng bằng câu); một dòng trống; tiêu đề "Lưu ý" (không dấu ":"); mỗi dòng Lưu ý giải thích một thứ vừa nhắc ("Số cam:" giải thích số cam, "Thế thân" giải thích thế thân). Ở Ví dụ 1 (nội tại) mana nằm sau nhãn "Nội dung:" trong ngoặc kép; chưa phân biệt luật, theo ví dụ gần nhất.
+- **Q4** (Ví dụ 2, sửa theo W4) Bố cục skill chủ động: dòng "Thời điểm kích hoạt:"; dòng mana riêng, không nhãn, cả dòng xanh lam; dòng "Nội dung:" (nhiều dòng thì dòng sau không nhãn, bắt đầu thẳng bằng câu). Phần "Lưu ý" thuộc icon Lưu ý, không thuộc skill; trong ví dụ nó được tách bằng một dòng trống. Mỗi dòng Lưu ý giải thích một thứ vừa nhắc ("Số cam:" giải thích số cam, "Thế thân" giải thích thế thân). Ở Ví dụ 1 (nội tại) mana nằm sau nhãn "Nội dung:" trong ngoặc kép; chưa phân biệt luật, theo ví dụ gần nhất.
 
 ## Nền dự án (có sẵn từ AGENTS.project.md và docs/luat-la-bai.md, không mang mã W/Q)
 Đọc `docs/luat-la-bai.md` mục 2 (khuôn chữ lá) và mục 5 (quy tắc viết) trước khi viết.
@@ -82,5 +84,5 @@ Lưu ý
 Số cam:(cam) là "số lượt ẩn thân còn lại(cam)
 Thế thân(cam) thì "không thể chặn đòn(vàng)
 ```
-Mã rút ra: áp Q0, Q2; mở rộng Q3; thêm Q4.
+Mã rút ra: áp Q0, Q2; mở rộng Q3; Q4 (đã sửa sau W4). Phần "Lưu ý" của ví dụ thuộc icon Lưu ý; `skill-book.ts` hiện có `NOTE("số cam cho thấy")` cho lá này, khi áp chữ mới thì chuỗi `pick` phải khớp dòng Lưu ý mới (vd "số cam:").
 Chữ hiện trong `catalog.ts` (dòng 350: "Ẩn mình: Tiêu hao 1 mana. Tạo ra thế thân… Số cam cho thấy quá trình ẩn thân đang bắt đầu.") khác ví dụ (ví dụ thêm 4 lượt, "ở trạng thái tĩnh", chân thân bỏ thế thân, Lưu ý). KHÔNG sửa khi chưa có lệnh. Giữ nguyên văn "thay cho trong" như sếp viết.
