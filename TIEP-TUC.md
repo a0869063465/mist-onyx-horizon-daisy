@@ -1,7 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
 ## Skill `mo-ta-skill` (17/11, Sonnet 5.5 low, nhánh `ccr-fc1ee7ec-gspefp`, ĐÃ DỰNG KHUNG)
-1. Việc vừa làm: tạo `.claude/skills/mo-ta-skill/SKILL.md` (W0–W6 luật công ty, Q0–Q3 cách Claude làm, mục ví dụ trống).
+1. Việc vừa làm: tạo `.claude/skills/mo-ta-skill/SKILL.md` (W = luật sếp dạy, Q = cách làm rút từ ví dụ; Claude tự đánh số; hiện có W0, W1, chưa có Q).
 2. Hiện trạng: chưa có ví dụ nào; Claude chỉ soạn NHÁP, không tự sửa chữ lá.
 3. Việc sắp làm: chủ game đưa ví dụ dần, Claude chép nguyên văn vào mục "Ví dụ chủ game đã duyệt" + rút quy tắc.
 
