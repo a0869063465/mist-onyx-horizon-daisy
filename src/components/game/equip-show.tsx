@@ -15,6 +15,9 @@ const K = EQUIP_SLOW;
 export const EQUIP_MS = 1600 * K;
 /** Độ nghiêng sang bên: video KHÔNG có (lá chỉ xoay quanh trục đứng), chủ game 17/11 hỏi nên tắt (0). Muốn bật lại thì đặt 1. */
 const TILT = 0;
+/** Chuyển động "tự nhiên" tôi tự thêm 17/11 (cung bay, ấn xuống, vượt rồi yên, phồng, lơ lửng, bóng, nảy, nằm yên). Chủ game 17/11 bảo ẩn để so với bản gốc theo video (chỉ chậm lại). Đặt true để trả lại. */
+const NATURAL = false;
+const T_IN = 210 * EQUIP_SLOW;
 const T = { merged: 520 * K, spark: 620 * K, flash: 790 * K, burst: 840 * K, turn: 950 * K, edge: 992 * K, big: 1040 * K, counted: 1230 * K, back: 1400 * K, backEdge: 1448 * K };
 /** Width of the big card, of the board's width; the centre of the two cards on the stage, in parts of the board. */
 const BIG_W = 0.46;
@@ -124,7 +127,7 @@ export function EquipShow({
 
     // Lá quái: ấn xuống chút rồi nhấc lên theo cung, vượt nhẹ rồi nằm yên; trôi sang chỗ lá trang bị chui vào, phồng lên một nhịp
     // khi nhận, lơ lửng nhẹ, xoay cạnh, hiện to; cuối cùng xoay thu về, hạ xuống ô và nảy nhẹ.
-    {
+    if (NATURAL) {
       const m = track(bigW, bigH);
       const sit: Pose = { x: home.x, y: home.y, s: s0 };
       const pressed: Pose = { ...sit, y: home.y + 4, s: s0 * 0.95 };
@@ -171,11 +174,30 @@ export function EquipShow({
           { duration: EQUIP_MS, fill: "both" },
         ),
       );
+    } else {
+      const place = (q: { x: number; y: number }, scale: number, turn = 0) =>
+        `translate(${q.x - bigW / 2}px, ${q.y - bigH / 2}px) perspective(900px) rotateY(${turn}deg) scale(${scale})`;
+      runs.push(
+        monEl.animate(
+          [
+            { offset: 0, transform: place(home, s0), easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" },
+            { offset: at(T_IN), transform: place(left, s1), easing: "ease-in-out" },
+            { offset: at(T.merged), transform: place(drift, s1), easing: "linear" },
+            { offset: at(T.turn), transform: place(drift, s1), easing: "ease-in" },
+            { offset: at(T.edge), transform: place(mid(drift, big), (s1 + 1) / 2, 88), easing: "ease-out" },
+            { offset: at(T.big), transform: place(big, 1), easing: "linear" },
+            { offset: at(T.back), transform: place(big, 1), easing: "ease-in" },
+            { offset: at(T.backEdge), transform: place(mid(big, home), (s0 + 1) / 2, -88), easing: "ease-out" },
+            { offset: 1, transform: place(home, s0) },
+          ],
+          { duration: EQUIP_MS, fill: "both" },
+        ),
+      );
     }
 
     // Lá trang bị: nhấc khỏi tay, bay theo cung ra bên phải, lật mặt trên đường, hạ xuống nghiêng nhẹ rồi nằm yên một nhịp;
     // sau đó mới trượt sang, nghiêng và thu nhỏ dần cho tới khi chui vào lá quái.
-    {
+    if (NATURAL) {
       const gearW = box.width * STAGE_GROW;
       const gearH = gearW * (3.05 / 2);
       gearEl.style.width = `${gearW}px`;
@@ -196,6 +218,30 @@ export function EquipShow({
       g.tween(960, T.merged, g2, g3, ease.in, 0, ease.in, 4);
       g.push(EQUIP_MS, g3);
       runs.push(gearEl.animate(g.out, { duration: EQUIP_MS, fill: "both" }));
+    } else {
+      const gearW = box.width * STAGE_GROW;
+      const gearH = gearW * (3.05 / 2);
+      gearEl.style.width = `${gearW}px`;
+      gearEl.style.height = `${gearH}px`;
+      const hand = document.querySelector<HTMLElement>(from === "hand" ? ".hand" : ".foe-fan")?.getBoundingClientRect();
+      const start = hand
+        ? { x: hand.left - board.left + hand.width / 2, y: hand.top - board.top + hand.height / 2 }
+        : { x: W / 2, y: from === "hand" ? H : 0 };
+      const put = (q: { x: number; y: number }, scale: number, turn = 0) =>
+        `translate(${q.x - gearW / 2}px, ${q.y - gearH / 2}px) perspective(900px) rotateY(${turn}deg) scale(${scale})`;
+      runs.push(
+        gearEl.animate(
+          [
+            { offset: 0, transform: put(start, 0.7, 90), opacity: 0.2, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" },
+            { offset: at(T_IN * 0.45), opacity: 1 },
+            { offset: at(T_IN), transform: put(right, 1, 0), opacity: 1, easing: "cubic-bezier(0.5, 0, 0.85, 0.6)" },
+            { offset: at(T.merged - 50 * K), transform: put({ x: drift.x + gearW * 0.25, y: drift.y }, 0.3), opacity: 1, easing: "linear" },
+            { offset: at(T.merged), transform: put(drift, 0.08), opacity: 0 },
+            { offset: 1, transform: put(drift, 0.08), opacity: 0 },
+          ],
+          { duration: EQUIP_MS, fill: "both" },
+        ),
+      );
     }
 
     // Light on the monster: sparks at its feet, the white flash, the burst of rays.
