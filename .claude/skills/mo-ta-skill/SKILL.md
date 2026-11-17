@@ -18,7 +18,10 @@ description: Viết hoặc sửa chữ mô tả kỹ năng, phép của lá bài
   Rút gọn: W0 là chính dòng chat của sếp; Claude tự nhận ra sếp chưa hài lòng/đang dạy để đánh W; Q rút từ ví dụ của sếp, chỉ phần liên quan trực tiếp đến cách làm.
 
 ## Bài học cách làm (Q)
-- (chưa có; Q0 sẽ rút từ ví dụ đầu tiên của chủ game)
+- **Q0** (từ Ví dụ 1) Cách ĐỌC ví dụ của sếp: cụm chữ trong dấu ngoặc kép, kèm (màu) ngay sau = cụm đó tô màu đó. Chữ không có (màu) thì không tô.
+- **Q1** (Ví dụ 1) Bố cục skill: mỗi nhãn một dòng, theo thứ tự "Thời điểm kích hoạt:", "Nội dung:", "Nội tại:". Đập phá có đủ ba. Skill thiếu loại nào thì bỏ nhãn đó (CHƯA chắc, hỏi sếp lần đầu gặp).
+- **Q2** (Ví dụ 1) Dấu ":" và chữ nhãn đứng trước nó đều gạch chân.
+- **Q3** (Ví dụ 1) Tô màu theo vai trò của cụm: thời điểm kích hoạt = vàng (mỗi thời điểm một cụm riêng, "Khi phát động tấn công" và "Khi lao ra chặn đòn"); mana = xanh lam, gồm cả số ("Tiêu hao 1 mana"); đối tượng đòn đánh = đỏ ("Các đòn đánh thường"); chỉ số kèm số = cam ("1 công"); nhãn "Nội tại" = tím (CHƯA chắc: nhãn hay cả dòng). Từ nối như "tăng vĩnh viễn" không tô.
 
 ## Nền dự án (có sẵn từ AGENTS.project.md và docs/luat-la-bai.md, không mang mã W/Q)
 Đọc `docs/luat-la-bai.md` mục 2 (khuôn chữ lá) và mục 5 (quy tắc viết) trước khi viết.
@@ -41,4 +44,14 @@ Mẫu một mục:
 Chữ chủ game viết: <nguyên văn>
 Mã rút ra: <Wn / Qn, nếu có>
 ```
-- (chưa có ví dụ nào)
+### Khổng lồ 1 mắt — Đập phá (17/11) — Ví dụ 1
+Chữ chủ game viết (nguyên văn, kể cả dấu ngoặc):
+```
+Đập phá của khổng lồ 1 mắt
+Thời điểm kích hoạt: "Khi phát động tấn công (vàng) và "Khi lao ra chặn đòn (vàng)
+Nội dung: "Tiêu hao 1 mana (xanh lam)
+Nội tại: (tím) "Các đòn đánh thường (đỏ) tăng vĩnh viễn "1 công (cam).
+Dấu : và nội dung trước nó định dạng gạch chân.
+```
+Mã rút ra: Q0, Q1, Q2, Q3.
+Lệch với tài liệu cũ (chờ sếp nói): `docs/luat-la-bai.md` mục 9 ghi vàng = thủ, hồng = điều kiện phát động (Thế thân), "tăng" của Đập phá = xanh lá; ví dụ này dùng vàng cho thời điểm kích hoạt và không tô "tăng". Chữ hiện trong `catalog.ts` (dòng "Đòn đánh thường chủ động… Tiêu hao 1 mana. Những lần bị động thì không tốn.") khác hẳn và KHÔNG được sửa khi chưa có lệnh.
