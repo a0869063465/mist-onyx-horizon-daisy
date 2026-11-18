@@ -3888,6 +3888,7 @@ function PlayPage() {
     emitFx({ t: "ailments", act: "ailment", marks });
   }, [duel, net]);
 
+  const drawShowing = drawShows.length > 0;
   const fuseKey = (() => {
     if (!duel || duel.step !== "main" || duel.winner) return "";
     const player = duel.players[duel.turn];
@@ -3908,9 +3909,11 @@ function PlayPage() {
       return;
     }
     setFuseOn(true);
+    // Lá vừa rút đang hiện giữa màn thì glow chưa đếm giờ, tới khi lá về tay mới đếm 3,5 giây (chủ game 18/11).
+    if (drawShowing) return;
     const timer = window.setTimeout(() => setFuseOn(false), 3500);
     return () => window.clearTimeout(timer);
-  }, [fuseKey]);
+  }, [fuseKey, drawShowing]);
 
   useEffect(() => {
     if (!fuseAsk || fuseAsk.phase === "ask" || fuseAsk.phase === "preview") return;
@@ -5904,6 +5907,7 @@ function PlayPage() {
         }
       });
       for (const way of setFusionsFor(duel, viewer, index)) {
+        fuseHands.add(index);
         for (const mat of way.mats) {
           if (mat.from === "hand") fuseHands.add(mat.index);
           else fuseUids.add(mat.uid);
