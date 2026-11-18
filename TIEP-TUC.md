@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Dung hợp Khổng lồ: bảng chọn + khung lá + glow (18/11, nhánh `khong-lo-moi`, CHƯA áp `main`)
+1. Việc vừa làm (Sonnet 5.5 medium, chuyển từ nhánh `ccr-fc1ee7ec-gspefp`, commit cherry-pick): `handActions` (play.tsx) gom mọi cách dung hợp (`FuseOpt`); 1 cách chạy thẳng (`startFuse`), từ 2 cách mở `fuseChoice` = bảng `.fuse-pick` (2 quái kết quả, mỗi quái 1 ô Dung hợp cũ to hơn 10%, bấm quái đổi `HandPeek`). Lá `.fuse3d-big` dùng `CardFace hand`. Glow dung hợp `fuse-breathe` thay `fuse-blink`, tắt glow khác trên lá đó.
+2. Hiện trạng: đã nhận ảnh mẫu bảng chọn + ảnh Khổng lồ xanh/đỏ (nay là 2 lá mới trên nhánh này). Công thức Khổng lồ (từ phiên Pha 3): Mặc giáp = 1 mắt + 1 mắt; Thủ lĩnh = Mặc giáp + 1 mắt hoặc 3 Khổng lồ 1 mắt; chưa có trong `FUSIONS`/duel.ts nên bảng chọn chưa kích hoạt. Luật "sao người chơi từ N−1" ở nhánh `dung-hop-sao` cần gộp. Chưa chụp, chưa thử glow bằng mắt.
+3. Việc sắp làm: luật dung hợp 2 lá/3 lá giống nhau trong `duel.ts` = Opus 5.5 high, chờ chủ game đổi mô hình + "ok"; xong thì nối bảng chọn (chèn 2 ảnh lá mới), chụp.
+
 ## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 17/11)
 1. Việc vừa làm: F3/F4 (hồi máu, phát quang, sóng nước, kiếm cánh xanh/đỏ nền đen) do Safari không phát WebM VP9 alpha. `flatFx()`/`alphaSrc()` trong preload.ts: Safari/iOS dùng bản MP4 nền đen (`public/fx/{hoi-mau,phat-quang,thuy-tru,thuy-no,thuy-xoay,dai-hong-thuy}.mp4`, `public/ui/atk-you|foe.mp4`) + `html[data-flatfx]` trộn `screen` (cuối styles.css); `fxUrl` tự đổi; hộp ma thuật (`box-fx.tsx`) bỏ video trên Safari.
 2. Hiện trạng: nhận 1 video iPad. Chưa thử trên iPad thật (mới kiểm khung mp4 có hình). F1 (kéo quái/mũi tên lệch) và F2 (số máu to giữa màn khi địch triệu hồi) CHƯA tái hiện được trên Chromium 768×1024, chưa sửa; nghi đơn vị `cqw`/`cqmin` trên Safari cũ.

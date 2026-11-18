@@ -1079,7 +1079,8 @@ function openPending(sealed: UpdateRelease[], pending: string[]): UpdateRelease[
     const notes = [...chunk].reverse().map((text, index) => ({ n: index + 1, text }));
     opened.push({ version, remark: remarkOf(chunk), notes });
   }
-  return [...opened.reverse(), ...sealed];
+  return [...opened.reverse(), ...sealed  "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
+];
 }
 
 export const UPDATE_RELEASES = openPending(SEALED, PENDING_NOTES);
