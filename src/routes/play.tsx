@@ -8985,8 +8985,9 @@ function PlayPage() {
               <div key={opt.resultId} className={`fuse-pick-col${i === fuseChoice.at ? " is-on" : ""}`} onClick={(event) => event.stopPropagation()}>
                 <img
                   className="fuse-pick-art"
-                  src={artSrc(opt.resultId, 1)}
+                  src={`/art/fuse/${opt.resultId}.webp`}
                   alt={tr(monsterCard(opt.resultId)?.name ?? "")}
+                  onError={(event) => { const el = event.currentTarget; if (!el.dataset.fallback) { el.dataset.fallback = "1"; el.src = artSrc(opt.resultId, 1); el.classList.add("is-flat"); } }}
                   draggable={false}
                   onClick={() => {
                     playUi("soft");
