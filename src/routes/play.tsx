@@ -8183,6 +8183,16 @@ function PlayPage() {
                 <CardFace monster={monsterCard(stageHeld.id)!} hand level={stageHeld.saved?.level ?? 1} live={reserveLive(stageHeld, monsterCard(stageHeld.id)!)} gems={stageHeld.toll ? `${monsterCard(stageHeld.id)!.gems}+1` : undefined} fake={stageHeld.fake} />
               </button>
             </CardShow>
+            {/* Bảng mô tả nằm CÙNG lớp với lá giữa sân (z lá 80 > bảng 75) nên lá không bị bảng che; để ngoài lớp này bảng đè lên lá. */}
+            {pickPeek ? (
+              <HandPeek
+                info={pickPeek}
+                at={pickPeek.skills.length ? peekAt % pickPeek.skills.length : 0}
+                onPick={(index) => (playUi("soft"), setPeekAt(index))}
+                top={PEEK_TOP}
+                onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))}
+              />
+            ) : null}
           </div>
         ) : null}
         {drawShow ? (
@@ -8284,7 +8294,7 @@ function PlayPage() {
             }}
           />
         ) : null}
-        {pickPeek ? (
+        {pickPeek && !(stage && stageOk && stageHeld) ? (
           <HandPeek
             info={pickPeek}
             at={pickPeek.skills.length ? peekAt % pickPeek.skills.length : 0}
