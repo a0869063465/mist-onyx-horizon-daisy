@@ -1069,6 +1069,7 @@ export const PENDING_NOTES: string[] = [
   "Có nhiều cách dung hợp thì hiện bảng chọn 2 quái: bấm quái để xem mô tả, bấm Dung hợp để dung hợp.",
   "Dung hợp tính là lượt triệu hồi của vòng; lỡ triệu hồi 1 lá nguyên liệu trước thì vẫn dung hợp được. Quái dung hợp nhiều sao hơn sao của bạn thì không hành động được ngay vòng đó.",
   "Thêm Phù thuỷ tập sự (2 sao, công 0, thủ 0, thủ phép 3, máu 5, Cầu sấm +1 sát thương) và Phù thuỷ bậc thầy (3 sao, công 1, thủ 1, thủ phép 4, máu 6, Cầu sấm +1 sát thương, giết được mục tiêu thì Cầu sấm tăng thêm 1). Dung hợp từ Phù thuỷ tí hơn.",
+  "Rồng con có hình mới.",
 ];
 
 function remarkOf(notes: string[]) {
