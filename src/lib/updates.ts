@@ -1082,6 +1082,7 @@ export const PENDING_NOTES: string[] = [
   "Hàng khuyên dùng: quái dung hợp chưa được xếp thì theo hàng của nguyên liệu mạnh nhất.",
   "Phép chọn mục tiêu (Hoán đổi, Sừng lôi phá…) viền neon mục tiêu sáng và đậm hơn.",
   "Bảng xác nhận dùng skill, phép: dòng Tiêu hao mana lên đầu (mana xanh lam), thủ vàng, thủ phép tím. Khủng long vãy kiếm đánh thường cũng hỏi xác nhận (giảm 2 thủ).",
+  "Glow chớp hồng của phép, skill phản ứng và siêu tốc sáng và rõ hơn, bằng glow xanh lá của quái triệu hồi được.",
 ];
 
 function remarkOf(notes: string[]) {
