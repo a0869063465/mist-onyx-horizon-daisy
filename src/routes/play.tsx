@@ -362,6 +362,7 @@ type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks
 const SHOW_TOP = 47;
 const PEEK_TOP = 9;
 /** `third` and `c`: the third knight of a three-knight fusion and where it stands, so all three cards fly in. */
+type FuseOpt = { uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; cost: number };
 type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
 
 /** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
@@ -1821,6 +1822,7 @@ function PlayPage() {
   const [strike, setStrike] = useState<Strike | null>(null);
   const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string; from?: "chain" } | null>(null);
   const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
+  const [fuseChoice, setFuseChoice] = useState<{ index: number; opts: FuseOpt[]; at: number } | null>(null);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
   const [chronoAsk, setChronoAsk] = useState<{ caster: string; target: string; age: boolean; pass: boolean } | null>(null);
@@ -5862,6 +5864,26 @@ function PlayPage() {
   };
   const fuseAt = (show: FuseShow) => (slot: Slot) => fuse(duel, show.index, show.uid, slot);
   const cost = (next: Duel) => Math.max(0, you.orb - next.players[viewer].orb);
+  function startFuse(index: number, opt: FuseOpt) {
+    const held = you.reserve[index];
+    const mon = you.field.find((unit) => unit?.uid === opt.uid);
+    if (!held || !mon) return;
+    const slotSpot = boardSpot(document.querySelector(`[data-slot="${viewer}-${opt.slot}"]`), { x: 50, y: 62, w: 18 });
+    setFuseChoice(null);
+    setFuseShow({
+      index,
+      uid: opt.uid,
+      slot: opt.slot,
+      resultId: opt.resultId,
+      phase: "lift",
+      n: Date.now(),
+      a: boardSpot(document.querySelector(".card-show") ?? document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
+      b: slotSpot,
+      at: slotSpot,
+      ...trioOf(held.id, mon),
+    });
+    setInspect(null);
+  }
   /** What the held monster can do right now; a button only shows when the match would accept it. */
   function handActions(index: number): SheetAction[] {
     const held = you.reserve[index];
@@ -5900,29 +5922,24 @@ function PlayPage() {
       }
     }
     const ids = ownLive.map((mon) => mon.cardId);
+    const opts: FuseOpt[] = [];
     for (const mon of ownLive) {
       const recipe = findFusion(held.id, mon.cardId) ?? findKnightFusion(held.id, mon.cardId, ids);
-      if (!recipe) continue;
+      if (!recipe || opts.some((opt) => opt.resultId === recipe.result)) continue;
       const slot = you.field.findIndex((unit) => unit?.uid === mon.uid) as Slot;
       const next = fuse(duel, index, mon.uid, slot);
       if (!took(next)) continue;
-      list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: cost(next), onPress: () => {
-        const slotSpot = boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), { x: 50, y: 62, w: 18 });
-        setFuseShow({
-          index,
-          uid: mon.uid,
-          slot,
-          resultId: recipe.result,
-          phase: "lift",
-          n: Date.now(),
-          a: boardSpot(document.querySelector(".card-show") ?? document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
-          b: slotSpot,
-          at: slotSpot,
-          ...trioOf(held.id, mon),
-        });
+      opts.push({ uid: mon.uid, slot, resultId: recipe.result, cost: cost(next) });
+    }
+    // Một cách dung hợp: chạy thẳng. Từ 2 cách (2 lá / 3 lá): hiện bảng chọn 2 quái kết quả, mỗi quái một nút Dung hợp (chủ game 18/11).
+    if (opts.length === 1) {
+      list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: opts[0].cost, onPress: () => startFuse(index, opts[0]) });
+    } else if (opts.length > 1) {
+      list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: Math.min(...opts.map((opt) => opt.cost)), onPress: () => {
         setInspect(null);
+        setPeekAt(0);
+        setFuseChoice({ index, opts, at: 0 });
       } });
-      break;
     }
     return list;
   }
@@ -8876,7 +8893,7 @@ function PlayPage() {
                 style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}
                 onClick={fuseShow.phase === "reveal" ? () => (playUi("soft"), setPeekAt((at) => at + 1)) : undefined}
               >
-                <CardFace monster={monsterCard(fuseShow.resultId)!} />
+                <CardFace monster={monsterCard(fuseShow.resultId)!} hand />
               </div>
             ) : null}
             {fusePeek ? (
@@ -8894,6 +8911,32 @@ function PlayPage() {
                 <RowArrow row="back" off={fuseRows.back === null} onPick={() => fuseLand("back")} />
               </div>
             ) : null}
+          </div>
+        ) : null}
+        {fuseChoice && !fuseShow ? (
+          <div className="fuse-pick" onClick={() => setFuseChoice(null)}>
+            {fuseChoice.opts.map((opt, i) => (
+              <div key={opt.resultId} className={`fuse-pick-col${i === fuseChoice.at ? " is-on" : ""}`} onClick={(event) => event.stopPropagation()}>
+                <img
+                  className="fuse-pick-art"
+                  src={artSrc(opt.resultId, 1)}
+                  alt={tr(monsterCard(opt.resultId)?.name ?? "")}
+                  draggable={false}
+                  onClick={() => {
+                    playUi("soft");
+                    setPeekAt(0);
+                    setFuseChoice({ ...fuseChoice, at: i });
+                  }}
+                />
+                <ActionButton action={{ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: opt.cost, onPress: () => startFuse(fuseChoice.index, opt) }} />
+              </div>
+            ))}
+            {(() => {
+              const card = monsterCard(fuseChoice.opts[fuseChoice.at].resultId);
+              if (!card) return null;
+              const info: PeekInfo = { name: tr(card.name), cardId: card.id, stars: card.stars, stats: { atk: card.atk, def: card.def, mdef: card.mdef, hp: card.hp }, skills: skillsOf(card.id, card.skill ?? "") };
+              return <HandPeek info={info} at={info.skills.length ? peekAt % info.skills.length : 0} onPick={(index) => (playUi("soft"), setPeekAt(index))} top={PEEK_TOP} onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))} />;
+            })()}
           </div>
         ) : null}
       </section>

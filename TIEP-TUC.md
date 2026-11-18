@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Dung hợp: bảng chọn 2 cách + khung lá + glow (18/11, Sonnet 5.5 medium, nhánh `ccr-fc1ee7ec-gspefp`, CHƯA áp `main`)
+1. Việc vừa làm: `handActions` (play.tsx) gom mọi cách dung hợp (`FuseOpt`); 1 cách chạy thẳng (`startFuse`), từ 2 cách (2 lá / 3 lá) mở `fuseChoice` = bảng `.fuse-pick`: 2 quái kết quả, mỗi quái 1 ô Dung hợp cũ (to hơn 10%), bấm quái đổi `HandPeek`, bấm Dung hợp là dung hợp. Lá quái dung hợp `.fuse3d-big` dùng `CardFace hand`. Glow dung hợp: bỏ `fuse-blink`, thay `fuse-breathe` (tím hồng thở) cuối styles.css, đè glow triệu hồi/phản ứng/sẵn sàng/chặn của lá đó.
+2. Hiện trạng: nhận ảnh mẫu bảng chọn (2 ảnh). tsc sạch. CHƯA chụp: chưa lá nào có cả cách 2 lá lẫn 3 lá nên bảng chọn chưa kích hoạt được bằng luật thật; chưa thử glow bằng mắt, điện thoại. Vị trí ô/quái tự đặt (ảnh chỉ AI vẽ lại).
+3. Việc sắp làm: chờ chủ game xem; dựng cảnh thử bảng chọn nếu cần; áp `main` khi được bảo.
+
 ## Skill `mo-ta-skill` (17/11, Sonnet 5.5 low, nhánh `ccr-fc1ee7ec-gspefp`, ĐÃ DỰNG KHUNG)
 1. Việc vừa làm: tạo `.claude/skills/mo-ta-skill/SKILL.md` (W = luật sếp dạy, Q = cách làm rút từ ví dụ; Claude tự đánh số; hiện có W0–W4, Q0–Q4 từ Ví dụ 1 Đập phá, Ví dụ 2 Ẩn mình).
 2. Hiện trạng: chưa có ví dụ nào; Claude chỉ soạn NHÁP, không tự sửa chữ lá.
