@@ -14714,3 +14714,19 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .fuse-pick-art.is-flat { -webkit-mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); }
 .fuse-pick-art { width: 100%; height: var(--pick-h, 60vw); object-fit: contain; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.8)); cursor: pointer; }
 .fuse-pick .act3d { transform: scale(1.1); transform-origin: top center; margin-bottom: 0.6rem; }
+
+/* Phép chọn mục tiêu (Hoán đổi, Sừng lôi phá, Phục kích…) neon rõ như neon chọn mục tiêu của skill và đánh thường (chủ game 18/11):
+   mọi mục tiêu chọn được có viền đậm 3 lớp + quầng lớn, thở nhẹ; ô đang chọn (is-snap) vẫn sáng hơn. */
+@keyframes spell-target-blue {
+  0%, 100% { box-shadow: 0 0 0 2px #00122b, 0 0 0 5px #7cc4ff, 0 0 0 7px #00122b, 0 0 1.1rem 0.4rem color-mix(in srgb, #2f8dff 80%, transparent); }
+  50% { box-shadow: 0 0 0 2px #00122b, 0 0 0 5px #d6ecff, 0 0 0 7px #00122b, 0 0 1.8rem 0.8rem color-mix(in srgb, #4aa8ff 95%, transparent); }
+}
+@keyframes spell-target-red {
+  0%, 100% { box-shadow: 0 0 0 2px #1a0000, 0 0 0 5px #ff7a7a, 0 0 0 7px #1a0000, 0 0 1.1rem 0.4rem color-mix(in srgb, #ff2a2a 80%, transparent); }
+  50% { box-shadow: 0 0 0 2px #1a0000, 0 0 0 5px #ffd0d0, 0 0 0 7px #1a0000, 0 0 1.8rem 0.8rem color-mix(in srgb, #ff4a4a 95%, transparent); }
+}
+.slot[class*="slot-y"].is-hot.is-spell:not(.is-snap) { animation: spell-target-blue 1.2s ease-in-out infinite; }
+.slot[class*="slot-f"].is-hot.is-spell:not(.is-snap) { animation: spell-target-red 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.is-hot.is-spell:not(.is-snap) { animation: none !important; }
+}
