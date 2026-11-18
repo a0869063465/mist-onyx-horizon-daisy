@@ -48,8 +48,7 @@ export type FuseMat = { from: "hand"; index: number } | { from: "field"; uid: st
 export type SetFusion = { result: string; mats: FuseMat[] };
 
 /**
- * The set fusions the hand card at `index` can start, one per result (the cheapest way first: hand cards before field
- * monsters, so the field keeps its bodies). Each lists every material, the dragged card first.
+ * The set fusions the hand card at `index` can start, one per result (field monsters before hand cards). Each lists every material, the dragged card first.
  */
 export function setFusions(
   index: number,
@@ -68,16 +67,17 @@ export function setFusions(
     const usedField = new Set<string>();
     let ok = true;
     for (const id of need) {
-      const h = hand.findIndex((card, i) => card.id === id && !usedHand.has(i));
-      if (h >= 0) {
-        usedHand.add(h);
-        mats.push({ from: "hand", index: h });
-        continue;
-      }
+      // Quái đang đứng trên sân được dùng trước (chủ game 18/11), thiếu thì mới lấy lá trên tay.
       const f = field.find((mon) => mon && mon.cardId === id && !usedField.has(mon.uid));
       if (f) {
         usedField.add(f.uid);
         mats.push({ from: "field", uid: f.uid });
+        continue;
+      }
+      const h = hand.findIndex((card, i) => card.id === id && !usedHand.has(i));
+      if (h >= 0) {
+        usedHand.add(h);
+        mats.push({ from: "hand", index: h });
         continue;
       }
       ok = false;

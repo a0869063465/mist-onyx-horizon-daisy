@@ -1376,6 +1376,11 @@ test("Dung hợp Khổng lồ (18/11): 3 lá 1 mắt trên tay chọn Mặc giá
   assert.equal(at(armor, 0, 0)?.cardId, "khong-lo-mac-giap");
   assert.equal(armor.players[0].reserve.length, 1, "Mặc giáp dùng 2 lá, còn 1");
   assert.equal(at(armor, 0, 0).dim, false, "2 sao đủ sao: hành động được");
+  // Nguyên liệu ưu tiên quái trên sân: sân có 1 mắt + tay 2 lá, Mặc giáp dùng lá sân + lá kéo ra, giữ 1 lá trên tay.
+  const keep = D.fuseSet(withHand(board({ 0: ["khong-lo-mot-mat", {}] }, {}), ["khong-lo-mot-mat", "khong-lo-mot-mat"]), 0, "khong-lo-mac-giap", 1);
+  assert.equal(at(keep, 0, 1)?.cardId, "khong-lo-mac-giap", keep.live);
+  assert.equal(keep.players[0].reserve.length, 1, "giữ lại 1 lá trên tay");
+  assert.equal(at(keep, 0, 0), null, "quái trên sân được dùng làm nguyên liệu");
   // Đã triệu hồi quái khác vòng này: không dung hợp được.
   const used = D.fuseSet(withHand(board({}, {}), ["khong-lo-mot-mat", "khong-lo-mot-mat"], { summons: 1 }), 0, "khong-lo-mac-giap", 0);
   assert.equal(used.players[0].reserve.length, 2, "đã dùng lượt triệu hồi");
