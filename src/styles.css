@@ -14684,6 +14684,17 @@ html[data-flatfx] .tide-vid,
 html[data-flatfx] .tide-wave,
 html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 
+/* Hàng khuyên dùng (chủ game 18/11): mũi tên của hàng khuyên dùng toả hào quang như nút OK (2 vòng vàng + xanh sapphire nở ra, mặt mũi tên sáng theo nhịp). Mũi tên kia giữ nguyên. */
+.row-arrow .row-halo { position: absolute; inset: -14%; z-index: -1; border-radius: 50%; pointer-events: none; border: calc(0.45 * var(--cqw)) solid rgb(255 214 120 / 0.9); box-shadow: 0 0 calc(2.2 * var(--cqw)) calc(0.6 * var(--cqw)) rgb(74 168 255 / 0.85), inset 0 0 calc(2 * var(--cqw)) rgb(74 168 255 / 0.7); animation: row-halo 1.5s ease-out infinite; }
+.row-arrow .row-halo::after { content: ""; position: absolute; inset: calc(-0.45 * var(--cqw)); border-radius: 50%; border: calc(0.3 * var(--cqw)) solid rgb(130 205 255 / 0.9); box-shadow: 0 0 calc(1.6 * var(--cqw)) rgb(255 214 120 / 0.8); animation: row-halo 1.5s ease-out 0.5s infinite; }
+.row-arrow.is-advised svg { animation: row-arrow-up 1s ease-in-out infinite, row-advice-flash 1.5s ease-in-out infinite; opacity: 1; }
+.row-arrow.is-advised.is-back svg { animation: row-arrow-down 1s ease-in-out infinite, row-advice-flash 1.5s ease-in-out infinite; }
+@keyframes row-halo { 0% { transform: scale(0.8); opacity: 0.95; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes row-advice-flash {
+  0%, 100% { filter: drop-shadow(0 0 1.5px #46e874) drop-shadow(0 0 5px #46e874) drop-shadow(0 0 10px rgba(70, 232, 116, 0.8)); }
+  35% { filter: drop-shadow(0 0 calc(1.4 * var(--cqw)) rgb(255 220 140 / 0.95)) drop-shadow(0 0 calc(3 * var(--cqw)) rgb(74 168 255 / 0.9)) brightness(1.18); }
+}
+@media (prefers-reduced-motion: reduce) { .row-arrow .row-halo, .row-arrow .row-halo::after, .row-arrow.is-advised svg { animation: none; } }
 /* Glow dung hợp (chủ game 18/11): thở mượt thay chớp cứng; lá đang có glow dung hợp thì tắt glow triệu hồi được / phản ứng / sẵn sàng / chặn của chính lá đó. */
 @keyframes fuse-breathe {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 2px #ee5bff) drop-shadow(0 0 7px #ee5bff) drop-shadow(0 0 13px rgba(238, 91, 255, 0.75)); }

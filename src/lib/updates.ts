@@ -1072,6 +1072,7 @@ export const PENDING_NOTES: string[] = [
   "Rồng con có hình mới.",
   "Thêm Chiến binh kỳ nhông (2 sao, công 3, thủ 1, thủ phép 1, máu 4) và Chiến binh cưỡi rồng (3 sao, công 4, thủ 1, thủ phép 1, máu 6, dung hợp từ Rồng con và Chiến binh kỳ nhông). Linh hoạt: bị nhắm bởi đòn từ 5 sát thương thì né 65%, né được thì chớp sáng. Cưỡi rồng: nửa công thành sát thương chuẩn và hồi máu cho nó.",
   "Mọi dung hợp, kể cả chỉ có một cách, đều hiện bảng chọn quái kết quả với nút Dung hợp. Chiến binh cưỡi rồng đổi hình mới.",
+  "Chọn hàng triệu hồi: mũi tên của hàng khuyên dùng toả hào quang như nút OK. Quái chưa có hàng khuyên dùng thì không toả sáng.",
   "Bộ bài cho thuê trong tuần đổi thành bộ Fusion (hình nền Chiến binh kỳ nhông). Hoa ăn thịt người giảm máu từ 3 xuống 2.",
   "Có thư mới trong Hộp thư tặng 200 sao.",
 ];

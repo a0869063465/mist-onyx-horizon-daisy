@@ -192,6 +192,7 @@ import {
   wakeLurk,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
+import { advisedRow } from "@/lib/row-advice";
 import { findFusion, findKnightFusion, hexBonus, isHexer, thirdKnight, type FuseMat } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
@@ -5975,6 +5976,7 @@ function PlayPage() {
         rows: {
           front: front !== null,
           back: back !== null,
+          advice: advisedRow(held.id),
           onRow: (row) => {
             const slot = row === "front" ? front : back;
             if (slot === null) return;
@@ -7177,6 +7179,7 @@ function PlayPage() {
                               rows: {
                                 front: front !== null,
                                 back: back !== null,
+                                advice: advisedRow(held.id),
                                 onRow: (row: SummonRow) => {
                                   const slot = row === "front" ? front : back;
                                   if (slot !== null) go(slot);
@@ -8264,8 +8267,8 @@ function PlayPage() {
                 <div className={`stage-opts is-${stage.mode}`}>
                   {stage.mode === "rows" && stageRows ? (
                     <>
-                      <RowArrow row="front" off={stageRows.front === null} onPick={() => stageRows.front !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.front } }))} />
-                      <RowArrow row="back" off={stageRows.back === null} onPick={() => stageRows.back !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.back } }))} />
+                      <RowArrow row="front" off={stageRows.front === null} advised={advisedRow(stage.id) === "front"} onPick={() => stageRows.front !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.front } }))} />
+                      <RowArrow row="back" off={stageRows.back === null} advised={advisedRow(stage.id) === "back"} onPick={() => stageRows.back !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.back } }))} />
                     </>
                   ) : stage.mode === "menu" ? (
                     stageActs.map((act) => <ActionButton key={act.key} action={act} mini />)
@@ -8399,8 +8402,8 @@ function PlayPage() {
         {tutorial && (pickStage === "rows" || (pickActs.length === 1 && pickActs[0].key === "summon")) && pickShown && pickSpot && pickMon !== null ? (
           // Mũi tên chọn hàng (chủ game 28/10): ngoài lá, ngay trên mép trên lá, nằm cạnh nhau như ở nút Triệu hồi.
           <span className="row-arrows is-hand" style={{ left: `${pickSpot.x}%`, top: `${pickSpot.top}%` }}>
-            <RowArrow row="front" off={pickShown.front === null} onPick={() => pickRow(pickMon, "front")} />
-            <RowArrow row="back" off={pickShown.back === null} onPick={() => pickRow(pickMon, "back")} />
+            <RowArrow row="front" off={pickShown.front === null} advised={advisedRow(you.reserve[pickMon]?.id) === "front"} onPick={() => pickRow(pickMon, "front")} />
+            <RowArrow row="back" off={pickShown.back === null} advised={advisedRow(you.reserve[pickMon]?.id) === "back"} onPick={() => pickRow(pickMon, "back")} />
           </span>
         ) : null}
         {/* Bố cục chung (chủ game 28/10, theo bàn Grok): OK / chuyển lượt to trên cầu mana; X đỏ (huỷ) và con mắt (xem trước)
@@ -8994,8 +8997,8 @@ function PlayPage() {
             ) : null}
             {fuseShow.phase === "rows" && fuseRows ? (
               <div className="stage-opts is-rows is-fuse">
-                <RowArrow row="front" off={fuseRows.front === null} onPick={() => fuseLand("front")} />
-                <RowArrow row="back" off={fuseRows.back === null} onPick={() => fuseLand("back")} />
+                <RowArrow row="front" off={fuseRows.front === null} advised={advisedRow(fuseShow.resultId) === "front"} onPick={() => fuseLand("front")} />
+                <RowArrow row="back" off={fuseRows.back === null} advised={advisedRow(fuseShow.resultId) === "back"} onPick={() => fuseLand("back")} />
               </div>
             ) : null}
           </div>
