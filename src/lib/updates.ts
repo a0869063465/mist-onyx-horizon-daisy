@@ -1062,6 +1062,7 @@ export const PENDING_NOTES: string[] = [
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
   "Bộ sưu tập: nhãn N, SR, UR trên lá không còn đè lên bảng lọc và các khung mở ra phía trên.",
+  "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
 ];
 
 function remarkOf(notes: string[]) {
@@ -1078,8 +1079,7 @@ function openPending(sealed: UpdateRelease[], pending: string[]): UpdateRelease[
     const notes = [...chunk].reverse().map((text, index) => ({ n: index + 1, text }));
     opened.push({ version, remark: remarkOf(chunk), notes });
   }
-  return [...opened.reverse(), ...sealed  "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
-];
+  return [...opened.reverse(), ...sealed];
 }
 
 export const UPDATE_RELEASES = openPending(SEALED, PENDING_NOTES);
