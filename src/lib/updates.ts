@@ -1075,6 +1075,7 @@ export const PENDING_NOTES: string[] = [
   "Chọn hàng triệu hồi: mũi tên của hàng khuyên dùng toả hào quang như nút OK. Quái chưa có hàng khuyên dùng thì không toả sáng.",
   "Bộ bài cho thuê trong tuần đổi thành bộ Fusion (hình nền Chiến binh kỳ nhông). Hoa ăn thịt người giảm máu từ 3 xuống 2.",
   "Có thư mới trong Hộp thư tặng 200 sao.",
+  "Thỏ đen tinh nghịch né đòn cũng chớp sáng như Chiến binh kỳ nhông.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -3556,7 +3556,10 @@ function rabbitDodge(self: FieldMon, other: FieldMon, aimed = true): boolean {
   const rates = grabNums(skillText(self.cardId), /(\d+)\s*%/gi);
   const stars = monsterCard(other.cardId)?.stars ?? 0;
   const pct = stars >= 3 ? (rates[1] ?? rates[0] ?? 70) : (rates[0] ?? 35);
-  return Math.random() < pct / 100;
+  const dodged = Math.random() < pct / 100;
+  // Thỏ đen tinh nghịch né cũng chớp sáng như Linh hoạt (chủ game 18/11).
+  if (dodged && !dodgeOff && !listingChoices && !dodgeSeen.includes(self.uid)) dodgeSeen.push(self.uid);
+  return dodged;
 }
 
 function releaseGuardAttack(before: FieldMon, after: FieldMon, defender: FieldMon, allies?: Array<FieldMon | null>): { attacker: FieldMon; defender: FieldMon } {
