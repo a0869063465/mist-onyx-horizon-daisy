@@ -724,6 +724,30 @@ export const FORMS: MonsterCard[] = [
     "art": "khong-lo-thu-linh"
   },
   {
+    "id": "phu-thuy-tap-su",
+    "name": "Phù thuỷ tập sự",
+    "stars": 2,
+    "gems": 0,
+    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 3 cộng với số sao hiện có, lên đối thủ hoặc lên 1 quái địch.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 3,
+    "hp": 5,
+    "art": "phu-thuy-tap-su"
+  },
+  {
+    "id": "phu-thuy-bac-thay",
+    "name": "Phù thuỷ bậc thầy",
+    "stars": 3,
+    "gems": 0,
+    "skill": "**__Cầu sấm__**: \nDùng 1 mana gây sát thương phép bằng 3 cộng với số sao hiện có, lên đối thủ hoặc lên 1 quái địch.\nSau mỗi lần Cầu sấm giết được mục tiêu, Cầu sấm tăng thêm 1 sát thương vĩnh viễn.",
+    "atk": 1,
+    "def": 1,
+    "mdef": 4,
+    "hp": 6,
+    "art": "phu-thuy-bac-thay"
+  },
+  {
     "id": "ky-si-cuoi-rong",
     "name": "Kỵ sĩ cưỡi rồng",
     "stars": 5,

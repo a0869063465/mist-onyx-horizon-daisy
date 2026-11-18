@@ -1397,6 +1397,31 @@ test("Dung hợp Khổng lồ (18/11): 3 lá 1 mắt trên tay chọn Mặc giá
   assert.equal(barred.players[0].reserve.length, 1, "đã triệu hồi quái khác: không dung hợp");
 });
 
+test("Phù thuỷ tập sự / bậc thầy (18/11): dung hợp từ tí hơn, Cầu sấm +1, bậc thầy giết mục tiêu thì Cầu sấm tăng 1 vĩnh viễn", () => {
+  const hand = (s, ids, stars) => ({ ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, reserve: ids.map((id) => ({ id, hp: 3, maxHp: 3 })), stars, orb: 3, summons: 0, fresh: [] } : p)) });
+  const base = hand(board({}, {}), ["phu-thuy-ti-hon", "phu-thuy-ti-hon", "phu-thuy-ti-hon"], 3);
+  const ways = D.setFusionsFor(base, 0, 0).map((w) => w.result).sort();
+  assert.deepEqual(ways, ["phu-thuy-bac-thay", "phu-thuy-tap-su"]);
+  // Cầu sấm: tí hơn 2 + sao, tập sự 3 + sao, bậc thầy 3 + sao (sao 3: 5 / 6 / 6).
+  const hit = (id, extraMon = {}) => {
+    let s = board({ 0: [id, extraMon] }, { 0: ["may-chem", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+    s = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, stars: 3, orb: 3 } : p)) };
+    const done = D.passResponse(D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0, false, null));
+    return { s: done, dealt: 20 - (at(done, 1, 0)?.hp ?? 0) };
+  };
+  assert.equal(hit("phu-thuy-ti-hon").dealt, 5);
+  assert.equal(hit("phu-thuy-tap-su").dealt, 6);
+  assert.equal(hit("phu-thuy-bac-thay").dealt, 6);
+  // Bậc thầy giết được mục tiêu: Cầu sấm của nó +1 vĩnh viễn; không giết thì không tăng.
+  let kill = board({ 0: ["phu-thuy-bac-thay", {}] }, { 0: ["may-chem", { hp: 2, maxHp: 2, def: 0, mdef: 0 }] });
+  kill = { ...kill, players: kill.players.map((p, i) => (i === 0 ? { ...p, stars: 3, orb: 3 } : p)) };
+  const killed = D.passResponse(D.useSkill(kill, uid(kill, 0, 0), uid(kill, 1, 0), 0, false, null));
+  assert.equal(at(killed, 1, 0), null, killed.live);
+  assert.equal(at(killed, 0, 0).skillUp, 1, "giết được: +1 vĩnh viễn");
+  const miss = hit("phu-thuy-bac-thay").s;
+  assert.ok(!at(miss, 0, 0).skillUp, "không giết: không tăng");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

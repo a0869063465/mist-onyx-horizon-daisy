@@ -41,6 +41,10 @@ export const SET_FUSIONS: Array<{ result: string; materials: string[] }> = [
   { result: "khong-lo-mac-giap", materials: ["khong-lo-mot-mat", "khong-lo-mot-mat"] },
   { result: "khong-lo-thu-linh", materials: ["khong-lo-mac-giap", "khong-lo-mot-mat"] },
   { result: "khong-lo-thu-linh", materials: ["khong-lo-mot-mat", "khong-lo-mot-mat", "khong-lo-mot-mat"] },
+  // Phù thuỷ tí hơn cùng khuôn (chủ game 18/11): Tập sự = 2 tí hơn; Bậc thầy = Tập sự + 1 tí hơn, hoặc 3 tí hơn.
+  { result: "phu-thuy-tap-su", materials: ["phu-thuy-ti-hon", "phu-thuy-ti-hon"] },
+  { result: "phu-thuy-bac-thay", materials: ["phu-thuy-tap-su", "phu-thuy-ti-hon"] },
+  { result: "phu-thuy-bac-thay", materials: ["phu-thuy-ti-hon", "phu-thuy-ti-hon", "phu-thuy-ti-hon"] },
 ];
 
 /** One material of a set fusion: a card in the hand (by index) or a monster on the field (by uid). */
@@ -94,3 +98,9 @@ export function setFusions(
   }
   return out;
 }
+
+/** Phù thuỷ tí hơn và 2 dạng dung hợp của nó, đều dùng Cầu sấm (chủ game 18/11). */
+export const HEXERS = ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"] as const;
+export const isHexer = (id: string | null | undefined): boolean => Boolean(id && (HEXERS as readonly string[]).includes(id));
+/** Sát thương Cầu sấm cộng thêm theo lá: Tập sự +1, Bậc thầy +1. */
+export const hexBonus = (id: string | null | undefined): number => (id === "phu-thuy-tap-su" || id === "phu-thuy-bac-thay" ? 1 : 0);

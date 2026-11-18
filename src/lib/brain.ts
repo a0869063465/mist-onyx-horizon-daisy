@@ -1,3 +1,4 @@
+import { isHexer } from "./fusion.ts";
 import { monsterCard, spellCard } from "./catalog.ts";
 import {
   aiAnswerAsk,
@@ -385,7 +386,7 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
 
 function faceSkill(id: string, index: number) {
   return (
-    id === "phu-thuy-ti-hon" ||
+    isHexer(id) ||
     id === "mat-do-tan-pha" ||
     id === "may-nem-bom-hinh-nhen" ||
     id === "ma-dao-si" ||

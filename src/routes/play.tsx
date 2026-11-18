@@ -192,7 +192,7 @@ import {
   wakeLurk,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
-import { findFusion, findKnightFusion, thirdKnight, type FuseMat } from "@/lib/fusion";
+import { findFusion, findKnightFusion, hexBonus, isHexer, thirdKnight, type FuseMat } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
@@ -1511,7 +1511,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
 
 function fieldLook(mon: FieldMon, stars: number): { name: string; text: string; hot?: string } {
   const name = fieldName(mon);
-  if (mon.cardId === "phu-thuy-ti-hon") return { name, text: "Gây ", hot: `${3 + stars} sát thương` };
+  if (isHexer(mon.cardId)) return { name, text: "Gây ", hot: `${2 + hexBonus(mon.cardId) + stars + (mon.skillUp ?? 0)} sát thương` };
   if (mon.cardId === "mo-voi-ma-mut") return { name, text: "Hy sinh, gây ", hot: `${mon.hp} sát thương phép` };
   if (mon.cardId === "ga-he-dang-so" && mon.charge >= 2) {
     const amount = skillFigure("ga-he-dang-so", "dmg", 5) + skillFigure("ga-he-dang-so", "dmg", 4, 1) * Math.floor((mon.charge - 2) / 2);
@@ -1566,7 +1566,7 @@ function damageShot(cardId: string, index: number) {
 }
 
 function faceSkill(id: string, index: number) {
-  return id === "phu-thuy-ti-hon" || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
+  return isHexer(id) || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
 }
 
 function skillChoices(text: string): string[] {
@@ -3187,7 +3187,7 @@ function PlayPage() {
     const whipBoom = Boolean(attackWas && !attackNow && fieldMon(prev, attackWas.attacker)?.bolt && !fieldMon(prev, attackWas.attacker)?.horn && /sát thương phép/.test(said));
     const gnawed = gnawBoosted(prev, duel);
     const beamCaster = beam && duel.pending?.kind === "beam" ? fieldMon(duel, duel.pending.caster)?.cardId ?? "" : "";
-    const beamKill = beamCaster === "ga-he-dang-so" || beamCaster === "phu-thuy-ti-hon" || beamCaster === "mo-voi-ma-mut";
+    const beamKill = beamCaster === "ga-he-dang-so" || isHexer(beamCaster) || beamCaster === "mo-voi-ma-mut";
     const monsterKill = !spent && duel.tone === "spell" && /sát thương phép|tiêu diệt/i.test(said);
     const cameFromBeam = prev.pending?.kind === "beam";
     const beamWasSwordsman = cameFromBeam && prev.pending?.kind === "beam" && fieldMon(prev, prev.pending.caster)?.cardId === "kiem-si-lua-thieng";

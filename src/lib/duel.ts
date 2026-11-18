@@ -11,7 +11,7 @@ import { chooseSwing, readLean, tilt, type Lean } from "./adapt.ts";
 import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
-import { findFusion, findKnightFusion, setFusions } from "./fusion.ts";
+import { findFusion, findKnightFusion, hexBonus, isHexer, setFusions } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import { keywordsOf } from "./keywords.ts";
@@ -696,6 +696,8 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "rong-con": [{ index: 0, cast: "aim" }],
   "rong-ngan-tuoi": [{ index: 0, cast: "aim" }],
   "phu-thuy-ti-hon": [{ index: 0, cast: "aim" }],
+  "phu-thuy-tap-su": [{ index: 0, cast: "aim" }],
+  "phu-thuy-bac-thay": [{ index: 0, cast: "aim" }],
   "ma-dao-si": [{ index: 0, cast: "aim" }],
   "loi-nguyen-cua-rong": [{ index: 0, cast: "aim" }],
   "rong-ac-ma": [{ index: 0, cast: "aim" }],
@@ -2087,6 +2089,8 @@ const NOT_BEAST = new Set([
   "ky-si-bong-toi",
   "ga-he-dang-so",
   "phu-thuy-ti-hon",
+  "phu-thuy-tap-su",
+  "phu-thuy-bac-thay",
   "phu-thuy-rung-den",
   "yeu-tinh-chuc-phuc",
   "quai-thu-thien-su",
@@ -2737,7 +2741,7 @@ export function skillLook(cardId: string, index = 0): "spell" | "fire" | "gun" |
 }
 
 export function harmSkill(cardId: string, index = 0) {
-  if (cardId === "kiem-si-lua-thieng" || cardId === "phu-thuy-ti-hon" || cardId === "trieu-hoi-ac-ma" || cardId === "sua-hut-ma-phap" || cardId === "trai-tim-hai-long" || cardId === "mo-voi-ma-mut" || cardId === "mat-do-tan-pha" || cardId === "may-nem-bom-hinh-nhen") return true;
+  if (cardId === "kiem-si-lua-thieng" || isHexer(cardId) || cardId === "trieu-hoi-ac-ma" || cardId === "sua-hut-ma-phap" || cardId === "trai-tim-hai-long" || cardId === "mo-voi-ma-mut" || cardId === "mat-do-tan-pha" || cardId === "may-nem-bom-hinh-nhen") return true;
   if (cardId === "ngai-khong-lo" || cardId === "ngai-nu-hoang" || cardId === "ngai-hoan-my") return true;
   if (cardId === "rong-phun-hoa-cau") return index === 1;
   if (cardId === "ga-he-dang-so") return index === 1;
@@ -6277,7 +6281,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "yeu-tinh-chuc-phuc") return chipLabel(cardId, index === 0 ? "aid" : "bless");
   if (cardId === "sau-non") return chipLabel(cardId, "cocoon");
   if (cardId === "ken-ngai") return chipLabel(cardId, "hatch");
-  if (cardId === "phu-thuy-ti-hon" || cardId === "trieu-hoi-ac-ma") return chipLabel(cardId, "hex");
+  if (isHexer(cardId) || cardId === "trieu-hoi-ac-ma") return chipLabel(cardId, "hex");
   if (cardId === "ong-khong-lo") return chipLabel(cardId, "stun");
   if (cardId === "mo-voi-ma-mut") return chipLabel(cardId, "burst");
   if (cardId === "ngai-khong-lo" || cardId === "ngai-nu-hoang" || cardId === "ngai-hoan-my") return chipLabel(cardId, "dust");
@@ -8985,14 +8989,14 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const noted = note(next, aimNotice(castName(mon.cardId, skillIndex), curseRows) ?? `${castName(mon.cardId, skillIndex)} gây ${lone}.`, "hit");
     return { ...noted, skill: { id: mon.cardId, index: skillIndex, aim: targetUid, hits } };
   }
-  if (mon.cardId === "phu-thuy-ti-hon") {
+  if (isHexer(mon.cardId)) {
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
     const before = you.stars;
     const paid = pay(you, 1);
     if (!paid) return note(state, "Cần 1 gem.");
     const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
     let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
-    const amount = Math.max(0, 2 + next.players[side].stars + (mon.skillUp ?? 0) - (mon.fake ? 1 : 0));
+    const amount = Math.max(0, 2 + hexBonus(mon.cardId) + next.players[side].stars + (mon.skillUp ?? 0) - (mon.fake ? 1 : 0));
     const them = next.players[foe];
     if (!targetUid) {
       const dealt = outgoing(mon, amount);
@@ -9004,7 +9008,15 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
     const real = shuntUid(them.field, target.uid) ?? target.uid;
     const foeField = them.field.map((unit) => (unit?.uid === real ? damageSpell(unit, amount, undefined, mon) : unit));
     next = patch(next, foe, dropDead({ ...them, field: foeField }));
-    return note(next, `${castName(mon.cardId, skillIndex)} gây ${spellLanded(them.field.find((unit) => unit?.uid === real) ?? target, amount, undefined, mon)} sát thương phép.`, "spell");
+    let text = `${castName(mon.cardId, skillIndex)} gây ${spellLanded(them.field.find((unit) => unit?.uid === real) ?? target, amount, undefined, mon)} sát thương phép.`;
+    // Phù thuỷ bậc thầy (chủ game 18/11): Cầu sấm giết được mục tiêu thì Cầu sấm của chính nó tăng thêm 1 sát thương vĩnh viễn (cộng dồn).
+    const struck = foeField.find((unit) => unit?.uid === real);
+    if (mon.cardId === "phu-thuy-bac-thay" && struck && struck.hp <= 0) {
+      const mine = next.players[side];
+      next = patch(next, side, { ...mine, field: mine.field.map((unit) => (unit?.uid === uid ? { ...unit, skillUp: (unit.skillUp ?? 0) + 1 } : unit)) });
+      text += ` Cầu sấm tăng thêm 1 sát thương vĩnh viễn.`;
+    }
+    return note(next, text, "spell");
   }
   if (mon.cardId === "phu-thuy-thoi-gian") {
     const name = castName(mon.cardId, skillIndex);
@@ -10878,7 +10890,7 @@ export function aiStep(state: Duel): Duel {
       if (cast) return cast;
     }
   }
-  const witch = ready.find((mon) => mon.cardId === "phu-thuy-ti-hon");
+  const witch = ready.find((mon) => isHexer(mon.cardId));
   if (witch && me.orb >= 1 && canTargetFoe(state)) {
     const victim = threats.find((mon) => spellHurt(mon, 3 + me.stars) >= mon.hp);
     if (victim) {

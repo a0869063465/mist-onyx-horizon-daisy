@@ -1,3 +1,4 @@
+import { isHexer } from "@/lib/fusion";
 import { MONSTER_CHIPS } from "@/lib/card-edits";
 import { FORMS, MONSTERS, SPELLS, monsterCard } from "@/lib/catalog";
 
@@ -119,7 +120,7 @@ export function baseSkillLook(cardId: string, index = 0): SkillLook {
   if (cardId === "rong-phun-hoa-cau" && index === 1) return "fire";
   if (cardId === "ga-he-dang-so") return index === 1 ? "spell" : null;
   if (
-    cardId === "phu-thuy-ti-hon" ||
+    isHexer(cardId) ||
     cardId === "trieu-hoi-ac-ma" ||
     cardId === "sua-hut-ma-phap" ||
     cardId === "con-thinh-no-cua-hai-vuong" ||

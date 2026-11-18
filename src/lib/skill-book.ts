@@ -63,6 +63,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhinoceros-horn")],
   "phu-thuy-ti-hon": [A("Cầu sấm", "focused-lightning")],
+  "phu-thuy-tap-su": [A("Cầu sấm", "focused-lightning")],
+  "phu-thuy-bac-thay": [A("Cầu sấm", "focused-lightning")],
   "sau-non": [
     RP("Hoá Kén", "caterpillar", "tiêu hao 1 mana.", "kén có công", "kén và chân kén hồi"),
     joined(AP("Chân kén", "spider-web", "tạo tối đa 2 chân kén")),
