@@ -8980,7 +8980,7 @@ function PlayPage() {
           </div>
         ) : null}
         {fuseChoice && !fuseShow ? (
-          <div className="fuse-pick" onClick={() => setFuseChoice(null)}>
+          <div className={`fuse-pick${fuseChoice.opts.length === 1 ? " is-solo" : ""}`} onClick={() => setFuseChoice(null)}>
             {fuseChoice.opts.map((opt, i) => (
               <div key={opt.resultId} className={`fuse-pick-col${i === fuseChoice.at ? " is-on" : ""}`} onClick={(event) => event.stopPropagation()}>
                 <img

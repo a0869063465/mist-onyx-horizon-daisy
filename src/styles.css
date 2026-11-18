@@ -14701,4 +14701,8 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .fuse-pick-col { position: relative; width: 46%; display: flex; flex-direction: column; align-items: center; gap: 0.9rem; opacity: 0.72; transition: opacity 0.2s, transform 0.2s; }
 .fuse-pick-col.is-on { opacity: 1; transform: scale(1.03); }
 .fuse-pick-art { width: 100%; aspect-ratio: 2 / 3; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.8)); cursor: pointer; }
+/* Chỉ một quái kết quả: lá to hơn và hạ xuống để đầu quái không nằm dưới bảng mô tả (chủ game 18/11). */
+.fuse-pick.is-solo { padding-top: calc(41% + 4.2rem); }
+.fuse-pick.is-solo .fuse-pick-col { width: 58%; opacity: 1; }
+.fuse-pick.is-solo .fuse-pick-art { -webkit-mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 60%, transparent 100%); mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 60%, transparent 100%); }
 .fuse-pick .act3d { transform: scale(1.1); transform-origin: top center; margin-bottom: 0.6rem; }
