@@ -1085,6 +1085,7 @@ export const PENDING_NOTES: string[] = [
   "Bảng xác nhận dùng skill, phép: dòng Tiêu hao mana lên đầu (mana xanh lam), thủ vàng, thủ phép tím. Khủng long vãy kiếm đánh thường cũng hỏi xác nhận (giảm 2 thủ).",
   "Glow chớp hồng của phép, skill phản ứng và siêu tốc sáng và rõ hơn, bằng glow xanh lá của quái triệu hồi được.",
   "Phép dùng được ở lượt chính (Sừng lôi phá, Sợi xích địa ngục…) chớp glow xanh lá như quái triệu hồi được.",
+  "Quái không thể hành động (bị Sợi xích địa ngục khoá) hoặc không thể chặn (Hoa ăn thịt người, Kén) không còn chớp phản ứng hay chớp chặn.",
 ];
 
 function remarkOf(notes: string[]) {

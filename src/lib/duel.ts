@@ -4952,7 +4952,7 @@ export function armBlockSkill(state: Duel, uid: string, skillName: string): Duel
   if (state.hold.priority !== ownerSide) return note(state, "Chưa tới lượt phản ứng.");
   const owner = state.players[ownerSide];
   const mon = owner.field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || mon.cardId !== "chien-si-gam-nham" || mon.dim || mon.stun > 0 || mon.noBlock) return state;
+  if (!mon || mon.cardId !== "chien-si-gam-nham" || mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || mon.noBlock) return state;
   const cost = skillManaCost(mon.cardId);
   if (owner.orb < cost) return note(state, cost === 1 ? "Cần 1 gem." : `Cần ${cost} gem.`);
   const name = skillName.trim() || "Khiên thú sĩ";

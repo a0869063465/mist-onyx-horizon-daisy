@@ -1298,7 +1298,7 @@ function reactTone(_cardId: string): string {
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (canStand(duel, mon.uid)) return true;
   if (harpyAlert(duel, mon, viewer)) return true;
-  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0) return false;
+  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0) return false;
   const pending = duel.pending;
   if (mon.cardId === "chien-si-gam-nham" && pending?.kind === "face") return true;
   if (mon.cardId === "yeu-tinh-chuc-phuc" && (pending?.kind === "face" || pending?.kind === "melee")) return true;
@@ -7965,7 +7965,7 @@ function PlayPage() {
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer) || (lurkReady(mon) && duel.turn === viewer && duel.step === "main"))}
               lurk={!!mon && lurking(mon)}
               ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
-              block={!!mon && !frozen && canIntercept && mon.row !== "back" && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
+              block={!!mon && !frozen && canIntercept && mon.row !== "back" && !isStill(mon.cardId) && !mon.noBlock && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
               forecast={mon ? sight?.mons.get(mon.uid) : undefined}
               onSlot={onSlot}
