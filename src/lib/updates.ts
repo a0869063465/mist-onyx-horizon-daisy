@@ -1061,6 +1061,8 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi số chỉ số to bất thường giữa màn hình khi đối thủ triệu hồi quái.",
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
+  "Khổng lồ 1 mắt đổi hình mới, còn thủ 1 và máu 3.",
+  "Thêm Khổng lồ mặc giáp (2 sao, công 4, thủ 2, thủ phép 1, máu 4) và Khổng lồ thủ lĩnh (3 sao, công 4, thủ 1, máu 9, Đập phá hồi thêm 1 máu).",
 ];
 
 function remarkOf(notes: string[]) {

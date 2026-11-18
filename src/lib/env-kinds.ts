@@ -41,7 +41,7 @@ export const ENV_KINDS: Record<string, string[]> = {
     "the-than-cua-shien",
   ],
   // Đất đá
-  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat"],
+  "dat-da": ["linh-chien-da-khong-lo", "khung-long-vay-kiem", "mo-voi-ma-mut", "khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"],
   // Chim chóc và rồng
   nui: ["rong-phun-hoa-cau", "rong-boc-trung", "rong-con", "rong-ngan-tuoi", "loi-nguyen-cua-rong", "my-dieu-nhan", "nu-chua-dieu-nhan", "mat-xanh-huy-diet"],
   // Thú rừng và côn trùng

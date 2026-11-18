@@ -1337,6 +1337,18 @@ test("L2 kiểu 2: đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) 
   });
 });
 
+test("Khổng lồ thủ lĩnh: Đập phá +1 công và hồi 1 máu (không vượt máu tối đa); mặc giáp chỉ +1 công", () => {
+  for (const [id, heal] of [["khong-lo-thu-linh", 1], ["khong-lo-mac-giap", 0]]) {
+    let s = board({ 0: [id, { hp: 5, maxHp: 9 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, atk: 0 }] });
+    s = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 2 } : p)) };
+    const atk0 = at(s, 0, 0).atk;
+    const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    const me = at(done, 0, 0);
+    assert.equal(me.atk, atk0 + 1, "+1 công");
+    assert.equal(me.hp, 5 + heal, "hồi máu");
+  }
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

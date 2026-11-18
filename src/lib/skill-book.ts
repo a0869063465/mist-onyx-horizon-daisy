@@ -89,6 +89,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
+  "khong-lo-mac-giap": [P("Đập phá", "cyclops")],
+  "khong-lo-thu-linh": [P("Đập phá", "cyclops")],
   "may-quay-thuong": [
     AP("Quay thưởng", "slot-machine", "quay thưởng một lần", "vòng quay trúng"),
     joined(PP("Số 7", "card-joker", "- số 7")),

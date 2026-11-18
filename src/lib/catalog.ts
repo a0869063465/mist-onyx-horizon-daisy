@@ -509,9 +509,9 @@ export const MONSTERS: MonsterCard[] = [
     "gems": 0,
     "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn Tiêu hao 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
     "atk": 3,
-    "def": 3,
+    "def": 1,
     "mdef": 0,
-    "hp": 1,
+    "hp": 3,
     "art": "khong-lo-mot-mat",
     "strong": "Vô dịch trong đấu vật lý",
     "weak": "Không có thủ phép",
@@ -698,6 +698,30 @@ export const FORMS: MonsterCard[] = [
     "mdef": 3,
     "hp": 3,
     "art": "hiep-si-huyen-bi"
+  },
+  {
+    "id": "khong-lo-mac-giap",
+    "name": "Khổng lồ mặc giáp",
+    "stars": 2,
+    "gems": 0,
+    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn Tiêu hao 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường.",
+    "atk": 4,
+    "def": 2,
+    "mdef": 1,
+    "hp": 4,
+    "art": "khong-lo-mac-giap"
+  },
+  {
+    "id": "khong-lo-thu-linh",
+    "name": "Khổng lồ thủ lĩnh",
+    "stars": 3,
+    "gems": 0,
+    "skill": "**__Đập phá__**: \nĐòn đánh thường chủ động của hắn Tiêu hao 1 mana. Những lần bị động thì không tốn.\nTăng cho hắn 1 công vĩnh viễn sau mỗi đòn đánh thường. Đập phá hồi thêm 1 máu.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 0,
+    "hp": 9,
+    "art": "khong-lo-thu-linh"
   },
   {
     "id": "ky-si-cuoi-rong",

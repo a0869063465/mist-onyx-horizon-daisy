@@ -7522,7 +7522,7 @@ function flowerBiteCore(state: Duel, foe: Side, attackerUid: string, flowerUid: 
     "heal",
   );
   const mends = [{ uid: flower.uid, n: take }, ...[awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend }))];
-  return growSmash(releaseLegend({ ...noted, mends }), attacker.uid, attacker.cardId === "khong-lo-mot-mat");
+  return growSmash(releaseLegend({ ...noted, mends }), attacker.uid, isSmasher(attacker.cardId));
 }
 
 function rainBombs(state: Duel, side: Side, mon: FieldMon, primaryUid: string | null): Duel {
@@ -7628,8 +7628,12 @@ function grantAtk(mon: FieldMon, n: number): FieldMon {
   return { ...mon, atk: mon.atk + n, raised: markRaised(mon, { atk: n }) };
 }
 
+/** The one-eyed giants that carry Đập phá (Khổng lồ 1 mắt, mặc giáp, thủ lĩnh). */
+const SMASHERS = ["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"];
+const isSmasher = (id: string) => SMASHERS.includes(id);
+
 function smashPlain(mon: FieldMon): boolean {
-  return mon.cardId === "khong-lo-mot-mat" && !mon.horn && !mon.gaze && !mon.bolt;
+  return isSmasher(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt;
 }
 
 function swordSwing(mon: FieldMon) {
@@ -7674,11 +7678,15 @@ function growSmash(state: Duel, uid: string | null | undefined, allow: boolean):
   const side = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   const you = state.players[side];
   const mon = you.field.find((unit) => unit?.uid === uid && unit.hp > 0) ?? null;
-  if (!mon || mon.cardId !== "khong-lo-mot-mat") return state;
-  const grown = grantAtk(mon, 1);
+  if (!mon || !isSmasher(mon.cardId)) return state;
+  // Khổng lồ thủ lĩnh: Đập phá also heals 1 (chủ game 18/11); health stops at the maximum.
+  const leader = mon.cardId === "khong-lo-thu-linh";
+  const cap = mon.maxHp || mon.hp;
+  const healed = leader ? Math.min(1, Math.max(0, cap - mon.hp)) : 0;
+  const grown = { ...grantAtk(mon, 1), hp: mon.hp + healed };
   const field = you.field.map((unit) => (unit?.uid === uid ? grown : unit));
   const next = patch(state, side, { ...you, field });
-  return stackAct(next, `${cardOf(mon).name} dùng Đập phá, tăng 1 công vĩnh viễn.`);
+  return stackAct(next, leader ? `${cardOf(mon).name} dùng Đập phá, tăng 1 công vĩnh viễn và hồi 1 máu.` : `${cardOf(mon).name} dùng Đập phá, tăng 1 công vĩnh viễn.`);
 }
 
 function grantWard(mon: FieldMon, n: number): FieldMon {
@@ -8053,7 +8061,7 @@ function charmStrikeCore(state: Duel, birdUid: string, foeUid: string): Duel {
   const stunned = hit.attacker.hp > 0 ? { ...hit.attacker, dim: true, stun: Math.max(hit.attacker.stun, 2) } : hit.attacker;
   let next = patch(state, foe, dropDead({ ...them, field: them.field.map((unit) => (unit?.uid === attacker.uid ? stunned : unit)) }));
   next = patch(next, side, dropDead({ ...you, field: you.field.map((unit) => (unit?.uid === bird.uid ? hit.defender : unit)) }));
-  return growSmash(sealHarpy(next, side, bird.uid, actNotice("Mê hoặc", [`${cardOf(attacker).name} đánh thường vào ${cardOf(bird).name}`, `${cardOf(attacker).name} không thể hành động ở lượt sau`]), "hit"), attacker.uid, attacker.cardId === "khong-lo-mot-mat");
+  return growSmash(sealHarpy(next, side, bird.uid, actNotice("Mê hoặc", [`${cardOf(attacker).name} đánh thường vào ${cardOf(bird).name}`, `${cardOf(attacker).name} không thể hành động ở lượt sau`]), "hit"), attacker.uid, isSmasher(attacker.cardId));
 }
 
 export function answerPlume(state: Duel, yes: boolean): Duel {
@@ -8173,7 +8181,7 @@ function castLureCore(state: Duel, side: Side, mon: FieldMon, foeUid: string | n
   next = patch(next, side, dropDead({ ...owner, field: owner.field.map((unit) => (unit?.uid === defender.uid ? hit.defender : unit)) }));
   const lines = [`${cardOf(grown).name} dụ dỗ ${cardOf(attacker).name}`, `${cardOf(attacker).name} sáp lá cà với ${cardOf(defender).name}`];
   const text = actNotice("Dụ dỗ", lines);
-  return growSmash(becomePerfect(note(next, text, "hit"), side, mon.uid), attacker.uid, attacker.cardId === "khong-lo-mot-mat");
+  return growSmash(becomePerfect(note(next, text, "hit"), side, mon.uid), attacker.uid, isSmasher(attacker.cardId));
 }
 
 function castPerfect(state: Duel, side: Side, mon: FieldMon, skillIndex: number, targetUid: string | null, extra: string | null): Duel {
