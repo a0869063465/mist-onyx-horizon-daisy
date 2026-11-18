@@ -3449,7 +3449,7 @@ button.trail-dot.is-on {
 }
 @keyframes react-breathe {
   0%, 100% { scale: 1; filter: drop-shadow(0 0 1.5px var(--alert-color)) drop-shadow(0 0 5px var(--alert-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--alert-color) 80%, transparent)); }
-  50% { scale: 1.07; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--alert-color) 35%, #ffffff)) drop-shadow(0 0 12px var(--alert-color)) drop-shadow(0 0 26px var(--alert-color)) drop-shadow(0 0 34px color-mix(in srgb, var(--alert-color) 90%, transparent)); }
+  50% { scale: 1.035; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--alert-color) 35%, #ffffff)) drop-shadow(0 0 12px var(--alert-color)) drop-shadow(0 0 26px var(--alert-color)) drop-shadow(0 0 34px color-mix(in srgb, var(--alert-color) 90%, transparent)); }
 }
 /* V8C: lá phép dùng được nhưng không phải phép phản ứng: viền + glow sáng đứng yên, không thở. */
 .hand-card.is-castable > .card {
@@ -14741,4 +14741,4 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .act-note.is-ask b.ink-sheet-clean { color: #6fb6ff; }
 .act-note.is-ask b.ink-mana { color: #9ef4ff; }
 
-/* Chủ game 18/11: glow phản ứng (phép, skill, siêu tốc) chớp mạnh bằng glow xanh lá của quái triệu hồi được: đỉnh chớp cùng cỡ, phồng 1,07. */
+/* Chủ game 18/11: glow phản ứng (phép, skill, siêu tốc) chớp mạnh bằng glow xanh lá của quái triệu hồi được: đỉnh chớp cùng cỡ, phồng 1,035 như ready-breathe. */
