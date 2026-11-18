@@ -11,7 +11,7 @@ import { chooseSwing, readLean, tilt, type Lean } from "./adapt.ts";
 import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
-import { findFusion, findKnightFusion } from "./fusion.ts";
+import { findFusion, findKnightFusion, setFusions } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import { keywordsOf } from "./keywords.ts";
@@ -175,6 +175,8 @@ export type Player = {
   drawLock?: boolean;
   drawBan?: number;
   summons: number;
+  /** Quái vừa triệu hồi vòng này (uid): dung hợp với nó vẫn được dù đã dùng lượt triệu hồi (chủ game 18/11, châm chước). */
+  fresh?: string[];
   aside?: number;
   acted: boolean;
   turns: number;
@@ -503,7 +505,7 @@ function pour(orb: number, flask: number, gain: number): { orb: number; flask: n
 
 function refill(player: Player): Player {
   const angels = player.field.filter((mon) => mon?.cardId === "quai-thu-thien-su").length;
-  return { ...player, ...pour(player.orb, player.flask, 1 + angels), draws: 0, summons: 0, aside: 0, acted: false };
+  return { ...player, ...pour(player.orb, player.flask, 1 + angels), draws: 0, summons: 0, fresh: [], aside: 0, acted: false };
 }
 
 export function createDuel(
@@ -3066,7 +3068,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
   const reserve = paid.reserve
     .filter((_, index) => index !== reserveIndex)
     .map((pile) => (pile.freeAt == null ? pile : { ...pile, freeAt: undefined }));
-  let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
+  let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, fresh: [...(paid.fresh ?? []), next.uid], aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
   const vow = absorbVow(placed, next.uid);
   placed = vow.player;
   if (placed.hats) placed = { ...placed, field: mixRow(placed.field) as Player["field"] };
@@ -3176,7 +3178,7 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: str
   const field = [...cleared] as Player["field"];
   field[land] = born;
   const reserve = paid.reserve.filter((_, index) => index !== reserveIndex).map((pile) => (pile.freeAt == null ? pile : { ...pile, freeAt: undefined }));
-  let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
+  let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, fresh: [...(paid.fresh ?? []), born.uid], aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
   const vow = absorbVow(placed, born.uid);
   placed = vow.player;
   if (placed.hats) placed = { ...placed, field: mixRow(placed.field) as Player["field"] };
@@ -3241,20 +3243,90 @@ function fuseCore(state: Duel, reserveIndex: number, fieldUid: string, slot: Slo
   if ((!recipe && !knight) || !handCard || !result) return note(state, "Không hợp nhất được.");
   // Chủ game 17/11: chỉ dung hợp được khi sao của người chơi không thấp hơn sao quái ra quá 1 (ra 5 sao thì cần từ 4 sao).
   if (player.stars < result.stars - 1) return note(state, `Cần ${result.stars - 1} sao để dung hợp ra ${result.name}.`);
+  const fuseBar = fuseSummonBar(player, [fieldUid]);
+  if (fuseBar) return note(state, fuseBar);
   if (player.field[slot] && player.field[slot]?.uid !== fieldUid && !(knight && player.field[slot]?.cardId && ["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"].includes(player.field[slot]?.cardId ?? ""))) return note(state, "Ô này đã có quái.");
   const guardRow = guardBarred(result.id, slot);
   if (guardRow) return note(state, guardRow);
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
-  const born = place({ ...state, seq: state.seq + 1 }, side, result.id);
+  const born = fuseShort(place({ ...state, seq: state.seq + 1 }, side, result.id), player, result.stars);
   const knights = new Set(["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"]);
   const field = player.field.map((mon) => (knight && mon && !mon.abroad && knights.has(mon.cardId) ? null : mon?.uid === fieldUid ? null : mon)) as Player["field"];
   field[slot] = born;
   const reserve = player.reserve.filter((_, index) => index !== reserveIndex);
-  const placed = { ...player, field, reserve, spent: [...(player.spent ?? []), held.id, ...(knight ? ids.filter((id) => knights.has(id) && id !== held.id) : [])] };
+  const placed = { ...player, field, reserve, summons: player.summons + 1, spent: [...(player.spent ?? []), held.id, ...(knight ? ids.filter((id) => knights.has(id) && id !== held.id) : [])] };
   const handName = fieldName({ cardId: held.id, level: held.saved?.level ?? 1 });
   const line = knight ? `Hợp nhất ba hiệp sĩ trở thành ${result.name}.` : `Hợp nhất ${handName} và ${fieldName(host)} trở thành ${result.name}.`;
   return note(patch({ ...state, seq: state.seq + 2 }, side, placed), line);
+}
+
+/**
+ * Dung hợp tính là 1 lượt triệu hồi (chủ game 18/11). Đã triệu hồi vòng này thì chỉ còn dung hợp được khi một nguyên liệu
+ * trên sân chính là quái vừa triệu hồi (lỡ kéo nguyên liệu ra sân trước: châm chước).
+ */
+function fuseSummonBar(player: Player, fieldUids: string[]): string | null {
+  if (player.summons < 1) return null;
+  if (fieldUids.some((uid) => (player.fresh ?? []).includes(uid))) return null;
+  return "Mỗi vòng chỉ triệu hồi 1 lần.";
+}
+
+/** Quái dung hợp nhiều sao hơn sao người chơi (vd 3 sao mà mình 2 sao) thì không hành động được lượt vừa dung hợp (chủ game 18/11). */
+function fuseShort(born: FieldMon, player: Player, stars: number): FieldMon {
+  return player.stars < stars ? { ...born, dim: true } : born;
+}
+
+/** Các cách dung hợp từ lá giống nhau mà lá trên tay ở `reserveIndex` mở được (nguyên liệu trên tay hoặc trên sân). */
+export function setFusionsFor(state: Duel, side: Side, reserveIndex: number) {
+  const player = state.players[side];
+  return setFusions(reserveIndex, player.reserve, player.field.map((mon) => (mon && mon.abroad === undefined && mon.hp > 0 ? mon : null)));
+}
+
+/**
+ * Dung hợp từ lá giống nhau (Khổng lồ, chủ game 18/11): kéo lá trên tay ở `reserveIndex`, ra `resultId`, đặt vào `slot`
+ * (ô trống hoặc ô của một nguyên liệu trên sân).
+ */
+export function fuseSet(state: Duel, reserveIndex: number, resultId: string, slot: Slot): Duel {
+  const next = fuseSetCore(state, reserveIndex, resultId, slot);
+  if (next === state) return next;
+  const ok = next.players !== state.players;
+  if (!ok && next.upkeep && !state.upkeep) return next;
+  const held = state.players[state.turn].reserve[reserveIndex];
+  const marked = traced(state, next, { kind: "fuse", actor: state.turn, ok, cardId: held?.id ?? null, target: null, end: null });
+  return ok ? yieldTurn(marked) : marked;
+}
+
+function fuseSetCore(state: Duel, reserveIndex: number, resultId: string, slot: Slot): Duel {
+  const locked = talkLock(state);
+  if (locked) return locked;
+  if (state.step !== "main" || state.winner) return state;
+  const waiting = needUpkeep(state);
+  if (waiting) return waiting;
+  const side = state.turn;
+  const player = state.players[side];
+  const held = player.reserve[reserveIndex];
+  const way = setFusionsFor(state, side, reserveIndex).find((fusion) => fusion.result === resultId);
+  const result = monsterCard(resultId);
+  if (!held || !way || !result) return note(state, "Không hợp nhất được.");
+  if (player.stars < result.stars - 1) return note(state, `Cần ${result.stars - 1} sao để dung hợp ra ${result.name}.`);
+  const fieldUids = way.mats.flatMap((mat) => (mat.from === "field" ? [mat.uid] : []));
+  const handIdx = new Set(way.mats.flatMap((mat) => (mat.from === "hand" ? [mat.index] : [])));
+  const bar = fuseSummonBar(player, fieldUids);
+  if (bar) return note(state, bar);
+  const there = player.field[slot];
+  if (there && !fieldUids.includes(there.uid)) return note(state, "Ô này đã có quái.");
+  const guardRow = guardBarred(result.id, slot);
+  if (guardRow) return note(state, guardRow);
+  if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
+  if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
+  const born = fuseShort(place({ ...state, seq: state.seq + 1 }, side, result.id), player, result.stars);
+  const field = player.field.map((mon) => (mon && fieldUids.includes(mon.uid) ? null : mon)) as Player["field"];
+  field[slot] = born;
+  const usedIds = [...[...handIdx].map((i) => player.reserve[i].id), ...player.field.flatMap((mon) => (mon && fieldUids.includes(mon.uid) ? [mon.cardId] : []))];
+  const reserve = player.reserve.filter((_, index) => !handIdx.has(index));
+  const placed = { ...player, field, reserve, summons: player.summons + 1, spent: [...(player.spent ?? []), ...[...handIdx].map((i) => player.reserve[i].id)] };
+  const names = usedIds.map((id) => monsterCard(id)?.name ?? id);
+  return note(patch({ ...state, seq: state.seq + 2 }, side, placed), `Hợp nhất ${names.join(", ")} trở thành ${result.name}.`);
 }
 
 function absorbVow(player: Player, uid: string): { player: Player; eaten: boolean } {

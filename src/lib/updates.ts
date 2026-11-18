@@ -1065,6 +1065,9 @@ export const PENDING_NOTES: string[] = [
   "Thêm Khổng lồ mặc giáp (2 sao, công 4, thủ 2, thủ phép 1, máu 4) và Khổng lồ thủ lĩnh (3 sao, công 4, thủ 1, máu 9, Đập phá hồi thêm 1 máu).",
   "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
   "Dung hợp chặt hơn: ra quái N sao thì người chơi phải có ít nhất N-1 sao (ví dụ ra quái 5 sao cần 4 sao). Áp cho mọi dung hợp.",
+  "Khổng lồ 1 mắt dung hợp được: 2 lá ra Khổng lồ mặc giáp, 3 lá (hoặc Khổng lồ mặc giáp + Khổng lồ 1 mắt) ra Khổng lồ thủ lĩnh; lá nằm trên tay hay trên sân đều được.",
+  "Có nhiều cách dung hợp thì hiện bảng chọn 2 quái: bấm quái để xem mô tả, bấm Dung hợp để dung hợp.",
+  "Dung hợp tính là lượt triệu hồi của vòng; lỡ triệu hồi 1 lá nguyên liệu trước thì vẫn dung hợp được. Quái dung hợp nhiều sao hơn sao của bạn thì không hành động được ngay vòng đó.",
 ];
 
 function remarkOf(notes: string[]) {

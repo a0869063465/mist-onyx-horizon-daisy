@@ -1362,6 +1362,36 @@ test("Dung hợp: ra quái N sao cần người chơi từ N-1 sao (rồng ác m
   assert.equal(ok.players[0].reserve.length, 0, "đủ N-1 sao: dung hợp được");
 });
 
+test("Dung hợp Khổng lồ (18/11): 3 lá 1 mắt trên tay chọn Mặc giáp hoặc Thủ lĩnh; tính 1 lượt triệu hồi; thiếu sao thì đứng yên", () => {
+  const withHand = (s, ids, extra = {}) => ({ ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, reserve: ids.map((id) => ({ id, hp: 3, maxHp: 3 })), stars: 2, orb: 3, summons: 0, fresh: [], ...extra } : p)) });
+  const s = withHand(board({}, {}), ["khong-lo-mot-mat", "khong-lo-mot-mat", "khong-lo-mot-mat"]);
+  const ways = D.setFusionsFor(s, 0, 0).map((w) => w.result).sort();
+  assert.deepEqual(ways, ["khong-lo-mac-giap", "khong-lo-thu-linh"]);
+  const boss = D.fuseSet(s, 0, "khong-lo-thu-linh", 0);
+  assert.equal(at(boss, 0, 0)?.cardId, "khong-lo-thu-linh", boss.live);
+  assert.equal(boss.players[0].reserve.length, 0, "dùng cả 3 lá trên tay");
+  assert.equal(boss.players[0].summons, 1, "tính 1 lượt triệu hồi");
+  assert.equal(at(boss, 0, 0).dim, true, "3 sao mà mình 2 sao: không hành động lượt này");
+  const armor = D.fuseSet(s, 0, "khong-lo-mac-giap", 0);
+  assert.equal(at(armor, 0, 0)?.cardId, "khong-lo-mac-giap");
+  assert.equal(armor.players[0].reserve.length, 1, "Mặc giáp dùng 2 lá, còn 1");
+  assert.equal(at(armor, 0, 0).dim, false, "2 sao đủ sao: hành động được");
+  // Đã triệu hồi quái khác vòng này: không dung hợp được.
+  const used = D.fuseSet(withHand(board({}, {}), ["khong-lo-mot-mat", "khong-lo-mot-mat"], { summons: 1 }), 0, "khong-lo-mac-giap", 0);
+  assert.equal(used.players[0].reserve.length, 2, "đã dùng lượt triệu hồi");
+  // Lỡ kéo 1 lá nguyên liệu ra sân: vẫn dung hợp được (châm chước).
+  let lap = withHand(board({}, {}), ["khong-lo-mot-mat", "khong-lo-mot-mat"]);
+  lap = D.summon(lap, 0, 0);
+  lap = { ...lap, turn: 0, step: "main", hold: null, pending: null };
+  const after = D.fuseSet(lap, 0, "khong-lo-mac-giap", 0);
+  assert.equal(at(after, 0, 0)?.cardId, "khong-lo-mac-giap", after.live);
+  // Dung hợp cũ (Kỵ sĩ bóng tối + Lời nguyền của rồng) cũng tính lượt triệu hồi.
+  let old = board({ 0: ["ky-si-bong-toi", {}] }, {});
+  old = { ...old, players: old.players.map((p, i) => (i === 0 ? { ...p, stars: 4, orb: 3, summons: 1, fresh: [], reserve: [{ id: "loi-nguyen-cua-rong", hp: 4, maxHp: 4 }] } : p)) };
+  const barred = D.fuse(old, 0, uid(old, 0, 0), 0);
+  assert.equal(barred.players[0].reserve.length, 1, "đã triệu hồi quái khác: không dung hợp");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

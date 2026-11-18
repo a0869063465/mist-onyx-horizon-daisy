@@ -145,6 +145,8 @@ import {
   previewMon,
   vowCap,
   fuse,
+  fuseSet,
+  setFusionsFor,
   testGrant,
   testEnv,
   testReset,
@@ -190,7 +192,7 @@ import {
   wakeLurk,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
-import { findFusion, findKnightFusion, thirdKnight } from "@/lib/fusion";
+import { findFusion, findKnightFusion, thirdKnight, type FuseMat } from "@/lib/fusion";
 import { COUNT_MARKS, fieldSpots, SHEET_SPOTS, loadAlertLook, loadField, markScale, matchBoard, type FieldKey } from "@/lib/layouts";
 import { bottomArt, topArt } from "@/lib/env-boards";
 import { spellFxLook } from "@/lib/card-fx";
@@ -362,8 +364,10 @@ type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks
 const SHOW_TOP = 47;
 const PEEK_TOP = 9;
 /** `third` and `c`: the third knight of a three-knight fusion and where it stands, so all three cards fly in. */
-type FuseOpt = { uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; cost: number };
-type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot };
+type FuseOpt = { uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; cost: number; set?: { mats: FuseMat[] } };
+/** Dung hợp từ lá giống nhau: hình và chỗ của từng nguyên liệu ngoài lá đang kéo, để cảnh dung hợp bay đúng. */
+type FuseMatShow = { src: string; spot: BoardSpot; uid?: string; index?: number };
+type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot; set?: { mats: FuseMatShow[] } };
 
 /** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
 const FUSE_RAYS = [
@@ -3855,6 +3859,7 @@ function PlayPage() {
       player.field.forEach((mon) => {
         if (mon && (findFusion(held.id, mon.cardId) || findKnightFusion(held.id, mon.cardId, ids))) bits.push(`${index}:${mon.uid}`);
       });
+      for (const way of setFusionsFor(duel, duel.turn, index)) bits.push(`${index}:${way.result}`);
     });
     return bits.length ? `${duel.turn}|${bits.join("|")}` : "";
   })();
@@ -5846,6 +5851,12 @@ function PlayPage() {
           fuseUids.add(mon.uid);
         }
       });
+      for (const way of setFusionsFor(duel, viewer, index)) {
+        for (const mat of way.mats) {
+          if (mat.from === "hand") fuseHands.add(mat.index);
+          else fuseUids.add(mat.uid);
+        }
+      }
     });
   }
   const fuseResult = fuseAsk ? monsterCard(fuseAsk.resultId) : undefined;
@@ -5862,13 +5873,42 @@ function PlayPage() {
     const mon = you.field[slot];
     return mon && !picks.includes(mon.uid) ? duel : summonVow(duel, index, slot, picks);
   };
-  const fuseAt = (show: FuseShow) => (slot: Slot) => fuse(duel, show.index, show.uid, slot);
+  const fuseAt = (show: FuseShow) => (slot: Slot) => (show.set ? fuseSet(duel, show.index, show.resultId, slot) : fuse(duel, show.index, show.uid, slot));
   const cost = (next: Duel) => Math.max(0, you.orb - next.players[viewer].orb);
   function startFuse(index: number, opt: FuseOpt) {
     const held = you.reserve[index];
     const mon = you.field.find((unit) => unit?.uid === opt.uid);
-    if (!held || !mon) return;
+    if (!held || (!mon && !opt.set)) return;
     const slotSpot = boardSpot(document.querySelector(`[data-slot="${viewer}-${opt.slot}"]`), { x: 50, y: 62, w: 18 });
+    if (opt.set) {
+      // Nguyên liệu khác lá đang kéo: lá trên tay bay lên từ tay, quái trên sân từ ô của nó.
+      const mats: FuseMatShow[] = opt.set.mats.slice(1).flatMap((mat): FuseMatShow[] => {
+        if (mat.from === "hand") {
+          const card = you.reserve[mat.index];
+          return card ? [{ index: mat.index, src: artSrc(card.id, card.saved?.level ?? 1), spot: boardSpot(document.querySelector(`[data-hand="r:${mat.index}"]`), { x: 50, y: 92, w: 18 }) }] : [];
+        }
+        const unit = you.field.find((at) => at?.uid === mat.uid);
+        const at = you.field.findIndex((one) => one?.uid === mat.uid);
+        return unit ? [{ src: artSrc(unit.cardId, unit.level ?? 1), spot: boardSpot(document.querySelector(`[data-slot="${viewer}-${at}"]`), slotSpot), uid: unit.uid }] : [];
+      });
+      setFuseChoice(null);
+      setFuseShow({
+        index,
+        uid: opt.uid,
+        slot: opt.slot,
+        resultId: opt.resultId,
+        phase: "lift",
+        n: Date.now(),
+        a: boardSpot(document.querySelector(".card-show") ?? document.querySelector(`[data-reserve="${index}"]`), { x: 30, y: 88, w: 18 }),
+        b: mats[0]?.spot ?? slotSpot,
+        c: mats[1]?.spot,
+        at: slotSpot,
+        set: { mats },
+      });
+      setInspect(null);
+      return;
+    }
+    if (!mon) return;
     setFuseChoice(null);
     setFuseShow({
       index,
@@ -5930,6 +5970,14 @@ function PlayPage() {
       const next = fuse(duel, index, mon.uid, slot);
       if (!took(next)) continue;
       opts.push({ uid: mon.uid, slot, resultId: recipe.result, cost: cost(next) });
+    }
+    // Dung hợp từ lá giống nhau (Khổng lồ, chủ game 18/11): nguyên liệu trên tay hoặc sân; quái ra đứng ở ô nguyên liệu trên sân, không thì ô trống.
+    for (const way of setFusionsFor(duel, viewer, index)) {
+      if (opts.some((opt) => opt.resultId === way.result)) continue;
+      const order = [...way.mats.flatMap((mat) => (mat.from === "field" ? [you.field.findIndex((unit) => unit?.uid === mat.uid)] : [])), ...Array.from({ length: FIELD_SLOTS }, (_, at) => at)];
+      const slot = order.find((at) => at >= 0 && took(fuseSet(duel, index, way.result, at as Slot))) as Slot | undefined;
+      if (slot === undefined) continue;
+      opts.push({ uid: way.mats.find((mat): mat is Extract<FuseMat, { from: "field" }> => mat.from === "field")?.uid ?? "", slot, resultId: way.result, cost: cost(fuseSet(duel, index, way.result, slot)), set: { mats: way.mats } });
     }
     // Một cách dung hợp: chạy thẳng. Từ 2 cách (2 lá / 3 lá): hiện bảng chọn 2 quái kết quả, mỗi quái một nút Dung hợp (chủ game 18/11).
     if (opts.length === 1) {
@@ -6599,7 +6647,7 @@ function PlayPage() {
     // Lightning strikes the slot as the fused monster lands, with its thunder.
     playCue("boltPrep", 0.35);
     window.setTimeout(() => {
-      apply(fuse(duel, show.index, show.uid, show.slot));
+      apply(fuseAt(show)(show.slot));
       setFuseShow(null);
       emitFx({ t: "rite", x: show.at.x, y: show.at.y, kind: "fuse" });
       emitFx({ t: "bolt", rank: "big", x: show.at.x, y: show.at.y });
@@ -7998,7 +8046,7 @@ function PlayPage() {
                   <div key={`${id}-${index}`} className={`hand-pick${picked && !tutorial ? " is-up" : ""}${stage?.index === index && stageOk ? " is-out" : ""}${drawShows.some((show) => show.target === `r:${index}`) ? " is-away" : ""}`} data-hand={`r:${index}`} style={fanStyle(index)}>
                     <button
                       type="button"
-                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index ? " is-fuse-hide" : ""}`}
+                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${(fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index) || (fuseShow?.set && (fuseShow.index === index || fuseShow.set.mats.some((mat) => mat.index === index))) ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
                       style={cottonCard || standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
@@ -8849,7 +8897,15 @@ function PlayPage() {
         </div>
         {fuseShow ? (
           <div className={`fuse3d is-${fuseShow.phase}`}>
-            {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fusePartner ? (
+            {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && fuseHeld && fuseShow.set && fuseShow.set.mats.length ? (
+              <FuseDance a={fuseShow.a} b={fuseShow.b} c={fuseShow.set.mats[1] ? fuseShow.c : undefined}>
+                {[
+                  <FusePic key="a" src={artSrc(fuseHeld.id, fuseHeld.saved?.level ?? 1)} />,
+                  ...fuseShow.set.mats.slice(0, 2).map((mat, i) => <FusePic key={i ? "c" : "b"} src={mat.src} />),
+                ]}
+              </FuseDance>
+            ) : null}
+            {(fuseShow.phase === "lift" || fuseShow.phase === "clash" || fuseShow.phase === "apart" || fuseShow.phase === "swirl" || fuseShow.phase === "flash") && !fuseShow.set && fuseHeld && fusePartner ? (
               <FuseDance a={fuseShow.a} b={fuseShow.b} c={fuseThird ? fuseShow.c : undefined}>
                 {[
                   <FusePic key="a" src={artSrc(fuseHeld.id, fuseHeld.saved?.level ?? 1)} />,
