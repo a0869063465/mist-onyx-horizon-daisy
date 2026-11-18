@@ -440,6 +440,11 @@ export const BALANCE_LOG: BalanceEntry[] = [
     at: "2026-11-18",
     wave: 35,
     stats: { def: { from: 3, to: 1 }, hp: { from: 1, to: 3 } },
+  },  {
+    id: "hoa-an-thit-nguoi",
+    at: "2026-11-18",
+    wave: 36,
+    stats: { hp: { from: 3, to: 2 } },
   },
 ];
 

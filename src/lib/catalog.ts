@@ -471,7 +471,7 @@ export const MONSTERS: MonsterCard[] = [
     "atk": 0,
     "def": 2,
     "mdef": 0,
-    "hp": 3,
+    "hp": 2,
     "art": "hoa-an-thit-nguoi",
     "still": true,
     "strong": "Thủ cao, cướp máu vĩnh viễn, và như 1 dạng dame chuẩn.",

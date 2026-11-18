@@ -1,13 +1,32 @@
-import { DEFAULT_DECK, STARTER_NAME } from "./catalog.ts";
 
 /**
  * Bộ dùng thử (chủ game 08/11): replaces the fake starter cards. Each calendar week (from 0:00 on Monday, the phone's
  * time) one deck of TRIAL_DECKS is lent: its cards play with full figures until the week ends, then the next deck
  * of the list comes round. The owner writes the decks; for now the starter deck is the only one.
  */
-export type TrialDeck = { id: string; name: string; monsters: string[]; spells: string[] };
+export type TrialDeck = { id: string; name: string; monsters: string[]; spells: string[]; cover?: string };
 
-export const TRIAL_DECKS: TrialDeck[] = [{ id: "khoi-dau", name: STARTER_NAME, monsters: [...DEFAULT_DECK.monsters], spells: [...DEFAULT_DECK.spells] }];
+const count = (id: string, n: number): string[] => Array.from({ length: n }, () => id);
+
+/** Bộ Fusion (chủ game 18/11): the trial deck lent for the week, replacing the old starter deck. */
+export const TRIAL_DECKS: TrialDeck[] = [
+  {
+    id: "fusion",
+    name: "Fusion",
+    cover: "chien-binh-ky-nhong",
+    monsters: [
+      ...count("hoa-an-thit-nguoi", 2),
+      ...count("khong-lo-mot-mat", 3),
+      ...count("phu-thuy-ti-hon", 3),
+      ...count("rong-con", 2),
+      "tho-den-tinh-nghich",
+      ...count("chien-binh-ky-nhong", 2),
+      "rong-phun-hoa-cau",
+      "chien-binh-rong",
+    ],
+    spells: ["hap-thu-ma-phap", ...count("hoan-doi", 2), ...count("phuc-kich", 2), "soi-xich-dia-nguc", ...count("sung-loi-pha", 2)],
+  },
+];
 
 /** A deck holding more trial copies than this is swapped whole for the new week's trial deck (chủ game 08/11). */
 export const TRIAL_SWAP_OVER = 16;
