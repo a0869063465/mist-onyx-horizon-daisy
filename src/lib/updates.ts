@@ -1076,6 +1076,7 @@ export const PENDING_NOTES: string[] = [
   "Bộ bài cho thuê trong tuần đổi thành bộ Fusion (hình nền Chiến binh kỳ nhông). Hoa ăn thịt người giảm máu từ 3 xuống 2.",
   "Có thư mới trong Hộp thư tặng 200 sao.",
   "Thỏ đen tinh nghịch né đòn cũng chớp sáng như Chiến binh kỳ nhông.",
+  "Glow dung hợp trên tay không còn tắt khi lá vừa rút đang hiện giữa màn; nó sáng tiếp sau khi lá về tay.",
 ];
 
 function remarkOf(notes: string[]) {
