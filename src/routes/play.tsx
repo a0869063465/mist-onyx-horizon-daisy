@@ -25,7 +25,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { STAR_COST } from "@/lib/duel";
+import { STAR_COST, skillLoss } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -862,6 +862,8 @@ function attackTerms(mon: FieldMon): string | null {
     const cost = /Tiêu hao\s*(\d+)\s*mana/i.exec(plainCopy(monsterCard(mon.cardId)?.skill ?? ""))?.[1] ?? "1";
     return `Tiêu hao ${cost} mana để tấn công`;
   }
+  // Chủ game 18/11: đòn đánh thường kèm hiệu ứng riêng cũng hỏi xác nhận. Vãy phá giáp trừ thủ mục tiêu trước khi tính sát thương.
+  if (mon.cardId === "khung-long-vay-kiem") return `Giảm ${skillLoss(mon.cardId, "def", 2)} thủ của 1 kẻ địch`;
   return null;
 }
 
@@ -5563,7 +5565,7 @@ function PlayPage() {
     }
     // Chủ game 17/11: thêm dòng "Tiêu hao x mana" (số lấy từ chữ skill, như icon trên bảng quái); không có phí thì không ghi.
     const cost = skillCost(hit?.text ?? "");
-    if (cost && !lines.some((line) => /tiêu hao/i.test(line))) lines.push(`${tr("Tiêu hao")} ${cost} mana`);
+    if (cost && !lines.some((line) => /tiêu hao/i.test(line))) lines.unshift(`${tr("Tiêu hao")} ${cost} mana`);
     const kind = hit?.slow ? "slow" : row.kind;
     playUi("select");
     setUseAsk({ head: { name, tone: SKILL_GLOW[kind] ?? SKILL_GLOW.active, icon: row.icon, kind, art, who: card ? tr(card.name) : "" }, lines, text: lines.length ? undefined : hit?.text, go: row.go });
@@ -5578,7 +5580,7 @@ function PlayPage() {
     const lines = spellBrief(duel, id, viewer).split("\n").slice(1).filter(Boolean);
     // Chủ game 17/11: khung OK/Huỷ ghi thêm "Tiêu hao x mana" (phép có phí +1 thì cộng vào); 0 mana thì không ghi.
     const cost = card.gems + (toll ? 1 : 0);
-    if (cost > 0) lines.push(`${tr("Tiêu hao")} ${cost} mana`);
+    if (cost > 0) lines.unshift(`${tr("Tiêu hao")} ${cost} mana`);
     playUi("select");
     setUseAsk({ head: { name: card.name, tone: speedTone(id), art: spellSrc(id), who: tr("Phép") }, lines, text: lines.length ? undefined : card.effect, go });
   }
@@ -8402,7 +8404,7 @@ function PlayPage() {
               useAsk.lines.length ? (
                 useAsk.lines.map((line, index) => (
                   <p key={index}>
-                    <Painted text={line} />
+                    <CopyText text={line} firstTitle={false} inked />
                   </p>
                 ))
               ) : (

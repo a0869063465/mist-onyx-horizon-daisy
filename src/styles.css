@@ -14730,3 +14730,12 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) {
   .slot.is-hot.is-spell:not(.is-snap) { animation: none !important; }
 }
+
+/* Bảng xác nhận (K5): thủ vàng, thủ phép tím, như bảng mô tả quái (chủ game 18/11). */
+.act-note.is-ask b.ink-sheet-turn,
+.act-note.is-ask b.ink-sheet-atk { color: #ff7a1a; }
+.act-note.is-ask b.ink-sheet-def { color: #ffbe0b; }
+.act-note.is-ask b.ink-sheet-mdef { color: #c084fc; }
+.act-note.is-ask b.ink-sheet-hp { color: #3ddc6a; }
+.act-note.is-ask b.ink-sheet-blood { color: #ff3b3b; }
+.act-note.is-ask b.ink-sheet-clean { color: #6fb6ff; }

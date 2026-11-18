@@ -1081,6 +1081,7 @@ export const PENDING_NOTES: string[] = [
   "Hàng khuyên dùng: Chiến binh cưỡi rồng hàng trước; Phù thuỷ tập sự và Phù thuỷ bậc thầy hàng sau.",
   "Hàng khuyên dùng: quái dung hợp chưa được xếp thì theo hàng của nguyên liệu mạnh nhất.",
   "Phép chọn mục tiêu (Hoán đổi, Sừng lôi phá…) viền neon mục tiêu sáng và đậm hơn.",
+  "Bảng xác nhận dùng skill, phép: dòng Tiêu hao mana lên đầu, thủ vàng, thủ phép tím. Khủng long vãy kiếm đánh thường cũng hỏi xác nhận (giảm 2 thủ).",
 ];
 
 function remarkOf(notes: string[]) {
