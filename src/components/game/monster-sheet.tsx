@@ -16,7 +16,7 @@ export type SheetAction = { key: string; label: string; tone: SheetTone; cost: n
  * A summon button (chủ game 28/10): pressing it hides it, and ↑ (hàng trước) and ↓ (hàng sau) show side by side where it
  * stood; the arrow summons into that row. `front`/`back` false: the row takes no monster, its arrow is dark.
  */
-export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow) => void };
+export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow) => void; /** Hàng khuyên dùng của quái này (mũi tên toả sáng). */ advice?: SummonRow | null };
 
 /**
  * An icon on a sheet that is not one of the card's skills: Cân bằng (the deck builder) or a spell's kind (the
@@ -266,8 +266,8 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
   if (!rows || !rowsOpen) return tile;
   return (
     <span className={`act3d-rows${mini ? " is-mini" : ""}`}>
-      <RowArrow row="front" off={!rows.front} onPick={() => rows.onRow("front")} />
-      <RowArrow row="back" off={!rows.back} onPick={() => rows.onRow("back")} />
+      <RowArrow row="front" off={!rows.front} advised={rows.advice === "front"} onPick={() => rows.onRow("front")} />
+      <RowArrow row="back" off={!rows.back} advised={rows.advice === "back"} onPick={() => rows.onRow("back")} />
     </span>
   );
 }

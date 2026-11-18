@@ -63,6 +63,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhinoceros-horn")],
   "phu-thuy-ti-hon": [A("Cầu sấm", "focused-lightning")],
+  "phu-thuy-tap-su": [A("Cầu sấm", "focused-lightning")],
+  "phu-thuy-bac-thay": [A("Cầu sấm", "focused-lightning")],
   "sau-non": [
     RP("Hoá Kén", "caterpillar", "tiêu hao 1 mana.", "kén có công", "kén và chân kén hồi"),
     joined(AP("Chân kén", "spider-web", "tạo tối đa 2 chân kén")),
@@ -89,6 +91,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
+  "khong-lo-mac-giap": [P("Đập phá", "cyclops")],
+  "khong-lo-thu-linh": [P("Đập phá", "cyclops")],
   "may-quay-thuong": [
     AP("Quay thưởng", "slot-machine", "quay thưởng một lần", "vòng quay trúng"),
     joined(PP("Số 7", "card-joker", "- số 7")),
@@ -99,6 +103,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
     A("Con bạc nổi giận", "dice-fire"),
   ],
   "rong-con": [A("Hơi thở rồng", "dragon-breath")],
+  "chien-binh-ky-nhong": [P("Linh hoạt", "angel-wings")],
+  "chien-binh-cuoi-rong": [P("Linh hoạt", "angel-wings"), P("Cưỡi rồng", "dragon-head")],
   "rong-ngan-tuoi": [A("Hơi thở rồng", "dragon-breath")],
   "chien-binh-rong": [P("Vảy rồng", "scale-mail")],
   "ma-dao-si": [A("Ma đạn", "bolt-spell-cast")],

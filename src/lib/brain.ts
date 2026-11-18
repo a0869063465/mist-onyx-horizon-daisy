@@ -1,3 +1,4 @@
+import { isHexer } from "./fusion.ts";
 import { monsterCard, spellCard } from "./catalog.ts";
 import {
   aiAnswerAsk,
@@ -19,6 +20,8 @@ import {
   draw,
   endTurn,
   fuse,
+  fuseSet,
+  setFusionsFor,
   guardCover,
   harpyLash,
   harpyOffer,
@@ -40,6 +43,7 @@ import {
   vowCap,
   wallAlly,
   type Duel,
+  type Slot,
   type FieldMon,
   type Side,
   knackOpen,
@@ -75,6 +79,7 @@ export type Act =
   | ["summon", number, 0 | 1 | 2]
   | ["vow", number, 0 | 1 | 2, string]
   | ["fuse", number, string, 0 | 1 | 2]
+  | ["fuseSet", number, string, Slot]
   | ["spell", number, string | null]
   | ["swap", number, string | null, string]
   | ["skill", string, string | null, number, boolean, string | null]
@@ -110,6 +115,8 @@ export function runAct(state: Duel, act: Act): Duel {
       return summonVow(state, act[1], act[2], [act[3]]);
     case "fuse":
       return fuse(state, act[1], act[2], act[3]);
+    case "fuseSet":
+      return fuseSet(state, act[1], act[2], act[3]);
     case "spell":
       return castSpell(state, act[1], act[2]);
     case "swap": {
@@ -379,7 +386,7 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
 
 function faceSkill(id: string, index: number) {
   return (
-    id === "phu-thuy-ti-hon" ||
+    isHexer(id) ||
     id === "mat-do-tan-pha" ||
     id === "may-nem-bom-hinh-nhen" ||
     id === "ma-dao-si" ||
@@ -443,6 +450,12 @@ export function mainMoves(state: Duel): Move[] {
     for (const mon of own) {
       const slot = me.field.findIndex((unit) => unit?.uid === mon.uid) as 0 | 1 | 2;
       tryMove(list, state, ["fuse", index, mon.uid, slot]);
+    }
+    // Dung hợp từ lá giống nhau (Khổng lồ, chủ game 18/11): mỗi cách (2 lá / 3 lá) là một nước đi, chấm điểm như mọi nước khác.
+    for (const way of setFusionsFor(state, ME, index)) {
+      const at = way.mats.flatMap((mat) => (mat.from === "field" ? [me.field.findIndex((unit) => unit?.uid === mat.uid)] : []));
+      const slot = at.find((n) => n >= 0) ?? free;
+      if (slot >= 0) tryMove(list, state, ["fuseSet", index, way.result, slot as Slot]);
     }
   });
   spellMoves(state, list);

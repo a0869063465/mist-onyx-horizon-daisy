@@ -40,6 +40,8 @@ const PAIRS: Array<[string, string]> = [
   ["Rồng bọc trứng", "Egg Dragon"],
   ["Gã hề đáng sợ", "Dread Clown"],
   ["Thỏ đen tinh nghịch", "Tricky Black Rabbit"],
+  ["Chiến binh kỳ nhông", "Salamander Warrior"],
+  ["Chiến binh cưỡi rồng", "Dragon Rider Warrior"],
   ["Cục bông ma quái", "Ghost Cotton"],
   ["Quái thú thiên sứ", "Angel Beast"],
   ["Tê giác bé con", "Baby Rhino"],

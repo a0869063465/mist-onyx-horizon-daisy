@@ -435,6 +435,17 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     notes: ["Gắn sừng là +3 công ngay", "Bỏ đánh Lan và bảng chọn Lan / +3"],
   },
+  {
+    id: "khong-lo-mot-mat",
+    at: "2026-11-18",
+    wave: 35,
+    stats: { def: { from: 3, to: 1 }, hp: { from: 1, to: 3 } },
+  },  {
+    id: "hoa-an-thit-nguoi",
+    at: "2026-11-18",
+    wave: 36,
+    stats: { hp: { from: 3, to: 2 } },
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

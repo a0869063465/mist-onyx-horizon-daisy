@@ -65,11 +65,16 @@ export function parseBook(raw: string): DeckBook | null {
   }
 }
 
+/** The cover the owner set on a trial deck (`cover` + `coverSet`), else nothing. */
+function coverOfTrial(deck: { cover?: string }): { cover?: string; coverSet?: boolean } {
+  return deck.cover ? { cover: deck.cover, coverSet: true } : {};
+}
+
 function seed(): DeckBook {
   // A new phone starts with this week's trial deck (chủ game 08/11).
-  const trial = typeof localStorage === "undefined" ? { name: STARTER_NAME, monsters: DEFAULT_DECK.monsters, spells: DEFAULT_DECK.spells } : trialDeck();
+  const trial: { name: string; monsters: string[]; spells: string[]; cover?: string } = typeof localStorage === "undefined" ? { name: STARTER_NAME, monsters: DEFAULT_DECK.monsters, spells: DEFAULT_DECK.spells } : trialDeck();
   return {
-    decks: [{ n: 1, name: trial.name, monsters: [...trial.monsters], spells: [...trial.spells] }],
+    decks: [{ n: 1, name: trial.name, monsters: [...trial.monsters], spells: [...trial.spells], ...coverOfTrial(trial) }],
     active: 1,
   };
 }
@@ -101,7 +106,7 @@ function rotateTrial(book: DeckBook): DeckBook {
   if (localStorage.getItem(TRIAL_WEEK_KEY) === week) return book;
   const fresh = trialDeck();
   const decks = book.decks.map((row) =>
-    trialCount([...row.monsters, ...row.spells]) > TRIAL_SWAP_OVER ? { ...row, name: fresh.name, monsters: [...fresh.monsters], spells: [...fresh.spells], at: Date.now() } : row,
+    trialCount([...row.monsters, ...row.spells]) > TRIAL_SWAP_OVER ? { ...row, name: fresh.name, monsters: [...fresh.monsters], spells: [...fresh.spells], at: Date.now(), ...coverOfTrial(fresh) } : row,
   );
   const next = { ...book, decks };
   saveBook(next);
