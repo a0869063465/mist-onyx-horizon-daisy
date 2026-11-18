@@ -1076,7 +1076,7 @@ export const PENDING_NOTES: string[] = [
   "Bộ bài cho thuê trong tuần đổi thành bộ Fusion (hình nền Chiến binh kỳ nhông). Hoa ăn thịt người giảm máu từ 3 xuống 2.",
   "Có thư mới trong Hộp thư tặng 200 sao.",
   "Thỏ đen tinh nghịch né đòn cũng chớp sáng như Chiến binh kỳ nhông.",
-  "Glow dung hợp trên tay không còn tắt khi lá vừa rút đang hiện giữa màn; nó sáng tiếp sau khi lá về tay.",
+  "Lá trên tay dung hợp với quái đang đứng ở sân (kể cả Phù thuỷ tí hơn với Phù thuỷ tí hơn) giờ cũng có glow dung hợp, không chỉ quái ở sân.",
 ];
 
 function remarkOf(notes: string[]) {

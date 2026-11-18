@@ -5889,6 +5889,7 @@ function PlayPage() {
         }
       });
       for (const way of setFusionsFor(duel, viewer, index)) {
+        fuseHands.add(index);
         for (const mat of way.mats) {
           if (mat.from === "hand") fuseHands.add(mat.index);
           else fuseUids.add(mat.uid);
