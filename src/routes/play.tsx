@@ -1986,6 +1986,8 @@ function PlayPage() {
   const keptSpots = useRef(new Map<string, IconSpot>());
   /** The branches of the spread on the board that a monster can stand in front of (worked out as the icons are). */
   const branchLanes = useRef<Array<{ hit: string; pts: Array<{ x: number; y: number }> }>>([]);
+  /** The flow of the strike a monster can block, as runs from its icon to where it lands (% of the board). */
+  const strikeFlows = useRef<Array<[{ x: number; y: number }, { x: number; y: number }]>>([]);
   /** The last results each skill icon showed while its caster stood. */
   const briefSeen = useRef(new Map<string, string>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
@@ -5280,7 +5282,21 @@ function PlayPage() {
     const intercept = responding && duel.hold?.priority === viewer && (pending?.kind === "face" || coverBack);
     if (intercept && pending) {
       const attackerUid = "attacker" in pending ? pending.attacker : "caster" in pending ? pending.caster : "";
-      const onShot = coverBack || Boolean(beamEl) || Boolean(reactEl) || (foeUid !== "" && foeUid === attackerUid);
+      let onFlow = false;
+      const board = document.querySelector(".board")?.getBoundingClientRect();
+      if (board && at) {
+        const rows = 16 / 9 / boardCut().v;
+        const x = ((at.x - board.left) / board.width) * 100;
+        const y = ((at.y - board.top) / board.height) * 100;
+        onFlow = strikeFlows.current.some(([a, b]) => {
+          const dx = b.x - a.x;
+          const dy = (b.y - a.y) * rows;
+          const len2 = dx * dx + dy * dy || 1;
+          const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * rows * dy) / len2));
+          return Math.hypot(x - (a.x + t * dx), (y - (a.y + (t * dy) / rows)) * rows) <= LANE_REACH;
+        });
+      }
+      const onShot = coverBack || onFlow || Boolean(beamEl) || Boolean(reactEl) || (foeUid !== "" && foeUid === attackerUid);
       if (onShot) {
         offerBlock(payload.uid);
         return;
@@ -6503,6 +6519,20 @@ function PlayPage() {
         if ("orb" in link.end) continue;
         const land = flowEnd(link.end, spot);
         if (land) runs.push([spot, land]);
+      }
+    }
+  }
+  // Kéo quái lên dòng flow của đòn cũng là chặn (chủ game 18/11), không chỉ lên icon hay quái ra đòn.
+  strikeFlows.current = [];
+  if (responding) {
+    for (const orb of chain) {
+      if (orb.done || (orb.kind !== "attack" && orb.kind !== "skill")) continue;
+      const from = iconSpots.get(orb.id);
+      if (!from) continue;
+      for (const link of orb.to) {
+        if ("orb" in link.end) continue;
+        const land = flowEnd(link.end, from);
+        if (land) strikeFlows.current.push([from, land]);
       }
     }
   }
@@ -7851,7 +7881,7 @@ function PlayPage() {
               layout={fieldLayout}
               hot={foeHot}
               blocked={foeBlocked}
-              tone={drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
+              tone={drag?.kind === "spell" || aim?.kind === "spell" ? "spell" : aim?.kind === "skill" ? "skill" : "monster"}
               attack={foeHot && drag?.kind !== "spell" && aim?.kind !== "spell"}
               picked={aim?.kind === "skill" && aim.also === mon?.uid}
               snapped={snap === `${side}-${index}` || (!snap && !drag && aimLit === `${side}-${index}`)}
@@ -7916,7 +7946,7 @@ function PlayPage() {
               blocked={youBlocked}
               fuse={Boolean(mon && ((fuseOn && fuseUids.has(mon.uid)) || (drag?.kind === "summon" && (findFusion(drag.card.id, mon.cardId) || findKnightFusion(drag.card.id, mon.cardId, you.field.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit)).map((unit) => unit.cardId))))))}
               fuseHide={Boolean(mon && fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.fieldUid === mon.uid)}
-              tone={drag?.kind === "summon" || aim?.kind === "summon" ? "summon" : drag?.kind === "spell" || aim?.kind === "spell" || aim?.kind === "skill" ? "skill" : "monster"}
+              tone={drag?.kind === "summon" || aim?.kind === "summon" ? "summon" : drag?.kind === "spell" || aim?.kind === "spell" ? "spell" : aim?.kind === "skill" ? "skill" : "monster"}
               picked={!!mon && ((!!aim && "uid" in aim && aim.uid === mon.uid) || duel.hold?.armed === mon.uid || (blessArm && mon.cardId === "yeu-tinh-chuc-phuc"))}
               snapped={snap === `${viewer}-${index}` || (!snap && !drag && aimLit === `${viewer}-${index}`)}
               attack={false}
@@ -8286,6 +8316,16 @@ function PlayPage() {
                 <CardFace monster={monsterCard(stageHeld.id)!} hand level={stageHeld.saved?.level ?? 1} live={reserveLive(stageHeld, monsterCard(stageHeld.id)!)} gems={stageHeld.toll ? `${monsterCard(stageHeld.id)!.gems}+1` : undefined} fake={stageHeld.fake} />
               </button>
             </CardShow>
+            {/* Bảng mô tả nằm CÙNG lớp với lá giữa sân (z lá 80 > bảng 75) nên lá không bị bảng che; để ngoài lớp này bảng đè lên lá. */}
+            {pickPeek ? (
+              <HandPeek
+                info={pickPeek}
+                at={pickPeek.skills.length ? peekAt % pickPeek.skills.length : 0}
+                onPick={(index) => (playUi("soft"), setPeekAt(index))}
+                top={PEEK_TOP}
+                onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))}
+              />
+            ) : null}
           </div>
         ) : null}
         {drawShow ? (
@@ -8387,7 +8427,7 @@ function PlayPage() {
             }}
           />
         ) : null}
-        {pickPeek ? (
+        {pickPeek && !(stage && stageOk && stageHeld) ? (
           <HandPeek
             info={pickPeek}
             at={pickPeek.skills.length ? peekAt % pickPeek.skills.length : 0}
@@ -9633,7 +9673,7 @@ function BoardSlot({
   blocked?: boolean;
   fuse?: boolean;
   fuseHide?: boolean;
-  tone?: "monster" | "skill" | "summon";
+  tone?: "monster" | "skill" | "summon" | "spell";
   picked?: boolean;
   /** Chọn mục tiêu thông minh: the target a drag will land on. */
   snapped?: boolean;
