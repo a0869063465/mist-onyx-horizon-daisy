@@ -1064,6 +1064,7 @@ export const PENDING_NOTES: string[] = [
   "Khổng lồ 1 mắt đổi hình mới, còn thủ 1 và máu 3.",
   "Thêm Khổng lồ mặc giáp (2 sao, công 4, thủ 2, thủ phép 1, máu 4) và Khổng lồ thủ lĩnh (3 sao, công 4, thủ 1, máu 9, Đập phá hồi thêm 1 máu).",
   "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
+  "Dung hợp chặt hơn: ra quái N sao thì người chơi phải có ít nhất N-1 sao (ví dụ ra quái 5 sao cần 4 sao). Áp cho mọi dung hợp.",
 ];
 
 function remarkOf(notes: string[]) {

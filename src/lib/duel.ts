@@ -3239,6 +3239,8 @@ function fuseCore(state: Duel, reserveIndex: number, fieldUid: string, slot: Slo
   const handCard = monsterCard(held.id);
   const result = resultId ? monsterCard(resultId) : undefined;
   if ((!recipe && !knight) || !handCard || !result) return note(state, "Không hợp nhất được.");
+  // Chủ game 17/11: chỉ dung hợp được khi sao của người chơi không thấp hơn sao quái ra quá 1 (ra 5 sao thì cần từ 4 sao).
+  if (player.stars < result.stars - 1) return note(state, `Cần ${result.stars - 1} sao để dung hợp ra ${result.name}.`);
   if (player.field[slot] && player.field[slot]?.uid !== fieldUid && !(knight && player.field[slot]?.cardId && ["hiep-si-cua-vua", "hiep-si-ho-ve", "hiep-si-cua-hau"].includes(player.field[slot]?.cardId ?? ""))) return note(state, "Ô này đã có quái.");
   const guardRow = guardBarred(result.id, slot);
   if (guardRow) return note(state, guardRow);
