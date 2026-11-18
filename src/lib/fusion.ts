@@ -41,6 +41,8 @@ export const SET_FUSIONS: Array<{ result: string; materials: string[] }> = [
   { result: "khong-lo-mac-giap", materials: ["khong-lo-mot-mat", "khong-lo-mot-mat"] },
   { result: "khong-lo-thu-linh", materials: ["khong-lo-mac-giap", "khong-lo-mot-mat"] },
   { result: "khong-lo-thu-linh", materials: ["khong-lo-mot-mat", "khong-lo-mot-mat", "khong-lo-mot-mat"] },
+  // Chiến binh cưỡi rồng = Rồng con + Chiến binh kỳ nhông (chủ game 18/11), nguyên liệu trên tay hoặc trên sân.
+  { result: "chien-binh-cuoi-rong", materials: ["chien-binh-ky-nhong", "rong-con"] },
   // Phù thuỷ tí hơn cùng khuôn (chủ game 18/11): Tập sự = 2 tí hơn; Bậc thầy = Tập sự + 1 tí hơn, hoặc 3 tí hơn.
   { result: "phu-thuy-tap-su", materials: ["phu-thuy-ti-hon", "phu-thuy-ti-hon"] },
   { result: "phu-thuy-bac-thay", materials: ["phu-thuy-tap-su", "phu-thuy-ti-hon"] },

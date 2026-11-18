@@ -549,6 +549,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerTone": "down",
     "shiftAt": "2026-11-11"
   },
+  "chien-binh-ky-nhong": {
+    "kind": "monster",
+    "stars": 2,
+    "mana": 1,
+    "atk": 3,
+    "def": 1,
+    "mdef": 1,
+    "hp": 4,
+    "text": "5922ee7f",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
   "chien-binh-rong": {
     "kind": "monster",
     "stars": 3,
@@ -740,6 +754,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "mdef": 0,
     "hp": 9,
     "text": "cc6437b",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "chien-binh-cuoi-rong": {
+    "kind": "monster",
+    "stars": 3,
+    "mana": 0,
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "text": "fd8bb6b5",
     "added": null,
     "powerAt": null,
     "powerTone": null,

@@ -35,6 +35,8 @@ export const ENV_KINDS: Record<string, string[]> = {
     "hiep-si-ho-ve",
     "hiep-si-cua-hau",
     "chien-binh-rong",
+    "chien-binh-ky-nhong",
+    "chien-binh-cuoi-rong",
     "kazura",
     "kizuran",
     "ma-dao-si",

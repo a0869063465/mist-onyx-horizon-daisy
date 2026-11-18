@@ -3168,6 +3168,18 @@ function PlayPage() {
       setLift(uid);
       window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
+    // Linh hoạt (chủ game 18/11): quái vừa né đòn chớp sáng bằng hiệu ứng phát quang có sẵn, cả hai bên đều thấy.
+    if (!quiet && !tutorial && prev.mid === duel.mid && duel.dodge && duel.dodge.id !== prev.dodge?.id) {
+      for (const uid of duel.dodge.uids) {
+        const seat = seatOf(duel, uid);
+        const mon = fieldMon(duel, uid);
+        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
+        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+        emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        setLift(uid);
+        window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
+      }
+    }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
     const attackNow = duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending : null;

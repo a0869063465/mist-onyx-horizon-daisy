@@ -272,6 +272,8 @@ export type Duel = {
   /** Trả đòn after a skill that landed on several (chủ game 29/10): the front-row monsters still to strike back at
    *  `from`, left to right, one at a time once the one before is done. */
   counterQueue?: { from: string; uids: string[] } | null;
+  /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
+  dodge?: { id: number; uids: string[] } | null;
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
    *  giữ quyền trước đó; `rest` = các lần về xấp khác đang chờ hỏi. */
   lurkAsk?: { side: Side; slot: Slot; back: Side; rest?: Array<{ side: Side; slot: Slot }> } | null;
@@ -979,7 +981,10 @@ function buildLook(before: Duel, after: Duel, event: TraceEvent): DecisionLook |
 }
 
 function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
-  const after = settleLurk(markLurk(before, settleBox(rawAfter), event));
+  const seen = dodgeSeen.splice(0);
+  dodgeRolls.clear();
+  const flashed = seen.length ? { ...rawAfter, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : rawAfter;
+  const after = settleLurk(markLurk(before, settleBox(flashed), event));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -3448,7 +3453,105 @@ function stampLegend(state: Duel, uids: string[]): Duel {
   return note(next, `${names.join(", ")} nhận +${atk} công, +${def} thủ và +${max} máu tối đa cho lần giáp lá cà này.`);
 }
 
-function rabbitDodge(self: FieldMon, other: FieldMon): boolean {
+/**
+ * Linh hoạt (chủ game 18/11): Chiến binh kỳ nhông và Chiến binh cưỡi rồng bị nhắm bởi đòn có tổng sát thương từ 5 trở
+ * lên (đánh thường: công kẻ đánh; skill, phép: tổng sát thương của đòn lên nó) thì né đòn đó với xác suất 65%. Số đọc từ chữ lá.
+ */
+export const DODGERS: ReadonlySet<string> = new Set(["chien-binh-ky-nhong", "chien-binh-cuoi-rong"]);
+/** Chiến binh cưỡi rồng: Cưỡi rồng, khi phát động tấn công 50% công thành sát thương chuẩn và hồi máu cho nó (chủ game 18/11). */
+export const DRAGOON = "chien-binh-cuoi-rong";
+function dodgeFloor(id: string): number {
+  return grabNums(skillText(id), /từ\s*(\d+)\s*trở lên/gi)[0] ?? 5;
+}
+function dodgeChance(id: string): number {
+  return grabNums(skillText(id), /lên\s*(\d+)\s*%/gi)[0] ?? 65;
+}
+/** Phần công thành sát thương chuẩn của Cưỡi rồng, làm tròn (luật làm tròn chung). */
+const beamedFace = (mon: FieldMon): boolean => Boolean(mon.horn || mon.gaze || mon.bolt);
+export function rideTrue(raw: number): number {
+  const pct = grabNums(skillText(DRAGOON), /(\d+)\s*%\s*công/gi)[0] ?? 50;
+  return Math.max(0, Math.round((raw * pct) / 100));
+}
+/** Né của Linh hoạt trong một việc: lần gieo đầu quyết định, các lần hỏi lại trong cùng việc dùng lại kết quả đó. */
+const dodgeRolls = new Map<string, boolean>();
+/** Quái vừa né trong việc đang chạy: `traced` gắn vào trận để trang trận chớp sáng. */
+const dodgeSeen: string[] = [];
+let dodgeOff = false;
+function lizardRoll(self: FieldMon, amount: number): boolean {
+  if (dodgeOff || listingChoices || amount < dodgeFloor(self.cardId)) return false;
+  const known = dodgeRolls.get(self.uid);
+  if (known !== undefined) return known;
+  const dodged = Math.random() < dodgeChance(self.cardId) / 100;
+  dodgeRolls.set(self.uid, dodged);
+  if (dodged) dodgeSeen.push(self.uid);
+  return dodged;
+}
+
+/** Every monster on the board, changed by `fn` where it is one of `uids`. */
+function reshapeMons(state: Duel, uids: ReadonlySet<string>, fn: (mon: FieldMon) => FieldMon): Duel {
+  const players = state.players.map((player) => ({
+    ...player,
+    field: player.field.map((mon) => (mon && uids.has(mon.uid) ? fn(mon) : mon)) as Player["field"],
+  })) as Duel["players"];
+  return { ...state, players };
+}
+
+/**
+ * Linh hoạt trước skill và phép: chạy thử đòn với kỳ nhông không có thủ để đọc tổng sát thương lên nó; đủ ngưỡng thì gieo
+ * 65%. Né được thì chạy thật với nó không thể bị thương, rồi trả nó về y như trước đòn (không mất máu, không dính hiệu ứng).
+ */
+let guardDepth = 0;
+function lizardGuard(state: Duel, outer: (state: Duel) => Duel): Duel {
+  if (dodgeOff || listingChoices || guardDepth > 0) return outer(state);
+  const run = (next: Duel) => {
+    guardDepth += 1;
+    try {
+      return outer(next);
+    } finally {
+      guardDepth -= 1;
+    }
+  };
+  const lizards = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && DODGERS.has(mon.cardId) && mon.hp > 0)));
+  if (lizards.length === 0) return outer(state);
+  const seed = Math.floor(Math.random() * 2147483646) + 1;
+  const ids = new Set(lizards.map((mon) => mon.uid));
+  const BULK = 1000;
+  const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def: 0, mdef: 0, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
+  const ward = wardLines.splice(0);
+  const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
+  dodgeOff = true;
+  let dry: Duel;
+  try {
+    dry = withSeed(seed, () => run(bare));
+  } finally {
+    dodgeOff = false;
+    wardLines.splice(0, wardLines.length, ...ward);
+    skillHex = hex;
+  }
+  const after = new Map(dry.players.flatMap((player) => player.field.flatMap((mon) => (mon ? [[mon.uid, mon] as const] : []))));
+  const dodgers = lizards.filter((mon) => {
+    const now = after.get(mon.uid);
+    const taken = now ? mon.hp + BULK - now.hp : 0;
+    return taken > 0 && lizardRoll(mon, taken);
+  });
+  if (dodgers.length === 0) return withSeed(seed, () => run(state));
+  const safe = new Set(dodgers.map((mon) => mon.uid));
+  const shielded = reshapeMons(state, safe, (mon) => ({ ...mon, def: mon.def + BULK, mdef: mon.mdef + BULK, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
+  const ran = withSeed(seed, () => run(shielded));
+  if (ran === shielded) return state;
+  const kept = new Map(dodgers.map((mon) => [mon.uid, mon] as const));
+  const restored = reshapeMons(ran, safe, (mon) => kept.get(mon.uid) ?? mon);
+  return note(restored, dodgers.map((mon) => `${cardOf(mon).name} né đòn.`).join(" "), "info");
+}
+
+/** Who dodged in a clash: the struck one if it can dodge, else the attacker (Thỏ đen tinh nghịch né cả phần đánh trả). */
+function dodgerName(attacker: FieldMon, defender: FieldMon): string {
+  const struck = DODGERS.has(defender.cardId) || defender.cardId === "tho-den-tinh-nghich";
+  return cardOf(struck ? defender : attacker).name;
+}
+
+function rabbitDodge(self: FieldMon, other: FieldMon, aimed = true): boolean {
+  if (DODGERS.has(self.cardId)) return aimed && lizardRoll(self, liveAtk(other));
   if (self.cardId !== "tho-den-tinh-nghich") return false;
   const rates = grabNums(skillText(self.cardId), /(\d+)\s*%/gi);
   const stars = monsterCard(other.cardId)?.stars ?? 0;
@@ -3550,7 +3653,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const plate = plateBank(attacker);
   const bolt = attacker.cardId === PERFECT && Boolean(attacker.bolt);
   if (!bolt) atk += plate.p;
-  const attackerDodged = rabbitDodge(attacker, defender);
+  const attackerDodged = rabbitDodge(attacker, defender, false);
   const defenderDodged = rabbitDodge(defender, attacker);
   const beam = Boolean(attacker.horn || attacker.gaze || bolt);
   if (shadeHidden(attacker) || (shadeHidden(defender) && !beam) || defender.cage) counter = 0;
@@ -3581,6 +3684,8 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const hornAmount = outgoing(attacker, hornRaw);
   let bite = 0;
   let surplus = 0;
+  let rideHeal = 0;
+  let rideShown = 0;
   let defenderBody: FieldMon;
   if (gazeTrue) {
     if (defenderDodged) defenderBody = defender;
@@ -3626,6 +3731,25 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
       const raw = defenderDodged ? 0 : outgoing(attacker, atk);
       hit = strikeSpell(defender, raw, alliesB);
       if (raw > 0) wardLines.push(`${cardOf(attacker).name} gây ${raw} sát thương phép`);
+    } else if (attacker.cardId === DRAGOON && !defenderDodged) {
+      // Cưỡi rồng (chủ game 18/11): một nửa công là sát thương chuẩn, phần còn lại là đòn vật lý; nó hồi máu bằng phần chuẩn gây ra.
+      const raw = outgoing(attacker, atk);
+      const tru = rideTrue(raw);
+      const phys = raw - tru;
+      const first = dragon
+        ? takePhysical(defender, phys, alliesB)
+        : (() => {
+            const blocked = Math.max(0, Math.min(phys, defB));
+            const plated = bankPlate(defender, "phys", blocked);
+            const soaked = soak(plated, "phys", hurt(plated, physical(phys, defB)));
+            const landed = applyIncoming(soaked.mon, soaked.amount, alliesB);
+            return { ...landed, mon: crackArmor(landed.mon, raw) };
+          })();
+      const before = Math.max(0, first.mon.hp);
+      const second = landTrue(first.mon, tru, alliesB);
+      rideHeal = Math.min(tru, Math.max(0, before - Math.max(0, second.mon.hp)));
+      rideShown = tru;
+      hit = { mon: second.mon, bite: first.bite + second.bite, surplus: first.surplus + second.surplus };
     } else if (dragon) hit = takePhysical(defender, outgoing(attacker, atk), alliesB);
     else if (riderAtk && !defenderDodged) {
       const pack = riderPackets(attacker, defender, alliesB);
@@ -3685,7 +3809,10 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const dumped = releaseGuardAttack(attacker, grownAttacker, grownDefender, alliesB);
   const attackerBreak = settleMystic(attacker, dumped.attacker, dumped.defender, alliesB, true);
   const defenderBreak = settleMystic(defender, attackerBreak.foe ?? dumped.defender, attackerBreak.mon, alliesA, Boolean(defender.guarding));
-  return { attacker: defenderBreak.foe ?? attackerBreak.mon, defender: defenderBreak.mon, dodged: attackerDodged || defenderDodged, bite, surplus };
+  const finalAttacker = defenderBreak.foe ?? attackerBreak.mon;
+  if (rideShown > 0) wardLines.push(`Cưỡi rồng gây ${rideShown} sát thương chuẩn${rideHeal > 0 && finalAttacker.hp > 0 ? `, ${cardOf(attacker).name} hồi ${Math.min(rideHeal, Math.max(0, finalAttacker.maxHp - finalAttacker.hp))} máu` : ""}`);
+  const healed = rideHeal > 0 && finalAttacker.hp > 0 ? { ...finalAttacker, hp: Math.min(finalAttacker.maxHp, finalAttacker.hp + rideHeal) } : finalAttacker;
+  return { attacker: healed, defender: defenderBreak.mon, dodged: attackerDodged || defenderDodged, bite, surplus };
 }
 
 function withLeech(field: Array<FieldMon | null>, attacker: FieldMon, bite: number, surplus: number) {
@@ -5620,7 +5747,7 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
     riderBits.push(`- Mũi thương bị nguyền rủa lên ${fieldName(defender)} gây ${shownTru(defender, packets.physical, them.field, 0, defPool)} sát thương vật lý, ${shownTru(defender, packets.tru, them.field, packets.physical, defPool)} sát thương chuẩn.`);
     if (fires.length) riderBits.push(riderFireLine(fires));
   }
-  if (clash && defender.cardId === RIDER && !rabbitDodge(attacker, defender)) {
+  if (clash && defender.cardId === RIDER && !rabbitDodge(attacker, defender, false)) {
     const packets = riderPackets(withLegend(defender), attacker, you.field);
     riderAttacker = applyIncoming(riderAttacker, packets.second, you.field, veilLeft(attacker, packets.first)).mon;
     const hits = [attacker.uid, attacker.uid, ...(riderSkill?.hits ?? [])];
@@ -5647,7 +5774,7 @@ function resolveMeleeCore(state: Duel, attackerUid: string, defenderUid: string)
   if (pierce) next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - pierce });
   const soul = soulLeech(next, side, attacker, hit.bite + hit.surplus);
   next = soul.state;
-  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`;
+  const tail = `${shot.line ? ` ${shot.line}` : ""}${hit.dodged ? ` ${dodgerName(attacker, defender)} né đòn.` : ""}${pierce ? ` Đâm xuyên gây ${pierce} sát thương lên người chơi.` : ""}${soul.line}`;
   const hornRows = attacker.horn
     ? [
         { name: cardOf(defender).name, bits: `${hornDealt} sát thương phép` },
@@ -6070,7 +6197,11 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
         ? outgoing(attacker, Math.max(raw, skillFigure(RIDER, "dmg", 4)))
         : raw;
   const bitten = Math.min(dealt, Math.max(0, them.hp));
-  const fed = withLeech(you.field, spent, bitten, Math.max(0, dealt - bitten));
+  // Cưỡi rồng (chủ game 18/11): một nửa đòn vào người chơi là sát thương chuẩn, nó hồi máu bằng phần đó.
+  const ridden = attacker.cardId === DRAGOON && !beamedFace(attacker) ? rideTrue(dealt) : 0;
+  const rideHealed = Math.min(ridden, Math.max(0, them.hp), Math.max(0, spent.maxHp - spent.hp));
+  const rider = rideHealed > 0 && spent.hp > 0 ? { ...spent, hp: spent.hp + rideHealed } : spent;
+  const fed = withLeech(you.field, rider, bitten, Math.max(0, dealt - bitten));
   let next = patch(state, side, { ...you, field: fed.field });
   next = patch(next, foe, { ...them, hp: them.hp - dealt });
   const soul = soulLeech(next, side, attacker, dealt);
@@ -6081,7 +6212,8 @@ function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = fal
   const preyHit = attacker.cardId === PREY && attacker.preyKind === "spell" ? "sát thương phép" : attacker.cardId === PREY && attacker.preyKind === "tru" ? "sát thương chuẩn" : "";
   const hiddenFace = shadeHidden(attacker) && !beamed ? "sát thương chuẩn" : "";
   const faceWord = guardSpell ? "sát thương phép" : preyHit || hiddenFace || "máu";
-  next = checkWinner(note(next, beamed ? `${cardOf(attacker).name} gây ${dealt} ${gazeTrue ? "sát thương chuẩn" : "sát thương phép"} lên người chơi.${soul.line}` : `${cardOf(attacker).name} gây ${dealt} ${faceWord} lên người chơi.${soul.line}`, beamed || guardSpell || preyHit === "sát thương phép" ? "spell" : "hit"));
+  const rideLine = ridden > 0 ? ` Cưỡi rồng: ${dealt - ridden} sát thương vật lý, ${ridden} sát thương chuẩn${rideHealed > 0 ? `, hồi ${rideHealed} máu` : ""}.` : "";
+  next = checkWinner(note(next, beamed ? `${cardOf(attacker).name} gây ${dealt} ${gazeTrue ? "sát thương chuẩn" : "sát thương phép"} lên người chơi.${soul.line}` : `${cardOf(attacker).name} gây ${dealt} ${faceWord} lên người chơi.${rideLine}${soul.line}`, beamed || guardSpell || preyHit === "sát thương phép" ? "spell" : "hit"));
   return markPrey(tideSwing(finishParley(mysticSecond(swingSword(growSmash(becomePerfect(releaseLegend({ ...next, step: next.winner !== null ? "over" : "main", pending: null }), side, attacker.uid), attacker.uid, smashPlain(attacker)), attacker.uid, swordSwing(attacker)), attacker.uid, null)), foe, attacker.uid), side, attacker, "face", true, spent.hp <= 0);
 }
 
@@ -6569,6 +6701,10 @@ function ownerCard(state: Duel, uid: string): string {
 }
 
 function castSpellCore(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
+  return lizardGuard(state, (next) => castSpellBody(next, handIndex, targetUid, replay, sourceUid));
+}
+
+function castSpellBody(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
   const locked = talkLock(state);
   if (locked) return locked;
   if (state.winner || (state.step !== "main" && state.step !== "respond")) return state;
@@ -7596,7 +7732,7 @@ function flowerBiteCore(state: Duel, foe: Side, attackerUid: string, flowerUid: 
   const steal = lead.replace(`${cardOf(flower).name} `, "").replace(/\.+$/u, "");
   const noted = note(
     next,
-    `${actNotice(cardOf(flower).name, [steal, `${cardOf(attacker).name} đánh thường vào ${cardOf(flower).name}`])}${hit.dodged ? " Thỏ đen tinh nghịch né đòn." : ""}${soul.line}`,
+    `${actNotice(cardOf(flower).name, [steal, `${cardOf(attacker).name} đánh thường vào ${cardOf(flower).name}`])}${hit.dodged ? ` ${dodgerName(attacker, flower)} né đòn.` : ""}${soul.line}`,
     "heal",
   );
   const mends = [{ uid: flower.uid, n: take }, ...[awardA, awardD].filter((row) => row.mend > 0 && row.mon.hp > 0).map((row) => ({ uid: row.mon.uid, n: row.mend }))];
@@ -8462,6 +8598,10 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
 }
 
 function castSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
+  return lizardGuard(state, (next) => castSkillBody(next, uid, targetUid, skillIndex, skipGnaw, extra));
+}
+
+function castSkillBody(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
   if (state.step !== "main" || state.winner) return state;
   const waiting = needUpkeep(state);
   if (waiting) return waiting;

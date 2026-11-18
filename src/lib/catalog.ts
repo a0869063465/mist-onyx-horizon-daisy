@@ -545,6 +545,18 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Quái vật lý đụng nhẹ là đi. "
   },
   {
+    "id": "chien-binh-ky-nhong",
+    "name": "Chiến binh kỳ nhông",
+    "stars": 2,
+    "gems": 1,
+    "skill": "__**Linh hoạt**__:\nThời điểm kích hoạt: khi bị nhắm vào bới sát thương từ 5 trở lên.\nNội dung: tăng khả năng né tránh đòn đó lên 65%.",
+    "atk": 3,
+    "def": 1,
+    "mdef": 1,
+    "hp": 4,
+    "art": "chien-binh-ky-nhong"
+  },
+  {
     "id": "chien-binh-rong",
     "name": "Chiến binh rồng",
     "stars": 3,
@@ -722,6 +734,18 @@ export const FORMS: MonsterCard[] = [
     "mdef": 0,
     "hp": 9,
     "art": "khong-lo-thu-linh"
+  },
+  {
+    "id": "chien-binh-cuoi-rong",
+    "name": "Chiến binh cưỡi rồng",
+    "stars": 3,
+    "gems": 0,
+    "skill": "__**Linh hoạt**__:\nThời điểm kích hoạt: khi bị nhắm vào bới sát thương từ 5 trở lên.\nNội dung: tăng khả năng né tránh đòn đó lên 65%.\n\n__**Cưỡi rồng**__:\nThời điểm kích hoạt: khi phát động tấn công.\nNội dung: 50% công sẽ gây sát thương chuẩn, và hồi máu cho bản thân.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "art": "chien-binh-cuoi-rong"
   },
   {
     "id": "phu-thuy-tap-su",

@@ -1070,6 +1070,7 @@ export const PENDING_NOTES: string[] = [
   "Dung hợp tính là lượt triệu hồi của vòng; lỡ triệu hồi 1 lá nguyên liệu trước thì vẫn dung hợp được. Quái dung hợp nhiều sao hơn sao của bạn thì không hành động được ngay vòng đó.",
   "Thêm Phù thuỷ tập sự (2 sao, công 0, thủ 0, thủ phép 3, máu 5, Cầu sấm +1 sát thương) và Phù thuỷ bậc thầy (3 sao, công 1, thủ 1, thủ phép 4, máu 6, Cầu sấm +1 sát thương, giết được mục tiêu thì Cầu sấm tăng thêm 1). Dung hợp từ Phù thuỷ tí hơn.",
   "Rồng con có hình mới.",
+  "Thêm Chiến binh kỳ nhông (2 sao, công 3, thủ 1, thủ phép 1, máu 4) và Chiến binh cưỡi rồng (3 sao, công 4, thủ 1, thủ phép 1, máu 6, dung hợp từ Rồng con và Chiến binh kỳ nhông). Linh hoạt: bị nhắm bởi đòn từ 5 sát thương thì né 65%, né được thì chớp sáng. Cưỡi rồng: nửa công thành sát thương chuẩn và hồi máu cho nó.",
 ];
 
 function remarkOf(notes: string[]) {
