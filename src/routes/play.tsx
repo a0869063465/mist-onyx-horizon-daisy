@@ -1827,6 +1827,26 @@ function PlayPage() {
   const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string; from?: "chain" } | null>(null);
   const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
   const [fuseChoice, setFuseChoice] = useState<{ index: number; opts: FuseOpt[]; at: number } | null>(null);
+  const fusePickRef = useRef<HTMLDivElement | null>(null);
+  // Bảng chọn dung hợp: hình quái nằm ngay dưới bảng mô tả (cao thấp tuỳ số dòng), nút Dung hợp cố định ở ~60% sân (chủ game 18/11).
+  useLayoutEffect(() => {
+    const box = fusePickRef.current;
+    if (!box) return;
+    const fit = () => {
+      const peek = box.querySelector<HTMLElement>(".hand-peek");
+      const whole = box.getBoundingClientRect();
+      const bottom = peek ? peek.getBoundingClientRect().bottom - whole.top : whole.height * 0.34;
+      const top = bottom + whole.height * 0.012;
+      box.style.setProperty("--pick-top", `${top}px`);
+      box.style.setProperty("--pick-h", `${Math.max(120, whole.height * 0.6 - top)}px`);
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(box);
+    const peek = box.querySelector<HTMLElement>(".hand-peek");
+    if (peek) watch.observe(peek);
+    return () => watch.disconnect();
+  }, [fuseChoice?.at, fuseChoice?.opts.length, Boolean(fuseChoice)]);
   const [blockChoice, setBlockChoice] = useState<BlockChoice | null>(null);
   const [blessArm, setBlessArm] = useState(false);
   const [chronoAsk, setChronoAsk] = useState<{ caster: string; target: string; age: boolean; pass: boolean } | null>(null);
@@ -8980,7 +9000,7 @@ function PlayPage() {
           </div>
         ) : null}
         {fuseChoice && !fuseShow ? (
-          <div className={`fuse-pick${fuseChoice.opts.length === 1 ? " is-solo" : ""}`} onClick={() => setFuseChoice(null)}>
+          <div ref={fusePickRef} className="fuse-pick" onClick={() => setFuseChoice(null)}>
             {fuseChoice.opts.map((opt, i) => (
               <div key={opt.resultId} className={`fuse-pick-col${i === fuseChoice.at ? " is-on" : ""}`} onClick={(event) => event.stopPropagation()}>
                 <img
