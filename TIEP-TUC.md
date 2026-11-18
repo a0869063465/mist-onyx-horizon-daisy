@@ -3,6 +3,7 @@
 ## Dung hợp Khổng lồ: bảng chọn + khung lá + glow (18/11, nhánh `khong-lo-moi`, CHƯA áp `main`)
 1. Việc vừa làm (Sonnet 5.5 medium, chuyển từ nhánh `ccr-fc1ee7ec-gspefp`, commit cherry-pick): `handActions` (play.tsx) gom mọi cách dung hợp (`FuseOpt`); 1 cách chạy thẳng (`startFuse`), từ 2 cách mở `fuseChoice` = bảng `.fuse-pick` (2 quái kết quả, mỗi quái 1 ô Dung hợp cũ to hơn 10%, bấm quái đổi `HandPeek`). Lá `.fuse3d-big` dùng `CardFace hand`. Glow dung hợp `fuse-breathe` thay `fuse-blink`, tắt glow khác trên lá đó.
 2. Hiện trạng: đã nhận ảnh mẫu bảng chọn + ảnh Khổng lồ xanh/đỏ (nay là 2 lá mới trên nhánh này). Công thức Khổng lồ (từ phiên Pha 3): Mặc giáp = 1 mắt + 1 mắt; Thủ lĩnh = Mặc giáp + 1 mắt hoặc 3 Khổng lồ 1 mắt; chưa có trong `FUSIONS`/duel.ts nên bảng chọn chưa kích hoạt. Luật "sao người chơi từ N−1" ở nhánh `dung-hop-sao` cần gộp. Chưa chụp, chưa thử glow bằng mắt.
+   LUẬT DUNG HỢP BỔ SUNG (chủ game 18/11, CHƯA LÀM, chờ mô hình **Opus 5.5 high**): (1) dung hợp tính là 1 lượt triệu hồi bình thường; (2) lỡ kéo 1 quái nguyên liệu từ tay ra sân vẫn dung hợp được (châm chước); (3) nếu cả 3 lá nguyên liệu nằm trên tay thì kéo ra 1 lá rồi dung hợp bình thường, không nhất thiết có lá trên sân (nguyên liệu có thể ở tay lẫn sân); (4) quái dung hợp có sao cao hơn sao người chơi (vd quái 3 sao mà mình chỉ có 2 sao) thì quái đó KHÔNG hành động được trong lượt vừa dung hợp (cân bằng; ăn khớp luật "sao từ N−1" ở nhánh `dung-hop-sao`, cần gộp). Claude hiểu (chờ xác nhận): vừa dung hợp thiếu sao thì quái vào sân ở trạng thái "đã hành động" tới hết vòng.
 3. Việc sắp làm: luật dung hợp 2 lá/3 lá giống nhau trong `duel.ts` = Opus 5.5 high, chờ chủ game đổi mô hình + "ok"; xong thì nối bảng chọn (chèn 2 ảnh lá mới), chụp.
 
 ## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 17/11)
@@ -581,6 +582,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## Quy tắc làm việc với chủ game
 
+- IN ĐẬM MÔ HÌNH + NỖ LỰC TRƯỚC KHI LÀM (chủ game 18/11, nhắc nhiều lần, Claude vẫn quên): mỗi lần xin "ok" hoặc sắp bắt đầu làm, viết **tên mô hình + mức nỗ lực** in đậm, ở dòng riêng, để chủ game đổi kịp. Không tự giác thì chủ game phải nhắc lại. Chủ game chỉ cho làm đúng mô hình đã chốt; mô hình đang chạy khác thì DỪNG, không "làm medium cho nhanh".
 - GHI VIỆC SẮP LÀM NGẮN (chủ game 05/11, nhắc lại, TUYỆT ĐỐI TUÂN THEO): mỗi việc sắp làm viết DƯỚI 4 DÒNG, trong tin nhắn trả lời, file kế hoạch và file này. Không bảng dài, không liệt kê chi tiết. Dài hơn thì chủ game không đọc. Chi tiết kỹ thuật chỉ ghi ngắn vào TIEP-TUC.md sau khi làm xong.
 - VFX TỪ VIDEO (chủ game 06/11): mỗi lần cài hoặc sửa VFX, ĐỌC `.claude/skills/vfx/SKILL.md` trước. "Chèn hiệu ứng" không nói gì = thay CẢ hình lẫn âm thanh của video (tách âm gốc, bỏ âm cũ của hiệu ứng đó).
 - SAI MÔ HÌNH THÌ KHÔNG LÀM (chủ game 01/11): mỗi việc có mô hình + nỗ lực đã chốt với chủ game. Nếu mô hình/nỗ lực đang chạy khác chốt thì DỪNG, báo, chờ chủ game đổi, kể cả khi đã được cấp quyền sửa. Xong phần được duyệt thì DỪNG, không tự sang bước kế (01/11 đã tự sang T2d sau khi chỉ được duyệt bước 1 là sai).
