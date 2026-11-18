@@ -44,7 +44,7 @@ const ALBUM_ENVS: Array<{ env: string; parts?: Part[] }> = [
   {
     env: "dat-da",
     parts: [
-      { label: "Đá", offset: 0, ids: ["linh-chien-da-khong-lo", "khong-lo-mot-mat"], rest: true },
+      { label: "Đá", offset: 0, ids: ["linh-chien-da-khong-lo", "khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"], rest: true },
       { label: "Khủng long", offset: 20, ids: ["khung-long-vay-kiem"] },
       { label: "Xác sống", offset: 40, ids: ["mo-voi-ma-mut"] },
     ],

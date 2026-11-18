@@ -1061,6 +1061,17 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi số chỉ số to bất thường giữa màn hình khi đối thủ triệu hồi quái.",
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
+  "Khổng lồ 1 mắt đổi hình mới, còn thủ 1 và máu 3.",
+  "Thêm Khổng lồ mặc giáp (2 sao, công 4, thủ 2, thủ phép 1, máu 4) và Khổng lồ thủ lĩnh (3 sao, công 4, thủ 1, máu 9, Đập phá hồi thêm 1 máu).",
+  "Dung hợp: quái dung hợp dùng khung lá mới, glow dung hợp thở mượt và tắt các glow khác trên lá đó.",
+  "Dung hợp chặt hơn: ra quái N sao thì người chơi phải có ít nhất N-1 sao (ví dụ ra quái 5 sao cần 4 sao). Áp cho mọi dung hợp.",
+  "Khổng lồ 1 mắt dung hợp được: 2 lá ra Khổng lồ mặc giáp, 3 lá (hoặc Khổng lồ mặc giáp + Khổng lồ 1 mắt) ra Khổng lồ thủ lĩnh; lá nằm trên tay hay trên sân đều được.",
+  "Có nhiều cách dung hợp thì hiện bảng chọn 2 quái: bấm quái để xem mô tả, bấm Dung hợp để dung hợp.",
+  "Dung hợp tính là lượt triệu hồi của vòng; lỡ triệu hồi 1 lá nguyên liệu trước thì vẫn dung hợp được. Quái dung hợp nhiều sao hơn sao của bạn thì không hành động được ngay vòng đó.",
+  "Thêm Phù thuỷ tập sự (2 sao, công 0, thủ 0, thủ phép 3, máu 5, Cầu sấm +1 sát thương) và Phù thuỷ bậc thầy (3 sao, công 1, thủ 1, thủ phép 4, máu 6, Cầu sấm +1 sát thương, giết được mục tiêu thì Cầu sấm tăng thêm 1). Dung hợp từ Phù thuỷ tí hơn.",
+  "Rồng con có hình mới.",
+  "Thêm Chiến binh kỳ nhông (2 sao, công 3, thủ 1, thủ phép 1, máu 4) và Chiến binh cưỡi rồng (3 sao, công 4, thủ 1, thủ phép 1, máu 6, dung hợp từ Rồng con và Chiến binh kỳ nhông). Linh hoạt: bị nhắm bởi đòn từ 5 sát thương thì né 65%, né được thì chớp sáng. Cưỡi rồng: nửa công thành sát thương chuẩn và hồi máu cho nó.",
+  "Mọi dung hợp, kể cả chỉ có một cách, đều hiện bảng chọn quái kết quả với nút Dung hợp. Chiến binh cưỡi rồng đổi hình mới.",
   "Chọn hàng triệu hồi: mũi tên của hàng khuyên dùng toả hào quang như nút OK. Quái chưa có hàng khuyên dùng thì không toả sáng.",
 ];
 
