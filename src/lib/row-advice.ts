@@ -32,6 +32,7 @@ const FRONT = new Set([
   "chien-binh-huyen-thoai",
   "khong-lo-mac-giap",
   "khong-lo-thu-linh",
+  "chien-binh-cuoi-rong",
 ]);
 
 const BACK = new Set([
@@ -53,6 +54,8 @@ const BACK = new Set([
   "hiep-si-cua-hau",
   "phu-thuy-rung-den",
   "rong-ngan-tuoi",
+  "phu-thuy-tap-su",
+  "phu-thuy-bac-thay",
 ]);
 
 export function advisedRow(cardId: string | null | undefined): AdvisedRow | null {

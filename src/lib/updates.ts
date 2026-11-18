@@ -1077,6 +1077,7 @@ export const PENDING_NOTES: string[] = [
   "Có thư mới trong Hộp thư tặng 200 sao.",
   "Kéo lá quái ra giữa sân: bảng mô tả không còn che lá.",
   "Kéo quái lên dòng flow của đòn cũng chặn được, không cần kéo đúng vào icon hay quái ra đòn.",
+  "Hàng khuyên dùng: Chiến binh cưỡi rồng hàng trước; Phù thuỷ tập sự và Phù thuỷ bậc thầy hàng sau.",
 ];
 
 function remarkOf(notes: string[]) {
