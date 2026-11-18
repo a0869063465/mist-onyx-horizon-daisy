@@ -5991,10 +5991,8 @@ function PlayPage() {
       if (slot === undefined) continue;
       opts.push({ uid: way.mats.find((mat): mat is Extract<FuseMat, { from: "field" }> => mat.from === "field")?.uid ?? "", slot, resultId: way.result, cost: cost(fuseSet(duel, index, way.result, slot)), set: { mats: way.mats } });
     }
-    // Một cách dung hợp: chạy thẳng. Từ 2 cách (2 lá / 3 lá): hiện bảng chọn 2 quái kết quả, mỗi quái một nút Dung hợp (chủ game 18/11).
-    if (opts.length === 1) {
-      list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: opts[0].cost, onPress: () => startFuse(index, opts[0]) });
-    } else if (opts.length > 1) {
+    // Mọi dung hợp (kể cả chỉ 1 cách) hiện bảng chọn quái kết quả, mỗi quái một nút Dung hợp (chủ game 18/11).
+    if (opts.length > 0) {
       list.push({ key: "fuse", label: "Dung hợp", tone: "fuse", emblem: "swirl", cost: Math.min(...opts.map((opt) => opt.cost)), onPress: () => {
         setInspect(null);
         setPeekAt(0);
