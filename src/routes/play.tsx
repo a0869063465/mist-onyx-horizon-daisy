@@ -1836,9 +1836,10 @@ function PlayPage() {
       const peek = box.querySelector<HTMLElement>(".hand-peek");
       const whole = box.getBoundingClientRect();
       const bottom = peek ? peek.getBoundingClientRect().bottom - whole.top : whole.height * 0.34;
-      const top = bottom + whole.height * 0.012;
+      // Chân hình luôn ở 61,7% sân, cao tối đa 28,5% (đo theo ảnh chụp bảng Khổng lồ của chủ game 18/11); bảng mô tả dài hơn thì hình thấp lại.
+      const top = Math.max(whole.height * 0.332, bottom + whole.height * 0.012);
       box.style.setProperty("--pick-top", `${top}px`);
-      box.style.setProperty("--pick-h", `${Math.max(120, whole.height * 0.6 - top)}px`);
+      box.style.setProperty("--pick-h", `${Math.max(120, whole.height * 0.617 - top)}px`);
     };
     fit();
     const watch = new ResizeObserver(fit);
