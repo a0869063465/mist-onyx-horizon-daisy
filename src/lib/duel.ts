@@ -8153,7 +8153,7 @@ function markQueenAct(state: Duel, side: Side, uid: string): { state: Duel; extr
 
 function harpyBird(state: Duel, side: Side, uid: string | null) {
   if (!uid) return null;
-  return state.players[side].field.find((unit) => unit?.uid === uid && unit.hp > 0 && isHarpy(unit.cardId)) ?? null;
+  return state.players[side].field.find((unit) => unit?.uid === uid && unit.hp > 0 && isHarpy(unit.cardId) && !held(unit)) ?? null;
 }
 
 export function harpyOffer(state: Duel, side: Side): "armor" | "lash" | null {
