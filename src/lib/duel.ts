@@ -2062,6 +2062,11 @@ function held(mon: FieldMon) {
   return stuck(mon) || mon.abroad !== undefined;
 }
 
+/** Khoá, trói, choáng, tê liệt nói chung là một (chủ game 18/11): quái không hành động, không phản ứng, không chặn đòn được. */
+export function cannotAct(mon: FieldMon | null | undefined): boolean {
+  return Boolean(mon && held(mon));
+}
+
 function canIntercept(mon: FieldMon | null, committed = false): mon is FieldMon {
   if (!mon || mon.noBlock || mon.row === "back" || mon.cage || (mon.path ?? 0) > 0 || hexLocked(mon)) return false;
   if ((held(mon) || mon.stun > 0) && !(committed && mon.guarding)) return false;
@@ -4952,7 +4957,7 @@ export function armBlockSkill(state: Duel, uid: string, skillName: string): Duel
   if (state.hold.priority !== ownerSide) return note(state, "Chưa tới lượt phản ứng.");
   const owner = state.players[ownerSide];
   const mon = owner.field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || mon.cardId !== "chien-si-gam-nham" || mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0 || mon.noBlock) return state;
+  if (!mon || mon.cardId !== "chien-si-gam-nham" || mon.dim || held(mon) || mon.noBlock) return state;
   const cost = skillManaCost(mon.cardId);
   if (owner.orb < cost) return note(state, cost === 1 ? "Cần 1 gem." : `Cần ${cost} gem.`);
   const name = skillName.trim() || "Khiên thú sĩ";

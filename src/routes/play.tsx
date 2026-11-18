@@ -25,7 +25,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { STAR_COST, skillLoss } from "@/lib/duel";
+import { cannotAct, STAR_COST, skillLoss } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -1298,7 +1298,7 @@ function reactTone(_cardId: string): string {
 function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (canStand(duel, mon.uid)) return true;
   if (harpyAlert(duel, mon, viewer)) return true;
-  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || mon.stun > 0 || (mon.chain ?? 0) > 0) return false;
+  if (duel.step !== "respond" || duel.hold?.priority !== viewer || mon.dim || cannotAct(mon)) return false;
   const pending = duel.pending;
   if (mon.cardId === "chien-si-gam-nham" && pending?.kind === "face") return true;
   if (mon.cardId === "yeu-tinh-chuc-phuc" && (pending?.kind === "face" || pending?.kind === "melee")) return true;
@@ -7964,7 +7964,7 @@ function PlayPage() {
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer) || (lurkReady(mon) && duel.turn === viewer && duel.step === "main"))}
               lurk={!!mon && lurking(mon)}
-              ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
+              ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && !cannotAct(mon) && !(mon.path ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               block={!!mon && !frozen && canIntercept && mon.row !== "back" && !isStill(mon.cardId) && !mon.noBlock && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
               forecast={mon ? sight?.mons.get(mon.uid) : undefined}
