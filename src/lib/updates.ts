@@ -1084,6 +1084,7 @@ export const PENDING_NOTES: string[] = [
   "Lá trên tay dung hợp với quái đang đứng ở sân (kể cả Phù thuỷ tí hơn với Phù thuỷ tí hơn) giờ cũng có glow dung hợp, không chỉ quái ở sân.",
   "Bảng xác nhận dùng skill, phép: dòng Tiêu hao mana lên đầu (mana xanh lam), thủ vàng, thủ phép tím. Khủng long vãy kiếm đánh thường cũng hỏi xác nhận (giảm 2 thủ).",
   "Glow chớp hồng của phép, skill phản ứng và siêu tốc sáng và rõ hơn, bằng glow xanh lá của quái triệu hồi được.",
+  "Phép dùng được ở lượt chính (Sừng lôi phá, Sợi xích địa ngục…) chớp glow xanh lá như quái triệu hồi được.",
 ];
 
 function remarkOf(notes: string[]) {

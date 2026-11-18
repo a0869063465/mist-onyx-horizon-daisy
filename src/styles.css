@@ -14742,3 +14742,7 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .act-note.is-ask b.ink-mana { color: #9ef4ff; }
 
 /* Chủ game 18/11: glow phản ứng (phép, skill, siêu tốc) chớp mạnh bằng glow xanh lá của quái triệu hồi được: đỉnh chớp cùng cỡ, phồng 1,035 như ready-breathe. */
+
+/* Chủ game 18/11: phép dùng được ở lượt chính (Sừng lôi phá, Sợi xích địa ngục…) chớp xanh lá như lá quái. Trước đây lá này không có
+   --alert-color nên bộ lọc glow hỏng và không hiện gì. */
+.hand-card.is-castable { --alert-color: #46e874; }
