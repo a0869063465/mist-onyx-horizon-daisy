@@ -14739,3 +14739,4 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .act-note.is-ask b.ink-sheet-hp { color: #3ddc6a; }
 .act-note.is-ask b.ink-sheet-blood { color: #ff3b3b; }
 .act-note.is-ask b.ink-sheet-clean { color: #6fb6ff; }
+.act-note.is-ask b.ink-mana { color: #9ef4ff; }
