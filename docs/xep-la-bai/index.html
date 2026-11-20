@@ -151,10 +151,11 @@
 <section class="box pool"><h2><span id="pt">Chưa sắp xếp</span><b id="np">0</b></h2><div class="grid" id="pool"></div></section>
 <section class="box done"><h2><span id="dn">Đã xếp</span><span class="r"><button id="edit">Sửa nhóm</button><b id="nd">0</b></span></h2><div class="nav" id="nav"></div><div class="grid" id="done"></div><div class="sub" id="dsub"></div></section>
 <pre id="out"></pre>
+<div id="impbox" style="display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.8);padding:16px"><div style="background:#0b1020;border:1px solid var(--gold);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px"><b style="color:var(--gold)">Dán chữ đã sao chép vào đây</b><textarea id="imptx" style="flex:1;background:#111a33;color:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"></textarea><div id="impmsg" style="font-size:13px"></div><div style="display:flex;gap:8px"><button id="impok" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--gold);background:#3a2d0c;color:var(--gold);font-weight:700">Nạp</button><button id="impno" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:#111a33;color:#fff">Đóng</button></div></div></div>
 <div id="pop"><div class="b" id="pb"></div></div>
 <div class="tsheet" id="tsheet"><div class="panel" id="tpanel"></div></div>
 <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
-<footer><button class="mode" id="mode">Xem</button><button id="top">↑ Trở về</button><button id="dir" class="dir" aria-label="Hướng chuyển lá: lên nhóm mẹ">↑</button></footer>
+<footer><button class="mode" id="mode">Xem</button><button id="imp">Nhập</button><button id="top">↑ Trở về</button><button id="dir" class="dir" aria-label="Hướng chuyển lá: lên nhóm mẹ">↑</button></footer>
 <script>
 const KEY = "lor-groups-v1";
 const COPYSVG = document.getElementById("copy").innerHTML, OKSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -540,6 +541,19 @@ $("top").onclick = () => {
   window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { if ((window.pageYOffset || document.documentElement.scrollTop || 0) > 8) document.body.scrollIntoView(true); }, 60);
 };
 fetch("data.json").then((r) => r.json()).then((d) => { D = d; setId = D.sets[0].id; setMode("sort"); });
+
+/* Nhập bản sắp xếp từ chữ đã sao chép: chỉ thay đúng các bộ có trong chữ, bản cũ lưu vào khoá sao lưu. */
+$("imp").onclick = () => { $("impmsg").textContent = ""; $("impbox").style.display = "block"; };
+$("impno").onclick = () => { $("impbox").style.display = "none"; };
+$("impok").onclick = () => {
+  let j; try { j = JSON.parse($("imptx").value.trim()); } catch (e) { $("impmsg").textContent = "Chữ không đọc được, kiểm tra đã dán đủ chưa."; return; }
+  if (!j || j.app !== "lor-xep-la" || !j.data || typeof j.data !== "object") { $("impmsg").textContent = "Không phải bản sắp xếp của trang này."; return; }
+  const keys = Object.keys(j.data);
+  if (!keys.length || !confirm("Nạp " + keys.length + " bộ (" + keys.join(", ") + ")? Bản hiện tại sẽ được sao lưu."))  return;
+  try { localStorage.setItem(KEY + "-backup", JSON.stringify(ST)); } catch (e) {}
+  keys.forEach((k) => { ST[k] = j.data[k]; });
+  save(); location.reload();
+};
 </script>
 </body>
 </html>
