@@ -192,6 +192,7 @@ import {
   wakeLurk,
   riteDeadFor,
   RITE_CARD,
+  doomWaiting,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { advisedRow } from "@/lib/row-advice";
@@ -917,12 +918,13 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
   return { kind: "face", uid: attacker.uid, thrust: toward(orb, 1), ang: faceAng, at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path, orb };
 }
 
-const SLOW_SPELLS = new Set(["sam-set-tan-the", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
-const SLOW_AIM = new Set(["soi-xich-dia-nguc", "phan-nguyen"]);
+const SLOW_SPELLS = new Set(["sam-set-tan-the", "huy-diet", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
+const SLOW_AIM = new Set(["soi-xich-dia-nguc", "huy-diet", "phan-nguyen"]);
 /** Phép có mục tiêu (chủ game 03/11, V8B): the side whose monsters it picks; kéo lá hay bấm Use rồi rê, mục tiêu dùng
  *  được sáng neon như chọn skill. Phản nguyền and Hộp ma thuật pick an ally first, then an enemy. */
 const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "soi-xich-dia-nguc": "foe",
+  "huy-diet": "foe",
   "sung-loi-pha": "ally",
   "giap-co-khi": "ally",
   "co-may-thoi-gian": "ally",
@@ -1141,6 +1143,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   // Hấp thụ ma pháp nuốt phép nhanh và skill dạng phép vừa đáp trong chuỗi (chủ game 04/11).
   if (id === "hap-thu-ma-phap" && duel.hold && eatFor(duel, duel.hold.priority)) return true;
   // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
+  // Huỷ diệt chỉ Hấp thụ ma pháp hoá giải được (chủ game 20/11).
+  if (doomWaiting(duel)) return id === "hap-thu-ma-phap";
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
@@ -1222,7 +1226,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
-  if (id === "soi-xich-dia-nguc" || id === "thanh-guom-anh-sang") return open && foes;
+  if (id === "soi-xich-dia-nguc" || id === "thanh-guom-anh-sang" || id === "huy-diet") return open && foes;
   if (id === "sam-set-tan-the") return open && foes;
   if (id === "phan-nguyen") return open && foes && you.field.some((mon) => mon && harmShift(mon));
   if (id === "mu-ma-phap") return you.field.some((mon) => mon && mon.cardId !== "mu");
@@ -4757,7 +4761,7 @@ function PlayPage() {
     if (!aims) return keys;
     const cards = duel.players[viewer].hand.length;
     each(aims === "foe" ? foeSide : viewer, (mon) => {
-      if (id === "soi-xich-dia-nguc") return true;
+      if (id === "soi-xich-dia-nguc" || id === "huy-diet") return true;
       if (id === "sung-loi-pha") return hornFit(mon.cardId);
       if (id === "phuc-kich") return ambushReady(mon);
       if (id === "ngan-chan-phong-ngu") return shelterPicks(duel).includes(mon.uid);
@@ -5210,7 +5214,7 @@ function PlayPage() {
       }
       if (!mine || hit?.closest(".hand") || hit?.closest(".face-pile")) return;
       const uid = slotEl?.dataset.uid || "";
-      if (payload.spellId === "soi-xich-dia-nguc") {
+      if (payload.spellId === "soi-xich-dia-nguc" || payload.spellId === "huy-diet") {
         const marked = slotEl && owner !== viewer ? foe.field.find((mon) => mon?.uid === uid) ?? null : null;
         if (!marked) {
           holdNotice("Chọn một quái đối thủ.");
@@ -7914,7 +7918,7 @@ function PlayPage() {
           const foeHot = plan ? !!mon && plan.keys.has(`${side}-${index}`) : attacking && !untouchable;
           const foeSpell =
             curseStep === "foe" ||
-            (drag?.kind === "spell" && !["sung-loi-pha", "phan-nguyen", "hoan-doi", "ke-dao-mo", "soi-xich-dia-nguc"].includes(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
+            (drag?.kind === "spell" && !["sung-loi-pha", "phan-nguyen", "hoan-doi", "ke-dao-mo", "soi-xich-dia-nguc", "huy-diet"].includes(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
             (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || (aim.spellId === "hop-ma-thuat" ? Boolean(aim.from) : spellDragLive(aim.spellId, duel, viewer, aim.index))));
           const foeBlocked = !!mon && !frozen && !foeHot && (plan ? plan.foe : foeSpell);
           return (
@@ -7971,7 +7975,7 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
+          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "huy-diet" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
           const plan = targetPlan();
           const youSpell =
             (drag?.kind === "spell" && drag.spellId === "sung-loi-pha" && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||

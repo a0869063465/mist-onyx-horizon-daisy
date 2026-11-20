@@ -1153,6 +1153,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 1,
     "effect": "Khi 1 quái của bạn bị tiêu diệt bởi quái thú đối phương, kích hoạt lá bài này để chọn ra đòn hoặc skill đơn mục tiêu dạng trả đòn (tức là không phản ứng được) lên quái thú đó.\nTất cả sát thương biến thành sát thương chuẩn.",
     "picture": "spell:don-cuoi-cung"
+  },
+  {
+    "id": "huy-diet",
+    "name": "Huỷ diệt",
+    "gems": 2,
+    "effect": "Tiêu diệt 1 quái thú địch bất kỳ.",
+    "picture": "spell:huy-diet"
   }
 ];
 

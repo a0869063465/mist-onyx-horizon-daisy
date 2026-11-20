@@ -4417,6 +4417,7 @@ function passResponseCore(state: Duel): Duel {
 const STAND_IN = "the-than-cua-shien";
 
 function standAim(state: Duel): { face: boolean; uid: string | null } | null {
+  if (doomWaiting(state)) return null;
   const pending = state.pending;
   const hold = state.hold;
   if (!pending || !hold) return null;
@@ -4562,6 +4563,7 @@ function spendWall(mon: FieldMon): FieldMon {
 }
 
 export function canWall(state: Duel, uid: string): boolean {
+  if (doomWaiting(state)) return false;
   if (state.step !== "respond" || !state.hold || !state.pending) return false;
   const ownerSide = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   if (state.hold.priority !== ownerSide) return false;
@@ -4625,6 +4627,7 @@ function spiritAim(state: Duel): string | null {
 }
 
 export function canSpirit(state: Duel, uid: string): boolean {
+  if (doomWaiting(state)) return false;
   if (state.step !== "respond" || !state.hold || !state.pending) return false;
   const ownerSide = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   if (state.hold.priority !== ownerSide) return false;
@@ -4731,6 +4734,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     return note(state, "Chưa tới lượt chặn");
   }
   if (slowWaiting(state)) return note(state, "Kỹ năng này không chặn được.");
+  if (doomWaiting(state)) return note(state, "Huỷ diệt không chặn được.");
   if (branch) {
     const hits = spreadHits(state);
     if (!hits || hits.length < 2) return note(state, "Chỉ chặn từng nhánh khi kỹ năng trúng nhiều mục tiêu.");
@@ -4923,6 +4927,7 @@ export function slowSkill(state: Duel, uid: string, index: number, targetUid: st
 }
 
 export function canGuardCover(state: Duel, uid: string): boolean {
+  if (doomWaiting(state)) return false;
   if (state.step !== "respond" || !state.hold || !state.pending) return false;
   const ownerSide = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   if (state.hold.priority !== ownerSide) return false;
@@ -6777,6 +6782,9 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && slowWaiting(state) && card.id !== "hap-thu-ma-phap" && card.id !== "hop-ma-thuat") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được kỹ năng này.");
   }
+  if (!replay && state.step === "respond" && doomWaiting(state) && card.id !== "hap-thu-ma-phap") {
+    return note(state, "Chỉ Hấp thụ ma pháp hoá giải được Huỷ diệt.");
+  }
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
@@ -6863,6 +6871,13 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     targetUid = picked.uid;
   }
   let spellSource: string | null = null;
+  // Huỷ diệt (chủ game 20/11): nhắm 1 quái địch bất kỳ, kể cả hàng sau, quái ẩn và quái 5 sao; giữ mục tiêu gốc để không ai
+  // che hay đổi hướng được.
+  if (card.id === DOOM_CARD && !replay) {
+    const picked = targetUid ? state.players[foe].field.find((mon) => mon?.uid === targetUid) ?? null : null;
+    if (!picked) return note(state, "Chọn một quái đối thủ.");
+    spellSource = picked.uid;
+  }
   const turnsVirus = card.id === "phan-nguyen" && state.step === "respond";
   if (turnsVirus && !(state.pending?.kind === "spell" && state.pending.corrode && state.hold?.priority === side)) {
     return note(state, "Phản nguyền chỉ phản được Virus ăn mòn đang chờ.");
@@ -6929,6 +6944,16 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   const enemy = next.players[foe];
   const foeMon = targetUid ? enemy.field.find((mon) => mon?.uid === targetUid) ?? null : enemy.field.find((mon) => mon) ?? null;
 
+  if (card.id === DOOM_CARD) {
+    const aim = sourceUid ?? targetUid;
+    const where = aim === null ? null : ownerSide(next, aim);
+    const victim = where === null ? null : next.players[where].field.find((mon) => mon?.uid === aim) ?? null;
+    if (where === null || !victim) return note(next, "Huỷ diệt không còn mục tiêu.", "spell");
+    const owner = next.players[where];
+    const field = owner.field.map((mon) => (mon?.uid === victim.uid ? { ...mon, hp: 0 } : mon)) as Player["field"];
+    const done = note(patch(next, where, dropDead({ ...owner, field })), `Huỷ diệt tiêu diệt ${cardOf(victim).name}.`, "spell");
+    return done.step === "respond" ? keep(done) : done;
+  }
   if (card.id === "sam-set-tan-the") {
     const amount = 2 + next.players[side].stars;
     const living = next.players[foe].field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0));
@@ -11329,4 +11354,12 @@ function riteRun(state: Duel, run: (state: Duel) => Duel): Duel {
   const now = next.players[side];
   const players = next.players.map((player, n) => (n === side ? { ...now, orb: Math.max(you.orb, now.orb - 40), stars: you.stars, starGems: you.starGems } : player)) as Duel["players"];
   return buryRite({ ...next, players });
+}
+
+/** Huỷ diệt (chủ game 20/11): phép chậm 2 mana, tiêu diệt thẳng 1 quái địch bất kỳ. */
+export const DOOM_CARD = "huy-diet";
+
+/** Huỷ diệt đang chờ trong chuỗi: chỉ Hấp thụ ma pháp hoá giải được, không quái nào chặn hay che được. */
+export function doomWaiting(state: Duel): boolean {
+  return state.step === "respond" && state.pending?.kind === "spell" && state.pending.cardId === DOOM_CARD;
 }

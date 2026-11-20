@@ -1526,6 +1526,35 @@ test("Đòn cuối cùng: qua việc khác là mất cơ hội; kẻ hạ đã c
   assert.equal(D.riteDeadFor(back, 0).length, 0, "đánh rồi chết vì Trả đòn: không kích hoạt");
 });
 
+test("Huỷ diệt (20/11): phép chậm 2 mana, giết thẳng 1 quái địch kể cả hàng sau và 5 sao; chỉ Hấp thụ ma pháp hoá giải", () => {
+  const make = (theirs) => {
+    let s = board({ 0: ["may-chem", {}] }, theirs);
+    return { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? ["huy-diet"] : ["hoan-doi", "hap-thu-ma-phap"], tolls: [] })) };
+  };
+  // Hàng sau, máu nhiều, thủ cao: vẫn chết.
+  let s = make({ 0: ["khong-lo-mot-mat", {}], 3: ["chien-binh-rong", { hp: 30, maxHp: 30, def: 9, mdef: 9 }] });
+  const back = uid(s, 1, 3);
+  const cast = D.castSpell(s, 0, back);
+  assert.equal(cast.step, "respond", "phép chậm chờ phản ứng: " + cast.live);
+  assert.equal(cast.players[0].orb, 1, "2 mana");
+  assert.match(D.castSpell(cast, 0, null).live, /Chỉ Hấp thụ ma pháp/, "Hoán đổi không đáp được");
+  assert.equal(D.assignBlock(cast, uid(cast, 1, 0)).hold?.blocker ?? null, null, "không chặn được");
+  const done = D.passResponse(cast);
+  assert.equal(at(done, 1, 3), null, "chết ngay: " + done.live);
+  assert.ok(at(done, 1, 0), "quái khác còn nguyên");
+  assert.equal(done.rites ?? null, null, "phép không mở Đòn cuối cùng");
+  // Quái 5 sao cũng chết.
+  let five = make({ 0: ["rong-ac-ma", {}] });
+  five = D.passResponse(D.castSpell(five, 0, uid(five, 1, 0)));
+  assert.equal(at(five, 1, 0), null, five.live);
+  // Hấp thụ ma pháp hoá giải: quái sống.
+  let eat = make({ 0: ["khong-lo-mot-mat", {}] });
+  eat = D.castSpell(eat, 0, uid(eat, 1, 0));
+  eat = D.castSpell(eat, 1, null);
+  eat = D.passResponse(D.passResponse(eat));
+  assert.ok(at(eat, 1, 0), "Hấp thụ ma pháp cứu: " + eat.live);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
