@@ -540,11 +540,14 @@ $("top").onclick = () => {
   }
   window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { if ((window.pageYOffset || document.documentElement.scrollTop || 0) > 8) document.body.scrollIntoView(true); }, 60);
 };
-/* Xuất: tải file JSON + chép vào bộ nhớ tạm. Nhập: dán nội dung file; dữ liệu hiện tại được sao lưu vào khoá lor-groups-backup trước khi thay. */
+/* Xuất: hiện khung chữ + chép vào bộ nhớ tạm (khung xem artifact không cho tải file). Nhập: dán nội dung file; dữ liệu hiện tại được sao lưu vào khoá lor-groups-backup trước khi thay. */
 $("exp").onclick = async () => {
-  const txt = JSON.stringify({ app: "lor-xep-la", at: new Date().toISOString(), data: ST }, null, 1);
-  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = "xep-la-bai-du-lieu.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
-  try { await navigator.clipboard.writeText(txt); $("exp").textContent = "Đã xuất ✓"; setTimeout(() => ($("exp").textContent = "Xuất dữ liệu"), 2000); } catch (e) {}
+  const txt = JSON.stringify({ app: "lor-xep-la", at: new Date().toISOString(), data: ST });
+  open('<h3>Xuất dữ liệu</h3><div class="note" id="expm">Bấm “Chép”, hoặc chạm giữ vào khung rồi chọn tất cả và sao chép. Dán vào nơi lưu giữ (ghi chú, tin nhắn) hoặc gửi cho Claude.</div><textarea id="expt" rows="7" readonly style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0d1430;color:var(--ink);font-size:11px"></textarea><div class="rowb"><button id="no">Đóng</button><button id="ok" class="ok">Chép</button></div>');
+  $("expt").value = txt;
+  $("no").onclick = close;
+  const copy = async () => { try { await navigator.clipboard.writeText(txt); $("expm").textContent = "Đã chép vào bộ nhớ tạm ✓"; return true; } catch (e) { $("expt").focus(); $("expt").select(); $("expm").textContent = "Không tự chép được: khung đã được chọn sẵn, hãy sao chép bằng tay."; return false; } };
+  $("ok").onclick = copy; copy();
 };
 $("imp").onclick = () => {
   open('<h3>Nhập dữ liệu</h3><div class="note">Dán nội dung file đã xuất. Dữ liệu hiện tại sẽ được sao lưu rồi bị thay.</div><textarea id="impt" rows="6" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0d1430;color:var(--ink);font-size:12px"></textarea><div class="note" id="impm"></div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="ok">Thay dữ liệu</button></div>');
