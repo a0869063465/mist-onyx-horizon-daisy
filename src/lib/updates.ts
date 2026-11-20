@@ -1086,6 +1086,7 @@ export const PENDING_NOTES: string[] = [
   "Glow chớp hồng của phép, skill phản ứng và siêu tốc sáng và rõ hơn, bằng glow xanh lá của quái triệu hồi được.",
   "Phép dùng được ở lượt chính (Sừng lôi phá, Sợi xích địa ngục…) chớp glow xanh lá như quái triệu hồi được.",
   "Quái bị khoá, trói, choáng hoặc tê liệt (kể cả quái điểu nhân, nói chung là không hành động được) hay không thể chặn (Hoa ăn thịt người, Kén) không còn chớp phản ứng hay chớp chặn.",
+  "Thêm phép Đòn cuối cùng (1 mana, siêu tốc): quái của bạn bị quái địch hạ thì lá chớp hồng; dùng ngay lúc đó, quái vừa chết gượng dậy ra đòn hoặc skill Trả đòn lên kẻ hạ nó, mọi sát thương là sát thương chuẩn, không né được.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -148,6 +148,9 @@ export type FieldMon = {
 
 export type PileKind = "monster" | "spell";
 
+/** One monster just killed by an enemy monster, kept for Đòn cuối cùng: as it was before it fell, and who killed it. */
+export type RiteDead = { uid: string; slot: Slot; mon: FieldMon; killer: string };
+
 export type PileMon = { id: string; hp: number; maxHp: number; saved?: Omit<FieldMon, "uid">; toll?: boolean; freeAt?: number; fake?: boolean };
 
 export type GearWorn = { id: string; again?: boolean; atk: number; def: number; mdef: number; hp: number };
@@ -272,6 +275,11 @@ export type Duel = {
   /** Trả đòn after a skill that landed on several (chủ game 29/10): the front-row monsters still to strike back at
    *  `from`, left to right, one at a time once the one before is done. */
   counterQueue?: { from: string; uids: string[] } | null;
+  /**
+   * Đòn cuối cùng (chủ game 20/11): quái của `side` vừa bị quái địch hạ trong việc vừa xong (`dead`, kèm kẻ hạ nó).
+   * Chỉ dùng được ngay lúc quyền về `side`; việc kế tiếp xoá mất. `strike` = quái đã chết đang gượng dậy ra đòn cuối.
+   */
+  rites?: { side: Side; dead: RiteDead[]; strike?: string | null } | null;
   /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
   dodge?: { id: number; uids: string[] } | null;
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
@@ -984,7 +992,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const seen = dodgeSeen.splice(0);
   dodgeRolls.clear();
   const flashed = seen.length ? { ...rawAfter, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : rawAfter;
-  const after = settleLurk(markLurk(before, settleBox(flashed), event));
+  const after = markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event);
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -2160,6 +2168,7 @@ function clearHarm(mon: FieldMon): FieldMon {
 }
 
 function liveDef(mon: FieldMon, allies?: Array<FieldMon | null>) {
+  if (bareUids.has(mon.uid)) return 0;
   const hex = mon.hex && mon.hex.left > 0 ? 2 : 0;
   if ((mon.chain ?? 0) > 0) return 0 - hex;
   if (mon.cage) return Math.max(0, mon.def - (mon.raised?.def ?? 0) - (mon.buff?.def ?? 0)) - hex;
@@ -2167,6 +2176,7 @@ function liveDef(mon: FieldMon, allies?: Array<FieldMon | null>) {
 }
 
 function liveMdef(mon: FieldMon, allies?: Array<FieldMon | null>) {
+  if (bareUids.has(mon.uid)) return 0;
   const hex = mon.hex && mon.hex.left > 0 ? 2 : 0;
   if ((mon.chain ?? 0) > 0) return 0 - hex;
   if (mon.cage) return Math.max(0, mon.mdef - (mon.raised?.mdef ?? 0) - (mon.buff?.mdef ?? 0)) - hex;
@@ -2581,6 +2591,7 @@ function wardTag(kind: "phys" | "spell") {
 }
 
 function soak(mon: FieldMon, kind: "phys" | "spell", amount: number): { mon: FieldMon; amount: number } {
+  if (bareUids.has(mon.uid)) return { mon, amount };
   if (mon.cage || !mon.ward || amount <= 0) return { mon, amount };
   if (mon.wardStay) {
     if (kind !== "spell" || mon.ward !== "spell") return { mon, amount };
@@ -3482,6 +3493,10 @@ const dodgeRolls = new Map<string, boolean>();
 /** Quái vừa né trong việc đang chạy: `traced` gắn vào trận để trang trận chớp sáng. */
 const dodgeSeen: string[] = [];
 let dodgeOff = false;
+/** Đòn cuối cùng: quái nhận đòn cuối không có thủ, thủ phép hay khiên (mọi sát thương thành chuẩn). */
+const bareUids = new Set<string>();
+/** Đòn cuối cùng đang ra đòn: không né được (Linh hoạt, Thỏ đen tinh nghịch). */
+let riteRunning = false;
 function lizardRoll(self: FieldMon, amount: number): boolean {
   if (dodgeOff || listingChoices || amount < dodgeFloor(self.cardId)) return false;
   const known = dodgeRolls.get(self.uid);
@@ -3556,6 +3571,7 @@ function dodgerName(attacker: FieldMon, defender: FieldMon): string {
 }
 
 function rabbitDodge(self: FieldMon, other: FieldMon, aimed = true): boolean {
+  if (riteRunning) return false;
   if (DODGERS.has(self.cardId)) return aimed && lizardRoll(self, liveAtk(other));
   if (self.cardId !== "tho-den-tinh-nghich") return false;
   const rates = grabNums(skillText(self.cardId), /(\d+)\s*%/gi);
@@ -4122,12 +4138,19 @@ function counterAffordable(state: Duel, side: Side): boolean {
 
 /** Thu phí Trả đòn (luật L1, chủ game 14/11): trả ngay lúc chọn, thành công hay không cũng mất. */
 function payCounter(state: Duel, side: Side): Duel | null {
+  // Đòn cuối cùng: chỉ trả 1 mana của lá, không trả phí Trả đòn (chủ game 20/11).
+  if (state.rites?.strike && state.counterAsk?.uid === state.rites.strike) return state;
   const paid = pay(state.players[side], COUNTER_FEE);
   return paid ? patch(state, side, paid) : null;
 }
 
 /** Trả đòn bằng đòn đánh thường: gây sát thương vật lý bằng công của quái lên kẻ vừa ra đòn. */
 export function pickCounter(state: Duel, mode: "phys"): Duel {
+  if (state.rites?.strike && state.counterAsk?.uid === state.rites.strike) return riteRun(state, (armed) => pickCounterCore(armed, mode));
+  return pickCounterCore(state, mode);
+}
+
+function pickCounterCore(state: Duel, mode: "phys"): Duel {
   const ask = state.counterAsk;
   if (!ask || mode !== "phys") return state;
   const owner = ownerSide(state, ask.uid);
@@ -6677,6 +6700,7 @@ function restoreEaten(now: Duel, back: Duel): Duel {
 export function castSpell(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
   const side = (state.step === "main" ? state.turn : (state.hold?.priority ?? ((1 - state.turn) as Side))) as Side;
   const cardId = state.players[side].hand[handIndex] ?? null;
+  if (cardId === RITE_CARD && !replay) return riteCast(state, side, handIndex, sourceUid ?? targetUid);
   const snap = !replay && state.step === "respond" && cardId && EATABLE.has(cardId) ? payHand(state, side, handIndex) : null;
   const next = castSpellCore(state, handIndex, targetUid, replay, sourceUid);
   if (replay || next === state) return next;
@@ -8515,6 +8539,13 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
 }
 
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
+  if (!silent && state.rites?.strike === uid && state.counterAsk?.uid === uid) {
+    return riteRun(state, (armed) => useSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent));
+  }
+  return useSkillBody(state, uid, targetUid, skillIndex, skipGnaw, extra, silent);
+}
+
+function useSkillBody(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
   const second = silent ? null : knackRun(state, uid, (from) => useSkill(from, uid, targetUid, skillIndex, skipGnaw, extra, silent));
   if (second) return second;
   const run = (from: Duel) => lavaSkill(from, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent)));
@@ -11165,4 +11196,137 @@ export function aiStep(state: Duel): Duel {
     }
   }
   return endTurn(state);
+}
+
+/** Đòn cuối cùng (chủ game 20/11). */
+export const RITE_CARD = "don-cuoi-cung";
+
+/** The enemy monster (of the side opposite `deadSide`) that struck in the action from `before`: an attack, a skill, its
+ *  Trả đòn. Spells and damage over time (burn, poison at a turn's end) kill nobody's monster "by a monster". */
+function riteKiller(before: Duel, event: TraceEvent, deadSide: Side): string | null {
+  if (event.kind === "spell") return null;
+  const foe = (1 - deadSide) as Side;
+  const theirs = (uid: string | null | undefined) => (uid && before.players[foe].field.some((mon) => mon?.uid === uid) ? uid : null);
+  const pending = before.pending;
+  if (pending) {
+    if (pending.kind === "melee" || pending.kind === "face" || pending.kind === "gnaw") return theirs(pending.attacker);
+    if (pending.kind === "beam" || pending.kind === "gnaw-skill") return theirs(pending.caster);
+    if (pending.kind === "lash") return theirs(pending.bird);
+    return null;
+  }
+  const asked = theirs(before.counterAsk?.uid);
+  if (asked) return asked;
+  if (event.actor === foe && event.cardId && (event.kind === "skill" || event.kind === "attack-monster" || event.kind === "attack-face")) {
+    return before.players[foe].field.find((mon) => mon && mon.cardId === event.cardId && mon.hp > 0)?.uid ?? null;
+  }
+  return null;
+}
+
+/** Monsters of `side` that died between `before` and `after` (left every field, not back to the hand or the deck). */
+function riteFallen(before: Duel, after: Duel, side: Side): Array<{ uid: string; slot: Slot; mon: FieldMon }> {
+  const was = before.players[side];
+  const now = after.players[side];
+  if (now.reserve.length + now.monsterDeck.length > was.reserve.length + was.monsterDeck.length) return [];
+  const standing = new Set(after.players.flatMap((player) => player.field.flatMap((mon) => (mon ? [mon.uid] : []))));
+  return was.field.flatMap((mon, slot) =>
+    mon && mon.hp > 0 && mon.cardId !== "mu" && !mon.lurk && mon.abroad === undefined && !standing.has(mon.uid) ? [{ uid: mon.uid, slot: slot as Slot, mon }] : [],
+  );
+}
+
+/** The ghost of Đòn cuối cùng leaves once its last blow is over (it is already in the graveyard). */
+function buryRite(state: Duel): Duel {
+  const strike = state.rites?.strike;
+  if (!strike || state.counterAsk || state.countering != null) return state;
+  const players = state.players.map((player) =>
+    player.field.some((mon) => mon?.uid === strike) ? { ...player, field: player.field.map((mon) => (mon?.uid === strike ? null : mon)) } : player,
+  ) as Duel["players"];
+  return { ...state, players, rites: null };
+}
+
+/** After each action: a monster killed by an enemy monster still standing opens Đòn cuối cùng for its owner; any other
+ *  action closes it (chủ game 20/11: chỉ dùng đúng lúc đó, qua là mất cơ hội). */
+function markRites(before: Duel, after: Duel, event: TraceEvent): Duel {
+  const state = buryRite(after);
+  if (state.rites?.strike) return state;
+  for (const side of [0, 1] as const) {
+    const killer = riteKiller(before, event, side);
+    if (!killer) continue;
+    const foe = (1 - side) as Side;
+    if (!state.players[foe].field.some((mon) => mon?.uid === killer && mon.hp > 0)) continue;
+    const dead = riteFallen(before, state, side);
+    if (dead.length) return { ...state, rites: { side, dead: dead.map((row) => ({ ...row, killer })) } };
+  }
+  if (!state.rites) return state;
+  if (event.kind === "spell" && event.cardId === RITE_CARD) return state;
+  return { ...state, rites: null };
+}
+
+/** The empty slot the ghost rises in: its own, else one in its row, else any. */
+function riteSlot(player: Player, slot: Slot): Slot | null {
+  if (!player.field[slot]) return slot;
+  const row = ALL_SLOTS.filter((n) => backSlot(n) === backSlot(slot) && !player.field[n]);
+  return row[0] ?? ALL_SLOTS.find((n) => !player.field[n]) ?? null;
+}
+
+/** The monsters of `side` Đòn cuối cùng can raise now: just killed by an enemy monster still standing, and `side`
+ *  holds the turn with nothing else waiting. */
+export function riteDeadFor(state: Duel, side: Side): RiteDead[] {
+  const rites = state.rites;
+  if (!rites || rites.side !== side || rites.strike || state.winner !== null) return [];
+  if (state.step !== "main" || state.turn !== side || state.hold || state.pending) return [];
+  if (state.counterAsk || state.countering != null || state.lurkAsk || state.parley || state.wheel || state.reel) return [];
+  const foe = state.players[(1 - side) as Side];
+  if (riteSlot(state.players[side], 0) === null) return [];
+  return rites.dead.filter((row) => foe.field.some((mon) => mon?.uid === row.killer && mon.hp > 0));
+}
+
+/** Đòn cuối cùng lands at once (siêu tốc): the fallen monster rises as it was before it fell and strikes its killer as a
+ *  Trả đòn (a plain attack or a single-target skill), for the card's 1 mana only; then it is gone again. */
+function riteCast(state: Duel, side: Side, handIndex: number, deadUid: string | null): Duel {
+  const list = riteDeadFor(state, side);
+  if (list.length === 0) return note(state, "Đòn cuối cùng chỉ dùng ngay lúc quái của bạn vừa bị quái địch hạ.");
+  const pick = (deadUid ? list.find((row) => row.uid === deadUid) : null) ?? (list.length === 1 ? list[0] : null);
+  if (!pick) return note(state, "Chọn quái vừa bị hạ.");
+  const paid = payHand(state, side, handIndex);
+  if (!paid) return note(state, `Cần ${spellCard(RITE_CARD)?.gems ?? 1} gem.`);
+  const player = paid.players[side];
+  const slot = riteSlot(player, pick.slot);
+  if (slot === null) return note(state, "Không còn ô trống cho quái gượng dậy.");
+  const ghost: FieldMon = { ...pick.mon, stun: 0, chain: 0, cage: undefined, path: 0, dim: false, used: false, knack: undefined, waitCounter: undefined };
+  const field = [...player.field] as Player["field"];
+  field[slot] = ghost;
+  const killer = paid.players[(1 - side) as Side].field.find((mon) => mon?.uid === pick.killer) ?? null;
+  const placed = patch(paid, side, { ...player, field });
+  const opened = note(
+    { ...placed, counterAsk: { uid: ghost.uid, from: pick.killer }, counterQueue: null, turn: side, rites: { side, dead: [], strike: ghost.uid } },
+    `Đòn cuối cùng: ${cardOf(ghost).name} gượng dậy ra đòn cuối lên ${killer ? cardOf(killer).name : "kẻ đã hạ nó"}.`,
+    "spell",
+  );
+  const marked = traced(state, opened, { kind: "spell", actor: side, ok: true, cardId: RITE_CARD, target: monsterTarget(state, pick.killer), end: null });
+  return marked.mode === "ai" && side === 1 ? pickCounter(marked, "phys") : marked;
+}
+
+/** Runs the ghost's last blow: the killer has no def, mdef or shield, nobody dodges, and the skill's own mana is free. */
+function riteRun(state: Duel, run: (state: Duel) => Duel): Duel {
+  const strike = state.rites?.strike;
+  const ask = state.counterAsk;
+  const side = strike ? ownerSide(state, strike) : null;
+  if (!strike || !ask || ask.uid !== strike || side === null) return run(state);
+  const you = state.players[side];
+  const boosted: Duel = { ...state, players: state.players.map((player, n) => (n === side ? { ...player, orb: player.orb + 40 } : player)) as Duel["players"] };
+  const wasOff = dodgeOff;
+  bareUids.add(ask.from);
+  dodgeOff = true;
+  riteRunning = true;
+  let next: Duel;
+  try {
+    next = run(boosted);
+  } finally {
+    bareUids.delete(ask.from);
+    dodgeOff = wasOff;
+    riteRunning = false;
+  }
+  const now = next.players[side];
+  const players = next.players.map((player, n) => (n === side ? { ...now, orb: Math.max(you.orb, now.orb - 40), stars: you.stars, starGems: you.starGems } : player)) as Duel["players"];
+  return buryRite({ ...next, players });
 }

@@ -1146,6 +1146,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Khi 1 quái thú đồng minh bị nhắm đến bởi kỹ năng của đối phương, hoán đổi vị trí của nó với 1 quái thú của đối phương, cho đến hết lượt đấu.",
     "picture": "spell:hop-ma-thuat"
+  },
+  {
+    "id": "don-cuoi-cung",
+    "name": "Đòn cuối cùng",
+    "gems": 1,
+    "effect": "Khi 1 quái của bạn bị tiêu diệt bởi quái thú đối phương, kích hoạt lá bài này để chọn ra đòn hoặc skill đơn mục tiêu dạng trả đòn (tức là không phản ứng được) lên quái thú đó.\nTất cả sát thương biến thành sát thương chuẩn.",
+    "picture": "spell:don-cuoi-cung"
   }
 ];
 

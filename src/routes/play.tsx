@@ -190,6 +190,8 @@ import {
   lurkChoices,
   answerLurk,
   wakeLurk,
+  riteDeadFor,
+  RITE_CARD,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { advisedRow } from "@/lib/row-advice";
@@ -1215,6 +1217,8 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   // Sừng lôi phá only in the round its side holds the sword (chủ game 29/10).
   if (id === "sung-loi-pha") return attackRound(duel) === viewer && you.field.some((mon) => mon && hornFit(mon.cardId));
   if (id === "ke-dao-mo") return canTargetFoe(duel) && digChoices(duel, viewer).length > 0;
+  // Đòn cuối cùng (chủ game 20/11): ngay lúc quyền về sau khi quái mình bị quái địch hạ.
+  if (id === RITE_CARD) return riteDeadFor(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -1934,6 +1938,8 @@ function PlayPage() {
   const [reflectPick, setReflectPick] = useState<{ index: number; uid: string | null } | null>(null);
   const [ambushPick, setAmbushPick] = useState<{ index: number; uid: string | null } | null>(null);
   const [digPick, setDigPick] = useState<{ index: number; id: string | null } | null>(null);
+  /** Đòn cuối cùng: nhiều quái vừa bị hạ thì chọn quái ra đòn cuối trước. */
+  const [riteAsk, setRiteAsk] = useState<{ index: number } | null>(null);
   const [lockFlash, setLockFlash] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
@@ -5045,6 +5051,21 @@ function PlayPage() {
     return document.elementsFromPoint(x, y).find((node) => !node.closest(".ghost") && !node.closest(".inspect-dismiss") && !node.closest(".inspect-card")) ?? null;
   }
 
+  /** Đòn cuối cùng: 1 quái vừa bị hạ thì nó gượng dậy ngay; nhiều quái thì chọn quái trước, rồi chọn đòn trên quái đó. */
+  function startRite(index: number) {
+    if (!duel) return;
+    const dead = riteDeadFor(duel, viewer);
+    if (dead.length === 0) {
+      holdNotice("Đòn cuối cùng chỉ dùng ngay lúc quái của bạn vừa bị quái địch hạ.");
+      return;
+    }
+    if (dead.length === 1 && dead[0]) {
+      apply(castSpell(duel, index, null, false, dead[0].uid));
+      return;
+    }
+    setRiteAsk({ index });
+  }
+
   function openDig(index: number) {
     if (!duel) return;
     if (!canTargetFoe(duel)) {
@@ -5120,6 +5141,10 @@ function PlayPage() {
       }
       if (payload.spellId === "ke-dao-mo") {
         openDig(payload.index);
+        return;
+      }
+      if (payload.spellId === RITE_CARD) {
+        startRite(payload.index);
         return;
       }
       if (payload.spellId === "hoan-doi") {
@@ -7410,6 +7435,28 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
+        {riteAsk && you.hand[riteAsk.index] === RITE_CARD && riteDeadFor(duel, viewer).length > 1 ? (
+          <div className="overlay is-ask">
+            <div className="ask-card">
+              <p>{tr("Đòn cuối cùng: chọn quái vừa bị hạ để ra đòn cuối.")}</p>
+              {riteDeadFor(duel, viewer).map((row) => (
+                <button
+                  key={row.uid}
+                  type="button"
+                  onClick={() => {
+                    setRiteAsk(null);
+                    apply(castSpell(duel, riteAsk.index, null, false, row.uid));
+                  }}
+                >
+                  {tr(monsterCard(row.mon.cardId)?.name ?? row.mon.cardId)}
+                </button>
+              ))}
+              <button type="button" onClick={() => setRiteAsk(null)}>
+                {tr("Đóng")}
+              </button>
+            </div>
+          </div>
+        ) : null}
         {digPick && you.hand[digPick.index] === "ke-dao-mo" ? (
           <div className="overlay is-ask">
             <div className="ask-card">
@@ -8151,7 +8198,9 @@ function PlayPage() {
                 const tolled = Boolean(you.tolls?.[index]);
                 const payable = tollOk(spellCard(id)?.gems ?? 0, tolled, you.orb, you.flask);
                 const usable = mine && answerUsable(id, duel, viewer, index);
-                const ready = usable && (spellSpeed(id) === "fast" || spellSpeed(id) === "super");
+                // Đòn cuối cùng chớp hồng đúng lúc dùng được (chủ game 20/11).
+                const riteNow = Boolean(mine) && id === RITE_CARD && spellDragLive(id, duel, viewer, index);
+                const ready = (usable && (spellSpeed(id) === "fast" || spellSpeed(id) === "super")) || riteNow;
                 // V8C: đủ điều kiện thi triển thì viền + glow sáng đứng yên; phép nhanh/siêu tốc đủ điều kiện thì thở mạnh (V8D).
                 const castable = Boolean(mine) && !ready && (usable || spellDragLive(id, duel, viewer, index));
                 const slowUse = canPlay && slowUsable(id, duel, viewer) && payable;
@@ -8164,7 +8213,7 @@ function PlayPage() {
                   <button
                     type="button"
                     className={`hand-card press is-spell${open || picked ? " is-open" : ""}${ready ? " is-alert" : ""}${castable ? " is-castable" : ""}${drag?.kind === "spell" && drag.index === index ? " is-ghosting" : ""}`}
-                    style={ready ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
+                    style={ready ? ({ "--alert-color": riteNow ? "#ff4fa6" : SKILL_TONES.spell } as CSSProperties) : undefined}
                     onClick={() => openHand("spell", index, id)}
                     onPointerDown={(event) => begin(event, { kind: "spell", index, spellId: id })}
                     onPointerMove={move}
@@ -8191,6 +8240,10 @@ function PlayPage() {
                             setHandPick(null);
                             if (id === "ke-dao-mo") {
                               openDig(index);
+                              return;
+                            }
+                            if (id === RITE_CARD) {
+                              startRite(index);
                               return;
                             }
                             if (id === "hoan-doi") {
@@ -9367,16 +9420,16 @@ function UnitChips({
 }) {
   const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, setAim, apply });
   if (!built) return null;
-  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
+  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} rite={riposte && duel.rites?.strike === uid} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
 }
 
 /** The list of buttons above a monster on the field (tapped, or dragged onto a target). */
-function UnitActs({ rows, box, soloRed, riposte = false, onSlide, onAsk }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void; /** K5: a press goes through the confirm panel first. */ onAsk?: (row: UnitRow) => void }) {
+function UnitActs({ rows, box, soloRed, riposte = false, rite = false, onSlide, onAsk }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; /** Đòn cuối cùng: quái đã chết đang ra đòn cuối, không tốn phí Trả đòn. */ rite?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void; /** K5: a press goes through the confirm panel first. */ onAsk?: (row: UnitRow) => void }) {
   const wide = Math.max(box.w + 8, 31);
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
     <div className={`unit-acts${riposte ? " is-riposte" : ""}`} style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
-      {riposte ? <p className="riposte-title">{tr("Trả đòn")} <small>{tr("(+1 mana)")}</small></p> : null}
+      {riposte ? <p className="riposte-title">{rite ? tr("Đòn cuối cùng") : tr("Trả đòn")} {rite ? null : <small>{tr("(+1 mana)")}</small>}</p> : null}
       {rows.map((row) => (
         <button
           key={row.key}

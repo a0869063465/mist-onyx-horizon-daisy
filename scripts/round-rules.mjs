@@ -1473,6 +1473,59 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
+/** Đòn cuối cùng (chủ game 20/11): bên 0 đánh hạ quái của bên 1; bên 1 cầm lá. */
+function riteBoard(victim, killer) {
+  let s = board({ 0: killer }, { 0: victim });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.RITE_CARD] : [], tolls: [] })) };
+  return D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+}
+
+test("Đòn cuối cùng (20/11): quái bị quái địch hạ, quyền về chủ thì quái chết ra đòn cuối, sát thương chuẩn, chỉ 1 mana", () => {
+  const dead = riteBoard(["may-chem", { atk: 3, def: 0, hp: 2, maxHp: 2 }], ["khong-lo-mot-mat", { atk: 5, def: 4, mdef: 4, hp: 10, maxHp: 10 }]);
+  assert.equal(at(dead, 1, 0), null, "quái bên 1 chết: " + dead.live);
+  assert.equal(dead.turn, 1, "quyền về bên bị hạ");
+  assert.equal(D.riteDeadFor(dead, 1).length, 1, "lá chớp");
+  const cast = D.castSpell(dead, 0, null);
+  assert.equal(cast.players[1].hand.length, 0, cast.live);
+  assert.equal(cast.players[1].orb, 2, "trả 1 mana của lá");
+  assert.equal(at(cast, 1, 0)?.cardId, "may-chem", "quái chết gượng dậy");
+  assert.equal(cast.counterAsk?.from, uid(dead, 0, 0));
+  const hit = D.pickCounter(cast, "phys");
+  assert.equal(at(hit, 0, 0).hp, 7, "3 sát thương chuẩn, bỏ qua 4 thủ: " + hit.live);
+  assert.equal(at(hit, 1, 0), null, "đòn xong thì quái lại biến mất");
+  assert.equal(hit.players[1].orb, 2, "không trả phí Trả đòn");
+  assert.equal(hit.turn, 1, "quyền vẫn ở bên dùng lá");
+  assert.equal(hit.rites ?? null, null);
+});
+
+test("Đòn cuối cùng: skill Trả đòn đơn mục tiêu thành sát thương chuẩn, không tốn mana của skill", () => {
+  const dead = riteBoard(["rong-con", { atk: 1, def: 0, hp: 1, maxHp: 1 }], ["khong-lo-mot-mat", { atk: 5, def: 0, mdef: 5, hp: 20, maxHp: 20 }]);
+  const cast = D.castSpell(dead, 0, null);
+  const ghost = at(cast, 1, 0);
+  assert.equal(ghost?.cardId, "rong-con");
+  const hp = at(cast, 0, 0).hp;
+  const burned = D.declareSkill(cast, ghost.uid, uid(cast, 0, 0), 0);
+  assert.ok(at(burned, 0, 0).hp < hp, "Hơi thở rồng xuyên 5 thủ phép: " + burned.live);
+  assert.equal(burned.players[1].orb, 2, "chỉ trả 1 mana của lá");
+  assert.equal(at(burned, 1, 0), null, burned.live);
+});
+
+test("Đòn cuối cùng: qua việc khác là mất cơ hội; kẻ hạ đã chết hoặc chủ động đánh rồi chết thì không chớp", () => {
+  const dead = riteBoard(["may-chem", { atk: 3, def: 0, hp: 2, maxHp: 2 }], ["khong-lo-mot-mat", { atk: 5, def: 0, hp: 10, maxHp: 10 }]);
+  const passed = D.endTurn(dead);
+  assert.equal(D.riteDeadFor(passed, 1).length, 0, "bỏ lượt là mất");
+  // Kẻ hạ không còn trên sân: lá không chớp.
+  const gone = { ...dead, players: dead.players.map((p, i) => (i === 0 ? { ...p, field: Array(6).fill(null) } : p)) };
+  assert.equal(D.riteDeadFor(gone, 1).length, 0, "kẻ hạ đã chết");
+  // Bên 0 chủ động đánh, chết vì Trả đòn: quyền về đối thủ, không dùng được.
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 1, def: 0, hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { atk: 9, def: 0, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, hand: i === 0 ? [D.RITE_CARD] : [], tolls: [] })) };
+  const open = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  const back = D.pickCounter(open, "phys");
+  assert.equal(at(back, 0, 0), null, back.live);
+  assert.equal(D.riteDeadFor(back, 0).length, 0, "đánh rồi chết vì Trả đòn: không kích hoạt");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
