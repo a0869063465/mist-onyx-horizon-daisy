@@ -137,6 +137,7 @@
   .tsheet .kw.ok { border-color:var(--gold); background:#3a2d0c; color:var(--gold); }
   .tsheet .kwin { flex:1 1 150px; min-width:0; padding:9px 10px; border-radius:10px; border:1px solid var(--line); background:#0d1430; color:var(--ink); font-size:14px; }
   .tsheet .kw.on { border-color:var(--gold); color:var(--gold); background:#3a2d0c; }
+  .grid > * { content-visibility:auto; contain-intrinsic-size:auto 190px; }
 </style>
 </head>
 <body>
@@ -166,7 +167,7 @@ try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} pushRemote(); };
 /* Đồng bộ qua cơ sở dữ liệu chung: mỗi bộ lá là một tài liệu state/<id>, chỉ ghi sau khi đã đọc xong bản trên máy chủ để không đè bằng bản trống. */
-let REM = null; const remoteOK = {}, lastJson = {}; let pushTimer = null;
+let REM = null; const remoteOK = {}, lastJson = {}; let pushTimer = null, remRender = 0;
 function pushRemote() {
   if (!REM) return;
   clearTimeout(pushTimer);
@@ -191,7 +192,7 @@ async function loadRemote() {
       remoteOK[set.id] = true;
       ref.onSnapshot((sn) => {
         if (!sn.exists || !sn.data() || !sn.data().json || sn.data().json === lastJson[set.id]) return;
-        try { ST[set.id] = JSON.parse(sn.data().json); lastJson[set.id] = sn.data().json; localStorage.setItem(KEY, JSON.stringify(ST)); render(); } catch (e) {}
+        try { ST[set.id] = JSON.parse(sn.data().json); lastJson[set.id] = sn.data().json; localStorage.setItem(KEY, JSON.stringify(ST)); if (!remRender) remRender = requestAnimationFrame(() => { remRender = 0; render(); }); } catch (e) {}
       }, () => {});
     }
     REM = cl;
@@ -239,14 +240,16 @@ const bonusMap = () => { roots(); const o = ST[setId]; if (!o._bonus) o._bonus =
 function tile(c, onTap) {
   const b = document.createElement("button");
   const kw = (ST[setId] && ST[setId]._bonus && ST[setId]._bonus[c.id]) || "";
-  b.innerHTML = `<img loading="lazy" draggable="false" src="cards/${c.id}.webp" alt="${c.name}"><span class="mn">${c.cost}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}`;
+  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="cards/${c.id}.webp" alt="${c.name}"><span class="mn">${c.cost}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}`;
   b.onclick = onTap;
   return b;
 }
 function openBonus(c, el) {
   const rc = el.getBoundingClientRect();
   const place = () => {
-    const p = $("tpanel"), W = window.innerWidth, H = window.innerHeight, w = p.offsetWidth, h = p.offsetHeight;
+    const vv = window.visualViewport, p = $("tpanel"), W = window.innerWidth, H = vv ? vv.height : window.innerHeight;
+    p.style.maxHeight = Math.max(160, H - 16) + "px";
+    const w = p.offsetWidth, h = p.offsetHeight;
     let x = rc.left + rc.width / 2 - w / 2; x = Math.max(8, Math.min(W - w - 8, x));
     let y = rc.bottom + 28; if (y + h > H - 8) y = rc.top - h - 8; if (y < 8) y = Math.max(8, Math.min(H - h - 8, rc.bottom - h / 2));
     p.style.left = x + "px"; p.style.top = y + "px";
@@ -267,6 +270,9 @@ function openBonus(c, el) {
     place();
   };
   $("tsheet").style.display = "block"; draw();
+  /* Bàn phím mở làm vùng nhìn thấy thấp đi: đặt lại khung để ô nhập không bị che, rồi gỡ khi đóng. */
+  const vv = window.visualViewport;
+  if (vv) { const re = () => { if ($("tsheet").style.display === "block") { place(); const i = $("tpanel").querySelector(".kwin"); if (i) i.scrollIntoView({ block: "nearest" }); } else { vv.removeEventListener("resize", re); } }; vv.addEventListener("resize", re); }
 }
 $("tsheet").onclick = (e) => { if (e.target === $("tsheet")) $("tsheet").style.display = "none"; };
 
