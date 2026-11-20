@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { CopyText } from "@/components/game/copy-text";
-import { Glyph, Rim } from "@/components/game/monster-sheet";
+import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { KEYWORDS, keywordsOf } from "@/lib/keywords";
 import { skillCost, type SkillShown } from "@/lib/skill-book";
 import { tr } from "@/lib/i18n";
@@ -101,7 +101,7 @@ export function HandPeek({ info, at, onPick, top, onTap }: { info: PeekInfo; at:
             >
               <span className="sk3d-gem">
                 <span className="sk3d-core">
-                  <Glyph name={skill.icon} />
+                  <SkillGlyph name={skill.icon} />
                 </span>
                 <Rim kind={skill.slow ? "slow" : skill.kind} />
               </span>
