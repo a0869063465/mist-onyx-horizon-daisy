@@ -139,10 +139,10 @@
   .tsheet .kw.on { border-color:var(--gold); color:var(--gold); background:#3a2d0c; }
   .grid > * { content-visibility:auto; contain-intrinsic-size:auto 190px; }
   .grid .bk.ck { background:#3b1420; color:#ffb0b8; }
-  .ktabs { display:flex; gap:8px; margin:0 0 8px; }
-  .ktabs button { flex:1; padding:9px 6px; border-radius:10px; border:1px solid var(--line); background:#0d1430; color:#9fb0e6; font-weight:700; font-size:14px; }
-  .ktabs button.on { border-color:var(--gold); background:#3a2d0c; color:var(--gold); }
-  .ktabs button.on[data-k="cond"] { border-color:#ff8a98; background:#3b1420; color:#ffb0b8; }
+  .tsheet h3.kt { display:flex; gap:14px; align-items:baseline; margin:0 0 2px; }
+  .tsheet h3.kt button { background:none; border:0; padding:2px 0; font:inherit; font-size:15px; font-weight:700; color:var(--mute); border-bottom:2px solid transparent; }
+  .tsheet h3.kt button.on { color:var(--gold); border-bottom-color:var(--gold); }
+  .tsheet h3.kt button.on[data-pk="cond"] { color:#ffb0b8; border-bottom-color:#ff8a98; }
 </style>
 </head>
 <body>
@@ -155,7 +155,7 @@
 <div class="srch"><input id="sq" type="search" placeholder="Tìm tên nhóm…" autocomplete="off"><div class="res" id="sres"></div></div>
 <div class="tabs" id="tabs"></div>
 <section class="box pool"><h2><span id="pt">Chưa sắp xếp</span><b id="np">0</b></h2><div class="grid" id="pool"></div></section>
-<section class="box done"><h2><span id="dn">Đã xếp</span><span class="r"><button id="edit">Sửa nhóm</button><b id="nd">0</b></span></h2><div class="ktabs" id="ktabs"><button data-k="star">Thưởng</button><button data-k="cond">Điều kiện</button></div><div class="nav" id="nav"></div><div class="grid" id="done"></div><div class="sub" id="dsub"></div></section>
+<section class="box done"><h2><span id="dn">Đã xếp</span><span class="r"><button id="edit">Sửa nhóm</button><b id="nd">0</b></span></h2><div class="nav" id="nav"></div><div class="grid" id="done"></div><div class="sub" id="dsub"></div></section>
 <pre id="out"></pre>
 <div id="impbox" style="display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.8);padding:16px"><div style="background:#0b1020;border:1px solid var(--gold);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px"><b style="color:var(--gold)">Dán chữ đã sao chép vào đây</b><textarea id="imptx" style="flex:1;background:#111a33;color:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"></textarea><div id="impmsg" style="font-size:13px"></div><div style="display:flex;gap:8px"><button id="impok" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--gold);background:#3a2d0c;color:var(--gold);font-weight:700">Nạp</button><button id="impno" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:#111a33;color:#fff">Đóng</button></div></div></div>
 <div id="pop"><div class="b" id="pb"></div></div>
@@ -167,7 +167,7 @@ const KEY = "lor-groups-v1";
 const COPYSVG = document.getElementById("copy").innerHTML, OKSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 let granSel = null, arrange = false, picks = new Set(), bonusOn = false;
 let D = null, setId = null, curId = null, mode = "sort", ST = {}, dir = "up", lastKid = {};
-try { { const v = localStorage.getItem("lor-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : v === "cond" ? "cond" : "up"; } } catch (e) {}
+try { { const v = localStorage.getItem("lor-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : "up"; } } catch (e) {}
 try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} pushRemote(); };
@@ -245,8 +245,9 @@ const KINDS = {
   bonus: { title: "Thưởng", cats: BONUS, map: "_bonus", kws: "_kws", hid: "_hid", cls: "bk" },
   cond: { title: "Điều kiện", cats: [{ name: "Có hại mình", items: ["Bị tiêu diệt"] }], map: "_cond", kws: "_ckws", hid: "_chid", cls: "bk ck" },
 };
-const kindNow = () => (dir === "cond" ? KINDS.cond : KINDS.bonus);
-const tagMode = () => dir === "star" || dir === "cond";
+let panelKind = "bonus"; /* loại đang mở trong khung chọn: bonus (Thưởng) hoặc cond (Điều kiện), đổi bằng chữ ở đầu khung */
+const kindNow = () => KINDS[panelKind];
+const tagMode = () => dir === "star";
 const kwList = (gi, K = kindNow()) => { roots(); const o = ST[setId]; if (!o[K.kws]) o[K.kws] = []; while (o[K.kws].length < K.cats.length) o[K.kws].push([]); const hid = (o[K.hid] || []).map(fold); return [...K.cats[gi].items, ...(o[K.kws][gi] || [])].filter((k) => !hid.includes(fold(k))); };
 /* Mỗi lá chọn tối đa 2 từ khoá: _bonus[idLá] là chuỗi (1 từ khoá) hoặc mảng (2). */
 const MAXKW = 2;
@@ -261,7 +262,7 @@ function tile(c, onTap) {
   return b;
 }
 function openBonus(c, el) {
-  const K = kindNow();
+  let K = kindNow();
   const rc = el.getBoundingClientRect();
   const place = () => {
     const vv = window.visualViewport, p = $("tpanel"), W = window.innerWidth, H = vv ? vv.height : window.innerHeight;
@@ -272,9 +273,11 @@ function openBonus(c, el) {
     p.style.left = x + "px"; p.style.top = y + "px";
   };
   const draw = () => {
+    K = kindNow();
     const cur = kwOf(c.id, K);
-    $("tpanel").innerHTML = `<h3>${K.title}</h3><div class="note">${escS(c.name)} · chọn tối đa 2 từ khoá, bấm lại để bỏ chọn, bấm ngoài khung để đóng.</div>` +
+    $("tpanel").innerHTML = `<h3 class="kt">${Object.entries(KINDS).map(([id, k]) => `<button class="${id === panelKind ? "on" : ""}" data-pk="${id}">${k.title}</button>`).join("")}</h3><div class="note">${escS(c.name)} · chọn tối đa 2 từ khoá, bấm lại để bỏ chọn, bấm ngoài khung để đóng.</div>` +
       K.cats.map((g, gi) => `<div class="bg">${g.name}</div>` + `<div class="chips">` + kwList(gi, K).map((k, ki) => `<button class="kw${cur.includes(k) ? " on" : ""}" data-g="${gi}" data-k="${ki}">${escS(k)}</button>`).join("") + `<button class="kw plus" data-add="${gi}" aria-label="Thêm từ khoá vào ${g.name}">+</button></div>`).join("");
+    $("tpanel").querySelectorAll(".kt button").forEach((b) => { b.onclick = () => { panelKind = b.dataset.pk; draw(); }; });
     $("tpanel").querySelectorAll(".kw").forEach((b) => { b.onclick = () => { const k = kwList(+b.dataset.g, K)[+b.dataset.k]; const now = kwOf(c.id, K); if (now.includes(k)) kwSet(c.id, now.filter((x) => x !== k), K); else if (now.length >= MAXKW) { const nt = $("tpanel").querySelector(".note"); if (nt) nt.textContent = "Tối đa " + MAXKW + " từ khoá, bấm lại một ô đang chọn để bỏ."; return; } else kwSet(c.id, [...now, k], K); save(); draw(); render(); }; });
     $("tpanel").querySelectorAll(".kw.plus").forEach((b) => { b.onclick = () => {
       const gi = +b.dataset.add, row = b.parentElement;
@@ -323,14 +326,11 @@ function moveOut(g, at, id) {
   save(); render();
 }
 function dirUi() {
-  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "star" ? "✱" : "⚑";
-  document.querySelectorAll("#ktabs button").forEach((b) => b.classList.toggle("on", dir === b.dataset.k));
-  $("dir").classList.toggle("starred", dir === "star" || dir === "cond");
-  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng: bấm lá để chọn từ khoá thưởng" : "Điều kiện: bấm lá để chọn điều kiện");
+  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : "✱";
+  $("dir").classList.toggle("starred", dir === "star");
+  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : "Thưởng và điều kiện: bấm lá để chọn từ khoá");
 }
-/* Chữ Thưởng / Điều kiện trên khung Đã xếp: bấm để vào chế độ đó, bấm lại chữ đang chọn để về hướng lên. */
-document.querySelectorAll("#ktabs button").forEach((b) => { b.onclick = () => { dir = dir === b.dataset.k ? "up" : b.dataset.k; try { localStorage.setItem("lor-dir", dir); } catch (e) {} render(); }; });
-$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "cond" : "up"; try { localStorage.setItem("lor-dir", dir); } catch (e) {} render(); };
+$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : "up"; try { localStorage.setItem("lor-dir", dir); } catch (e) {} render(); };
 /* Bấm một tab nhóm con: chuyển thẳng sang giao diện của nhóm đó (ô chưa sắp xếp = nguyên liệu từ nhóm mẹ của nó, khung dưới = nhóm đó). Giữ khung nhóm đúng chỗ trên màn hình, không bay lên đầu trang. */
 function stay(change) {
   const before = $("nav").getBoundingClientRect().top;
@@ -540,7 +540,7 @@ function render() {
   $("dn").textContent = "Đã xếp: " + g.name;
   dirUi();
   { const t = targetOf(g, at);
-    $("dsub").textContent = mode === "view" ? "" : tagMode() ? "Đang ở chế độ " + kindNow().title + ": bấm một lá để chọn " + (dir === "cond" ? "điều kiện" : "từ khoá thưởng") + ". Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
+    $("dsub").textContent = mode === "view" ? "" : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
   $("nd").textContent = g.cards.length;
   $("done").innerHTML = "";
   const sub = total(g) - g.cards.length;
