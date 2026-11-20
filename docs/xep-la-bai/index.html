@@ -146,6 +146,7 @@
   <p id="hint"></p>
 </header>
 <div class="sets" id="sets"></div>
+<div class="sets"><button id="exp">Xuất dữ liệu</button><button id="imp">Nhập dữ liệu</button></div>
 <div class="srch"><input id="sq" type="search" placeholder="Tìm tên nhóm…" autocomplete="off"><div class="res" id="sres"></div></div>
 <div class="tabs" id="tabs"></div>
 <section class="box pool"><h2><span id="pt">Chưa sắp xếp</span><b id="np">0</b></h2><div class="grid" id="pool"></div></section>
@@ -538,6 +539,22 @@ $("top").onclick = () => {
     return;
   }
   window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { if ((window.pageYOffset || document.documentElement.scrollTop || 0) > 8) document.body.scrollIntoView(true); }, 60);
+};
+/* Xuất: tải file JSON + chép vào bộ nhớ tạm. Nhập: dán nội dung file; dữ liệu hiện tại được sao lưu vào khoá lor-groups-backup trước khi thay. */
+$("exp").onclick = async () => {
+  const txt = JSON.stringify({ app: "lor-xep-la", at: new Date().toISOString(), data: ST }, null, 1);
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = "xep-la-bai-du-lieu.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
+  try { await navigator.clipboard.writeText(txt); $("exp").textContent = "Đã xuất ✓"; setTimeout(() => ($("exp").textContent = "Xuất dữ liệu"), 2000); } catch (e) {}
+};
+$("imp").onclick = () => {
+  open('<h3>Nhập dữ liệu</h3><div class="note">Dán nội dung file đã xuất. Dữ liệu hiện tại sẽ được sao lưu rồi bị thay.</div><textarea id="impt" rows="6" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0d1430;color:var(--ink);font-size:12px"></textarea><div class="note" id="impm"></div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="ok">Thay dữ liệu</button></div>');
+  $("no").onclick = close;
+  $("ok").onclick = () => {
+    let o; try { o = JSON.parse($("impt").value); } catch (e) { $("impm").textContent = "Không đọc được nội dung."; return; }
+    const d = o && o.data; if (!d || typeof d !== "object" || !Object.values(d).every((v) => v && Array.isArray(v.groups))) { $("impm").textContent = "Nội dung không đúng dạng dữ liệu xếp lá."; return; }
+    try { localStorage.setItem("lor-groups-backup", localStorage.getItem(KEY) || "{}"); } catch (e) {}
+    ST = d; save(); close(); curId = null; render();
+  };
 };
 fetch("data.json").then((r) => r.json()).then((d) => { D = d; setId = D.sets[0].id; setMode("sort"); });
 </script>
