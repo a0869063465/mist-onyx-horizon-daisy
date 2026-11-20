@@ -156,7 +156,7 @@
 <div id="pop"><div class="b" id="pb"></div></div>
 <div class="tsheet" id="tsheet"><div class="panel" id="tpanel"></div></div>
 <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
-<footer><button class="mode" id="mode">Xem</button><button id="imp">Nhập</button><button id="top">↑ Trở về</button><button id="dir" class="dir" aria-label="Hướng chuyển lá: lên nhóm mẹ">↑</button></footer>
+<footer><button class="mode" id="mode">Xem</button><button id="top">↑ Trở về</button><button id="dir" class="dir" aria-label="Hướng chuyển lá: lên nhóm mẹ">↑</button></footer>
 <script>
 const KEY = "lor-groups-v1";
 const COPYSVG = document.getElementById("copy").innerHTML, OKSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -595,7 +595,15 @@ $("top").onclick = () => {
 fetch("data.json").then((r) => r.json()).then(async (d) => { D = d; setId = D.sets[0].id; await loadRemote(); setMode("sort"); });
 
 /* Nhập bản sắp xếp từ chữ đã sao chép: chỉ thay đúng các bộ có trong chữ, bản cũ lưu vào khoá sao lưu. */
-$("imp").onclick = () => { $("impmsg").textContent = ""; $("impbox").style.display = "block"; };
+/* Ấn giữ nút sao chép ở góc trên phải (0,6 giây) thì mở ô nhập; bấm thường vẫn là sao chép. */
+{ let lp = null, held = false; const cp = $("copy");
+  const openImp = () => { held = true; $("impmsg").textContent = ""; $("impbox").style.display = "block"; };
+  const stop = () => { clearTimeout(lp); lp = null; };
+  cp.addEventListener("pointerdown", () => { held = false; stop(); lp = setTimeout(openImp, 600); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => cp.addEventListener(ev, stop));
+  cp.addEventListener("contextmenu", (e) => e.preventDefault());
+  cp.addEventListener("click", (e) => { if (held) { e.stopImmediatePropagation(); e.preventDefault(); held = false; } }, true);
+}
 $("impno").onclick = () => { $("impbox").style.display = "none"; };
 $("impok").onclick = () => {
   let j; try { j = JSON.parse($("imptx").value.trim()); } catch (e) { $("impmsg").textContent = "Chữ không đọc được, kiểm tra đã dán đủ chưa."; return; }
