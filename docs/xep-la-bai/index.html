@@ -170,6 +170,23 @@ let D = null, setId = null, curId = null, mode = "sort", ST = {}, dir = "up", la
 try { { const v = localStorage.getItem("lor-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : "up"; } } catch (e) {}
 try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
+/* Ảnh lá s1-113..237 nằm gộp trong một ảnh ghép (atlas/b1.webp, 10 cột, ô 150×214) vì mỗi bản đăng chỉ chứa tối đa 511 tệp; cắt ra bằng canvas khi mở trang. */
+const ATLAS = { file: "atlas/b1.webp", first: 113, last: 237, cols: 10, w: 150, h: 214 };
+const IMGS = {};
+const cardSrc = (id) => IMGS[id] || "cards/" + id + ".webp";
+async function loadAtlas() {
+  try {
+    const bm = await createImageBitmap(await (await fetch(ATLAS.file)).blob());
+    const cv = document.createElement("canvas"); cv.width = ATLAS.w; cv.height = ATLAS.h; const cx = cv.getContext("2d");
+    for (let n = ATLAS.first; n <= ATLAS.last; n++) {
+      const i = n - ATLAS.first;
+      cx.clearRect(0, 0, ATLAS.w, ATLAS.h);
+      cx.drawImage(bm, (i % ATLAS.cols) * ATLAS.w, Math.floor(i / ATLAS.cols) * ATLAS.h, ATLAS.w, ATLAS.h, 0, 0, ATLAS.w, ATLAS.h);
+      const b = await new Promise((r) => cv.toBlob(r, "image/webp", 0.92));
+      if (b) IMGS["s1-" + String(n).padStart(3, "0")] = URL.createObjectURL(b);
+    }
+  } catch (e) {}
+}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} pushRemote(); };
 /* Đồng bộ qua cơ sở dữ liệu chung: mỗi bộ lá là một tài liệu state/<id>, chỉ ghi sau khi đã đọc xong bản trên máy chủ để không đè bằng bản trống. */
 let REM = null; const remoteOK = {}, lastJson = {}; let pushTimer = null, remRender = 0;
@@ -231,7 +248,7 @@ function show(c) {
   const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const meta = `Mana ${c.cost}` + (c.stats ? ` · ${c.stats.startsWith("+") ? "Trang bị" : "Công/Máu"} ${c.stats}` : "");
   const paras = (c.text || "").split("\n").filter(Boolean).map((t) => `<p${t.startsWith("THĂNG CẤP") ? ' class="up"' : ""}>${esc(t)}</p>`).join("");
-  $("pb").innerHTML = `<div class="card"><img src="cards/${c.id}.webp" alt=""><div><h2>${esc(c.name)}</h2><div class="meta">${meta}</div>${c.tag ? `<span class="tg">${esc(c.tag)}</span>` : ""}${paras || '<p class="c">Không có mô tả.</p>'}${holder ? `<div class="c">Đang ở nhóm: ${esc(holder.name)}</div>` : ""}</div></div>`;
+  $("pb").innerHTML = `<div class="card"><img src="${cardSrc(c.id)}" alt=""><div><h2>${esc(c.name)}</h2><div class="meta">${meta}</div>${c.tag ? `<span class="tg">${esc(c.tag)}</span>` : ""}${paras || '<p class="c">Không có mô tả.</p>'}${holder ? `<div class="c">Đang ở nhóm: ${esc(holder.name)}</div>` : ""}</div></div>`;
   $("pop").style.display = "flex";
 }
 $("pop").onclick = () => ($("pop").style.display = "none");
@@ -257,7 +274,7 @@ const bonusMap = (K = kindNow()) => { roots(); const o = ST[setId]; if (!o[K.map
 function tile(c, onTap) {
   const b = document.createElement("button");
   const kw = kwOf(c.id, KINDS.bonus).join(" · "), cd = kwOf(c.id, KINDS.cond).join(" · ");
-  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="cards/${c.id}.webp" alt="${c.name}"><span class="mn">${c.cost}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
+  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}"><span class="mn">${c.cost}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
   b.onclick = onTap;
   return b;
 }
@@ -611,7 +628,7 @@ $("top").onclick = () => {
   }
   window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { if ((window.pageYOffset || document.documentElement.scrollTop || 0) > 8) document.body.scrollIntoView(true); }, 60);
 };
-fetch("data.json").then((r) => r.json()).then(async (d) => { D = d; setId = D.sets[0].id; await loadRemote(); setMode("sort"); });
+fetch("data.json").then((r) => r.json()).then(async (d) => { D = d; setId = D.sets[0].id; await Promise.all([loadRemote(), loadAtlas()]); setMode("sort"); });
 
 /* Nhập bản sắp xếp từ chữ đã sao chép: chỉ thay đúng các bộ có trong chữ, bản cũ lưu vào khoá sao lưu. */
 /* Ấn giữ nút sao chép ở góc trên phải (0,6 giây) thì mở ô nhập; bấm thường vẫn là sao chép. */
