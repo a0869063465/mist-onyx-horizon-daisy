@@ -529,7 +529,10 @@ function render() {
   $("done").innerHTML = "";
   const sub = total(g) - g.cards.length;
   if (!g.cards.length) $("done").innerHTML = `<span class="none">Chưa có lá nào thẳng trong nhóm này${sub ? ` (còn ${sub} lá trong nhóm con)` : ""}.</span>`;
-  for (const id of g.cards) { const c = cardOf(id); if (c) $("done").appendChild(tile(c, mode === "view" ? () => show(c) : dir === "star" ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, id); })); }
+  /* Chỉ đổi cách hiển thị: lá cùng từ khoá Thưởng đứng cạnh nhau (theo tên từ khoá), lá chưa có từ khoá ở cuối, thứ tự cũ giữ nguyên trong mỗi cụm. */
+  const kwKey = (id) => { const k = kwOf(id); return k.length ? k.map(fold).sort().join("|") : "\uffff"; };
+  const shown = g.cards.map((id, i) => ({ id, i, k: kwKey(id) })).sort((x, y) => (x.k < y.k ? -1 : x.k > y.k ? 1 : x.i - y.i)).map((x) => x.id);
+  for (const id of shown) { const c = cardOf(id); if (c) $("done").appendChild(tile(c, mode === "view" ? () => show(c) : dir === "star" ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, id); })); }
   $("edit").style.display = mode === "view" ? "none" : "";
 }
 function addChild(g, at) {
