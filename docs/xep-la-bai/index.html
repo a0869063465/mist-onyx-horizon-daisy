@@ -235,11 +235,15 @@ const BONUS = [
   { name: "Lợi lên mình", items: ["Rút bài", "Tự tăng cường"] },
   { name: "Hại lên địch", items: ["Tiến công", "Gây dame diện rộng"] },
 ];
-const kwList = (gi) => { roots(); const o = ST[setId]; if (!o._kws) o._kws = [[], []]; return [...BONUS[gi].items, ...(o._kws[gi] || [])]; };
+const kwList = (gi) => { roots(); const o = ST[setId]; if (!o._kws) o._kws = [[], []]; const hid = (o._hid || []).map(fold); return [...BONUS[gi].items, ...(o._kws[gi] || [])].filter((k) => !hid.includes(fold(k))); };
+/* Mỗi lá chọn tối đa 2 từ khoá: _bonus[idLá] là chuỗi (1 từ khoá) hoặc mảng (2). */
+const MAXKW = 2;
+const kwOf = (id) => { const v = (ST[setId] && ST[setId]._bonus && ST[setId]._bonus[id]) || ""; return Array.isArray(v) ? v : v ? [v] : []; };
+const kwSet = (id, arr) => { const m = bonusMap(); if (!arr.length) delete m[id]; else m[id] = arr.length === 1 ? arr[0] : arr; };
 const bonusMap = () => { roots(); const o = ST[setId]; if (!o._bonus) o._bonus = {}; return o._bonus; };
 function tile(c, onTap) {
   const b = document.createElement("button");
-  const kw = (ST[setId] && ST[setId]._bonus && ST[setId]._bonus[c.id]) || "";
+  const kw = kwOf(c.id).join(" · ");
   b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="cards/${c.id}.webp" alt="${c.name}"><span class="mn">${c.cost}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}`;
   b.onclick = onTap;
   return b;
@@ -255,15 +259,22 @@ function openBonus(c, el) {
     p.style.left = x + "px"; p.style.top = y + "px";
   };
   const draw = () => {
-    const cur = bonusMap()[c.id] || "";
-    $("tpanel").innerHTML = `<h3>Thưởng</h3><div class="note">${escS(c.name)} · chọn 1 từ khoá, bấm lại để bỏ chọn, bấm ngoài khung để đóng.</div>` +
-      BONUS.map((g, gi) => `<div class="bg">${g.name}</div>` + `<div class="chips">` + kwList(gi).map((k, ki) => `<button class="kw${cur === k ? " on" : ""}" data-g="${gi}" data-k="${ki}">${escS(k)}</button>`).join("") + `<button class="kw plus" data-add="${gi}" aria-label="Thêm từ khoá vào ${g.name}">+</button></div>`).join("");
-    $("tpanel").querySelectorAll(".kw").forEach((b) => { b.onclick = () => { const k = kwList(+b.dataset.g)[+b.dataset.k]; const m = bonusMap(); if (m[c.id] === k) delete m[c.id]; else m[c.id] = k; save(); draw(); render(); }; });
+    const cur = kwOf(c.id);
+    $("tpanel").innerHTML = `<h3>Thưởng</h3><div class="note">${escS(c.name)} · chọn tối đa 2 từ khoá, bấm lại để bỏ chọn, bấm ngoài khung để đóng.</div>` +
+      BONUS.map((g, gi) => `<div class="bg">${g.name}</div>` + `<div class="chips">` + kwList(gi).map((k, ki) => `<button class="kw${cur.includes(k) ? " on" : ""}" data-g="${gi}" data-k="${ki}">${escS(k)}</button>`).join("") + `<button class="kw plus" data-add="${gi}" aria-label="Thêm từ khoá vào ${g.name}">+</button></div>`).join("");
+    $("tpanel").querySelectorAll(".kw").forEach((b) => { b.onclick = () => { const k = kwList(+b.dataset.g)[+b.dataset.k]; const now = kwOf(c.id); if (now.includes(k)) kwSet(c.id, now.filter((x) => x !== k)); else if (now.length >= MAXKW) { const nt = $("tpanel").querySelector(".note"); if (nt) nt.textContent = "Tối đa " + MAXKW + " từ khoá, bấm lại một ô đang chọn để bỏ."; return; } else kwSet(c.id, [...now, k]); save(); draw(); render(); }; });
     $("tpanel").querySelectorAll(".kw.plus").forEach((b) => { b.onclick = () => {
       const gi = +b.dataset.add, row = b.parentElement;
       row.innerHTML = '<input class="kwin" maxlength="30" placeholder="Từ khoá mới"><button class="kw ok" id="kwok">Thêm</button>';
       const inp = row.querySelector("input"); inp.focus();
-      const add = () => { const v = inp.value.trim(); if (!v) { draw(); return; } const all = [0, 1].flatMap((i) => kwList(i)); if (!all.some((x) => fold(x) === fold(v))) { ST[setId]._kws[gi].push(v); save(); } draw(); };
+      const add = () => { const v = inp.value.trim(); if (!v) { draw(); return; } const o = ST[setId], same = kwList(gi).some((x) => fold(x) === fold(v));
+        if (!same) {
+          // Trùng tên ô ở nhóm khác thì chuyển sang nhóm này: xoá ô cũ ở nhóm kia (ô có sẵn thì ẩn đi), từ khoá đã gắn vào lá giữ nguyên.
+          for (let oi = 0; oi < 2; oi++) { if (oi === gi) continue; const had = kwList(oi).find((x) => fold(x) === fold(v)); if (!had) continue; o._kws[oi] = (o._kws[oi] || []).filter((x) => fold(x) !== fold(v)); if (BONUS[oi].items.some((x) => fold(x) === fold(v))) { o._hid = o._hid || []; o._hid.push(had); } }
+          const bm = bonusMap(); for (const id of Object.keys(bm)) { const arr = (Array.isArray(bm[id]) ? bm[id] : [bm[id]]).map((x) => (fold(x) === fold(v) ? v : x)); bm[id] = arr.length === 1 ? arr[0] : arr; }
+          (o._hid = (o._hid || []).filter((x) => fold(x) !== fold(v))); o._kws[gi].push(v); save(); render();
+        }
+        draw(); };
       $("kwok").onclick = add; inp.onkeydown = (e) => { if (e.key === "Enter") add(); };
       place();
     }; });
@@ -552,7 +563,7 @@ function result() {
   lines.push(`${set.name}:`);
   { const gs = grans(); if (gs.length) { lines.push("Nhóm bà:"); for (const gr of gs) lines.push(`  ${gr.name}: ${gr.ids.map((id) => (rs.find((r) => r.id === id) || {}).name).filter(Boolean).join(", ") || "-"}`); lines.push(""); } }
   { const bm = (ST[setId] && ST[setId]._bonus) || {}, by = {};
-    for (const [id, k] of Object.entries(bm)) { const c = cardOf(id); if (c) (by[k] = by[k] || []).push(c.name); }
+    for (const [id, kv] of Object.entries(bm)) { const c = cardOf(id); if (c) for (const k of (Array.isArray(kv) ? kv : [kv])) (by[k] = by[k] || []).push(c.name); }
     if (Object.keys(by).length) { lines.push("Thưởng:"); for (const [k, v] of Object.entries(by)) lines.push(`  ${k}: ${v.join(", ")}`); lines.push(""); } }
   const walk = (list, depth) => { for (const g of list) { { const sub = total(g) - g.cards.length; lines.push(`${"  ".repeat(depth)}${g.name} (${g.cards.length} lá${sub ? `, nhóm con ${sub} lá` : ""}): ${g.cards.map((id) => cardOf(id).name).join(", ") || "-"}`); } walk(g.children, depth + 1); } };
   walk(rs, 0);
