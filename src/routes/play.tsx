@@ -6636,19 +6636,14 @@ function PlayPage() {
     if (!card) return null;
     const stats = visibleStats(mon, duel.players[orb.side].field);
     const name = orb.skill === "lash" ? chipLabel(mon.cardId, "lash") : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
-    // A skill with painted art shows that art in its ring instead of the monster (chủ game 20/11): the round picture
-    // then shrinks into the round icon.
+    // A skill with painted art shows just that picture, feathered and glowing, without a rim (chủ game 20/11), then it
+    // shrinks into the round icon.
     const sk = iconSkill(orb);
     if (sk && hasSkillArt(sk.icon)) {
       return (
         <>
           <span className="rx-show-skill">
-            <span className={`rx-gem is-${sk.kind}`}>
-              <span className="rx-gem-core">
-                <SkillGlyph name={sk.icon} />
-              </span>
-              <Rim kind={sk.kind} />
-            </span>
+            <SkillGlyph name={sk.icon} />
           </span>
           {name ? <b className="rx-show-name">{tr(name)}</b> : null}
         </>
