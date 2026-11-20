@@ -164,7 +164,39 @@ let D = null, setId = null, curId = null, mode = "sort", ST = {}, dir = "up", la
 try { { const v = localStorage.getItem("lor-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : "up"; } } catch (e) {}
 try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} pushRemote(); };
+/* Đồng bộ qua cơ sở dữ liệu chung: mỗi bộ lá là một tài liệu state/<id>, chỉ ghi sau khi đã đọc xong bản trên máy chủ để không đè bằng bản trống. */
+let REM = null; const remoteOK = {}, lastJson = {}; let pushTimer = null;
+function pushRemote() {
+  if (!REM) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    for (const id of Object.keys(remoteOK)) {
+      if (!ST[id]) continue;
+      const j = JSON.stringify(ST[id]);
+      if (j === lastJson[id]) continue;
+      lastJson[id] = j;
+      REM.collection("state").doc(id).set({ json: j, at: Date.now() }).catch(() => { lastJson[id] = null; });
+    }
+  }, 600);
+}
+async function loadRemote() {
+  try {
+    const cl = window.claude && window.claude.use ? await Promise.race([window.claude.use("db"), new Promise((r) => setTimeout(() => r(null), 4000))]) : null;
+    if (!cl) return;
+    for (const set of D.sets) {
+      const ref = cl.collection("state").doc(set.id);
+      const snap = await Promise.race([ref.get(), new Promise((_, rj) => setTimeout(() => rj(new Error("t")), 4000))]);
+      if (snap.exists && snap.data() && snap.data().json) { ST[set.id] = JSON.parse(snap.data().json); lastJson[set.id] = snap.data().json; try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
+      remoteOK[set.id] = true;
+      ref.onSnapshot((sn) => {
+        if (!sn.exists || !sn.data() || !sn.data().json || sn.data().json === lastJson[set.id]) return;
+        try { ST[set.id] = JSON.parse(sn.data().json); lastJson[set.id] = sn.data().json; localStorage.setItem(KEY, JSON.stringify(ST)); render(); } catch (e) {}
+      }, () => {});
+    }
+    REM = cl;
+  } catch (e) { REM = null; }
+}
 let uid = 0;
 const gid = () => "g" + Date.now().toString(36) + (uid++);
 const curSet = () => D.sets.find((s) => s.id === setId);
@@ -540,7 +572,7 @@ $("top").onclick = () => {
   }
   window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { if ((window.pageYOffset || document.documentElement.scrollTop || 0) > 8) document.body.scrollIntoView(true); }, 60);
 };
-fetch("data.json").then((r) => r.json()).then((d) => { D = d; setId = D.sets[0].id; setMode("sort"); });
+fetch("data.json").then((r) => r.json()).then(async (d) => { D = d; setId = D.sets[0].id; await loadRemote(); setMode("sort"); });
 
 /* Nhập bản sắp xếp từ chữ đã sao chép: chỉ thay đúng các bộ có trong chữ, bản cũ lưu vào khoá sao lưu. */
 $("imp").onclick = () => { $("impmsg").textContent = ""; $("impbox").style.display = "block"; };
