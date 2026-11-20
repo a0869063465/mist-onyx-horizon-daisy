@@ -139,6 +139,10 @@
   .tsheet .kw.on { border-color:var(--gold); color:var(--gold); background:#3a2d0c; }
   .grid > * { content-visibility:auto; contain-intrinsic-size:auto 190px; }
   .grid .bk.ck { background:#3b1420; color:#ffb0b8; }
+  .ktabs { display:flex; gap:8px; margin:0 0 8px; }
+  .ktabs button { flex:1; padding:9px 6px; border-radius:10px; border:1px solid var(--line); background:#0d1430; color:#9fb0e6; font-weight:700; font-size:14px; }
+  .ktabs button.on { border-color:var(--gold); background:#3a2d0c; color:var(--gold); }
+  .ktabs button.on[data-k="cond"] { border-color:#ff8a98; background:#3b1420; color:#ffb0b8; }
 </style>
 </head>
 <body>
@@ -151,7 +155,7 @@
 <div class="srch"><input id="sq" type="search" placeholder="Tìm tên nhóm…" autocomplete="off"><div class="res" id="sres"></div></div>
 <div class="tabs" id="tabs"></div>
 <section class="box pool"><h2><span id="pt">Chưa sắp xếp</span><b id="np">0</b></h2><div class="grid" id="pool"></div></section>
-<section class="box done"><h2><span id="dn">Đã xếp</span><span class="r"><button id="edit">Sửa nhóm</button><b id="nd">0</b></span></h2><div class="nav" id="nav"></div><div class="grid" id="done"></div><div class="sub" id="dsub"></div></section>
+<section class="box done"><h2><span id="dn">Đã xếp</span><span class="r"><button id="edit">Sửa nhóm</button><b id="nd">0</b></span></h2><div class="ktabs" id="ktabs"><button data-k="star">Thưởng</button><button data-k="cond">Điều kiện</button></div><div class="nav" id="nav"></div><div class="grid" id="done"></div><div class="sub" id="dsub"></div></section>
 <pre id="out"></pre>
 <div id="impbox" style="display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.8);padding:16px"><div style="background:#0b1020;border:1px solid var(--gold);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px"><b style="color:var(--gold)">Dán chữ đã sao chép vào đây</b><textarea id="imptx" style="flex:1;background:#111a33;color:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"></textarea><div id="impmsg" style="font-size:13px"></div><div style="display:flex;gap:8px"><button id="impok" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--gold);background:#3a2d0c;color:var(--gold);font-weight:700">Nạp</button><button id="impno" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:#111a33;color:#fff">Đóng</button></div></div></div>
 <div id="pop"><div class="b" id="pb"></div></div>
@@ -320,9 +324,12 @@ function moveOut(g, at, id) {
 }
 function dirUi() {
   $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "star" ? "✱" : "⚑";
+  document.querySelectorAll("#ktabs button").forEach((b) => b.classList.toggle("on", dir === b.dataset.k));
   $("dir").classList.toggle("starred", dir === "star" || dir === "cond");
   $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng: bấm lá để chọn từ khoá thưởng" : "Điều kiện: bấm lá để chọn điều kiện");
 }
+/* Chữ Thưởng / Điều kiện trên khung Đã xếp: bấm để vào chế độ đó, bấm lại chữ đang chọn để về hướng lên. */
+document.querySelectorAll("#ktabs button").forEach((b) => { b.onclick = () => { dir = dir === b.dataset.k ? "up" : b.dataset.k; try { localStorage.setItem("lor-dir", dir); } catch (e) {} render(); }; });
 $("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "cond" : "up"; try { localStorage.setItem("lor-dir", dir); } catch (e) {} render(); };
 /* Bấm một tab nhóm con: chuyển thẳng sang giao diện của nhóm đó (ô chưa sắp xếp = nguyên liệu từ nhóm mẹ của nó, khung dưới = nhóm đó). Giữ khung nhóm đúng chỗ trên màn hình, không bay lên đầu trang. */
 function stay(change) {
