@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Lá Bẫy thú (20/11, Opus 5.5, nhánh `ccr-9debffc2-yhepws`, CHƯA áp `main`)
+1. Việc vừa làm: phép `bay-thu` (1 mana, nhanh = phản ứng, nhóm Sát thương, chữ lá đúng chữ chủ game, tranh `public/art/spells/bay-thu.jpg`). duel.ts `TRAP_CARD`, `trapPicks`, `markTraps` (trong `traced`: sau triệu hồi thường/hiến tế/dung hợp của một bên, `Duel.trap` mở cho bên kia tới việc kế tiếp, cơ chế chung như Đòn cuối cùng), `Hold.trap` + `trapSpring` (quái máu dưới 4 đưa đòn đánh hoặc skill sát thương lên hàng chờ: bẫy chờ trong chuỗi như Phục kích, Hấp thụ ma pháp nuốt được qua `EATABLE`; chuỗi nổ thì quái đó chết, đòn huỷ, quyền sang bên bị đánh), `slay` (giết thẳng, dùng chung cách Huỷ diệt). Máu hiện tại < 4; quái ẩn (L2, Biển sâu, dưới Mũ) chưa lật thì không bẫy; quái 5 sao theo luật dự án không áp.
+2. Hiện trạng: nhận 1 ảnh (tranh lá). round-rules 85/85 (+2 bài; bài Phục kích chập chờn cũ), tsc sạch, chụp Chromium 412×915: Máy chém máu 2 lao vào, lá chớp hồng, dùng thì icon bẫy + dòng hồng tới Máy chém, vào hàng chờ. Chưa thử: lúc triệu hồi bằng mắt, online, Vs Máy, điện thoại.
+3. Việc sắp làm: chờ chủ game thử; áp `main` khi được bảo.
+
 ## Lá Huỷ diệt (20/11, Opus 5.5, nhánh `ccr-9debffc2-yhepws`, CHƯA áp `main`)
 1. Việc vừa làm: phép `huy-diet` (2 mana, chậm, nhóm Sát thương, chữ lá đúng chữ chủ game, tranh `public/art/spells/huy-diet.jpg`). duel.ts `DOOM_CARD`, `doomWaiting`: chờ trong chuỗi, chỉ Hấp thụ ma pháp đáp được; không chặn, không Tường thành/Thế thân/che hộ (`canWall`, `canSpirit`, `canGuardCover`, `standAim`, `assignBlockCore` từ chối); mục tiêu gốc giữ ở `pending.source` nên không bị đổi hướng (Kizuran, Hoán đổi); lúc nổ đặt máu 0 rồi `dropDead` (hiệu ứng khi chết chạy như thường); kể cả hàng sau, quái ẩn, quái 5 sao (chủ game 20/11). Không mở Đòn cuối cùng (phép).
 2. Hiện trạng: nhận 1 ảnh (tranh lá). round-rules 83/83 (+1 bài), tsc sạch, chụp Chromium 412×915: 2 quái địch (kể cả Rồng ác ma) sáng, bấm mục tiêu thì vào hàng chờ. Chưa thử: online, Vs Máy, điện thoại, quái ẩn bằng mắt.

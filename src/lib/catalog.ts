@@ -1160,6 +1160,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 2,
     "effect": "Tiêu diệt 1 quái thú địch bất kỳ.",
     "picture": "spell:huy-diet"
+  },
+  {
+    "id": "bay-thu",
+    "name": "Bẫy thú",
+    "gems": 1,
+    "effect": "Phản ứng.\nKhi quái thú có máu thấp hơn 4 được triệu hồi hoặc phát động tấn công. Tiêu diệt ngay nó.",
+    "picture": "spell:bay-thu"
   }
 ];
 

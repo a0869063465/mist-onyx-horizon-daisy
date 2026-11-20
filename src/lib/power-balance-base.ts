@@ -90,6 +90,7 @@ export const BALANCE_BASE: Record<string, Snap> = {
   "hop-ma-thuat": {"kind":"spell","name":"Hộp ma thuật","stars":0,"mana":0,"atk":0,"def":0,"mdef":0,"hp":0},
   "don-cuoi-cung": {"kind":"spell","name":"Đòn cuối cùng","stars":0,"mana":1,"atk":0,"def":0,"mdef":0,"hp":0},
   "huy-diet": {"kind":"spell","name":"Huỷ diệt","stars":0,"mana":2,"atk":0,"def":0,"mdef":0,"hp":0},
+  "bay-thu": {"kind":"spell","name":"Bẫy thú","stars":0,"mana":1,"atk":0,"def":0,"mdef":0,"hp":0},
   "hiep-si-ho-ve": {"kind":"monster","name":"Hiệp sĩ hộ vệ","stars":2,"mana":1,"atk":2,"def":0,"mdef":0,"hp":2},
   "hiep-si-cua-hau": {"kind":"monster","name":"Hiệp sĩ của hậu","stars":2,"mana":1,"atk":1,"def":0,"mdef":3,"hp":2},
 };

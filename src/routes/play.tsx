@@ -193,6 +193,8 @@ import {
   riteDeadFor,
   RITE_CARD,
   doomWaiting,
+  trapPicks,
+  TRAP_CARD,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { advisedRow } from "@/lib/row-advice";
@@ -1105,6 +1107,7 @@ function splashMarkPoint(state: Duel, id: string, viewer: Side, falls: Fall[]): 
 
 
 const ANSWER_SPELLS = new Set([
+  "bay-thu",
   "guong-phong-ho",
   "la-chan-phan-don",
   "vong-xoay-bao-ho",
@@ -1145,6 +1148,7 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
   // Huỷ diệt chỉ Hấp thụ ma pháp hoá giải được (chủ game 20/11).
   if (doomWaiting(duel)) return id === "hap-thu-ma-phap";
+  if (id === TRAP_CARD) return duel.hold ? trapPicks(duel, duel.hold.priority).length > 0 : false;
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
@@ -1223,6 +1227,8 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (id === "ke-dao-mo") return canTargetFoe(duel) && digChoices(duel, viewer).length > 0;
   // Đòn cuối cùng (chủ game 20/11): ngay lúc quyền về sau khi quái mình bị quái địch hạ.
   if (id === RITE_CARD) return riteDeadFor(duel, viewer).length > 0;
+  // Bẫy thú (chủ game 20/11): ngay lúc quyền về sau khi quái địch máu dưới 4 vừa triệu hồi.
+  if (id === TRAP_CARD) return trapPicks(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -1256,7 +1262,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const card = spellCard(id);
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
-  if (ANSWER_SPELLS.has(id) && (id !== "phan-nguyen" || duel.step === "respond")) {
+  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
     if (id === "hoan-doi") return canCastSwap(duel, viewer);
@@ -5151,6 +5157,10 @@ function PlayPage() {
         startRite(payload.index);
         return;
       }
+      if (payload.spellId === TRAP_CARD) {
+        apply(castSpell(duel, payload.index, trapPicks(duel, viewer)[0] ?? null));
+        return;
+      }
       if (payload.spellId === "hoan-doi") {
         setSwapPick([]);
         apply(castSpell(duel, payload.index, aimedUid(duel)));
@@ -8203,7 +8213,7 @@ function PlayPage() {
                 const payable = tollOk(spellCard(id)?.gems ?? 0, tolled, you.orb, you.flask);
                 const usable = mine && answerUsable(id, duel, viewer, index);
                 // Đòn cuối cùng chớp hồng đúng lúc dùng được (chủ game 20/11).
-                const riteNow = Boolean(mine) && id === RITE_CARD && spellDragLive(id, duel, viewer, index);
+                const riteNow = Boolean(mine) && (id === RITE_CARD || (id === TRAP_CARD && duel.step === "main")) && spellDragLive(id, duel, viewer, index);
                 const ready = (usable && (spellSpeed(id) === "fast" || spellSpeed(id) === "super")) || riteNow;
                 // V8C: đủ điều kiện thi triển thì viền + glow sáng đứng yên; phép nhanh/siêu tốc đủ điều kiện thì thở mạnh (V8D).
                 const castable = Boolean(mine) && !ready && (usable || spellDragLive(id, duel, viewer, index));
@@ -8248,6 +8258,10 @@ function PlayPage() {
                             }
                             if (id === RITE_CARD) {
                               startRite(index);
+                              return;
+                            }
+                            if (id === TRAP_CARD) {
+                              apply(castSpell(duel, index, trapPicks(duel, viewer)[0] ?? null));
                               return;
                             }
                             if (id === "hoan-doi") {

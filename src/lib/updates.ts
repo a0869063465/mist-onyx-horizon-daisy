@@ -1088,6 +1088,7 @@ export const PENDING_NOTES: string[] = [
   "Quái bị khoá, trói, choáng hoặc tê liệt (kể cả quái điểu nhân, nói chung là không hành động được) hay không thể chặn (Hoa ăn thịt người, Kén) không còn chớp phản ứng hay chớp chặn.",
   "Thêm phép Đòn cuối cùng (1 mana, siêu tốc): quái của bạn bị quái địch hạ thì lá chớp hồng; dùng ngay lúc đó, quái vừa chết gượng dậy ra đòn hoặc skill Trả đòn lên kẻ hạ nó, mọi sát thương là sát thương chuẩn, không né được.",
   "Thêm phép Huỷ diệt (2 mana, phép chậm): tiêu diệt 1 quái địch bất kỳ, kể cả quái 5 sao. Không quái nào chặn hay che được, chỉ Hấp thụ ma pháp hoá giải được.",
+  "Thêm phép Bẫy thú (1 mana, phản ứng): quái địch máu dưới 4 vừa triệu hồi, hiến tế, dung hợp hoặc đưa đòn đánh, skill sát thương lên hàng chờ thì lá chớp hồng, dùng là tiêu diệt ngay nó. Quái ẩn chưa lật thì chưa bẫy được.",
 ];
 
 function remarkOf(notes: string[]) {

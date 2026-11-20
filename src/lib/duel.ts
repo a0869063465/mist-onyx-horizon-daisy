@@ -241,6 +241,9 @@ export type Hold = {
   /** Giáp và Vuốt (chủ game 04/11): it waits in the chain like Phục kích; once the chain lands the skill or spell on
    *  `bird` is stopped and the bird grows. */
   ward?: { bird: string };
+  /** Bẫy thú (chủ game 20/11): chờ trong chuỗi như Phục kích; chuỗi nổ thì `uid` (quái máu dưới 4 vừa phát động tấn
+   *  công) chết ngay, đòn của nó huỷ. */
+  trap?: { uid: string };
   /**
    * Hấp thụ ma pháp nuốt được phép chậm, phép nhanh và skill dạng phép (chủ game 04/11). The last fast answer in the
    * chain keeps the board as it was just before it took effect (its card already paid), so the answer can be swallowed
@@ -280,6 +283,9 @@ export type Duel = {
    * Chỉ dùng được ngay lúc quyền về `side`; việc kế tiếp xoá mất. `strike` = quái đã chết đang gượng dậy ra đòn cuối.
    */
   rites?: { side: Side; dead: RiteDead[]; strike?: string | null } | null;
+  /** Bẫy thú (chủ game 20/11): quái của bên kia vừa triệu hồi (thường, hiến tế, dung hợp); `side` được bẫy ngay lúc quyền
+   *  về mình, việc kế tiếp xoá mất. */
+  trap?: { side: Side; uids: string[] } | null;
   /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
   dodge?: { id: number; uids: string[] } | null;
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
@@ -992,7 +998,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const seen = dodgeSeen.splice(0);
   dodgeRolls.clear();
   const flashed = seen.length ? { ...rawAfter, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : rawAfter;
-  const after = markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event);
+  const after = markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event);
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -4350,6 +4356,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
+  if (hold.trap) return trapSpring(state, hold.trap.uid);
   if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
@@ -6695,7 +6702,7 @@ export function eatFor(state: Duel, side: Side): boolean {
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
-const EATABLE = new Set(["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
+const EATABLE = new Set(["bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
 
 /** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
 function restoreEaten(now: Duel, back: Duel): Duel {
@@ -6773,6 +6780,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "giap-co-khi",
     "hop-ma-thuat",
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
+    ...(state.step === "respond" ? [TRAP_CARD] : []),
   ]);
   if (!replay && card.id === "hoan-doi") {
     if (!canCastSwap(state, side)) {
@@ -6878,6 +6886,14 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     if (!picked) return note(state, "Chọn một quái đối thủ.");
     spellSource = picked.uid;
   }
+  if (card.id === TRAP_CARD && !replay) {
+    const picks = trapPicks(state, side);
+    if (picks.length === 0) return note(state, "Bẫy thú chỉ dùng khi quái máu dưới 4 vừa triệu hồi hoặc phát động tấn công.");
+    const picked = targetUid && picks.includes(targetUid) ? targetUid : picks.length === 1 ? picks[0]! : null;
+    if (!picked) return note(state, "Chọn quái để bẫy.");
+    targetUid = picked;
+    spellSource = picked;
+  }
   const turnsVirus = card.id === "phan-nguyen" && state.step === "respond";
   if (turnsVirus && !(state.pending?.kind === "spell" && state.pending.corrode && state.hold?.priority === side)) {
     return note(state, "Phản nguyền chỉ phản được Virus ăn mòn đang chờ.");
@@ -6944,6 +6960,17 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   const enemy = next.players[foe];
   const foeMon = targetUid ? enemy.field.find((mon) => mon?.uid === targetUid) ?? null : enemy.field.find((mon) => mon) ?? null;
 
+  if (card.id === TRAP_CARD) {
+    const aim = replay ? sourceUid ?? targetUid : spellSource;
+    const prey = aim ? next.players[foe].field.find((mon) => mon?.uid === aim) ?? null : null;
+    if (!aim || !prey) return note(next, "Bẫy thú không còn mục tiêu.", "spell");
+    // Trong chuỗi (quái vừa phát động tấn công): bẫy chờ như Phục kích, chuỗi nổ mới sập (chủ game 20/11, phép nhanh).
+    if (!replay && next.step === "respond" && next.hold) {
+      return keep(note({ ...next, hold: { ...next.hold, trap: { uid: prey.uid } } }, `Bẫy thú giăng chờ ${cardOf(prey).name}.`, "spell"));
+    }
+    const done = slay(next, prey.uid, `Bẫy thú tiêu diệt ${cardOf(prey).name}.`);
+    return done.step === "respond" ? keep(done) : done;
+  }
   if (card.id === DOOM_CARD) {
     const aim = sourceUid ?? targetUid;
     const where = aim === null ? null : ownerSide(next, aim);
@@ -11362,4 +11389,69 @@ export const DOOM_CARD = "huy-diet";
 /** Huỷ diệt đang chờ trong chuỗi: chỉ Hấp thụ ma pháp hoá giải được, không quái nào chặn hay che được. */
 export function doomWaiting(state: Duel): boolean {
   return state.step === "respond" && state.pending?.kind === "spell" && state.pending.cardId === DOOM_CARD;
+}
+
+/** Bẫy thú (chủ game 20/11): phép nhanh 1 mana, tiêu diệt quái máu dưới 4 vừa triệu hồi hoặc phát động tấn công. */
+export const TRAP_CARD = "bay-thu";
+
+/** A monster dies outright (Huỷ diệt, Bẫy thú): no hp, def, shield or dodge counts; what happens on death runs as usual. */
+function slay(state: Duel, uid: string, line: string): Duel {
+  const where = ownerSide(state, uid);
+  if (where === null) return state;
+  const owner = state.players[where];
+  const field = owner.field.map((mon) => (mon?.uid === uid ? { ...mon, hp: 0 } : mon)) as Player["field"];
+  return note(patch(state, where, dropDead({ ...owner, field })), line, "spell");
+}
+
+/** Bẫy thú only sees what its owner sees: not a hidden monster (quái ẩn, Biển sâu, under Mũ ma pháp) until it shows. */
+function trapFits(state: Duel, side: Side, uid: string): boolean {
+  const foe = (1 - side) as Side;
+  const mon = state.players[foe].field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon || mon.hp <= 0 || mon.hp >= 4) return false;
+  if ((monsterCard(mon.cardId)?.stars ?? 0) >= 5) return false;
+  if (mon.lurk || state.players[foe].hats || shadeHidden(mon)) return false;
+  if (state.players[foe].sea && SEA_IDS.has(mon.cardId) && !mon.shown) return false;
+  return true;
+}
+
+/** The monsters `side` may trap now: just summoned by the other side (quyền vừa về), or striking in the chain. */
+export function trapPicks(state: Duel, side: Side): string[] {
+  if (state.winner !== null) return [];
+  const foe = (1 - side) as Side;
+  if (state.step === "main") {
+    const trap = state.trap;
+    if (!trap || trap.side !== side || state.turn !== side || state.hold || state.pending) return [];
+    if (state.counterAsk || state.countering != null || state.lurkAsk || state.parley || state.wheel || state.reel) return [];
+    return trap.uids.filter((uid) => trapFits(state, side, uid));
+  }
+  const pending = state.pending;
+  const hold = state.hold;
+  if (state.step !== "respond" || !pending || !hold || hold.stage || hold.priority !== side || hold.trap) return [];
+  let striker: string | null = null;
+  if (pending.kind === "melee" || pending.kind === "face" || pending.kind === "gnaw") striker = pending.attacker;
+  else if ((pending.kind === "beam" || pending.kind === "gnaw-skill") && !("back" in pending && pending.back)) {
+    striker = harmSkill(ownerCard(state, pending.caster), pending.index) ? pending.caster : null;
+  }
+  if (!striker || !state.players[foe].field.some((mon) => mon?.uid === striker)) return [];
+  return trapFits(state, side, striker) ? [striker] : [];
+}
+
+/** After each action: a summon by one side opens Bẫy thú for the other until its next action. */
+function markTraps(before: Duel, after: Duel, event: TraceEvent): Duel {
+  if (event.ok && (event.kind === "summon" || event.kind === "fuse")) {
+    const side = event.actor;
+    const old = new Set(before.players[side].field.flatMap((mon) => (mon ? [mon.uid] : [])));
+    const fresh = after.players[side].field.flatMap((mon) => (mon && !old.has(mon.uid) ? [mon.uid] : []));
+    if (fresh.length) return { ...after, trap: { side: (1 - side) as Side, uids: fresh } };
+  }
+  return after.trap ? { ...after, trap: null } : after;
+}
+
+/** Bẫy thú lands in the chain: the striker dies and its blow is gone; quyền sang bên bị đánh như đòn đã xong. */
+function trapSpring(state: Duel, uid: string): Duel {
+  const hold = state.hold;
+  const victim = state.players.flatMap((player) => player.field).find((mon) => mon?.uid === uid) ?? null;
+  if (!hold || !victim) return passResponseCore({ ...state, hold: hold ? { ...hold, trap: undefined } : hold });
+  const slain = slay(state, uid, `Bẫy thú tiêu diệt ${cardOf(victim).name}, đòn bị huỷ.`);
+  return releaseLegend({ ...slain, step: "main", pending: null, hold: null });
 }

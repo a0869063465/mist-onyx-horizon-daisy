@@ -1555,6 +1555,52 @@ test("Huỷ diệt (20/11): phép chậm 2 mana, giết thẳng 1 quái địch 
   assert.ok(at(eat, 1, 0), "Hấp thụ ma pháp cứu: " + eat.live);
 });
 
+test("Bẫy thú (20/11): quái địch máu dưới 4 vừa triệu hồi thì quyền về mình bẫy được ngay; qua việc khác là mất", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", {}] }, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 4, hand: i === 1 ? [D.TRAP_CARD] : [], tolls: [] })) };
+  s = D.testGrant(s, 0, "may-chem", false);
+  const summoned = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 1);
+  const fresh = uid(summoned, 0, 1);
+  assert.equal(summoned.turn, 1);
+  assert.deepEqual(D.trapPicks(summoned, 1), [fresh], "Máy chém máu dưới 4: lá chớp");
+  const cast = D.castSpell(summoned, 0, fresh);
+  assert.equal(cast.step, "respond", "phép nhanh chờ đối thủ đáp: " + cast.live);
+  assert.equal(cast.players[1].orb, 2, "1 mana");
+  const done = D.passResponse(cast);
+  assert.equal(at(done, 0, 1), null, "Máy chém chết: " + done.live);
+  assert.ok(at(done, 0, 0), "quái khác còn");
+  // Bỏ lượt là mất.
+  assert.equal(D.trapPicks(D.endTurn(summoned), 1).length, 0);
+  // Máu từ 4 trở lên: không bẫy được.
+  const tough = { ...summoned, players: summoned.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === fresh ? { ...m, hp: 4, maxHp: 4 } : m)) } : p)) };
+  assert.equal(D.trapPicks(tough, 1).length, 0, "máu 4 không bẫy");
+  // Quái ẩn chưa lật: không bẫy được.
+  const hidden = { ...summoned, players: summoned.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === fresh ? { ...m, lurk: { left: 4 } } : m)) } : p)) };
+  assert.equal(D.trapPicks(hidden, 1).length, 0, "quái ẩn không bẫy");
+});
+
+test("Bẫy thú: quái máu dưới 4 đưa đòn đánh lên hàng chờ thì bẫy trong chuỗi, chuỗi nổ là chết, đòn huỷ; Hấp thụ ma pháp nuốt được", () => {
+  const make = () => {
+    let s = board({ 0: ["may-chem", { atk: 5, hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10 }] });
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.TRAP_CARD] : ["hap-thu-ma-phap"], tolls: [] })) };
+    return D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  };
+  const open = make();
+  assert.equal(D.trapPicks(open, 1).length, 1, "kẻ đánh máu 2: lá chớp");
+  const set = D.castSpell(open, 0, null);
+  assert.equal(set.hold?.trap?.uid, uid(open, 0, 0), "bẫy chờ trong chuỗi: " + set.live);
+  assert.equal(set.hold?.priority, 0, "đối thủ được đáp");
+  const sprung = D.passResponse(D.passResponse(set));
+  assert.equal(at(sprung, 0, 0), null, "kẻ đánh chết: " + sprung.live);
+  assert.equal(at(sprung, 1, 0).hp, 10, "đòn huỷ");
+  assert.equal(sprung.step, "main");
+  // Hấp thụ ma pháp nuốt Bẫy thú: đòn vẫn vào.
+  const eaten = D.castSpell(set, 0, null);
+  const landed = D.passResponse(D.passResponse(eaten));
+  assert.ok(at(landed, 0, 0), "kẻ đánh còn sống: " + landed.live);
+  assert.ok(at(landed, 1, 0).hp < 10, "đòn vẫn vào");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
