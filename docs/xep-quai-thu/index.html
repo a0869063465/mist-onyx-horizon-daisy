@@ -39,7 +39,7 @@
   .grid button { position:relative; }
   .grid .mn { position:absolute; left:3px; top:3px; min-width:20px; height:20px; border-radius:50%; background:#1d3a8a; color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; border:1px solid #e0c070; }
   .none { color:var(--mute); font-size:12px; padding:6px 2px; grid-column:1/-1; }
-  .sub { color:var(--mute); font-size:12px; margin-top:8px; }
+  .sub { color:var(--mute); font-size:12px; margin-top:8px; min-height:5.4em; }
   footer { position:fixed; left:0; right:0; bottom:0; z-index:6; padding:10px 12px; background:rgba(11,16,32,.96); border-top:1px solid var(--line); display:flex; gap:8px; }
   footer button { flex:1; padding:12px; border-radius:10px; border:1px solid var(--gold); background:#3a2d0c; color:var(--gold); font-weight:700; font-size:14px; }
   footer button.mode { flex:0 0 auto; min-width:120px; border-color:#3f8cff; background:#10284f; color:#9fd0ff; }
@@ -78,7 +78,7 @@
   .sheet .rowb button.ok { border-color:var(--gold); background:#3a2d0c; color:var(--gold); }
   .sheet .rowb button.del { border-color:#ff5a5a; background:#4a1414; color:#ffb0b0; }
   .sheet .note { color:var(--mute); font-size:12px; margin-top:6px; }
-  footer button.dir { flex:0 0 54px; padding:0; font-size:26px; line-height:1; border-color:#3f8cff; background:#10284f; color:#9fd0ff; }
+  footer button.dir { height:48px; overflow:hidden; flex:0 0 54px; padding:0; font-size:26px; line-height:1; border-color:#3f8cff; background:#10284f; color:#9fd0ff; }
   footer button.dir:active { transform:scale(.92); }
   footer button:disabled { opacity:.4; }
   .nav .tabs2 { display:flex; gap:8px; overflow-x:auto; }
@@ -147,6 +147,10 @@
   .pairbox { grid-column: span 2; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border:2px solid var(--gold); border-radius:10px; background:#1b2547; }
   .pairbox button { min-width:0; }
   .grid button.pk { outline:3px solid #7fd6ff; outline-offset:-3px; box-shadow:0 0 10px #7fd6ff; }
+  /* Ô lá cao cố định theo tỉ lệ ảnh, nhãn nằm đè lên đáy ảnh: chiều cao không đổi khi ảnh tải xong nên trang không nhảy. */
+  .grid > button, .pairbox > button { position:relative; display:block; aspect-ratio:150/214; }
+  .grid img { height:100%; aspect-ratio:auto; object-fit:cover; }
+  .grid .lbl { position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column; }
 </style>
 </head>
 <body>
@@ -310,7 +314,7 @@ function mountList(host, ids, make) {
 function tile(c, onTap) {
   const b = document.createElement("button");
   const kw = kwOf(c.id, KINDS.bonus).join(" · "), cd = kwOf(c.id, KINDS.cond).join(" · ");
-  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}">${c.mana === undefined ? "" : `<span class="mn">${c.cost}★</span><span class="nm">${escS(c.name)}</span>`}${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
+  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}">${c.mana === undefined ? "" : `<span class="mn">${c.cost}★</span>`}<span class="lbl">${c.mana === undefined ? "" : `<span class="nm">${escS(c.name)}</span>`}${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}</span>`;
   if (dir === "pair" && pairPicks.includes(c.id)) b.classList.add("pk");
   b.onclick = onTap;
   return b;
@@ -384,7 +388,7 @@ function dirUi() {
   $("dir").classList.toggle("starred", dir === "star" || dir === "pair");
   $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng và điều kiện: bấm lá để chọn từ khoá" : "Ghép cặp: bấm lần lượt 2 lá để ghép");
 }
-$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "pair" : "up"; pairPicks = []; try { localStorage.setItem("qt-dir", dir); } catch (e) {} render(); };
+$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "pair" : "up"; pairPicks = []; try { localStorage.setItem("qt-dir", dir); } catch (e) {} stay(() => {}); };
 /* Bấm một tab nhóm con: chuyển thẳng sang giao diện của nhóm đó (ô chưa sắp xếp = nguyên liệu từ nhóm mẹ của nó, khung dưới = nhóm đó). Giữ khung nhóm đúng chỗ trên màn hình, không bay lên đầu trang. */
 function stay(change) {
   const before = $("nav").getBoundingClientRect().top;
@@ -494,6 +498,7 @@ function editGran(id) {
 /* Chuyển một lần (theo yêu cầu): “Tiêu diệt ngay” và “Đánh dấu” (nhóm mẹ) cùng “Ra đòn” nằm TRONG nhóm khác (không phải nhóm mẹ “Ra đòn”) thành nhóm con của nhóm mẹ “Tiêu diệt”, nhóm mẹ này nằm trong nhóm bà “Hành động”. Nhóm mẹ “Ra đòn” giữ nguyên. */
 function migrate1() {}
 function render() {
+  const keepY = window.scrollY;
   migrate1();
   bonusOn = tagMode();
   const set = curSet(), rs = roots(); norm(rs);
@@ -525,16 +530,17 @@ function render() {
   $("dn").textContent = "Đã xếp: " + g.name;
   dirUi();
   { const t = targetOf(g, at);
-    $("dsub").textContent = mode === "view" ? "" : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
+    $("dsub").textContent = mode === "view" ? "" : dir === "pair" ? "Đang ở chế độ ghép cặp: bấm lần lượt 2 lá để ghép, bấm một lá đã ghép để huỷ ghép. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
   $("nd").textContent = g.cards.length;
   $("done").innerHTML = "";
   const sub = total(g) - g.cards.length;
   if (!g.cards.length) $("done").innerHTML = `<span class="none">Chưa có lá nào thẳng trong nhóm này${sub ? ` (còn ${sub} lá trong nhóm con)` : ""}.</span>`;
   /* Chỉ đổi cách hiển thị: lá cùng từ khoá Thưởng đứng cạnh nhau (theo tên từ khoá), lá chưa có từ khoá ở cuối, thứ tự cũ giữ nguyên trong mỗi cụm. */
-  const kwKey = (id) => { const k = kwOf(id); return k.length ? k.map(fold).sort().join("|") : "\uffff"; };
+  const kwKey = (id) => { const k = kwOf(id, KINDS.bonus); return k.length ? k.map(fold).sort().join("|") : "\uffff"; };
   const shown = g.cards.map((id, i) => ({ id, i, k: kwKey(id) })).sort((x, y) => (x.k < y.k ? -1 : x.k > y.k ? 1 : x.i - y.i)).map((x) => x.id);
   mountList($("done"), shown, (c) => tile(c, mode === "view" ? () => show(c) : dir === "pair" ? () => pairTap(c, "done") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, c.id); }));
   $("edit").style.display = mode === "view" ? "none" : "";
+  if (Math.abs(window.scrollY - keepY) > 1) window.scrollTo(0, keepY);
 }
 function addChild(g, at) {
   const kid = { id: gid(), name: `${g.name} ${at.path.length + 1}.${g.children.length + 1}`, cards: [], children: [] };
