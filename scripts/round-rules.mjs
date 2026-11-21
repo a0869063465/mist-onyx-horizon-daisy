@@ -1337,6 +1337,59 @@ test("L2 kiểu 2: đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) 
   });
 });
 
+test("Quả trứng thiên sứ chặn đòn đánh thường, kẻ đánh mệt, quái bị đánh Trả đòn không tốn phí", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 20, maxHp: 20 }] }, { 0: ["may-chem", { atk: 4, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 1, "qua-trung-thien-su", false);
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 1 ? 0 : 5 })) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(swung.pending?.kind, "melee", swung.live);
+  const waiting = D.castSpell(swung, swung.players[1].hand.indexOf("qua-trung-thien-su"), null);
+  assert.deepEqual(waiting.hold?.egg, { ally: uid(s, 1, 0), foe: uid(s, 0, 0) }, waiting.live);
+  assert.equal(waiting.hold?.priority, 0, "quyền sang bên đánh");
+  const landed = D.passResponse(waiting);
+  assert.equal(at(landed, 1, 0).hp, 20, "đòn bị chặn");
+  assert.equal(at(landed, 0, 0).dim, true, "kẻ đánh bị mệt");
+  assert.equal(landed.counterAsk?.uid, uid(s, 1, 0), landed.live);
+  assert.equal(landed.counterAsk?.free, true);
+  const hit = D.pickCounter(landed, "phys");
+  assert.ok(at(hit, 0, 0).hp < 20, "Trả đòn dù 0 mana: " + hit.live);
+});
+
+test("Quả trứng thiên sứ: quái hàng sau bị kỹ năng nhắm vẫn được Trả đòn; không dùng khi đánh vào người chơi", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }], 1: ["khong-lo-mot-mat", { atk: 3 }] }, { 3: ["may-chem", { atk: 4, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 1, "qua-trung-thien-su", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 3), 0);
+  assert.equal(breath.step, "respond", breath.live);
+  const waiting = D.castSpell(breath, breath.players[1].hand.indexOf("qua-trung-thien-su"), uid(s, 1, 3));
+  assert.ok(waiting.hold?.egg, waiting.live);
+  const landed = D.passResponse(waiting);
+  assert.equal(at(landed, 1, 3).hp, 20, "kỹ năng bị chặn");
+  assert.equal(landed.counterAsk?.uid, uid(s, 1, 3), "hàng sau được Trả đòn: " + landed.live);
+  const orb = landed.players[1].orb;
+  const hit = D.pickCounter(landed, "phys");
+  assert.equal(hit.players[1].orb, orb, "không thu phí");
+  assert.ok(at(hit, 0, 0).hp < 20);
+  const face = D.attackFace(s, uid(s, 0, 1));
+  const refused = D.castSpell(face, face.players[1].hand.indexOf("qua-trung-thien-su"), null);
+  assert.ok(!refused.hold?.egg, "đánh vào người chơi thì không dùng được");
+});
+
+test("Hấp thụ ma pháp nuốt Quả trứng thiên sứ: đòn đánh vẫn vào", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 20, maxHp: 20 }] }, { 0: ["may-chem", { atk: 4, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = D.testGrant(s, 1, "qua-trung-thien-su", false);
+  s = D.testGrant(s, 0, "hap-thu-ma-phap", false);
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const waiting = D.castSpell(swung, swung.players[1].hand.indexOf("qua-trung-thien-su"), null);
+  assert.ok(waiting.hold?.egg, waiting.live);
+  const eaten = D.castSpell(waiting, waiting.players[0].hand.indexOf("hap-thu-ma-phap"), null);
+  assert.ok(!eaten.hold?.egg, "đã bị nuốt: " + eaten.live);
+  let done = eaten;
+  for (let i = 0; i < 4 && done.step === "respond"; i += 1) done = D.passResponse(done);
+  assert.ok(at(done, 1, 0).hp < 20, "đòn vẫn vào: " + done.live);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

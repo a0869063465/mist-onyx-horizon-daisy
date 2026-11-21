@@ -1062,6 +1062,7 @@ export const PENDING_NOTES: string[] = [
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
   "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
+  "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
 ];
 
 function remarkOf(notes: string[]) {

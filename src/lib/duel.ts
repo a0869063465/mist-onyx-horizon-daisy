@@ -230,6 +230,9 @@ export type Hold = {
   /** Phục kích (chủ game 30/10): it waits in the chain against the skill; once the chain lands the skill is stopped and
    *  `ally` strikes `foe`, the one who used it. */
   ambush?: { ally: string; foe: string };
+  /** Quả trứng thiên sứ (chủ game 21/11): it waits in the chain; once the chain lands the attack or skill of `foe` is
+   *  stopped, `foe` tires and `ally`, one monster it aimed at, strikes back (Trả đòn without its fee, back row too). */
+  egg?: { ally: string; foe: string };
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
@@ -264,7 +267,7 @@ export type Duel = {
   /** Ai đã bỏ lượt liên tiếp. Cả hai bỏ thì hết vòng, token sang người kia, cả hai +1 mana. */
   skipped?: [boolean, boolean];
   /** Trả đòn: quái hàng trước vừa chịu đòn mà còn sống được đánh trả kẻ ra đòn (đánh thường hoặc kỹ năng). */
-  counterAsk?: { uid: string; from: string } | null;
+  counterAsk?: { uid: string; from: string; free?: boolean } | null;
   /** Bên đang Trả đòn bằng kỹ năng: xong thì quyền ở lại bên đó, như sau đòn của đối thủ. */
   countering?: Side | null;
   /** Trả đòn after a skill that landed on several (chủ game 29/10): the front-row monsters still to strike back at
@@ -3922,7 +3925,7 @@ export function pickCounter(state: Duel, mode: "phys"): Duel {
   const done = (next: Duel) => nextCounter({ ...next, counterAsk: null, skipped: [false, false] as [boolean, boolean] });
   if (owner === null || fromSide === null) return done(state);
   const side = owner;
-  const charged = payCounter(state, side);
+  const charged = ask.free ? state : payCounter(state, side);
   if (!charged) return note(state, `Trả đòn cần ${COUNTER_FEE} gem.`);
   state = charged;
   const mon = state.players[side].field.find((unit) => unit?.uid === ask.uid) ?? null;
@@ -3974,6 +3977,62 @@ function ambushStrike(state: Duel, allyUid: string, foeUid: string): Duel {
   let hit = patch(open, foe, dropDead({ ...open.players[foe], field: foeField }));
   hit = patch(hit, side, { ...hit.players[side], field: myField });
   return releaseLegend(note(hit, actNotice("Phục kích", ["chặn kỹ năng", `${cardOf(fighter).name} đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]), "hit"));
+}
+
+/** The attacker of the action waiting now, if it is an enemy monster's plain attack or damaging skill aimed at a monster
+ *  of `side` (Quả trứng thiên sứ, chủ game 21/11), with the monsters of `side` it aims at. */
+export function eggAim(state: Duel, side: Side): { foe: string; aimed: string[] } | null {
+  const pending = state.pending;
+  if (state.step !== "respond" || !state.hold || !pending) return null;
+  const foe = (1 - side) as Side;
+  const mine = (uid: string | null | undefined) => Boolean(uid && state.players[side].field.some((mon) => mon && mon.uid === uid && mon.hp > 0));
+  const theirs = (uid: string) => state.players[foe].field.some((mon) => mon?.uid === uid);
+  if (pending.kind === "melee" || pending.kind === "gnaw") {
+    return theirs(pending.attacker) && mine(pending.defender) ? { foe: pending.attacker, aimed: [pending.defender] } : null;
+  }
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
+    if (("back" in pending && pending.back) || !theirs(pending.caster) || !harmSkill(ownerCard(state, pending.caster), pending.index)) return null;
+    const spread = pending.kind === "beam" ? (spreadHits(state) ?? []).filter(mine) : [];
+    const aimed = spread.length > 0 ? spread : mine(pending.target) ? [pending.target as string] : [];
+    return aimed.length > 0 ? { foe: pending.caster, aimed } : null;
+  }
+  return null;
+}
+
+/** The monsters of `side` Quả trứng thiên sứ may pick to strike back now: those aimed at that still may act; when none
+ *  may, those aimed at (it then only stops the blow). */
+export function eggAllies(state: Duel, side: Side): string[] {
+  const aim = eggAim(state, side);
+  if (!aim) return [];
+  const free = aim.aimed.filter((uid) => {
+    const mon = state.players[side].field.find((unit) => unit?.uid === uid);
+    return Boolean(mon && eggCanStrike(mon));
+  });
+  return free.length > 0 ? free : aim.aimed;
+}
+
+/** Trả đòn rules (alive, not held, not abroad), without the front-row rule. */
+function eggCanStrike(mon: FieldMon): boolean {
+  if (mon.hp <= 0 || mon.abroad !== undefined) return false;
+  return !(mon.stun > 0 || mon.cage || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon));
+}
+
+/** Quả trứng thiên sứ lands: the attack or skill is stopped, its maker tires as when blocked, and `allyUid` may strike
+ *  back as a Trả đòn without its 1-mana fee, from the back row too. */
+function eggStrike(state: Duel, allyUid: string, foeUid: string): Duel {
+  const side = ownerSide(state, allyUid);
+  const foeSide = ownerSide(state, foeUid);
+  let open: Duel = { ...state, step: "main" as const, pending: null, hold: null };
+  if (foeSide !== null) {
+    const field = open.players[foeSide].field.map((mon) => (mon?.uid === foeUid ? { ...mon, dim: true } : mon));
+    open = patch(open, foeSide, { ...open.players[foeSide], field });
+  }
+  const ally = side === null ? null : open.players[side].field.find((mon) => mon?.uid === allyUid) ?? null;
+  const attacker = foeSide === null ? null : open.players[foeSide].field.find((mon) => mon?.uid === foeUid) ?? null;
+  const stopped = note(open, "Quả trứng thiên sứ chặn đòn tấn công.", "spell");
+  if (side === null || !ally || !attacker || attacker.hp <= 0 || !eggCanStrike(ally) || boulder(ally) || boulder(attacker)) return releaseLegend(stopped);
+  const asked = note({ ...stopped, counterAsk: { uid: ally.uid, from: attacker.uid, free: true }, turn: side }, `${cardOf(ally).name} được Trả đòn.`, "info");
+  return releaseLegend(asked.mode === "ai" && side === 1 ? pickCounter(asked, "phys") : asked);
 }
 
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
@@ -4114,6 +4173,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
+  if (hold.egg) return eggStrike(state, hold.egg.ally, hold.egg.foe);
   if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
@@ -6099,7 +6159,7 @@ function counterStart(state: Duel, uid: string): { state: Duel } | { refused: Du
   const side = ownerSide(state, uid);
   if (side === null) return null;
   // Luật L1: kỹ năng dùng để Trả đòn tốn thêm 1 mana, thu trước khi kỹ năng tính mana của nó.
-  const charged = payCounter(state, side);
+  const charged = ask.free ? state : payCounter(state, side);
   if (!charged) return { refused: note(state, `Trả đòn cần thêm ${COUNTER_FEE} gem.`) };
   const player = charged.players[side];
   const field = player.field.map((mon) => (mon?.uid === uid ? { ...mon, dim: false } : mon));
@@ -6449,7 +6509,7 @@ export function eatFor(state: Duel, side: Side): boolean {
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
-const EATABLE = new Set(["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
+const EATABLE = new Set(["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"]);
 
 /** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
 function restoreEaten(now: Duel, back: Duel): Duel {
@@ -6521,6 +6581,7 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     "co-may-thoi-gian",
     "giap-co-khi",
     "hop-ma-thuat",
+    "qua-trung-thien-su",
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
   ]);
   if (!replay && card.id === "hoan-doi") {
@@ -6533,6 +6594,9 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
+  }
+  if (!replay && card.id === "qua-trung-thien-su" && !eggAim(state, side)) {
+    return note(state, "Quả trứng thiên sứ chỉ dùng khi quái của bạn bị quái đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến.");
   }
   if (!replay && card.id === "virus-an-mon") {
     if (!virusPick(state, side, targetUid)) return note(state, "Virus ăn mòn chỉ dùng khi quái 1 sao đồng minh có thể bị hạ.");
@@ -6877,6 +6941,18 @@ function castSpellCore(state: Duel, handIndex: number, targetUid: string | null 
     let shifted = patch(next, side, { ...next.players[side], field: mine });
     shifted = patch(shifted, foe, { ...enemy, field: theirs });
     return note(shifted, `Phản nguyền chuyển trạng thái xấu từ ${cardOf(ally).name} sang ${cardOf(foeMon).name}.`, "spell");
+  }
+  if (card.id === "qua-trung-thien-su") {
+    // Chủ game 21/11: only against an enemy monster's attack or damaging skill aimed at a monster of its side.
+    const aim = eggAim(state, side);
+    if (!aim) return note(state, "Quả trứng thiên sứ chỉ dùng khi quái của bạn bị quái đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến.");
+    const picks = eggAllies(state, side);
+    const pick = targetUid && picks.includes(targetUid) ? targetUid : sourceUid && picks.includes(sourceUid) ? sourceUid : picks.length === 1 ? picks[0] : null;
+    if (!pick || !next.hold) return note(state, "Chọn 1 quái bị nhắm đến để trả đòn.");
+    const ally = next.players[side].field.find((mon) => mon?.uid === pick) ?? null;
+    const attacker = next.players[foe].field.find((mon) => mon?.uid === aim.foe) ?? null;
+    if (!ally || !attacker) return note(state, "Chọn 1 quái bị nhắm đến để trả đòn.");
+    return keep(note({ ...next, hold: { ...next.hold, egg: { ally: ally.uid, foe: attacker.uid } } }, `Quả trứng thiên sứ: ${cardOf(ally).name} chờ trả đòn ${cardOf(attacker).name}.`, "spell"));
   }
   if (card.id === "phuc-kich") {
     // Chủ game 29/10: it stops a damaging skill aimed at its side (not a plain attack); the ally picked strikes the
