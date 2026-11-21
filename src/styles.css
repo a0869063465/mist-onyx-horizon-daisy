@@ -14752,4 +14752,4 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .sk3d-core:has(.skill-art), .unit-act-core:has(.skill-art), .rx-gem-core:has(.skill-art) { overflow: hidden; background: #120d0a; box-shadow: inset 0 0 0.4rem rgba(0, 0, 0, 0.8); }
 .sk3d-core:has(.skill-art)::after, .rx-gem-core:has(.skill-art)::after { display: none; }
 .rx-show-skill { position: relative; display: block; width: 100%; aspect-ratio: 1; }
-.rx-show-skill .skill-art { left: -8%; top: -8%; width: 116%; height: 116%; }
+.rx-show-skill .skill-art { left: 0; top: 0; width: 100%; height: 100%; }
