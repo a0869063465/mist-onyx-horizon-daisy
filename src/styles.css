@@ -14806,3 +14806,59 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   .act3d-ico.is-veil::before,
   .act3d-ico.is-veil::after { animation: none; }
 }
+
+/* Quái ẩn (chủ game 21/11): bên mình lá úp (lưng bài che cả lá, chỉ số giấu), bên kia thấy dạng ẩn như cũ. Lật: bên mình lá
+   quay mặt, bên đối thủ sương mù tan. */
+.slot .field-unit .fu-body { transform-style: flat; }
+.slot .fu-body > .lurk-back {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 0.55rem;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.slot.is-lurk .fu-body > :not(.lurk-back):not(.fog-wipe) { visibility: hidden; }
+.slot .fu-body.is-flip { animation: lurk-flip-face 0.34s 0.3s ease-out both; }
+.slot .field-unit > .lurk-turn {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 0.55rem;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  animation: lurk-flip-back 0.3s ease-in both;
+}
+@keyframes lurk-flip-back {
+  from { transform: translate(0.9%, -2.46%) scale(0.981, 1.0166) perspective(500px) rotateY(0); }
+  to { transform: translate(0.9%, -2.46%) scale(0.981, 1.0166) perspective(500px) rotateY(90deg); opacity: 0.4; }
+}
+@keyframes lurk-flip-face { from { transform: perspective(500px) rotateY(-90deg); } to { transform: perspective(500px) rotateY(0); } }
+.slot .fu-body > .fog-wipe {
+  position: absolute;
+  inset: -22%;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 30% 40%, rgba(240, 246, 255, 0.95), transparent 72%),
+    radial-gradient(34% 28% at 70% 60%, rgba(225, 236, 252, 0.9), transparent 72%),
+    radial-gradient(42% 30% at 50% 82%, rgba(255, 255, 255, 0.85), transparent 72%),
+    radial-gradient(40% 28% at 50% 18%, rgba(235, 242, 255, 0.85), transparent 72%);
+  animation: fog-wipe 0.95s ease-out forwards;
+}
+@keyframes fog-wipe {
+  0% { opacity: 1; transform: scale(0.85); }
+  55% { opacity: 0.85; }
+  100% { opacity: 0; transform: scale(1.6) translateY(-8%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot .fu-body.is-flip, .slot .field-unit > .lurk-turn, .slot .fu-body > .fog-wipe { animation-duration: 0.01s; }
+}

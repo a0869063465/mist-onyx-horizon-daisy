@@ -1091,6 +1091,7 @@ export const PENDING_NOTES: string[] = [
   "Kéo lá quái ra có thêm nút Ẩn: tốn thêm 1 mana, quái úp trên sân. Đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) thì Kích hoạt được; bị đánh, bị kỹ năng, bị phép hoặc hết 4 vòng thì tự lật. Lật luôn loé sáng. Có Sương mù thì lật xong về xấp bài, không thì thành quái thường.",
   "Kraken: 0 mana, công 3, thủ 0, thủ phép 0, máu 3. Đắm tàu: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay.",
   "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
+  "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
 ];
 
 function remarkOf(notes: string[]) {
