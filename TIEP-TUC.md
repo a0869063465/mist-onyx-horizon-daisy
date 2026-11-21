@@ -3,7 +3,7 @@
 ## Đồng hồ khó đoán (21/11, chủ game ghi "Lưu chưa làm", CHƯA LÀM, chờ "ok" + trả lời câu hỏi)
 1. Việc vừa làm: chỉ lưu yêu cầu + 3 ảnh vào `docs/anh-tiep-tuc/dong-ho-*.png` (1 cát cam nền đồng hồ sáng, 2 cát đỏ khung gai, 3 cát hồng nhỏ nền tối). Không sửa code.
 2. Hiện trạng: nhận 3 ảnh, chưa rõ ảnh nào là lá/hình trạng thái nào. Chữ gốc: Đồng hồ khó đoán, 2★, 1 mana, công 2 thủ 0 thủ phép 0 máu 2. Skill "Tiktok": khi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh; tự đổi trạng thái mỗi 2 lượt. Hung bạo: 4/0/0 máu 7, Đòn đánh phép. Mỏng manh: 0/0/0 máu 1. Úp thì không tự đổi, mặc định hung bạo.
-   CHỦ GAME TRẢ LỜI 21/11: "Tất cả đúng" cho (a)–(d); (e) hệ thiên sứ (`SANCTUARY_GUARDED`, như Quả trứng), ĐỔI: Hung bạo máu 7 → 6 (hung bạo 4/0/0 máu 6, Đòn đánh phép). Chưa nói "ok làm".
+   CHỦ GAME TRẢ LỜI 21/11: "Tất cả đúng" cho (a)–(d); (e) hệ thiên sứ (`SANCTUARY_GUARDED`, như Quả trứng), ĐỔI: Hung bạo máu 7 → 6 (hung bạo 5/0/0 máu 6, Đòn đánh phép; công 4 → 5 chủ game 21/11). Chưa nói "ok làm".
 3. Việc sắp làm: chờ chủ game đổi sang **Opus 5.5 high** + "ok" (luật lá mới trong duel.ts: tự đổi trạng thái mỗi 2 lượt chung, chọn khi ra sân, úp = hung bạo không đổi, đổi máu theo luật máu tối đa).
 
 ## Icon skill vẽ tay: BẢN HIỆN TẠI (21/11, Sonnet 5.5 high, nhánh `ccr-f07c0313-bc7ych`, CHƯA áp `main`) — đọc mục này thay mục cũ ngay dưới
