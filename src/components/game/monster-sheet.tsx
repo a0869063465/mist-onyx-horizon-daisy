@@ -392,14 +392,14 @@ export function MonsterSheet({
     <button
       key={`${skill.name}-${index}`}
       type="button"
-      className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${`s${index}` === picked ? " on" : ""}`}
+      className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${skill.buff ? " is-buff" : ""}${`s${index}` === picked ? " on" : ""}`}
       onClick={() => setPicked(`s${index}`)}
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
           <SkillGlyph name={skill.icon} />
         </span>
-        <Rim kind={skill.slow ? "slow" : skill.kind} />
+        <Rim kind={skill.slow ? "slow" : skill.buff ? "green" : skill.kind} />
       </span>
       <span className="sk3d-name">{tr(skill.name)}</span>
     </button>
@@ -607,7 +607,7 @@ export function MonsterSheet({
         {onSkills ? <div className="msheet-desc" onClick={cycle}>
           {shown ? (
             <>
-              <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
+              <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}${shown.buff ? " is-buff" : ""}`}>
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">

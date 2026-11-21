@@ -3492,6 +3492,63 @@ function lizardRoll(self: FieldMon, amount: number): boolean {
   return dodged;
 }
 
+/**
+ * Quả trứng sinh mệnh (chủ game 21/11), Sinh mệnh mới: skill buff (siêu tốc ngoài giao tranh), ở lượt của mình, tiêu 1
+ * mana. Bạn bỏ 1 lá bạn chọn trên tay (`extra` = "r:i" quái dự bị hoặc "s:i" phép), đối phương bỏ 1 lá ngẫu nhiên, đối
+ * phương rút 1 lá, bạn rút 2 lá. Lá bỏ biến mất. Rút miễn phí, không tính lá rút của vòng.
+ */
+export const EGG = "qua-trung-sinh-menh";
+/** Skill buff: không dùng trong giao tranh (Trả đòn, cửa sổ phản ứng). */
+export function buffSkill(cardId: string, index: number): boolean {
+  return cardId === EGG && index === 0;
+}
+/** Lá trên tay theo chỉ số "r:i" / "s:i": bỏ khỏi tay, null nếu không có lá đó. */
+function dropPick(player: Player, pick: string): Player | null {
+  const hit = /^([rs]):(\d+)$/.exec(pick);
+  if (!hit) return null;
+  const index = Number(hit[2]);
+  if (hit[1] === "r") return index < player.reserve.length ? { ...player, reserve: player.reserve.filter((_, at) => at !== index) } : null;
+  return index < player.hand.length ? dropHandCard(player, index) : null;
+}
+/** Every card on a hand as "r:i" / "s:i". */
+export function handPicks(player: Player): string[] {
+  return [...player.reserve.map((_, index) => `r:${index}`), ...player.hand.map((_, index) => `s:${index}`)];
+}
+function freeDraws(player: Player, n: number): { player: Player; got: number } {
+  let next = player;
+  let got = 0;
+  for (let i = 0; i < n; i += 1) {
+    const top = takeTop(next);
+    if (!top) break;
+    next = top.player;
+    got += 1;
+  }
+  return { player: next, got };
+}
+function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | null): Duel {
+  if (state.countering != null || state.counterAsk) return note(state, "Kỹ năng buff không dùng khi giao tranh.");
+  const you = state.players[side];
+  const foeSide = (1 - side) as Side;
+  if (handPicks(you).length === 0) return note(state, "Không có lá trên tay để bỏ.");
+  const cost = grabNums(skillText(EGG), /tiêu(?:\s*hao)?\s*(\d+)\s*mana/gi)[0] ?? 1;
+  const before = you.stars;
+  const paid = pay(you, cost);
+  if (!paid) return note(state, `Cần ${cost} gem.`);
+  const dropped = extra ? dropPick(paid, extra) : null;
+  if (!dropped) return note(state, "Chọn 1 lá trên tay để bỏ.");
+  const foe = state.players[foeSide];
+  const foePicks = handPicks(foe);
+  const foeDropped = foePicks.length ? dropPick(foe, foePicks[Math.floor(Math.random() * foePicks.length)]) ?? foe : foe;
+  const foeDrawn = freeDraws(foeDropped, 1);
+  const yourDrawn = freeDraws(dropped, 2);
+  let next = patch(state, side, yourDrawn.player);
+  next = patch(next, foeSide, foeDrawn.player);
+  next = pingStars({ ...next, seq: next.seq + 1 }, side, before, paid.stars);
+  // Viết hoa "Bạn"/"Đối thủ" để trang trận đổi đúng góc nhìn; tránh cụm "Đối thủ rút" (trang trận che tên lá rút ở đó).
+  const foeLine = foePicks.length ? `${sideName(foeSide)} bỏ 1 lá ngẫu nhiên và rút ${foeDrawn.got} lá` : `${sideName(foeSide)} không có lá để bỏ, vẫn rút ${foeDrawn.got} lá`;
+  return note(next, `${chipLabel(EGG, "life")}: ${sideName(side)} bỏ 1 lá và rút ${yourDrawn.got} lá; ${foeLine}.`, "heal");
+}
+
 /** Every monster on the board, changed by `fn` where it is one of `uids`. */
 function reshapeMons(state: Duel, uids: ReadonlySet<string>, fn: (mon: FieldMon) => FieldMon): Duel {
   const players = state.players.map((player) => ({
@@ -8622,6 +8679,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   if (mon?.cardId === "sat-nhan-bat-giu") return castSeize(state, side, mon, targetUid);
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
   if (!mon || stuck(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
+  if (mon.cardId === EGG) return castRebirth(state, side, mon, extra);
   if (mon.cardId === "mat-xanh-huy-diet") {
     if (mon.gaze) return note(state, "Cầu sấm ánh sáng đã nạp cho đòn tiếp theo.");
     const before = you.stars;

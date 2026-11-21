@@ -545,6 +545,18 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Quái vật lý đụng nhẹ là đi. "
   },
   {
+    "id": "qua-trung-sinh-menh",
+    "name": "Quả trứng sinh mệnh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Sinh mệnh mới**__\nTiêu hao 1 mana, ở lượt của mình, bạn bỏ 1 lá bài bạn chọn trên tay, đối phương bỏ 1 lá ngẫu nhiên, sau đó đối phương rút 1 lá, còn bạn rút 2 lá bài.",
+    "atk": 0,
+    "def": 1,
+    "mdef": 0,
+    "hp": 1,
+    "art": "qua-trung-sinh-menh"
+  },
+  {
     "id": "chien-binh-ky-nhong",
     "name": "Chiến binh kỳ nhông",
     "stars": 2,

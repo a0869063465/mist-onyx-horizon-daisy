@@ -18,6 +18,7 @@ import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
 import { MatchIntro, type IntroSide } from "@/components/game/match-intro";
 import { OpenerPanel, type OpenerCard } from "@/components/game/opener-panel";
+import { RebirthPanel, type RebirthCard } from "@/components/game/rebirth-panel";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { ActionButton, GlyphDefs, hasSkillArt, MonsterSheet, Rim, SkillGlyph, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
@@ -25,7 +26,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { cannotAct, STAR_COST, skillLoss } from "@/lib/duel";
+import { cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -827,9 +828,9 @@ function formOf(mon: FieldMon) {
 }
 
 /** The light of a skill by its kind (K2, K4): brighter than the metal of its rim, so it reads as a glow. */
-const SKILL_GLOW: Record<string, string> = { active: "#62b8ff", risk: "#ff8f3d", spell: "#ff6bb5", slow: "#ff5a4a" };
+const SKILL_GLOW: Record<string, string> = { active: "#62b8ff", risk: "#ff8f3d", spell: "#ff6bb5", slow: "#ff5a4a", buff: "#2fd072" };
 
-type SkillFacts = { cardId: string; name: string; icon: string; kind: string; slow: boolean };
+type SkillFacts = { cardId: string; name: string; icon: string; kind: string; slow: boolean; buff?: boolean };
 /** The skill a monster is using, as its sheet names it: by its number among the monster's skills ("lash" = Roi điện). */
 function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | null): SkillFacts | null {
   const cardId = mon ? formOf(mon) : fallbackId;
@@ -846,7 +847,7 @@ function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: numb
     ? bookSkill(cardId, label, card?.skill ?? "") ?? (label.trim().toLowerCase() === card?.name.trim().toLowerCase() ? sole() : undefined)
     : book.find((row) => row.kind === "active" || row.kind === "risk");
   const kind = hit && hit.kind !== "passive" && hit.kind !== "note" ? hit.kind : "active";
-  return { cardId, name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind, slow: Boolean(hit?.slow) };
+  return { cardId, name: hit?.name ?? label, icon: hit?.icon ?? "sparkles", kind, slow: Boolean(hit?.slow), buff: Boolean(hit?.buff) };
 }
 
 /** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
@@ -1889,6 +1890,8 @@ function PlayPage() {
   const [fuseDrag, setFuseDrag] = useState<{ x: number; y: number; moved: boolean } | null>(null);
   const [aim, setAim] = useState<Aim | null>(null);
   const [lureAsk, setLureAsk] = useState<string | null>(null);
+  // Sinh mệnh mới (chủ game 21/11): uid của Quả trứng đang chọn lá để bỏ.
+  const [rebirthAsk, setRebirthAsk] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const [help, setHelp] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -3071,7 +3074,7 @@ function PlayPage() {
       const jolt = far < 1 ? { x: 0, y: 0 } : { x: (((dx / far) * reach) * 100) / home.w, y: (((dy / far) * reach * boardAspect()) * 100) / home.h };
       const index = cast.kind === "face" ? (mon.cardId === "may-quay-thuong" ? 1 : 0) : cast.kind === "beam" ? cast.index : 0;
       const facts = skillFacts(mon, mon.cardId, index);
-      const tone = SKILL_GLOW[facts?.slow ? "slow" : facts?.kind ?? "active"] ?? SKILL_GLOW.active;
+      const tone = SKILL_GLOW[facts?.slow ? "slow" : facts?.buff ? "buff" : facts?.kind ?? "active"] ?? SKILL_GLOW.active;
       return { uid, from, jolt, ang: far < 1 ? undefined : Math.atan2(dy, dx), tone };
     })();
     const pre = rouse ? ROUSE_MS : 0;
@@ -3167,7 +3170,7 @@ function PlayPage() {
           const card = monsterCard(facts.cardId);
           setFoeNote({
             key: foeAct.id,
-            head: { name: facts.name, tone: SKILL_GLOW[facts.slow ? "slow" : facts.kind] ?? SKILL_GLOW.active, icon: facts.icon, kind: facts.slow ? "slow" : facts.kind, art: artSrc(facts.cardId, mon?.level ?? 1), who: card ? tr(card.name) : "" },
+            head: { name: facts.name, tone: SKILL_GLOW[facts.slow ? "slow" : facts.buff ? "buff" : facts.kind] ?? SKILL_GLOW.active, icon: facts.icon, kind: facts.slow ? "slow" : facts.buff ? "buff" : facts.kind, art: artSrc(facts.cardId, mon?.level ?? 1), who: card ? tr(card.name) : "" },
             lines: brief,
           });
           playLine("note", 0.12);
@@ -5569,7 +5572,7 @@ function PlayPage() {
     // Chủ game 17/11: thêm dòng "Tiêu hao x mana" (số lấy từ chữ skill, như icon trên bảng quái); không có phí thì không ghi.
     const cost = skillCost(hit?.text ?? "");
     if (cost && !lines.some((line) => /tiêu hao/i.test(line))) lines.unshift(`${tr("Tiêu hao")} ${cost} mana`);
-    const kind = hit?.slow ? "slow" : row.kind;
+    const kind = hit?.slow ? "slow" : hit?.buff ? "buff" : row.kind;
     playUi("select");
     setUseAsk({ head: { name, tone: SKILL_GLOW[kind] ?? SKILL_GLOW.active, icon: row.icon, kind, art, who: card ? tr(card.name) : "" }, lines, text: lines.length ? undefined : hit?.text, go: row.go });
   }
@@ -6708,6 +6711,15 @@ function PlayPage() {
     }),
     ...you.hand.filter((_, index) => index !== autoS).map((id, index): OpenerCard => ({ key: `s${index}:${id}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} />, can: pileLeft(you) > 0 })),
   ];
+  const rebirthCards: RebirthCard[] = rebirthAsk
+    ? [
+        ...you.reserve.map((held, index): RebirthCard => {
+          const card = monsterCard(held.id);
+          return { pick: `r:${index}`, face: card ? <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null };
+        }),
+        ...you.hand.map((id, index): RebirthCard => ({ pick: `s:${index}`, face: <CardFace spellId={id} hand gems={you.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} /> })),
+      ]
+    : [];
   const pinnedLine = pinnedId === null ? null : trailDots.find((dot) => dot.id === pinnedId)?.text ?? null;
   // While the icons show, a notice of one of them shows only when it is tapped; anything else is a prompt to the
   // player (a wrong move, a pick to make) and shows by itself for a few seconds (chủ game 23/10).
@@ -6794,6 +6806,17 @@ function PlayPage() {
           startWaiting={Boolean(duel.opener?.done[viewer])}
           onConfirm={confirmOpener}
           onClosed={() => setOpenerOpen(false)}
+        />
+      ) : null}
+      {rebirthAsk && duel.step === "main" && duel.turn === viewer ? (
+        <RebirthPanel
+          cards={rebirthCards}
+          onCancel={() => setRebirthAsk(null)}
+          onConfirm={(pick) => {
+            const uid = rebirthAsk;
+            setRebirthAsk(null);
+            apply(useSkill(duel, uid, null, 0, false, pick));
+          }}
         />
       ) : null}
       {trial && duel ? (
@@ -8598,6 +8621,10 @@ function PlayPage() {
               apply(useSkill(duel, uid, null, 2));
             }}
             onLure={(uid) => setLureAsk(uid)}
+            onRebirth={(uid) => {
+              setAim(null);
+              setRebirthAsk(uid);
+            }}
             setAim={setAim}
             apply={apply}
             onAsk={askRow}
@@ -9142,12 +9169,13 @@ type UnitRowsArgs = {
   onBless: () => void;
   onChronoFlow: (uid: string) => void;
   onLure: (uid: string) => void;
+  onRebirth?: (uid: string) => void;
   setAim: (aim: Aim | null) => void;
   apply: (next: Duel) => void;
 };
 
 /** The buttons a monster on the field shows when tapped (the same list a drag onto a target filters). */
-function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onBless, onChronoFlow, onLure, setAim, apply }: UnitRowsArgs): { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean } | null {
+function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onBless, onChronoFlow, onLure, onRebirth, setAim, apply }: UnitRowsArgs): { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean } | null {
   const side = (duel.players[0].field.some((unit) => unit?.uid === uid) ? 0 : 1) as Side;
   const mon = duel.players[side].field.find((unit) => unit?.uid === uid) ?? null;
   const card = mon ? monsterCard(mon.cardId) : undefined;
@@ -9201,6 +9229,10 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
   }
   if (attackable && !mon.copy && card.id === "sat-nhan-bat-giu" && !mon.seized && mon.stun === 0 && (mon.chain ?? 0) === 0 && (mon.path ?? 0) === 0 && !mon.cage) {
     y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0), slide: aimed(0) });
+  }
+  // Sinh mệnh mới: skill buff, không dùng khi Trả đòn hay đang giao tranh (chủ game 21/11).
+  if (attackable && !noSkill && !riposte && onRebirth && card.id === EGG && duel.step === "main" && afford(skillManaCost(card.id, 1)) && handPicks(you).length > 0) {
+    y.push({ key: "life", label: chipLabel(card.id, "life"), go: () => onRebirth(uid) });
   }
   if (attackable && !noSkill && card.id === "mat-xanh-huy-diet" && !mon.gaze && you.orb >= 1) {
     y.push({ key: "gaze", label: "Cầu sấm ánh sáng", go: () => apply(useSkill(duel, uid, null, 0)) });
@@ -9356,6 +9388,7 @@ function UnitChips({
   onBless,
   onChronoFlow,
   onLure,
+  onRebirth,
   onSlide,
   setAim,
   apply,
@@ -9371,6 +9404,7 @@ function UnitChips({
   onBless: () => void;
   onChronoFlow: (uid: string) => void;
   onLure: (uid: string) => void;
+  onRebirth?: (uid: string) => void;
   /** Ấn giữ rồi trượt (chủ game 31/10): a button that picks a target starts a slide to it. */
   onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void;
   setAim: (aim: Aim | null) => void;
@@ -9378,7 +9412,7 @@ function UnitChips({
   /** K5: a press goes through the confirm panel first. */
   onAsk?: (uid: string, row: UnitRow) => void;
 }) {
-  const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, setAim, apply });
+  const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, onRebirth, setAim, apply });
   if (!built) return null;
   return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
 }

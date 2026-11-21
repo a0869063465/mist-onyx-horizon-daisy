@@ -17,6 +17,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "barrage", label: "Pháo kích", tone: "y" },
   ],
   "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
+  "qua-trung-sinh-menh": [{ key: "life", label: "Sinh mệnh mới", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
   "rong-phun-hoa-cau": [
     { key: "peek", label: "Lộ diện", tone: "y" },

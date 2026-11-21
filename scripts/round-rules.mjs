@@ -1473,6 +1473,32 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
+test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới tiêu 1 mana, bỏ lá chọn, đối thủ bỏ 1 lá ngẫu nhiên, đối thủ rút 1, mình rút 2", () => {
+  let s = board({ 0: ["qua-trung-sinh-menh", {}] }, {});
+  s = {
+    ...s,
+    players: s.players.map((p, i) => ({ ...p, orb: 3, draws: 1, reserve: i === 0 ? [{ id: "rong-con", hp: 2, maxHp: 2 }] : [{ id: "may-chem", hp: 2, maxHp: 2 }], hand: i === 0 ? ["hoan-doi"] : ["phuc-kich"], tolls: [false] })),
+  };
+  const left = (p) => p.monsterDeck.length + p.spellDeck.length;
+  const egg = uid(s, 0, 0);
+  // Chưa chọn lá: từ chối, không tốn mana.
+  const none = D.useSkill(s, egg, null, 0, false, null);
+  assert.equal(none.players[0].orb, 3, none.live);
+  const n = D.useSkill(s, egg, null, 0, false, "s:0");
+  assert.equal(n.players[0].orb, 2, n.live);
+  assert.ok(!n.players[0].hand.includes("hoan-doi") || n.players[0].hand.indexOf("hoan-doi") > 0 || left(s.players[0]) - left(n.players[0]) === 2, "lá chọn bị bỏ");
+  assert.equal(n.players[0].reserve.length + n.players[0].hand.length, 2 - 1 + 2, "bỏ 1 rút 2");
+  assert.equal(n.players[1].reserve.length + n.players[1].hand.length, 2 - 1 + 1, "đối thủ bỏ 1 rút 1");
+  assert.equal(left(s.players[0]) - left(n.players[0]), 2);
+  assert.equal(left(s.players[1]) - left(n.players[1]), 1);
+  assert.equal(n.players[0].draws, 1, "rút miễn phí, không tính lá rút của vòng");
+  assert.ok(at(n, 0, 0).used, "dùng xong là đã hành động");
+  assert.match(n.live, /Sinh mệnh mới/);
+  // Đã hành động: không dùng lại trong vòng.
+  const again = D.useSkill({ ...n, turn: 0 }, egg, null, 0, false, "r:0");
+  assert.equal(again.players[0].orb, n.players[0].orb, again.live);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
