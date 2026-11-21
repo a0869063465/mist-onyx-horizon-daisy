@@ -144,6 +144,9 @@
   .tsheet h3.kt button.on { color:var(--gold); border-bottom-color:var(--gold); }
   .tsheet h3.kt button.on[data-pk="cond"] { color:#ffb0b8; border-bottom-color:#ff8a98; }
   .grid .nm { display:block; padding:3px 4px; background:#0b1020; color:#e9eefc; font-size:10px; font-weight:700; line-height:1.15; text-align:center; white-space:normal; overflow-wrap:anywhere; }
+  .pairbox { grid-column: span 2; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border:2px solid var(--gold); border-radius:10px; background:#1b2547; }
+  .pairbox button { min-width:0; }
+  .grid button.pk { outline:3px solid #7fd6ff; outline-offset:-3px; box-shadow:0 0 10px #7fd6ff; }
 </style>
 </head>
 <body>
@@ -168,7 +171,7 @@ const KEY = "qt-groups-v1";
 const COPYSVG = document.getElementById("copy").innerHTML, OKSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 let granSel = null, arrange = false, picks = new Set(), bonusOn = false;
 let D = null, setId = null, curId = null, mode = "sort", ST = {}, dir = "up", lastKid = {};
-try { { const v = localStorage.getItem("qt-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : "up"; } } catch (e) {}
+try { { const v = localStorage.getItem("qt-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : v === "pair" ? "pair" : "up"; } } catch (e) {}
 try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
 /* Ảnh lá s1-113..237 nằm gộp trong một ảnh ghép (atlas/b1.webp, 10 cột, ô 150×214) vì mỗi bản đăng chỉ chứa tối đa 511 tệp; cắt ra bằng canvas khi mở trang. */
@@ -271,10 +274,44 @@ const MAXKW = 2;
 const kwOf = (id, K = kindNow()) => { const v = (ST[setId] && ST[setId][K.map] && ST[setId][K.map][id]) || ""; return Array.isArray(v) ? v : v ? [v] : []; };
 const kwSet = (id, arr, K = kindNow()) => { const m = bonusMap(K); if (!arr.length) delete m[id]; else m[id] = arr.length === 1 ? arr[0] : arr; };
 const bonusMap = (K = kindNow()) => { roots(); const o = ST[setId]; if (!o[K.map]) o[K.map] = {}; return o[K.map]; };
+/* Ghép cặp: _pairs = [[idA, idB], ...] (mỗi lá tối đa 1 cặp). Hai lá đã ghép nằm cạnh nhau trong cùng một khung khi cùng nằm trong một danh sách. */
+let pairPicks = [], pickWhere = "";
+const pairsOf = () => { roots(); const o = ST[setId]; if (!o._pairs) o._pairs = []; return o._pairs; };
+const partnerOf = (id) => { const p = pairsOf().find((x) => x.includes(id)); return p ? p.find((y) => y !== id) : null; };
+function pairTap(c, where) {
+  const pid = partnerOf(c.id), pc = pid ? cardOf(pid) : null;
+  if (pc) {
+    open(`<h3>Huỷ ghép cặp?</h3><div class="note">${escS(c.name)} + ${escS(pc.name)}</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="del">Huỷ ghép</button></div>`);
+    $("no").onclick = close;
+    $("ok").onclick = () => { const o = ST[setId]; o._pairs = pairsOf().filter((x) => !x.includes(c.id)); save(); close(); render(); };
+    return;
+  }
+  if (pairPicks.includes(c.id)) pairPicks = pairPicks.filter((x) => x !== c.id);
+  else { if (pickWhere !== where) pairPicks = []; pickWhere = where; pairPicks.push(c.id); }
+  if (pairPicks.length < 2) { render(); return; }
+  const [x, y] = pairPicks.map(cardOf);
+  render();
+  open(`<h3>Ghép cặp</h3><div class="note">${escS(x.name)} + ${escS(y.name)}</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="ok">Ghép cặp</button></div>`);
+  $("no").onclick = () => { pairPicks = []; close(); render(); };
+  $("ok").onclick = () => { pairsOf().push([x.id, y.id]); pairPicks = []; save(); close(); render(); };
+}
+/* Vẽ danh sách lá; hai lá đã ghép cùng nằm trong danh sách thì vào chung một khung. */
+function mountList(host, ids, make) {
+  const seen = new Set(), inList = new Set(ids);
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    const c = cardOf(id); if (!c) continue;
+    const pid = partnerOf(id), pc = pid && inList.has(pid) ? cardOf(pid) : null;
+    seen.add(id);
+    if (pc) { seen.add(pid); const box = document.createElement("div"); box.className = "pairbox"; box.appendChild(make(c)); box.appendChild(make(pc)); host.appendChild(box); }
+    else host.appendChild(make(c));
+  }
+}
 function tile(c, onTap) {
   const b = document.createElement("button");
   const kw = kwOf(c.id, KINDS.bonus).join(" · "), cd = kwOf(c.id, KINDS.cond).join(" · ");
   b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}">${c.mana === undefined ? "" : `<span class="mn">${c.cost}★</span><span class="nm">${escS(c.name)}</span>`}${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
+  if (dir === "pair" && pairPicks.includes(c.id)) b.classList.add("pk");
   b.onclick = onTap;
   return b;
 }
@@ -343,11 +380,11 @@ function moveOut(g, at, id) {
   save(); render();
 }
 function dirUi() {
-  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : "✱";
-  $("dir").classList.toggle("starred", dir === "star");
-  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : "Thưởng và điều kiện: bấm lá để chọn từ khoá");
+  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "star" ? "✱" : "⇄";
+  $("dir").classList.toggle("starred", dir === "star" || dir === "pair");
+  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng và điều kiện: bấm lá để chọn từ khoá" : "Ghép cặp: bấm lần lượt 2 lá để ghép");
 }
-$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : "up"; try { localStorage.setItem("qt-dir", dir); } catch (e) {} render(); };
+$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "pair" : "up"; pairPicks = []; try { localStorage.setItem("qt-dir", dir); } catch (e) {} render(); };
 /* Bấm một tab nhóm con: chuyển thẳng sang giao diện của nhóm đó (ô chưa sắp xếp = nguyên liệu từ nhóm mẹ của nó, khung dưới = nhóm đó). Giữ khung nhóm đúng chỗ trên màn hình, không bay lên đầu trang. */
 function stay(change) {
   const before = $("nav").getBoundingClientRect().top;
@@ -484,7 +521,7 @@ function render() {
   $("pt").textContent = mom ? `Chưa sắp xếp (từ nhóm mẹ “${mom.name}”)` : "Chưa sắp xếp";
   $("pool").innerHTML = "";
   if (!free.length) $("pool").innerHTML = mom ? '<span class="none">Nhóm mẹ không còn lá nào để chia xuống.</span>' : '<span class="none">Đã xếp hết các lá.</span>';
-  for (const c of free) $("pool").appendChild(tile(c, mode === "view" ? () => show(c) : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { if (mom) mom.cards = mom.cards.filter((x) => x !== c.id); g.cards.push(c.id); save(); render(); }));
+  mountList($("pool"), free.map((c) => c.id), (c) => tile(c, mode === "view" ? () => show(c) : dir === "pair" ? () => pairTap(c, "pool") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { if (mom) mom.cards = mom.cards.filter((x) => x !== c.id); g.cards.push(c.id); save(); render(); }));
   $("dn").textContent = "Đã xếp: " + g.name;
   dirUi();
   { const t = targetOf(g, at);
@@ -496,7 +533,7 @@ function render() {
   /* Chỉ đổi cách hiển thị: lá cùng từ khoá Thưởng đứng cạnh nhau (theo tên từ khoá), lá chưa có từ khoá ở cuối, thứ tự cũ giữ nguyên trong mỗi cụm. */
   const kwKey = (id) => { const k = kwOf(id); return k.length ? k.map(fold).sort().join("|") : "\uffff"; };
   const shown = g.cards.map((id, i) => ({ id, i, k: kwKey(id) })).sort((x, y) => (x.k < y.k ? -1 : x.k > y.k ? 1 : x.i - y.i)).map((x) => x.id);
-  for (const id of shown) { const c = cardOf(id); if (c) $("done").appendChild(tile(c, mode === "view" ? () => show(c) : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, id); })); }
+  mountList($("done"), shown, (c) => tile(c, mode === "view" ? () => show(c) : dir === "pair" ? () => pairTap(c, "done") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, c.id); }));
   $("edit").style.display = mode === "view" ? "none" : "";
 }
 function addChild(g, at) {
