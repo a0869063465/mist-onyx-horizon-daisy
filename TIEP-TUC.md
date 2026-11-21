@@ -601,6 +601,7 @@ Chủ game trả lời (29/10), CHƯA LÀM gì, chờ "ok" và trả lời câu 
 
 ## Quy tắc làm việc với chủ game
 
+- ĐỔI MÔ HÌNH ĐÚNG LÚC (chủ game 21/11): mỗi việc chia theo mô hình hợp (luật `duel.ts` = Opus, giao diện/hiệu ứng = Sonnet, ghi chú = thấp). Xong phần của mô hình đang chạy thì DỪNG và BÁO ngay "xong phần X, đổi sang mô hình Y để làm phần Z" để chủ game đổi. Không làm bằng mô hình không hợp, quá sức hoặc tốn token.
 - IN ĐẬM MÔ HÌNH + NỖ LỰC TRƯỚC KHI LÀM (chủ game 18/11, nhắc nhiều lần, Claude vẫn quên): mỗi lần xin "ok" hoặc sắp bắt đầu làm, viết **tên mô hình + mức nỗ lực** in đậm, ở dòng riêng, để chủ game đổi kịp. Không tự giác thì chủ game phải nhắc lại. Chủ game chỉ cho làm đúng mô hình đã chốt; mô hình đang chạy khác thì DỪNG, không "làm medium cho nhanh".
 - GHI VIỆC SẮP LÀM NGẮN (chủ game 05/11, nhắc lại, TUYỆT ĐỐI TUÂN THEO): mỗi việc sắp làm viết DƯỚI 4 DÒNG, trong tin nhắn trả lời, file kế hoạch và file này. Không bảng dài, không liệt kê chi tiết. Dài hơn thì chủ game không đọc. Chi tiết kỹ thuật chỉ ghi ngắn vào TIEP-TUC.md sau khi làm xong.
 - VFX TỪ VIDEO (chủ game 06/11): mỗi lần cài hoặc sửa VFX, ĐỌC `.claude/skills/vfx/SKILL.md` trước. "Chèn hiệu ứng" không nói gì = thay CẢ hình lẫn âm thanh của video (tách âm gốc, bỏ âm cũ của hiệu ứng đó).
