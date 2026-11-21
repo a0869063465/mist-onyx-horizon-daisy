@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -3211,7 +3211,9 @@ function PlayPage() {
       const keys = Object.keys(fresh);
       if (keys.length > 0) {
         setUnveil((now) => ({ ...now, ...fresh }));
-        window.setTimeout(() => setUnveil((now) => Object.fromEntries(Object.entries(now).filter(([uid]) => !keys.includes(uid)))), 1100);
+        for (const uid of keys) {
+          window.setTimeout(() => setUnveil((now) => Object.fromEntries(Object.entries(now).filter(([key]) => key !== uid))), fresh[uid] === "foe" ? FOG_MS : 1100);
+        }
       }
     }
     // Linh hoạt (chủ game 18/11), quái ẩn kích hoạt / Đắm tàu / Phản phép (21/11): chớp sáng bằng hiệu ứng phát quang có
@@ -9863,7 +9865,7 @@ function BoardSlot({
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>
         {lurk && !veil ? <img className="lurk-back" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
-        {unveil === "foe" ? <i className="fog-wipe" aria-hidden="true" /> : null}
+        {unveil === "foe" ? <FogWipe /> : null}
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
         {veil || decoy || mask ? null : <KeywordRow cardId={mon.cardId} />}

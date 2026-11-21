@@ -14822,7 +14822,7 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   box-sizing: border-box;
   pointer-events: none;
 }
-.slot.is-lurk .fu-body > :not(.lurk-back):not(.fog-wipe) { visibility: hidden; }
+.slot.is-lurk .fu-body > :not(.lurk-back):not(.fog-wipe):not(.fog-video) { visibility: hidden; }
 .slot .fu-body.is-flip { animation: lurk-flip-face 0.34s 0.3s ease-out both; }
 .slot .field-unit > .lurk-turn {
   position: absolute;
@@ -14853,6 +14853,18 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
     radial-gradient(42% 30% at 50% 82%, rgba(255, 255, 255, 0.85), transparent 72%),
     radial-gradient(40% 28% at 50% 18%, rgba(235, 242, 255, 0.85), transparent 72%);
   animation: fog-wipe 0.95s ease-out forwards;
+}
+.slot .fu-body > .fog-video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 198%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -44.75%);
+  z-index: 7;
+  pointer-events: none;
+  padding: 0;
+  max-width: none;
 }
 @keyframes fog-wipe {
   0% { opacity: 1; transform: scale(0.85); }

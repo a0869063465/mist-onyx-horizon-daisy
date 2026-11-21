@@ -999,3 +999,22 @@ export function ShieldBurst() {
     </>
   );
 }
+
+// Sương mù tan khi quái ẩn của đối thủ lật (chủ game 22/11): 2 hình × 2 âm trộn ngẫu nhiên = 4 kiểu.
+// Video 960×960: lá chiếm 50,5% bề ngang, tâm lá ở (50%; 44,75%) khung.
+export const FOG_MS = 1750;
+const FOG_PICS = ["/fx/suong-mu-hinh1.webm?v=1", "/fx/suong-mu-hinh2.webm?v=1"];
+export function FogWipe() {
+  const [pic] = useState(() => Math.floor(Math.random() * FOG_PICS.length));
+  const [sound] = useState(() => (Math.random() < 0.5 ? "fogA" : "fogB") as "fogA" | "fogB");
+  const played = useRef(false);
+  useEffect(() => {
+    if (played.current) return;
+    played.current = true;
+    playCue(sound);
+  }, [sound]);
+  if (document.documentElement.hasAttribute("data-flatfx") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return <i className="fog-wipe" aria-hidden="true" />;
+  }
+  return <video className="fog-video" src={fxUrl(FOG_PICS[pic])} autoPlay muted playsInline aria-hidden="true" />;
+}

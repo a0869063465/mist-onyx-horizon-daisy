@@ -1092,6 +1092,7 @@ export const PENDING_NOTES: string[] = [
   "Kraken: 0 mana, công 3, thủ 0, thủ phép 0, máu 3. Đắm tàu: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay.",
   "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
   "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
+  "Sương mù tan khi quái ẩn của đối thủ lật có 4 kiểu, hình và âm trộn ngẫu nhiên.",
 ];
 
 function remarkOf(notes: string[]) {
