@@ -3964,6 +3964,22 @@ button.trail-dot.is-on {
   color: #fff;
   text-shadow: 0 1px 0 #000, 0 0 2px #000, 0 0 1px #000;
 }
+/* Số cam to hơn, ở giữa ô sao (chủ game 21/11); 3 giây đầu mỗi vòng mới cả hai bên chớp. */
+.field-unit .fstat.is-count {
+  place-items: center;
+  text-align: center;
+  transform: translate(-50%, -45%) scale(1.6);
+  -webkit-text-stroke: 0.05em #3a1a00;
+  paint-order: stroke fill;
+}
+.count-blink .field-unit .fstat.is-count { animation: count-blink 0.55s ease-in-out infinite; }
+@keyframes count-blink {
+  0%, 100% { opacity: 1; filter: brightness(1.25) drop-shadow(0 0 0.25rem #ffb24a); }
+  50% { opacity: 0.2; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .count-blink .field-unit .fstat.is-count { animation: none; }
+}
 .fstat.is-count.is-hold {
   color: #ffe2a8;
   background: rgba(18, 10, 6, 0.72);
@@ -14533,6 +14549,15 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   object-fit: contain;
 }
 
+/* Kuriboh phát nổ (chủ game 21/11): video 512×512, tâm nổ ở 50% ngang, 52,7% dọc. */
+.boom-blast {
+  position: absolute;
+  z-index: 16;
+  transform: translate(-50%, -52.7%);
+  pointer-events: none;
+  object-fit: contain;
+}
+
 .mz-necklace { position: relative; }
 .mz-necklace img { max-height: 4.6rem; }
 .mz-dpad { position: absolute; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 50%; border: 0.1rem solid rgba(217, 169, 54, 0.45); background: rgba(12, 26, 61, 0.25); color: rgba(255, 233, 168, 0.7); font-size: 0.8rem; padding: 0; cursor: pointer; z-index: 2; -webkit-tap-highlight-color: transparent; box-shadow: none; }
@@ -14680,6 +14705,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 /* Safari: alpha WebM becomes black-background MP4, so black must vanish by blending. */
 html[data-flatfx] .heal-blast,
 html[data-flatfx] .flare-blast,
+html[data-flatfx] .boom-blast,
 html[data-flatfx] .tide-vid,
 html[data-flatfx] .tide-wave,
 html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }

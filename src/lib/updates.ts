@@ -1090,6 +1090,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm phép Huỷ diệt (2 mana, phép chậm): tiêu diệt 1 quái địch bất kỳ, kể cả quái 5 sao. Không quái nào chặn hay che được, chỉ Hấp thụ ma pháp hoá giải được.",
   "Thêm phép Bẫy thú (1 mana, phản ứng): quái địch máu dưới 4 vừa triệu hồi, hiến tế, dung hợp hoặc đưa đòn đánh, skill sát thương lên hàng chờ thì lá chớp hồng, dùng là tiêu diệt ngay nó. Quái ẩn chưa lật thì chưa bẫy được.",
   "Cục bông ma quái đổi thành Kuriboh, công 1. Giáp lá cà (tấn công, bị đánh, lao ra chặn) thì tự nổ, gây sát thương chuẩn bằng công rồi biến mất, không bị đánh trả. Công 1 thì đánh ngay không lên hàng chờ. Cấp số nhân: 1 mana, bị tiêu diệt thì ra 2 Kuriboh. Bỏ Pháo kích và Bông mềm.",
+  "Kuriboh lao vào rồi nổ giữa hai lá, có hiệu ứng và âm riêng, lá biến mất ngay lúc nổ. Số cam to hơn, Cấp số nhân hiện ×2, số cam của cả hai bên chớp 3 giây đầu mỗi vòng mới.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -5,7 +5,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, BoomBlast, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -916,6 +916,36 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
   const faceAng = Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x);
   // Chủ game 16/11: đòn đánh người chơi tông thẳng vào viên máu (lá lao tới tận viên), nổ ngay tại viên, không còn tia điện dọc mép.
   return { kind: "face", uid: attacker.uid, thrust: toward(orb, 1), ang: faceAng, at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path, orb };
+}
+
+/** Bề ngang khung video nổ của Kuriboh so với bề ngang một lá (khung nổ ra tới mép ở đỉnh nổ). */
+const BOOM_SPAN = 3.2;
+
+/** Kuriboh tự lao vào rồi nổ ngay (chủ game 21/11): đòn không qua hàng chờ nên không có `pending`, kẻ lao và mục tiêu lấy từ `Duel.boom`. */
+function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }): Landing | null {
+  const boom = next.boom;
+  if (!boom || boom.id === prev.boom?.id) return null;
+  for (const uid of boom.uids) {
+    const to = boom.to[uid];
+    const attacker = fieldMon(prev, uid);
+    const seat = seatOf(prev, uid);
+    if (!to || !attacker || !seat || seaVeiled(prev, viewer, uid)) continue;
+    const home = SLOT_BOX[screenSide(seat.side, viewer)][seat.index];
+    const from = { x: home.x + home.w / 2, y: home.y + home.h / 2 };
+    const toward = (point: { x: number; y: number }, travel: number) => ({ x: ((point.x - from.x) * travel * 100) / home.w, y: ((point.y - from.y) * travel * 100) / home.h });
+    if (to.startsWith("face:")) {
+      const foe = Number(to.slice(5)) as Side;
+      const top = screenSide(foe, viewer) === 1;
+      const orb = top ? marks.foeHp : marks.youHp;
+      return { kind: "face", uid, thrust: toward(orb, 1), ang: Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x), at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path: [], orb };
+    }
+    const where = seatOf(prev, to);
+    if (!where) continue;
+    const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
+    const target = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+    return { kind: "clash", uid, thrust: toward(target, 0.76), at: { x: from.x + (target.x - from.x) * 0.8, y: from.y + (target.y - from.y) * 0.8 }, target, ang: Math.atan2((target.y - from.y) / boardAspect(), target.x - from.x) };
+  }
+  return null;
 }
 
 const SLOW_SPELLS = new Set(["sam-set-tan-the", "huy-diet", "soi-xich-dia-nguc", "phan-nguyen", "mua-ma-thuat", "thanh-guom-anh-sang", "thu-hoi-quai-thu", "ke-dao-mo", "mu-ma-phap"]);
@@ -3307,7 +3337,10 @@ function PlayPage() {
     // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
     // lightning to reach it.
     const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
-    const landing = quiet ? null : attackLanding(prev, duel, viewerNow, hud);
+    const landing = quiet ? null : (attackLanding(prev, duel, viewerNow, hud) ?? boomLanding(prev, duel, viewerNow, hud));
+    // Kuriboh phát nổ (chủ game 21/11): vụ nổ ở giữa hai lá lúc chạm, lá Kuriboh còn đứng đó tới đỉnh nổ rồi mất hẳn, không vỡ lá.
+    const boomOn = !quiet && !tutorial && Boolean(duel.boom && duel.boom.id !== prev.boom?.id) && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const boomIds = new Set<string>(boomOn ? duel.boom?.uids ?? [] : []);
     // Đòn tông có tiếng riêng (lao + va): tiếng trúng đòn cũ không phát chồng lên nó (chủ game 14/11).
     const rammed = Boolean(landing);
     if (!quiet && struck && spent !== "phuc-kich" && !curseBoom && !rammed) cueAt("hit");
@@ -3554,6 +3587,7 @@ function PlayPage() {
     if (equipNow && shown) for (const item of shown.floaters) if (item.heal) { item.hush = true; item.delay = EQUIP_MS / 1000; }
     // Đòn tông (chủ game 14/11): quái đánh quái lấy đà lùi nhẹ (WIND) rồi lao thẳng vào mục tiêu (RAM), tới nơi mới nổ.
     const WIND_MS = landing ? 150 : 0;
+    const BOOM_PEAK_MS = 280;
     const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
@@ -3580,11 +3614,19 @@ function PlayPage() {
           }), LAND_MS + 60);
         }
       }
-      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + 130);
-      window.setTimeout(() => {
-        fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
-      }, LAND_MS);
-      playHit("ram", LAND_MS / 1000);
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) + 130);
+      if (boomOn) {
+        const seat = seatOf(prev, landing.uid);
+        const cardW = seat ? SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index].w : 15;
+        const start = slotPoint(prev, landing.uid, viewerNow);
+        const spot = landing.kind === "face" || !start ? landing.at : { x: start.x + (landing.target.x - start.x) * 0.88, y: start.y + (landing.target.y - start.y) * 0.88 };
+        window.setTimeout(() => fxAt({ t: "boom", x: spot.x, y: spot.y, w: cardW * BOOM_SPAN }), LAND_MS);
+      } else {
+        window.setTimeout(() => {
+          fxAt({ t: "clash", x: landing.at.x, y: landing.at.y, ang: landing.ang });
+        }, LAND_MS);
+        playHit("ram", LAND_MS / 1000);
+      }
     }
     const fxSourceUid = strikeUid(prev) || strikeUid(duel);
     const fxCard = (fxSourceUid ? (fieldMon(prev, fxSourceUid) ?? fieldMon(duel, fxSourceUid))?.cardId : undefined)
@@ -3828,6 +3870,20 @@ function PlayPage() {
       const trail = Math.round(Math.max(0, ...shown.floaters.map((item) => (item.delay ?? 0) * 1000)));
       window.setTimeout(() => setFloaters((current) => current.filter((item) => !ids.has(item.id))), 1500 + trail);
     }
+    const boomFalls = shown.falls.filter((fall) => boomIds.has(fall.mon.uid));
+    if (boomFalls.length > 0) {
+      setLinger((current) => {
+        const kept = current.filter((item) => !boomFalls.some((fall) => fall.side === item.side && fall.index === item.index));
+        return [...kept, ...boomFalls.map((fall) => ({ id: fall.floater.id, side: fall.side, index: fall.index, mon: fall.mon }))];
+      });
+      const gone = new Set(boomFalls.map((fall) => fall.floater.id));
+      // Không có cú lao (đòn không dựng được đường bay) thì nổ ngay tại ô của nó.
+      if (!landing) for (const fall of boomFalls) fxAt({ t: "boom", x: fall.floater.x, y: fall.floater.y, w: 15 * BOOM_SPAN });
+      window.setTimeout(() => setLinger((current) => current.filter((item) => !gone.has(item.id))), (landing ? LAND_MS : 0) + BOOM_PEAK_MS);
+    }
+    shown.falls = shown.falls.filter((fall) => !boomIds.has(fall.mon.uid));
+    // Số mất máu / "Hạ" ở ô Kuriboh nổ không hiện: nó biến mất trong vụ nổ, số sát thương hiện trên kẻ bị trúng.
+    if (boomIds.size > 0) shown.floaters = shown.floaters.filter((item) => !boomFalls.some((fall) => fall.floater.id === item.id || (Math.abs(fall.floater.x - item.x) < 0.5 && Math.abs(fall.floater.y - item.y) < 0.5)));
     if (shown.falls.length > 0) {
       const arm = (falls: Fall[], fadeAt: number) => {
         setLinger((current) => {
@@ -3999,6 +4055,21 @@ function PlayPage() {
     };
   }, [cut]);
   const [turnCue, setTurnCue] = useState<TitleCue | null>(null);
+  // Số cam của cả hai bên chớp 3 giây đầu mỗi vòng mới (chủ game 21/11).
+  const [countBlink, setCountBlink] = useState(false);
+  const blinkClock = useRef<number | null>(null);
+  const blinkTimer = useRef(0);
+  useEffect(() => {
+    if (!duel) return;
+    const clock = duel.clock ?? 1;
+    const was = blinkClock.current;
+    blinkClock.current = clock;
+    if (was === null || clock <= was || duel.winner !== null || tutorial) return;
+    setCountBlink(true);
+    window.clearTimeout(blinkTimer.current);
+    blinkTimer.current = window.setTimeout(() => setCountBlink(false), 3000);
+  }, [duel]);
+  useEffect(() => () => window.clearTimeout(blinkTimer.current), []);
   const lightSeen = useRef<{ actor: Side; clock: number } | null>(null);
   const cueTimer = useRef(0);
   useEffect(() => {
@@ -6764,7 +6835,7 @@ function PlayPage() {
       : null;
 
   return (
-    <main className={`stage is-play${replay ? " is-replay" : ""}`} data-cut={cut.top > 0 ? "" : undefined}>
+    <main className={`stage is-play${replay ? " is-replay" : ""}${countBlink ? " count-blink" : ""}`} data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       <DrawFlights flights={flights} onDone={flightDone} />
       {watch ? (
@@ -9017,6 +9088,7 @@ function PlayPage() {
         <FireBurst />
         <HealBlast />
         <FlareBlast />
+        <BoomBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
@@ -9573,7 +9645,10 @@ function KnightPick({
 /** The orange number a monster shows on the field (charge, blocks left, level…), or "" for none. */
 function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | string {
   return (
-    (mon.cardId === "ga-he-dang-so" || mon.cardId === "tho-den-tinh-nghich") && mon.charge > 0
+    // Kuriboh đã kích hoạt Cấp số nhân (chủ game 21/11): icon x2 ở ô số cam.
+    mon.cardId === "cuc-bong-ma-quai" && mon.mult
+      ? "×2"
+      : (mon.cardId === "ga-he-dang-so" || mon.cardId === "tho-den-tinh-nghich") && mon.charge > 0
       ? mon.charge
       : mon.cardId === "linh-chien-da-khong-lo" && mon.blocksLeft > 0
         ? mon.blocksLeft

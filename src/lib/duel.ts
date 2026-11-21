@@ -291,7 +291,7 @@ export type Duel = {
   /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
   dodge?: { id: number; uids: string[] } | null;
   /** Kuriboh vừa phát nổ khi giáp lá cà (chủ game 21/11): biến mất ngay, không vỡ lá như quái bị hạ (id tăng mỗi lần nổ). */
-  boom?: { id: number; uids: string[] } | null;
+  boom?: { id: number; uids: string[]; /** Kuriboh đang tự lao vào: uid → mục tiêu (uid quái hoặc `face:<bên>`); quái bị đánh / chặn nổ thì không có. */ to: Record<string, string> } | null;
   /** Kuriboh mang Cấp số nhân đã tách ra 2 con mới (để không tách 2 lần). */
   bred?: string[];
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
@@ -1005,7 +1005,9 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   dodgeRolls.clear();
   const dodged = seen.length ? { ...rawAfter, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : rawAfter;
   const booms = boomSeen.splice(0);
-  const flashed = booms.length ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms)] } } : dodged;
+  const flashed = booms.length
+    ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
+    : dodged;
   const after = settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
@@ -11360,7 +11362,7 @@ function trapSpring(state: Duel, uid: string): Duel {
 export const KURIBOH = "cuc-bong-ma-quai";
 
 /** Kuriboh that exploded in the action now running, for the board to show the blast (flushed by `traced`). */
-const boomSeen: string[] = [];
+const boomSeen: Array<{ uid: string; to?: string }> = [];
 
 /** A plain blow (no horn, gaze or whip) is giáp lá cà. */
 function plainBlow(mon: FieldMon) {
@@ -11415,7 +11417,8 @@ function kuribohClash(state: Duel, aUid: string, dUid: string): Duel | null {
   if (aBoom) aAfter = { ...aAfter, hp: 0 };
   else aAfter = { ...aAfter, dim: true };
   if (dBoom) dAfter = { ...dAfter, hp: 0 };
-  for (const mon of [aBoom ? a : null, dBoom ? d : null]) if (mon) boomSeen.push(mon.uid);
+  if (aBoom) boomSeen.push({ uid: a.uid, to: d.uid });
+  if (dBoom) boomSeen.push({ uid: d.uid });
   let next = state;
   for (const [side, uid, mon] of [[aSide, aUid, aAfter], [dSide, dUid, dAfter]] as const) {
     const player = next.players[side];
@@ -11431,7 +11434,7 @@ function kuribohFace(state: Duel, attacker: FieldMon): Duel | null {
   const side = state.turn;
   const foe = (1 - side) as Side;
   const dealt = outgoing(attacker, liveAtk(attacker));
-  boomSeen.push(attacker.uid);
+  boomSeen.push({ uid: attacker.uid, to: `face:${foe}` });
   const you = state.players[side];
   const field = you.field.map((unit) => (unit?.uid === attacker.uid ? { ...unit, hp: 0 } : unit)) as Player["field"];
   let next = patch(state, side, settleCocoon(dropDead({ ...you, field })));
