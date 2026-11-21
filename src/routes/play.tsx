@@ -142,6 +142,7 @@ import {
   skillManaCost,
   skillFigure,
   summon,
+  summonHidden,
   summonVow,
   previewMon,
   vowCap,
@@ -361,7 +362,7 @@ type BoardSpot = { x: number; y: number; w: number };
 type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "rows" | "land";
 /** Lá quái đưa từ tay ra giữa sân (chủ game 13/11): chọn hình thức triệu hồi (menu) rồi hàng (rows); `picks` = quân đã chọn
  *  hiến tế; `leave` = lá đang bay về tay (home) hoặc đáp xuống ô (land). */
-type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks: string[] | null; leave: null | { kind: "home" } | { kind: "land"; slot: Slot } };
+type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks: string[] | null; leave: null | { kind: "home" } | { kind: "land"; slot: Slot }; /** Triệu hồi Ẩn (chủ game 21/11). */ hide?: boolean };
 /** Giữa lá hiện to giữa sân, theo % chiều cao bàn. */
 const SHOW_TOP = 47;
 const PEEK_TOP = 9;
@@ -3195,12 +3196,14 @@ function PlayPage() {
       setLift(uid);
       window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
-    // Linh hoạt (chủ game 18/11): quái vừa né đòn chớp sáng bằng hiệu ứng phát quang có sẵn, cả hai bên đều thấy.
+    // Linh hoạt (chủ game 18/11), quái ẩn kích hoạt / Đắm tàu / Phản phép (21/11): chớp sáng bằng hiệu ứng phát quang có
+    // sẵn, cả hai bên đều thấy. Quái ẩn về xấp (sương mù) thì chớp ở ô nó vừa rời.
     if (!quiet && !tutorial && prev.mid === duel.mid && duel.dodge && duel.dodge.id !== prev.dodge?.id) {
       for (const uid of duel.dodge.uids) {
-        const seat = seatOf(duel, uid);
-        const mon = fieldMon(duel, uid);
-        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
+        const here = seatOf(duel, uid);
+        const seat = here ?? seatOf(prev, uid);
+        const mon = fieldMon(duel, uid) ?? fieldMon(prev, uid);
+        if (!seat || !mon || (here && seaVeiled(duel, viewerNow, mon.uid))) continue;
         const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
         emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
         setLift(uid);
@@ -5926,6 +5929,7 @@ function PlayPage() {
   const took = (next: Duel) => next.players[viewer].reserve.length < you.reserve.length;
   const rowSlot = (row: SummonRow, play: (slot: Slot) => Duel): Slot | null => ROW_SLOTS[row].find((slot) => took(play(slot))) ?? null;
   const summonAt = (index: number) => (slot: Slot) => (you.field[slot] ? duel : summon(duel, index, slot));
+  const hideAt = (index: number) => (slot: Slot) => (you.field[slot] ? duel : summonHidden(duel, index, slot));
   const vowAt = (index: number, picks: string[]) => (slot: Slot) => {
     const mon = you.field[slot];
     return mon && !picks.includes(mon.uid) ? duel : summonVow(duel, index, slot, picks);
@@ -6009,6 +6013,31 @@ function PlayPage() {
         },
       });
     }
+    // Ẩn (chủ game 21/11): mọi quái 1–4 sao, tốn thêm 1 mana, rồi chọn hàng như Triệu hồi.
+    const hidePlace = hideAt(index);
+    const hideFront = rowSlot("front", hidePlace);
+    const hideBack = rowSlot("back", hidePlace);
+    const hideFirst = hideFront ?? hideBack;
+    if (hideFirst !== null) {
+      list.push({
+        key: "hide",
+        label: "Ẩn",
+        tone: "mist",
+        emblem: "veil",
+        cost: cost(hidePlace(hideFirst)),
+        rows: {
+          front: hideFront !== null,
+          back: hideBack !== null,
+          advice: advisedRow(held.id),
+          onRow: (row) => {
+            const slot = row === "front" ? hideFront : hideBack;
+            if (slot === null) return;
+            setInspect(null);
+            apply(summonHidden(duel, index, slot));
+          },
+        },
+      });
+    }
     if (vowCap(held.id, held.saved?.level ?? 1) > 0 && ownLive.length > 0) {
       const offer = vowAt(index, [ownLive[0].uid]);
       const slot = rowSlot("front", offer) ?? rowSlot("back", offer);
@@ -6059,7 +6088,12 @@ function PlayPage() {
     pickMon !== null
       ? handActions(pickMon).map((act) => {
           const index = pickMon;
-          const press = act.key === "summon" ? () => setPickStage("rows") : act.onPress;
+          const press =
+            act.key === "summon"
+              ? () => setPickStage("rows")
+              : act.key === "hide"
+                ? () => setStage({ index, id: you.reserve[index]?.id ?? "", mode: "rows", picks: null, leave: null, hide: true })
+                : act.onPress;
           return {
             ...act,
             rows: undefined,
@@ -6108,7 +6142,7 @@ function PlayPage() {
   }
   const stageHeld = stage ? you.reserve[stage.index] : undefined;
   const stageOk = Boolean(stage && stageHeld && stageHeld.id === stage.id);
-  const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : summonAt(stage.index)) : null;
+  const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : stage.hide ? hideAt(stage.index) : summonAt(stage.index)) : null;
   const stageRows = stagePlace ? { front: rowSlot("front", stagePlace), back: rowSlot("back", stagePlace) } : null;
   const closeStage = () => setStage((now) => (now && !now.leave ? { ...now, leave: { kind: "home" } } : now));
   /** The staged card has flown: home to the hand, or onto its slot, where the summon really happens. */
@@ -6117,7 +6151,7 @@ function PlayPage() {
     setStage(null);
     setHandPick(null);
     if (!done || done.leave?.kind !== "land" || !duel) return;
-    apply(done.picks ? summonVow(duel, done.index, done.leave.slot, done.picks) : summon(duel, done.index, done.leave.slot));
+    apply(done.picks ? summonVow(duel, done.index, done.leave.slot, done.picks) : done.hide ? summonHidden(duel, done.index, done.leave.slot) : summon(duel, done.index, done.leave.slot));
   };
   const stageActs: SheetAction[] =
     stage && stageOk && stage.mode === "menu"
@@ -6125,8 +6159,8 @@ function PlayPage() {
           ...act,
           rows: undefined,
           onPress:
-            act.key === "summon"
-              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null } : now))
+            act.key === "summon" || act.key === "hide"
+              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, hide: act.key === "hide" } : now))
               : act.key === "vow"
                 ? () => setVowAsk({ index: stage.index, slot: null, picks: [], stage: true })
                 : () => {

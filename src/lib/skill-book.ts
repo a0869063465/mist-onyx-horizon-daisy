@@ -71,7 +71,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
     joined(PP("Nở", "butterfly", "đầu lượt của bạn", "đủ 4 lần", "đủ 5 lần", "đủ 6 lần", "chết từ mốc")),
   ],
   "trai-tim-hai-long": [A("Triều lên", "wave-crest"), joined(PP("Con nước lớn tàn phá", "big-wave")), joined(PP("Đại hồng thuỷ huỷ diệt", "waves")), NOTE("kẻ bị đòn này hạ")],
-  "sua-hut-ma-phap": [SP("Phản phép", "jellyfish", "phản phép"), NOTE("lưu ý")],
+  "sua-hut-ma-phap": [SP("Phản phép", "jellyfish", "tấn công phép thuật vào ta"), NOTE("lưu ý")],
   "con-thinh-no-cua-hai-vuong": [
     P("Hộ thần", "guardian-shield"),
     P("Đè nén", "trident-shield"),
@@ -81,7 +81,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "chien-binh-lan-khuat": [A("Ẩn mình", "hooded-assassin"), NOTE("số cam cho thấy")],
   "ke-san-moi-tu-than": [P("Kẻ săn mồi tử thần", "grim-reaper")],
   "sat-nhan-bat-giu": [A("Bắt Giữ", "manacles")],
-  "kraken": [SP("Đắm tàu", "kraken-tentacle", "đắm tàu"), NOTE("lưu ý")],
+  "kraken": [SP("Đắm tàu", "kraken-tentacle", "tấn công vật lý vào ta"), NOTE("lưu ý")],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],
   "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số cam:", "điểm do kazura kiếm được")],
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],

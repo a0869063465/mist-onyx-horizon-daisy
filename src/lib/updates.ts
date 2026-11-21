@@ -1088,6 +1088,9 @@ export const PENDING_NOTES: string[] = [
   "Quái bị khoá, trói, choáng hoặc tê liệt (kể cả quái điểu nhân, nói chung là không hành động được) hay không thể chặn (Hoa ăn thịt người, Kén) không còn chớp phản ứng hay chớp chặn.",
   "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
   "Sân Rừng rậm và Bóng tối chuyển động bằng video. Mỗi nửa sân tự đổi ngẫu nhiên giữa ảnh tĩnh 30 giây và 2 video, không lặp lại liền nhau.",
+  "Kéo lá quái ra có thêm nút Ẩn: tốn thêm 1 mana, quái úp trên sân. Đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) thì Kích hoạt được; bị đánh, bị kỹ năng, bị phép hoặc hết 4 vòng thì tự lật. Lật luôn loé sáng. Có Sương mù thì lật xong về xấp bài, không thì thành quái thường.",
+  "Kraken: 0 mana, công 3, thủ 0, thủ phép 0, máu 3. Đắm tàu: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay.",
+  "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
 ];
 
 function remarkOf(notes: string[]) {

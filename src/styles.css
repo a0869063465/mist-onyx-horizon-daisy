@@ -14762,3 +14762,47 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 /* Bàn B: phần sân dưới của video bị cắt trước viền HUD (HUD của B nằm thấp hơn), mờ dần vào nền của B. */
 .env-field.is-fade { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); }
 .env-pill { position: absolute; pointer-events: none; }
+
+/* Ẩn (chủ game 21/11): nút cùng kiểu Triệu hồi / Hiến tế / Dung hợp, màu trắng; huy hiệu tròn là lá úp chìm trong sương
+   mù trôi chậm. */
+.act3d.is-mist { --tone: #eef3fb; --glow: rgba(230, 240, 255, 0.55); }
+.act3d.is-mist .act3d-label { color: #f4f7fc; }
+.act3d-ico.is-veil {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #3a4250 0%, #12151b 75%);
+}
+.act3d-veil {
+  position: absolute;
+  inset: 16% 26%;
+  border-radius: 0.18rem;
+  background: url("/ui/card-back-you.webp") center / cover no-repeat;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55), 0 0 8px rgba(230, 240, 255, 0.7);
+  transform: rotate(-8deg);
+  filter: saturate(0.25) brightness(1.15);
+}
+.act3d-ico.is-veil::before,
+.act3d-ico.is-veil::after {
+  content: "";
+  position: absolute;
+  inset: -30% -60%;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 22% at 30% 62%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(34% 18% at 72% 40%, rgba(235, 242, 255, 0.6), transparent 70%),
+    radial-gradient(30% 16% at 50% 82%, rgba(255, 255, 255, 0.55), transparent 70%);
+  animation: act3d-mist 6s ease-in-out infinite alternate;
+}
+.act3d-ico.is-veil::after {
+  opacity: 0.7;
+  animation-duration: 8.5s;
+  animation-direction: alternate-reverse;
+}
+@keyframes act3d-mist {
+  from { transform: translateX(-14%); }
+  to { transform: translateX(14%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .act3d-ico.is-veil::before,
+  .act3d-ico.is-veil::after { animation: none; }
+}
