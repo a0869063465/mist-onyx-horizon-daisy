@@ -120,6 +120,9 @@ export type FieldMon = {
   spun?: boolean;
   misses?: number;
   shed?: string[];
+  /** Harpie Lady (chủ game 21/11): `born` = lượt chung lúc triệu hồi, `last` = lượt chung của lần Giảo hoạt gần nhất,
+   *  `picked` = kỹ năng đã nhận (không mời lại), `deeds` = các hành động khác nhau đã thi triển (3 thì tiến hoá). */
+  wit?: { born: number; last: number; picked: string[]; deeds: string[] };
   /** Kuriboh đã kích hoạt Cấp số nhân: bị tiêu diệt thì tách ra 2 Kuriboh mới (chủ game 21/11). */
   mult?: boolean;
   lure?: boolean;
@@ -363,7 +366,11 @@ export type Duel = {
     forced?: boolean;
     keep?: Record<string, { dim: boolean; blessAtk: number; blessDmg: number; nextDef: number }>;
   } | null;
-  birdAsk?: { uid: string } | null;
+  birdAsk?: { uid: string; side?: Side } | null;
+  /** Giảo hoạt của Harpie Lady: mỗi câu là 1 lần chọn 1 kỹ năng (2 kỹ năng ngẫu nhiên chưa nhận), hỏi lần lượt. */
+  wileAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
+  /** Một việc lẽ ra nhường quyền nhưng còn câu hỏi Giảo hoạt / tiến hoá chưa trả lời: trả lời xong thì nhường. */
+  owedYield?: boolean;
   prey?: { side: Side; aim: string; kind: "phys" | "spell" | "tru" } | null;
   preyAsk?: boolean;
   recall?: { side: Side; caps: number[] } | null;
@@ -1010,7 +1017,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event)));
+  const after = settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event)))));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -2950,6 +2957,7 @@ function settled(state: Duel): boolean {
     !state.soulAsk &&
     !state.plumeAsk &&
     !state.birdAsk &&
+    !state.wileAsk?.length &&
     !state.preyAsk &&
     !state.reel &&
     !state.wheel &&
@@ -2962,11 +2970,22 @@ function settled(state: Duel): boolean {
  * kỹ năng ghi "phép tự do" thì không. Vòng chưa hết: token vẫn ở người cũ, bỏ lượt liên tiếp được đếm lại từ đầu.
  */
 function yieldTurn(state: Duel): Duel {
-  if (!settled(state)) return state;
+  if (!settled(state)) return birdWaits(state) ? { ...state, owedYield: true } : state;
   const foe = (1 - state.turn) as Side;
   const players = [...state.players] as [Player, Player];
   players[foe] = { ...players[foe], acted: false };
-  return { ...state, players, turn: foe, seq: state.seq + 1, skipped: [false, false] };
+  return { ...state, players, turn: foe, seq: state.seq + 1, skipped: [false, false], owedYield: false };
+}
+
+/** Xong hẳn, chỉ còn câu hỏi Giảo hoạt hoặc tiến hoá của Harpie Lady đang chờ. */
+function birdWaits(state: Duel): boolean {
+  return Boolean(state.wileAsk?.length || state.birdAsk) && settled({ ...state, wileAsk: null, birdAsk: null });
+}
+
+/** Trả lời xong câu hỏi của Harpie Lady: việc trước đó lẽ ra nhường quyền thì giờ nhường. */
+function payYield(state: Duel): Duel {
+  if (!state.owedYield || !settled(state)) return state;
+  return yieldTurn({ ...state, owedYield: false });
 }
 
 /** Kỹ năng ghi "phép tự do": không tính là hành động, không nhường quyền. */
@@ -4384,7 +4403,7 @@ export function passResponse(state: Duel): Duel {
  */
 function yieldResolved(before: Duel, after: Duel): Duel {
   if (before.countering != null) return counterEnd(after);
-  if (!settled(after) || after.turn !== before.turn) return after;
+  if (!(settled(after) || birdWaits(after)) || after.turn !== before.turn) return after;
   const pending = before.pending;
   if (!pending) return after;
   if (pending.kind === "melee" || pending.kind === "face" || pending.kind === "gnaw") return yieldTurn(after);
@@ -4871,7 +4890,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
       field: next.players[defender].field.map((mon) => (mon?.uid === blocker.uid ? openShade(mon) : mon)),
     });
   }
-  const acted = markQueenAct(next, defender, blocker.uid);
+  const acted = markQueenAct(next, defender, blocker.uid, "block");
   if (branch) {
     const shielded = state.players[defender].field.find((mon) => mon?.uid === branch) ?? null;
     const covering = note(acted.state, `${cardOf(blocker).name} sẽ chặn cho ${shielded ? cardOf(shielded).name : "người chơi"}.${acted.extra}`, "info");
@@ -8163,6 +8182,12 @@ function growHarpy(mon: FieldMon, part: { atk?: number; def?: number; mdef?: num
   };
 }
 
+/** Harpie Lady ghi 1 hành động (đánh, chặn, hoặc 1 kỹ năng); cùng loại chỉ tính 1. */
+function markDeed(mon: FieldMon, deed: string): FieldMon {
+  if (mon.cardId !== GIRL || !mon.wit || mon.wit.deeds.includes(deed)) return mon;
+  return { ...mon, wit: { ...mon.wit, deeds: [...mon.wit.deeds, deed] } };
+}
+
 function banDraw(player: Player): Player {
   return { ...player, drawBan: (player.drawBan ?? 0) + 1 };
 }
@@ -8194,18 +8219,17 @@ function becomePerfect(state: Duel, side: Side, uid: string): Duel {
 
 function sealHarpy(state: Duel, side: Side, uid: string, line: string, tone: Duel["tone"]): Duel {
   const mon = state.players[side].field.find((unit) => unit?.uid === uid) ?? null;
-  let text = line;
+  const text = line;
   const ripe = Boolean(mon && mon.cardId === QUEEN && shedOf(mon).length >= 4 && (mon.acts ?? 0) >= 2);
-  if (mon?.cardId === GIRL && shedOf(mon).length >= 4) text += " Hãy chọn Công chúa điểu nhân hoặc Nữ chúa điểu nhân.";
   const noted = note(state, text, tone);
-  if (mon?.cardId === GIRL && shedOf(mon).length >= 4) return { ...noted, birdAsk: { uid } };
   if (ripe) return becomePerfect(noted, side, uid);
-  return noted;
+  return settleBird(noted);
 }
 
-function markQueenAct(state: Duel, side: Side, uid: string): { state: Duel; extra: string } {
+function markQueenAct(state: Duel, side: Side, uid: string, deed: "attack" | "block" = "attack"): { state: Duel; extra: string } {
   const you = state.players[side];
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
+  if (mon?.cardId === GIRL) return { state: patch(state, side, { ...you, field: you.field.map((unit) => (unit?.uid === uid ? markDeed(unit, deed) : unit)) }), extra: "" };
   if (!mon || mon.cardId !== QUEEN) return { state, extra: "" };
   const before = mon.acts ?? 0;
   const nextMon = { ...mon, acts: before + 1 };
@@ -8252,7 +8276,7 @@ export function harpyWard(state: Duel): Duel {
   else if (pending.kind === "beam" || pending.kind === "gnaw-skill") what = castName(ownerCard(state, pending.caster), pending.index);
   // Skill dạng phép (chủ game 04/11): it waits in the chain like a fast spell, so Hấp thụ ma pháp may swallow it; once
   // the chain lands (`landWard`) the skill or spell on the bird is stopped and the bird grows. The feather is spent now.
-  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? { ...unit, shed: [...shedOf(unit), "armor"] } : unit));
+  const field = paid.field.map((unit) => (unit?.uid === bird.uid ? markDeed({ ...unit, shed: [...shedOf(unit), "armor"] }, "armor") : unit));
   const waiting = patch(state, side, { ...paid, field });
   const held = keep(note({ ...waiting, hold: { ...state.hold, ward: { bird: bird.uid } } }, `Giáp và Vuốt chờ huỷ ${what} nhắm vào ${cardOf(bird).name}`, "spell"));
   return held.hold ? { ...held, hold: { ...held.hold, eat: { card: "giap-va-vuot", side, back: waiting } } } : held;
@@ -8322,7 +8346,7 @@ export function harpyLash(state: Duel): Duel {
   const attacker = them.field.find((unit) => unit?.uid === pending.attacker) ?? null;
   const paid = bird && kit ? pay(you, kit.lash) : null;
   if (!bird || !kit || !attacker || !paid) return note(state, kit?.lash === 1 ? "Cần 1 mana." : "Cần 2 mana.");
-  const grown = growHarpy(bird, { atk: kit.atk }, "lash");
+  const grown = markDeed(growHarpy(bird, { atk: kit.atk }, "lash"), "lash");
   let next = patch(state, side, { ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) });
   const marked = them.field.map((unit) => (unit?.uid === attacker.uid ? { ...unit, dim: true } : unit));
   next = patch(next, atkSide, { ...them, field: marked });
@@ -8363,7 +8387,7 @@ export function answerPlume(state: Duel, yes: boolean): Duel {
   const attacker = them.field.find((unit) => unit?.uid === ask.foe && unit.hp > 0) ?? null;
   const paid = bird && kit && !shedOf(bird).includes("lash") ? pay(you, kit.lash) : null;
   if (!bird || !kit || !attacker || !paid) return charmStrike(cleared, ask.bird, ask.foe);
-  const grown = growHarpy(bird, { atk: kit.atk }, "lash");
+  const grown = markDeed(growHarpy(bird, { atk: kit.atk }, "lash"), "lash");
   let next = patch(cleared, side, { ...paid, field: paid.field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) });
   const marked = them.field.map((unit) => (unit?.uid === attacker.uid ? { ...unit, dim: true } : unit));
   next = patch(next, foe, { ...them, field: marked });
@@ -8380,9 +8404,10 @@ export function evolveBird(state: Duel, formId: string): Duel {
   const side = (state.players[0].field.some((mon) => mon?.uid === ask.uid) ? 0 : 1) as Side;
   const you = state.players[side];
   const mon = you.field.find((unit) => unit?.uid === ask.uid && unit.cardId === GIRL) ?? null;
-  if (!mon) return { ...state, birdAsk: null };
+  if (!mon) return payYield({ ...state, birdAsk: null });
   const born: FieldMon = {
     ...mon,
+    wit: undefined,
     cardId: card.id,
     atk: card.atk,
     def: card.def,
@@ -8396,7 +8421,93 @@ export function evolveBird(state: Duel, formId: string): Duel {
     acts: 0,
   };
   const field = you.field.map((unit) => (unit?.uid === mon.uid ? born : unit));
-  return note(patch({ ...state, birdAsk: null }, side, { ...you, field }), `${cardOf(mon).name} tiến hoá thành ${card.name}.`, "heal");
+  return payYield(note(patch({ ...state, birdAsk: null }, side, { ...you, field }), `${cardOf(mon).name} tiến hoá thành ${card.name}.`, "heal"));
+}
+
+/** Bộ kỹ năng của Harpie Lady theo thứ tự trên bảng quái (Giảo hoạt, chủ game 21/11). */
+export const WILE_KEYS = ["armor", "gust", "charm", "lash"] as const;
+export const WILE_NAMES: Record<string, string> = { armor: "Giáp và Vuốt", gust: "Thổi bay", charm: "Mê hoặc", lash: "Roi điện" };
+/** Mỗi bao nhiêu lượt chung (không tính lượt triệu hồi) thì Giảo hoạt mời chọn lại. */
+const WILE_EVERY = 3;
+
+function shuffled<T>(rows: T[]): T[] {
+  const out = [...rows];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
+/**
+ * Giảo hoạt (chủ game 21/11): Harpie Lady vừa vào sân thì chưa có kỹ năng nào; lúc triệu hồi và đầu mỗi lượt chung thứ 3
+ * sau đó (lượt +3, +6…) được chọn 1 trong 2 kỹ năng ngẫu nhiên chưa nhận, dùng 1 lần. Hết kỹ năng chưa nhận thì thôi.
+ */
+function settleWit(before: Duel, after: Duel): Duel {
+  const clock = after.clock ?? 1;
+  const asks = [...(after.wileAsk ?? [])];
+  let next = after;
+  for (const side of [0, 1] as const) {
+    const board = next.players[side];
+    let changed = false;
+    const field = board.field.map((mon) => {
+      if (!mon || mon.cardId !== GIRL || mon.hp <= 0 || mon.copy) return mon;
+      const wit = mon.wit;
+      const due = !wit || (clock > (before.clock ?? 1) && clock - wit.born >= WILE_EVERY && (clock - wit.born) % WILE_EVERY === 0 && wit.last !== clock);
+      if (!due || asks.some((ask) => ask.uid === mon.uid)) return mon;
+      const fresh: FieldMon = wit ? { ...mon, wit: { ...wit, last: clock } } : { ...mon, shed: [...WILE_KEYS], wit: { born: clock, last: clock, picked: [], deeds: [] } };
+      changed = true;
+      const left = WILE_KEYS.filter((key) => !fresh.wit!.picked.includes(key));
+      if (left.length > 0) asks.push({ side: mon.abroad ?? side, uid: mon.uid, picks: shuffled(left).slice(0, 2) });
+      return fresh;
+    });
+    if (changed) next = patch(next, side, { ...board, field });
+  }
+  if (asks.length === (after.wileAsk?.length ?? 0) && next === after) return after;
+  const opened = asks.length > (after.wileAsk?.length ?? 0);
+  return opened ? note({ ...next, wileAsk: asks }, "Giảo hoạt: chọn 1 kỹ năng cho Harpie Lady.", "info") : { ...next, wileAsk: asks };
+}
+
+/** Tiến hoá (chủ game 21/11): Harpie Lady đã thi triển 3 hành động khác nhau (đánh, chặn, mỗi kỹ năng là 1 loại). */
+function settleBird(state: Duel): Duel {
+  if (state.birdAsk || state.wileAsk?.length || state.winner !== null) return state;
+  if (!settled({ ...state, birdAsk: null })) return state;
+  for (const side of [0, 1] as const) {
+    const mon = state.players[side].field.find((unit) => unit?.cardId === GIRL && unit.hp > 0 && (unit.wit?.deeds.length ?? 0) >= 3) ?? null;
+    if (!mon) continue;
+    return note({ ...state, birdAsk: { uid: mon.uid, side: mon.abroad ?? side } }, `${cardOf(mon).name} đã thi triển 3 hành động khác nhau. Hãy chọn Công chúa điểu nhân hoặc Nữ chúa điểu nhân.`, "heal");
+  }
+  return state;
+}
+
+/** Trả lời Giảo hoạt: `key` là kỹ năng chọn; null hoặc không hợp lệ (hết 20 giây) thì lấy ngẫu nhiên trong 2 kỹ năng mời. */
+export function answerWile(state: Duel, key: string | null): Duel {
+  const ask = state.wileAsk?.[0];
+  if (!ask) return state;
+  const rest = (state.wileAsk ?? []).slice(1);
+  const pick = key && ask.picks.includes(key) ? key : ask.picks[Math.floor(Math.random() * ask.picks.length)]!;
+  const side = ownerSide(state, ask.uid);
+  const board = side === null ? null : state.players[side];
+  const mon = board?.field.find((unit) => unit?.uid === ask.uid && unit.cardId === GIRL && unit.hp > 0) ?? null;
+  let next: Duel = { ...state, wileAsk: rest.length ? rest : null };
+  if (side !== null && board && mon) {
+    const wit = mon.wit ?? { born: state.clock ?? 1, last: state.clock ?? 1, picked: [], deeds: [] };
+    const grown: FieldMon = { ...mon, shed: shedOf(mon).filter((row) => row !== pick), wit: { ...wit, picked: [...wit.picked, pick] } };
+    next = note(patch(next, side, { ...board, field: board.field.map((unit) => (unit?.uid === mon.uid ? grown : unit)) }), `Giảo hoạt: ${cardOf(mon).name} nhận ${WILE_NAMES[pick]}.`, "heal");
+  }
+  return payYield(settleBird(next));
+}
+
+/** Máy chọn kỹ năng Giảo hoạt hợp nhất lúc này. */
+function aiWilePick(state: Duel, ask: { side: Side; picks: string[] }): string {
+  const foe = state.players[(1 - ask.side) as Side];
+  const score = (key: string) => {
+    if (key === "gust") return foe.hand.some((id) => spellCard(id) && !spellCard(id)?.env) ? 4 : 0;
+    if (key === "charm") return foe.field.some((mon) => mon && mon.hp > 0) ? 3 : 0;
+    if (key === "lash") return 2;
+    return 1;
+  };
+  return [...ask.picks].sort((a, b) => score(b) - score(a))[0]!;
 }
 
 function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, targetUid: string | null): Duel {
@@ -8405,7 +8516,7 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
   const kit = harpyKit(mon.cardId);
   const spent = shedOf(mon);
   if (skillIndex === 0) {
-    if (spent.includes("gust")) return note(state, "Thổi bay đã biến mất.");
+    if (spent.includes("gust")) return note(state, mon.wit && !mon.wit.picked.includes("gust") ? "Chưa nhận Thổi bay." : "Thổi bay đã biến mất.");
     const paid = pay(you, kit.gust);
     if (!paid) return note(state, "Cần 1 mana.");
     const hand = [...state.players[foe].hand];
@@ -8414,19 +8525,19 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     const pick = spells[Math.floor(Math.random() * spells.length)]!;
     hand.splice(pick.index, 1);
     const tolls = handTolls(state.players[foe]).filter((_, index) => index !== pick.index);
-    const grown = { ...mon, dim: true, shed: [...spent, "gust"] };
+    const grown = markDeed({ ...mon, dim: true, shed: [...spent, "gust"] }, "gust");
     const field = paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit));
     let next = patch(state, side, { ...paid, field });
     next = patch(next, foe, { ...state.players[foe], hand, tolls });
     return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`]), "spell");
   }
-  if (spent.includes("charm")) return note(state, "Mê hoặc đã biến mất.");
+  if (spent.includes("charm")) return note(state, mon.wit && !mon.wit.picked.includes("charm") ? "Chưa nhận Mê hoặc." : "Mê hoặc đã biến mất.");
   const them = state.players[foe];
   const target = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
   if (!target) return note(state, "Chọn một quái đối thủ.");
   const paid = pay(you, kit.charm);
   if (!paid) return note(state, "Cần 1 mana.");
-  const grown = { ...mon, dim: true, shed: [...spent, "charm"] };
+  const grown = markDeed({ ...mon, dim: true, shed: [...spent, "charm"] }, "charm");
   const field = paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit));
   const next = patch(state, side, { ...paid, field });
   const owner = next.players[side];
@@ -10893,6 +11004,7 @@ export function aiAnswerAsk(state: Duel): Duel | null {
     if (!pick) return { ...state, parley: null };
     return withLive(pickParley(state, pick.uid));
   }
+  if (state.wileAsk?.[0]?.side === 1) return withLive(answerWile(state, aiWilePick(state, state.wileAsk[0])));
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
   if (state.plumeAsk && state.turn === 1) return withLive(answerPlume(state, state.players[1].orb >= harpyKit(state.players[1].field.find((mon) => mon?.uid === state.plumeAsk?.bird)?.cardId ?? "").lash));
   if (state.recall?.side === 1) return withLive(confirmRecall(state, chooseRecall(state.players[1].reserve, state.recall.caps, state.players[1].orb)));

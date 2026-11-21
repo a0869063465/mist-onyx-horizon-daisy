@@ -461,6 +461,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     stats: { atk: { from: 1, to: 2 }, def: { from: 2, to: 3 }, mdef: { from: 2, to: 3 }, hp: { from: 8, to: 6 }, mana: { from: 1, to: 2 } },
     notes: ["Tường thành thành nội tại: quái địch chỉ được chọn Lính đá làm mục tiêu tấn công", "Mỗi đợt công kích trúng Lính đá thì thủ và thủ phép giảm 1, vĩnh viễn", "Bỏ đỡ đòn cho đồng minh"],
+  },  {
+    id: "my-dieu-nhan",
+    at: "2026-11-21",
+    wave: 39,
+    tone: "shift",
+    stats: { hp: { from: 4, to: 2 } },
+    notes: ["Đổi tên Harpie Lady", "Giảo hoạt: lúc triệu hồi và mỗi 3 lượt chung, chọn 1 trong 2 kỹ năng ngẫu nhiên chưa nhận, dùng 1 lần", "Tiến hoá khi thi triển 3 hành động khác nhau, thay Lông vũ"],
   },
 ];
 

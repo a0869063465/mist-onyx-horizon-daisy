@@ -174,6 +174,7 @@ function moved(prev: Duel, next: Duel): boolean {
     next.gemWarn !== prev.gemWarn ||
     next.preyAsk !== prev.preyAsk ||
     next.birdAsk !== prev.birdAsk ||
+    next.wileAsk !== prev.wileAsk ||
     next.plumeAsk !== prev.plumeAsk ||
     next.lurkAsk !== prev.lurkAsk
   );
@@ -550,6 +551,8 @@ function planAnswer(state: Duel): Act {
 export function brainChoose(state: Duel, budgetMs = BUDGET_MS): Act | null {
   if (state.mode !== "ai" || state.winner !== null || state.reel || state.wheel) return null;
   if (aiAnswerAsk(state)) return ["ask"];
+  // Giảo hoạt / tiến hoá của Harpie Lady bên người chơi: chờ họ chọn.
+  if (state.wileAsk?.length || state.birdAsk) return null;
   if (state.step === "respond" && state.hold?.priority === ME) return planAnswer(state);
   if (state.turn !== ME || state.step !== "main") return null;
   return planTurn(state, now() + budgetMs);

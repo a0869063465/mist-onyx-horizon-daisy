@@ -660,14 +660,14 @@ export const MONSTERS: MonsterCard[] = [
   },
   {
     "id": "my-dieu-nhan",
-    "name": "Mỹ điểu nhân",
+    "name": "Harpie Lady",
     "stars": 2,
     "gems": 0,
     "skill": "__**Giáp và Vuốt**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\n__**Lông vũ:**__ \nMỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn.\nĐủ 4 kỹ năng thì chờ tiến hoá.",
     "atk": 3,
     "def": 1,
     "mdef": 1,
-    "hp": 4,
+    "hp": 2,
     "art": "my-dieu-nhan"
   },
   {

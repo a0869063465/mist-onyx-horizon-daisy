@@ -2690,7 +2690,12 @@ function PlayPage() {
     const aiResponds = duel.step === "respond" && duel.hold?.priority === 1 && !duel.hold.stage;
     const aiMain = duel.turn === 1 && duel.step === "main";
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
-    if (!aiResponds && !aiMain && !aiParley) return;
+    // Harpie Lady (Giảo hoạt, tiến hoá): máy trả lời câu của nó; câu của người chơi thì máy chờ.
+    const birdSide = duel.birdAsk ? (duel.birdAsk.side ?? (duel.players[1].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? 1 : 0)) : null;
+    const askSide = duel.wileAsk?.[0]?.side ?? birdSide;
+    if (askSide === 0) return;
+    const aiAsk = askSide === 1;
+    if (!aiResponds && !aiMain && !aiParley && !aiAsk) return;
     // Bộ não mới (đợt 1): máy nghĩ ở luồng riêng trong 2 giây chờ, rồi trang chạy lại nước nó chọn bằng luật thật.
     const asked = duel;
     const started = Date.now();
@@ -7806,7 +7811,7 @@ function PlayPage() {
         ) : null}
         {duel.birdAsk && duel.players[viewer].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? (
           <div className="ask-card">
-            <p>Tiến hoá Mỹ điểu nhân thành?</p>
+            <p>Tiến hoá Harpie Lady thành?</p>
             <button type="button" onClick={() => apply(evolveBird(duel, "cong-chua-dieu-nhan"))}>Công chúa điểu nhân</button>
             <button type="button" onClick={() => apply(evolveBird(duel, "nu-chua-dieu-nhan"))}>Nữ chúa điểu nhân</button>
           </div>
