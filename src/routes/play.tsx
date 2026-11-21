@@ -9663,8 +9663,6 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
       ? "×2"
       : (mon.cardId === "ga-he-dang-so" || mon.cardId === "tho-den-tinh-nghich") && mon.charge > 0
       ? mon.charge
-      : mon.cardId === "linh-chien-da-khong-lo" && mon.blocksLeft > 0
-        ? mon.blocksLeft
       : (mon.cardId === "kazura" || mon.cardId === "kizuran") && allies.some((unit) => unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0)
         ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
       : mon.cardId === "ken-ngai"

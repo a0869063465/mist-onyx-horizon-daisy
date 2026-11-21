@@ -165,11 +165,11 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Lính chiến đá khổng lồ",
     "stars": 2,
     "gems": 1,
-    "skill": "**__Tường thành__**: \nKhi một quái thú đồng minh bị đánh thường, hoặc kỹ năng gây sát thương chọn làm mục tiêu. Tiêu hao 1 mana để đỡ cho đồng minh đó.\nChỉ đỡ đòn được 2 lần, tính cả dùng skill.",
-    "atk": 1,
-    "def": 2,
-    "mdef": 2,
-    "hp": 8,
+    "skill": "**__Tường thành__**: \nNội tại: khi ta trên sân, quái địch không thể chọn mục tiêu tấn công khác ngoài ta.\nNội tại: với mỗi đợt công kích phòng ngự của ta giảm đi 1.",
+    "atk": 2,
+    "def": 3,
+    "mdef": 3,
+    "hp": 6,
     "art": "linh-da",
     "strong": "Thủ mạnh, máu nhiều, còn đỡ được đòn cho team.",
     "weak": "Không có công",
@@ -1194,7 +1194,7 @@ export function isWarrior(name: string): boolean {
   return /kiếm sĩ|chiến binh|chiến sĩ/i.test(name);
 }
 
-const ART_REV = "49";
+const ART_REV = "50";
 
 export function librarySrc(picture: string): string {
   if (picture.startsWith("spell:")) return `/art/spells/${picture.slice(6)}.jpg?v=${ART_REV}`;

@@ -1093,6 +1093,7 @@ export const PENDING_NOTES: string[] = [
   "Kuriboh lao vào rồi nổ giữa hai lá, có hiệu ứng và âm riêng, lá biến mất ngay lúc nổ. Số cam to hơn, Cấp số nhân hiện ×2, số cam của cả hai bên chớp 3 giây đầu mỗi vòng mới.",
   "Kuriboh có tranh mới.",
   "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
+  "Lính chiến đá khổng lồ: công 2, thủ 3, thủ phép 3, máu 6, tranh mới. Tường thành: quái địch chỉ được chọn Lính chiến đá khổng lồ làm mục tiêu tấn công; mỗi đợt công kích trúng nó thì thủ và thủ phép giảm 1. Bỏ đỡ đòn cho đồng minh.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createDuel, concede, checkWinner, draw, endTurn, summon, attackFace, attackMonster, passResponse, assignBlock, aiStep, fuse, wallAlly, spiritCover, answerUpkeep, scoreReel, startReel, pullReel, settleReel, testGrant, useSkill, type Duel } from "./duel.ts";
+import { createDuel, concede, checkWinner, draw, endTurn, summon, attackFace, attackMonster, passResponse, assignBlock, aiStep, fuse, spiritCover, answerUpkeep, scoreReel, startReel, pullReel, settleReel, testGrant, useSkill, type Duel } from "./duel.ts";
 import { FUSIONS } from "./fusion.ts";
 import {
   MATCH_HISTORY_KEY,
@@ -495,20 +495,7 @@ test("fusion, wall, cover, upkeep and reel record the actor once", () => {
     FUSIONS.pop();
   }
 
-  let duel = testGrant(testGrant(testGrant(trial(), 0, "khong-lo-mot-mat", true), 1, "thien-than-be-nho", true), 1, "linh-chien-da-khong-lo", true);
-  const angel = duel.players[1].field.find((mon) => mon?.cardId === "thien-than-be-nho");
-  const soldier = duel.players[1].field.find((mon) => mon?.cardId === "linh-chien-da-khong-lo");
-  const giant = duel.players[0].field[0];
-  assert.ok(angel && soldier && giant);
-  const walled = wallAlly(attackMonster(duel, giant.uid, angel.uid), soldier.uid);
-  const wall = walled.events?.filter((event) => event.kind === "wall") ?? [];
-  assert.equal(wall.length, 1);
-  assert.equal(wall[0]?.actor, 1);
-  assert.equal(wall[0]?.ok, true);
-  assert.equal(wall[0]?.cardId, "linh-chien-da-khong-lo");
-  assert.equal(wall[0]?.target && wall[0].target.kind === "monster" ? wall[0].target.uid : "", angel.uid);
-
-  duel = testGrant(testGrant(testGrant(trial(), 0, "khong-lo-mot-mat", true), 1, "thien-than-be-nho", true), 1, "phu-thuy-thoi-gian", true);
+  let duel = testGrant(testGrant(testGrant(trial(), 0, "khong-lo-mot-mat", true), 1, "thien-than-be-nho", true), 1, "phu-thuy-thoi-gian", true);
   const target = duel.players[1].field.find((mon) => mon?.cardId === "thien-than-be-nho");
   const witch = duel.players[1].field.find((mon) => mon?.cardId === "phu-thuy-thoi-gian");
   const attacker = duel.players[0].field[0];

@@ -50,6 +50,8 @@ export type FieldMon = {
   mdef: number;
   dim: boolean;
   blocksLeft: number;
+  /** Lính chiến đá khổng lồ vừa bị trúng đòn trong việc này; traced trừ 1 thủ và 1 thủ phép rồi xoá. */
+  stoneHit?: boolean;
   stun: number;
   stance: "attack" | "guard";
   stanceUsed: boolean;
@@ -1008,7 +1010,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event));
+  const after = wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event)));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -1911,7 +1913,7 @@ function place(state: Duel, side: Side, cardId: string, held?: PileMon): FieldMo
     def: card.def,
     mdef: card.mdef,
     dim: false,
-    blocksLeft: card.name === "Lính chiến đá khổng lồ" ? 2 : 1,
+    blocksLeft: 1,
     stun: 0,
     stance: "attack",
     stanceUsed: false,
@@ -2347,6 +2349,53 @@ export function sanctuaryShielded(state: Duel, uid: string | null | undefined): 
   return false;
 }
 
+/**
+ * Lính chiến đá khổng lồ (chủ game 21/11): khi nó ở trên sân, quái địch chỉ được chọn nó làm mục tiêu tấn công
+ * (đánh thường, kỹ năng gây sát thương; không đánh người chơi). Có 2 con thì chọn 1 trong 2. Kỹ năng nhiều mục tiêu
+ * phải chọn nó, phần lan ra tính sau. Quái 5 sao không bị ràng buộc (luật dự án). Trả đòn không phải chọn mục tiêu.
+ */
+export const TAUNTERS = new Set(["linh-chien-da-khong-lo"]);
+
+export function tauntWalls(state: Duel, attackerUid: string): FieldMon[] {
+  const side = state.players[0].field.some((mon) => mon?.uid === attackerUid) ? 0 : state.players[1].field.some((mon) => mon?.uid === attackerUid) ? 1 : null;
+  if (side === null) return [];
+  const attacker = state.players[side].field.find((mon) => mon?.uid === attackerUid);
+  if (!attacker || (monsterCard(attacker.cardId)?.stars ?? 1) >= 5) return [];
+  if (state.counterAsk?.uid === attackerUid) return [];
+  return state.players[(1 - side) as Side].field.filter((mon): mon is FieldMon => Boolean(mon && TAUNTERS.has(mon.cardId) && mon.hp > 0 && mon.abroad === undefined));
+}
+
+/** Lời từ chối khi mục tiêu (uid quái, hoặc "face") không phải Lính chiến đá khổng lồ đang ép mục tiêu. */
+function tauntBar(state: Duel, attackerUid: string, target: string | null): string | null {
+  const walls = tauntWalls(state, attackerUid);
+  if (walls.length === 0 || !target) return null;
+  if (walls.some((mon) => mon.uid === target)) return null;
+  const foeUid = target !== "face" && state.players.some((player) => player.field.some((mon) => mon?.uid === target && !player.field.some((m) => m?.uid === attackerUid)));
+  if (target !== "face" && !foeUid) return null;
+  return `Phải chọn ${cardOf(walls[0]).name} làm mục tiêu.`;
+}
+
+/** Kỹ năng gây sát thương vừa đánh thẳng người chơi trong khi Lính đá ép mục tiêu thì bị từ chối. */
+function tauntFace(state: Duel, next: Duel, uid: string): boolean {
+  if (tauntWalls(state, uid).length === 0) return false;
+  const side = state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1;
+  const foe = (1 - side) as Side;
+  if (next.pending?.kind === "face" && next.pending.attacker === uid && next.pending !== state.pending) return true;
+  return next.players[foe].hp < state.players[foe].hp;
+}
+
+/** Lính chiến đá khổng lồ: mỗi đợt công kích trúng nó thì thủ và thủ phép giảm 1, vĩnh viễn (chủ game 21/11). */
+function wearStones(state: Duel): Duel {
+  if (!state.players.some((player) => player.field.some((mon) => mon?.stoneHit))) return state;
+  return {
+    ...state,
+    players: state.players.map((player) => ({
+      ...player,
+      field: player.field.map((mon) => (mon?.stoneHit ? { ...mon, stoneHit: undefined, def: Math.max(0, mon.def - 1), mdef: Math.max(0, mon.mdef - 1) } : mon)),
+    })) as Duel["players"],
+  };
+}
+
 function sanctuaryLine(mon: FieldMon): string {
   return `Thánh địa thiên sứ che chở ${cardOf(mon).name}. Phải tấn công các quái khác trước.`;
 }
@@ -2566,7 +2615,8 @@ function applyIncoming(mon: FieldMon, amount: number, allies?: Array<FieldMon | 
   const spent = spendPartners(allies, partnerId(mon.cardId), bite);
   const left = bite - spent;
   const stored = mon.cardId === "kizuran" ? (mon.stored ?? 0) + left : mon.stored;
-  return { mon: { ...mon, hp: before - left, stored }, bite, surplus };
+  const stoneHit = TAUNTERS.has(mon.cardId) && before > 0 ? true : mon.stoneHit;
+  return { mon: { ...mon, hp: before - left, stored, stoneHit }, bite, surplus };
 }
 
 function mendHp(mon: FieldMon, amount: number): FieldMon {
@@ -4578,6 +4628,8 @@ function spendWall(mon: FieldMon): FieldMon {
   return { ...mon, dim: true };
 }
 
+const WALLERS = new Set<string>();
+
 export function canWall(state: Duel, uid: string): boolean {
   if (doomWaiting(state)) return false;
   if (state.step !== "respond" || !state.hold || !state.pending) return false;
@@ -4585,7 +4637,8 @@ export function canWall(state: Duel, uid: string): boolean {
   if (state.hold.priority !== ownerSide) return false;
   const owner = state.players[ownerSide];
   const mon = owner.field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || mon.cardId !== "linh-chien-da-khong-lo" || !canIntercept(mon)) return false;
+  // Lính đá bỏ Tường thành cũ (chủ game 21/11): không còn quái nào đỡ đòn kiểu này.
+  if (!mon || !WALLERS.has(mon.cardId) || !canIntercept(mon)) return false;
   const aim = wallAim(state);
   if (!aim || aim.uid === uid) return false;
   const ally = owner.field.find((unit) => unit?.uid === aim.uid && unit.hp > 0);
@@ -5920,6 +5973,8 @@ function attackMonsterCore(state: Duel, attackerUid: string, defenderUid: string
   const you = state.players[state.turn];
   const them = state.players[(1 - state.turn) as Side];
   if (you.field.find((mon) => mon?.uid === attackerUid)?.used) return note(state, "Quái này đã hành động trong vòng này.");
+  const taunted = tauntBar(state, attackerUid, defenderUid);
+  if (taunted) return note(state, taunted);
   defenderUid = redirectCover(them.field, defenderUid) ?? defenderUid;
   defenderUid = shuntUid(them.field, defenderUid) ?? defenderUid;
   const picked = them.field.find((mon) => mon?.uid === defenderUid) ?? null;
@@ -6000,6 +6055,8 @@ function attackFaceCore(state: Duel, attackerUid: string, soulChosen = false): D
   if (you.attackLock > 0) return note(state, "Bạn đang bị cấm tấn công.");
   const attacker = you.field.find((mon) => mon?.uid === attackerUid) ?? null;
   if (attacker?.used) return note(state, "Quái này đã hành động trong vòng này.");
+  const tauntedFace = tauntBar(state, attackerUid, "face");
+  if (tauntedFace) return note(state, tauntedFace);
   if (attacker && (attacker.path ?? 0) > 0) return note(state, `${cardOf(attacker).name} không thể hành động.`);
   if (!attacker || attacker.dim || attacker.cardId === "chan-ken" || attacker.cardId === "hoa-an-thit-nguoi" || barred(attacker) || (attacker.path ?? 0) > 0) return state;
   if (attacker.cage) return note(state, "Đang bị khoá cứng.");
@@ -6249,9 +6306,10 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
     if (next === counter.state || (next.players === counter.state.players && next.pending === counter.state.pending)) return next === counter.state ? state : { ...state, live: next.live, log: next.log, stepNo: next.stepNo };
     return counterEnd(traceSkill(state, next, uid, targetUid, skillIndex));
   }
-  const gate = actGate(state, uid, skillIndex);
+  const gate = actGate(state, uid, skillIndex, targetUid);
   if (gate) return gate;
   const next = declareSkillCore(state, uid, targetUid, skillIndex, extra);
+  if (tauntFace(state, next, uid)) return note(state, tauntBar(state, uid, "face") ?? state.live);
   if (next === state || next.step !== "respond") return traceSkill(state, next, uid, targetUid, skillIndex);
   const mon = state.players[state.turn].field.find((unit) => unit?.uid === uid);
   const spent = mon && !skillIsFree(mon.cardId, skillIndex) ? markUsed(next, state.turn, uid) : next;
@@ -6262,10 +6320,14 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
  * Luật vòng cho kỹ năng: kỹ năng gây sát thương chỉ người giữ token dùng được; quái đã hành động trong vòng thì không
  * dùng kỹ năng thường nữa (kỹ năng ghi "phép tự do" vẫn dùng được).
  */
-function actGate(state: Duel, uid: string, skillIndex: number): Duel | null {
+function actGate(state: Duel, uid: string, skillIndex: number, targetUid: string | null = null): Duel | null {
   if (state.step !== "main" || state.parley) return null;
   const mon = state.players[state.turn].field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon) return null;
+  if (harmSkill(mon.cardId, skillIndex)) {
+    const taunted = tauntBar(state, uid, targetUid);
+    if (taunted) return note(state, taunted);
+  }
   if (harmSkill(mon.cardId, skillIndex) && attackRound(state) !== state.turn) return note(state, "Chưa đến vòng của bạn, không được tấn công.");
   if (mon.used && !skillIsFree(mon.cardId, skillIndex)) return note(state, "Quái này đã hành động trong vòng này.");
   return null;
@@ -8545,11 +8607,12 @@ function useSkillBody(state: Duel, uid: string, targetUid: string | null, skillI
     }
     return counterEnd(next);
   }
-  const gate = actGate(state, uid, skillIndex);
+  const gate = actGate(state, uid, skillIndex, targetUid);
   if (gate) return gate;
   const side = state.turn;
   const mon = state.step === "main" ? state.players[side].field.find((unit) => unit?.uid === uid) ?? null : null;
   const next = run(state);
+  if (mon && harmSkill(mon.cardId, skillIndex) && tauntFace(state, next, uid)) return note(state, tauntBar(state, uid, "face") ?? state.live);
   if (!mon || next === state || state.step !== "main") return next;
   const fresh = (next.events ?? []).slice(state.events?.length ?? 0);
   if (!fresh.some((event) => event.kind === "skill" && event.ok)) return next;

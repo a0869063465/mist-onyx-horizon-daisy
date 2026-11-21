@@ -490,7 +490,7 @@ const PAIRS: Array<[string, string]> = [
   ["Quái thú thiên sứ cần cầu nguyện: tiêu 1 mana, hoặc rời sân.", "Angel Beast must pray: spend 1 mana, or leave the field."],
   ["được cầu nguyện", "is kept by prayer"],
   ["Ở trạng thái phòng thủ, tiêu 1 mana để tăng gấp đôi phòng ngự và thêm 3 máu tối đa", "In defense, spend 1 mana to double adef and gain 3 max HP"],
-  ["Tường thành: Khi một quái thú đồng minh bị đánh thường, hoặc kỹ năng gây sát thương chọn làm mục tiêu. Tiêu hao 1 mana để đỡ cho đồng minh đó.\nChỉ đỡ đòn được 2 lần, tính cả dùng skill.", "Wall: When an allied monster is targeted by a normal attack, or by a damaging skill. Spend 1 mana to block for that ally.\nIt can block only 2 times, including this skill."],
+  ["Tường thành: Nội tại: khi ta trên sân, quái địch không thể chọn mục tiêu tấn công khác ngoài ta.\nNội tại: với mỗi đợt công kích phòng ngự của ta giảm đi 1.", "Wall: Passive: while I am on the field, enemy monsters cannot pick any attack target but me.\nPassive: each wave of attacks lowers my defense by 1."],
   ["Tường thành", "Wall"],
   ["Phản đòn kỹ năng đang nhắm mình sang 1 kẻ địch bất kỳ.", "Reflect the skill aimed at you onto any enemy."],
   ["Gây 2 + (số sao hiện có của bạn) thành sát thương chuẩn lên tất cả quái thú kẻ địch.", "Deal 2 + (your current stars) as true damage to every enemy monster."],

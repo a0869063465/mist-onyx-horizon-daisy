@@ -454,6 +454,14 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { atk: { from: 2, to: 1 } },
     notes: ["Đổi tên Kuriboh", "Phát nổ thành nội tại: giáp lá cà thì tự nổ, gây sát thương chuẩn bằng công", "Cấp số nhân: 1 mana, bị tiêu diệt thì nhân đôi", "Bỏ Pháo kích và Bông mềm"],
   },
+  {
+    id: "linh-chien-da-khong-lo",
+    at: "2026-11-21",
+    wave: 38,
+    tone: "shift",
+    stats: { atk: { from: 1, to: 2 }, def: { from: 2, to: 3 }, mdef: { from: 2, to: 3 }, hp: { from: 8, to: 6 } },
+    notes: ["Tường thành thành nội tại: quái địch chỉ được chọn Lính đá làm mục tiêu tấn công", "Mỗi đợt công kích trúng Lính đá thì thủ và thủ phép giảm 1, vĩnh viễn", "Bỏ đỡ đòn cho đồng minh"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

@@ -1664,6 +1664,35 @@ test("Kuriboh Cấp số nhân: 1 mana; bị tiêu diệt (cả lúc tự nổ) 
 });
 
 let failed = 0;
+test("Lính chiến đá khổng lồ (21/11): quái địch chỉ được chọn nó làm mục tiêu (đánh thường, đánh người chơi, kỹ năng); quái 5 sao không bị ép", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }], 1: ["rong-con", {}] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const other = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 1));
+  assert.equal(other.step, "main", "không đánh Máy chém được: " + other.live);
+  assert.match(other.live, /Lính chiến đá khổng lồ/);
+  const face = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(face.step, "main", "không đánh người chơi được: " + face.live);
+  const ok = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(ok.step, "respond", "đánh Lính đá được: " + ok.live);
+  const rich = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const skill = D.useSkill(rich, uid(s, 0, 1), uid(s, 1, 1), 0);
+  assert.equal(skill.players[1].field[1].hp, at(s, 1, 1).hp, "kỹ năng không nhắm Máy chém được: " + skill.live);
+  assert.equal(skill.pending ?? null, null);
+  const five = board({ 0: ["rong-ac-ma", {}] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const free = D.attackMonster(five, uid(five, 0, 0), uid(five, 1, 1));
+  assert.notEqual(free.live, D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 1)).live, "quái 5 sao chọn tự do: " + free.live);
+});
+
+test("Lính chiến đá khổng lồ: mỗi đợt công kích trúng nó thì thủ và thủ phép giảm 1, vĩnh viễn; không còn đỡ đòn cho đồng minh", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const card = C.monsterCard("linh-chien-da-khong-lo");
+  assert.deepEqual([card.atk, card.def, card.mdef, card.hp], [2, 3, 3, 6]);
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  const stone = at(done, 1, 0);
+  assert.equal(stone.hp, 6, "2 công không xuyên 3 thủ: " + done.live);
+  assert.deepEqual([stone.def, stone.mdef], [2, 2], "giảm 1 cả hai sau đợt đó");
+  assert.equal(D.canWall(s, uid(s, 1, 0)), false);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();
