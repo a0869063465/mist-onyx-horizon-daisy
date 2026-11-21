@@ -14,8 +14,6 @@ import {
   confirmSwap,
   swapRows,
   castSpell,
-  cottonCover,
-  cottonOffer,
   declareSkill,
   draw,
   endTurn,
@@ -94,8 +92,7 @@ export type Act =
   | ["wall", string]
   | ["guard", string]
   | ["stand", string]
-  | ["spirit", string]
-  | ["cotton"];
+  | ["spirit", string];
 
 export function runAct(state: Duel, act: Act): Duel {
   switch (act[0]) {
@@ -149,8 +146,6 @@ export function runAct(state: Duel, act: Act): Duel {
       return standFor(state, act[1]);
     case "spirit":
       return spiritCover(state, act[1]);
-    case "cotton":
-      return cottonCover(state);
   }
 }
 
@@ -340,7 +335,7 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
     aim: (index) => aims.push(index),
     cast: (index) => selfs.push(index),
     declare: (index) => declares.push(index),
-    spent: mon.shed ?? [],
+    spent: [...(mon.shed ?? []), ...(mon.mult ? ["mult"] : [])],
     room,
   })) chip.go();
   const id = card.id;
@@ -506,7 +501,6 @@ function answerMoves(state: Duel): Move[] {
     if (canStand(state, mon.uid)) tryMove(list, state, ["stand", mon.uid]);
     if (canSpirit(state, mon.uid)) tryMove(list, state, ["spirit", mon.uid]);
   }
-  if (cottonOffer(state, ME)) tryMove(list, state, ["cotton"]);
   spellMoves(state, list);
   return list;
 }

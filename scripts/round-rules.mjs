@@ -1601,6 +1601,68 @@ test("Bẫy thú: quái máu dưới 4 đưa đòn đánh lên hàng chờ thì 
   assert.ok(at(landed, 1, 0).hp < 10, "đòn vẫn vào");
 });
 
+test("Kuriboh (21/11): công 1 đánh quái thì nổ ngay, không hàng chờ, gây sát thương chuẩn bằng công, biến mất, không bị đánh trả", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", {}] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  const done = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(done.step, "main", "không vào hàng chờ: " + done.live);
+  assert.equal(done.hold, null);
+  assert.equal(at(done, 0, 0), null, "Kuriboh biến mất");
+  assert.equal(at(done, 1, 0).hp, 9, "1 sát thương chuẩn, xuyên thủ: " + done.live);
+  assert.equal(done.counterAsk ?? null, null, "không Trả đòn");
+  assert.deepEqual(done.boom?.uids, [uid(s, 0, 0)], "đánh dấu nổ cho trang trận");
+  assert.equal(done.turn, 1, "quyền sang đối thủ");
+});
+
+test("Kuriboh: được buff công trên 1 thì đòn vào hàng chờ như thường, lúc nổ gây đúng công", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", { atk: 3 }] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  const open = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(open.step, "respond", "vào hàng chờ: " + open.live);
+  const done = D.passResponse(open);
+  assert.equal(at(done, 0, 0), null);
+  assert.equal(at(done, 1, 0).hp, 7, "3 sát thương chuẩn: " + done.live);
+});
+
+test("Kuriboh: bị đánh thì nổ vào kẻ đánh và biến mất, kẻ đánh không gây sát thương", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["cuc-bong-ma-quai", {}], 1: ["may-chem", {}] });
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(done, 1, 0), null, "Kuriboh biến mất: " + done.live);
+  assert.equal(at(done, 0, 0).hp, 9, "kẻ đánh chịu 1 sát thương chuẩn");
+  assert.equal(done.counterAsk ?? null, null);
+});
+
+test("Kuriboh: đánh người chơi gây sát thương chuẩn bằng công rồi biến mất; lao ra chặn đòn vào người chơi cũng nổ", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", {}] }, {});
+  const hp = s.players[1].hp;
+  const face = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(face.step, "main", face.live);
+  assert.equal(face.players[1].hp, hp - 1);
+  assert.equal(at(face, 0, 0), null);
+  const t = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["cuc-bong-ma-quai", {}] });
+  const open = D.attackFace(t, uid(t, 0, 0));
+  const blocked = D.passResponse(D.passResponse(D.assignBlock(open, uid(t, 1, 0))));
+  assert.equal(at(blocked, 1, 0), null, "Kuriboh chặn rồi nổ: " + blocked.live);
+  assert.equal(at(blocked, 0, 0).hp, 9);
+  assert.equal(blocked.players[1].hp, t.players[1].hp, "người chơi không mất máu");
+});
+
+test("Kuriboh Cấp số nhân: 1 mana; bị tiêu diệt (cả lúc tự nổ) thì ra 2 Kuriboh mới, hàng trước trước, con mới dùng lại được", () => {
+  let s = board({ 0: ["cuc-bong-ma-quai", {}], 1: ["may-chem", {}] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const armed = D.useSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(armed.players[0].orb, 2, "1 mana: " + armed.live);
+  assert.ok(at(armed, 0, 0).mult);
+  assert.match(D.useSkill({ ...armed, turn: 0 }, uid(s, 0, 0), null, 0).live, /đã kích hoạt|đã hành động/);
+  const ready = { ...armed, turn: 0, players: armed.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m ? { ...m, used: false, dim: false } : m)) } : p)) };
+  const done = D.attackMonster(ready, uid(s, 0, 0), uid(s, 1, 0));
+  const kids = done.players[0].field.map((m, slot) => (m?.cardId === "cuc-bong-ma-quai" ? slot : null)).filter((n) => n !== null);
+  assert.deepEqual(kids, [0, 2], "2 con mới, hàng trước trước: " + rows(done));
+  assert.ok(!at(done, 0, 0).mult && !at(done, 0, 2).mult, "con mới chưa kích hoạt");
+  assert.equal(at(done, 1, 0).hp, 9);
+  // Không kích hoạt thì không nhân đôi.
+  const plain = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(plain.players[0].field.filter((m) => m?.cardId === "cuc-bong-ma-quai").length, 0);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

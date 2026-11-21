@@ -130,7 +130,7 @@ function lines(at: SkillAt): string[] {
       return [deal(blow(mon, spellOnly(amount)))];
     }
     case "cuc-bong-ma-quai":
-      return name === "Phát nổ" && mon ? ["Tự huỷ", deal(blow(mon, spellOnly(liveAtk(mon)), false))] : [];
+      return name === "Cấp số nhân" ? ["Nhân đôi khi bị tiêu diệt"] : [];
     case "phu-thuy-ti-hon":
     case "phu-thuy-tap-su":
     case "phu-thuy-bac-thay":

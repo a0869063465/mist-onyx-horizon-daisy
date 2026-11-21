@@ -446,6 +446,14 @@ export const BALANCE_LOG: BalanceEntry[] = [
     wave: 36,
     stats: { hp: { from: 3, to: 2 } },
   },
+  {
+    id: "cuc-bong-ma-quai",
+    at: "2026-11-21",
+    wave: 37,
+    tone: "shift",
+    stats: { atk: { from: 2, to: 1 } },
+    notes: ["Đổi tên Kuriboh", "Phát nổ thành nội tại: giáp lá cà thì tự nổ, gây sát thương chuẩn bằng công", "Cấp số nhân: 1 mana, bị tiêu diệt thì nhân đôi", "Bỏ Pháo kích và Bông mềm"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

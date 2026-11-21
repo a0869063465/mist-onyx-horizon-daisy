@@ -104,8 +104,6 @@ import {
   attackRound,
   hornFit,
   skillLook,
-  cottonCover,
-  cottonOffer,
   chronoChoice,
   chronoHighAlly,
   rollTimeSector,
@@ -2012,7 +2010,6 @@ function PlayPage() {
   const [starFlash, setStarFlash] = useState<Side | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
   const [hornAsk, setHornAsk] = useState<{ uid: string; foeUid: string; mode: "splash" | "plus" | null } | null>(null);
-  const [cottonAsk, setCottonAsk] = useState<null | "hand">(null);
   const [askAt, setAskAt] = useState<{ x: number; y: number } | null>(null);
   const askDrag = useRef<{ pointer: number; x: number; y: number; left: number; top: number } | null>(null);
   const prevDuel = useRef<Duel | null>(null);
@@ -4180,7 +4177,6 @@ function PlayPage() {
     return Boolean(aimed && you.field.some((unit) => unit?.uid === aimed && unit.row === "back"));
   })();
   const canIntercept = responding && duel.hold?.priority === viewer && (duel.pending?.kind === "face" || coverBack);
-  const cotton = mine && responding && duel.hold?.priority === viewer ? cottonOffer(duel, viewer) : { hand: false };
   const standHand = Boolean(mine && canStandHand(duel, viewer));
   const board = matchBoard(foe.env, you.env);
   /** Chọn mục tiêu theo video chủ game (30/10): the spell waits as an icon in the middle with its short line. */
@@ -4538,7 +4534,6 @@ function PlayPage() {
     setChronoSpin(null);
     setKnightAsk(null);
     setHornAsk(null);
-    setCottonAsk(null);
     setBlessArm(false);
     setSwapPick([]);
     setReflectPick(null);
@@ -4570,7 +4565,6 @@ function PlayPage() {
     setChronoSpin(null);
     setKnightAsk(null);
     setHornAsk(null);
-    setCottonAsk(null);
     setBlessArm(false);
     setSwapPick([]);
     setReflectPick(null);
@@ -5098,10 +5092,6 @@ function PlayPage() {
     const index = slotEl ? Number(slotEl.dataset.index) : NaN;
     const foeUid = slotEl?.dataset.uid ?? "";
     if (payload.kind === "summon") {
-      if (responding && duel.hold && payload.card.id === "cuc-bong-ma-quai" && slotEl && owner === viewer && slotEl.dataset.empty === "1") {
-        setCottonAsk("hand");
-        return;
-      }
       if (!tutorial) {
         // Kéo lá ra khỏi tay (chủ game 13/11): lá hiện to giữa sân với các lựa chọn; không còn thả thẳng vào ô.
         if (!at || !hitsHand(at.x, at.y)) openStage(payload.index);
@@ -6088,7 +6078,7 @@ function PlayPage() {
 
   // The picked monster in hand that can be summoned now (a monster flashing orange shows its skill instead).
   const pickHeld = handPick?.pile === "reserve" ? you.reserve[handPick.index] : undefined;
-  const pickMon = pickHeld && pickHeld.id === handPick?.id && canPlay && !(pickHeld.id === "cuc-bong-ma-quai" && cotton.hand) && !(pickHeld.id === "the-than-cua-shien" && standHand) ? handPick.index : null;
+  const pickMon = pickHeld && pickHeld.id === handPick?.id && canPlay && !(pickHeld.id === "the-than-cua-shien" && standHand) ? handPick.index : null;
   const pickRows = pickMon !== null ? { front: rowSlot("front", summonAt(pickMon)), back: rowSlot("back", summonAt(pickMon)) } : null;
   const pickShown = pickRows && (pickRows.front !== null || pickRows.back !== null) ? pickRows : null;
   // Bấm 1 lần lá quái trên tay (chủ game 01/11): hàng nút Triệu hồi / Hiến tế / Dung hợp (nút nào luật cho mới hiện) ở chỗ
@@ -7751,13 +7741,6 @@ function PlayPage() {
             <button type="button" onClick={() => apply(answerPrey(duel, false))}>{tr("Không")}</button>
           </div>
         ) : null}
-        {cottonAsk === "hand" && cotton.hand ? (
-          <div className="ask-card">
-            <p>{monsterCard("cuc-bong-ma-quai")?.name}</p>
-            <button type="button" onClick={() => { setCottonAsk(null); apply(cottonCover(duel, "hand")); }}>{askLabel("cuc-bong-ma-quai", "soft")}</button>
-            <button type="button" onClick={() => setCottonAsk(null)}>{tr("Không")}</button>
-          </div>
-        ) : null}
         {blockChoice ? (
           <div className="ask-card">
             {blockChoice.skill === null ? (
@@ -8097,7 +8080,7 @@ function PlayPage() {
         {board.stack.hidden ? null : (
         <button
           type="button"
-          className={`face-pile press${canDrawNow ? " is-ready" : ""}${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || ((cotton.hand || standHand) && hand === "spell") ? " is-alert" : ""}`}
+          className={`face-pile press${canDrawNow ? " is-ready" : ""}${(you.hand.some((id, index) => answerUsable(id, duel, viewer, index)) && (drag?.kind === "unit" || drag?.kind === "summon")) || (standHand && hand === "spell") ? " is-alert" : ""}`}
           style={{
             ...({ "--alert-color": "#ff4f93" } as CSSProperties),
             left: `${board.stack.x}%`,
@@ -8167,20 +8150,19 @@ function PlayPage() {
                 const lit = open || picked || (aim?.kind === "summon" && aim.index === index);
                 const swapCard = swapBench(held);
                 const summonPlace = summonAt(index);
-                const summonable = canPlay && !(id === "cuc-bong-ma-quai" && cotton.hand) && !(id === "the-than-cua-shien" && standHand) && (rowSlot("front", summonPlace) !== null || rowSlot("back", summonPlace) !== null);
-                const cottonCard = id === "cuc-bong-ma-quai" && cotton.hand;
+                const summonable = canPlay && !(id === "the-than-cua-shien" && standHand) && (rowSlot("front", summonPlace) !== null || rowSlot("back", summonPlace) !== null);
                 const standCard = id === "the-than-cua-shien" && standHand;
                 // A monster flashing orange uses its skill from the hand: tap the card, then the skill (Bông mềm, Thế thân).
-                const react = cottonCard ? { label: "Bông mềm", go: () => setCottonAsk("hand") } : standCard ? { label: "Thế thân trên tay", go: () => apply(standIn(duel, index)) } : null;
+                const react = standCard ? { label: "Thế thân trên tay", go: () => apply(standIn(duel, index)) } : null;
                 const reactLook = react ? bookSkill(id, react.label, card.skill ?? "") : undefined;
                 return (
                   <div key={`${id}-${index}`} className={`hand-pick${picked && !tutorial ? " is-up" : ""}${stage?.index === index && stageOk ? " is-out" : ""}${drawShows.some((show) => show.target === `r:${index}`) ? " is-away" : ""}`} data-hand={`r:${index}`} style={fanStyle(index)}>
                     <button
                       type="button"
-                      className={`hand-card press is-monster${lit ? " is-open" : ""}${cottonCard || standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${(fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index) || (fuseShow?.set && (fuseShow.index === index || fuseShow.set.mats.some((mat) => mat.index === index))) ? " is-fuse-hide" : ""}`}
+                      className={`hand-card press is-monster${lit ? " is-open" : ""}${standCard || swapCard ? " is-alert" : ""}${summonable ? " is-summonable" : ""}${fuseHands.has(index) ? " is-fuse" : ""}${drag?.kind === "summon" && drag.index === index ? " is-ghosting" : ""}${(fuseAsk && fuseAsk.phase !== "ask" && fuseAsk.reserveIndex === index) || (fuseShow?.set && (fuseShow.index === index || fuseShow.set.mats.some((mat) => mat.index === index))) ? " is-fuse-hide" : ""}`}
                       data-reserve={index}
                       data-stars={card.stars}
-                      style={cottonCard || standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
+                      style={standCard || swapCard ? ({ "--alert-color": SKILL_TONES.spell } as CSSProperties) : undefined}
                       onClick={() => (swapAsk ? (swapCard ? apply(confirmSwap(duel, swapAsk.locked!, `r:${index}`)) : undefined) : openHand("reserve", index, id))}
                       onPointerDown={(event) => begin(event, { kind: "summon", index, card })}
                       onPointerMove={move}
@@ -8709,13 +8691,7 @@ function PlayPage() {
               >
                 Đánh thường
               </button>
-              {selectedCard.id === "cuc-bong-ma-quai" ? (
-                <>
-                  <button type="button" className="act press is-skillbox" onClick={() => { setStrike(null); apply(useSkill(duel, strike.uid, null, 1)); }}>
-                    Pháo kích
-                  </button>
-                </>
-              ) : selectedCard.id === "mat-xanh-huy-diet" ? (
+              {selectedCard.id === "mat-xanh-huy-diet" ? (
                 <button
                   type="button"
                   className="act press is-skillbox"
@@ -9237,7 +9213,7 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       aim: aimSkill,
       cast: (index) => apply(useSkill(duel, uid, null, index)),
       declare: (index) => apply(declareSkill(duel, uid, null, index)),
-      spent: mon.shed ?? [],
+      spent: [...(mon.shed ?? []), ...(mon.mult ? ["mult"] : [])],
       room: empty,
     })) {
       if (!sword && harmSkill(card.id, chip.skill)) continue;

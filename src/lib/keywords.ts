@@ -223,7 +223,7 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "yeu-tinh-chuc-phuc": { "Lời chúc phúc của tinh linh": "hao-quang", "Hỗ công": "buff", "Hộ thủ": "buff" },
   "thien-than-be-nho": { "Thiên thần hộ mệnh": "buff" },
   "khung-long-vay-kiem": { "Vãy phá giáp": "debuff" },
-  "cuc-bong-ma-quai": { "Pháo kích": "trieu-goi", "Bông mềm": "trieu-goi" },
+  "cuc-bong-ma-quai": { "Cấp số nhân": "trieu-goi" },
   "linh-chien-da-khong-lo": { "Tường thành": "ho-ve" },
   "rong-phun-hoa-cau": { "Hoả cầu": "sao-choi" },
   "phu-thuy-thoi-gian": { "Lão hoá": "debuff", "Dòng chảy thời gian": "buff" },
