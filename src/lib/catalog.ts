@@ -1194,7 +1194,7 @@ export function isWarrior(name: string): boolean {
   return /kiếm sĩ|chiến binh|chiến sĩ/i.test(name);
 }
 
-const ART_REV = "48";
+const ART_REV = "49";
 
 export function librarySrc(picture: string): string {
   if (picture.startsWith("spell:")) return `/art/spells/${picture.slice(6)}.jpg?v=${ART_REV}`;
