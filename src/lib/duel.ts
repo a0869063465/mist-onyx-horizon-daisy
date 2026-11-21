@@ -133,6 +133,8 @@ export type FieldMon = {
   row?: "back";
   /** Đã đánh hoặc dùng kỹ năng trong vòng này: mỗi quái một lần mỗi vòng. */
   used?: boolean;
+  /** Quả trứng sinh mệnh đã dùng Sinh mệnh mới lần đầu (chủ game 21/11): các lần sau miễn mana, không rút thêm. */
+  reborn?: boolean;
   /** Tháo vát: đã dùng lần hành động thứ nhất trong vòng (còn lần thứ hai). */
   knack?: number;
   /** Lá Trang bị đang gắn: chỉ số đã cộng, `again` = đã gắn lần 2 (rời sân thì mất hẳn). */
@@ -3530,7 +3532,9 @@ function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | nul
   const you = state.players[side];
   const foeSide = (1 - side) as Side;
   if (handPicks(you).length === 0) return note(state, "Không có lá trên tay để bỏ.");
-  const cost = grabNums(skillText(EGG), /tiêu(?:\s*hao)?\s*(\d+)\s*mana/gi)[0] ?? 1;
+  // Lần đầu tốn 1 mana và mình rút thêm 1 lá; các lần sau 0 mana (chủ game 21/11, tính riêng từng Quả trứng trên sân).
+  const first = !mon.reborn;
+  const cost = first ? 1 : 0;
   const before = you.stars;
   const paid = pay(you, cost);
   if (!paid) return note(state, `Cần ${cost} gem.`);
@@ -3540,8 +3544,9 @@ function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | nul
   const foePicks = handPicks(foe);
   const foeDropped = foePicks.length ? dropPick(foe, foePicks[Math.floor(Math.random() * foePicks.length)]) ?? foe : foe;
   const foeDrawn = freeDraws(foeDropped, 1);
-  const yourDrawn = freeDraws(dropped, 2);
-  let next = patch(state, side, yourDrawn.player);
+  const yourDrawn = freeDraws(dropped, first ? 2 : 1);
+  const marked = { ...yourDrawn.player, field: yourDrawn.player.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, reborn: true } : unit)) as Player["field"] };
+  let next = patch(state, side, marked);
   next = patch(next, foeSide, foeDrawn.player);
   next = pingStars({ ...next, seq: next.seq + 1 }, side, before, paid.stars);
   // Viết hoa "Bạn"/"Đối thủ" để trang trận đổi đúng góc nhìn; tránh cụm "Đối thủ rút" (trang trận che tên lá rút ở đó).

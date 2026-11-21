@@ -1473,7 +1473,7 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
-test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới tiêu 1 mana, bỏ lá chọn, đối thủ bỏ 1 lá ngẫu nhiên, đối thủ rút 1, mình rút 2", () => {
+test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới lần đầu 1 mana + mình rút 2, các lần sau 0 mana + rút 1; đối thủ bỏ 1 ngẫu nhiên và rút 1", () => {
   let s = board({ 0: ["qua-trung-sinh-menh", {}] }, {});
   s = {
     ...s,
@@ -1486,17 +1486,23 @@ test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới tiêu 1 mana, bỏ l�
   assert.equal(none.players[0].orb, 3, none.live);
   const n = D.useSkill(s, egg, null, 0, false, "s:0");
   assert.equal(n.players[0].orb, 2, n.live);
-  assert.ok(!n.players[0].hand.includes("hoan-doi") || n.players[0].hand.indexOf("hoan-doi") > 0 || left(s.players[0]) - left(n.players[0]) === 2, "lá chọn bị bỏ");
-  assert.equal(n.players[0].reserve.length + n.players[0].hand.length, 2 - 1 + 2, "bỏ 1 rút 2");
+  assert.equal(n.players[0].reserve.length + n.players[0].hand.length, 2 - 1 + 2, "lần đầu: bỏ 1 rút 2");
   assert.equal(n.players[1].reserve.length + n.players[1].hand.length, 2 - 1 + 1, "đối thủ bỏ 1 rút 1");
   assert.equal(left(s.players[0]) - left(n.players[0]), 2);
   assert.equal(left(s.players[1]) - left(n.players[1]), 1);
   assert.equal(n.players[0].draws, 1, "rút miễn phí, không tính lá rút của vòng");
   assert.ok(at(n, 0, 0).used, "dùng xong là đã hành động");
+  assert.ok(at(n, 0, 0).reborn, "đánh dấu đã dùng lần đầu");
   assert.match(n.live, /Sinh mệnh mới/);
-  // Đã hành động: không dùng lại trong vòng.
-  const again = D.useSkill({ ...n, turn: 0 }, egg, null, 0, false, "r:0");
-  assert.equal(again.players[0].orb, n.players[0].orb, again.live);
+  // Lần sau (vòng sau, quái hết hành động): 0 mana, mình chỉ rút 1.
+  const next = { ...n, turn: 0, players: n.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m ? { ...m, used: false, dim: false } : m)) } : p)) };
+  const again = D.useSkill(next, egg, null, 0, false, "r:0");
+  assert.equal(again.players[0].orb, next.players[0].orb, "lần sau không tốn mana: " + again.live);
+  assert.equal(left(next.players[0]) - left(again.players[0]), 1, "lần sau mình rút 1");
+  assert.equal(left(next.players[1]) - left(again.players[1]), 1, "đối thủ vẫn rút 1");
+  // Đã hành động trong vòng: không dùng lại ngay.
+  const same = D.useSkill({ ...n, turn: 0 }, egg, null, 0, false, "r:0");
+  assert.equal(same.players[0].orb, n.players[0].orb, same.live);
 });
 
 let failed = 0;

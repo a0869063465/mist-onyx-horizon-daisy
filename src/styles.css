@@ -14761,3 +14761,9 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 /* Skill buff (chủ game 21/11): viền xanh lá như phép buff. */
 .sk3d.is-buff { --ring: #2fd072; --deep: #063a1a; --tone: #2fd072; }
 .msheet-desc-title.is-buff { color: #9ff0bd; text-shadow: 0 2px 0 #032a12, 0 0 8px rgba(47, 208, 114, 0.55); }
+/* Sinh mệnh mới (chủ game 21/11): lá chọn để bỏ có quầng ĐỎ thay tím. Chỉ bảng này, bảng Bài khởi đầu giữ tím. */
+.op.is-rebirth .op-slot.is-marked .op-card::after { background: radial-gradient(circle at 50% 45%, rgb(255 80 70 / 0.28), rgb(70 8 8 / 0.5)); }
+.op.is-rebirth .op-swirl {
+  background: conic-gradient(from 0deg, transparent 0 8%, rgb(255 140 120 / 0.95) 22%, transparent 38%, transparent 52%, rgb(224 32 28 / 0.95) 72%, transparent 88%);
+  filter: drop-shadow(0 0 calc(2 * var(--cqw)) #ff4a40);
+}

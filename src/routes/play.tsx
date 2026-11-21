@@ -9231,7 +9231,7 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
     y.push({ key: "seize", label: chipLabel(card.id, "seize"), go: () => aimSkill(0), slide: aimed(0) });
   }
   // Sinh mệnh mới: skill buff, không dùng khi Trả đòn hay đang giao tranh (chủ game 21/11).
-  if (attackable && !noSkill && !riposte && onRebirth && card.id === EGG && duel.step === "main" && afford(skillManaCost(card.id, 1)) && handPicks(you).length > 0) {
+  if (attackable && !noSkill && !riposte && onRebirth && card.id === EGG && duel.step === "main" && afford(mon.reborn ? 0 : 1) && handPicks(you).length > 0) {
     y.push({ key: "life", label: chipLabel(card.id, "life"), go: () => onRebirth(uid) });
   }
   if (attackable && !noSkill && card.id === "mat-xanh-huy-diet" && !mon.gaze && you.orb >= 1) {

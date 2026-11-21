@@ -557,11 +557,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 0,
     "hp": 1,
-    "text": "c0bf2086",
+    "text": "4911611a",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-21"
   },
   "chien-binh-ky-nhong": {
     "kind": "monster",

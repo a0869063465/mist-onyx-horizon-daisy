@@ -549,7 +549,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Quả trứng sinh mệnh",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Sinh mệnh mới**__\nTiêu hao 1 mana, ở lượt của mình, bạn bỏ 1 lá bài bạn chọn trên tay, đối phương bỏ 1 lá ngẫu nhiên, sau đó đối phương rút 1 lá, còn bạn rút 2 lá bài.",
+    "skill": "__**Sinh mệnh mới**__\nTiêu hao 1 (lần đầu, 0 các lần sau) mana, bạn bỏ 1 lá bài bạn chọn trên tay, đối phương bỏ 1 lá ngẫu nhiên, sau đó cả hai bên đều rút 1 lá bài.\nNếu đây là lần đầu tiên kích hoạt sinh mệnh mới thì bạn rút thêm 1 lá nữa.",
     "atk": 0,
     "def": 1,
     "mdef": 0,
