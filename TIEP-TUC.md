@@ -1,6 +1,6 @@
 # Việc đang dở (đọc trước khi làm)
 
-## Icon skill vẽ tay: BẢN HIỆN TẠI (21/11, Sonnet 5.5 high, nhánh `ccr-f07c0313-bc7ych`, CHƯA áp `main`) — đọc mục này thay mục cũ ngay dưới
+## Icon skill vẽ tay: BẢN HIỆN TẠI (21/11, Sonnet 5.5 high, nhánh `ccr-f07c0313-bc7ych`, ĐÃ ÁP `main` 21/11 commit 19fcfed) — đọc mục này thay mục cũ ngay dưới
 1. Hai bộ ảnh RIÊNG, đừng gộp: `public/ui/skill/<id>.webp` (256 px, cắt tròn theo khuôn vòng viền chủ game, giữ nền tròn, bỏ chữ + khung; dùng ở MỌI chỗ có vòng viền: bảng quái, nút trên quái, hand-peek, act-notes, icon thanh phản ứng) và `public/ui/skill-c/<id>.webp` (cùng hình, mép mờ dần thành trong suốt đi vào trong (dày 26% bán kính, mép ngoài dời ra +10% bán kính để chạm viền đen, KHÔNG có vầng đen bên ngoài; chủ game chốt 21/11), CHỈ cho hình giữa màn hình trong trận, `SkillGlyph center` ở `orbCard` play.tsx, CSS `.rx-show-skill .skill-art`). Chủ game 21/11: chỉ sửa icon giữa màn; mọi chỗ khác KHÔNG đụng. Bản vầng đen đặc (làm trên cả bộ chung) bị bác: nhìn như bệt đen che mất glow xanh.
 2. Cách làm ảnh: khuôn tròn = vòng viền trong ảnh có viền chủ game gửi (Hough + dò đỉnh sáng), nội dung = ảnh không viền; xoá chữ bằng cách chỉ lấy điểm ảnh trong vòng. Part 2 ghép 12 hình option 1 + 8 hình option 2; Hiến Tế lấy từ part 6; Súng phóng lựu dùng tên lửa (ảnh không viền cũ), part 4 khuôn lấy từ ảnh có viền mới `daae6dac`. Script nằm scratchpad (mất khi hết phiên): `cut2.py`, `cut4.py`, `ring.py`, `ring2.py`.
 3. Chưa thử: điện thoại, nút trên quái ngoài sân, hand-peek, act-notes bằng mắt.
