@@ -115,6 +115,8 @@ export const EVOLUTIONS: { result: string; needs: string[] }[] = [
   { result: "te-giac-chien-binh", needs: ["te-giac-be-con"] },
   { result: "rong-ngan-tuoi", needs: ["rong-con", "phu-thuy-thoi-gian"] },
   { result: "ken-ngai", needs: ["sau-non"] },
+  { result: "dong-ho-hung-bao", needs: ["dong-ho-kho-doan"] },
+  { result: "dong-ho-mong-manh", needs: ["dong-ho-kho-doan"] },
   { result: "ngai-khong-lo", needs: ["sau-non"] },
   { result: "ngai-nu-hoang", needs: ["sau-non"] },
   { result: "ngai-hoan-my", needs: ["sau-non"] },

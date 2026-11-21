@@ -145,6 +145,8 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
 
 /** Keyword từng quái, theo id quái (chủ game duyệt 10/11: đa phần 1, tối đa 2, chỉ cái đặc trưng chính). */
 export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
+  // Đồng hồ khó đoán (chủ game 21/11): dạng hung bạo có Đòn đánh phép.
+  "dong-ho-hung-bao": ["phep"],
   "chien-si-gam-nham": ["ben-bi"],
   "chien-binh-rong": ["ben-bi"],
   "hiep-si-ho-ve": ["ben-bi", "ho-ve"],

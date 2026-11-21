@@ -53,6 +53,8 @@ export type FieldMon = {
   stun: number;
   stance: "attack" | "guard";
   stanceUsed: boolean;
+  /** Đồng hồ khó đoán (chủ game 21/11): số vòng còn lại trước khi tự đổi trạng thái. */
+  clockLeft?: number;
   bleed: number;
   curse: boolean;
   vulnerable: number;
@@ -344,6 +346,8 @@ export type Duel = {
     keep?: Record<string, { dim: boolean; blessAtk: number; blessDmg: number; nextDef: number }>;
   } | null;
   birdAsk?: { uid: string } | null;
+  /** Đồng hồ khó đoán vừa ra sân: chủ chọn hung bạo hoặc mỏng manh; `back` = bên giữ quyền trước khi hỏi. */
+  clockAsk?: { uid: string; side: Side; back: Side } | null;
   prey?: { side: Side; aim: string; kind: "phys" | "spell" | "tru" } | null;
   preyAsk?: boolean;
   recall?: { side: Side; caps: number[] } | null;
@@ -395,6 +399,7 @@ function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon 
 }
 
 function pileFromField(mon: FieldMon): PileMon {
+  if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
   const { uid: _uid, lurk: _lurk, ...saved } = mon;
   const cap = saved.maxHp || saved.hp;
   return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
@@ -1254,9 +1259,9 @@ function withRows(player: Player): Player {
 
 function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
   const prev = state.players[side];
-  const player = gearHome(prev, envBoost(syncOrder(withRows(rawPlayer))));
+  const player = clockHidden(gearHome(prev, envBoost(syncOrder(withRows(rawPlayer)))));
   const gone = [
-    ...departed(prev.field, player.field),
+    ...departed(prev.field, player.field).map(clockBase),
     ...(prev.env && prev.env !== player.env ? [prev.env] : []),
   ];
   const spent = [...(player.spent ?? prev.spent ?? []), ...gone];
@@ -1267,7 +1272,7 @@ function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
     if (!mon || born?.[mon.uid]) return;
     born = { ...(born ?? {}), [mon.uid]: { mon: structuredClone(mon), slot: slot as Slot } };
   });
-  return { ...state, players, born };
+  return askClock({ ...state, players, born }, side);
 }
 
 /** Lá Trang bị (chủ game 10/11). */
@@ -2876,6 +2881,7 @@ function settled(state: Duel): boolean {
     !state.soulAsk &&
     !state.plumeAsk &&
     !state.birdAsk &&
+    !state.clockAsk &&
     !state.preyAsk &&
     !state.reel &&
     !state.wheel &&
@@ -8370,6 +8376,94 @@ export function answerPlume(state: Duel, yes: boolean): Duel {
   return openLash(next, side, bird.uid, attacker.uid, true, line);
 }
 
+/* ---------- Đồng hồ khó đoán (chủ game 21/11) ---------- */
+
+/** Lá đồng hồ trên tay, trong xấp, trong mộ. Ra sân thì chủ chọn 1 trong 2 dạng, mỗi 2 vòng (lượt chung) tự đổi dạng. */
+export const CLOCK = "dong-ho-kho-doan";
+export const CLOCK_FIERCE = "dong-ho-hung-bao";
+export const CLOCK_FRAIL = "dong-ho-mong-manh";
+const CLOCK_TURNS = 2;
+
+export function clockForm(id: string | null | undefined): boolean {
+  return id === CLOCK_FIERCE || id === CLOCK_FRAIL;
+}
+
+/** Dạng của đồng hồ rời sân thì lại là lá Đồng hồ khó đoán. */
+export function clockBase(id: string): string {
+  return clockForm(id) ? CLOCK : id;
+}
+
+/**
+ * Đổi dạng: công, thủ, thủ phép đổi theo chênh lệch giữa hai lá (giữ buff/debuff đang có); máu tối đa tăng bao nhiêu
+ * thì máu hiện tại tăng bấy nhiêu, máu tối đa giảm thì máu hiện tại không vượt máu tối đa mới.
+ */
+function shiftClock(mon: FieldMon, to: string): FieldMon {
+  const from = monsterCard(mon.cardId);
+  const next = monsterCard(to);
+  if (!from || !next) return mon;
+  const gain = next.hp - from.hp;
+  const maxHp = Math.max(1, (mon.maxHp || mon.hp) + gain);
+  const hp = gain > 0 ? mon.hp + gain : Math.min(mon.hp, maxHp);
+  return {
+    ...mon,
+    cardId: to,
+    atk: Math.max(0, mon.atk + next.atk - from.atk),
+    def: Math.max(0, mon.def + next.def - from.def),
+    mdef: Math.max(0, mon.mdef + next.mdef - from.mdef),
+    maxHp,
+    hp,
+    clockLeft: CLOCK_TURNS,
+  };
+}
+
+/** Đồng hồ úp (quái ẩn): không hỏi, đứng ở dạng hung bạo. */
+function clockHidden(player: Player): Player {
+  if (!player.field.some((mon) => mon?.cardId === CLOCK && mon.lurk)) return player;
+  return { ...player, field: player.field.map((mon) => (mon?.cardId === CLOCK && mon.lurk ? shiftClock(mon, CLOCK_FIERCE) : mon)) as Player["field"] };
+}
+
+/** Đồng hồ vừa ra sân: hỏi chủ của nó chọn dạng. Đang ở lượt chính thì quyền tạm về chủ đồng hồ tới khi chọn xong. */
+function askClock(state: Duel, side: Side): Duel {
+  if (state.clockAsk) return state;
+  const mon = state.players[side].field.find((unit) => unit?.cardId === CLOCK && !unit.lurk) ?? null;
+  if (!mon) return state;
+  return { ...state, clockAsk: { uid: mon.uid, side, back: state.turn }, ...(state.step === "main" ? { turn: side } : {}) };
+}
+
+/** Chủ đồng hồ chọn dạng: hung bạo hoặc mỏng manh. Xong thì việc vừa làm (triệu hồi…) nhường quyền như thường. */
+export function chooseClock(state: Duel, form: string): Duel {
+  const ask = state.clockAsk;
+  if (!ask || !clockForm(form)) return state;
+  const you = state.players[ask.side];
+  const mon = you.field.find((unit) => unit?.uid === ask.uid && unit.cardId === CLOCK) ?? null;
+  const open: Duel = { ...state, clockAsk: null, ...(state.step === "main" ? { turn: ask.back } : {}) };
+  if (!mon) return open;
+  const field = you.field.map((unit) => (unit?.uid === mon.uid ? shiftClock(unit, form) : unit)) as Player["field"];
+  const chosen = note(patch(open, ask.side, { ...you, field }), `${cardOf(mon).name} chọn ${monsterCard(form)?.name ?? ""}.`, "info");
+  if (chosen.clockAsk) return chosen;
+  return chosen.step === "main" && ask.back === ask.side && settled(chosen) && chosen.turn === ask.side ? yieldTurn(chosen) : chosen;
+}
+
+/** Đầu mỗi vòng: đồng hồ đang đứng (không úp) đếm lùi; hết 2 vòng thì tự đổi sang dạng kia. */
+function clockTick(state: Duel): { state: Duel; line: string } {
+  let next = state;
+  const bits: string[] = [];
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon && clockForm(mon.cardId) && !mon.lurk && mon.hp > 0)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon || !clockForm(mon.cardId) || mon.lurk || mon.hp <= 0) return mon;
+      const left = (mon.clockLeft ?? CLOCK_TURNS) - 1;
+      if (left > 0) return { ...mon, clockLeft: left };
+      const to = mon.cardId === CLOCK_FIERCE ? CLOCK_FRAIL : CLOCK_FIERCE;
+      bits.push(`${cardOf(mon).name} chuyển thành ${monsterCard(to)?.name ?? ""}.`);
+      return shiftClock(mon, to);
+    }) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return { state: next, line: bits.join(" ") };
+}
+
 export function evolveBird(state: Duel, formId: string): Duel {
   const ask = state.birdAsk;
   if (!ask) return state;
@@ -10503,7 +10597,8 @@ function endTurnCore(state: Duel): Duel {
   const eroded = erosionTick(next);
   const virused = virusTick(eroded.state);
   const lava = lavaTick(virused.state);
-  let startedTurn = lava.state;
+  const ticked = clockTick(lava.state);
+  let startedTurn = ticked.state;
   for (const at of [0, 1] as const) {
     const board = startedTurn.players[at];
     if (!board.hats) continue;
@@ -10528,7 +10623,7 @@ function endTurnCore(state: Duel): Duel {
     .join(". ");
   const offered = offerPrey(startedTurn);
   startedTurn = offered.state;
-  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, offered.line].filter(Boolean).join(" ");
+  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, ticked.line, owed.line, offered.line].filter(Boolean).join(" ");
   const mute = startedTurn.players[foe].drawLock ? " Lượt này không được rút bài." : "";
   const noted = note(stampTurn(startedTurn), extra ? `${due}${mute} ${extra}` : `${due}${mute}`);
   const mends = [...(noted.mends ?? []), ...vowHeals];
@@ -10851,6 +10946,7 @@ function askedNow(prev: Duel, next: Duel): boolean {
       (next.parley && !prev.parley) ||
       (next.preyAsk && !prev.preyAsk) ||
       (next.birdAsk && !prev.birdAsk) ||
+      (next.clockAsk && !prev.clockAsk) ||
       (next.plumeAsk && !prev.plumeAsk) ||
       (next.recall && !prev.recall) ||
       (next.legs && !prev.legs),
@@ -10909,6 +11005,7 @@ export function aiAnswerAsk(state: Duel): Duel | null {
     return withLive(pickParley(state, pick.uid));
   }
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
+  if (state.clockAsk?.side === 1) return withLive(chooseClock(state, CLOCK_FIERCE));
   if (state.plumeAsk && state.turn === 1) return withLive(answerPlume(state, state.players[1].orb >= harpyKit(state.players[1].field.find((mon) => mon?.uid === state.plumeAsk?.bird)?.cardId ?? "").lash));
   if (state.recall?.side === 1) return withLive(confirmRecall(state, chooseRecall(state.players[1].reserve, state.recall.caps, state.players[1].orb)));
   if (state.legs && state.turn === 1 && state.step === "main") {

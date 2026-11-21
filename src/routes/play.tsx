@@ -122,6 +122,10 @@ import {
   answerPlume,
   answerPrey,
   evolveBird,
+  chooseClock,
+  CLOCK_FIERCE,
+  CLOCK_FRAIL,
+  clockForm,
   wallAlly,
   confirmSwap,
   confirmRecall,
@@ -4292,7 +4296,7 @@ function PlayPage() {
   function queueStep(prev: Duel, next: Duel): { next: Duel; kind: "act" | "answer" } | null {
     if (!mine || tutorial || next.winner !== null || next.mid !== prev.mid) return null;
     // A choice the rules ask for while an action resolves (Kỵ sĩ bóng tối's stance, a pick of cards…) is made at once.
-    if (prev.parley || next.parley || prev.soulAsk || prev.plumeAsk || prev.birdAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
+    if (prev.parley || next.parley || prev.soulAsk || prev.plumeAsk || prev.birdAsk || prev.clockAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
     const declared =
       !queue &&
       prev.step === "main" &&
@@ -6817,6 +6821,18 @@ function PlayPage() {
             setRebirthAsk(null);
             apply(useSkill(duel, uid, null, 0, false, pick));
           }}
+        />
+      ) : null}
+      {duel.clockAsk && duel.clockAsk.side === viewer && !watch ? (
+        <RebirthPanel
+          kind="is-clock"
+          title="Đồng hồ khó đoán"
+          sub="Chọn trạng thái"
+          cards={[CLOCK_FIERCE, CLOCK_FRAIL].map((id) => {
+            const card = monsterCard(id);
+            return { pick: id, face: card ? <CardFace monster={card} hand /> : null };
+          })}
+          onConfirm={(form) => apply(chooseClock(duel, form))}
         />
       ) : null}
       {trial && duel ? (
@@ -9579,6 +9595,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
         ? mon.blocksLeft
       : (mon.cardId === "kazura" || mon.cardId === "kizuran") && allies.some((unit) => unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0)
         ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
+      : clockForm(mon.cardId) && !mon.lurk
+        ? mon.clockLeft ?? 2
       : mon.cardId === "ken-ngai"
         ? mon.level ?? 0
         : mon.cardId === "con-thinh-no-cua-hai-vuong"

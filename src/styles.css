@@ -14767,3 +14767,6 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   background: conic-gradient(from 0deg, transparent 0 8%, rgb(255 140 120 / 0.95) 22%, transparent 38%, transparent 52%, rgb(224 32 28 / 0.95) 72%, transparent 88%);
   filter: drop-shadow(0 0 calc(2 * var(--cqw)) #ff4a40);
 }
+
+/* Đồng hồ khó đoán (chủ game 21/11): bảng chọn trạng thái khi ra sân, 2 lá, không huỷ được. */
+.op.is-clock .rb-row { grid-template-columns: repeat(2, calc(32 * var(--cqw))); padding: calc(1 * var(--cqh)) calc(1 * var(--cqw)); }

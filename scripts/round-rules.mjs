@@ -1473,6 +1473,46 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
+test("Đồng hồ khó đoán (21/11): ra sân chọn hung bạo/mỏng manh, tự đổi sau mỗi 2 vòng, máu tối đa tăng thì máu tăng theo; úp thì hung bạo, không đổi", () => {
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 2, reserve: i === 0 ? [{ id: "dong-ho-kho-doan", hp: 2, maxHp: 2 }] : p.reserve })) };
+  const placed = D.summon(s, 0, 0);
+  assert.ok(placed.clockAsk, "hỏi chọn trạng thái: " + placed.live);
+  assert.equal(placed.turn, 0, "chưa chọn xong thì chưa nhường quyền");
+  const fierce = D.chooseClock(placed, "dong-ho-hung-bao");
+  const f = at(fierce, 0, 0);
+  assert.equal(f.cardId, "dong-ho-hung-bao");
+  assert.deepEqual([f.atk, f.def, f.mdef, f.hp, f.maxHp], [5, 0, 0, 6, 6]);
+  assert.equal(fierce.turn, 1, "chọn xong thì nhường quyền như triệu hồi");
+  assert.equal(fierce.clockAsk, null);
+  assert.ok(D.spellAtk(f), "hung bạo có Đòn đánh phép");
+  const one = closeRound(fierce);
+  assert.equal(at(one, 0, 0).cardId, "dong-ho-hung-bao", "1 vòng: chưa đổi");
+  assert.equal(at(one, 0, 0).clockLeft, 1);
+  const two = closeRound(one);
+  const t = at(two, 0, 0);
+  assert.equal(t.cardId, "dong-ho-mong-manh", "2 vòng: đổi sang mỏng manh " + two.live);
+  assert.deepEqual([t.atk, t.hp, t.maxHp], [0, 1, 1]);
+  assert.equal(D.spellAtk(t), false, "mỏng manh không có Đòn đánh phép");
+  const four = closeRound(closeRound(two));
+  assert.equal(at(four, 0, 0).cardId, "dong-ho-hung-bao", "thêm 2 vòng: về hung bạo");
+  assert.deepEqual([at(four, 0, 0).hp, at(four, 0, 0).maxHp], [6, 6], "máu tối đa +5 thì máu +5");
+  // Chọn mỏng manh lúc ra sân.
+  const frail = at(D.chooseClock(placed, "dong-ho-mong-manh"), 0, 0);
+  assert.deepEqual([frail.cardId, frail.atk, frail.hp, frail.maxHp], ["dong-ho-mong-manh", 0, 1, 1]);
+  // Máy (bên 1) tự chọn hung bạo.
+  const mine = { ...placed, mode: "ai", clockAsk: { ...placed.clockAsk, side: 1 } };
+  assert.equal(D.aiAnswerAsk(mine) === null, false);
+  // Úp (quái ẩn): không hỏi, hung bạo, không tự đổi.
+  withHidden({ "dong-ho-kho-doan": 1 }, () => {
+    const hid = D.summon(s, 0, 0);
+    assert.equal(hid.clockAsk ?? null, null, "úp thì không hỏi");
+    assert.equal(at(hid, 0, 0).cardId, "dong-ho-hung-bao");
+    const later = closeRound(closeRound(hid));
+    if (at(later, 0, 0)) assert.equal(at(later, 0, 0).cardId, "dong-ho-hung-bao", "úp thì không đổi");
+  });
+});
+
 test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới lần đầu 1 mana + mình rút 2, các lần sau 0 mana + rút 1; đối thủ bỏ 1 ngẫu nhiên và rút 1", () => {
   let s = board({ 0: ["qua-trung-sinh-menh", {}] }, {});
   s = {

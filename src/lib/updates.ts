@@ -1088,6 +1088,7 @@ export const PENDING_NOTES: string[] = [
   "Quái bị khoá, trói, choáng hoặc tê liệt (kể cả quái điểu nhân, nói chung là không hành động được) hay không thể chặn (Hoa ăn thịt người, Kén) không còn chớp phản ứng hay chớp chặn.",
   "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
   "Thêm Quả trứng sinh mệnh (2 sao, công 0, thủ 1, thủ phép 0, máu 1) với skill buff Sinh mệnh mới: ở lượt của bạn, bỏ 1 lá bạn chọn trên tay, đối thủ bỏ 1 lá ngẫu nhiên, cả hai bên rút 1 lá; tiêu hao 1 mana lần đầu, 0 các lần sau, và lần đầu bạn rút thêm 1 lá.",
+  "Thêm Đồng hồ khó đoán (2 sao, 1 mana, công 2, máu 2) với skill Tiktok: ra sân chọn Đồng hồ hung bạo (công 5, máu 6, Đòn đánh phép) hoặc Đồng hồ mỏng manh (công 0, máu 1), mỗi 2 lượt tự đổi sang dạng kia; khi úp thì đứng ở dạng hung bạo, không đổi.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -557,6 +557,18 @@ export const MONSTERS: MonsterCard[] = [
     "art": "qua-trung-sinh-menh"
   },
   {
+    "id": "dong-ho-kho-doan",
+    "name": "Đồng hồ khó đoán",
+    "stars": 2,
+    "gems": 1,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "dong-ho-kho-doan"
+  },
+  {
     "id": "chien-binh-ky-nhong",
     "name": "Chiến binh kỳ nhông",
     "stars": 2,
@@ -758,6 +770,30 @@ export const FORMS: MonsterCard[] = [
     "mdef": 1,
     "hp": 6,
     "art": "chien-binh-cuoi-rong"
+  },
+  {
+    "id": "dong-ho-hung-bao",
+    "name": "Đồng hồ hung bạo",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 5,
+    "def": 0,
+    "mdef": 0,
+    "hp": 6,
+    "art": "dong-ho-hung-bao"
+  },
+  {
+    "id": "dong-ho-mong-manh",
+    "name": "Đồng hồ mỏng manh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "dong-ho-mong-manh"
   },
   {
     "id": "phu-thuy-tap-su",
