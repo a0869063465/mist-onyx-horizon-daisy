@@ -7965,6 +7965,7 @@ function PlayPage() {
               motion={motion}
               veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
               unveil={mon ? unveil[mon.uid] : undefined}
+              fog={Boolean(mon && lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
               decoy={Boolean(mon && !mon.cage && mon.cardId === "chien-binh-lan-khuat" && (mon.shown ?? 0) > 0)}
               allies={duel.players[side].field}
@@ -9726,6 +9727,7 @@ function BoardSlot({
   alertColor,
   lurk = false,
   unveil,
+  fog = false,
   veil = false,
   mask = false,
   decoy = false,
@@ -9780,6 +9782,7 @@ function BoardSlot({
   lurk?: boolean;
   /** Quái ẩn vừa lật: `own` lật bài, `foe` xoá sương mù. */
   unveil?: "own" | "foe";
+  fog?: boolean;
   veil?: boolean;
   mask?: boolean;
   decoy?: boolean;
@@ -9865,6 +9868,7 @@ function BoardSlot({
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>
         {lurk && !veil ? <img className="lurk-back" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
+        {fog || unveil === "foe" ? <img className={`lurk-fog${unveil === "foe" ? " is-out" : ""}`} src="/ui/suong-mu-dung.webp" alt="" draggable={false} /> : null}
         {unveil === "foe" ? <FogWipe /> : null}
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
