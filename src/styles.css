@@ -14753,3 +14753,12 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .sk3d-core:has(.skill-art)::after, .rx-gem-core:has(.skill-art)::after { display: none; }
 .rx-show-skill { position: relative; display: block; width: 100%; aspect-ratio: 1; }
 .rx-show-skill .skill-art { left: 0; top: 0; width: 100%; height: 100%; }
+
+/* Sân động Rừng rậm / Bóng tối (chủ game 21/11): video nằm trên ảnh bàn, ảnh tĩnh làm nền chờ. */
+.env-field { position: absolute; left: 0; width: 100%; pointer-events: none; overflow: hidden; }
+.env-field > img, .env-field > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.env-field > video { opacity: 0; transition: opacity 0.6s ease; }
+.env-field > video.is-on { opacity: 1; }
+/* Bàn B: phần sân dưới của video bị cắt trước viền HUD (HUD của B nằm thấp hơn), mờ dần vào nền của B. */
+.env-field.is-fade { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); }
+.env-pill { position: absolute; pointer-events: none; }

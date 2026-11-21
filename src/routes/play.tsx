@@ -1,3 +1,4 @@
+import { EnvField, hasEnvField } from "@/components/game/env-field";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { KeywordRow } from "@/components/game/keyword-row";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -6867,6 +6868,8 @@ function PlayPage() {
       >
         <div className="diorama">
         <BoardArt src={artTop} bottom={artBottom} cut={cut} />
+        {hasEnvField(foe.env) && <EnvField key={`t-${foe.env}`} env={foe.env as string} half="top" board={cut.id} />}
+        {hasEnvField(you.env) && <EnvField key={`b-${you.env}`} env={you.env as string} half="bot" board={cut.id} />}
         <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
         {(() => {
           // Tay đối thủ (chủ game 28/10): lá úp xoè trong khay để bài (băng rôn đỏ ở chính giữa trên cùng), nhìn là thấy
