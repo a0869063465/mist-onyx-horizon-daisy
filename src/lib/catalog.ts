@@ -164,7 +164,7 @@ export const MONSTERS: MonsterCard[] = [
     "id": "linh-chien-da-khong-lo",
     "name": "Lính chiến đá khổng lồ",
     "stars": 2,
-    "gems": 1,
+    "gems": 2,
     "skill": "**__Tường thành__**: \nNội tại: khi ta trên sân, quái địch không thể chọn mục tiêu tấn công khác ngoài ta.\nNội tại: với mỗi đợt công kích phòng ngự của ta giảm đi 1.",
     "atk": 2,
     "def": 3,

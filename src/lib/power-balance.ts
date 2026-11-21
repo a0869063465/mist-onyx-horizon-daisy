@@ -459,7 +459,7 @@ export const BALANCE_LOG: BalanceEntry[] = [
     at: "2026-11-21",
     wave: 38,
     tone: "shift",
-    stats: { atk: { from: 1, to: 2 }, def: { from: 2, to: 3 }, mdef: { from: 2, to: 3 }, hp: { from: 8, to: 6 } },
+    stats: { atk: { from: 1, to: 2 }, def: { from: 2, to: 3 }, mdef: { from: 2, to: 3 }, hp: { from: 8, to: 6 }, mana: { from: 1, to: 2 } },
     notes: ["Tường thành thành nội tại: quái địch chỉ được chọn Lính đá làm mục tiêu tấn công", "Mỗi đợt công kích trúng Lính đá thì thủ và thủ phép giảm 1, vĩnh viễn", "Bỏ đỡ đòn cho đồng minh"],
   },
 ];
