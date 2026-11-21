@@ -393,7 +393,6 @@ function faceSkill(id: string, index: number) {
     id === "rong-ac-ma" ||
     id === "rong-con" ||
     id === "rong-ngan-tuoi" ||
-    id === "sua-hut-ma-phap" ||
     id === "con-thinh-no-cua-hai-vuong" ||
     (id === "rong-phun-hoa-cau" && index === 1) ||
     (id === "ga-he-dang-so" && index === 1) ||

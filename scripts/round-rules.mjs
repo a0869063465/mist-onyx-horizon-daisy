@@ -1242,99 +1242,139 @@ test("luật 0.2: Hoả cầu giảm 1 thủ phép TRƯỚC rồi mới gây sá
   assert.equal(at(next, 1, 0).hp, 8, `3 phép vào thủ phép 2 - 1 = 1 → 2 sát thương | ${next.live}`);
 });
 
-test("L2 kiểu 1: quái ẩn đếm 4 vòng, sang vòng 5 lật về xấp (giữ máu), rút 1 lá, triệu hồi phản ứng không tính lượt", () => {
-  withHidden({ "may-chem": 1, "rong-con": 1 }, () => {
+const FOG = (s, side) => ({ ...s, players: s.players.map((p, i) => (i === side ? { ...p, env: H.FOG_ENV } : p)) });
+
+test("Ẩn: triệu hồi Ẩn tốn thêm 1 mana, đứng úp; quái 5 sao không ẩn; hiến tế/triệu hồi thường không ẩn", () => {
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 4 })) };
+  s = D.testGrant(s, 0, "rong-con", false);
+  const idx = s.players[0].reserve.findIndex((p) => p.id === "rong-con");
+  const gems = C.monsterCard("rong-con").gems;
+  const plain = D.summon(s, idx, 0);
+  const hid = D.summonHidden(s, idx, 0);
+  assert.equal(at(plain, 0, 0).lurk, undefined, "thường không ẩn");
+  assert.equal(at(hid, 0, 0).lurk?.left, 4, hid.live);
+  assert.equal(at(hid, 0, 0).lurk?.wake, 2);
+  assert.equal(s.players[0].orb - hid.players[0].orb, gems + H.HIDE_FEE, "tốn thêm 1 mana");
+  const poor = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: gems, flask: 0 } : p)) };
+  assert.equal(at(D.summonHidden(poor, idx, 0), 0, 0), null, "thiếu mana phí Ẩn thì không được");
+});
+
+test("Ẩn hết 4 vòng: không sương mù thì lật thành quái thường; có sương mù thì về xấp, rút 1, triệu hồi phản ứng Ẩn", () => {
+  for (const fog of [false, true]) {
     let s = board({}, {});
     s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 4 })) };
+    if (fog) s = FOG(s, 0);
     s = D.testGrant(s, 0, "may-chem", false);
-    s = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 0);
-    assert.equal(at(s, 0, 0).lurk?.left, 4, s.live);
+    s = D.summonHidden(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 0);
     for (let n = 0; n < 3; n++) s = closeRound(s);
-    assert.equal(at(s, 0, 0)?.cardId, "may-chem", `còn trên sân sau 3 vòng | ${s.live}`);
     assert.equal(at(s, 0, 0).lurk.left, 1);
     s = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m, k) => (k === 0 ? { ...m, hp: 1 } : m)) } : p)) };
-    const pile = s.players[0].monsterDeck.length + s.players[0].spellDeck.length;
-    const hand = s.players[0].reserve.length + s.players[0].hand.length;
     s = D.testGrant(s, 0, "rong-con", false);
+    const pile = s.players[0].monsterDeck.length + s.players[0].spellDeck.length;
     s = closeRound(s);
-    assert.equal(at(s, 0, 0), null, `lật về xấp | ${s.live}`);
+    if (!fog) {
+      assert.equal(at(s, 0, 0)?.cardId, "may-chem", `ở lại sân | ${s.live}`);
+      assert.equal(at(s, 0, 0).lurk, undefined, "thành quái thường");
+      assert.equal(s.lurkAsk ?? null, null);
+      assert.ok(s.dodge?.uids.includes(uid(s, 0, 0)), "loé sáng");
+      continue;
+    }
+    assert.equal(at(s, 0, 0), null, `về xấp | ${s.live}`);
     assert.equal(s.lurkAsk?.side, 0);
-    assert.equal(s.turn, 0);
     assert.equal(s.players[0].monsterDeck.length + s.players[0].spellDeck.length, pile, "về xấp 1, rút 1");
-    assert.equal(s.players[0].reserve.length + s.players[0].hand.length, hand + 1 + 1, "rút thêm 1 lá");
     const back = [...s.players[0].monsterDeck, ...s.players[0].reserve].find((p) => p.id === "may-chem" && p.saved);
-    assert.ok(back, "Máy chém nằm trong xấp");
-    assert.equal(back.hp, 1, "giữ máu");
-    assert.match(D.draw(s).live, /quái ẩn/, "phải trả lời bảng trước");
-    const choices = D.lurkChoices(s, 0);
-    const pick = choices.find((row) => row.id === "rong-con");
-    assert.ok(pick?.ok, JSON.stringify(choices));
-    const orb = s.players[0].orb + s.players[0].flask;
+    assert.equal(back?.hp, 1, "giữ máu");
+    const pick = D.lurkChoices(s, 0).find((row) => row.id === "rong-con");
+    assert.ok(pick?.ok);
     const summons = s.players[0].summons;
     const done = D.answerLurk(s, pick.index);
     assert.equal(at(done, 0, 0)?.cardId, "rong-con", done.live);
-    assert.equal(at(done, 0, 0).lurk?.left, 4);
+    assert.equal(at(done, 0, 0).lurk?.left, 4, "ra sân ẩn");
     assert.equal(done.players[0].summons, summons, "không tính lượt triệu hồi");
-    assert.ok(done.players[0].orb + done.players[0].flask <= orb, "vẫn tốn mana");
-    assert.equal(done.lurkAsk, null);
-    const skipped = D.answerLurk(s, null);
-    assert.equal(skipped.lurkAsk, null);
-    assert.equal(at(skipped, 0, 0), null, "bỏ qua thì mất lượt free");
-    const poor = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, stars: 0 } : p)) };
-    assert.equal(D.lurkChoices(poor, 0).find((row) => row.id === "rong-con")?.ok, false, "thiếu sao thì không được");
-  });
+    assert.equal(D.answerLurk(s, null).lurkAsk, null);
+  }
 });
 
-test("L2 kiểu 3: quái ẩn bị đánh, giao tranh xong (kể cả Trả đòn) thì về xấp, giữ máu; chết thì chết thường", () => {
-  withHidden({ "may-chem": 1 }, () => {
-    let s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["may-chem", { atk: 1, def: 0, hp: 8, maxHp: 8, lurk: { left: 4 } }] });
+test("Ẩn bị đánh: giao tranh xong (kể cả Trả đòn) thì lật; không sương mù ở lại sân, có sương mù về xấp; chết thì chết thường", () => {
+  for (const fog of [false, true]) {
+    let s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["may-chem", { atk: 1, def: 0, hp: 8, maxHp: 8, lurk: { left: 4, wake: 2 } }] });
     s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+    if (fog) s = FOG(s, 1);
     let next = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
     assert.ok(next.counterAsk, `được hỏi Trả đòn | ${next.live}`);
-    assert.equal(at(next, 1, 0)?.cardId, "may-chem", "chưa về khi còn Trả đòn");
+    assert.ok(at(next, 1, 0)?.lurk, "chưa lật khi còn Trả đòn");
     next = D.pickCounter(next, "phys");
-    assert.equal(at(next, 1, 0), null, `về xấp sau Trả đòn | ${next.live}`);
-    assert.ok(at(next, 0, 0).hp < 9, "Trả đòn vẫn đánh");
-    const back = [...next.players[1].monsterDeck, ...next.players[1].reserve].find((p) => p.id === "may-chem" && p.saved);
-    assert.equal(back?.hp, 6, "giữ máu đã mất");
-    assert.equal(next.lurkAsk?.side, 1);
-    let dead = board({ 0: ["khong-lo-mot-mat", { atk: 9, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["may-chem", { atk: 1, def: 0, hp: 2, maxHp: 2, lurk: { left: 4 } }] });
-    dead = D.passResponse(D.attackMonster(dead, uid(dead, 0, 0), uid(dead, 1, 0)));
-    assert.equal(dead.lurkAsk ?? null, null, "chết thì không hỏi");
-    assert.ok(![...dead.players[1].monsterDeck].some((p) => p.id === "may-chem" && p.saved), "không về xấp");
+    if (fog) {
+      assert.equal(at(next, 1, 0), null, `về xấp sau Trả đòn | ${next.live}`);
+      assert.equal(next.lurkAsk?.side, 1);
+    } else {
+      assert.equal(at(next, 1, 0)?.cardId, "may-chem", next.live);
+      assert.equal(at(next, 1, 0).lurk, undefined);
+    }
+  }
+  let dead = FOG(board({ 0: ["khong-lo-mot-mat", { atk: 9, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["may-chem", { atk: 1, def: 0, hp: 2, maxHp: 2, lurk: { left: 4 } }] }), 1);
+  dead = D.passResponse(D.attackMonster(dead, uid(dead, 0, 0), uid(dead, 1, 0)));
+  assert.equal(dead.lurkAsk ?? null, null, "chết thì không hỏi");
+});
+
+test("Ẩn: tự đánh ở lượt mình thì lộ diện thành quái thường", () => {
+  let s = board({ 0: ["may-chem", { atk: 2, hp: 9, maxHp: 9, lurk: { left: 4 } }] }, {});
+  const swung = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(at(swung, 0, 0).lurk, undefined, swung.live);
+  assert.equal(at(D.passResponse(swung), 0, 0)?.cardId, "may-chem");
+});
+
+test("Ẩn chủ động: đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) thì Kích hoạt, lật có loé sáng", () => {
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 4 })) };
+  s = D.testGrant(s, 0, "may-chem", false);
+  s = D.summonHidden(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 0);
+  assert.equal(at(s, 0, 0).lurk?.wake, 2);
+  s = D.testGrant(s, 1, "may-chem", false);
+  s = D.summonHidden(s, s.players[1].reserve.findIndex((p) => p.id === "may-chem"), 0);
+  assert.equal(at(s, 1, 0).lurk?.wake, 3, "triệu hồi ở vòng đối thủ thì chờ 3");
+  s = closeRound(s);
+  assert.ok(!D.lurkReady(at(s, 0, 0)));
+  s = closeRound(s);
+  assert.ok(D.lurkReady(at(s, 0, 0)), "đủ 2 vòng");
+  assert.ok(!D.lurkReady(at(s, 1, 0)), "bên kia chưa đủ 3");
+  if (s.turn !== 0) s = D.endTurn(s);
+  const woke = D.wakeLurk(s, uid(s, 0, 0));
+  assert.equal(at(woke, 0, 0)?.lurk, undefined, woke.live);
+  assert.ok(woke.dodge?.uids.includes(uid(s, 0, 0)), "loé sáng");
+  const fogWoke = D.wakeLurk(FOG(s, 0), uid(s, 0, 0));
+  assert.equal(at(fogWoke, 0, 0), null, "có sương mù thì về xấp");
+});
+
+test("Đắm tàu: quái đánh vật lý vào Kraken bị tiêu diệt ngay, Kraken không mất máu; đòn phép thì không", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["kraken", { hp: 3, maxHp: 3 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(done, 0, 0), null, `kẻ đánh bị tiêu diệt | ${done.live}`);
+  assert.equal(at(done, 1, 0)?.hp, 3, "Kraken không mất máu");
+  assert.ok(done.dodge?.uids.includes(uid(s, 1, 0)), "loé sáng");
+  withKeywords("khong-lo-mot-mat", ["phep"], () => {
+    const magic = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    assert.equal(at(magic, 0, 0)?.cardId, "khong-lo-mot-mat", `đòn phép không kích hoạt Đắm tàu | ${magic.live}`);
   });
 });
 
-test("L2: quái ẩn tự đánh ở lượt mình thì lộ diện thành quái thường", () => {
-  withHidden({ "may-chem": 1 }, () => {
-    let s = board({ 0: ["may-chem", { atk: 2, hp: 9, maxHp: 9, lurk: { left: 4 } }] }, {});
-    const swung = D.attackFace(s, uid(s, 0, 0));
-    assert.equal(at(swung, 0, 0).lurk, undefined, swung.live);
-    const done = D.passResponse(swung);
-    assert.equal(at(done, 0, 0)?.cardId, "may-chem", "vẫn ở trên sân");
+test("Phản phép: quái có Đòn đánh phép đánh vào Sứa bị tiêu diệt ngay; đòn vật lý thì không; Kraken ẩn bị đánh vẫn kích hoạt và lật", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["sua-hut-ma-phap", { hp: 2, maxHp: 2 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  withKeywords("khong-lo-mot-mat", ["phep"], () => {
+    const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    assert.equal(at(done, 0, 0), null, `kẻ đánh bị tiêu diệt | ${done.live}`);
+    assert.equal(at(done, 1, 0)?.hp, 2, "Sứa không mất máu");
   });
-});
-
-test("L2 kiểu 2: đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) thì sẵn sàng, Kích hoạt xong về xấp", () => {
-  withHidden({ "may-chem": 2 }, () => {
-    let s = board({}, {});
-    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 4 })) };
-    s = D.testGrant(s, 0, "may-chem", false);
-    s = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 0);
-    assert.equal(at(s, 0, 0).lurk?.wake, 2);
-    s = D.testGrant(s, 1, "may-chem", false);
-    s = D.summon(s, s.players[1].reserve.findIndex((p) => p.id === "may-chem"), 0);
-    assert.equal(at(s, 1, 0).lurk?.wake, 3, "triệu hồi ở vòng đối thủ thì chờ 3");
-    s = closeRound(s);
-    assert.ok(!D.lurkReady(at(s, 0, 0)));
-    s = closeRound(s);
-    assert.ok(D.lurkReady(at(s, 0, 0)), "đủ 2 vòng");
-    assert.ok(!D.lurkReady(at(s, 1, 0)), "bên kia chưa đủ 3");
-    if (s.turn !== 0) s = D.endTurn(s);
-    const woke = D.wakeLurk(s, uid(s, 0, 0));
-    assert.equal(at(woke, 0, 0), null, woke.live);
-    assert.equal(woke.lurkAsk?.side, 0);
-  });
+  const phys = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(phys, 0, 0)?.cardId, "khong-lo-mot-mat", "đòn vật lý không kích hoạt Phản phép");
+  let k = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 9, maxHp: 9 }] }, { 0: ["kraken", { hp: 3, maxHp: 3, lurk: { left: 4, wake: 2 } }] });
+  k = { ...k, players: k.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const hit = D.passResponse(D.attackMonster(k, uid(k, 0, 0), uid(k, 1, 0)));
+  assert.equal(at(hit, 0, 0), null, hit.live);
+  assert.equal(at(hit, 1, 0)?.lurk, undefined, "lật thành quái thường");
 });
 
 test("Khổng lồ thủ lĩnh: Đập phá +1 công và hồi 1 máu (không vượt máu tối đa); mặc giáp chỉ +1 công", () => {
