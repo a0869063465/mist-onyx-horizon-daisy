@@ -281,13 +281,29 @@ const bonusMap = (K = kindNow()) => { roots(); const o = ST[setId]; if (!o[K.map
 /* Ghép cặp: _pairs = [[idA, idB], ...] (mỗi lá tối đa 1 cặp). Hai lá đã ghép nằm cạnh nhau trong cùng một khung khi cùng nằm trong một danh sách. */
 let pairPicks = [], pickWhere = "";
 const pairsOf = () => { roots(); const o = ST[setId]; if (!o._pairs) o._pairs = []; return o._pairs; };
-const partnerOf = (id) => { const p = pairsOf().find((x) => x.includes(id)); return p ? p.find((y) => y !== id) : null; };
+const FRAME_MAX = 4; /* một khung chứa tối đa 4 lá */
+const groupOf = (id) => pairsOf().find((x) => x.includes(id)) || null;
+const namesOf = (ids) => ids.map((id) => (cardOf(id) || { name: id }).name).map(escS).join(" + ");
 function pairTap(c, where) {
-  const pid = partnerOf(c.id), pc = pid ? cardOf(pid) : null;
-  if (pc) {
-    open(`<h3>Huỷ ghép cặp?</h3><div class="note">${escS(c.name)} + ${escS(pc.name)}</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="del">Huỷ ghép</button></div>`);
+  const grp = groupOf(c.id);
+  if (grp) {
+    // Đang đánh dấu 1 lá ngoài khung, bấm tiếp 1 lá trong khung: thêm lá đó vào khung (xác nhận).
+    if (pairPicks.length === 1 && pickWhere === where) {
+      const a = cardOf(pairPicks[0]);
+      if (grp.length >= FRAME_MAX) {
+        open(`<h3>Khung đã đủ ${FRAME_MAX} lá</h3><div class="note">${namesOf(grp)}</div><div class="rowb"><button id="ok" class="ok">Đóng</button></div>`);
+        $("ok").onclick = close;
+        return;
+      }
+      open(`<h3>Thêm vào khung?</h3><div class="note">${escS(a.name)} → ${namesOf(grp)}</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="ok">Thêm vào khung</button></div>`);
+      $("no").onclick = () => { pairPicks = []; close(); render(); };
+      $("ok").onclick = () => { grp.push(a.id); pairPicks = []; save(); close(); render(); };
+      return;
+    }
+    // Không có lá đánh dấu: hỏi huỷ ghép lá vừa bấm (khung còn 1 lá thì khung tan).
+    open(`<h3>Huỷ ghép?</h3><div class="note">${escS(c.name)} ra khỏi khung ${namesOf(grp)}</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="del">Huỷ ghép</button></div>`);
     $("no").onclick = close;
-    $("ok").onclick = () => { const o = ST[setId]; o._pairs = pairsOf().filter((x) => !x.includes(c.id)); save(); close(); render(); };
+    $("ok").onclick = () => { const o = ST[setId]; grp.splice(grp.indexOf(c.id), 1); o._pairs = pairsOf().filter((x) => x.length >= 2); save(); close(); render(); };
     return;
   }
   if (pairPicks.includes(c.id)) pairPicks = pairPicks.filter((x) => x !== c.id);
@@ -299,16 +315,20 @@ function pairTap(c, where) {
   $("no").onclick = () => { pairPicks = []; close(); render(); };
   $("ok").onclick = () => { pairsOf().push([x.id, y.id]); pairPicks = []; save(); close(); render(); };
 }
-/* Vẽ danh sách lá; hai lá đã ghép cùng nằm trong danh sách thì vào chung một khung. */
+/* Vẽ danh sách lá; các lá cùng khung ghép cùng nằm trong danh sách thì vào chung một khung. */
 function mountList(host, ids, make) {
   const seen = new Set(), inList = new Set(ids);
   for (const id of ids) {
     if (seen.has(id)) continue;
     const c = cardOf(id); if (!c) continue;
-    const pid = partnerOf(id), pc = pid && inList.has(pid) ? cardOf(pid) : null;
-    seen.add(id);
-    if (pc) { seen.add(pid); const box = document.createElement("div"); box.className = "pairbox"; box.appendChild(make(c)); box.appendChild(make(pc)); host.appendChild(box); }
-    else host.appendChild(make(c));
+    const grp = groupOf(id), mem = grp ? grp.filter((m) => inList.has(m) && cardOf(m)) : [];
+    if (mem.length >= 2) {
+      mem.forEach((m) => seen.add(m));
+      const box = document.createElement("div"); box.className = "pairbox";
+      box.style.gridColumn = "span " + Math.min(mem.length, 4); box.style.gridTemplateColumns = "repeat(" + mem.length + ", minmax(0, 1fr))";
+      mem.forEach((m) => box.appendChild(make(cardOf(m))));
+      host.appendChild(box);
+    } else { seen.add(id); host.appendChild(make(c)); }
   }
 }
 function tile(c, onTap) {
@@ -530,7 +550,7 @@ function render() {
   $("dn").textContent = "Đã xếp: " + g.name;
   dirUi();
   { const t = targetOf(g, at);
-    $("dsub").textContent = mode === "view" ? "" : dir === "pair" ? "Đang ở chế độ ghép cặp: bấm lần lượt 2 lá để ghép, bấm một lá đã ghép để huỷ ghép. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
+    $("dsub").textContent = mode === "view" ? "" : dir === "pair" ? "Đang ở chế độ ghép cặp: bấm lần lượt 2 lá để ghép. Muốn thêm lá thứ 3, bấm 1 lá ngoài rồi bấm 1 lá trong khung (tối đa 4 lá). Bấm một lá trong khung khi chưa chọn lá nào để huỷ ghép. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
   $("nd").textContent = g.cards.length;
   $("done").innerHTML = "";
   const sub = total(g) - g.cards.length;
