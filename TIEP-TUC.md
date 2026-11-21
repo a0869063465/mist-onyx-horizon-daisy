@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Lá phép Quả trứng thiên sứ (21/11, Sonnet 5.5 medium phần lá, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
+1. Việc vừa làm: phần lá: `catalog.ts` (0 mana, chữ mô tả đúng bản chủ game), ảnh `public/art/spells/qua-trung-thien-su.jpg`, `WAITING_CARDS` (hiện trong Bộ sưu tập No.617, chưa vào gói/bộ bài), nhóm Phản đòn + tốc độ Nhanh (`spell-kinds.ts`), `fx-kinds`, `power-balance-base`, `i18n`, `card-clock` (stamp-cards, loader `/tmp/alias-register.mjs` tự viết lại), PENDING_NOTES.
+2. Hiện trạng: nhận 1 ảnh. tsc sạch; Vite kiểm: No.617, Phản đòn, Nhanh, bậc N, chưa dùng được. CHƯA có luật trong `duel.ts`/`play.tsx`. Chủ game chốt ("ok hết"): chỉ kích hoạt khi quái mình bị quái địch đánh thường hoặc dùng skill sát thương; skill nhiều mục tiêu chặn cả skill rồi 1 quái bị nhắm trả đòn; trả đòn theo luật Trả đòn hiện có nhưng bỏ phí +1 mana và quái hàng sau vẫn được; kẻ ra đòn bị mệt như bị chặn; Hấp thụ ma pháp nuốt được (thêm vào `EATABLE`). round-rules 73/74 (bài Hấp thụ nuốt Phục kích chập chờn cũ, cũng rớt khi bỏ thay đổi này).
+3. Việc sắp làm: luật = Opus 5.5 high (bỏ id khỏi `WAITING_CARDS` khi xong, thêm vào `castSpellCore`, `spellCanAnswer`, reaction-chain, máy brain.ts); chờ chủ game đổi mô hình.
+
 ## Lỗi iPad đời cũ 3:4 (17/11, Sonnet 5.5 medium, nhánh `ccr-b9b935aa-34c6k2`, ĐÃ ÁP `main` 17/11)
 1. Việc vừa làm: F3/F4 (hồi máu, phát quang, sóng nước, kiếm cánh xanh/đỏ nền đen) do Safari không phát WebM VP9 alpha. `flatFx()`/`alphaSrc()` trong preload.ts: Safari/iOS dùng bản MP4 nền đen (`public/fx/{hoi-mau,phat-quang,thuy-tru,thuy-no,thuy-xoay,dai-hong-thuy}.mp4`, `public/ui/atk-you|foe.mp4`) + `html[data-flatfx]` trộn `screen` (cuối styles.css); `fxUrl` tự đổi; hộp ma thuật (`box-fx.tsx`) bỏ video trên Safari.
 2. Hiện trạng: nhận 1 video iPad. Chưa thử trên iPad thật (mới kiểm khung mp4 có hình). F1 (kéo quái/mũi tên lệch) và F2 (số máu to giữa màn khi địch triệu hồi) CHƯA tái hiện được trên Chromium 768×1024, chưa sửa; nghi đơn vị `cqw`/`cqmin` trên Safari cũ.

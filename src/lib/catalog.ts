@@ -1074,11 +1074,18 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Khi 1 quái thú đồng minh bị nhắm đến bởi kỹ năng của đối phương, hoán đổi vị trí của nó với 1 quái thú của đối phương, cho đến hết lượt đấu.",
     "picture": "spell:hop-ma-thuat"
+  },
+  {
+    "id": "qua-trung-thien-su",
+    "name": "Quả trứng thiên sứ",
+    "gems": 0,
+    "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
+    "picture": "spell:qua-trung-thien-su"
   }
 ];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>(["qua-trung-thien-su"]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map(SPELLS.map((card) => [card.id, card]));

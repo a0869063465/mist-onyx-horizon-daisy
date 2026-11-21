@@ -1061,6 +1061,7 @@ export const PENDING_NOTES: string[] = [
   "Sửa lỗi số chỉ số to bất thường giữa màn hình khi đối thủ triệu hồi quái.",
   "Khung OK / Huỷ trước khi dùng skill hoặc phép có thêm dòng Tiêu hao x mana.",
   "Bỏ nút OK ở giữa 4 mũi tên chọn mục tiêu: bấm thẳng vào mục tiêu đang sáng.",
+  "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
 ];
 
 function remarkOf(notes: string[]) {

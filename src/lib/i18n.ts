@@ -70,6 +70,7 @@ const PAIRS: Array<[string, string]> = [
   ["Mưa ma thuật", "Magic Rain"],
   ["Hoán đổi", "Swap"],
   ["Hộp ma thuật", "Magic Box"],
+  ["Quả trứng thiên sứ", "Angel Egg"],
   ["Vòng xoáy bảo hộ", "Guard Whirl"],
   ["Ngăn chặn phòng ngự", "Defense Block"],
   ["Thanh gươm ánh sáng", "Sword of Light"],
