@@ -54,9 +54,10 @@ export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?
 
 /** A skill's icon: the painted picture when it has one (chủ game 20/11, no rim: the rim is drawn by the page), else the glyph. */
 export const hasSkillArt = (name: string) => SKILL_ART.has(name);
-export function SkillGlyph({ name }: { name: string }) {
+export function SkillGlyph({ name, center = false }: { name: string; center?: boolean }) {
   if (!SKILL_ART.has(name)) return <Glyph name={name} />;
-  return <img className="skill-art" src={`/ui/skill/${name}.webp`} alt="" draggable={false} />;
+  // `center`: the big picture in the middle of the board, with its own feathered edge (chủ game 21/11).
+  return <img className="skill-art" src={`/ui/${center ? "skill-c" : "skill"}/${name}.webp`} alt="" draggable={false} />;
 }
 
 /** Gradients the 3D glyphs and gems share; rendered once per sheet. */

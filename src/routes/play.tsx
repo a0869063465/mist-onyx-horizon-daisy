@@ -6643,7 +6643,7 @@ function PlayPage() {
       return (
         <>
           <span className="rx-show-skill">
-            <SkillGlyph name={sk.icon} />
+            <SkillGlyph name={sk.icon} center />
           </span>
           {name ? <b className="rx-show-name">{tr(name)}</b> : null}
         </>
