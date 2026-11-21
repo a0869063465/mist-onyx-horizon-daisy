@@ -114,7 +114,9 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
   "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
-  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
+  // Harpie Lady (chủ game 21/11): Giảo hoạt đứng đầu, 4 kỹ năng giữ nguyên, Tiến hoá cuối cùng. Chữ của hai mục này theo chữ
+  // lá chủ game viết (chưa có: "Giảo hoạt" trống; "Tiến hoá" tạm lấy đoạn Lông vũ cũ cho tới khi chủ game đổi).
+  "my-dieu-nhan": [P("Giảo hoạt", "card-joker"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), PP("Tiến hoá", "growth", "mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), slow(A("Dụ dỗ", "lips")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), slow(A("Gió xoáy", "tornado")), slow(A("Dụ dỗ", "lips")), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],
