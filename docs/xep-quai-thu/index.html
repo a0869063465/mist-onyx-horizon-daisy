@@ -247,7 +247,7 @@ $("sheet").onclick = (e) => { if (e.target === $("sheet")) close(); };
 function show(c) {
   const holder = (function f(list) { for (const g of list) { if (g.cards.includes(c.id)) return g; const r = f(g.children); if (r) return r; } return null; })(roots());
   const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const meta = `${c.cost}★ · Mana ${c.mana} · ${c.stats}`;
+  const meta = (c.mana === undefined ? `Bậc ${c.cost}` + (c.pw ? ` · ⚡+${c.pw}` : "") : `${c.cost}★ · Mana ${c.mana} · ${c.stats}`);
   const paras = (c.text || "").split("\n").filter(Boolean).map((t) => `<p${t.startsWith("THĂNG CẤP") ? ' class="up"' : ""}>${esc(t)}</p>`).join("");
   $("pb").innerHTML = `<div class="card"><img src="${cardSrc(c.id)}" alt=""><div><h2>${esc(c.name)}</h2><div class="meta">${meta}</div>${c.tag ? `<span class="tg">${esc(c.tag)}</span>` : ""}${paras || '<p class="c">Không có mô tả.</p>'}${holder ? `<div class="c">Đang ở nhóm: ${esc(holder.name)}</div>` : ""}</div></div>`;
   $("pop").style.display = "flex";
@@ -274,7 +274,7 @@ const bonusMap = (K = kindNow()) => { roots(); const o = ST[setId]; if (!o[K.map
 function tile(c, onTap) {
   const b = document.createElement("button");
   const kw = kwOf(c.id, KINDS.bonus).join(" · "), cd = kwOf(c.id, KINDS.cond).join(" · ");
-  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}"><span class="mn">${c.cost}★</span><span class="nm">${escS(c.name)}</span>${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
+  b.innerHTML = `<img loading="lazy" decoding="async" draggable="false" src="${cardSrc(c.id)}" alt="${c.name}">${c.mana === undefined ? "" : `<span class="mn">${c.cost}★</span><span class="nm">${escS(c.name)}</span>`}${kw ? `<span class="bk">${escS(kw)}</span>` : ""}${cd ? `<span class="bk ck">${escS(cd)}</span>` : ""}`;
   b.onclick = onTap;
   return b;
 }
