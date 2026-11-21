@@ -3,6 +3,7 @@ import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { SKILL_ICONS } from "@/lib/skill-icons";
+import { SKILL_ART } from "@/lib/skill-art-ids";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
 import { tr } from "@/lib/i18n";
@@ -49,6 +50,14 @@ export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?
       : (SKILL_ICONS[name] ?? SKILL_ICONS["info"] ?? "");
   const body = raw.replaceAll('fill="currentColor"', `fill="${fill}"`);
   return <svg className="glyph3d" viewBox="0 0 512 512" aria-hidden="true" dangerouslySetInnerHTML={{ __html: body }} />;
+}
+
+/** A skill's icon: the painted picture when it has one (chủ game 20/11, no rim: the rim is drawn by the page), else the glyph. */
+export const hasSkillArt = (name: string) => SKILL_ART.has(name);
+export function SkillGlyph({ name, center = false }: { name: string; center?: boolean }) {
+  if (!SKILL_ART.has(name)) return <Glyph name={name} />;
+  // `center`: the big picture in the middle of the board, with its own feathered edge (chủ game 21/11).
+  return <img className="skill-art" src={`/ui/${center ? "skill-c" : "skill"}/${name}.webp`} alt="" draggable={false} />;
 }
 
 /** Gradients the 3D glyphs and gems share; rendered once per sheet. */
@@ -388,7 +397,7 @@ export function MonsterSheet({
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
-          <Glyph name={skill.icon} />
+          <SkillGlyph name={skill.icon} />
         </span>
         <Rim kind={skill.slow ? "slow" : skill.kind} />
       </span>

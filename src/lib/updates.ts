@@ -1092,6 +1092,7 @@ export const PENDING_NOTES: string[] = [
   "Cục bông ma quái đổi thành Kuriboh, công 1. Giáp lá cà (tấn công, bị đánh, lao ra chặn) thì tự nổ, gây sát thương chuẩn bằng công rồi biến mất, không bị đánh trả. Công 1 thì đánh ngay không lên hàng chờ. Cấp số nhân: 1 mana, bị tiêu diệt thì ra 2 Kuriboh. Bỏ Pháo kích và Bông mềm.",
   "Kuriboh lao vào rồi nổ giữa hai lá, có hiệu ứng và âm riêng, lá biến mất ngay lúc nổ. Số cam to hơn, Cấp số nhân hiện ×2, số cam của cả hai bên chớp 3 giây đầu mỗi vòng mới.",
   "Kuriboh có tranh mới.",
+  "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
 ];
 
 function remarkOf(notes: string[]) {

@@ -19,7 +19,7 @@ import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
 import { MatchIntro, type IntroSide } from "@/components/game/match-intro";
 import { OpenerPanel, type OpenerCard } from "@/components/game/opener-panel";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
-import { ActionButton, Glyph, GlyphDefs, MonsterSheet, Rim, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
+import { ActionButton, GlyphDefs, hasSkillArt, MonsterSheet, Rim, SkillGlyph, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
@@ -6736,6 +6736,19 @@ function PlayPage() {
     if (!card) return null;
     const stats = visibleStats(mon, duel.players[orb.side].field);
     const name = orb.skill === "lash" ? chipLabel(mon.cardId, "lash") : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
+    // A skill with painted art shows just that picture, feathered and glowing, without a rim (chủ game 20/11), then it
+    // shrinks into the round icon.
+    const sk = iconSkill(orb);
+    if (sk && hasSkillArt(sk.icon)) {
+      return (
+        <>
+          <span className="rx-show-skill">
+            <SkillGlyph name={sk.icon} center />
+          </span>
+          {name ? <b className="rx-show-name">{tr(name)}</b> : null}
+        </>
+      );
+    }
     return (
       <>
         <CardFace monster={card} level={mon.level ?? 1} live={{ name: fieldName(mon), atk: stats.atk, def: stats.def, mdef: stats.mdef, hp: mon.hp }} />
@@ -9439,7 +9452,7 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
             key: "attack",
             label: attackLabel(),
             go: () => (riposte ? apply(pickCounter(duel, "phys")) : setAim({ kind: "attack", uid })),
-            icon: "broadsword",
+            icon: "sword-clash",
             kind: "attack" as const,
             ...(riposte ? {} : { slide: { kind: "attack", uid } as ChipSlide }),
           },
@@ -9506,7 +9519,7 @@ function UnitActs({ rows, box, soloRed, riposte = false, rite = false, onSlide, 
         >
           <span className="unit-act-ico">
             <span className="unit-act-core">
-              <Glyph name={row.icon} />
+              <SkillGlyph name={row.icon} />
             </span>
             <Rim kind={row.kind} />
           </span>
@@ -9534,7 +9547,7 @@ function HandUse({ icon, kind, label, onUse }: { icon: string; kind: UnitActKind
     >
       <span className="unit-act-ico">
         <span className="unit-act-core">
-          <Glyph name={icon} />
+          <SkillGlyph name={icon} />
         </span>
         <Rim kind={kind} />
       </span>
