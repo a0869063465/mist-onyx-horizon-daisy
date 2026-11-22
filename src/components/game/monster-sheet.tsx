@@ -314,6 +314,7 @@ export function MonsterSheet({
   name,
   card,
   count,
+  countBadge,
   skills,
   extras = [],
   actions,
@@ -338,6 +339,8 @@ export function MonsterSheet({
   card: ReactNode;
   /** The orange number the monster shows on the field; empty hides the badge. */
   count: string;
+  /** Ô số đếm kiểu mới (icon skill + số màu); có thì thay vòng cam. */
+  countBadge?: ReactNode;
   skills: SkillShown[];
   /** Icons after the skills that are not skills: a spell's kind on the spell sheet. */
   extras?: SheetExtra[];
@@ -393,14 +396,14 @@ export function MonsterSheet({
     <button
       key={`${skill.name}-${index}`}
       type="button"
-      className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${`s${index}` === picked ? " on" : ""}`}
+      className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${skill.buff ? " is-buff" : ""}${`s${index}` === picked ? " on" : ""}`}
       onClick={() => setPicked(`s${index}`)}
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
           <SkillGlyph name={skill.icon} />
         </span>
-        <Rim kind={skill.slow ? "slow" : skill.kind} />
+        <Rim kind={skill.slow ? "slow" : skill.buff ? "green" : skill.kind} />
       </span>
       <span className="sk3d-name">{tr(skill.name)}</span>
     </button>
@@ -577,7 +580,7 @@ export function MonsterSheet({
           >
             {card}
             {badge}
-            {count ? <span className="msheet-count">{count}</span> : null}
+            {countBadge ? <span className="msheet-cntb">{countBadge}</span> : count ? <span className="msheet-count">{count}</span> : null}
           </div>
           <div className="msheet-side">
             <div className="msheet-head">
@@ -608,7 +611,7 @@ export function MonsterSheet({
         {onSkills ? <div className="msheet-desc" onClick={cycle}>
           {shown ? (
             <>
-              <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
+              <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}${shown.buff ? " is-buff" : ""}`}>
                 {tr(shown.name)}
                 {cost ? (
                   <span className="act3d-cost">

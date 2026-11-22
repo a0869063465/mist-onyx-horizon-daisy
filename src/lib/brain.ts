@@ -14,8 +14,6 @@ import {
   confirmSwap,
   swapRows,
   castSpell,
-  cottonCover,
-  cottonOffer,
   declareSkill,
   draw,
   endTurn,
@@ -47,6 +45,8 @@ import {
   type FieldMon,
   type Side,
   knackOpen,
+  lockStrike,
+  aiLockPick,
 } from "./duel.ts";
 import { fieldBindsFor } from "./field-chips.ts";
 
@@ -94,8 +94,7 @@ export type Act =
   | ["wall", string]
   | ["guard", string]
   | ["stand", string]
-  | ["spirit", string]
-  | ["cotton"];
+  | ["spirit", string];
 
 export function runAct(state: Duel, act: Act): Duel {
   switch (act[0]) {
@@ -124,15 +123,15 @@ export function runAct(state: Duel, act: Act): Duel {
       return cast.swap?.locked ? confirmSwap(cast, cast.swap.locked, act[3]) : cast;
     }
     case "skill":
-      return fireSkill(state, act[1], act[2], act[3], act[4], act[5]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => fireSkill(s, act[1], act[2], act[3], act[4], act[5]));
     case "declare":
-      return declareSkill(state, act[1], act[2], act[3]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => declareSkill(s, act[1], act[2], act[3]));
     case "stance":
       return toggleStance(state, act[1]);
     case "face":
-      return attackFace(state, act[1]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], null), (s) => attackFace(s, act[1]));
     case "hit":
-      return attackMonster(state, act[1], act[2]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => attackMonster(s, act[1], act[2]));
     case "block":
       return assignBlock(state, act[1], act[2]);
     case "cover":
@@ -149,8 +148,6 @@ export function runAct(state: Duel, act: Act): Duel {
       return standFor(state, act[1]);
     case "spirit":
       return spiritCover(state, act[1]);
-    case "cotton":
-      return cottonCover(state);
   }
 }
 
@@ -179,6 +176,8 @@ function moved(prev: Duel, next: Duel): boolean {
     next.gemWarn !== prev.gemWarn ||
     next.preyAsk !== prev.preyAsk ||
     next.birdAsk !== prev.birdAsk ||
+    next.wileAsk !== prev.wileAsk ||
+    next.clockAsk !== prev.clockAsk ||
     next.plumeAsk !== prev.plumeAsk ||
     next.lurkAsk !== prev.lurkAsk
   );
@@ -245,6 +244,7 @@ function askOf(state: Duel): Side | null {
   if (state.parley && state.step === "main") return null;
   if (state.swap) return state.swap.side;
   if (state.lurkAsk) return state.lurkAsk.side;
+  if (state.clockAsk) return state.clockAsk.side;
   if (state.upkeep || state.legs || state.preyAsk || state.plumeAsk) return state.turn;
   return null;
 }
@@ -340,7 +340,7 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
     aim: (index) => aims.push(index),
     cast: (index) => selfs.push(index),
     declare: (index) => declares.push(index),
-    spent: mon.shed ?? [],
+    spent: [...(mon.shed ?? []), ...(mon.mult ? ["mult"] : [])],
     room,
   })) chip.go();
   const id = card.id;
@@ -505,7 +505,6 @@ function answerMoves(state: Duel): Move[] {
     if (canStand(state, mon.uid)) tryMove(list, state, ["stand", mon.uid]);
     if (canSpirit(state, mon.uid)) tryMove(list, state, ["spirit", mon.uid]);
   }
-  if (cottonOffer(state, ME)) tryMove(list, state, ["cotton"]);
   spellMoves(state, list);
   return list;
 }
@@ -555,6 +554,8 @@ function planAnswer(state: Duel): Act {
 export function brainChoose(state: Duel, budgetMs = BUDGET_MS): Act | null {
   if (state.mode !== "ai" || state.winner !== null || state.reel || state.wheel) return null;
   if (aiAnswerAsk(state)) return ["ask"];
+  // Giảo hoạt / tiến hoá của Harpie Lady bên người chơi: chờ họ chọn.
+  if (state.wileAsk?.length || state.birdAsk) return null;
   if (state.step === "respond" && state.hold?.priority === ME) return planAnswer(state);
   if (state.turn !== ME || state.step !== "main") return null;
   return planTurn(state, now() + budgetMs);

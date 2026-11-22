@@ -24,6 +24,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "tho-den-tinh-nghich": ["nature", "claw"],
   "cuc-bong-ma-quai": ["shadow", "magic"],
   "quai-thu-thien-su": ["holy", "magic"],
+  "tinh-linh-dan-hac": ["holy", "magic"],
+  "thien-su-vo-hinh": ["holy", "magic"],
   "te-giac-be-con": ["earth", "smash"],
   "te-giac-hieu-thang": ["earth", "smash"],
   "te-giac-chien-binh": ["earth", "smash"],
@@ -59,6 +61,10 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "rong-con": ["fire", "claw"],
   "chien-binh-rong": ["fire", "blade"],
   "chien-binh-ky-nhong": ["nature", "blade"],
+  "qua-trung-sinh-menh": ["holy", "magic"],
+  "dong-ho-kho-doan": ["holy", "magic"],
+  "dong-ho-hung-bao": ["holy", "magic"],
+  "dong-ho-mong-manh": ["holy", "magic"],
   "chien-binh-cuoi-rong": ["fire", "blade"],
   "may-chem": ["steel", "blade"],
   "ma-dao-si": ["arcane", "magic"],
@@ -100,6 +106,10 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "giap-co-khi": ["steel", "magic"],
   "mu-ma-phap": ["arcane", "magic"],
   "hop-ma-thuat": ["arcane", "magic"],
+  "don-cuoi-cung": ["shadow", "magic"],
+  "huy-diet": ["shadow", "magic"],
+  "bay-thu": ["steel", "magic"],
+  "qua-trung-thien-su": ["holy", "magic"],
 };
 
 export function fxKindOf(cardId: string | null | undefined): [FxKind, FxStrike] {

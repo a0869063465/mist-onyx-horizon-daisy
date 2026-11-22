@@ -469,7 +469,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -854,6 +854,39 @@ export function FlareBlast() {
           muted
           playsInline
           style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w * 2}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Chủ game 21/11: Kuriboh phát nổ giữa hai lá lúc chạm. Video đã cắt gọn (0,7 giây, tâm nổ ở 50% / 52,7% khung). */
+export function BoomBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "boom") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
+      playCue("kuriBoom");
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="boom-blast"
+          src={fxUrl("/fx/kuriboh-no.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w}%` }}
           onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
         />
       ))}

@@ -14,6 +14,9 @@ type WireDuel = {
   hold: { priority: 0 | 1 } | null;
   opener?: { done: [boolean, boolean] } | null;
   again?: [Vote, Vote] | null;
+  /** Harpie Lady: câu hỏi Giảo hoạt / tiến hoá do chủ quái trả lời, kể cả khi không tới lượt họ. */
+  wileAsk?: Array<{ side: 0 | 1 }> | null;
+  birdAsk?: { side?: 0 | 1 } | null;
 };
 
 type RoomRow = {
@@ -55,6 +58,8 @@ function readDeck(raw: string | null): NetDeck | null {
 
 function actor(duel: WireDuel): 0 | 1 | null {
   if (duel.winner) return null;
+  if (duel.wileAsk?.[0]) return duel.wileAsk[0].side;
+  if (duel.birdAsk?.side != null) return duel.birdAsk.side;
   if (duel.step === "respond") return duel.hold?.priority ?? null;
   if (duel.step === "main") return duel.turn;
   return null;

@@ -130,7 +130,7 @@ function lines(at: SkillAt): string[] {
       return [deal(blow(mon, spellOnly(amount)))];
     }
     case "cuc-bong-ma-quai":
-      return name === "Phát nổ" && mon ? ["Tự huỷ", deal(blow(mon, spellOnly(liveAtk(mon)), false))] : [];
+      return name === "Cấp số nhân" ? ["Nhân đôi khi bị tiêu diệt"] : [];
     case "phu-thuy-ti-hon":
     case "phu-thuy-tap-su":
     case "phu-thuy-bac-thay":
@@ -248,10 +248,18 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "phuc-kich":
         // Chủ game 29/10–30/10: it stops a skill; "Một đồng minh ra đòn".
         return ["Chặn kỹ năng", `Một đồng minh ra đòn (+${num(e, /tăng\s*(\d+)\s*công/, 2)} công)`];
+      case "qua-trung-thien-su":
+        return ["Chặn đòn tấn công", "Một quái bị nhắm được trả đòn"];
       case "hoan-doi":
         return ["Đổi chỗ quái bị nhắm với quái khác"];
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
+      case "don-cuoi-cung":
+        return ["Quái vừa bị hạ ra đòn cuối lên kẻ hạ nó", "Sát thương chuẩn, không né được"];
+      case "huy-diet":
+        return ["Tiêu diệt 1 quái địch bất kỳ"];
+      case "bay-thu":
+        return ["Tiêu diệt quái máu dưới 4 vừa triệu hồi hoặc phát động tấn công"];
       case "vong-xoay-bao-ho":
         return ["Chặn đòn", "Đối thủ kết thúc lượt ngay"];
       case "ngan-chan-phong-ngu":

@@ -12,11 +12,9 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "charge", label: "Tích luỹ", tone: "y" },
     { key: "cast", label: "Quả cầu bóng đêm", tone: "z" },
   ],
-  "cuc-bong-ma-quai": [
-    { key: "boom", label: "Phát nổ", tone: "y" },
-    { key: "barrage", label: "Pháo kích", tone: "y" },
-  ],
+  "cuc-bong-ma-quai": [{ key: "mult", label: "Cấp số nhân", tone: "y" }],
   "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
+  "qua-trung-sinh-menh": [{ key: "life", label: "Sinh mệnh mới", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
   "rong-phun-hoa-cau": [
     { key: "peek", label: "Lộ diện", tone: "y" },
@@ -122,7 +120,6 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
     { key: "surge", title: "Con nước lớn", label: "Con nước lớn tàn phá" },
     { key: "doom", title: "Đại hồng thuỷ", label: "Đại hồng thuỷ huỷ diệt" },
   ],
-  "cuc-bong-ma-quai": [{ key: "soft", title: "Bông mềm", label: "Triệu hồi bản thân ra chặn. Tốn 1 mana, các bản sao lấp đầy sân." }],
 };
 
 type Store = {
@@ -190,6 +187,8 @@ function write(store: Store) {
 }
 
 const STALE_SKILLS: Array<[string, string]> = [
+  ["my-dieu-nhan", "Mỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn"],
+  ["linh-chien-da-khong-lo", "Tiêu hao 1 mana để đỡ cho đồng minh đó"],
   ["kraken", "sẽ thêm vào công của hắn"],
   ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
   ["khong-lo-mot-mat", "Sau mỗi lần giáp lá cà"],
@@ -229,6 +228,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["nu-chua-dieu-nhan", "không được rút bài"],
   ["nu-chua-dieu-nhan", "không khoá rút bài"],
   ["cuc-bong-ma-quai", "Dùng để tấn công"],
+  ["cuc-bong-ma-quai", "Pháo kích"],
   ["ong-khong-lo", "__**Tê liệt**__"],
   ["sua-hut-ma-phap", "Ma pháp tích tụ"],
   ["kiem-si-lua-thieng", "Long Hoả"],
