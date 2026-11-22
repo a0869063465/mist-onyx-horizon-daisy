@@ -444,4 +444,4 @@ export function drawnWay(shape: Array<[number, number]>, a: BoxPt, b: BoxPt): Bo
 
 export const MANA_TRUNK: Array<[number, number]> = [[216, 885], [279, 930], [336, 970], [380, 1010], [415, 1050], [436, 1090], [452, 1130], [465, 1170], [478, 1210], [494, 1250], [500, 1268]];
 export const MANA_TO_GEMS: Array<[number, number]> = [[500, 1268], [525, 1288], [550, 1300], [575, 1309], [625, 1319], [650, 1325], [675, 1328], [703, 1334]];
-export const MANA_TO_ORB: Array<[number, number]> = [[500, 1268], [494, 1330], [488, 1400], [490, 1470], [505, 1540], [535, 1605], [580, 1660], [640, 1695], [700, 1710], [745, 1705]];
+export const MANA_TO_ORB: Array<[number, number]> = [[500, 1268], [524, 1337], [550, 1404], [580, 1470], [615, 1532], [655, 1592], [699, 1649], [745, 1705]];
