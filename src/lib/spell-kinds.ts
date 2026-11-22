@@ -21,7 +21,7 @@ export const SPELL_KINDS: SpellKind[] = [
   { key: "cleanse", label: "Giải trừ", react: "block", tone: "#f5c542", ids: ["hap-thu-ma-phap", "mua-ma-thuat", "phan-nguyen", "vong-xoay-bao-ho"] },
   { key: "multi", label: "Đa năng", react: "buff", tone: "#3ddc6a", ids: ["ke-dao-mo", "mu-ma-phap", "thu-hoi-quai-thu"] },
   { key: "bind", label: "Khống chế", react: "chain", tone: "#d7d7e2", ids: ["soi-xich-dia-nguc", "thanh-guom-anh-sang", "vong-nguyen-rua-ac-ma", "ngan-chan-phong-ngu"] },
-  { key: "harm", label: "Sát thương", react: "skill", tone: "#4aa8ff", ids: ["sung-loi-pha", "sam-set-tan-the", "virus-an-mon"] },
+  { key: "harm", label: "Sát thương", react: "skill", tone: "#4aa8ff", ids: ["sung-loi-pha", "sam-set-tan-the", "virus-an-mon", "don-cuoi-cung", "huy-diet", "bay-thu"] },
 ];
 
 /** The kind of a spell; a spell no kind lists (a new one) counts as an environment if it is one, else Đa năng. */
@@ -42,9 +42,9 @@ export function spellKindRank(id: string): number {
 /** Spell speed (chủ game 02/11), shown under the mana gem on a spell in hand: Chậm (tím), Nhanh = phép phản ứng (hồng), Siêu tốc (xanh lam), Buff (xanh lá). A spell not listed shows none. */
 export type SpellSpeed = "slow" | "fast" | "super" | "buff";
 const SPEEDS: Record<SpellSpeed, string[]> = {
-  slow: ["sam-set-tan-the", "soi-xich-dia-nguc", "thanh-guom-anh-sang", "mu-ma-phap", "phan-nguyen"],
-  fast: ["guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"],
-  super: ["hoan-doi", "hop-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat"],
+  slow: ["sam-set-tan-the", "huy-diet", "soi-xich-dia-nguc", "thanh-guom-anh-sang", "mu-ma-phap", "phan-nguyen"],
+  fast: ["bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"],
+  super: ["hoan-doi", "hop-ma-thuat", "don-cuoi-cung", "hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat"],
   buff: ["sung-loi-pha", "ke-dao-mo", "thu-hoi-quai-thu"],
 };
 export function spellSpeed(id: string): SpellSpeed | null {

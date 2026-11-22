@@ -24,6 +24,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "tho-den-tinh-nghich": ["nature", "claw"],
   "cuc-bong-ma-quai": ["shadow", "magic"],
   "quai-thu-thien-su": ["holy", "magic"],
+  "tinh-linh-dan-hac": ["holy", "magic"],
+  "thien-su-vo-hinh": ["holy", "magic"],
   "te-giac-be-con": ["earth", "smash"],
   "te-giac-hieu-thang": ["earth", "smash"],
   "te-giac-chien-binh": ["earth", "smash"],
@@ -40,6 +42,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "sua-hut-ma-phap": ["water", "magic"],
   "con-thinh-no-cua-hai-vuong": ["water", "pierce"],
   kraken: ["water", "smash"],
+  "nang-va-gio": ["fire", "magic"],
   "chien-binh-lan-khuat": ["shadow", "blade"],
   "ke-san-moi-tu-than": ["blood", "claw"],
   "sat-nhan-bat-giu": ["shadow", "blade"],
@@ -104,6 +107,9 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "giap-co-khi": ["steel", "magic"],
   "mu-ma-phap": ["arcane", "magic"],
   "hop-ma-thuat": ["arcane", "magic"],
+  "don-cuoi-cung": ["shadow", "magic"],
+  "huy-diet": ["shadow", "magic"],
+  "bay-thu": ["steel", "magic"],
   "qua-trung-thien-su": ["holy", "magic"],
 };
 

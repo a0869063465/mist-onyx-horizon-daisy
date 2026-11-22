@@ -1,4 +1,5 @@
 import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
+import { monsterCard } from "./catalog.ts";
 
 /**
  * The reaction icons (chủ game 23/10, in place of the fixed reaction line of 21/10): one icon for what is waiting (an
@@ -9,7 +10,7 @@ import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
  * into its own icon. When the wait ends, the icon of what waited fires if both sides let it through, or fizzles if an
  * answer stopped it; the others have done their work and fade with it.
  */
-export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side };
+export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side } | { mana: Side; part: "orb" | "gems" | "stars" };
 
 /** Where a bite of Virus ăn mòn lands (chủ game 30/10): the card on the field, the hand for a reserve card, the
  *  face-down deck for one still in it. */
@@ -32,7 +33,7 @@ export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: bo
 
 export type ChainOrb = {
   id: string;
-  kind: "attack" | "skill" | "spell" | "block";
+  kind: "attack" | "skill" | "spell" | "block" | "seal";
   /** Who acts: the attacker's side, the caster's side, the spell's owner or the blocker's side. */
   side: Side;
   /** The monster that acts (attacker, caster, the bird of Roi điện, the blocker); null for a spell from the hand. */
@@ -412,6 +413,46 @@ function mirrorOrb(next: Duel, live: ChainOrb, side: Side): ChainOrb {
   };
 }
 
+/**
+ * Gió dịu đi (Nắng và gió, chủ game 22/11): the hidden monster turns up by itself against the attack aimed at it; its
+ * skill icon stands by it and the attack surges into it.
+ */
+function breezeOrb(next: Duel, live: ChainOrb, side: Side, uid: string): ChainOrb {
+  // The attacker's ngọc mana and its mana in the grave (the gem of the star frame): a flow each.
+  const foe = (1 - side) as Side;
+  const loser = next.players[foe];
+  const to: FlowLink[] = [];
+  // Two flows from one trunk (chủ game 22/11): the mother flow runs part of the way, then splits to the two marks.
+  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink", fork: true });
+  if (loser.starGems > 0) to.push({ end: { mana: foe, part: "gems" }, tone: "pink", fork: true });
+  return {
+    spread: to.length ? foe : null,
+    id: `orb${orbSeq++}`,
+    kind: "skill",
+    side,
+    source: uid,
+    cardId: "nang-va-gio",
+    spell: null,
+    near: uid,
+    by: live.id,
+    to,
+    tone: "pink",
+    skill: 1,
+    strike: null,
+    base: null,
+    aim: null,
+    notice: next.live,
+    done: false,
+    end: null,
+    stops: live.id,
+  };
+}
+
+/** The icon that stands up against the attack by itself: Gương phòng hộ, or Gió dịu đi. */
+function isRiser(orb: ChainOrb, live: ChainOrb): boolean {
+  return orb.stops === live.id && (orb.spell === "guong-phong-ho" || (orb.kind === "skill" && orb.cardId === "nang-va-gio" && orb.skill === 1));
+}
+
 /** Spells that left a hand between two states, with their owner. */
 function playedSpells(prev: Duel, next: Duel): Array<{ id: string; side: Side; target: FlowEnd | null }> {
   const seen = new Set((prev.events ?? []).map((row) => row.id));
@@ -540,7 +581,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     }
     // Hấp thụ ma pháp swallowed the last answer (chủ game 04/11): its white light wraps that answer's icon, the answer
     // fizzles (with the ally Phục kích sent), and the waiting action flows again to what it was aimed at.
-    const eat = prev.hold?.eat ?? (prev.hold?.mirror === "up" ? { card: "guong-phong-ho", side: (1 - prev.hold.priority) as Side } : null);
+    const eat = prev.hold?.eat ?? (prev.hold?.mirror === "up" && !prev.hold.breeze ? { card: "guong-phong-ho", side: (1 - prev.hold.priority) as Side } : null);
     const ate = eat && playedSpells(prev, next).some((play) => play.id === "hap-thu-ma-phap" && play.side !== eat.side);
     if (eat && ate) {
       const hap = [...list].reverse().find((orb) => orb.spell === "hap-thu-ma-phap" && !orb.done) ?? null;
@@ -557,7 +598,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     // What a spell stops runs into its icon now, surging against it (Gương phòng hộ ends the wait at once, so this
     // shows as the attack fades; Vòng nguyền rủa ác ma holds it while the curse waits).
     for (const stopper of list) {
-      if (!stopper.stops || stopper.kind !== "spell") continue;
+      if (!stopper.stops || (stopper.kind !== "spell" && !(stopper.kind === "skill" && stopper.cardId === "nang-va-gio"))) continue;
       list = list.map((orb) => (orb.id === stopper.stops && !orb.to.some((link) => "orb" in link.end && link.end.orb === stopper.id) ? { ...orb, to: [{ end: { orb: stopper.id }, tone: orb.tone, dam: true }] } : orb));
     }
     if (open && base && !placed && !list.some((orb) => orb.kind !== "block" && orb.base === base)) {
@@ -574,12 +615,13 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   const heldBy = new Map<string, string>();
   if (live?.stops && live.kind === "spell") heldBy.set(live.stops, live.id);
   // Gương phòng hộ risen against the attack: its icon, held while the wait goes on.
-  const mirror = live && next.hold?.mirror ? list.find((orb) => orb.spell === "guong-phong-ho" && orb.stops === live.id) ?? null : null;
+  const mirror = live && next.hold?.mirror ? list.find((orb) => isRiser(orb, live)) ?? null : null;
   if (live && next.hold?.mirror && !mirror) {
     const side = (1 - next.turn) as Side;
-    list.push(mirrorOrb(next, live, side));
+    const breeze = next.hold.breeze;
+    list.push(breeze ? breezeOrb(next, live, side, breeze) : mirrorOrb(next, live, side));
   }
-  const glass = live && next.hold?.mirror ? list.find((orb) => orb.spell === "guong-phong-ho" && orb.stops === live.id) ?? null : null;
+  const glass = live && next.hold?.mirror ? list.find((orb) => isRiser(orb, live)) ?? null : null;
   // Phục kích waiting in the chain (chủ game 30/10): its icon stops the skill on its way in, its ally's strike waits.
   const ambush = next.hold?.ambush ?? null;
   // Quả trứng thiên sứ waits the same way (chủ game 21/11), its strike back comes after as a Trả đòn.
@@ -617,6 +659,31 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
       }
       coverShields.set(cover.target, orb);
     }
+    // Khoá 1 (chủ game 22/11): an icon beside the striker's own, pink light to the monster it locked.
+    const seal = next.hold?.seal ?? null;
+    const sealKey = `block:${base}`;
+    if (seal && !list.some((orb) => orb.kind === "seal" && orb.base === sealKey && !orb.done)) {
+      const locked = monOf(next, seal.uid);
+      list.push({
+        id: `orb${orbSeq++}`,
+        kind: "seal",
+        side: sideOf(next, seal.by) ?? next.turn,
+        source: seal.by,
+        cardId: monOf(next, seal.by)?.cardId ?? null,
+        spell: null,
+        near: seal.by,
+        by: null,
+        to: [{ end: { uid: seal.uid }, tone: "pink" }],
+        tone: "pink",
+        skill: null,
+        strike: null,
+        base: sealKey,
+        aim: null,
+        notice: locked ? `Khoá 1: ${(monsterCard(locked.cardId)?.name ?? "Quái")} bị khoá hành động.` : next.live,
+        done: false,
+        end: null,
+      });
+    }
     // Giáp cơ khí or Lá chắn phản đòn throwing the skill back: the spell's icon is where the skill turns.
     const turner = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell && REFLECT_SPELLS.has(orb.spell)) ?? null : null;
     // Giáp cơ khí is a dam only once its buff is enough to throw the skill back (chủ game 30/10): the skill surges
@@ -631,7 +698,11 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     let to: FlowLink[];
     let spread: Side | null = null;
     let miss = false;
-    if (wall) {
+    // Nắng ấm lên lands on the whole field (chủ game 22/11): its icon only, no flow to anyone.
+    const sunlight = next.pending?.kind === "beam" && next.pending.index === 0 && live.cardId === "nang-va-gio";
+    if (sunlight) {
+      to = [];
+    } else if (wall) {
       // Stopped before it splits: one flow into the icon that stops it.
       to = [{ end: { orb: wall.id }, tone, dam: true }];
     } else if (spreads && reach) {
@@ -671,20 +742,24 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();
   list = list.map((orb) => {
-    if (orb.kind === "block") return orb;
+    if (orb.kind === "block" || orb.kind === "seal") return orb;
     // The mirror stands until the attack it stops is over.
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.
-    const stopped = !orb.to.some((link) => link.back) && orb.to.some((link) => link.dam && "orb" in link.end && list.some((other) => other.id === (link.end as { orb: string }).orb && other.kind === "spell"));
-    const end = orb.end ?? (passed && !stopped ? "fire" : "fizzle");
+    const stopped = !orb.to.some((link) => link.back) && orb.to.some((link) => link.dam && "orb" in link.end && list.some((other) => other.id === (link.end as { orb: string }).orb && (other.kind === "spell" || (other.kind === "skill" && other.cardId === "nang-va-gio"))));
+    // Bẫy thú (chủ game 20/11): the chain resolves from the last in to the first, the trap first; the one it killed is
+    // gone, so what it was doing never happens (no flow, no strike).
+    const trapped = prev?.hold?.trap?.uid;
+    const slain = Boolean(trapped && orb.source === trapped && !monOf(next, orb.source));
+    const end = slain ? "fizzle" : orb.end ?? (passed && !stopped ? "fire" : "fizzle");
     if (orb.base) ended.set(`block:${orb.base}`, end);
     // What came of it (the notice as it lands): a random skill's outcome shows on its icon afterwards.
     return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };
   });
   return list.map((orb) => {
-    if (orb.kind !== "block" || orb.done) return orb;
+    if ((orb.kind !== "block" && orb.kind !== "seal") || orb.done) return orb;
     // A block icon on one branch goes with the spread it blocks ("block:<base>:<target>").
     const key = orb.base && orb.cover ? orb.base.slice(0, -(orb.cover.length + 1)) : orb.base;
     if (key && ended.has(key)) return { ...orb, done: true, end: ended.get(key) ?? "fizzle" };

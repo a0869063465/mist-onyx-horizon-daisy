@@ -82,3 +82,5 @@ Lá đứng yên là lá không đánh hoặc không chặn vì cơ chế in s�
 Quái 5 sao là trường hợp đặc biệt. Cơ chế mới mà người chơi không đề cập tới quái 5 sao thì quái 5 sao không có cơ chế đó. Chỉ áp dụng tối đa đến quái 4 sao.
 
 Chủ game đưa ảnh linh kiện (khung, nút, ô, glow) để chèn lên thì cắt nguyên ảnh đó rồi gắn, không tự vẽ lại bằng CSS hay SVG. Muốn dựng lại bằng code thì hỏi trước.
+
+Hiệu ứng "Khi triệu hồi" của một quái chỉ chạy khi chính quái đó được triệu hồi, không chạy khi quái khác được triệu hồi. Quái triệu hồi có hiệu ứng riêng sẽ còn thêm, theo luật này.

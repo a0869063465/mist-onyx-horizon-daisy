@@ -58,6 +58,8 @@ function board(mine, theirs, extra = {}) {
   return s;
 }
 const at = (s, side, slot) => s.players[side].field[slot];
+/** Harpie Lady đã nhận đủ 4 kỹ năng qua Giảo hoạt (để thử từng kỹ năng). */
+const ALL_WIT = { wit: { born: 1, last: 1, picked: ["armor", "gust", "charm", "lash"], deeds: [] } };
 const uid = (s, side, slot) => at(s, side, slot).uid;
 const rows = (s) => s.players.map((p) => p.field.map((m) => (m ? `${m.cardId}${m.row === "back" ? "(sau)" : ""}` : "-")).join(" "));
 
@@ -721,7 +723,7 @@ test("skill chậm vào hàng chờ: Lão hoá, Cường hoá (vòng quay sau ch
   assert.equal(at(curse, 1, 0).hp, 20);
   assert.ok(at(D.passResponse(curse), 1, 0).hp < 20);
   // Thổi bay (Mỹ điểu nhân) waits; then a spell leaves the foe's hand.
-  s = make({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] });
+  s = make({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] });
   s = D.testGrant(s, 1, "vong-xoay-bao-ho", false);
   const gust = D.useSkill(s, uid(s, 0, 0), null, 0);
   assert.equal(gust.step, "respond", gust.live);
@@ -921,7 +923,7 @@ test("Hấp thụ ma pháp nuốt Vòng nguyền rủa ác ma: đòn đánh ti�
 });
 
 test("Giáp và Vuốt chờ trong chuỗi: không ai nuốt thì huỷ kỹ năng; Hấp thụ ma pháp nuốt thì kỹ năng vào", () => {
-  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, def: 0, mdef: 0, ...ALL_WIT }] });
   s = rich(withHand(s, 0, ["hap-thu-ma-phap"]));
   const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
   assert.equal(D.harpyOffer(breath, 1), "armor", breath.live);
@@ -981,7 +983,7 @@ test("keyword chặn: Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt", () =
   assert.equal(D.assignBlock(D.attackFace(s, uid(s, 0, 0)), uid(s, 1, 0)).hold?.blocker, uid(s, 1, 0), "không keyword thì chặn như thường");
 });
 
-test("keyword Luồn lách: số quái được chặn = số quái hàng trước trừ x", () => {
+test("keyword Luồn lách 2: số quái được chặn = số quái hàng trước trừ 2", () => {
   const make = (front) => {
     const theirs = {};
     for (let i = 0; i < front; i += 1) theirs[i] = ["rong-con", { atk: 2, def: 1, hp: 6 }];
@@ -989,12 +991,6 @@ test("keyword Luồn lách: số quái được chặn = số quái hàng trư�
     s = D.endTurn(D.endTurn(s));
     return { ...s, turn: 0, round: 0 };
   };
-  withKeywords("may-chem", ["luon-lach-1"], () => {
-    const one = make(1);
-    assert.match(D.assignBlock(D.attackFace(one, uid(one, 0, 0)), uid(one, 1, 0)).live, /Luồn lách 1/);
-    const two = make(2);
-    assert.equal(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).hold?.blocker, uid(two, 1, 0));
-  });
   withKeywords("may-chem", ["luon-lach-2"], () => {
     const two = make(2);
     assert.match(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).live, /Luồn lách 2/);
@@ -1513,6 +1509,237 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
+test("Gió dịu đi: Nắng và gió ẩn bị đánh thì tự lật, chặn đòn; kẻ đánh đã hành động, đối thủ mất 1 mana và 1 mana trong mộ", () => {
+  let s = board({ 0: ["rong-con", { atk: 3, hp: 9, maxHp: 9 }] }, { 0: ["nang-va-gio", { hp: 4, maxHp: 4, lurk: { left: 4, wake: 2 } }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, starGems: 2 })) };
+  const aimed = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(at(aimed, 1, 0)?.lurk, undefined, `tự lật lúc bị nhắm | ${aimed.live}`);
+  assert.ok(aimed.hold?.breeze && aimed.hold.mirror === "up" && aimed.hold.priority === 0, "lên hàng chờ, bên đánh đáp trước");
+  assert.match(D.assignBlock(D.passResponse(aimed), uid(s, 1, 0)).live, /Gió dịu đi/);
+  const done = D.passResponse(D.passResponse(aimed));
+  assert.equal(at(done, 1, 0)?.hp, 4, `không mất máu | ${done.live}`);
+  assert.ok(at(done, 0, 0)?.dim, "kẻ đánh đã hành động");
+  assert.equal(done.players[0].orb, aimed.players[0].orb - 1, "mất 1 mana");
+  assert.equal(done.players[0].starGems, aimed.players[0].starGems - 1, "mất 1 mana trong mộ");
+  // Không ẩn: đánh trúng như thường.
+  const open = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m) => (m ? { ...m, lurk: undefined } : m)) } : p)) };
+  const plain = D.passResponse(D.attackMonster(open, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.ok(at(plain, 1, 0) === null || at(plain, 1, 0).hp < 4, plain.live);
+});
+
+test("Nắng ấm lên: skill chậm, trả 2 mana lúc lên hàng chờ; nổ thì 1 chuẩn lên mọi quái trừ nó và 2 người chơi, hoàn 1 mana; bị Hấp thụ nuốt thì mất mana", () => {
+  let s = board({ 0: ["nang-va-gio", { hp: 4, maxHp: 4 }], 1: ["may-chem", { hp: 5, maxHp: 5, def: 5 }] }, { 0: ["rong-con", { hp: 5, maxHp: 5, def: 5 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const hp = s.players.map((p) => p.hp);
+  const queued = D.declareSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(queued.step, "respond", queued.live);
+  assert.equal(queued.players[0].orb, 1, "trả 2 mana lúc lên hàng chờ");
+  assert.match(D.assignBlock(queued, uid(s, 1, 0)).live, /không chặn được/);
+  const done = D.passResponse(queued);
+  assert.equal(at(done, 0, 0).hp, 4, "không trúng chính nó");
+  assert.equal(at(done, 0, 1).hp, 4, `đồng minh mất 1 dù thủ cao | ${done.live}`);
+  assert.equal(at(done, 1, 0).hp, 4, "quái địch mất 1");
+  assert.deepEqual(done.players.map((p) => p.hp), hp.map((n) => n - 1), "2 người chơi mất 1");
+  assert.equal(done.players[0].orb, 2, "hoàn 1 mana");
+  const withAbsorb = D.testGrant(queued, 1, "hap-thu-ma-phap", false);
+  const eaten = D.castSpell({ ...withAbsorb, players: withAbsorb.players.map((p, i) => (i === 1 ? { ...p, orb: 3 } : p)) }, withAbsorb.players[1].hand.indexOf("hap-thu-ma-phap"), null);
+  assert.equal(eaten.step, "main", eaten.live);
+  assert.equal(at(eaten, 1, 0).hp, 5, "bị nuốt thì không nổ");
+  assert.equal(eaten.players[0].orb, 1, "không hoàn mana");
+  const poor = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 1 } : p)) };
+  assert.match(D.declareSkill(poor, uid(s, 0, 0), null, 0).live, /Cần 2 gem/);
+});
+
+/** Đòn cuối cùng (chủ game 20/11): bên 0 đánh hạ quái của bên 1; bên 1 cầm lá. */
+function riteBoard(victim, killer) {
+  let s = board({ 0: killer }, { 0: victim });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.RITE_CARD] : [], tolls: [] })) };
+  return D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+}
+
+test("Đòn cuối cùng (20/11): quái bị quái địch hạ, quyền về chủ thì quái chết ra đòn cuối, sát thương chuẩn, chỉ 1 mana", () => {
+  const dead = riteBoard(["may-chem", { atk: 3, def: 0, hp: 2, maxHp: 2 }], ["khong-lo-mot-mat", { atk: 5, def: 4, mdef: 4, hp: 10, maxHp: 10 }]);
+  assert.equal(at(dead, 1, 0), null, "quái bên 1 chết: " + dead.live);
+  assert.equal(dead.turn, 1, "quyền về bên bị hạ");
+  assert.equal(D.riteDeadFor(dead, 1).length, 1, "lá chớp");
+  const cast = D.castSpell(dead, 0, null);
+  assert.equal(cast.players[1].hand.length, 0, cast.live);
+  assert.equal(cast.players[1].orb, 2, "trả 1 mana của lá");
+  assert.equal(at(cast, 1, 0)?.cardId, "may-chem", "quái chết gượng dậy");
+  assert.equal(cast.counterAsk?.from, uid(dead, 0, 0));
+  const hit = D.pickCounter(cast, "phys");
+  assert.equal(at(hit, 0, 0).hp, 7, "3 sát thương chuẩn, bỏ qua 4 thủ: " + hit.live);
+  assert.equal(at(hit, 1, 0), null, "đòn xong thì quái lại biến mất");
+  assert.equal(hit.players[1].orb, 2, "không trả phí Trả đòn");
+  assert.equal(hit.turn, 1, "quyền vẫn ở bên dùng lá");
+  assert.equal(hit.rites ?? null, null);
+});
+
+test("Đòn cuối cùng: skill Trả đòn đơn mục tiêu thành sát thương chuẩn, không tốn mana của skill", () => {
+  const dead = riteBoard(["rong-con", { atk: 1, def: 0, hp: 1, maxHp: 1 }], ["khong-lo-mot-mat", { atk: 5, def: 0, mdef: 5, hp: 20, maxHp: 20 }]);
+  const cast = D.castSpell(dead, 0, null);
+  const ghost = at(cast, 1, 0);
+  assert.equal(ghost?.cardId, "rong-con");
+  const hp = at(cast, 0, 0).hp;
+  const burned = D.declareSkill(cast, ghost.uid, uid(cast, 0, 0), 0);
+  assert.ok(at(burned, 0, 0).hp < hp, "Hơi thở rồng xuyên 5 thủ phép: " + burned.live);
+  assert.equal(burned.players[1].orb, 2, "chỉ trả 1 mana của lá");
+  assert.equal(at(burned, 1, 0), null, burned.live);
+});
+
+test("Đòn cuối cùng: qua việc khác là mất cơ hội; kẻ hạ đã chết hoặc chủ động đánh rồi chết thì không chớp", () => {
+  const dead = riteBoard(["may-chem", { atk: 3, def: 0, hp: 2, maxHp: 2 }], ["khong-lo-mot-mat", { atk: 5, def: 0, hp: 10, maxHp: 10 }]);
+  const passed = D.endTurn(dead);
+  assert.equal(D.riteDeadFor(passed, 1).length, 0, "bỏ lượt là mất");
+  // Kẻ hạ không còn trên sân: lá không chớp.
+  const gone = { ...dead, players: dead.players.map((p, i) => (i === 0 ? { ...p, field: Array(6).fill(null) } : p)) };
+  assert.equal(D.riteDeadFor(gone, 1).length, 0, "kẻ hạ đã chết");
+  // Bên 0 chủ động đánh, chết vì Trả đòn: quyền về đối thủ, không dùng được.
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 1, def: 0, hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { atk: 9, def: 0, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, hand: i === 0 ? [D.RITE_CARD] : [], tolls: [] })) };
+  const open = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  const back = D.pickCounter(open, "phys");
+  assert.equal(at(back, 0, 0), null, back.live);
+  assert.equal(D.riteDeadFor(back, 0).length, 0, "đánh rồi chết vì Trả đòn: không kích hoạt");
+});
+
+test("Huỷ diệt (20/11): phép chậm 2 mana, giết thẳng 1 quái địch kể cả hàng sau và 5 sao; chỉ Hấp thụ ma pháp hoá giải", () => {
+  const make = (theirs) => {
+    let s = board({ 0: ["may-chem", {}] }, theirs);
+    return { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? ["huy-diet"] : ["hoan-doi", "hap-thu-ma-phap"], tolls: [] })) };
+  };
+  // Hàng sau, máu nhiều, thủ cao: vẫn chết.
+  let s = make({ 0: ["khong-lo-mot-mat", {}], 3: ["chien-binh-rong", { hp: 30, maxHp: 30, def: 9, mdef: 9 }] });
+  const back = uid(s, 1, 3);
+  const cast = D.castSpell(s, 0, back);
+  assert.equal(cast.step, "respond", "phép chậm chờ phản ứng: " + cast.live);
+  assert.equal(cast.players[0].orb, 1, "2 mana");
+  assert.match(D.castSpell(cast, 0, null).live, /Chỉ Hấp thụ ma pháp/, "Hoán đổi không đáp được");
+  assert.equal(D.assignBlock(cast, uid(cast, 1, 0)).hold?.blocker ?? null, null, "không chặn được");
+  const done = D.passResponse(cast);
+  assert.equal(at(done, 1, 3), null, "chết ngay: " + done.live);
+  assert.ok(at(done, 1, 0), "quái khác còn nguyên");
+  assert.equal(done.rites ?? null, null, "phép không mở Đòn cuối cùng");
+  // Quái 5 sao cũng chết.
+  let five = make({ 0: ["rong-ac-ma", {}] });
+  five = D.passResponse(D.castSpell(five, 0, uid(five, 1, 0)));
+  assert.equal(at(five, 1, 0), null, five.live);
+  // Hấp thụ ma pháp hoá giải: quái sống.
+  let eat = make({ 0: ["khong-lo-mot-mat", {}] });
+  eat = D.castSpell(eat, 0, uid(eat, 1, 0));
+  eat = D.castSpell(eat, 1, null);
+  eat = D.passResponse(D.passResponse(eat));
+  assert.ok(at(eat, 1, 0), "Hấp thụ ma pháp cứu: " + eat.live);
+});
+
+test("Bẫy thú (20/11): quái địch máu dưới 4 vừa triệu hồi thì quyền về mình bẫy được ngay; qua việc khác là mất", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", {}] }, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 4, hand: i === 1 ? [D.TRAP_CARD] : [], tolls: [] })) };
+  s = D.testGrant(s, 0, "may-chem", false);
+  const summoned = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "may-chem"), 1);
+  const fresh = uid(summoned, 0, 1);
+  assert.equal(summoned.turn, 1);
+  assert.deepEqual(D.trapPicks(summoned, 1), [fresh], "Máy chém máu dưới 4: lá chớp");
+  const cast = D.castSpell(summoned, 0, fresh);
+  assert.equal(cast.step, "respond", "phép nhanh chờ đối thủ đáp: " + cast.live);
+  assert.equal(cast.players[1].orb, 2, "1 mana");
+  const done = D.passResponse(cast);
+  assert.equal(at(done, 0, 1), null, "Máy chém chết: " + done.live);
+  assert.ok(at(done, 0, 0), "quái khác còn");
+  // Bỏ lượt là mất.
+  assert.equal(D.trapPicks(D.endTurn(summoned), 1).length, 0);
+  // Máu từ 4 trở lên: không bẫy được.
+  const tough = { ...summoned, players: summoned.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === fresh ? { ...m, hp: 4, maxHp: 4 } : m)) } : p)) };
+  assert.equal(D.trapPicks(tough, 1).length, 0, "máu 4 không bẫy");
+  // Quái ẩn chưa lật: không bẫy được.
+  const hidden = { ...summoned, players: summoned.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === fresh ? { ...m, lurk: { left: 4 } } : m)) } : p)) };
+  assert.equal(D.trapPicks(hidden, 1).length, 0, "quái ẩn không bẫy");
+});
+
+test("Bẫy thú: quái máu dưới 4 đưa đòn đánh lên hàng chờ thì bẫy trong chuỗi, chuỗi nổ là chết, đòn huỷ; Hấp thụ ma pháp nuốt được", () => {
+  const make = () => {
+    let s = board({ 0: ["may-chem", { atk: 5, hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10 }] });
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.TRAP_CARD] : ["hap-thu-ma-phap"], tolls: [] })) };
+    return D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  };
+  const open = make();
+  assert.equal(D.trapPicks(open, 1).length, 1, "kẻ đánh máu 2: lá chớp");
+  const set = D.castSpell(open, 0, null);
+  assert.equal(set.hold?.trap?.uid, uid(open, 0, 0), "bẫy chờ trong chuỗi: " + set.live);
+  assert.equal(set.hold?.priority, 0, "đối thủ được đáp");
+  const sprung = D.passResponse(D.passResponse(set));
+  assert.equal(at(sprung, 0, 0), null, "kẻ đánh chết: " + sprung.live);
+  assert.equal(at(sprung, 1, 0).hp, 10, "đòn huỷ");
+  assert.equal(sprung.step, "main");
+  // Hấp thụ ma pháp nuốt Bẫy thú: đòn vẫn vào.
+  const eaten = D.castSpell(set, 0, null);
+  const landed = D.passResponse(D.passResponse(eaten));
+  assert.ok(at(landed, 0, 0), "kẻ đánh còn sống: " + landed.live);
+  assert.ok(at(landed, 1, 0).hp < 10, "đòn vẫn vào");
+});
+
+test("Kuriboh (21/11): công 1 đánh quái thì nổ ngay, không hàng chờ, gây sát thương chuẩn bằng công, biến mất, không bị đánh trả", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", {}] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  const done = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(done.step, "main", "không vào hàng chờ: " + done.live);
+  assert.equal(done.hold, null);
+  assert.equal(at(done, 0, 0), null, "Kuriboh biến mất");
+  assert.equal(at(done, 1, 0).hp, 9, "1 sát thương chuẩn, xuyên thủ: " + done.live);
+  assert.equal(done.counterAsk ?? null, null, "không Trả đòn");
+  assert.deepEqual(done.boom?.uids, [uid(s, 0, 0)], "đánh dấu nổ cho trang trận");
+  assert.equal(done.turn, 1, "quyền sang đối thủ");
+});
+
+test("Kuriboh: được buff công trên 1 thì đòn vào hàng chờ như thường, lúc nổ gây đúng công", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", { atk: 3 }] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  const open = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(open.step, "respond", "vào hàng chờ: " + open.live);
+  const done = D.passResponse(open);
+  assert.equal(at(done, 0, 0), null);
+  assert.equal(at(done, 1, 0).hp, 7, "3 sát thương chuẩn: " + done.live);
+});
+
+test("Kuriboh: bị đánh thì nổ vào kẻ đánh và biến mất, kẻ đánh không gây sát thương", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["cuc-bong-ma-quai", {}], 1: ["may-chem", {}] });
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(done, 1, 0), null, "Kuriboh biến mất: " + done.live);
+  assert.equal(at(done, 0, 0).hp, 9, "kẻ đánh chịu 1 sát thương chuẩn");
+  assert.equal(done.counterAsk ?? null, null);
+});
+
+test("Kuriboh: đánh người chơi gây sát thương chuẩn bằng công rồi biến mất; lao ra chặn đòn vào người chơi cũng nổ", () => {
+  const s = board({ 0: ["cuc-bong-ma-quai", {}] }, {});
+  const hp = s.players[1].hp;
+  const face = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(face.step, "main", face.live);
+  assert.equal(face.players[1].hp, hp - 1);
+  assert.equal(at(face, 0, 0), null);
+  const t = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["cuc-bong-ma-quai", {}] });
+  const open = D.attackFace(t, uid(t, 0, 0));
+  const blocked = D.passResponse(D.passResponse(D.assignBlock(open, uid(t, 1, 0))));
+  assert.equal(at(blocked, 1, 0), null, "Kuriboh chặn rồi nổ: " + blocked.live);
+  assert.equal(at(blocked, 0, 0).hp, 9);
+  assert.equal(blocked.players[1].hp, t.players[1].hp, "người chơi không mất máu");
+});
+
+test("Kuriboh Cấp số nhân: 1 mana; bị tiêu diệt (cả lúc tự nổ) thì ra 2 Kuriboh mới, hàng trước trước, con mới dùng lại được", () => {
+  let s = board({ 0: ["cuc-bong-ma-quai", {}], 1: ["may-chem", {}] }, { 0: ["khong-lo-mot-mat", { atk: 5, def: 3, hp: 10, maxHp: 10 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const armed = D.useSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(armed.players[0].orb, 2, "1 mana: " + armed.live);
+  assert.ok(at(armed, 0, 0).mult);
+  assert.match(D.useSkill({ ...armed, turn: 0 }, uid(s, 0, 0), null, 0).live, /đã kích hoạt|đã hành động/);
+  const ready = { ...armed, turn: 0, players: armed.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m ? { ...m, used: false, dim: false } : m)) } : p)) };
+  const done = D.attackMonster(ready, uid(s, 0, 0), uid(s, 1, 0));
+  const kids = done.players[0].field.map((m, slot) => (m?.cardId === "cuc-bong-ma-quai" ? slot : null)).filter((n) => n !== null);
+  assert.deepEqual(kids, [0, 2], "2 con mới, hàng trước trước: " + rows(done));
+  assert.ok(!at(done, 0, 0).mult && !at(done, 0, 2).mult, "con mới chưa kích hoạt");
+  assert.equal(at(done, 1, 0).hp, 9);
+  // Không kích hoạt thì không nhân đôi.
+  const plain = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(plain.players[0].field.filter((m) => m?.cardId === "cuc-bong-ma-quai").length, 0);
+});
+
 test("Đồng hồ khó đoán (21/11): ra sân chọn hung bạo/mỏng manh, tự đổi sau mỗi 2 vòng, máu tối đa tăng thì máu tăng theo; úp thì hung bạo, không đổi", () => {
   let s = board({}, {});
   s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 2, reserve: i === 0 ? [{ id: "dong-ho-kho-doan", hp: 2, maxHp: 2 }] : p.reserve })) };
@@ -1668,6 +1895,143 @@ test("Hấp thụ ma pháp nuốt Quả trứng thiên sứ: đòn đánh vẫn 
 });
 
 let failed = 0;
+test("Lính chiến đá khổng lồ (21/11): quái địch chỉ được chọn nó làm mục tiêu (đánh thường, đánh người chơi, kỹ năng); quái 5 sao không bị ép", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 5, def: 2, hp: 10, maxHp: 10 }], 1: ["rong-con", {}] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const other = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 1));
+  assert.equal(other.step, "main", "không đánh Máy chém được: " + other.live);
+  assert.match(other.live, /Lính chiến đá khổng lồ/);
+  const face = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(face.step, "main", "không đánh người chơi được: " + face.live);
+  const ok = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(ok.step, "respond", "đánh Lính đá được: " + ok.live);
+  const rich = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const skill = D.useSkill(rich, uid(s, 0, 1), uid(s, 1, 1), 0);
+  assert.equal(skill.players[1].field[1].hp, at(s, 1, 1).hp, "kỹ năng không nhắm Máy chém được: " + skill.live);
+  assert.equal(skill.pending ?? null, null);
+  const five = board({ 0: ["rong-ac-ma", {}] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const free = D.attackMonster(five, uid(five, 0, 0), uid(five, 1, 1));
+  assert.notEqual(free.live, D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 1)).live, "quái 5 sao chọn tự do: " + free.live);
+});
+
+test("Lính chiến đá khổng lồ: mỗi đợt công kích trúng nó thì thủ và thủ phép giảm 1, vĩnh viễn; không còn đỡ đòn cho đồng minh", () => {
+  const s = board({ 0: ["khong-lo-mot-mat", { atk: 2, def: 2, hp: 10, maxHp: 10 }] }, { 0: ["linh-chien-da-khong-lo", {}], 1: ["may-chem", {}] });
+  const card = C.monsterCard("linh-chien-da-khong-lo");
+  assert.deepEqual([card.atk, card.def, card.mdef, card.hp], [2, 3, 3, 6]);
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  const stone = at(done, 1, 0);
+  assert.equal(stone.hp, 6, "2 công không xuyên 3 thủ: " + done.live);
+  assert.deepEqual([stone.def, stone.mdef], [2, 2], "giảm 1 cả hai sau đợt đó");
+  assert.equal(D.canWall(s, uid(s, 1, 0)), false);
+});
+
+test("Harpie Lady: Giảo hoạt lúc triệu hồi, chọn 1 trong 2 kỹ năng; trả lời xong mới nhường quyền", () => {
+  const card = C.monsterCard("my-dieu-nhan");
+  assert.equal(card.name, "Harpie Lady");
+  assert.equal(card.hp, 2);
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0, stars: 4 })) };
+  s = D.testGrant(s, 0, "my-dieu-nhan", false);
+  const summoned = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "my-dieu-nhan"), 0);
+  const ask = summoned.wileAsk?.[0];
+  assert.ok(ask, summoned.live);
+  assert.equal(ask.side, 0);
+  assert.equal(ask.picks.length, 2);
+  assert.notEqual(ask.picks[0], ask.picks[1]);
+  assert.equal(summoned.turn, 0, "chưa nhường khi chưa chọn");
+  assert.deepEqual([...at(summoned, 0, 0).shed].sort(), ["armor", "charm", "gust", "lash"], "chưa có kỹ năng nào");
+  const picked = D.answerWile(summoned, ask.picks[1]);
+  assert.equal(picked.wileAsk, null);
+  assert.equal(picked.turn, 1, "chọn xong thì nhường");
+  assert.ok(!at(picked, 0, 0).shed.includes(ask.picks[1]), picked.live);
+  assert.ok(at(picked, 0, 0).shed.includes(ask.picks[0]));
+  const timeout = D.answerWile(summoned, null);
+  assert.ok(ask.picks.includes(at(timeout, 0, 0).wit.picked[0]), "hết giờ lấy ngẫu nhiên trong 2 kỹ năng");
+});
+
+test("Harpie Lady: Giảo hoạt mời lại ở lượt chung thứ 3 sau lượt triệu hồi, không mời kỹ năng đã nhận", () => {
+  let s = board({ 0: ["my-dieu-nhan", {}] }, { 0: ["may-chem", {}] });
+  s = D.draw({ ...s, players: s.players.map((p) => ({ ...p, orb: 3 })) }, "spell");
+  const first = s.wileAsk[0].picks[0];
+  s = D.answerWile(s, first);
+  const born = at(s, 0, 0).wit.born;
+  assert.deepEqual(at(s, 0, 0).wit.picked, [first]);
+  for (let n = 1; n <= 3; n += 1) {
+    s = closeRound(s);
+    const clock = s.clock - born;
+    assert.equal(Boolean(s.wileAsk?.length), clock === 3, `lượt +${clock}`);
+  }
+  assert.ok(!s.wileAsk[0].picks.includes(first), "không mời lại kỹ năng đã nhận");
+});
+
+test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến hoá", () => {
+  let s = board({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }] }, { 3: ["may-chem", { hp: 20, maxHp: 20 }] });
+  s = rich(s);
+  s = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
+  assert.deepEqual(at(s, 0, 0).wit.deeds, ["attack"]);
+  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
+  s = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
+  assert.equal(at(s, 0, 0).wit.deeds.length, 1, "đánh lần 2 không tính thêm");
+  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
+  s = D.testGrant(s, 1, "hap-thu-ma-phap", false);
+  let gust = D.useSkill(s, uid(s, 0, 0), null, 0);
+  if (gust.step === "respond") gust = D.passResponse(gust);
+  assert.deepEqual(at(gust, 0, 0).wit.deeds, ["attack", "gust"], gust.live);
+  assert.equal(gust.birdAsk ?? null, null);
+  s = { ...gust, turn: 0, players: gust.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
+  let charm = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 3), 1);
+  if (charm.step === "respond") charm = D.passResponse(charm);
+  if (charm.plumeAsk) charm = D.answerPlume(charm, false);
+  assert.ok(charm.birdAsk, charm.live);
+  const evolved = D.evolveBird(charm, "nu-chua-dieu-nhan");
+  assert.equal(at(evolved, 0, 0).cardId, "nu-chua-dieu-nhan");
+});
+
+test("Tinh linh đàn hạc: triệu hồi chính nó +2 mana vào mộ mana (dư lên sao); đầu lượt +1 mana mỗi con; quái khác triệu hồi không kích", () => {
+  const spent = (p) => D.STAR_COST.slice(0, p.stars).reduce((a, b) => a + b, 0) + p.starGems;
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 2, starGems: 0 })) };
+  s = D.testGrant(s, 0, "tinh-linh-dan-hac", false);
+  const harp = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "tinh-linh-dan-hac"), 0);
+  assert.equal(harp.players[0].field[0]?.cardId, "tinh-linh-dan-hac", harp.live);
+  assert.equal(spent(harp.players[0]) - spent(s.players[0]), 4, "2 mana trả + 2 mana trao");
+  assert.match(harp.live, /Tiếng nhạc du dương/);
+  let other = D.testGrant(s, 0, "may-chem", false);
+  other = { ...other, players: other.players.map((p, i) => (i === 0 ? { ...p, field: [harp.players[0].field[0], null, null, null, null, null] } : p)) };
+  const plain = D.summon(other, other.players[0].reserve.findIndex((p) => p.id === "may-chem"), 1);
+  const fee = C.MONSTERS.find((m) => m.id === "may-chem").gems;
+  assert.equal(spent(plain.players[0]) - spent(other.players[0]), fee, "chỉ mana trả cho Máy chém: đàn hạc trên sân không kích");
+  let t = board({}, { 0: ["tinh-linh-dan-hac"], 1: ["tinh-linh-dan-hac"] });
+  t = { ...t, players: t.players.map((p) => ({ ...p, orb: 0, flask: 0 })) };
+  const closed = D.endTurn(D.endTurn(t));
+  assert.equal(closed.players[1].orb, 3, "1 + 2 con đàn hạc");
+  assert.match(closed.live + (closed.log ?? []).join(" "), /Tiếng nhạc du dương cho thêm 2 gem/);
+});
+
+test("Khoá 1: quái bị khoá không chặn, không Trả đòn; hết đòn thì gỡ khoá. Mũi tên thiên sứ trúng người chơi thì rút 1 lá", () => {
+  const settle = (x) => { for (let i = 0; i < 6 && x.step === "respond"; i += 1) x = D.passResponse(x); return x; };
+  let s = board({ 0: ["thien-su-vo-hinh"] }, { 0: ["rong-con", { atk: 2, def: 0, hp: 9, maxHp: 9 }], 1: ["may-chem", { atk: 2, def: 0, hp: 9, maxHp: 9 }] });
+  const angel = uid(s, 0, 0);
+  assert.deepEqual(D.lockChoices(s, angel).sort(), [uid(s, 1, 0), uid(s, 1, 1)].sort());
+  const locked = D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackFace(x, angel));
+  assert.equal(locked.hold?.seal?.uid, uid(s, 1, 0), locked.live);
+  assert.equal(at(locked, 1, 0).seal, angel);
+  assert.equal(D.assignBlock(locked, uid(s, 1, 0)).hold?.blocker ?? null, null, "quái bị khoá không chặn được");
+  const pile = D.pileLeft(s.players[0]);
+  const done = settle(locked);
+  assert.ok(done.players[1].hp < s.players[1].hp);
+  assert.equal(D.pileLeft(done.players[0]), pile - 1, "Mũi tên thiên sứ rút 1 lá");
+  assert.equal(done.players[0].draws, s.players[0].draws, "không tính lượt rút");
+  assert.equal(at(done, 1, 0).seal, undefined, "hết đòn thì gỡ khoá");
+  const blocked = settle(D.assignBlock(D.attackFace(s, angel), uid(s, 1, 1)));
+  assert.equal(blocked.players[1].hp, s.players[1].hp);
+  assert.equal(D.pileLeft(blocked.players[0]), pile, "bị chặn hết thì không rút");
+  const free = settle(D.attackMonster(s, angel, uid(s, 1, 0)));
+  assert.ok(free.counterAsk, "không khoá thì mục tiêu được Trả đòn");
+  const sealed = settle(D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackMonster(x, angel, uid(s, 1, 0))));
+  assert.ok(!sealed.counterAsk, "mục tiêu bị khoá thì không Trả đòn");
+  assert.equal(at(sealed, 1, 0).seal, undefined);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

@@ -3964,6 +3964,22 @@ button.trail-dot.is-on {
   color: #fff;
   text-shadow: 0 1px 0 #000, 0 0 2px #000, 0 0 1px #000;
 }
+/* Số cam to hơn, ở giữa ô sao (chủ game 21/11); 3 giây đầu mỗi vòng mới cả hai bên chớp. */
+.field-unit .fstat.is-count {
+  place-items: center;
+  text-align: center;
+  transform: translate(-50%, -45%) scale(1.6);
+  -webkit-text-stroke: 0.05em #3a1a00;
+  paint-order: stroke fill;
+}
+.count-blink .field-unit .fstat.is-count { animation: count-blink 0.55s ease-in-out infinite; }
+@keyframes count-blink {
+  0%, 100% { opacity: 1; filter: brightness(1.25) drop-shadow(0 0 0.25rem #ffb24a); }
+  50% { opacity: 0.2; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .count-blink .field-unit .fstat.is-count { animation: none; }
+}
 .fstat.is-count.is-hold {
   color: #ffe2a8;
   background: rgba(18, 10, 6, 0.72);
@@ -13548,7 +13564,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="khong-lo"], .kw-name[data-kw="khong-lo"] { --kw: #ff5a48; }
 .kw-icon[data-kw="sieu-toc"], .kw-name[data-kw="sieu-toc"] { --kw: #ff5a48; }
 .kw-icon[data-kw="nanh-vuot"], .kw-name[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="luon-lach-1"], .kw-name[data-kw="luon-lach-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="khoa-1"], .kw-name[data-kw="khoa-1"] { --kw: #3cff4a; }
 .kw-icon[data-kw="luon-lach-2"], .kw-name[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="phep"], .kw-name[data-kw="phep"] { --kw: #c14dff; }
 .kw-icon[data-kw="vinh-quang"], .kw-name[data-kw="vinh-quang"] { --kw: #ffc94d; }
@@ -14533,6 +14549,15 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   object-fit: contain;
 }
 
+/* Kuriboh phát nổ (chủ game 21/11): video 512×512, tâm nổ ở 50% ngang, 52,7% dọc. */
+.boom-blast {
+  position: absolute;
+  z-index: 16;
+  transform: translate(-50%, -52.7%);
+  pointer-events: none;
+  object-fit: contain;
+}
+
 .mz-necklace { position: relative; }
 .mz-necklace img { max-height: 4.6rem; }
 .mz-dpad { position: absolute; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 50%; border: 0.1rem solid rgba(217, 169, 54, 0.45); background: rgba(12, 26, 61, 0.25); color: rgba(255, 233, 168, 0.7); font-size: 0.8rem; padding: 0; cursor: pointer; z-index: 2; -webkit-tap-highlight-color: transparent; box-shadow: none; }
@@ -14680,6 +14705,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 /* Safari: alpha WebM becomes black-background MP4, so black must vanish by blending. */
 html[data-flatfx] .heal-blast,
 html[data-flatfx] .flare-blast,
+html[data-flatfx] .boom-blast,
 html[data-flatfx] .tide-vid,
 html[data-flatfx] .tide-wave,
 html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
@@ -14753,6 +14779,56 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .sk3d-core:has(.skill-art)::after, .rx-gem-core:has(.skill-art)::after { display: none; }
 .rx-show-skill { position: relative; display: block; width: 100%; aspect-ratio: 1; }
 .rx-show-skill .skill-art { left: 0; top: 0; width: 100%; height: 100%; }
+
+/* ---- Ô số đếm trên quái (chủ game 22/11): icon gốc của skill dạng ô vuông + số màu bên phải, màu theo bảng thông báo. ---- */
+.cntb {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+.cntb-ico {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  overflow: hidden;
+  border-radius: 0.2em;
+  background: #120d0a;
+  box-shadow: 0 0 0 0.06em rgba(255, 224, 150, 0.85), 0 0.08em 0.2em rgba(0, 0, 0, 0.75);
+}
+/* Hình gốc tròn: phóng để phủ kín ô vuông, không đổi hình. */
+.cntb-ico .skill-art { left: 0; top: 0; width: 100%; height: 100%; transform: scale(1.38); }
+.cntb-ico .glyph3d { position: absolute; inset: 12%; width: 76%; height: 76%; }
+.cntb-n { display: inline-flex; gap: 0.2em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cntb-n b {
+  font-weight: 800;
+  color: #fff;
+  -webkit-text-stroke: 0.06em #000;
+  paint-order: stroke fill;
+  text-shadow: 0 0.04em 0 #000, 0 0 0.12em #000;
+}
+.cntb-n b.is-pink { color: #ff4f93; }
+.cntb-n b.is-red { color: #ff4d4d; }
+.cntb-n b.is-green { color: #3ddc6a; }
+.cntb-n b.is-phys { color: #ffe14a; }
+.cntb-n b.is-ward { color: #c084fc; }
+.cntb-n b.is-tru { color: #d6d6d6; }
+.count-blink .cntb { animation: count-blink 0.55s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .count-blink .cntb { animation: none; }
+}
+.msheet-cntb { position: absolute; left: 0.1rem; top: -0.9rem; z-index: 4; }
+.msheet-cntb .cntb { position: relative; left: auto; top: auto; transform: none !important; font-size: 1.5rem; padding: 0.12em 0.3em 0.12em 0.14em; border-radius: 0.5em; background: rgba(14, 10, 8, 0.82); box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.7); }
+/* Ba số nợ của Vảy rồng: thu nhỏ và lùi trái để khỏi tràn mép lá. */
+.cntb.is-debt { transform: translate(-64%, -50%) scale(0.82); }
+.cntb.is-debt .cntb-n { gap: 0.2em; }
 /* Sinh mệnh mới (chủ game 21/11): bảng chọn 1 lá bỏ, cùng kiểu bảng Bài khởi đầu; lá xếp 3 cột, nhiều lá thì cuộn dọc. */
 .op.is-rebirth .rb-row { grid-template-columns: repeat(3, calc(26 * var(--cqw))); max-height: calc(58 * var(--cqh)); overflow-y: auto; padding: calc(1 * var(--cqh)) calc(1 * var(--cqw)); }
 .op.is-rebirth .op-dim { cursor: pointer; }
@@ -14934,4 +15010,12 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   inset: 0;
   background-size: 900% 900%;
   background-repeat: no-repeat;
+}
+
+/* Gió dịu đi (chủ game 22/11): mana bị thổi bay chớp rồi giảm. */
+.mark.is-drain,
+.mark.is-drain b { animation: drain-blink 1.2s ease-out 1; }
+@keyframes drain-blink {
+  0%, 30%, 60% { color: #fff; filter: drop-shadow(0 0 0.5em #ff4fa6) drop-shadow(0 0 0.9em #ff4fa6); transform: scale(1.3); }
+  15%, 45%, 100% { color: #ff4141; filter: none; transform: scale(1); }
 }

@@ -419,3 +419,29 @@ function clearOf(inner: BoxPt[], outer: BoxPt[], f: BoxPt, side: number, toward:
   }
   return true;
 }
+
+/** The way the chủ game drew a flow to a player's mana (22/11): a shape in screenshot pixels, laid exactly from `a` to `b`
+ *  (turned and scaled, not bent), as cubic pieces in box units. */
+export function drawnWay(shape: Array<[number, number]>, a: BoxPt, b: BoxPt): BoxPt[] {
+  const [x0, y0] = shape[0];
+  const [x1, y1] = shape[shape.length - 1];
+  const sl = Math.hypot(x1 - x0, y1 - y0) || 1;
+  const k = Math.hypot(b.x - a.x, b.y - a.y) / sl;
+  const rot = Math.atan2(b.y - a.y, b.x - a.x) - Math.atan2(y1 - y0, x1 - x0);
+  const c = Math.cos(rot);
+  const sn = Math.sin(rot);
+  const box = shape.map(([x, y]) => ({ x: a.x + k * ((x - x0) * c - (y - y0) * sn), y: a.y + k * ((x - x0) * sn + (y - y0) * c) }));
+  const path: BoxPt[] = [box[0]];
+  for (let i = 0; i + 1 < box.length; i += 1) {
+    const p0 = box[Math.max(0, i - 1)];
+    const p1 = box[i];
+    const p2 = box[i + 1];
+    const p3 = box[Math.min(box.length - 1, i + 2)];
+    path.push({ x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 }, { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 }, p2);
+  }
+  return path;
+}
+
+export const MANA_TRUNK: Array<[number, number]> = [[216, 885], [279, 930], [336, 970], [380, 1010], [415, 1050], [436, 1090], [452, 1130], [465, 1170], [478, 1210], [494, 1250], [500, 1268]];
+export const MANA_TO_GEMS: Array<[number, number]> = [[500, 1268], [525, 1288], [550, 1300], [575, 1309], [625, 1319], [650, 1325], [675, 1328], [703, 1334]];
+export const MANA_TO_ORB: Array<[number, number]> = [[500, 1268], [524, 1337], [550, 1404], [580, 1470], [615, 1532], [655, 1592], [699, 1649], [745, 1705]];

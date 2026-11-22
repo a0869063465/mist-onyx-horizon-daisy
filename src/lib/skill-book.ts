@@ -54,13 +54,15 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "yeu-tinh-chuc-phuc": [P("Lời chúc phúc của tinh linh", "fairy-wand"), A("Hỗ công", "crossed-swords"), S("Hộ thủ", "checked-shield")],
   "mo-voi-ma-mut": [slow(R("Nguyền rủa", "animal-skull")), P("Ác linh", "ghost")],
   "ong-khong-lo": [A("Kim châm tê liệt", "bee")],
-  "linh-chien-da-khong-lo": [S("Tường thành", "stone-wall")],
+  "linh-chien-da-khong-lo": [P("Tường thành", "stone-wall")],
   "khung-long-vay-kiem": [P("Vãy phá giáp", "stegosaurus-scales")],
   "rong-boc-trung": [A("Thế công", "dragon-spiral"), A("Thế thủ", "egg-defense"), NOTE("đổi thế công hoặc thế thủ")],
   "ga-he-dang-so": [A("Quả cầu bóng đêm", "concentration-orb")],
   "tho-den-tinh-nghich": [P("Nhảy qua lại", "rabbit")],
-  "cuc-bong-ma-quai": [A("Phát nổ", "spiky-explosion"), A("Pháo kích", "cannon-shot"), S("Bông mềm", "fluffy-cloud"), NOTE("mỗi loại kỹ năng", "các kỹ năng ngoài")],
+  "cuc-bong-ma-quai": [P("Phát nổ", "spiky-explosion"), A("Cấp số nhân", "three-friends")],
   "quai-thu-thien-su": [P("Cầu nguyện", "prayer"), P("Ân huệ thiên sứ", "angel-wings")],
+  "tinh-linh-dan-hac": [P("Tiếng nhạc du dương", "harp")],
+  "thien-su-vo-hinh": [P("Mũi tên thiên sứ", "cupidon-arrow")],
   "te-giac-be-con": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhino-banner")],
@@ -84,6 +86,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ke-san-moi-tu-than": [P("Kẻ săn mồi tử thần", "grim-reaper")],
   "sat-nhan-bat-giu": [A("Bắt Giữ", "manacles")],
   "kraken": [SP("Đắm tàu", "kraken-tentacle", "tấn công vật lý vào ta"), NOTE("lưu ý")],
+  "nang-va-gio": [S("Gió dịu đi", "whirlwind"), slow(A("Nắng ấm lên", "flame-spin"))],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],
   "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số cam:", "điểm do kazura kiếm được")],
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
@@ -121,7 +124,8 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
   "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
-  "my-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
+  // Harpie Lady (chủ game 21/11): Giảo hoạt đứng đầu, 4 kỹ năng giữ nguyên, Tiến hoá cuối cùng (chữ theo chữ lá chủ game viết).
+  "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Tiến hoá", "round-star")],
   "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), slow(A("Dụ dỗ", "lips")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), slow(A("Gió xoáy", "tornado")), slow(A("Dụ dỗ", "lips")), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],
@@ -171,7 +175,7 @@ const tidy = (lines: string[]) =>
     .trim();
 
 /**
- * The mana a skill costs, read from its description: every "N mana" except mana gained ("nhận thêm 1 mana")
+ * The mana a skill costs, read from its description: every "N mana" except mana gained ("nhận thêm 1 mana", "trao 2 mana")
  * or an alternative ("Hoặc tiêu hao 2 mana để tiến hoá"). Several different costs show as "0/1"; none, or
  * only 0, shows nothing.
  */
@@ -179,7 +183,7 @@ export function skillCost(text: string): string {
   const costs: number[] = [];
   for (const hit of text.matchAll(/(\d+)\s*mana/gi)) {
     const before = text.slice(Math.max(0, (hit.index ?? 0) - 28), hit.index).toLowerCase();
-    if (/nhận|hoặc/.test(before)) continue;
+    if (/nhận|hoặc|trao/.test(before)) continue;
     const value = Number(hit[1]);
     if (!costs.includes(value)) costs.push(value);
   }
