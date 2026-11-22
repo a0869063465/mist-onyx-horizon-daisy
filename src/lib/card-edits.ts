@@ -53,7 +53,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ngai-khong-lo": [{ key: "dust", label: "Thổi độc", tone: "y" }],
   "ngai-nu-hoang": [{ key: "dust", label: "Thổi độc 2", tone: "y" }],
   "ngai-hoan-my": [{ key: "dust", label: "Thổi độc 3", tone: "y" }],
-  "sua-hut-ma-phap": [{ key: "spit", label: "Tích luỹ ma pháp", tone: "y" }],
   "con-thinh-no-cua-hai-vuong": [{ key: "rage", label: "Cơn thịnh nộ của hải thần", tone: "y" }],
   "chien-binh-lan-khuat": [{ key: "hide", label: "Ẩn mình", tone: "y" }],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
@@ -191,6 +190,8 @@ function write(store: Store) {
 }
 
 const STALE_SKILLS: Array<[string, string]> = [
+  ["kraken", "sẽ thêm vào công của hắn"],
+  ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
   ["khong-lo-mot-mat", "Sau mỗi lần giáp lá cà"],
   ["khong-lo-mot-mat", "tốn thêm 1 mana"],
   ["tho-den-tinh-nghich", "tăng lên đến 75% khi đấu với quái thú"],

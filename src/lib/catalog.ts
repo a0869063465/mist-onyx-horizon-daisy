@@ -322,12 +322,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "sua-hut-ma-phap",
     "name": "Sứa hút ma pháp",
     "stars": 2,
-    "gems": 1,
-    "skill": "__**Tích luỹ ma pháp**__: \n- Phần sát thương phép bị thủ phép chặn được tích lại.\n- Tốn 0 mana gây 3 cộng với số sát thương đã tích tụ lên 1 kẻ địch hoặc người chơi.",
-    "atk": 1,
+    "gems": 0,
+    "skill": "**__Phản phép__**:\nBất kỳ quái thú nào tấn công phép thuật vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công phép thuật là đòn tấn công có nhiều dame phép thuật hơn.",
+    "atk": 3,
     "def": 0,
-    "mdef": 4,
-    "hp": 5,
+    "mdef": 0,
+    "hp": 2,
     "art": "sua"
   },
   {
@@ -385,12 +385,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "kraken",
     "name": "Kraken",
     "stars": 2,
-    "gems": 1,
-    "skill": "**__Đắm tàu__**: \nKhi giáp lá cà, phần sát thương bị thủ của Kraken chặn được sẽ thêm vào công của hắn.",
+    "gems": 0,
+    "skill": "**__Đắm tàu__**:\nBất kỳ quái thú nào tấn công vật lý vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công vật lý là đòn tấn công có nhiều dame vật lý hơn.",
     "atk": 3,
-    "def": 3,
+    "def": 0,
     "mdef": 0,
-    "hp": 4,
+    "hp": 3,
     "art": "kraken",
     "strong": "Trao đổi vật lý, dame rất to, thủ rất mạnh.\n",
     "weak": "Không có thủ phép, máu không cao",
@@ -1194,6 +1194,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Khi 1 quái thú đồng minh bị nhắm đến bởi kỹ năng của đối phương, hoán đổi vị trí của nó với 1 quái thú của đối phương, cho đến hết lượt đấu.",
     "picture": "spell:hop-ma-thuat"
+  },
+  {
+    "id": "qua-trung-thien-su",
+    "name": "Quả trứng thiên sứ",
+    "gems": 0,
+    "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
+    "picture": "spell:qua-trung-thien-su"
   }
 ];
 

@@ -14778,3 +14778,141 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .clock-side > .card { width: 100%; height: 100%; aspect-ratio: auto; }
 .clock-side.is-on { transform: translate(-50%, -50%) scale(1.03); }
 .clock-side.is-dim { opacity: 0.4; filter: grayscale(0.6) brightness(0.7); }
+
+/* Sân động Rừng rậm / Bóng tối (chủ game 21/11): video nằm trên ảnh bàn, ảnh tĩnh làm nền chờ. */
+.env-field { position: absolute; left: 0; width: 100%; pointer-events: none; overflow: hidden; }
+.env-field > img, .env-field > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.env-field > video { opacity: 0; transition: opacity 0.6s ease; }
+.env-field > video.is-on { opacity: 1; }
+/* Bàn B: phần sân dưới của video bị cắt trước viền HUD (HUD của B nằm thấp hơn), mờ dần vào nền của B. */
+.env-field.is-fade { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); mask-image: linear-gradient(to bottom, #000 0, #000 69%, transparent 79%); }
+.env-pill { position: absolute; pointer-events: none; }
+
+/* Ẩn (chủ game 21/11): nút cùng kiểu Triệu hồi / Hiến tế / Dung hợp, màu trắng; huy hiệu tròn là lá úp chìm trong sương
+   mù trôi chậm. */
+.act3d.is-mist { --tone: #eef3fb; --glow: rgba(230, 240, 255, 0.55); }
+.act3d.is-mist .act3d-label { color: #f4f7fc; }
+.act3d-ico.is-veil {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #3a4250 0%, #12151b 75%);
+}
+.act3d-veil {
+  position: absolute;
+  inset: 16% 26%;
+  border-radius: 0.18rem;
+  background: url("/ui/card-back-you.webp") center / cover no-repeat;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55), 0 0 8px rgba(230, 240, 255, 0.7);
+  transform: rotate(-8deg);
+  filter: saturate(0.25) brightness(1.15);
+}
+.act3d-ico.is-veil::before,
+.act3d-ico.is-veil::after {
+  content: "";
+  position: absolute;
+  inset: -30% -60%;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 22% at 30% 62%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(34% 18% at 72% 40%, rgba(235, 242, 255, 0.6), transparent 70%),
+    radial-gradient(30% 16% at 50% 82%, rgba(255, 255, 255, 0.55), transparent 70%);
+  animation: act3d-mist 6s ease-in-out infinite alternate;
+}
+.act3d-ico.is-veil::after {
+  opacity: 0.7;
+  animation-duration: 8.5s;
+  animation-direction: alternate-reverse;
+}
+@keyframes act3d-mist {
+  from { transform: translateX(-14%); }
+  to { transform: translateX(14%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .act3d-ico.is-veil::before,
+  .act3d-ico.is-veil::after { animation: none; }
+}
+
+/* Quái ẩn (chủ game 21/11): bên mình lá úp (lưng bài che cả lá, chỉ số giấu), bên kia thấy dạng ẩn như cũ. Lật: bên mình lá
+   quay mặt, bên đối thủ sương mù tan. */
+.slot .field-unit .fu-body { transform-style: flat; }
+.slot .fu-body > .lurk-back {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 0.55rem;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.slot.is-lurk .fu-body > :not(.lurk-back):not(.fog-wipe):not(.fog-video) { visibility: hidden; }
+.slot .fu-body.is-flip { animation: lurk-flip-face 0.34s 0.3s ease-out both; }
+.slot .field-unit > .lurk-turn {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 0.55rem;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  animation: lurk-flip-back 0.3s ease-in both;
+}
+@keyframes lurk-flip-back {
+  from { transform: translate(0.9%, -2.46%) scale(0.981, 1.0166) perspective(500px) rotateY(0); }
+  to { transform: translate(0.9%, -2.46%) scale(0.981, 1.0166) perspective(500px) rotateY(90deg); opacity: 0.4; }
+}
+@keyframes lurk-flip-face { from { transform: perspective(500px) rotateY(-90deg); } to { transform: perspective(500px) rotateY(0); } }
+.slot .fu-body > .fog-wipe {
+  position: absolute;
+  inset: -22%;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 30% 40%, rgba(240, 246, 255, 0.95), transparent 72%),
+    radial-gradient(34% 28% at 70% 60%, rgba(225, 236, 252, 0.9), transparent 72%),
+    radial-gradient(42% 30% at 50% 82%, rgba(255, 255, 255, 0.85), transparent 72%),
+    radial-gradient(40% 28% at 50% 18%, rgba(235, 242, 255, 0.85), transparent 72%);
+  animation: fog-wipe 0.95s ease-out forwards;
+}
+.slot .fu-body > .lurk-fog {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 198%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -44.75%);
+  z-index: 6;
+  pointer-events: none;
+  padding: 0;
+  max-width: none;
+}
+.slot .fu-body > .lurk-fog.is-out { animation: fog-still-out 0.3s 0.15s linear forwards; }
+@keyframes fog-still-out { to { opacity: 0; } }
+.slot .fu-body:has(> .lurk-fog) > :not(.lurk-fog):not(.fog-video):not(.fog-wipe) { visibility: hidden; }
+.slot .fu-body > .fog-video { animation: fog-vid-in 0.25s linear both; }
+@keyframes fog-vid-in { from { opacity: 0; } to { opacity: 1; } }
+.slot .fu-body > .fog-video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 198%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -44.75%);
+  z-index: 7;
+  pointer-events: none;
+  padding: 0;
+  max-width: none;
+}
+@keyframes fog-wipe {
+  0% { opacity: 1; transform: scale(0.85); }
+  55% { opacity: 0.85; }
+  100% { opacity: 0; transform: scale(1.6) translateY(-8%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot .fu-body.is-flip, .slot .field-unit > .lurk-turn, .slot .fu-body > .fog-wipe { animation-duration: 0.01s; }
+}

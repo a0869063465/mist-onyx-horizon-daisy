@@ -10,9 +10,9 @@ import { tr } from "@/lib/i18n";
 import { useSwipe } from "@/lib/swipe";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
-export type SheetTone = "gold" | "red" | "purple" | "fuse";
+export type SheetTone = "gold" | "red" | "purple" | "fuse" | "mist";
 /** `swirl`: a round emblem holding the owner's whirlpool picture (Dung hợp), like Hiến tế's round emblem. */
-export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress?: () => void; rows?: SheetRows };
+export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl" | "veil"; onPress?: () => void; rows?: SheetRows };
 /**
  * A summon button (chủ game 28/10): pressing it hides it, and ↑ (hàng trước) and ↓ (hàng sau) show side by side where it
  * stood; the arrow summons into that row. `front`/`back` false: the row takes no monster, its arrow is dark.
@@ -206,6 +206,7 @@ const CRYSTAL: Record<SheetTone, { top: string[]; low: string[]; glow: string }>
   red: { top: ["#ffe4de", "#ff8a76", "#ff4a35"], low: ["#e0281a", "#a8140a", "#600400"], glow: "#ff5a40" },
   purple: { top: ["#f6e8ff", "#d4a2ff", "#b46cff"], low: ["#9346f0", "#6a22c0", "#3a0a78"], glow: "#c88cff" },
   fuse: { top: ["#ffe6ff", "#f39cff", "#ee5bff"], low: ["#ff3a3a", "#c0101a", "#6a0008"], glow: "#ff6ad8" },
+  mist: { top: ["#ffffff", "#eef3fb", "#d6dfeb"], low: ["#b9c4d4", "#8794a8", "#4d5868"], glow: "#eef4ff" },
 };
 
 /** A faceted crystal floating over a gold ring pedestal (simple 3D, after the owner's reference picture). */
@@ -259,7 +260,7 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
   const tile = (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={rows ? () => setRowsOpen(true) : action.onPress}>
       <span className={`act3d-ico${crystal ? " is-crystal" : ""}${action.emblem ? ` is-${action.emblem}` : ""}`}>
-        {action.emblem === "swirl" ? <i className="act3d-swirl" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
+        {action.emblem === "swirl" ? <i className="act3d-swirl" /> : action.emblem === "veil" ? <i className="act3d-veil" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
       </span>
       <span className="act3d-label">
         {tr(action.label)}

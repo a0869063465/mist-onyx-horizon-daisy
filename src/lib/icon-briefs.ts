@@ -248,6 +248,8 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "phuc-kich":
         // Chủ game 29/10–30/10: it stops a skill; "Một đồng minh ra đòn".
         return ["Chặn kỹ năng", `Một đồng minh ra đòn (+${num(e, /tăng\s*(\d+)\s*công/, 2)} công)`];
+      case "qua-trung-thien-su":
+        return ["Chặn đòn tấn công", "Một quái bị nhắm được trả đòn"];
       case "hoan-doi":
         return ["Đổi chỗ quái bị nhắm với quái khác"];
       case "hop-ma-thuat":

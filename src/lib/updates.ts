@@ -1089,7 +1089,15 @@ export const PENDING_NOTES: string[] = [
   "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
   "Thêm Quả trứng sinh mệnh (2 sao, công 0, thủ 1, thủ phép 0, máu 1) với skill buff Sinh mệnh mới: ở lượt của bạn, bỏ 1 lá bạn chọn trên tay, đối thủ bỏ 1 lá ngẫu nhiên, cả hai bên rút 1 lá; tiêu hao 1 mana lần đầu, 0 các lần sau, và lần đầu bạn rút thêm 1 lá.",
   "Thêm Đồng hồ khó đoán (2 sao, 1 mana, công 2, máu 2) với skill Tiktok: ra sân chọn Đồng hồ hung bạo (công 5, máu 6, Đòn đánh phép) hoặc Đồng hồ mỏng manh (công 0, máu 1), mỗi 2 lượt tự đổi sang dạng kia; khi úp thì đứng ở dạng hung bạo, không đổi.",
-  "Đồng hồ khó đoán: kéo lá ra chọn Triệu hồi hoặc Úp; Triệu hồi thì chọn Đồng hồ hung bạo hoặc Đồng hồ mỏng manh rồi chọn hàng, Úp thì ra sân ở dạng Đồng hồ hung bạo.",
+  "Đồng hồ khó đoán: kéo lá ra chọn Triệu hồi hoặc Ẩn; Triệu hồi thì chọn Đồng hồ hung bạo hoặc Đồng hồ mỏng manh rồi chọn hàng, Ẩn thì ra sân ở dạng Đồng hồ hung bạo.",
+  "Sân Rừng rậm và Bóng tối chuyển động bằng video. Mỗi nửa sân tự đổi ngẫu nhiên giữa ảnh tĩnh 30 giây và 2 video, không lặp lại liền nhau.",
+  "Kéo lá quái ra có thêm nút Ẩn: tốn thêm 1 mana, quái úp trên sân. Đủ 2 vòng (3 nếu triệu hồi ở vòng đối thủ) thì Kích hoạt được; bị đánh, bị kỹ năng, bị phép hoặc hết 4 vòng thì tự lật. Lật luôn loé sáng. Có Sương mù thì lật xong về xấp bài, không thì thành quái thường.",
+  "Kraken: 0 mana, công 3, thủ 0, thủ phép 0, máu 3. Đắm tàu: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay.",
+  "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
+  "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
+  "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
+  "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
+  "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
 ];
 
 function remarkOf(notes: string[]) {

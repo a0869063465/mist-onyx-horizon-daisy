@@ -446,6 +446,22 @@ export const BALANCE_LOG: BalanceEntry[] = [
     wave: 36,
     stats: { hp: { from: 3, to: 2 } },
   },
+  {
+    id: "kraken",
+    at: "2026-11-21",
+    wave: 37,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, def: { from: 3, to: 0 }, hp: { from: 4, to: 3 } },
+    notes: ["Đắm tàu mới: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay"],
+  },
+  {
+    id: "sua-hut-ma-phap",
+    at: "2026-11-21",
+    wave: 37,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, atk: { from: 1, to: 3 }, mdef: { from: 4, to: 0 }, hp: { from: 5, to: 2 } },
+    notes: ["Phản phép mới: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay", "Có keyword Đòn đánh phép"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

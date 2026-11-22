@@ -1,3 +1,4 @@
+import { EnvField, hasEnvField } from "@/components/game/env-field";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { KeywordRow } from "@/components/game/keyword-row";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
@@ -5,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, FlareBlast, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -148,6 +149,7 @@ import {
   skillManaCost,
   skillFigure,
   summon,
+  summonHidden,
   summonVow,
   previewMon,
   vowCap,
@@ -160,6 +162,8 @@ import {
   canCastSwap,
   shelterPicks,
   boxAllies,
+  eggAim,
+  eggAllies,
   boxFoes,
   virusTargets,
   slowWaiting,
@@ -373,8 +377,10 @@ type Staged = {
   mode: "menu" | "rows" | "none";
   picks: string[] | null;
   leave: null | { kind: "home" } | { kind: "land"; slot: Slot };
-  /** Đồng hồ khó đoán (chủ game 22/11): Úp hay Triệu hồi, và dạng đã chọn (null = đang chọn). */
-  clock?: { hide: boolean; form: string | null };
+  /** Triệu hồi Ẩn (chủ game 21/11). */
+  hide?: boolean;
+  /** Đồng hồ khó đoán (chủ game 22/11): dạng đã chọn trước khi ra sân (null = đang chọn). Ẩn thì luôn hung bạo. */
+  clock?: { form: string | null };
 };
 /** Giữa lá hiện to giữa sân, theo % chiều cao bàn. */
 const SHOW_TOP = 47;
@@ -941,6 +947,7 @@ const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "co-may-thoi-gian": "ally",
   "virus-an-mon": "ally",
   "phuc-kich": "ally",
+  "qua-trung-thien-su": "ally",
   "ngan-chan-phong-ngu": "foe",
   "la-chan-phan-don": "foe",
 };
@@ -950,7 +957,7 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat"]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su"]);
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1129,6 +1136,7 @@ const ANSWER_SPELLS = new Set([
   "giap-co-khi",
   "phan-nguyen",
   "hop-ma-thuat",
+  "qua-trung-thien-su",
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1155,6 +1163,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   if (id === "hap-thu-ma-phap" && duel.hold && eatFor(duel, duel.hold.priority)) return true;
   // A slow skill waiting in the chain is broken only by Hấp thụ ma pháp for now (chủ game 30/10).
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
+  // Quả trứng thiên sứ (chủ game 21/11): an enemy monster's attack or damaging skill aimed at a monster of yours.
+  if (id === "qua-trung-thien-su") return duel.hold?.priority !== undefined && eggAim(duel, duel.hold.priority) !== null;
   if (GUARD_SPELLS.has(id) && (duel.hold?.priority === undefined || answerSide(duel) !== duel.hold.priority)) return false;
   const pending = duel.pending;
   const horn = hornPending(duel);
@@ -1956,6 +1966,8 @@ function PlayPage() {
   const [shake, setShake] = useState(false);
   /** The attacker's last thrust as its blow lands (chủ game 22/10). */
   const [lift, setLift] = useState<string | null>(null);
+  /** Quái ẩn vừa lật (chủ game 21/11): bên mình lật bài, bên kia xoá sương mù; uid → kiểu hiệu ứng. */
+  const [unveil, setUnveil] = useState<Record<string, "own" | "foe">>({});
   const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
@@ -3070,10 +3082,10 @@ function PlayPage() {
       const cast = prev.pending;
       if (quiet || tutorial || prev.mid !== duel.mid || prev.step !== "respond" || !cast || duel.pending) return null;
       if (cast.kind !== "beam" && cast.kind !== "gnaw-skill" && !(cast.kind === "face" && cast.skill)) return null;
-      if (prev.hold?.ambush || (duel.reel && !prev.reel) || (duel.wheel && !prev.wheel)) return null;
+      if (prev.hold?.ambush || prev.hold?.egg || (duel.reel && !prev.reel) || (duel.wheel && !prev.wheel)) return null;
       const known = new Set((prev.events ?? []).map((row) => row.id));
       if (!(duel.events ?? []).some((row) => !known.has(row.id) && row.kind === "pass")) return null;
-      if (duel.fx !== prev.fx && /chặn kỹ năng|Hấp thụ ma pháp/.test(duel.live)) return null;
+      if (duel.fx !== prev.fx && /chặn kỹ năng|chặn đòn tấn công|Hấp thụ ma pháp/.test(duel.live)) return null;
       const uid = cast.kind === "face" ? cast.attacker : cast.caster;
       const seat = seatOf(prev, uid);
       const mon = fieldMon(prev, uid);
@@ -3212,12 +3224,32 @@ function PlayPage() {
       setLift(uid);
       window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
-    // Linh hoạt (chủ game 18/11): quái vừa né đòn chớp sáng bằng hiệu ứng phát quang có sẵn, cả hai bên đều thấy.
+    // Quái ẩn vừa lật mà còn trên sân: lá của mình lật mặt, bên đối thủ sương mù tan đi (chủ game 21/11).
+    if (!quiet && !tutorial && prev.mid === duel.mid) {
+      const fresh: Record<string, "own" | "foe"> = {};
+      for (const side of [0, 1] as const) {
+        for (const mon of duel.players[side].field) {
+          if (!mon || mon.lurk) continue;
+          const was = fieldMon(prev, mon.uid);
+          if (was?.lurk) fresh[mon.uid] = side === viewerNow ? "own" : "foe";
+        }
+      }
+      const keys = Object.keys(fresh);
+      if (keys.length > 0) {
+        setUnveil((now) => ({ ...now, ...fresh }));
+        for (const uid of keys) {
+          window.setTimeout(() => setUnveil((now) => Object.fromEntries(Object.entries(now).filter(([key]) => key !== uid))), fresh[uid] === "foe" ? FOG_MS : 1100);
+        }
+      }
+    }
+    // Linh hoạt (chủ game 18/11), quái ẩn kích hoạt / Đắm tàu / Phản phép (21/11): chớp sáng bằng hiệu ứng phát quang có
+    // sẵn, cả hai bên đều thấy. Quái ẩn về xấp (sương mù) thì chớp ở ô nó vừa rời.
     if (!quiet && !tutorial && prev.mid === duel.mid && duel.dodge && duel.dodge.id !== prev.dodge?.id) {
       for (const uid of duel.dodge.uids) {
-        const seat = seatOf(duel, uid);
-        const mon = fieldMon(duel, uid);
-        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
+        const here = seatOf(duel, uid);
+        const seat = here ?? seatOf(prev, uid);
+        const mon = fieldMon(duel, uid) ?? fieldMon(prev, uid);
+        if (!seat || !mon || (here && seaVeiled(duel, viewerNow, mon.uid))) continue;
         const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
         emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
         setLift(uid);
@@ -3532,7 +3564,7 @@ function PlayPage() {
     const armingGun = Boolean(duel.reel?.kind === "gun" && !prev.reel);
     const started = pendingChanged && duel.pending ? shotLook(duel, duel.pending) : null;
     // A skill stopped by Phục kích never goes off: no fire on the target (chủ game 01/11).
-    const stopped = Boolean(prev.hold?.ambush) || /Phục kích[^.]*chặn kỹ năng|chặn kỹ năng/.test(said);
+    const stopped = Boolean(prev.hold?.ambush) || Boolean(prev.hold?.egg) || /Phục kích[^.]*chặn kỹ năng|chặn kỹ năng/.test(said);
     const finished = pendingChanged && !duel.pending && !armingGun && !stopped ? shotLook(prev, prev.pending) : null;
     const stamped = !started && !finished && duel.skill && duel.fx !== prev.fx ? skillLook(duel.skill.id, duel.skill.index) : null;
     const fromSpell = spent ? spellFxLook(spent) : null;
@@ -4212,6 +4244,22 @@ function PlayPage() {
     setAim({ kind: "spell", index, spellId: "hop-ma-thuat", ...(allies.length === 1 ? { from: allies[0] } : {}) });
     holdNotice(allies.length === 1 ? "Chọn quái đối thủ để đổi chỗ." : "Chọn đồng minh đang bị nhắm.");
   }
+  /** Quả trứng thiên sứ: one monster aimed at = cast at once; several = an icon waits while one of them is picked. */
+  function startEgg(index: number) {
+    if (!duel) return;
+    const picks = eggAllies(duel, viewer);
+    if (picks.length === 0) {
+      holdNotice("Chưa có quái nào của bạn bị tấn công hoặc bị kỹ năng nhắm.");
+      return;
+    }
+    if (picks.length === 1) {
+      apply(castSpell(duel, index, picks[0]));
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: "qua-trung-thien-su" });
+    holdNotice("Chọn 1 quái bị nhắm đến để trả đòn.");
+  }
   function cancelPick() {
     setAim(null);
     setVowAsk(null);
@@ -4772,6 +4820,7 @@ function PlayPage() {
       if (id === "soi-xich-dia-nguc") return true;
       if (id === "sung-loi-pha") return hornFit(mon.cardId);
       if (id === "phuc-kich") return ambushReady(mon);
+      if (id === "qua-trung-thien-su") return eggAllies(duel, viewer).includes(mon.uid);
       if (id === "ngan-chan-phong-ngu") return shelterPicks(duel).includes(mon.uid);
       // The others by the rule itself: the card leaves the hand only on a target it takes.
       return castSpell(duel, index, mon.uid).players[viewer].hand.length < cards;
@@ -5156,6 +5205,18 @@ function PlayPage() {
         }
         playCue("chain");
         setAim({ kind: "spell", index: payload.index, spellId: payload.spellId });
+        return;
+      }
+      // Quả trứng thiên sứ: one monster aimed at = cast at once; several = dropped on one of them, or an icon waiting.
+      if (payload.spellId === "qua-trung-thien-su") {
+        if (hit?.closest(".hand")) return;
+        const picks = eggAllies(duel, viewer);
+        const ally = slotEl && owner === viewer ? you.field.find((mon) => mon?.uid === slotEl.dataset.uid) ?? null : null;
+        if (picks.length === 1 || (ally && picks.includes(ally.uid))) {
+          apply(castSpell(duel, payload.index, picks.length === 1 ? picks[0] : ally!.uid));
+          return;
+        }
+        startEgg(payload.index);
         return;
       }
       // Hộp ma thuật: dropped on an enemy with one ally struck, it is cast; elsewhere it waits as an icon.
@@ -5691,6 +5752,13 @@ function PlayPage() {
       }
       return;
     }
+    if (aim?.kind === "spell" && aim.spellId === "qua-trung-thien-su") {
+      if (side === viewer && eggAllies(duel, viewer).includes(mon.uid)) {
+        apply(castSpell(duel, aim.index, mon.uid));
+        setAim(null);
+      }
+      return;
+    }
     if (aim?.kind === "spell" && aim.spellId === "phuc-kich") {
       if (side === viewer && ambushReady(mon)) {
         apply(castSpell(duel, aim.index, mon.uid));
@@ -5943,6 +6011,7 @@ function PlayPage() {
   const took = (next: Duel) => next.players[viewer].reserve.length < you.reserve.length;
   const rowSlot = (row: SummonRow, play: (slot: Slot) => Duel): Slot | null => ROW_SLOTS[row].find((slot) => took(play(slot))) ?? null;
   const summonAt = (index: number) => (slot: Slot) => (you.field[slot] ? duel : summon(duel, index, slot));
+  const hideAt = (index: number) => (slot: Slot) => (you.field[slot] ? duel : summonHidden(duel, index, slot));
   const vowAt = (index: number, picks: string[]) => (slot: Slot) => {
     const mon = you.field[slot];
     return mon && !picks.includes(mon.uid) ? duel : summonVow(duel, index, slot, picks);
@@ -6025,13 +6094,31 @@ function PlayPage() {
           },
         },
       });
-      // Đồng hồ khó đoán (chủ game 22/11): ngoài Triệu hồi còn Úp (quái ẩn, luôn hung bạo).
-      if (held.id === CLOCK) {
-        list.push({ key: "hide", label: "Úp", tone: "purple", cost: cost(place(first)), onPress: () => {
-          setInspect(null);
-          openStage(index, { hide: true, form: CLOCK_FIERCE });
-        } });
-      }
+    }
+    // Ẩn (chủ game 21/11): mọi quái 1–4 sao, tốn thêm 1 mana, rồi chọn hàng như Triệu hồi.
+    const hidePlace = hideAt(index);
+    const hideFront = rowSlot("front", hidePlace);
+    const hideBack = rowSlot("back", hidePlace);
+    const hideFirst = hideFront ?? hideBack;
+    if (hideFirst !== null) {
+      list.push({
+        key: "hide",
+        label: "Ẩn",
+        tone: "mist",
+        emblem: "veil",
+        cost: cost(hidePlace(hideFirst)),
+        rows: {
+          front: hideFront !== null,
+          back: hideBack !== null,
+          advice: advisedRow(held.id),
+          onRow: (row) => {
+            const slot = row === "front" ? hideFront : hideBack;
+            if (slot === null) return;
+            setInspect(null);
+            apply(summonHidden(duel, index, slot));
+          },
+        },
+      });
     }
     if (vowCap(held.id, held.saved?.level ?? 1) > 0 && ownLive.length > 0) {
       const offer = vowAt(index, [ownLive[0].uid]);
@@ -6083,7 +6170,14 @@ function PlayPage() {
     pickMon !== null
       ? handActions(pickMon).map((act) => {
           const index = pickMon;
-          const press = act.key === "summon" ? (pickHeld?.id === CLOCK ? () => openStage(index, { hide: false, form: null }) : () => setPickStage("rows")) : act.onPress;
+          const press =
+            act.key === "summon"
+              ? pickHeld?.id === CLOCK
+                ? () => openStage(index, { form: null })
+                : () => setPickStage("rows")
+              : act.key === "hide"
+                ? () => setStage({ index, id: you.reserve[index]?.id ?? "", mode: "rows", picks: null, leave: null, hide: true, ...(pickHeld?.id === CLOCK ? { clock: { form: CLOCK_FIERCE } } : {}) })
+                : act.onPress;
           return {
             ...act,
             rows: undefined,
@@ -6136,10 +6230,10 @@ function PlayPage() {
   }
   const stageHeld = stage ? you.reserve[stage.index] : undefined;
   const stageOk = Boolean(stage && stageHeld && stageHeld.id === stage.id);
-  const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : summonAt(stage.index)) : null;
+  const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : stage.hide ? hideAt(stage.index) : summonAt(stage.index)) : null;
   const stageRows = stagePlace ? { front: rowSlot("front", stagePlace), back: rowSlot("back", stagePlace) } : null;
   // Đang chọn dạng Đồng hồ (Triệu hồi, chưa đáp): lá giữa ẩn, 2 dạng hai bên; chưa chọn thì mũi tên mờ.
-  const stageChoosing = Boolean(stage?.clock && !stage.clock.hide && stage.mode === "rows" && !stage.leave);
+  const stageChoosing = Boolean(stage?.clock && !stage.hide && stage.mode === "rows" && !stage.leave);
   const stageWaits = Boolean(stage?.clock && !stage.clock.form);
   const closeStage = () => setStage((now) => (now && !now.leave ? { ...now, leave: { kind: "home" } } : now));
   /** The staged card has flown: home to the hand, or onto its slot, where the summon really happens. */
@@ -6149,8 +6243,8 @@ function PlayPage() {
     setHandPick(null);
     if (!done || done.leave?.kind !== "land" || !duel) return;
     const slot = done.leave.slot;
-    const run = (state: Duel) => (done.picks ? summonVow(state, done.index, slot, done.picks) : summon(state, done.index, slot));
-    apply(done.clock?.form ? summonClock(duel, done.clock.form, done.clock.hide, run) : run(duel));
+    const run = (state: Duel) => (done.picks ? summonVow(state, done.index, slot, done.picks) : done.hide ? summonHidden(state, done.index, slot) : summon(state, done.index, slot));
+    apply(done.clock?.form && !done.hide ? summonClock(duel, done.clock.form, run) : run(duel));
   };
   const stageActs: SheetAction[] =
     stage && stageOk && stage.mode === "menu"
@@ -6158,10 +6252,8 @@ function PlayPage() {
           ...act,
           rows: undefined,
           onPress:
-            act.key === "summon"
-              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, ...(now.id === CLOCK ? { clock: { hide: false, form: null } } : {}) } : now))
-              : act.key === "hide"
-                ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, clock: { hide: true, form: CLOCK_FIERCE } } : now))
+            act.key === "summon" || act.key === "hide"
+              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, hide: act.key === "hide", ...(now.id === CLOCK ? { clock: { form: act.key === "hide" ? CLOCK_FIERCE : null } } : {}) } : now))
               : act.key === "vow"
                 ? () => setVowAsk({ index: stage.index, slot: null, picks: [], stage: true })
                 : () => {
@@ -6929,6 +7021,8 @@ function PlayPage() {
       >
         <div className="diorama">
         <BoardArt src={artTop} bottom={artBottom} cut={cut} />
+        {hasEnvField(foe.env) && <EnvField key={`t-${foe.env}`} env={foe.env as string} half="top" board={cut.id} />}
+        {hasEnvField(you.env) && <EnvField key={`b-${you.env}`} env={you.env as string} half="bot" board={cut.id} />}
         <TurnLight side={duel.winner !== null ? null : actor === viewer ? "you" : "foe"} geo={tankGeo} cue={turnCue} />
         {(() => {
           // Tay đối thủ (chủ game 28/10): lá úp xoè trong khay để bài (băng rôn đỏ ở chính giữa trên cùng), nhìn là thấy
@@ -7932,7 +8026,7 @@ function PlayPage() {
           const allyAim = aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id);
           const curseStep = aim?.kind === "spell" && aim.spellId === "phan-nguyen" ? (aim.from ? "foe" : "ally") : drag?.kind === "spell" && drag.spellId === "phan-nguyen" ? "ally" : null;
           const witchFoe = aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian";
-          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && aim.spellId !== "ngan-chan-phong-ngu" && aim.spellId !== "hop-ma-thuat" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu" && shelterPicks(duel).includes(mon.uid)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && Boolean(aim.from) && boxFoes(duel, viewer).includes(mon.uid)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
+          const attacking = !!mon && curseStep !== "ally" && (curseStep === "foe" || drag?.kind === "unit" || (drag?.kind === "spell" && drag.spellId !== "sung-loi-pha" && drag.spellId !== "phan-nguyen" && drag.spellId !== "hoan-doi" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index)) || aim?.kind === "attack" || (aim?.kind === "spell" && aim.spellId !== "phan-nguyen" && aim.spellId !== "sung-loi-pha" && aim.spellId !== "hoan-doi" && aim.spellId !== "ke-dao-mo" && aim.spellId !== "phuc-kich" && aim.spellId !== "qua-trung-thien-su" && aim.spellId !== "ngan-chan-phong-ngu" && aim.spellId !== "hop-ma-thuat" && spellDragLive(aim.spellId, duel, viewer, aim.index)) || (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu" && shelterPicks(duel).includes(mon.uid)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && Boolean(aim.from) && boxFoes(duel, viewer).includes(mon.uid)) || (aim?.kind === "skill" && !allyAim && !(witchFoe && chronoImmortal(mon))));
           const covered =
             !!mon &&
             mon.cardId === "kazura" &&
@@ -7943,7 +8037,7 @@ function PlayPage() {
           const foeSpell =
             curseStep === "foe" ||
             (drag?.kind === "spell" && !["sung-loi-pha", "phan-nguyen", "hoan-doi", "ke-dao-mo", "soi-xich-dia-nguc"].includes(drag.spellId) && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
-            (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || (aim.spellId === "hop-ma-thuat" ? Boolean(aim.from) : spellDragLive(aim.spellId, duel, viewer, aim.index))));
+            (aim?.kind === "spell" && !["phan-nguyen", "sung-loi-pha", "hoan-doi", "ke-dao-mo", "phuc-kich", "qua-trung-thien-su"].includes(aim.spellId) && (aim.spellId === "ngan-chan-phong-ngu" || (aim.spellId === "hop-ma-thuat" ? Boolean(aim.from) : spellDragLive(aim.spellId, duel, viewer, aim.index))));
           const foeBlocked = !!mon && !frozen && !foeHot && (plan ? plan.foe : foeSpell);
           return (
             <BoardSlot
@@ -7969,6 +8063,8 @@ function PlayPage() {
               lifted={Boolean(shown && lift === shown.uid)}
               motion={motion}
               veil={Boolean((duel.players[side].sea && mon && !mon.cage && !mon.shown && (mon.cardId === "trai-tim-hai-long" || mon.cardId === "sua-hut-ma-phap" || mon.cardId === "kraken")) || lurking(mon))}
+              unveil={mon ? unveil[mon.uid] : undefined}
+              fog={Boolean(mon && lurking(mon))}
               mask={Boolean(duel.players[side].hats && mon && mon.cardId !== "mu")}
               decoy={Boolean(mon && !mon.cage && mon.cardId === "chien-binh-lan-khuat" && (mon.shown ?? 0) > 0)}
               allies={duel.players[side].field}
@@ -7999,11 +8095,11 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
+          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (aim?.kind === "spell" && aim.spellId === "qua-trung-thien-su" && !!mon && eggAllies(duel, viewer).includes(mon.uid)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
           const plan = targetPlan();
           const youSpell =
             (drag?.kind === "spell" && drag.spellId === "sung-loi-pha" && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
-            (aim?.kind === "spell" && (aim.spellId === "sung-loi-pha" || aim.spellId === "phuc-kich" || ((aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat") && !aim.from))) ||
+            (aim?.kind === "spell" && (aim.spellId === "sung-loi-pha" || aim.spellId === "phuc-kich" || aim.spellId === "qua-trung-thien-su" || ((aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat") && !aim.from))) ||
             Boolean(swapAsk);
           const youBlocked =
             !!mon && !frozen && mon.uid !== plan?.caster && !(plan ? plan.keys.has(`${viewer}-${index}`) : youHot) && (plan ? plan.you : youSpell);
@@ -8039,6 +8135,7 @@ function PlayPage() {
               lockFlash={!!mon && lockFlash === mon.uid}
               alert={!!mon && (monsterAlert(duel, mon, viewer) || mysticAlert(duel, mon, viewer) || (lurkReady(mon) && duel.turn === viewer && duel.step === "main"))}
               lurk={!!mon && lurking(mon)}
+              unveil={mon ? unveil[mon.uid] : undefined}
               ready={!!mon && !frozen && canPlay && attackRound(duel) === viewer && !tired(mon) && !cannotAct(mon) && !(mon.path ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               block={!!mon && !frozen && canIntercept && mon.row !== "back" && !isStill(mon.cardId) && !mon.noBlock && !tired(mon) && mon.stun <= 0 && !(mon.path ?? 0) && !(mon.chain ?? 0) && mon.cardId !== "chan-ken" && !mon.abroad && !hexLocked(mon)}
               alertColor={mon ? reactTone(mon.cardId) : undefined}
@@ -8322,6 +8419,10 @@ function PlayPage() {
                               startBox(index);
                               return;
                             }
+                            if (id === "qua-trung-thien-su") {
+                              startEgg(index);
+                              return;
+                            }
                             if (id === "phuc-kich") {
                               // Chọn mục tiêu theo video chủ game (30/10): icon giữa sân + dòng mô tả, đồng minh dùng được sáng viền.
                               if (!you.field.some((unit) => unit && ambushReady(unit))) {
@@ -8405,7 +8506,7 @@ function PlayPage() {
                     type="button"
                     className={`clock-side is-${i === 0 ? "left" : "right"}${stage.clock?.form === form ? " is-on" : stage.clock?.form ? " is-dim" : ""}`}
                     style={{ top: `${SHOW_TOP}%` }}
-                    onClick={() => (playUi("soft"), setStage({ ...stage, clock: { hide: false, form } }))}
+                    onClick={() => (playUi("soft"), setStage({ ...stage, clock: { form } }))}
                   >
                     <CardFace monster={monsterCard(form)!} hand />
                   </button>
@@ -8805,6 +8906,11 @@ function PlayPage() {
                           if (shownSpell.id === "hop-ma-thuat") {
                             setInspect(null);
                             startBox(index);
+                            return;
+                          }
+                          if (shownSpell.id === "qua-trung-thien-su") {
+                            setInspect(null);
+                            startEgg(index);
                             return;
                           }
                           if (shownSpell.id === "ngan-chan-phong-ngu") {
@@ -9495,16 +9601,16 @@ function UnitChips({
 }) {
   const built = unitRows({ duel, uid, viewer, attackable, riposte, blessOn, onBless, onChronoFlow, onLure, onRebirth, setAim, apply });
   if (!built) return null;
-  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
+  return <UnitActs rows={built.rows} box={built.box} soloRed={built.soloRed} riposte={riposte} free={Boolean(riposte && duel.counterAsk?.free)} onSlide={onSlide} onAsk={onAsk ? (row) => onAsk(uid, row) : undefined} />;
 }
 
 /** The list of buttons above a monster on the field (tapped, or dragged onto a target). */
-function UnitActs({ rows, box, soloRed, riposte = false, onSlide, onAsk }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void; /** K5: a press goes through the confirm panel first. */ onAsk?: (row: UnitRow) => void }) {
+function UnitActs({ rows, box, soloRed, riposte = false, free = false, onSlide, onAsk }: { rows: UnitRow[]; box: { x: number; y: number; w: number; h: number }; soloRed: boolean; riposte?: boolean; /** Quả trứng thiên sứ: this Trả đòn costs no fee. */ free?: boolean; onSlide?: (slide: ChipSlide, go: () => void, event: ReactPointerEvent<HTMLButtonElement>) => void; /** K5: a press goes through the confirm panel first. */ onAsk?: (row: UnitRow) => void }) {
   const wide = Math.max(box.w + 8, 31);
   const left = Math.min(Math.max(box.x + box.w / 2 - wide / 2, 1), 99 - wide);
   return (
     <div className={`unit-acts${riposte ? " is-riposte" : ""}`} style={{ left: `${left}%`, width: `${wide}%`, ...(soloRed ? { top: `${box.y + box.h * 0.3}%` } : { bottom: `${100 - box.y + 0.8}%` }) } as CSSProperties}>
-      {riposte ? <p className="riposte-title">{tr("Trả đòn")} <small>{tr("(+1 mana)")}</small></p> : null}
+      {riposte ? <p className="riposte-title">{tr("Trả đòn")} {free ? null : <small>{tr("(+1 mana)")}</small>}</p> : null}
       {rows.map((row) => (
         <button
           key={row.key}
@@ -9783,6 +9889,8 @@ function BoardSlot({
   block = false,
   alertColor,
   lurk = false,
+  unveil,
+  fog = false,
   veil = false,
   mask = false,
   decoy = false,
@@ -9835,6 +9943,9 @@ function BoardSlot({
   alertColor?: string;
   /** Luật L2: quái ẩn của mình, glow trắng đứng yên. */
   lurk?: boolean;
+  /** Quái ẩn vừa lật: `own` lật bài, `foe` xoá sương mù. */
+  unveil?: "own" | "foe";
+  fog?: boolean;
   veil?: boolean;
   mask?: boolean;
   decoy?: boolean;
@@ -9917,7 +10028,11 @@ function BoardSlot({
       <span
         className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
-        <span className="fu-body">
+        {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
+        <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>
+        {lurk && !veil ? <img className="lurk-back" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
+        {fog || unveil === "foe" ? <img className={`lurk-fog${unveil === "foe" ? " is-out" : ""}`} src="/ui/suong-mu-dung.webp" alt="" draggable={false} /> : null}
+        {unveil === "foe" ? <FogWipe /> : null}
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
         {veil || decoy || mask ? null : <KeywordRow cardId={mon.cardId} />}

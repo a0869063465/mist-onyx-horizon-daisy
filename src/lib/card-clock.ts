@@ -314,16 +314,16 @@ export const CARD_CLOCK: Record<string, CardClock> = {
   "sua-hut-ma-phap": {
     "kind": "monster",
     "stars": 2,
-    "mana": 1,
-    "atk": 1,
+    "mana": 0,
+    "atk": 3,
     "def": 0,
-    "mdef": 4,
-    "hp": 5,
-    "text": "f9c7494",
+    "mdef": 0,
+    "hp": 2,
+    "text": "48b9bfda",
     "added": null,
-    "powerAt": "2026-10-08",
-    "powerTone": "down",
-    "shiftAt": "2026-10-17"
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": "2026-11-22"
   },
   "con-thinh-no-cua-hai-vuong": {
     "kind": "monster",
@@ -384,16 +384,16 @@ export const CARD_CLOCK: Record<string, CardClock> = {
   "kraken": {
     "kind": "monster",
     "stars": 2,
-    "mana": 1,
+    "mana": 0,
     "atk": 3,
-    "def": 3,
+    "def": 0,
     "mdef": 0,
-    "hp": 4,
-    "text": "845492e2",
+    "hp": 3,
+    "text": "d652287a",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-22"
   },
   "kazura": {
     "kind": "monster",
@@ -1454,6 +1454,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "mdef": 0,
     "hp": 0,
     "text": "7ee31401",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "qua-trung-thien-su": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 0,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "bdacb288",
     "added": null,
     "powerAt": null,
     "powerTone": null,

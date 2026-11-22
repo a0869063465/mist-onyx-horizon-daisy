@@ -62,7 +62,6 @@ const ROWS: Row[] = [
   { ids: ["trieu-hoi-ac-ma"], key: "hex", cast: "aim", skill: 0 },
   { ids: ["sau-non"], key: "cocoon", cast: "self", skill: 0, gate: orb(1) },
   { ids: ["ngai-khong-lo", "ngai-nu-hoang", "ngai-hoan-my"], key: "dust", cast: "aim", skill: 0, gate: orb(1) },
-  { ids: ["sua-hut-ma-phap"], key: "spit", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "spit")} ${3 + ctx.stored}` },
   { ids: ["con-thinh-no-cua-hai-vuong"], key: "rage", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(1) },
   { ids: ["chien-binh-lan-khuat"], key: "hide", cast: "self", skill: 0, gate: (ctx) => ctx.afford(1) },
 ];
