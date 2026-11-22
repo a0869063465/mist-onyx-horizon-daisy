@@ -7,7 +7,8 @@
  * skill riêng của nó. Chỉ một số keyword có luật chung trong engine (xem dưới).
  *
  * Bộ cũ (15): CÓ LUẬT CHUNG (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép (thủ + thủ phép ≥ 3 mới chặn
- * được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 1/2, Đòn đánh phép (đòn đánh thường
+ * được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 2, Khoá 1 (trước là Luồn lách 1, chủ game 22/11: trước khi đánh hoặc
+ * dùng skill chọn 1 quái địch, nó bị khoá hành động suốt hàng chờ đòn đó, duel.ts `lockStrike`), Đòn đánh phép (đòn đánh thường
  * gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). NHÃN NHÓM, không luật chung:
  * - "khe-uoc" Khế ước (trước là Hiến tế): hy sinh máu của 1 hay nhiều quái để tạo hiệu ứng có lợi (sát thương người chơi
  *   địch, hồi máu người chơi, sát thương quái địch, tăng chỉ số...; chỉ là ví dụ).
@@ -69,7 +70,7 @@ export type LegacyKeywordId =
   | "khong-lo"
   | "sieu-toc"
   | "nanh-vuot"
-  | "luon-lach-1"
+  | "khoa-1"
   | "luon-lach-2"
   | "phep"
   | "vinh-quang"
@@ -116,7 +117,7 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
   "khong-lo": { src: "/ui/kw/khong-lo.webp", label: "Khổng lồ" },
   "sieu-toc": { src: "/ui/kw/sieu-toc.webp", label: "Siêu tốc" },
   "nanh-vuot": { src: "/ui/kw/nanh-vuot.webp", label: "Nanh vuốt" },
-  "luon-lach-1": { src: "/ui/kw/luon-lach-1.webp", label: "Luồn lách 1" },
+  "khoa-1": { src: "/ui/kw/luon-lach-1.webp", label: "Khoá 1" },
   "luon-lach-2": { src: "/ui/kw/luon-lach-2.webp", label: "Luồn lách 2" },
   phep: { src: "/ui/kw/phep.webp", label: "Đòn đánh phép" },
   "vinh-quang": { src: "/ui/kw/vinh-quang.webp", label: "Vinh quang" },
@@ -166,6 +167,7 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "kizuran": ["hoi-phuc"],
   "quai-thu-thien-su": ["dau-luot", "cau-mana"],
   "tinh-linh-dan-hac": ["cau-mana"],
+  "thien-su-vo-hinh": ["khoa-1"],
   "ke-san-moi-tu-than": ["bao-oan"],
   "ky-si-bong-toi": ["tan-cong"],
   "rong-con": ["sao-choi"],

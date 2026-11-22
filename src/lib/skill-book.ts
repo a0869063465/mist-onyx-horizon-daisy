@@ -60,6 +60,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "cuc-bong-ma-quai": [P("Phát nổ", "spiky-explosion"), A("Cấp số nhân", "three-friends")],
   "quai-thu-thien-su": [P("Cầu nguyện", "prayer"), P("Ân huệ thiên sứ", "angel-wings")],
   "tinh-linh-dan-hac": [P("Tiếng nhạc du dương", "harp")],
+  "thien-su-vo-hinh": [P("Mũi tên thiên sứ", "cupidon-arrow")],
   "te-giac-be-con": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhino-banner")],

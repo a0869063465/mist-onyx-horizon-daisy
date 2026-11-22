@@ -274,6 +274,18 @@ export const MONSTERS: MonsterCard[] = [
     "art": "tinh-linh-dan-hac"
   },
   {
+    "id": "thien-su-vo-hinh",
+    "name": "Thiên sứ vô hình",
+    "stars": 1,
+    "gems": 2,
+    "skill": "__**Mũi tên thiên sứ**__\nNội tại: Khi gây sát thương lên người chơi đối thủ, rút 1 lá bài.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "thien-su-vo-hinh"
+  },
+  {
     "id": "te-giac-be-con",
     "name": "Tê giác bé con",
     "stars": 1,

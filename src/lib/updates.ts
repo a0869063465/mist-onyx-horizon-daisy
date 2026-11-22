@@ -1097,6 +1097,7 @@ export const PENDING_NOTES: string[] = [
   "Mỹ điểu nhân đổi tên Harpie Lady, máu 2. Vào sân chưa có kỹ năng nào: lúc triệu hồi và mỗi 3 lượt sau đó được chọn 1 trong 2 kỹ năng ngẫu nhiên, dùng 1 lần. Thi triển 3 hành động khác nhau thì tiến hoá.",
   "Số đếm trên quái giờ là icon gốc của kỹ năng kèm số màu: trắng là bình thường; Gã hề đáng sợ hồng khi đủ thi triển, đỏ khi đã mạnh hơn; Kén ngài hồng khi đủ lượt mở kén, đỏ khi qua mốc đó; số nợ Vảy rồng của Chiến binh rồng vàng (vật lý), tím (phép), xám (chuẩn).",
   "Lá mới Tinh linh đàn hạc (2 sao, 2 mana, máu 3), hệ Thánh địa thiên sứ. Tiếng nhạc du dương: khi triệu hồi trao 2 mana vào mộ mana; đầu mỗi lượt của bạn nhận thêm 1 mana.",
+  "Lá mới Thiên sứ vô hình (1 sao, 2 mana, công 2, máu 1), hệ Thánh địa thiên sứ, keyword Khoá 1. Mũi tên thiên sứ: gây sát thương lên người chơi đối thủ thì rút 1 lá. Keyword Luồn lách 1 đổi thành Khoá 1: trước khi đánh hoặc dùng skill, chọn 1 quái địch để khoá hành động trong hàng chờ đó.",
 ];
 
 function remarkOf(notes: string[]) {

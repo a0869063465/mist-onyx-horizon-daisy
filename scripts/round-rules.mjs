@@ -983,7 +983,7 @@ test("keyword chặn: Siêu tốc, Bọc thép, Khổng lồ, Nanh vuốt", () =
   assert.equal(D.assignBlock(D.attackFace(s, uid(s, 0, 0)), uid(s, 1, 0)).hold?.blocker, uid(s, 1, 0), "không keyword thì chặn như thường");
 });
 
-test("keyword Luồn lách: số quái được chặn = số quái hàng trước trừ x", () => {
+test("keyword Luồn lách 2: số quái được chặn = số quái hàng trước trừ 2", () => {
   const make = (front) => {
     const theirs = {};
     for (let i = 0; i < front; i += 1) theirs[i] = ["rong-con", { atk: 2, def: 1, hp: 6 }];
@@ -991,12 +991,6 @@ test("keyword Luồn lách: số quái được chặn = số quái hàng trư�
     s = D.endTurn(D.endTurn(s));
     return { ...s, turn: 0, round: 0 };
   };
-  withKeywords("may-chem", ["luon-lach-1"], () => {
-    const one = make(1);
-    assert.match(D.assignBlock(D.attackFace(one, uid(one, 0, 0)), uid(one, 1, 0)).live, /Luồn lách 1/);
-    const two = make(2);
-    assert.equal(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).hold?.blocker, uid(two, 1, 0));
-  });
   withKeywords("may-chem", ["luon-lach-2"], () => {
     const two = make(2);
     assert.match(D.assignBlock(D.attackFace(two, uid(two, 0, 0)), uid(two, 1, 0)).live, /Luồn lách 2/);
@@ -1776,6 +1770,31 @@ test("Tinh linh đàn hạc: triệu hồi chính nó +2 mana vào mộ mana (d�
   const closed = D.endTurn(D.endTurn(t));
   assert.equal(closed.players[1].orb, 3, "1 + 2 con đàn hạc");
   assert.match(closed.live + (closed.log ?? []).join(" "), /Tiếng nhạc du dương cho thêm 2 gem/);
+});
+
+test("Khoá 1: quái bị khoá không chặn, không Trả đòn; hết đòn thì gỡ khoá. Mũi tên thiên sứ trúng người chơi thì rút 1 lá", () => {
+  const settle = (x) => { for (let i = 0; i < 6 && x.step === "respond"; i += 1) x = D.passResponse(x); return x; };
+  let s = board({ 0: ["thien-su-vo-hinh"] }, { 0: ["rong-con", { atk: 2, def: 0, hp: 9, maxHp: 9 }], 1: ["may-chem", { atk: 2, def: 0, hp: 9, maxHp: 9 }] });
+  const angel = uid(s, 0, 0);
+  assert.deepEqual(D.lockChoices(s, angel).sort(), [uid(s, 1, 0), uid(s, 1, 1)].sort());
+  const locked = D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackFace(x, angel));
+  assert.equal(locked.hold?.seal?.uid, uid(s, 1, 0), locked.live);
+  assert.equal(at(locked, 1, 0).seal, angel);
+  assert.equal(D.assignBlock(locked, uid(s, 1, 0)).hold?.blocker ?? null, null, "quái bị khoá không chặn được");
+  const pile = D.pileLeft(s.players[0]);
+  const done = settle(locked);
+  assert.ok(done.players[1].hp < s.players[1].hp);
+  assert.equal(D.pileLeft(done.players[0]), pile - 1, "Mũi tên thiên sứ rút 1 lá");
+  assert.equal(done.players[0].draws, s.players[0].draws, "không tính lượt rút");
+  assert.equal(at(done, 1, 0).seal, undefined, "hết đòn thì gỡ khoá");
+  const blocked = settle(D.assignBlock(D.attackFace(s, angel), uid(s, 1, 1)));
+  assert.equal(blocked.players[1].hp, s.players[1].hp);
+  assert.equal(D.pileLeft(blocked.players[0]), pile, "bị chặn hết thì không rút");
+  const free = settle(D.attackMonster(s, angel, uid(s, 1, 0)));
+  assert.ok(free.counterAsk, "không khoá thì mục tiêu được Trả đòn");
+  const sealed = settle(D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackMonster(x, angel, uid(s, 1, 0))));
+  assert.ok(!sealed.counterAsk, "mục tiêu bị khoá thì không Trả đòn");
+  assert.equal(at(sealed, 1, 0).seal, undefined);
 });
 
 for (const [name, fn] of tests) {

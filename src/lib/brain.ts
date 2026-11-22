@@ -45,6 +45,8 @@ import {
   type FieldMon,
   type Side,
   knackOpen,
+  lockStrike,
+  aiLockPick,
 } from "./duel.ts";
 import { fieldBindsFor } from "./field-chips.ts";
 
@@ -121,15 +123,15 @@ export function runAct(state: Duel, act: Act): Duel {
       return cast.swap?.locked ? confirmSwap(cast, cast.swap.locked, act[3]) : cast;
     }
     case "skill":
-      return fireSkill(state, act[1], act[2], act[3], act[4], act[5]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => fireSkill(s, act[1], act[2], act[3], act[4], act[5]));
     case "declare":
-      return declareSkill(state, act[1], act[2], act[3]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => declareSkill(s, act[1], act[2], act[3]));
     case "stance":
       return toggleStance(state, act[1]);
     case "face":
-      return attackFace(state, act[1]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], null), (s) => attackFace(s, act[1]));
     case "hit":
-      return attackMonster(state, act[1], act[2]);
+      return lockStrike(state, act[1], aiLockPick(state, act[1], act[2]), (s) => attackMonster(s, act[1], act[2]));
     case "block":
       return assignBlock(state, act[1], act[2]);
     case "cover":

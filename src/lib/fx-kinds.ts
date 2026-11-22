@@ -25,6 +25,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "cuc-bong-ma-quai": ["shadow", "magic"],
   "quai-thu-thien-su": ["holy", "magic"],
   "tinh-linh-dan-hac": ["holy", "magic"],
+  "thien-su-vo-hinh": ["holy", "magic"],
   "te-giac-be-con": ["earth", "smash"],
   "te-giac-hieu-thang": ["earth", "smash"],
   "te-giac-chien-binh": ["earth", "smash"],

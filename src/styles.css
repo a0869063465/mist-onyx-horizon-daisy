@@ -13564,7 +13564,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 .kw-icon[data-kw="khong-lo"], .kw-name[data-kw="khong-lo"] { --kw: #ff5a48; }
 .kw-icon[data-kw="sieu-toc"], .kw-name[data-kw="sieu-toc"] { --kw: #ff5a48; }
 .kw-icon[data-kw="nanh-vuot"], .kw-name[data-kw="nanh-vuot"] { --kw: #f2f6ff; }
-.kw-icon[data-kw="luon-lach-1"], .kw-name[data-kw="luon-lach-1"] { --kw: #3cff4a; }
+.kw-icon[data-kw="khoa-1"], .kw-name[data-kw="khoa-1"] { --kw: #3cff4a; }
 .kw-icon[data-kw="luon-lach-2"], .kw-name[data-kw="luon-lach-2"] { --kw: #ff8a1f; }
 .kw-icon[data-kw="phep"], .kw-name[data-kw="phep"] { --kw: #c14dff; }
 .kw-icon[data-kw="vinh-quang"], .kw-name[data-kw="vinh-quang"] { --kw: #ffc94d; }
