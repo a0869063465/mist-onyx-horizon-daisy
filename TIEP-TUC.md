@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## AR03 (22/11, Sonnet 5.5): nhân bản artifact "Xếp quái thú" sang tài khoản khác
+1. Việc vừa làm: chụp cố định artifact thành `docs/ar03/` (đúng phiên bản 6) + công thức đăng `docs/ar03/AR03.md`, script `docs/ar03/prep.py`.
+2. Hiện trạng: chủ game nhắc "AR03" ở tài khoản khác thì ĐỌC `docs/ar03/AR03.md` rồi đăng artifact y hệt (đăng mới trong tài khoản đó), dữ liệu sắp xếp chủ game tự chép sang. Nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`; artifact gốc: https://claude.ai/artifact/2mPabbW3H8f4NeVfadQHRH. Chưa có nút xuất dữ liệu trong trang (chỉ nhập bằng ấn giữ nút sao chép).
+3. Việc sắp làm: chờ chủ game duyệt áp `main` (để tài khoản khác thấy) và có thêm nút xuất dữ liệu không.
+
 ## Dung hợp Khổng lồ: bảng chọn + khung lá + glow (18/11, nhánh `khong-lo-moi`, CHƯA áp `main`)
 1. Việc vừa làm (Sonnet 5.5 medium, chuyển từ nhánh `ccr-fc1ee7ec-gspefp`, commit cherry-pick): `handActions` (play.tsx) gom mọi cách dung hợp (`FuseOpt`); 1 cách chạy thẳng (`startFuse`), từ 2 cách mở `fuseChoice` = bảng `.fuse-pick` (2 quái kết quả, mỗi quái 1 ô Dung hợp cũ to hơn 10%, bấm quái đổi `HandPeek`). Lá `.fuse3d-big` dùng `CardFace hand`. Glow dung hợp `fuse-breathe` thay `fuse-blink`, tắt glow khác trên lá đó.
 2. Hiện trạng: đã nhận ảnh mẫu bảng chọn + ảnh Khổng lồ xanh/đỏ (nay là 2 lá mới trên nhánh này). Công thức Khổng lồ (từ phiên Pha 3): Mặc giáp = 1 mắt + 1 mắt; Thủ lĩnh = Mặc giáp + 1 mắt hoặc 3 Khổng lồ 1 mắt; chưa có trong `FUSIONS`/duel.ts nên bảng chọn chưa kích hoạt. Luật "sao người chơi từ N−1" ở nhánh `dung-hop-sao` cần gộp. Chưa chụp, chưa thử glow bằng mắt.
