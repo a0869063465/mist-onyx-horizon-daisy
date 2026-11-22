@@ -569,6 +569,18 @@ export const MONSTERS: MonsterCard[] = [
     "art": "dong-ho-kho-doan"
   },
   {
+    "id": "doi-mat-tran-giu",
+    "name": "Đôi mắt trấn giữ",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tê liệt**__\nTiêu hao 1 mana, chọn 1 mục tiêu quái địch và khoá nó trong 2 lượt. Vô hiệu hoá khả năng kích hoạt bất kỳ skill nào của chúng, cũng như lật chúng lên nếu là quái ẩn.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 1,
+    "hp": 6,
+    "art": "doi-mat-tran-giu"
+  },
+  {
     "id": "chien-binh-ky-nhong",
     "name": "Chiến binh kỳ nhông",
     "stars": 2,
