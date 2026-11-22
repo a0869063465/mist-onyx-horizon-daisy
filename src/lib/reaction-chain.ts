@@ -423,11 +423,14 @@ function playedSpells(prev: Duel, next: Duel): Array<{ id: string; side: Side; t
       target: row.target?.kind === "monster" && row.target.uid ? { uid: row.target.uid } : row.target?.kind === "face" ? { face: (1 - row.actor) as Side } : null,
     }));
   }
+  // Lá bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới; chủ game 22/11) cũng làm tay bớt một phép nhưng không phải phép đã dùng.
+  const dropped = next.discard && next.discard.id !== prev.discard?.id ? next.discard.drops.map((drop) => `${drop.side}:${drop.card}`) : [];
   for (const side of [0, 1] as const) {
     const left = [...next.players[side].hand];
     for (const id of prev.players[side].hand) {
       const at = left.indexOf(id);
       if (at >= 0) left.splice(at, 1);
+      else if (dropped.includes(`${side}:${id}`)) dropped.splice(dropped.indexOf(`${side}:${id}`), 1);
       else return [{ id, side, target: null }];
     }
   }

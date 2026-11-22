@@ -14916,3 +14916,22 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) {
   .slot .fu-body.is-flip, .slot .field-unit > .lurk-turn, .slot .fu-body > .fog-wipe { animation-duration: 0.01s; }
 }
+
+/* Lá bị bỏ khỏi tay (chủ game 22/11): lá nhấc lên, bay cung về 2 giờ và cháy tan theo video, xem card-burn.tsx. */
+.burn { position: fixed; z-index: 120; pointer-events: none; will-change: transform; }
+.burn-mask {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-size: 900% 900%;
+  mask-size: 900% 900%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.burn-card { position: absolute; }
+.burn-card > .card, .burn-card > img { width: 100%; height: 100%; aspect-ratio: auto; display: block; }
+.burn-light {
+  position: absolute;
+  inset: 0;
+  background-size: 900% 900%;
+  background-repeat: no-repeat;
+}

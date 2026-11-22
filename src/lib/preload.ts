@@ -107,6 +107,8 @@ const CORE_PICTURES = [
   "/ui/act2/ok.webp?v=1",
   "/fx/vo-mask.webp?v=1",
   "/fx/vo-sang.webp?v=1",
+  "/fx/bo-la-mask.webp?v=1",
+  "/fx/bo-la-sang.webp?v=1",
   "/ui/atk-you.webp?v=2",
   "/ui/atk-foe.webp?v=2",
   "/board-bleed.jpg",
