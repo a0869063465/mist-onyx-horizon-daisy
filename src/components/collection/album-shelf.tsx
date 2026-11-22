@@ -93,7 +93,7 @@ export function AlbumTab() {
     {
       key: "env",
       title: "Theo môi trường",
-      group: [...list.filter((album) => album.group !== "char" && album.id !== "phep"), soon("vuong-quoc", "Vương đô", "env")],
+      group: [...list.filter((album) => album.group !== "char" && album.id !== "phep"), ...(byId("vuong-quoc") ? [] : [soon("vuong-quoc", "Vương đô", "env")])],
     },
   ];
 

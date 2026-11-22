@@ -107,6 +107,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "rong-con": [A("Hơi thở rồng", "dragon-breath")],
   "chien-binh-ky-nhong": [P("Linh hoạt", "flex-wings")],
   "qua-trung-sinh-menh": [buff(A("Sinh mệnh mới", "card-exchange"))],
+  "tu-than-cua-nhung-la-bai": [P("Gặt hồn", "grim-reaper")],
   "dong-ho-kho-doan": [P("Tiktok", "sands-of-time")],
   "dong-ho-hung-bao": [P("Tiktok", "sands-of-time")],
   "dong-ho-mong-manh": [P("Tiktok", "sands-of-time")],

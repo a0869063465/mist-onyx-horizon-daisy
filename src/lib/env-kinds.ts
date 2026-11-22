@@ -61,6 +61,8 @@ export const ENV_KINDS: Record<string, string[]> = {
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
+  // Vương quốc (chủ game 22/11; chưa có lá môi trường): Tử thần của những lá bài
+  "vuong-quoc": ["tu-than-cua-nhung-la-bai"],
   // Núi dung nham: quái hệ lửa (chủ game 19/10: chưa có quái nào; mỗi quái chỉ thuộc một môi trường)
   "nui-dung-nham": [],
   // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ

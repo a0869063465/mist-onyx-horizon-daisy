@@ -1098,6 +1098,7 @@ export const PENDING_NOTES: string[] = [
   "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
   "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
   "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
+  "Thêm Tử thần của những lá bài (2 sao, công 4, máu 2, hệ Vương quốc) với nội tại Gặt hồn: tiêu hao 1 mana để tấn công, đánh vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên trên tay.",
 ];
 
 function remarkOf(notes: string[]) {

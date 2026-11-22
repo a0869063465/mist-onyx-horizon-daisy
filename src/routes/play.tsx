@@ -879,7 +879,7 @@ const ROUSE_CAST = 400;
 
 /** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
 function attackTerms(mon: FieldMon): string | null {
-  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
+  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh", "tu-than-cua-nhung-la-bai"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
     const cost = /Tiêu hao\s*(\d+)\s*mana/i.exec(plainCopy(monsterCard(mon.cardId)?.skill ?? ""))?.[1] ?? "1";
     return `Tiêu hao ${cost} mana để tấn công`;
   }
