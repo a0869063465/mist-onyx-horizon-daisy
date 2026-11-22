@@ -1835,6 +1835,7 @@ function PlayPage() {
   const [look, setLook] = useState<{ name: string; text: string; hot?: string; uid?: string; skill?: string; from?: "chain" } | null>(null);
   const [fuseShow, setFuseShow] = useState<FuseShow | null>(null);
   const [fuseChoice, setFuseChoice] = useState<{ index: number; opts: FuseOpt[]; at: number } | null>(null);
+  const [clockOn, setClockOn] = useState<string | null>(null);
   const fusePickRef = useRef<HTMLDivElement | null>(null);
   // Bảng chọn dung hợp: hình quái nằm ngay dưới bảng mô tả (cao thấp tuỳ số dòng), nút Dung hợp cố định ở ~60% sân (chủ game 18/11).
   useLayoutEffect(() => {
@@ -6823,18 +6824,6 @@ function PlayPage() {
           }}
         />
       ) : null}
-      {duel.clockAsk && duel.clockAsk.side === viewer && !watch ? (
-        <RebirthPanel
-          kind="is-clock"
-          title="Đồng hồ khó đoán"
-          sub="Chọn trạng thái"
-          cards={[CLOCK_FIERCE, CLOCK_FRAIL].map((id) => {
-            const card = monsterCard(id);
-            return { pick: id, face: card ? <CardFace monster={card} hand /> : null };
-          })}
-          onConfirm={(form) => apply(chooseClock(duel, form))}
-        />
-      ) : null}
       {trial && duel ? (
         <div className="ap-trial">
           <b>{tr(trialLevels(trial.id)[trial.level]?.title ?? "")}</b>
@@ -9129,6 +9118,32 @@ function PlayPage() {
               if (!card) return null;
               const info: PeekInfo = { name: tr(card.name), cardId: card.id, stars: card.stars, stats: { atk: card.atk, def: card.def, mdef: card.mdef, hp: card.hp }, skills: skillsOf(card.id, card.skill ?? "") };
               return <HandPeek info={info} at={info.skills.length ? peekAt % info.skills.length : 0} onPick={(index) => (playUi("soft"), setPeekAt(index))} top={PEEK_TOP} onTap={() => (playUi("soft"), setPeekAt((at) => at + 1))} />;
+            })()}
+          </div>
+        ) : null}
+        {duel.clockAsk && duel.clockAsk.side === viewer && !watch ? (
+          <div className="clock-pick">
+            <div className="clock-pick-row">
+              {[CLOCK_FIERCE, CLOCK_FRAIL].map((id) => (
+                <div key={id} className={`clock-pick-col${clockOn === id ? " is-on" : ""}`}>
+                  <img
+                    className="clock-pick-art"
+                    src={artSrc(id, 1)}
+                    alt={tr(monsterCard(id)?.name ?? "")}
+                    draggable={false}
+                    onClick={() => (playUi("soft"), setClockOn(id))}
+                  />
+                  {clockOn === id ? (
+                    <ActionButton action={{ key: "clock", label: "Chọn", tone: "gold", cost: 0, onPress: () => { setClockOn(null); apply(chooseClock(duel, id)); } }} />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+            {(() => {
+              const card = monsterCard(clockOn ?? CLOCK_FIERCE);
+              if (!card) return null;
+              const info: PeekInfo = { name: tr(card.name), cardId: card.id, stars: card.stars, stats: { atk: card.atk, def: card.def, mdef: card.mdef, hp: card.hp }, skills: skillsOf(card.id, card.skill ?? "") };
+              return <HandPeek info={info} at={0} onPick={() => undefined} top={PEEK_TOP} onTap={() => undefined} />;
             })()}
           </div>
         ) : null}

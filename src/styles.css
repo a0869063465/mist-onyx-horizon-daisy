@@ -14769,4 +14769,11 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 }
 
 /* Đồng hồ khó đoán (chủ game 21/11): bảng chọn trạng thái khi ra sân, 2 lá, không huỷ được. */
-.op.is-clock .rb-row { grid-template-columns: repeat(2, calc(32 * var(--cqw))); padding: calc(1 * var(--cqh)) calc(1 * var(--cqw)); }
+
+.clock-pick { position: absolute; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; padding: 40% 3% 0; gap: 0.4rem; background: rgba(4, 8, 20, 0.55); }
+.clock-pick-title { color: #ffe9b0; font-weight: 700; font-size: 1.1rem; text-shadow: 0 2px 6px #000; }
+.clock-pick-row { display: flex; justify-content: center; gap: 4%; width: 100%; }
+.clock-pick-col { width: 46%; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-height: 14rem; transition: transform 0.2s; }
+.clock-pick-col.is-on { transform: scale(1.03); }
+.clock-pick-art { width: 100%; height: 40vw; object-fit: contain; border-radius: 0.6rem; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.8)); cursor: pointer; -webkit-mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); }
+.clock-pick .act3d { transform: scale(1.1); transform-origin: top center; }
