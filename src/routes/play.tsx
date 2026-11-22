@@ -707,6 +707,8 @@ const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
 /** The ring a flow of Gió dịu đi runs round a mana mark. */
 const MANA_RING = 4.2;
+/** How far along the way to the mana marks the mother flow of Gió dịu đi runs before it splits. */
+const MANA_FORK = 0.55;
 /** How long the blown-away mana keeps its old number: the pink flow's way to it (ms). */
 const DRAIN_WAIT = 1500;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
@@ -6392,6 +6394,18 @@ function PlayPage() {
         const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
         xs.push(board.marks[name].x);
       }
+    }
+    // Gió dịu đi (chủ game 22/11): the mother flow runs ~half way from its icon to the two mana marks, then splits.
+    const manas = orb.to.filter((link) => link.fork && "mana" in link.end);
+    if (manas.length && manas.length === orb.to.filter((link) => link.fork).length) {
+      const marks = manas.map((link) => {
+        const end = link.end as { mana: Side; part: "orb" | "gems" | "stars" };
+        const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+        return board.marks[name];
+      });
+      const mx = marks.reduce((sum, m) => sum + m.x, 0) / marks.length;
+      const my = marks.reduce((sum, m) => sum + m.y, 0) / marks.length;
+      return { x: from.x + (mx - from.x) * MANA_FORK, y: from.y + (my - from.y) * MANA_FORK, front: [] as Array<{ x: number; y: number; w: number; h: number }> };
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
     // The front row it is aimed at, for the branches to find their way round its cards.

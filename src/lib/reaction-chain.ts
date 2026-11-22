@@ -417,10 +417,11 @@ function breezeOrb(next: Duel, live: ChainOrb, side: Side, uid: string): ChainOr
   const foe = (1 - side) as Side;
   const loser = next.players[foe];
   const to: FlowLink[] = [];
-  // Two plain flows from the icon, curving as an attack on a player does (chủ game 22/11: not a stiff fork).
-  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink" });
-  if (loser.starGems > 0) to.push({ end: { mana: foe, part: "gems" }, tone: "pink" });
+  // Two flows from one trunk (chủ game 22/11): the mother flow runs part of the way, then splits to the two marks.
+  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink", fork: true });
+  if (loser.starGems > 0) to.push({ end: { mana: foe, part: "gems" }, tone: "pink", fork: true });
   return {
+    spread: to.length ? foe : null,
     id: `orb${orbSeq++}`,
     kind: "skill",
     side,

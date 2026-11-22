@@ -436,10 +436,13 @@ export function ReactionLine({
     const fork = orb.spread !== undefined && orb.spread !== null ? forkOf(orb, here) : null;
     const trunk = fork ? `${orb.id}|fork` : "";
     if (fork) {
+      const trunkA = toBox(here.x, here.y);
+      const trunkB = toBox(fork.x, fork.y);
       flows.push({
         key: trunk,
-        a: toBox(here.x, here.y),
-        b: toBox(fork.x, fork.y),
+        a: trunkA,
+        b: trunkB,
+        arc: fork.front.length ? undefined : keepOff(flows.filter((f) => !f.key.startsWith(`${orb.id}|`)), trunk, trunkA, trunkB),
         out: here.face !== 0 ? { x: 0, y: here.face } : unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         into: unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         tone: orb.tone,
@@ -504,7 +507,7 @@ export function ReactionLine({
       const bBox = toBox(land.x, land.y);
       // A flow made after another never runs along it (chủ game 30/10): when its straight way lies on an earlier
       // flow, it arcs round to the side away from that one.
-      const keep = !way && !route && !link.fork && !link.dam && arcs.get(key) === undefined ? keepOff(flows, key, aBox, bBox) : undefined;
+      const keep = !way && !route && !link.dam && arcs.get(key) === undefined ? keepOff(flows.filter((f) => !f.key.startsWith(`${orb.id}|`)), key, aBox, bBox) : undefined;
       flows.push({
         key,
         a: aBox,
