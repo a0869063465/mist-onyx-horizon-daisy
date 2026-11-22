@@ -14,7 +14,7 @@ import { skillVisual } from "./card-fx.ts";
 import { findFusion, findKnightFusion, hexBonus, isHexer, setFusions } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
-import { keywordsOf } from "./keywords.ts";
+import { keywordsOf, type KeywordId } from "./keywords.ts";
 import { FOG_ENV, HIDE_FEE, LURK_ROUNDS, LURK_WAKE } from "./hidden-kinds.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
@@ -150,7 +150,9 @@ export type FieldMon = {
   lurk?: { left: number; wake?: number; ready?: boolean; hit?: boolean };
   /** Vô hiệu hoá (Tước đoạt của Đôi mắt trấn giữ, chủ game 22/11): tới hết vòng này quái về dạng ban đầu, chỉ số gốc,
    *  không buff, không skill, không keyword. `keep` = phần bị cất (trả lại khi hết), `cut` = máu bị cắt khi về máu gốc. */
-  seal?: { keep: Partial<FieldMon>; cut: number };
+  /** Giải giới (vô hiệu hoá) tới hết vòng. `launch`: đòn/skill quái đã phóng trước lúc bị giải giới vẫn nổ đủ loại
+   *  (sừng, keyword, skill) nhưng bằng chỉ số hiện tại; hết hành động đó thì `launch` mất (chủ game 22/11). */
+  seal?: { keep: Partial<FieldMon>; cut: number; launch?: { keys: KeywordId[] } };
 };
 
 export type PileKind = "monster" | "spell";
@@ -998,7 +1000,7 @@ function buildLook(before: Duel, after: Duel, event: TraceEvent): DecisionLook |
 
 function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   dodgeRolls.clear();
-  const after = withFlash(before, settleLurk(markLurk(before, settleBox(rawAfter), event)));
+  const after = withFlash(before, settleLurk(markLurk(before, settleSeal(settleBox(rawAfter)), event)));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -1554,7 +1556,7 @@ export function settleWheel(state: Duel): Duel {
   const landed = useSkill(open, wheel.uid, wheel.target, wheel.index, true, wheel.sector % 3 === 0 ? "hit" : "miss", true);
   const free = mon ? skillIsFree(mon.cardId, wheel.index) : true;
   const next = !free && settled(landed) && landed.turn === side ? yieldTurn(landed) : landed;
-  return flushVirus(next);
+  return settleSeal(flushVirus(next));
 }
 
 export function buffMon(mon: FieldMon): FieldMon {
@@ -2081,7 +2083,38 @@ export function sealed(mon: FieldMon | null | undefined): boolean {
 
 /** Keyword của quái trên sân: quái bị vô hiệu hoá không còn keyword nào. */
 function monKeywords(mon: FieldMon | null | undefined) {
-  return mon && !sealed(mon) ? keywordsOf(mon.cardId) : [];
+  if (!mon) return [];
+  if (mon.seal) return mon.seal.launch?.keys ?? [];
+  return keywordsOf(mon.cardId);
+}
+
+/** Quái đang có hành động đã phóng trong chuỗi: kẻ đánh, kẻ dùng skill, quái chặn, máy quay/vòng quay đang chạy. */
+function launchedUids(state: Duel): Set<string> {
+  const out = new Set<string>();
+  const pending = state.pending;
+  if (pending?.kind === "melee" || pending?.kind === "face" || pending?.kind === "gnaw") out.add(pending.attacker);
+  if (pending?.kind === "beam" || pending?.kind === "gnaw-skill") out.add(pending.caster);
+  if (state.hold?.blocker) out.add(state.hold.blocker);
+  for (const cover of state.hold?.covers ?? []) out.add(cover.blocker);
+  if (state.reel) out.add(state.reel.uid);
+  if (state.wheel) out.add(state.wheel.uid);
+  return out;
+}
+
+/** Hành động đã phóng xong: quái bị giải giới mất nốt sừng/tia và keyword của đòn đó. */
+function settleSeal(state: Duel): Duel {
+  if (!state.players.some((player) => player.field.some((mon) => mon?.seal?.launch))) return state;
+  const live = launchedUids(state);
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.seal?.launch && !live.has(mon.uid))) continue;
+    const field = player.field.map((mon) =>
+      mon?.seal?.launch && !live.has(mon.uid) ? { ...mon, horn: undefined, gaze: undefined, bolt: undefined, seal: { keep: mon.seal.keep, cut: mon.seal.cut } } : mon,
+    ) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return next;
 }
 
 /** Những gì vô hiệu hoá cất đi rồi trả lại khi hết: dạng, chỉ số, buff, thế, đếm đổi dạng. */
@@ -4866,7 +4899,7 @@ export function canSpirit(state: Duel, uid: string): boolean {
   if (!canIntercept(mon) || sealed(mon) || mon.cardId === "thien-than-be-nho") return false;
   const aim = spiritAim(state);
   if (!aim || aim === uid) return false;
-  const ally = owner.field.find((unit) => unit?.uid === aim && unit.hp > 0 && unit.cardId === "thien-than-be-nho");
+  const ally = owner.field.find((unit) => unit?.uid === aim && unit.hp > 0 && unit.cardId === "thien-than-be-nho" && !sealed(unit));
   return Boolean(ally);
 }
 
@@ -7738,11 +7771,14 @@ function lurkFlip(state: Duel, side: Side, uid: string, why: "hit" | "time" | "w
  * hồ khó đoán, Rồng bọc trứng bỏ thế; quái ngoài bộ/dung hợp/Kén ngài giữ dạng), chỉ số gốc, mất buff, skill, keyword;
  * máu hiện tại không vượt máu gốc. Vẫn đánh thường, chặn đòn như thường; quái ẩn vẫn ẩn. Hết vòng thì mọi thứ trở lại.
  */
-function sealMon(state: Duel, side: Side, uid: string, skill: string): Duel {
+/** Giải giới (vô hiệu hoá) 1 quái tới hết vòng, ngay lúc gọi (dùng chung cho skill và phép siêu tốc sau này). */
+export function sealMon(state: Duel, side: Side, uid: string, skill: string): Duel {
   const player = state.players[side];
   const mon = player.field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon) return state;
   const now = mon.seal ? unsealMon(mon) : mon;
+  // Đòn/skill đã phóng thì vẫn nổ đủ loại, bằng chỉ số hiện tại (chủ game 22/11).
+  const launched = launchedUids(state).has(uid);
   const baseId = clockForm(now.cardId) ? CLOCK : now.cardId;
   const card = monsterCard(baseId);
   if (!card) return state;
@@ -7768,10 +7804,10 @@ function sealMon(state: Duel, side: Side, uid: string, skill: string): Duel {
     tempGuard: 0,
     nextDef: 0,
     clash: undefined,
-    horn: undefined,
+    horn: launched ? now.horn : undefined,
     hornNew: false,
-    gaze: undefined,
-    bolt: undefined,
+    gaze: launched ? now.gaze : undefined,
+    bolt: launched ? now.bolt : undefined,
     lava: undefined,
     armor: undefined,
     envArmor: undefined,
@@ -7779,7 +7815,7 @@ function sealMon(state: Duel, side: Side, uid: string, skill: string): Duel {
     envSkill: undefined,
     skillUp: undefined,
     stored: undefined,
-    seal: { keep, cut: now.hp - hp },
+    seal: { keep, cut: now.hp - hp, ...(launched ? { launch: { keys: keywordsOf(now.cardId) } } : {}) },
   };
   const field = player.field.map((slot) => (slot?.uid === uid ? unit : slot)) as Player["field"];
   const shown = mon.lurk ? "quái thú ẩn mình" : cardOf(mon).name;
@@ -8376,7 +8412,7 @@ export function settleReel(state: Duel): Duel {
   const struck = gun && foe !== null ? struckFront(state, landed, (1 - foe) as Side, gun.covers) : [];
   const next = gun && struck.length ? afterSpread(state, landed, gun.uid, struck) : landed;
   if (next === state) return next;
-  return withResults(state, next, { blocked: false, reflect: false, turn: false });
+  return settleSeal(withResults(state, next, { blocked: false, reflect: false, turn: false }));
 }
 
 function settleReelCore(state: Duel): Duel {
@@ -9094,7 +9130,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   const mon = you.field.find((unit) => unit?.uid === uid) ?? state.players[foe].field.find((unit) => unit?.uid === uid && unit.abroad === side) ?? null;
   if (mon?.cardId === "sat-nhan-bat-giu") return castSeize(state, side, mon, targetUid);
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
-  if (sealed(mon)) return note(state, `${cardOf(mon!).name} đang bị vô hiệu hoá, không dùng được kỹ năng.`);
+  if (sealed(mon) && !mon!.seal!.launch) return note(state, `${cardOf(mon!).name} đang bị vô hiệu hoá, không dùng được kỹ năng.`);
   if (!mon || stuck(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
   if (mon.cardId === EGG) return castRebirth(state, side, mon, extra);
   if (mon.cardId === "mat-xanh-huy-diet") {
