@@ -348,6 +348,8 @@ export type Duel = {
   birdAsk?: { uid: string } | null;
   /** Đồng hồ khó đoán vừa ra sân: chủ chọn hung bạo hoặc mỏng manh; `back` = bên giữ quyền trước khi hỏi. */
   clockAsk?: { uid: string; side: Side; back: Side } | null;
+  /** Đồng hồ khó đoán: dạng đã chọn TRƯỚC khi ra sân (bảng chọn lúc kéo lá ra, chủ game 22/11); `hide` = Úp (quái ẩn). Chỉ sống trong một lần triệu hồi. */
+  clockPick?: { form: string; hide: boolean } | null;
   prey?: { side: Side; aim: string; kind: "phys" | "spell" | "tru" } | null;
   preyAsk?: boolean;
   recall?: { side: Side; caps: number[] } | null;
@@ -7381,7 +7383,7 @@ const LURK_ACTS: Record<string, (state: Duel, side: Side, uid: string) => Duel> 
 
 /** Quái ẩn vừa ra sân: đếm lại từ đầu (quái 5 sao chưa có cơ chế này). */
 function hideOnSummon(state: Duel, side: Side, mon: FieldMon): FieldMon {
-  const kind = hiddenKind(mon.cardId);
+  const kind = hiddenKind(mon.cardId) || (mon.cardId === CLOCK && state.clockPick?.hide ? 1 : 0);
   if (!kind || cardStars(mon.cardId, mon.level) >= 5) return mon.lurk ? { ...mon, lurk: undefined } : mon;
   const wake = kind === 2 ? (attackRound(state) === side ? LURK_WAKE : LURK_WAKE + 1) : undefined;
   return { ...mon, lurk: { left: LURK_ROUNDS, ...(wake !== undefined ? { wake } : {}) } };
@@ -8427,6 +8429,13 @@ function askClock(state: Duel, side: Side): Duel {
   if (state.clockAsk) return state;
   const mon = state.players[side].field.find((unit) => unit?.cardId === CLOCK && !unit.lurk) ?? null;
   if (!mon) return state;
+  // Đã chọn dạng lúc kéo lá ra: đổi luôn, không hỏi.
+  const pick = state.clockPick;
+  if (pick && clockForm(pick.form)) {
+    const players = [...state.players] as [Player, Player];
+    players[side] = { ...players[side], field: players[side].field.map((unit) => (unit?.uid === mon.uid ? shiftClock(unit, pick.form) : unit)) as Player["field"] };
+    return { ...state, players };
+  }
   return { ...state, clockAsk: { uid: mon.uid, side, back: state.turn }, ...(state.step === "main" ? { turn: side } : {}) };
 }
 
@@ -8442,6 +8451,20 @@ export function chooseClock(state: Duel, form: string): Duel {
   const chosen = note(patch(open, ask.side, { ...you, field }), `${cardOf(mon).name} chọn ${monsterCard(form)?.name ?? ""}.`, "info");
   if (chosen.clockAsk) return chosen;
   return chosen.step === "main" && ask.back === ask.side && settled(chosen) && chosen.turn === ask.side ? yieldTurn(chosen) : chosen;
+}
+
+/**
+ * Triệu hồi Đồng hồ khó đoán đã chọn dạng trước (chủ game 22/11): Triệu hồi = dạng chọn; Úp = quái ẩn, luôn hung bạo.
+ * `run` là việc triệu hồi thật (summon / summonVow).
+ */
+export function summonClock(state: Duel, form: string, hide: boolean, run: (state: Duel) => Duel): Duel {
+  if (!clockForm(form)) return run(state);
+  const pick = { form: hide ? CLOCK_FIERCE : form, hide };
+  const armed: Duel = { ...state, clockPick: pick };
+  const done = run(armed);
+  if (done === armed) return state;
+  const { clockPick: _drop, ...rest } = done;
+  return rest as Duel;
 }
 
 /** Đầu mỗi vòng: đồng hồ đang đứng (không úp) đếm lùi; hết 2 vòng thì tự đổi sang dạng kia. */

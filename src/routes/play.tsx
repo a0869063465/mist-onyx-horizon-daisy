@@ -123,6 +123,8 @@ import {
   answerPrey,
   evolveBird,
   chooseClock,
+  summonClock,
+  CLOCK,
   CLOCK_FIERCE,
   CLOCK_FRAIL,
   clockForm,
@@ -365,7 +367,15 @@ type BoardSpot = { x: number; y: number; w: number };
 type FusePhase = "lift" | "clash" | "apart" | "swirl" | "flash" | "turn" | "reveal" | "rows" | "land";
 /** Lá quái đưa từ tay ra giữa sân (chủ game 13/11): chọn hình thức triệu hồi (menu) rồi hàng (rows); `picks` = quân đã chọn
  *  hiến tế; `leave` = lá đang bay về tay (home) hoặc đáp xuống ô (land). */
-type Staged = { index: number; id: string; mode: "menu" | "rows" | "none"; picks: string[] | null; leave: null | { kind: "home" } | { kind: "land"; slot: Slot } };
+type Staged = {
+  index: number;
+  id: string;
+  mode: "menu" | "rows" | "none";
+  picks: string[] | null;
+  leave: null | { kind: "home" } | { kind: "land"; slot: Slot };
+  /** Đồng hồ khó đoán (chủ game 22/11): Úp hay Triệu hồi, và dạng đã chọn (null = đang chọn). */
+  clock?: { hide: boolean; form: string | null };
+};
 /** Giữa lá hiện to giữa sân, theo % chiều cao bàn. */
 const SHOW_TOP = 47;
 const PEEK_TOP = 9;
@@ -6015,6 +6025,13 @@ function PlayPage() {
           },
         },
       });
+      // Đồng hồ khó đoán (chủ game 22/11): ngoài Triệu hồi còn Úp (quái ẩn, luôn hung bạo).
+      if (held.id === CLOCK) {
+        list.push({ key: "hide", label: "Úp", tone: "purple", cost: cost(place(first)), onPress: () => {
+          setInspect(null);
+          openStage(index, { hide: true, form: CLOCK_FIERCE });
+        } });
+      }
     }
     if (vowCap(held.id, held.saved?.level ?? 1) > 0 && ownLive.length > 0) {
       const offer = vowAt(index, [ownLive[0].uid]);
@@ -6066,7 +6083,7 @@ function PlayPage() {
     pickMon !== null
       ? handActions(pickMon).map((act) => {
           const index = pickMon;
-          const press = act.key === "summon" ? () => setPickStage("rows") : act.onPress;
+          const press = act.key === "summon" ? (pickHeld?.id === CLOCK ? () => openStage(index, { hide: false, form: null }) : () => setPickStage("rows")) : act.onPress;
           return {
             ...act,
             rows: undefined,
@@ -6075,7 +6092,7 @@ function PlayPage() {
                 openSheet("reserve", index);
                 return;
               }
-              if (act.key !== "summon") setHandPick(null);
+              if (act.key !== "summon" && act.key !== "hide") setHandPick(null);
               press?.();
             },
           };
@@ -6097,7 +6114,7 @@ function PlayPage() {
 
   /** The card id whose name and skills a field monster shows (Tê giác changes form as it levels). */
   /** Kéo lá quái ra khỏi tay (hoặc bấm mũi tên trắng): lá hiện to giữa sân với các lựa chọn luật cho phép (chủ game 13/11). */
-  function openStage(index: number) {
+  function openStage(index: number, clock?: Staged["clock"]) {
     const held = you.reserve[index];
     const card = held ? monsterCard(held.id) : undefined;
     if (!duel || !held || !card || stage || fuseShow || vowAsk) return;
@@ -6111,12 +6128,19 @@ function PlayPage() {
     playUi("confirm");
     setInspect(null);
     setHandPick({ pile: "reserve", index, id: held.id });
+    if (clock && acts.some((act) => act.key === "summon")) {
+      setStage({ index, id: held.id, mode: "rows", picks: null, leave: null, clock });
+      return;
+    }
     setStage({ index, id: held.id, mode: acts.length === 0 ? "none" : acts.length === 1 && acts[0].key === "summon" ? "rows" : "menu", picks: null, leave: null });
   }
   const stageHeld = stage ? you.reserve[stage.index] : undefined;
   const stageOk = Boolean(stage && stageHeld && stageHeld.id === stage.id);
   const stagePlace = stage && stageOk ? (stage.picks ? vowAt(stage.index, stage.picks) : summonAt(stage.index)) : null;
   const stageRows = stagePlace ? { front: rowSlot("front", stagePlace), back: rowSlot("back", stagePlace) } : null;
+  // Đang chọn dạng Đồng hồ (Triệu hồi, chưa đáp): lá giữa ẩn, 2 dạng hai bên; chưa chọn thì mũi tên mờ.
+  const stageChoosing = Boolean(stage?.clock && !stage.clock.hide && stage.mode === "rows" && !stage.leave);
+  const stageWaits = Boolean(stage?.clock && !stage.clock.form);
   const closeStage = () => setStage((now) => (now && !now.leave ? { ...now, leave: { kind: "home" } } : now));
   /** The staged card has flown: home to the hand, or onto its slot, where the summon really happens. */
   const stageLeft = () => {
@@ -6124,7 +6148,9 @@ function PlayPage() {
     setStage(null);
     setHandPick(null);
     if (!done || done.leave?.kind !== "land" || !duel) return;
-    apply(done.picks ? summonVow(duel, done.index, done.leave.slot, done.picks) : summon(duel, done.index, done.leave.slot));
+    const slot = done.leave.slot;
+    const run = (state: Duel) => (done.picks ? summonVow(state, done.index, slot, done.picks) : summon(state, done.index, slot));
+    apply(done.clock?.form ? summonClock(duel, done.clock.form, done.clock.hide, run) : run(duel));
   };
   const stageActs: SheetAction[] =
     stage && stageOk && stage.mode === "menu"
@@ -6133,7 +6159,9 @@ function PlayPage() {
           rows: undefined,
           onPress:
             act.key === "summon"
-              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null } : now))
+              ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, ...(now.id === CLOCK ? { clock: { hide: false, form: null } } : {}) } : now))
+              : act.key === "hide"
+                ? () => setStage((now) => (now ? { ...now, mode: "rows", picks: null, clock: { hide: true, form: CLOCK_FIERCE } } : now))
               : act.key === "vow"
                 ? () => setVowAsk({ index: stage.index, slot: null, picks: [], stage: true })
                 : () => {
@@ -6167,7 +6195,13 @@ function PlayPage() {
   // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
   const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
   const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
-  const pickPeek = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
+  const pickPeekRaw = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
+  // Đồng hồ khó đoán đã chọn dạng: bảng ngắn hiện dạng đó.
+  const clockShown = stage?.clock?.form ? monsterCard(stage.clock.form) : undefined;
+  const pickPeek: PeekInfo | null =
+    pickPeekRaw && clockShown
+      ? { ...pickPeekRaw, name: tr(clockShown.name), cardId: clockShown.id, stats: { atk: clockShown.atk, def: clockShown.def, mdef: clockShown.mdef, hp: clockShown.hp }, skills: skillsOf(clockShown.id, clockShown.skill ?? "") }
+      : pickPeekRaw;
   const handRect = (target: string) => {
     const pick = document.querySelector<HTMLElement>(`.hand [data-hand="${target}"]`);
     pick?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -7247,7 +7281,7 @@ function PlayPage() {
                         ...(staged
                           ? {
                               onPress: () => {
-                                setStage((now) => (now ? { ...now, mode: "rows", picks } : now));
+                                setStage((now) => (now ? { ...now, mode: "rows", picks, ...(now.id === CLOCK ? { clock: { hide: false, form: null } } : {}) } : now));
                                 close();
                               },
                             }
@@ -8327,7 +8361,7 @@ function PlayPage() {
           </button>
         ) : null}
         {stage && stageOk && stageHeld ? (
-          <div className="stage-back" onClick={(event) => event.target === event.currentTarget && closeStage()}>
+          <div className={`stage-back${stageChoosing ? " is-clock-pick" : ""}`} onClick={(event) => event.target === event.currentTarget && closeStage()}>
             <CardShow
               key={`stage-${stage.index}-${stage.id}`}
               from={() => document.querySelector(`.hand [data-reserve="${stage.index}"]`)?.getBoundingClientRect()}
@@ -8344,8 +8378,8 @@ function PlayPage() {
                 <div className={`stage-opts is-${stage.mode}`}>
                   {stage.mode === "rows" && stageRows ? (
                     <>
-                      <RowArrow row="front" off={stageRows.front === null} advised={advisedRow(stage.id) === "front"} onPick={() => stageRows.front !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.front } }))} />
-                      <RowArrow row="back" off={stageRows.back === null} advised={advisedRow(stage.id) === "back"} onPick={() => stageRows.back !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.back } }))} />
+                      <RowArrow row="front" off={stageRows.front === null || stageWaits} advised={advisedRow(stage.id) === "front"} onPick={() => stageRows.front !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.front } }))} />
+                      <RowArrow row="back" off={stageRows.back === null || stageWaits} advised={advisedRow(stage.id) === "back"} onPick={() => stageRows.back !== null && (playPack("cut"), setStage({ ...stage, leave: { kind: "land", slot: stageRows.back } }))} />
                     </>
                   ) : stage.mode === "menu" ? (
                     stageActs.map((act) => <ActionButton key={act.key} action={act} mini />)
@@ -8356,9 +8390,27 @@ function PlayPage() {
               }
             >
               <button type="button" className="hand-card is-monster stage-face" onClick={() => (playUi("soft"), setPeekAt((at) => at + 1))}>
-                <CardFace monster={monsterCard(stageHeld.id)!} hand level={stageHeld.saved?.level ?? 1} live={reserveLive(stageHeld, monsterCard(stageHeld.id)!)} gems={stageHeld.toll ? `${monsterCard(stageHeld.id)!.gems}+1` : undefined} fake={stageHeld.fake} />
+                {stage.clock?.form && monsterCard(stage.clock.form) ? (
+                  <CardFace monster={monsterCard(stage.clock.form)!} hand />
+                ) : (
+                  <CardFace monster={monsterCard(stageHeld.id)!} hand level={stageHeld.saved?.level ?? 1} live={reserveLive(stageHeld, monsterCard(stageHeld.id)!)} gems={stageHeld.toll ? `${monsterCard(stageHeld.id)!.gems}+1` : undefined} fake={stageHeld.fake} />
+                )}
               </button>
             </CardShow>
+            {/* Đồng hồ khó đoán (chủ game 22/11): 2 dạng hiện hai bên như lá giữa sân; bấm 1 bên thì bên kia mờ, mũi tên giữa sáng lên. */}
+            {stageChoosing
+              ? [CLOCK_FIERCE, CLOCK_FRAIL].map((form, i) => (
+                  <button
+                    key={form}
+                    type="button"
+                    className={`clock-side is-${i === 0 ? "left" : "right"}${stage.clock?.form === form ? " is-on" : stage.clock?.form ? " is-dim" : ""}`}
+                    style={{ top: `${SHOW_TOP}%` }}
+                    onClick={() => (playUi("soft"), setStage({ ...stage, clock: { hide: false, form } }))}
+                  >
+                    <CardFace monster={monsterCard(form)!} hand />
+                  </button>
+                ))
+              : null}
             {/* Bảng mô tả nằm CÙNG lớp với lá giữa sân (z lá 80 > bảng 75) nên lá không bị bảng che; để ngoài lớp này bảng đè lên lá. */}
             {pickPeek ? (
               <HandPeek
@@ -9121,30 +9173,28 @@ function PlayPage() {
             })()}
           </div>
         ) : null}
-        {duel.clockAsk && duel.clockAsk.side === viewer && !watch ? (
-          <div className="clock-pick">
-            <div className="clock-pick-row">
-              {[CLOCK_FIERCE, CLOCK_FRAIL].map((id) => (
-                <div key={id} className={`clock-pick-col${clockOn === id ? " is-on" : ""}`}>
-                  <img
-                    className="clock-pick-art"
-                    src={artSrc(id, 1)}
-                    alt={tr(monsterCard(id)?.name ?? "")}
-                    draggable={false}
-                    onClick={() => (playUi("soft"), setClockOn(id))}
-                  />
-                  {clockOn === id ? (
-                    <ActionButton action={{ key: "clock", label: "Chọn", tone: "gold", cost: 0, onPress: () => { setClockOn(null); apply(chooseClock(duel, id)); } }} />
-                  ) : null}
-                </div>
-              ))}
+        {/* Đồng hồ ra sân bằng đường khác (bảng quái, phản ứng…): chọn dạng sau khi đáp, cùng kiểu 2 lá hai bên. */}
+        {duel.clockAsk && duel.clockAsk.side === viewer && !watch && !stage ? (
+          <div className="stage-back is-clock-pick">
+            {[CLOCK_FIERCE, CLOCK_FRAIL].map((form, i) => (
+              <button
+                key={form}
+                type="button"
+                className={`clock-side is-${i === 0 ? "left" : "right"}${clockOn === form ? " is-on" : clockOn ? " is-dim" : ""}`}
+                style={{ top: `${SHOW_TOP}%` }}
+                onClick={() => (playUi("soft"), setClockOn(form))}
+              >
+                <CardFace monster={monsterCard(form)!} hand />
+              </button>
+            ))}
+            <div className="stage-opts is-rows">
+              <ActionButton mini action={{ key: "clock", label: "Chọn", tone: "gold", cost: 0, onPress: () => {
+                if (!clockOn) return;
+                const form = clockOn;
+                setClockOn(null);
+                apply(chooseClock(duel, form));
+              } }} />
             </div>
-            {(() => {
-              const card = monsterCard(clockOn ?? CLOCK_FIERCE);
-              if (!card) return null;
-              const info: PeekInfo = { name: tr(card.name), cardId: card.id, stars: card.stars, stats: { atk: card.atk, def: card.def, mdef: card.mdef, hp: card.hp }, skills: skillsOf(card.id, card.skill ?? "") };
-              return <HandPeek info={info} at={0} onPick={() => undefined} top={PEEK_TOP} onTap={() => undefined} />;
-            })()}
           </div>
         ) : null}
       </section>

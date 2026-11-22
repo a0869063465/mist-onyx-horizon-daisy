@@ -1511,6 +1511,20 @@ test("Đồng hồ khó đoán (21/11): ra sân chọn hung bạo/mỏng manh, t
     const later = closeRound(closeRound(hid));
     if (at(later, 0, 0)) assert.equal(at(later, 0, 0).cardId, "dong-ho-hung-bao", "úp thì không đổi");
   });
+  // Chọn dạng trước khi ra sân (chủ game 22/11): Triệu hồi mỏng manh thì không hỏi, nhường quyền ngay.
+  const pre = D.summonClock(s, "dong-ho-mong-manh", false, (st) => D.summon(st, 0, 0));
+  assert.equal(pre.clockAsk ?? null, null, "đã chọn trước thì không hỏi: " + pre.live);
+  assert.equal(pre.clockPick ?? null, null, "không để sót dạng đã chọn");
+  assert.deepEqual([at(pre, 0, 0).cardId, at(pre, 0, 0).hp, at(pre, 0, 0).lurk ?? null], ["dong-ho-mong-manh", 1, null]);
+  assert.equal(pre.turn, 1, "triệu hồi xong nhường quyền");
+  // Úp: quái ẩn, hung bạo, dù có chọn mỏng manh.
+  const set = D.summonClock(s, "dong-ho-mong-manh", true, (st) => D.summon(st, 0, 0));
+  assert.equal(set.clockAsk ?? null, null);
+  assert.equal(at(set, 0, 0).cardId, "dong-ho-hung-bao");
+  assert.ok(at(set, 0, 0).lurk, "úp = quái ẩn");
+  assert.equal(set.clockPick ?? null, null);
+  // Triệu hồi bị từ chối (ô có quái) thì bàn giữ nguyên.
+  assert.equal(D.summonClock(pre, "dong-ho-hung-bao", false, (st) => D.summon(st, 0, 0)).clockPick ?? null, null);
 });
 
 test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới lần đầu 1 mana + mình rút 2, các lần sau 0 mana + rút 1; đối thủ bỏ 1 ngẫu nhiên và rút 1", () => {

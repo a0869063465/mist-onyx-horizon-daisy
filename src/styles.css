@@ -14768,12 +14768,13 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   filter: drop-shadow(0 0 calc(2 * var(--cqw)) #ff4a40);
 }
 
-/* Đồng hồ khó đoán (chủ game 21/11): bảng chọn trạng thái khi ra sân, 2 lá, không huỷ được. */
 
-.clock-pick { position: absolute; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; padding: 40% 3% 0; gap: 0.4rem; background: rgba(4, 8, 20, 0.55); }
-.clock-pick-title { color: #ffe9b0; font-weight: 700; font-size: 1.1rem; text-shadow: 0 2px 6px #000; }
-.clock-pick-row { display: flex; justify-content: center; gap: 4%; width: 100%; }
-.clock-pick-col { width: 46%; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-height: 14rem; transition: transform 0.2s; }
-.clock-pick-col.is-on { transform: scale(1.03); }
-.clock-pick-art { width: 100%; height: 40vw; object-fit: contain; border-radius: 0.6rem; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.8)); cursor: pointer; -webkit-mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%); }
-.clock-pick .act3d { transform: scale(1.1); transform-origin: top center; }
+
+/* Đồng hồ khó đoán (chủ game 22/11): chọn dạng lúc kéo lá ra: 2 lá hai bên như lá giữa sân, lá giữa ẩn tới khi đáp. */
+.stage-back.is-clock-pick .card-show { opacity: 0; pointer-events: none; }
+.clock-side { position: absolute; z-index: 80; width: calc(40 * var(--cqw)); aspect-ratio: 0.72; padding: 0; border: 0; background: none; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(140, 215, 255, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); transition: opacity 0.2s, filter 0.2s, transform 0.2s; animation: hand-peek-in 0.25s ease-out both; cursor: pointer; }
+.clock-side.is-left { left: 26%; }
+.clock-side.is-right { left: 74%; }
+.clock-side > .card { width: 100%; height: 100%; aspect-ratio: auto; }
+.clock-side.is-on { transform: translate(-50%, -50%) scale(1.03); }
+.clock-side.is-dim { opacity: 0.4; filter: grayscale(0.6) brightness(0.7); }
