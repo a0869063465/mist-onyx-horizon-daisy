@@ -5,7 +5,7 @@ import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
 import type { Side } from "@/lib/duel";
-import { fanRoutes, type FanAim, type FanCard, type FanRoute } from "@/lib/fan-plan";
+import { drawnWay, MANA_TO_GEMS, MANA_TO_ORB, MANA_TRUNK, fanRoutes, type FanAim, type FanCard, type FanRoute } from "@/lib/fan-plan";
 import type { ChainOrb, FlowEnd, FlowLink, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
 
@@ -187,6 +187,16 @@ function clearOf(from: BoardPt, to: BoardPt, icon: BoardPt | undefined): number 
 
 /** Which way (+1 to its left-hand side) a flow from a to b arcs to stay off flows made before it, or undefined when its
  *  straight way is clear of them all (box units). */
+/** A branch begins a little back inside the trunk it comes from, so the two run on as one flow with no gap at the fork. */
+function joinTrunk(path: Array<{ x: number; y: number }>, trunk?: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
+  if (!trunk || trunk.length < 4) return path;
+  const f = path[0];
+  const c = trunk[trunk.length - 2];
+  const d = Math.hypot(c.x - f.x, c.y - f.y) || 1;
+  const back = { x: f.x + ((c.x - f.x) / d) * 1.4, y: f.y + ((c.y - f.y) / d) * 1.4 };
+  return [back, { x: back.x + (f.x - back.x) / 3, y: back.y + (f.y - back.y) / 3 }, { x: back.x + ((f.x - back.x) * 2) / 3, y: back.y + ((f.y - back.y) * 2) / 3 }, f, ...path.slice(1)];
+}
+
 function keepOff(flows: FlowSpec[], key: string, a: { x: number; y: number }, b: { x: number; y: number }): number | undefined {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -444,6 +454,7 @@ export function ReactionLine({
         b: trunkB,
         arc: fork.front.length ? undefined : keepOff(flows.filter((f) => !f.key.startsWith(`${orb.id}|`)), trunk, trunkA, trunkB),
         calm: fork.front.length ? undefined : true,
+        path: !fork.front.length && orb.to.every((l) => "mana" in l.end) ? drawnWay(MANA_TRUNK, trunkA, trunkB) : undefined,
         out: here.face !== 0 ? { x: 0, y: here.face } : unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         into: unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         tone: orb.tone,
@@ -454,7 +465,7 @@ export function ReactionLine({
         delay: wait,
         land: "none",
         // The trunk of a spread widens half as much as a flow at one target (chủ game 29/10).
-        tail: 0.5,
+        tail: orb.to.every((l) => "mana" in l.end) ? 0 : 0.5,
       });
     }
     // How each branch runs from the fork; a branch a monster blocks stops at its icon on the way.
@@ -524,7 +535,7 @@ export function ReactionLine({
         delay: link.from || link.fork ? flyWait : Math.max(wait, flyWait, thrownIn),
         land: link.dam ? "dam" : "flare",
         moat: moatOf(land),
-        path: route?.path,
+        path: route?.path ?? (link.fork && "mana" in link.end ? joinTrunk(drawnWay(link.end.part === "gems" ? MANA_TO_GEMS : MANA_TO_ORB, toBox(start.x, start.y), toBox(land.x, land.y)), flows.find((f) => f.key === trunk)?.path) : undefined),
         // Each arcs to its own left-hand side, and the two run opposite ways: in on one side, back round the other. A
         // curse's or a mirror's way back to the attacker (no damage) takes a third of the arc and half the tail.
         arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key) ?? keep,
