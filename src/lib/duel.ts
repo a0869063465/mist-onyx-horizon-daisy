@@ -239,6 +239,11 @@ export type Hold = {
    *  `bird` is stopped and the bird grows. */
   ward?: { bird: string };
   /**
+   * Gió dịu đi (Nắng và gió, chủ game 22/11): quái Ẩn này bị 1 quái thú nhắm bằng đòn đánh hoặc kỹ năng thì tự lật,
+   * loé sáng và đứng lên hàng chờ như Gương tự dựng (`mirror` "up" rồi "set"); chuỗi xong thì đòn bị chặn.
+   */
+  breeze?: string;
+  /**
    * Hấp thụ ma pháp nuốt được phép chậm, phép nhanh và skill dạng phép (chủ game 04/11). The last fast answer in the
    * chain keeps the board as it was just before it took effect (its card already paid), so the answer can be swallowed
    * and the chain goes on from there.
@@ -719,6 +724,7 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "ngai-hoan-my": [{ index: 0, cast: "aim" }],
   "con-thinh-no-cua-hai-vuong": [{ index: 0, cast: "aim" }],
   "chien-binh-lan-khuat": [{ index: 0, cast: "self" }],
+  "nang-va-gio": [{ index: 0, cast: "declare" }],
 };
 let listingChoices = false;
 
@@ -2762,6 +2768,7 @@ export function harmSkill(cardId: string, index = 0) {
   if (cardId === "hoa-an-thit-nguoi") return true;
   // Kim châm gây thêm sát thương phép (chủ game 01/11).
   if (cardId === "ong-khong-lo") return true;
+  if (cardId === BREEZE) return index === 0;
   return false;
 }
 
@@ -4235,12 +4242,22 @@ function beginHold(state: Duel, pending: Exclude<Pending, null>, line: string): 
   const noted = note(state, line);
   // A standing Gương phòng hộ rises by itself against an attack on its owner: that is its owner's action, so the
   // attacker answers first (chủ game 29/10).
-  const mirror = mirrorStands(state, pending);
+  const breeze = breezeRises(state, pending);
+  const mirror = Boolean(breeze) || mirrorStands(state, pending);
   const opened: Duel = {
-    ...noted,
+    ...(breeze ? breezeFlip(noted, breeze) : noted),
     step: "respond",
     pending,
-    hold: { priority: mirror ? state.turn : ((1 - state.turn) as Side), passed: [false, false], blocker: null, blockerSkill: false, armed: null, seed: freshSeed(), ...(mirror ? { mirror: "up" as const } : {}) },
+    hold: {
+      priority: mirror ? state.turn : ((1 - state.turn) as Side),
+      passed: [false, false],
+      blocker: null,
+      blockerSkill: false,
+      armed: null,
+      seed: freshSeed(),
+      ...(mirror ? { mirror: "up" as const } : {}),
+      ...(breeze ? { breeze } : {}),
+    },
   };
   if (pending.kind !== "melee") return opened;
   return stampLegend(opened, [pending.attacker, pending.defender]);
@@ -4267,6 +4284,48 @@ function ambushStrike(state: Duel, allyUid: string, foeUid: string): Duel {
   let hit = patch(open, foe, dropDead({ ...open.players[foe], field: foeField }));
   hit = patch(hit, side, { ...hit.players[side], field: myField });
   return releaseLegend(note(hit, actNotice("Phục kích", ["chặn kỹ năng", `${cardOf(fighter).name} đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]), "hit"));
+}
+
+export const BREEZE = "nang-va-gio";
+
+/**
+ * Gió dịu đi (chủ game 22/11): the hidden Nắng và gió a monster aims at with a plain attack or a skill. A spell does not
+ * wake it, and an attack on the player is not aimed at it.
+ */
+function breezeRises(state: Duel, pending: Exclude<Pending, null>): string | null {
+  const aimed = pending.kind === "melee" || pending.kind === "gnaw" ? pending.defender : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.target : null;
+  if (!aimed) return null;
+  const from = pending.kind === "melee" || pending.kind === "gnaw" ? pending.attacker : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : null;
+  const side = ownerSide(state, aimed);
+  if (side === null || !from || ownerSide(state, from) === side) return null;
+  const mon = state.players[side].field.find((unit) => unit?.uid === aimed) ?? null;
+  return mon && mon.cardId === BREEZE && mon.lurk && mon.hp > 0 ? mon.uid : null;
+}
+
+/** It turns face up where it stands, with a flash, as it rises against the attack. */
+function breezeFlip(state: Duel, uid: string): Duel {
+  const side = ownerSide(state, uid);
+  if (side === null) return state;
+  flashMon(uid);
+  const field = state.players[side].field.map((unit) => (unit?.uid === uid ? { ...unit, lurk: undefined } : unit)) as Player["field"];
+  return note(patch(state, side, { ...state.players[side], field }), `${monsterCard(BREEZE)?.name ?? "Nắng và gió"} lật mặt, kích hoạt Gió dịu đi.`, "spell");
+}
+
+/**
+ * Gió dịu đi lands: the attack is stopped, the one that struck has acted for the round, and its side loses 1 mana it
+ * holds and 1 mana in its pile (chủ game 22/11: nothing to lose, nothing lost).
+ */
+function breezeBlock(state: Duel, pending: Exclude<Pending, null>): Duel {
+  const from = pending.kind === "melee" || pending.kind === "gnaw" || pending.kind === "face" ? pending.attacker : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : null;
+  const open = { ...state, step: "main" as const, pending: null, hold: null };
+  const side = from ? ownerSide(state, from) : null;
+  if (side === null || !from) return releaseLegend(note(open, "Gió dịu đi chặn đòn.", "spell"));
+  const you = open.players[side];
+  const field = you.field.map((mon) => (mon?.uid === from ? { ...dropClash(openShade(mon)), dim: true } : mon)) as Player["field"];
+  const blown = { ...you, field, orb: Math.max(0, you.orb - 1), starGems: Math.max(0, you.starGems - 1) };
+  const attacker = you.field.find((mon) => mon?.uid === from) ?? null;
+  const who = attacker ? (shadeHidden(attacker) ? "quái thú ẩn mình" : cardOf(attacker).name) : "đòn";
+  return releaseLegend(note(patch(open, side, blown), `Gió dịu đi chặn đòn của ${who}, thổi bay 1 ngọc mana và 1 mana trong mộ.`, "spell"));
 }
 
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
@@ -4359,7 +4418,7 @@ export function passResponse(state: Duel): Duel {
   // The attacker lets the risen mirror through: it is set, and its owner's OK lets it land (chủ game 29/10).
   if (state.step === "respond" && state.hold?.mirror === "up" && state.hold.priority === state.turn) {
     const set = { ...state, hold: { ...state.hold, mirror: "set" as const, priority: (1 - state.turn) as Side, passed: [false, false] as [boolean, boolean] } };
-    return note(set, "Gương phòng hộ phát động.", "spell");
+    return note(set, state.hold.breeze ? "Gió dịu đi phát động." : "Gương phòng hộ phát động.", "spell");
   }
   const next = withSeed(state.hold?.seed, () => passResponseCore(state));
   if (next === state || !state.hold) return next;
@@ -4409,6 +4468,7 @@ function passResponseCore(state: Duel): Duel {
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
+  if (hold.breeze) return breezeBlock(state, pending);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
   if (pending.kind === "spell") {
     const ownerSide = pending.owner;
@@ -4788,6 +4848,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     return note(state, "Chưa tới lượt chặn");
   }
   if (slowWaiting(state)) return note(state, "Kỹ năng này không chặn được.");
+  if (state.hold.breeze) return note(state, "Gió dịu đi đang chặn đòn này.");
   if (branch) {
     const hits = spreadHits(state);
     if (!hits || hits.length < 2) return note(state, "Chỉ chặn từng nhánh khi kỹ năng trúng nhiều mục tiêu.");
@@ -4942,6 +5003,7 @@ export function spreadHits(state: Duel): string[] | null {
  * monster standing still. Roi sấm stays a quick answer.
  */
 export function waitSkill(cardId: string, index: number): boolean {
+  if (cardId === BREEZE) return index === 0;
   if (cardId === "phu-thuy-thoi-gian") return index <= 2;
   if (cardId === "mo-voi-ma-mut") return index === 0;
   if (cardId === PERFECT) return index === 0 || index === 3;
@@ -6438,6 +6500,15 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
     const dry = useSkillCore(state, uid, targetUid, skillIndex, true, extra ?? "hit", true);
     if (dry.players === state.players && !dry.plumeAsk) return dry;
   }
+  // Nắng ấm lên pays as it goes into the queue: swallowed (Hấp thụ ma pháp), its mana is lost (chủ game 22/11).
+  if (mon.cardId === BREEZE && skillIndex === 0) {
+    const cost = skillManaCost(BREEZE, 2);
+    const before = you.stars;
+    const paid = pay(you, cost);
+    if (!paid) return note(state, `Cần ${cost} gem.`);
+    const charged = pingStars(patch(state, state.turn, paid), state.turn, before, paid.stars);
+    return beginHold(charged, { kind: "beam", caster: uid, target: null, index: 0, extra }, `${cardOf(mon).name} dùng ${castName(BREEZE, 0)}.`);
+  }
   if (isHell(mon.cardId) && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   if (mon.cardId === "may-nem-bom-hinh-nhen" && you.orb < skillManaCost(mon.cardId, 1)) return note(state, "Cần 1 gem.");
   const foeField = state.players[(1 - state.turn) as Side].field;
@@ -6533,6 +6604,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "rong-con" || cardId === "rong-ngan-tuoi") return chipLabel(cardId, "breath");
   if (cardId === "ma-dao-si") return chipLabel(cardId, "dan");
   if (cardId === "loi-nguyen-cua-rong") return chipLabel(cardId, "fire");
+  if (cardId === BREEZE) return index === 1 ? "Gió dịu đi" : chipLabel(cardId, "sun");
   if (cardId === "phu-thuy-rung-den") return chipLabel(cardId, "curse");
   if (cardId === "rong-ac-ma") return chipLabel(cardId, "orb");
   if (cardId === "cuc-bong-ma-quai") return chipLabel(cardId, index === 0 ? "boom" : "barrage");
@@ -6745,7 +6817,7 @@ function payHand(state: Duel, side: Side, handIndex: number): Duel | null {
 export function eatFor(state: Duel, side: Side): boolean {
   if (state.step !== "respond" || !state.hold || state.hold.stage) return false;
   if (state.hold.eat && state.hold.eat.side !== side) return true;
-  return state.hold.mirror === "up" && state.hold.priority === side && !state.hold.eat;
+  return state.hold.mirror === "up" && state.hold.priority === side && !state.hold.eat && !state.hold.breeze;
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
@@ -7142,7 +7214,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
         return note({ ...restored, step: "respond", hold: { ...paid.hold, priority: foe, passed: [false, false] } }, `Hấp thụ ma pháp nuốt ${eaten}.`, "spell");
       }
     }
-    if (!replay && state.hold?.mirror === "up" && !eat) {
+    if (!replay && state.hold?.mirror === "up" && !eat && !state.hold.breeze) {
       // A mirror that stood up by itself (dựng sẵn): swallowed, it stops nothing and is gone (chủ game 21/10 G2).
       const owner = next.players[foe];
       const kept = { ...patch(next, foe, { ...owner, mirror: 0 }), step: "respond" as const };
@@ -7468,8 +7540,10 @@ function markLurk(before: Duel, after: Duel, event: TraceEvent): Duel {
   const attacker = pending?.kind === "melee" || pending?.kind === "gnaw" || pending?.kind === "face" ? pending.attacker : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.caster : null;
   // Phép của chính chủ (buff, giải trừ) không làm quái ẩn lật; chỉ phép của đối thủ.
   const spellBy = event.kind === "spell" ? event.actor : pending?.kind === "spell" ? pending.owner : null;
+  // Kỹ năng của chính phe mình (Nắng ấm lên trúng cả đồng minh) cũng vậy: chỉ của đối thủ mới làm quái ẩn lật.
+  const skillBy = pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? ownerSide(before, pending.caster) : null;
   for (const side of [0, 1] as const) {
-    if (spellBy === side) continue;
+    if (spellBy === side || skillBy === side) continue;
     const player = next.players[side];
     let changed = false;
     const field = player.field.map((mon) => {
@@ -8724,6 +8798,38 @@ function castSkill(state: Duel, uid: string, targetUid: string | null, skillInde
   return lizardGuard(state, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra)));
 }
 
+/**
+ * Nắng ấm lên (chủ game 22/11): its mana was paid as it went into the queue (`declareSkillCore`); landing, it deals true
+ * damage to every monster on both fields but itself and to both players, then gives 1 mana back.
+ */
+function castSunlight(state: Duel, side: Side, mon: FieldMon): Duel {
+  const foe = (1 - side) as Side;
+  const text = skillText(BREEZE);
+  const amount = grabNums(text, /(\d+)\s*sát thương chuẩn/gi)[0] ?? 1;
+  const back = grabNums(text, /trả lại\s*(\d+)\s*mana/gi)[0] ?? 1;
+  const blow = outgoing(mon, amount);
+  const hits: string[] = [];
+  const burn = (player: Player, spare: string[]): Player => {
+    const field = spray(
+      player.field,
+      (unit, allies) => {
+        if (unit.hp <= 0) return unit;
+        hits.push(unit.uid);
+        return trueDamage(unit, blow, allies);
+      },
+      spare,
+    );
+    return settleCocoon(dropDead({ ...player, field: field as Player["field"] }));
+  };
+  const self = state.players[side];
+  const mine = burn({ ...self, field: self.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, dim: true } : unit)) as Player["field"] }, [mon.uid]);
+  const theirs = burn(state.players[foe], []);
+  let next = patch(state, side, { ...mine, hp: mine.hp - blow, orb: mine.orb + back });
+  next = patch(next, foe, { ...theirs, hp: theirs.hp - blow });
+  next = note(next, `${castName(BREEZE, 0)} gây ${blow} sát thương chuẩn lên mọi quái thú và cả hai người chơi, trả lại ${back} mana.`, "hit");
+  return checkWinner({ ...next, skill: { id: BREEZE, index: 0, aim: null, hits } });
+}
+
 function castSkillBody(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
   if (state.step !== "main" || state.winner) return state;
   const waiting = needUpkeep(state);
@@ -8746,6 +8852,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
     const armed = note(pingStars(patch(state, side, { ...paid, field }), side, before, paid.stars), `${cardOf(mon).name} nạp tia sáng huỷ diệt. Đòn tiếp theo là sát thương chuẩn bằng công.`, "heal");
     return { ...armed, mends: [{ uid: mon.uid, n: 0 }] };
   }
+  if (mon.cardId === BREEZE && skillIndex === 0) return castSunlight(state, side, mon);
   if (mon.cardId === "thien-than-be-nho") {
     const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
     if (!ally) return note(state, "Chọn một đồng minh.");

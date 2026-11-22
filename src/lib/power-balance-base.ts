@@ -35,6 +35,7 @@ export const BALANCE_BASE: Record<string, Snap> = {
   "con-thinh-no-cua-hai-vuong": {"kind":"monster","name":"Cơn thịnh nộ của hải vương","stars":1,"mana":0,"atk":0,"def":0,"mdef":0,"hp":2},
   "trai-tim-hai-long": {"kind":"monster","name":"Trái tim hải long","stars":3,"mana":0,"atk":4,"def":1,"mdef":1,"hp":6},
   "sua-hut-ma-phap": {"kind":"monster","name":"Sứa hút ma pháp","stars":2,"mana":0,"atk":1,"def":0,"mdef":4,"hp":5},
+  "nang-va-gio": {"kind":"monster","name":"Nắng và gió","stars":2,"mana":1,"atk":0,"def":0,"mdef":0,"hp":4},
   "kraken": {"kind":"monster","name":"Kraken","stars":2,"mana":1,"atk":3,"def":3,"mdef":0,"hp":4},
   "kazura": {"kind":"monster","name":"Kazura","stars":2,"mana":0,"atk":6,"def":1,"mdef":0,"hp":3},
   "kizuran": {"kind":"monster","name":"Kizuran","stars":2,"mana":0,"atk":2,"def":0,"mdef":0,"hp":8},

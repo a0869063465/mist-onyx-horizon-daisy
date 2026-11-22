@@ -397,6 +397,19 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Đánh phép trúng nó"
   },
   {
+    "id": "nang-va-gio",
+    "name": "Nắng và gió",
+    "stars": 2,
+    "gems": 1,
+    "skill": "**__Gió dịu đi__**:\nKhi trạng thái ẩn, bị nhắm đến bởi 1 quái thú, chặn đòn tấn công đó, thổi bay 1 ngọc mana và 1 mana trong mộ của đối thủ.\n\n**__Nắng ấm lên__**:\nTiêu hao 2 mana, gây 1 sát thương chuẩn lên toàn bộ quái thú trên sân và người chơi 2 bên. Đồng thời trả lại 1 mana sau khi thi triển thành công.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 4,
+    "art": "nang-va-gio",
+    "since": "2026-11-22"
+  },
+  {
     "id": "kazura",
     "name": "Kazura",
     "stars": 2,

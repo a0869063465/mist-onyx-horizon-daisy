@@ -1093,6 +1093,7 @@ export const PENDING_NOTES: string[] = [
   "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
   "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
   "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
+  "Thêm lá Nắng và gió: Gió dịu đi chặn đòn khi đang ẩn, Nắng ấm lên gây 1 sát thương chuẩn lên cả sân.",
 ];
 
 function remarkOf(notes: string[]) {

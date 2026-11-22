@@ -43,6 +43,7 @@ const ROWS: Row[] = [
   { ids: ["cuc-bong-ma-quai"], key: "barrage", cast: "self", skill: 1, gate: (ctx) => ctx.room >= 1 && ctx.afford(1) && !ctx.spent.includes("barrage") },
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
+  { ids: ["nang-va-gio"], key: "sun", cast: "declare", skill: 0, gate: pay(2) },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["rong-con", "rong-ngan-tuoi"], key: "breath", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },

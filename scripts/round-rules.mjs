@@ -1513,6 +1513,47 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
+test("Gió dịu đi: Nắng và gió ẩn bị đánh thì tự lật, chặn đòn; kẻ đánh đã hành động, đối thủ mất 1 mana và 1 mana trong mộ", () => {
+  let s = board({ 0: ["rong-con", { atk: 3, hp: 9, maxHp: 9 }] }, { 0: ["nang-va-gio", { hp: 4, maxHp: 4, lurk: { left: 4, wake: 2 } }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, starGems: 2 })) };
+  const aimed = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(at(aimed, 1, 0)?.lurk, undefined, `tự lật lúc bị nhắm | ${aimed.live}`);
+  assert.ok(aimed.hold?.breeze && aimed.hold.mirror === "up" && aimed.hold.priority === 0, "lên hàng chờ, bên đánh đáp trước");
+  assert.match(D.assignBlock(D.passResponse(aimed), uid(s, 1, 0)).live, /Gió dịu đi/);
+  const done = D.passResponse(D.passResponse(aimed));
+  assert.equal(at(done, 1, 0)?.hp, 4, `không mất máu | ${done.live}`);
+  assert.ok(at(done, 0, 0)?.dim, "kẻ đánh đã hành động");
+  assert.equal(done.players[0].orb, aimed.players[0].orb - 1, "mất 1 mana");
+  assert.equal(done.players[0].starGems, aimed.players[0].starGems - 1, "mất 1 mana trong mộ");
+  // Không ẩn: đánh trúng như thường.
+  const open = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m) => (m ? { ...m, lurk: undefined } : m)) } : p)) };
+  const plain = D.passResponse(D.attackMonster(open, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.ok(at(plain, 1, 0) === null || at(plain, 1, 0).hp < 4, plain.live);
+});
+
+test("Nắng ấm lên: skill chậm, trả 2 mana lúc lên hàng chờ; nổ thì 1 chuẩn lên mọi quái trừ nó và 2 người chơi, hoàn 1 mana; bị Hấp thụ nuốt thì mất mana", () => {
+  let s = board({ 0: ["nang-va-gio", { hp: 4, maxHp: 4 }], 1: ["may-chem", { hp: 5, maxHp: 5, def: 5 }] }, { 0: ["rong-con", { hp: 5, maxHp: 5, def: 5 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const hp = s.players.map((p) => p.hp);
+  const queued = D.declareSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(queued.step, "respond", queued.live);
+  assert.equal(queued.players[0].orb, 1, "trả 2 mana lúc lên hàng chờ");
+  assert.match(D.assignBlock(queued, uid(s, 1, 0)).live, /không chặn được/);
+  const done = D.passResponse(queued);
+  assert.equal(at(done, 0, 0).hp, 4, "không trúng chính nó");
+  assert.equal(at(done, 0, 1).hp, 4, `đồng minh mất 1 dù thủ cao | ${done.live}`);
+  assert.equal(at(done, 1, 0).hp, 4, "quái địch mất 1");
+  assert.deepEqual(done.players.map((p) => p.hp), hp.map((n) => n - 1), "2 người chơi mất 1");
+  assert.equal(done.players[0].orb, 2, "hoàn 1 mana");
+  const withAbsorb = D.testGrant(queued, 1, "hap-thu-ma-phap", false);
+  const eaten = D.castSpell({ ...withAbsorb, players: withAbsorb.players.map((p, i) => (i === 1 ? { ...p, orb: 3 } : p)) }, withAbsorb.players[1].hand.indexOf("hap-thu-ma-phap"), null);
+  assert.equal(eaten.step, "main", eaten.live);
+  assert.equal(at(eaten, 1, 0).hp, 5, "bị nuốt thì không nổ");
+  assert.equal(eaten.players[0].orb, 1, "không hoàn mana");
+  const poor = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 1 } : p)) };
+  assert.match(D.declareSkill(poor, uid(s, 0, 0), null, 0).live, /Cần 2 gem/);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
