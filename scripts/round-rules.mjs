@@ -1509,7 +1509,6 @@ test("Chiến binh kỳ nhông / cưỡi rồng (18/11): dung hợp với Rồng
   assert.equal(at(face, 0, 0).hp, 5, face.live);
 });
 
-<<<<<<< HEAD
 test("Gió dịu đi: Nắng và gió ẩn bị đánh thì tự lật, chặn đòn; kẻ đánh đã hành động, đối thủ mất 1 mana và 1 mana trong mộ", () => {
   let s = board({ 0: ["rong-con", { atk: 3, hp: 9, maxHp: 9 }] }, { 0: ["nang-va-gio", { hp: 4, maxHp: 4, lurk: { left: 4, wake: 2 } }] });
   s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, starGems: 2 })) };
@@ -1549,7 +1548,8 @@ test("Nắng ấm lên: skill chậm, trả 2 mana lúc lên hàng chờ; nổ t
   assert.equal(eaten.players[0].orb, 1, "không hoàn mana");
   const poor = { ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 1 } : p)) };
   assert.match(D.declareSkill(poor, uid(s, 0, 0), null, 0).live, /Cần 2 gem/);
-=======
+});
+
 /** Đòn cuối cùng (chủ game 20/11): bên 0 đánh hạ quái của bên 1; bên 1 cầm lá. */
 function riteBoard(victim, killer) {
   let s = board({ 0: killer }, { 0: victim });
@@ -1871,7 +1871,6 @@ test("Hấp thụ ma pháp nuốt Quả trứng thiên sứ: đòn đánh vẫn 
   let done = eaten;
   for (let i = 0; i < 4 && done.step === "respond"; i += 1) done = D.passResponse(done);
   assert.ok(at(done, 1, 0).hp < 20, "đòn vẫn vào: " + done.live);
->>>>>>> origin/main
 });
 
 let failed = 0;

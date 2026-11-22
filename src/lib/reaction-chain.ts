@@ -745,17 +745,12 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
     if (!done || orb.done) return orb.done === done ? orb : { ...orb, done };
     // What a curse held is stopped by it, whatever came of the curse (the rules today); a skill thrown back goes on.
-<<<<<<< HEAD
     const stopped = !orb.to.some((link) => link.back) && orb.to.some((link) => link.dam && "orb" in link.end && list.some((other) => other.id === (link.end as { orb: string }).orb && (other.kind === "spell" || (other.kind === "skill" && other.cardId === "nang-va-gio"))));
-    const end = orb.end ?? (passed && !stopped ? "fire" : "fizzle");
-=======
-    const stopped = !orb.to.some((link) => link.back) && orb.to.some((link) => link.dam && "orb" in link.end && list.some((other) => other.id === (link.end as { orb: string }).orb && other.kind === "spell"));
     // Bẫy thú (chủ game 20/11): the chain resolves from the last in to the first, the trap first; the one it killed is
     // gone, so what it was doing never happens (no flow, no strike).
     const trapped = prev?.hold?.trap?.uid;
     const slain = Boolean(trapped && orb.source === trapped && !monOf(next, orb.source));
     const end = slain ? "fizzle" : orb.end ?? (passed && !stopped ? "fire" : "fizzle");
->>>>>>> origin/main
     if (orb.base) ended.set(`block:${orb.base}`, end);
     // What came of it (the notice as it lands): a random skill's outcome shows on its icon afterwards.
     return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };

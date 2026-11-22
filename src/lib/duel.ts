@@ -314,15 +314,12 @@ export type Duel = {
   trap?: { side: Side; uids: string[] } | null;
   /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
   dodge?: { id: number; uids: string[] } | null;
-<<<<<<< HEAD
   /** Gió dịu đi (chủ game 22/11): whose ngọc mana / mana trong mộ it just blew away, for the numbers to flash and fall. */
   drain?: { id: number; side: Side; orb: boolean; gems: boolean } | null;
-=======
   /** Kuriboh vừa phát nổ khi giáp lá cà (chủ game 21/11): biến mất ngay, không vỡ lá như quái bị hạ (id tăng mỗi lần nổ). */
   boom?: { id: number; uids: string[]; /** Kuriboh đang tự lao vào: uid → mục tiêu (uid quái hoặc `face:<bên>`); quái bị đánh / chặn nổ thì không có. */ to: Record<string, string> } | null;
   /** Kuriboh mang Cấp số nhân đã tách ra 2 con mới (để không tách 2 lần). */
   bred?: string[];
->>>>>>> origin/main
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
    *  giữ quyền trước đó; `rest` = các lần về xấp khác đang chờ hỏi. */
   lurkAsk?: { side: Side; slot: Slot; back: Side; rest?: Array<{ side: Side; slot: Slot }> } | null;
@@ -4501,7 +4498,6 @@ function ambushStrike(state: Duel, allyUid: string, foeUid: string): Duel {
   return releaseLegend(note(hit, actNotice("Phục kích", ["chặn kỹ năng", `${cardOf(fighter).name} đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]), "hit"));
 }
 
-<<<<<<< HEAD
 export const BREEZE = "nang-va-gio";
 
 /**
@@ -4543,7 +4539,8 @@ function breezeBlock(state: Duel, pending: Exclude<Pending, null>): Duel {
   const who = attacker ? (shadeHidden(attacker) ? "quái thú ẩn mình" : cardOf(attacker).name) : "đòn";
   const drained = note(patch(open, side, blown), `Gió dịu đi chặn đòn của ${who}, thổi bay 1 ngọc mana và 1 mana trong mộ.`, "spell");
   return releaseLegend({ ...drained, drain: { id: (state.drain?.id ?? 0) + 1, side, orb: you.orb > 0, gems: you.starGems > 0 } });
-=======
+}
+
 /** The attacker of the action waiting now, if it is an enemy monster's plain attack or damaging skill aimed at a monster
  *  of `side` (Quả trứng thiên sứ, chủ game 21/11), with the monsters of `side` it aims at. */
 export function eggAim(state: Duel, side: Side): { foe: string; aimed: string[] } | null {
@@ -4598,7 +4595,6 @@ function eggStrike(state: Duel, allyUid: string, foeUid: string): Duel {
   if (side === null || !ally || !attacker || attacker.hp <= 0 || !eggCanStrike(ally) || boulder(ally) || boulder(attacker)) return releaseLegend(stopped);
   const asked = note({ ...stopped, counterAsk: { uid: ally.uid, from: attacker.uid, free: true }, turn: side }, `${cardOf(ally).name} được Trả đòn.`, "info");
   return releaseLegend(asked.mode === "ai" && side === 1 ? pickCounter(asked, "phys") : asked);
->>>>>>> origin/main
 }
 
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
@@ -5129,11 +5125,8 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
     return note(state, "Chưa tới lượt chặn");
   }
   if (slowWaiting(state)) return note(state, "Kỹ năng này không chặn được.");
-<<<<<<< HEAD
   if (state.hold.breeze) return note(state, "Gió dịu đi đang chặn đòn này.");
-=======
   if (doomWaiting(state)) return note(state, "Huỷ diệt không chặn được.");
->>>>>>> origin/main
   if (branch) {
     const hits = spreadHits(state);
     if (!hits || hits.length < 2) return note(state, "Chỉ chặn từng nhánh khi kỹ năng trúng nhiều mục tiêu.");

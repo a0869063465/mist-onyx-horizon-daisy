@@ -415,7 +415,6 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "mana": 0,
     "atk": 3,
     "def": 0,
-<<<<<<< HEAD
     "mdef": 0,
     "hp": 3,
     "text": "d652287a",
@@ -434,12 +433,6 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "hp": 4,
     "text": "aa42c072",
     "added": "2026-11-22",
-=======
-    "mdef": 0,
-    "hp": 3,
-    "text": "d652287a",
-    "added": null,
->>>>>>> origin/main
     "powerAt": null,
     "powerTone": null,
     "shiftAt": "2026-11-22"
