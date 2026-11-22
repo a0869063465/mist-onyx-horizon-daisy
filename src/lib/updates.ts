@@ -1094,7 +1094,7 @@ export const PENDING_NOTES: string[] = [
   "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
   "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
   "Thêm lá Nắng và gió: Gió dịu đi chặn đòn khi đang ẩn, Nắng ấm lên gây 1 sát thương chuẩn lên cả sân.",
-  "Gió dịu đi của Nắng và gió: dòng hồng tách 2 nhánh tới ngọc mana và mana trong mộ của kẻ bị chặn, số chớp rồi giảm.",
+  "Gió dịu đi của Nắng và gió: dòng hồng chạy 2 dòng tới ngọc mana và mana trong mộ của kẻ bị chặn, số chớp rồi giảm.",
 ];
 
 function remarkOf(notes: string[]) {

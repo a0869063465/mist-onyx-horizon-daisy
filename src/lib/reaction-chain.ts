@@ -413,14 +413,14 @@ function mirrorOrb(next: Duel, live: ChainOrb, side: Side): ChainOrb {
  * skill icon stands by it and the attack surges into it.
  */
 function breezeOrb(next: Duel, live: ChainOrb, side: Side, uid: string): ChainOrb {
-  // The attacker's ngọc mana, and its mana in the grave (the star frame when the grave is hidden): a branch each.
+  // The attacker's ngọc mana and its mana in the grave (the gem of the star frame): a flow each.
   const foe = (1 - side) as Side;
   const loser = next.players[foe];
   const to: FlowLink[] = [];
-  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink", fork: true });
-  if (loser.starGems > 0) to.push({ end: { mana: foe, part: loser.stars >= 4 ? "stars" : "gems" }, tone: "pink", fork: true });
+  // Two plain flows from the icon, curving as an attack on a player does (chủ game 22/11: not a stiff fork).
+  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink" });
+  if (loser.starGems > 0) to.push({ end: { mana: foe, part: "gems" }, tone: "pink" });
   return {
-    spread: to.length ? foe : null,
     id: `orb${orbSeq++}`,
     kind: "skill",
     side,

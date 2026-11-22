@@ -1,7 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
 ## Gió dịu đi: flow hồng + chớp giảm mana (22/11, Sonnet 5.5 medium, nhánh `ccr-f07c0313-bc7ych`, CHƯA áp `main`)
-1. Việc vừa làm: `FlowEnd` thêm `{ mana, part: "orb"|"gems"|"stars" }`; `breezeOrb` (reaction-chain.ts) tạo 2 nhánh `fork` hồng (spread = phe kẻ đánh) tới ngọc mana và mana mộ (ô sao khi mộ ẩn vì ≥4 sao), chỉ nhánh nào có gì để mất; play.tsx `flowEnd`/`forkFor` nhận mark mana (vòng `MANA_RING` 4,2). `Duel.drain` (breezeBlock) → play.tsx `drainHold` giữ số cũ `DRAIN_WAIT` 1,5 s rồi `.mark.is-drain` chớp (CSS `drain-blink`) và số giảm. Kho icon chưa vẽ: `docs/icon-chua-ve.md` (Gió dịu đi `whirlwind`, Nắng ấm lên `flame-spin`).
+1. Việc vừa làm: `FlowEnd` thêm `{ mana, part: "orb"|"gems"|"stars" }`; `breezeOrb` (reaction-chain.ts) tạo 2 dòng hồng thường (không fork, uốn như đòn vào người chơi) tới ngọc mana và mana mộ (ô gem cạnh ô sao, kể cả khi số mộ ẩn), chỉ nhánh nào có gì để mất; play.tsx `flowEnd`/`forkFor` nhận mark mana (vòng `MANA_RING` 4,2). `Duel.drain` (breezeBlock) → play.tsx `drainHold` giữ số cũ `DRAIN_WAIT` 1,5 s rồi `.mark.is-drain` chớp (CSS `drain-blink`) và số giảm. Kho icon chưa vẽ: `docs/icon-chua-ve.md` (Gió dịu đi `whirlwind`, Nắng ấm lên `flame-spin`).
 2. Hiện trạng: tsc sạch, round-rules 83/84 (bài Phục kích chập chờn cũ). Chụp Chromium 412×915 cả 2 phía (flow 2 nhánh tới ngọc mana + ô sao, số 3 → chớp → 2). Chưa thấy nhánh mana mộ bằng mắt (cảnh thử ≥4 sao), chưa thử bàn cắt, online, điện thoại. Vòng ô sao chỉ có flow, số không đổi.
 3. Việc sắp làm: chờ chủ game xem; hiệu ứng riêng skill gió đơn mục tiêu chủ game sẽ làm sau; áp `main` khi được bảo.
 
