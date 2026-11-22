@@ -60,6 +60,10 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "rong-con": ["fire", "claw"],
   "chien-binh-rong": ["fire", "blade"],
   "chien-binh-ky-nhong": ["nature", "blade"],
+  "qua-trung-sinh-menh": ["holy", "magic"],
+  "dong-ho-kho-doan": ["holy", "magic"],
+  "dong-ho-hung-bao": ["holy", "magic"],
+  "dong-ho-mong-manh": ["holy", "magic"],
   "chien-binh-cuoi-rong": ["fire", "blade"],
   "may-chem": ["steel", "blade"],
   "ma-dao-si": ["arcane", "magic"],
@@ -104,6 +108,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "don-cuoi-cung": ["shadow", "magic"],
   "huy-diet": ["shadow", "magic"],
   "bay-thu": ["steel", "magic"],
+  "qua-trung-thien-su": ["holy", "magic"],
 };
 
 export function fxKindOf(cardId: string | null | undefined): [FxKind, FxStrike] {

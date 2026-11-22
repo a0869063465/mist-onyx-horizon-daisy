@@ -84,7 +84,7 @@ let orbSeq = 1;
 const WHITE_SPELLS = new Set(["hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat"]);
 /** Spells that stand in the way of what they answer, as a dam (chủ game 29/10): Lá chắn phản đòn a skill, Gương
  *  phòng hộ an attack, Vòng nguyền rủa ác ma both. */
-const DAM_SPELLS = new Set(["la-chan-phan-don", "guong-phong-ho", "vong-nguyen-rua-ac-ma", "phuc-kich"]);
+const DAM_SPELLS = new Set(["la-chan-phan-don", "guong-phong-ho", "vong-nguyen-rua-ac-ma", "phuc-kich", "qua-trung-thien-su"]);
 /** Spells that throw a skill back from their icon. */
 const REFLECT_SPELLS = new Set(["giap-co-khi", "la-chan-phan-don"]);
 // Cỗ máy thời gian and Hoán đổi run pink (chủ game 30/10), like the other answers; Hoán đổi is no green spell.
@@ -320,6 +320,10 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     case "phuc-kich":
       // Chủ game 29/10: it stops the skill; pink to the ally it sends, which strikes the one who used it (its own
       // attack icon, `ambushOrb`).
+      to = target ? [{ end: target, tone }] : into;
+      break;
+    case "qua-trung-thien-su":
+      // Chủ game 21/11: it stops the attack or skill; pink to the monster it lets strike back.
       to = target ? [{ end: target, tone }] : into;
       break;
     case "virus-an-mon":
@@ -576,7 +580,9 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   const glass = live && next.hold?.mirror ? list.find((orb) => orb.spell === "guong-phong-ho" && orb.stops === live.id) ?? null : null;
   // Phục kích waiting in the chain (chủ game 30/10): its icon stops the skill on its way in, its ally's strike waits.
   const ambush = next.hold?.ambush ?? null;
-  const lurk = live && ambush ? list.find((orb) => orb.spell === "phuc-kich" && orb.stops === live.id) ?? null : null;
+  // Quả trứng thiên sứ waits the same way (chủ game 21/11), its strike back comes after as a Trả đòn.
+  const lurkSpell = ambush ? "phuc-kich" : next.hold?.egg ? "qua-trung-thien-su" : null;
+  const lurk = live && lurkSpell ? list.find((orb) => orb.spell === lurkSpell && orb.stops === live.id) ?? null : null;
   const pounce = live && ambush ? list.find((orb) => orb.sent && orb.source === ambush.ally) ?? null : null;
   const wall = glass ?? lurk;
   // Cỗ máy thời gian waiting in the chain: its icon and its pink light round the ally stay until the chain lands.

@@ -469,6 +469,22 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { hp: { from: 4, to: 2 } },
     notes: ["Đổi tên Harpie Lady", "Giảo hoạt: lúc triệu hồi và mỗi 3 lượt chung, chọn 1 trong 2 kỹ năng ngẫu nhiên chưa nhận, dùng 1 lần", "Tiến hoá khi thi triển 3 hành động khác nhau, thay Lông vũ"],
   },
+  {
+    id: "kraken",
+    at: "2026-11-21",
+    wave: 40,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, def: { from: 3, to: 0 }, hp: { from: 4, to: 3 } },
+    notes: ["Đắm tàu mới: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay"],
+  },
+  {
+    id: "sua-hut-ma-phap",
+    at: "2026-11-21",
+    wave: 41,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, atk: { from: 1, to: 3 }, mdef: { from: 4, to: 0 }, hp: { from: 5, to: 2 } },
+    notes: ["Phản phép mới: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay", "Có keyword Đòn đánh phép"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

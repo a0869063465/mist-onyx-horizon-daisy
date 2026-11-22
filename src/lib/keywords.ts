@@ -146,6 +146,8 @@ export const KEYWORDS: Record<KeywordId, { src: string; label: string }> = {
 
 /** Keyword từng quái, theo id quái (chủ game duyệt 10/11: đa phần 1, tối đa 2, chỉ cái đặc trưng chính). */
 export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
+  // Đồng hồ khó đoán (chủ game 21/11): dạng hung bạo có Đòn đánh phép.
+  "dong-ho-hung-bao": ["phep"],
   "chien-si-gam-nham": ["ben-bi"],
   "chien-binh-rong": ["ben-bi"],
   "hiep-si-ho-ve": ["ben-bi", "ho-ve"],
@@ -176,7 +178,7 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "phu-thuy-bac-thay": ["sao-choi"],
   "ma-dao-si": ["sao-choi"],
   "ga-he-dang-so": ["sao-choi"],
-  "sua-hut-ma-phap": ["sao-choi"],
+  "sua-hut-ma-phap": ["phep"],
   "trieu-hoi-ac-ma": ["sao-choi"],
   "mat-do-tan-pha": ["sao-choi"],
   "mat-xanh-huy-diet": ["sao-choi"],
@@ -220,7 +222,6 @@ export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "phu-thuy-bac-thay": { "Cầu sấm": "sao-choi" },
   "ma-dao-si": { "Ma đạn": "sao-choi" },
   "ga-he-dang-so": { "Quả cầu bóng đêm": "sao-choi" },
-  "sua-hut-ma-phap": { "Tích luỹ ma pháp": "sao-choi" },
   "trieu-hoi-ac-ma": { "Sấm địa ngục": "sao-choi" },
   "mat-do-tan-pha": { "Cầu lửa địa ngục": "sao-choi" },
   "mat-xanh-huy-diet": { "Cầu sấm ánh sáng": "sao-choi" },

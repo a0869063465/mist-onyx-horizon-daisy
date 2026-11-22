@@ -15,7 +15,7 @@ import { findFusion, findKnightFusion, hexBonus, isHexer, setFusions } from "./f
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import { keywordsOf } from "./keywords.ts";
-import { hiddenKind, LURK_ROUNDS, LURK_WAKE } from "./hidden-kinds.ts";
+import { FOG_ENV, HIDE_FEE, LURK_ROUNDS, LURK_WAKE } from "./hidden-kinds.ts";
 import type { DecisionLook, EventTarget, HitNote, LookOption, MatchEvent } from "./match-history.ts";
 
 export type Side = 0 | 1;
@@ -55,6 +55,8 @@ export type FieldMon = {
   stun: number;
   stance: "attack" | "guard";
   stanceUsed: boolean;
+  /** Đồng hồ khó đoán (chủ game 21/11): số vòng còn lại trước khi tự đổi trạng thái. */
+  clockLeft?: number;
   bleed: number;
   curse: boolean;
   vulnerable: number;
@@ -140,6 +142,8 @@ export type FieldMon = {
   row?: "back";
   /** Đã đánh hoặc dùng kỹ năng trong vòng này: mỗi quái một lần mỗi vòng. */
   used?: boolean;
+  /** Quả trứng sinh mệnh đã dùng Sinh mệnh mới lần đầu (chủ game 21/11): các lần sau miễn mana, không rút thêm. */
+  reborn?: boolean;
   /** Tháo vát: đã dùng lần hành động thứ nhất trong vòng (còn lần thứ hai). */
   knack?: number;
   /** Lá Trang bị đang gắn: chỉ số đã cộng, `again` = đã gắn lần 2 (rời sân thì mất hẳn). */
@@ -245,6 +249,9 @@ export type Hold = {
   /** Phục kích (chủ game 30/10): it waits in the chain against the skill; once the chain lands the skill is stopped and
    *  `ally` strikes `foe`, the one who used it. */
   ambush?: { ally: string; foe: string };
+  /** Quả trứng thiên sứ (chủ game 21/11): it waits in the chain; once the chain lands the attack or skill of `foe` is
+   *  stopped, `foe` tires and `ally`, one monster it aimed at, strikes back (Trả đòn without its fee, back row too). */
+  egg?: { ally: string; foe: string };
   /** Cỗ máy thời gian (nhanh, chủ game 30/10): it waits in the chain; once the chain lands `ally` goes back to its earlier
    *  state, and the action then falls on it as it was. */
   rewind?: { ally: string };
@@ -284,7 +291,7 @@ export type Duel = {
   /** Ai đã bỏ lượt liên tiếp. Cả hai bỏ thì hết vòng, token sang người kia, cả hai +1 mana. */
   skipped?: [boolean, boolean];
   /** Trả đòn: quái hàng trước vừa chịu đòn mà còn sống được đánh trả kẻ ra đòn (đánh thường hoặc kỹ năng). */
-  counterAsk?: { uid: string; from: string } | null;
+  counterAsk?: { uid: string; from: string; free?: boolean } | null;
   /** Khoá 1 (chủ game 22/11): quái địch đã chọn khoá, chờ đòn kế tiếp của `by` vào hàng chờ (`lockStrike`). */
   lockAim?: { by: string; uid: string } | null;
   /** Bên đang Trả đòn bằng kỹ năng: xong thì quyền ở lại bên đó, như sau đòn của đối thủ. */
@@ -378,6 +385,10 @@ export type Duel = {
   wileAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
   /** Một việc lẽ ra nhường quyền nhưng còn câu hỏi Giảo hoạt / tiến hoá chưa trả lời: trả lời xong thì nhường. */
   owedYield?: boolean;
+  /** Đồng hồ khó đoán vừa ra sân: chủ chọn hung bạo hoặc mỏng manh; `back` = bên giữ quyền trước khi hỏi. */
+  clockAsk?: { uid: string; side: Side; back: Side } | null;
+  /** Đồng hồ khó đoán: dạng đã chọn TRƯỚC khi ra sân (bảng chọn lúc kéo lá ra, chủ game 22/11); Chỉ sống trong một lần triệu hồi. */
+  clockPick?: { form: string } | null;
   prey?: { side: Side; aim: string; kind: "phys" | "spell" | "tru" } | null;
   preyAsk?: boolean;
   recall?: { side: Side; caps: number[] } | null;
@@ -429,6 +440,7 @@ function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon 
 }
 
 function pileFromField(mon: FieldMon): PileMon {
+  if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
   const { uid: _uid, lurk: _lurk, ...saved } = mon;
   const cap = saved.maxHp || saved.hp;
   return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
@@ -771,7 +783,6 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "ngai-khong-lo": [{ index: 0, cast: "aim" }],
   "ngai-nu-hoang": [{ index: 0, cast: "aim" }],
   "ngai-hoan-my": [{ index: 0, cast: "aim" }],
-  "sua-hut-ma-phap": [{ index: 0, cast: "aim" }],
   "con-thinh-no-cua-hai-vuong": [{ index: 0, cast: "aim" }],
   "chien-binh-lan-khuat": [{ index: 0, cast: "self" }],
 };
@@ -1035,9 +1046,8 @@ function buildLook(before: Duel, after: Duel, event: TraceEvent): DecisionLook |
 }
 
 function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
-  const seen = dodgeSeen.splice(0);
   dodgeRolls.clear();
-  const dodged = seen.length ? { ...rawAfter, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : rawAfter;
+  const dodged = withFlash(before, rawAfter);
   const booms = boomSeen.splice(0);
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
@@ -1310,9 +1320,9 @@ function withRows(player: Player): Player {
 
 function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
   const prev = state.players[side];
-  const player = gearHome(prev, envBoost(syncOrder(withRows(rawPlayer))));
+  const player = clockHidden(gearHome(prev, envBoost(syncOrder(withRows(rawPlayer)))));
   const gone = [
-    ...departed(prev.field, player.field),
+    ...departed(prev.field, player.field).map(clockBase),
     ...(prev.env && prev.env !== player.env ? [prev.env] : []),
   ];
   const spent = [...(player.spent ?? prev.spent ?? []), ...gone];
@@ -1323,7 +1333,7 @@ function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
     if (!mon || born?.[mon.uid]) return;
     born = { ...(born ?? {}), [mon.uid]: { mon: structuredClone(mon), slot: slot as Slot } };
   });
-  return { ...state, players, born };
+  return askClock({ ...state, players, born }, side);
 }
 
 /** Lá Trang bị (chủ game 10/11). */
@@ -2983,6 +2993,7 @@ function settled(state: Duel): boolean {
     !state.plumeAsk &&
     !state.birdAsk &&
     !state.wileAsk?.length &&
+    !state.clockAsk &&
     !state.preyAsk &&
     !state.reel &&
     !state.wheel &&
@@ -3142,8 +3153,8 @@ export function openingDraw(state: Duel): Duel {
   return next;
 }
 
-export function summon(state: Duel, reserveIndex: number, slot: Slot): Duel {
-  const next = summonCore(state, reserveIndex, slot);
+export function summon(state: Duel, reserveIndex: number, slot: Slot, hide = false): Duel {
+  const next = summonCore(state, reserveIndex, slot, hide);
   if (next === state) return next;
   const side = state.turn;
   const before = new Set(state.players[side].field.map((mon) => mon?.uid));
@@ -3154,7 +3165,12 @@ export function summon(state: Duel, reserveIndex: number, slot: Slot): Duel {
   return ok ? yieldTurn(marked) : marked;
 }
 
-function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
+/** Triệu hồi Ẩn (chủ game 21/11): như triệu hồi thường, tốn thêm `HIDE_FEE` mana, quái ra sân đứng úp. */
+export function summonHidden(state: Duel, reserveIndex: number, slot: Slot): Duel {
+  return summon(state, reserveIndex, slot, true);
+}
+
+function summonCore(state: Duel, reserveIndex: number, slot: Slot, hide = false): Duel {
   const locked = talkLock(state);
   if (locked) return locked;
   if (state.step !== "main" || state.winner) return state;
@@ -3175,6 +3191,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
   if (guardRow) return note(state, guardRow);
   if ((player.locked?.[slot] ?? 0) > 0) return note(state, "Ô này đang ngập, chưa dùng được");
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
+  if (hide && cardStars(cardId, held.saved?.level ?? 1) >= 5) return note(state, "Quái 5 sao không ẩn được.");
   const short = player.stars < card.stars;
   const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
   const forced = short && cardId === "trieu-hoi-ac-ma";
@@ -3184,11 +3201,12 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
   const before = player.stars;
   const gratis = held.freeAt != null && held.freeAt === player.turns;
   const tolled = gratis ? false : Boolean(held.toll);
-  const bill = playBill(gratis ? 0 : card.gems, tolled, player.orb, player.flask);
+  const fee = (gratis ? 0 : card.gems) + (hide ? HIDE_FEE : 0);
+  const bill = playBill(fee, tolled, player.orb, player.flask);
   if (bill) return note(state, bill);
-  const paid = payPlayed(gate.player, gratis ? 0 : card.gems, tolled);
-  if (!paid) return note(state, bill ?? `Cần ${card.gems} gem đang có.`);
-  let next = hideOnSummon(state, side, place(state, side, cardId, held));
+  const paid = payPlayed(gate.player, fee, tolled);
+  if (!paid) return note(state, bill ?? `Cần ${fee} gem đang có.`);
+  let next = hideOnSummon(state, side, place(state, side, cardId, held), hide);
   if (cardId === "kazura" && !held.saved) next.dim = true;
   if (cardId === "trieu-hoi-ac-ma" && player.stars === 3 && !held.saved) next.pact = true;
   let grown = false;
@@ -3212,7 +3230,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
     ? `${card.name} bị hiến tế.`
     : forced
       ? `${sideName(side)} bất chấp triệu hồi ${card.name}. Đầu lượt phải trả khế ước.${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`
-      : `${sideName(side)} triệu hồi ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}${harp.line ? `.${harp.line}` : ""}`;
+      : `${sideName(side)} triệu hồi${next.lurk ? " ẩn" : ""} ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}${harp.line ? `.${harp.line}` : ""}`;
   return note(
     pingStars(patch({ ...state, seq: state.seq + 1, rite: vow.eaten ? { side, slot, seq: state.seq + 1 } : state.rite }, side, placed), side, before, placed.stars),
     line,
@@ -3620,6 +3638,66 @@ function lizardRoll(self: FieldMon, amount: number): boolean {
   return dodged;
 }
 
+/**
+ * Quả trứng sinh mệnh (chủ game 21/11), Sinh mệnh mới: skill buff (siêu tốc ngoài giao tranh), ở lượt của mình, tiêu 1
+ * mana. Bạn bỏ 1 lá bạn chọn trên tay (`extra` = "r:i" quái dự bị hoặc "s:i" phép), đối phương bỏ 1 lá ngẫu nhiên, đối
+ * phương rút 1 lá, bạn rút 2 lá. Lá bỏ biến mất. Rút miễn phí, không tính lá rút của vòng.
+ */
+export const EGG = "qua-trung-sinh-menh";
+/** Skill buff: không dùng trong giao tranh (Trả đòn, cửa sổ phản ứng). */
+export function buffSkill(cardId: string, index: number): boolean {
+  return cardId === EGG && index === 0;
+}
+/** Lá trên tay theo chỉ số "r:i" / "s:i": bỏ khỏi tay, null nếu không có lá đó. */
+function dropPick(player: Player, pick: string): Player | null {
+  const hit = /^([rs]):(\d+)$/.exec(pick);
+  if (!hit) return null;
+  const index = Number(hit[2]);
+  if (hit[1] === "r") return index < player.reserve.length ? { ...player, reserve: player.reserve.filter((_, at) => at !== index) } : null;
+  return index < player.hand.length ? dropHandCard(player, index) : null;
+}
+/** Every card on a hand as "r:i" / "s:i". */
+export function handPicks(player: Player): string[] {
+  return [...player.reserve.map((_, index) => `r:${index}`), ...player.hand.map((_, index) => `s:${index}`)];
+}
+function freeDraws(player: Player, n: number): { player: Player; got: number } {
+  let next = player;
+  let got = 0;
+  for (let i = 0; i < n; i += 1) {
+    const top = takeTop(next);
+    if (!top) break;
+    next = top.player;
+    got += 1;
+  }
+  return { player: next, got };
+}
+function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | null): Duel {
+  if (state.countering != null || state.counterAsk) return note(state, "Kỹ năng buff không dùng khi giao tranh.");
+  const you = state.players[side];
+  const foeSide = (1 - side) as Side;
+  if (handPicks(you).length === 0) return note(state, "Không có lá trên tay để bỏ.");
+  // Lần đầu tốn 1 mana và mình rút thêm 1 lá; các lần sau 0 mana (chủ game 21/11, tính riêng từng Quả trứng trên sân).
+  const first = !mon.reborn;
+  const cost = first ? 1 : 0;
+  const before = you.stars;
+  const paid = pay(you, cost);
+  if (!paid) return note(state, `Cần ${cost} gem.`);
+  const dropped = extra ? dropPick(paid, extra) : null;
+  if (!dropped) return note(state, "Chọn 1 lá trên tay để bỏ.");
+  const foe = state.players[foeSide];
+  const foePicks = handPicks(foe);
+  const foeDropped = foePicks.length ? dropPick(foe, foePicks[Math.floor(Math.random() * foePicks.length)]) ?? foe : foe;
+  const foeDrawn = freeDraws(foeDropped, 1);
+  const yourDrawn = freeDraws(dropped, first ? 2 : 1);
+  const marked = { ...yourDrawn.player, field: yourDrawn.player.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, reborn: true } : unit)) as Player["field"] };
+  let next = patch(state, side, marked);
+  next = patch(next, foeSide, foeDrawn.player);
+  next = pingStars({ ...next, seq: next.seq + 1 }, side, before, paid.stars);
+  // Viết hoa "Bạn"/"Đối thủ" để trang trận đổi đúng góc nhìn; tránh cụm "Đối thủ rút" (trang trận che tên lá rút ở đó).
+  const foeLine = foePicks.length ? `${sideName(foeSide)} bỏ 1 lá ngẫu nhiên và rút ${foeDrawn.got} lá` : `${sideName(foeSide)} không có lá để bỏ, vẫn rút ${foeDrawn.got} lá`;
+  return note(next, `${chipLabel(EGG, "life")}: ${sideName(side)} bỏ 1 lá và rút ${yourDrawn.got} lá; ${foeLine}.`, "heal");
+}
+
 /** Every monster on the board, changed by `fn` where it is one of `uids`. */
 function reshapeMons(state: Duel, uids: ReadonlySet<string>, fn: (mon: FieldMon) => FieldMon): Duel {
   const players = state.players.map((player) => ({
@@ -3675,6 +3753,84 @@ function lizardGuard(state: Duel, outer: (state: Duel) => Duel): Duel {
   const kept = new Map(dodgers.map((mon) => [mon.uid, mon] as const));
   const restored = reshapeMons(ran, safe, (mon) => kept.get(mon.uid) ?? mon);
   return note(restored, dodgers.map((mon) => `${cardOf(mon).name} né đòn.`).join(" "), "info");
+}
+
+/**
+ * Đắm tàu (Kraken) và Phản phép (Sứa hút ma pháp), chủ game 21/11: quái thú tấn công vào nó (đòn đánh thường hoặc kỹ
+ * năng, kể cả quái 5 sao) mà đòn có nhiều sát thương vật lý (phép) nhất thì bị tiêu diệt ngay, trước khi gây sát thương
+ * lên nó; chạy cả khi nó đang ẩn hay đã lật, có loé sáng. Sát thương chuẩn nhiều nhất thì không tính.
+ * Cách đọc loại đòn: chạy thử đòn 3 lần với nó không có thủ, thủ chặn hết vật lý, thủ phép chặn hết phép, rồi suy ra
+ * phần vật lý, phép, chuẩn. Mục tiêu khác của cùng đòn vẫn trúng như thường.
+ */
+const REBUKE: Record<string, { kind: "phys" | "magic"; skill: string }> = {
+  kraken: { kind: "phys", skill: "Đắm tàu" },
+  "sua-hut-ma-phap": { kind: "magic", skill: "Phản phép" },
+};
+let rebukeDepth = 0;
+function rebukeGuard(state: Duel, attackerUid: string | null, outer: (state: Duel) => Duel): Duel {
+  if (!attackerUid || dodgeOff || listingChoices || rebukeDepth > 0) return outer(state);
+  const guards = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && REBUKE[mon.cardId] && mon.hp > 0 && mon.uid !== attackerUid)));
+  if (guards.length === 0 || ownerSide(state, attackerUid) === null) return outer(state);
+  const run = (next: Duel) => {
+    rebukeDepth += 1;
+    try {
+      return outer(next);
+    } finally {
+      rebukeDepth -= 1;
+    }
+  };
+  const seed = Math.floor(Math.random() * 2147483646) + 1;
+  const ids = new Set(guards.map((mon) => mon.uid));
+  const BULK = 1000;
+  const taken = (def: number, mdef: number): Map<string, number> => {
+    const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def, mdef, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
+    const ward = wardLines.splice(0);
+    const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
+    dodgeOff = true;
+    let dry: Duel;
+    try {
+      dry = withSeed(seed, () => run(bare));
+    } finally {
+      dodgeOff = false;
+      wardLines.splice(0, wardLines.length, ...ward);
+      skillHex = hex;
+    }
+    const after = new Map(dry.players.flatMap((player) => player.field.flatMap((mon) => (mon ? [[mon.uid, mon] as const] : []))));
+    return new Map(guards.map((mon) => [mon.uid, Math.max(0, mon.hp + BULK - (after.get(mon.uid)?.hp ?? mon.hp + BULK))] as const));
+  };
+  const whole = taken(0, 0);
+  if (![...whole.values()].some((n) => n > 0)) return withSeed(seed, () => run(state));
+  const noPhys = taken(BULK, 0);
+  const noMagic = taken(0, BULK);
+  const struck = guards.filter((mon) => {
+    const all = whole.get(mon.uid) ?? 0;
+    const phys = Math.max(0, all - (noPhys.get(mon.uid) ?? 0));
+    const magic = Math.max(0, all - (noMagic.get(mon.uid) ?? 0));
+    const tru = Math.max(0, all - phys - magic);
+    const want = REBUKE[mon.cardId].kind === "phys" ? phys : magic;
+    const other = REBUKE[mon.cardId].kind === "phys" ? magic : phys;
+    return want > 0 && want > other && want > tru;
+  });
+  if (struck.length === 0) return withSeed(seed, () => run(state));
+  const safe = new Set(struck.map((mon) => mon.uid));
+  const shielded = reshapeMons(state, safe, (mon) => ({ ...mon, def: mon.def + BULK, mdef: mon.mdef + BULK, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
+  const ran = withSeed(seed, () => run(shielded));
+  if (ran === shielded) return state;
+  const kept = new Map(struck.map((mon) => [mon.uid, mon] as const));
+  let next = reshapeMons(ran, safe, (mon) => {
+    const was = kept.get(mon.uid) ?? mon;
+    return was.lurk ? { ...was, lurk: { ...was.lurk, hit: true } } : was;
+  });
+  const side = ownerSide(next, attackerUid);
+  const foe = side === null ? null : next.players[side].field.find((mon) => mon?.uid === attackerUid) ?? null;
+  for (const mon of struck) flashMon(mon.uid);
+  const lines = struck.map((mon) => `${cardOf(mon).name} kích hoạt ${REBUKE[mon.cardId].skill}`);
+  if (side !== null && foe) {
+    const field = next.players[side].field.map((mon) => (mon?.uid === attackerUid ? { ...mon, hp: 0 } : mon)) as Player["field"];
+    next = patch(next, side, settleCocoon(dropDead({ ...next.players[side], field })));
+    return note(next, `${lines.join(", ")}: tiêu diệt ${shadeHidden(foe) ? "quái thú ẩn mình" : cardOf(foe).name}.`, "spell");
+  }
+  return note(next, `${lines.join(", ")}.`, "spell");
 }
 
 /** Who dodged in a clash: the struck one if it can dodge, else the attacker (Thỏ đen tinh nghịch né cả phần đánh trả). */
@@ -3785,8 +3941,6 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   if (noAnswer) counter = 0;
   const defA = liveDef(attacker, alliesA);
   const defB = liveDef(defender, alliesB);
-  if (defender.cardId === "kraken") counter += Math.min(Math.max(0, defB), Math.max(0, atk));
-  if (attacker.cardId === "kraken") atk += Math.min(Math.max(0, defA), Math.max(0, counter));
   const plate = plateBank(attacker);
   const bolt = attacker.cardId === PERFECT && Boolean(attacker.bolt);
   if (!bolt) atk += plate.p;
@@ -4271,7 +4425,7 @@ function pickCounterCore(state: Duel, mode: "phys"): Duel {
   const done = (next: Duel) => nextCounter({ ...next, counterAsk: null, skipped: [false, false] as [boolean, boolean] });
   if (owner === null || fromSide === null) return done(state);
   const side = owner;
-  const charged = payCounter(state, side);
+  const charged = ask.free ? state : payCounter(state, side);
   if (!charged) return note(state, `Trả đòn cần ${COUNTER_FEE} gem.`);
   state = charged;
   const mon = state.players[side].field.find((unit) => unit?.uid === ask.uid) ?? null;
@@ -4323,6 +4477,62 @@ function ambushStrike(state: Duel, allyUid: string, foeUid: string): Duel {
   let hit = patch(open, foe, dropDead({ ...open.players[foe], field: foeField }));
   hit = patch(hit, side, { ...hit.players[side], field: myField });
   return releaseLegend(note(hit, actNotice("Phục kích", ["chặn kỹ năng", `${cardOf(fighter).name} đánh thường lên ${cardOf(attacker).name}, gây ${dealt} máu và không bị phản đòn`]), "hit"));
+}
+
+/** The attacker of the action waiting now, if it is an enemy monster's plain attack or damaging skill aimed at a monster
+ *  of `side` (Quả trứng thiên sứ, chủ game 21/11), with the monsters of `side` it aims at. */
+export function eggAim(state: Duel, side: Side): { foe: string; aimed: string[] } | null {
+  const pending = state.pending;
+  if (state.step !== "respond" || !state.hold || !pending) return null;
+  const foe = (1 - side) as Side;
+  const mine = (uid: string | null | undefined) => Boolean(uid && state.players[side].field.some((mon) => mon && mon.uid === uid && mon.hp > 0));
+  const theirs = (uid: string) => state.players[foe].field.some((mon) => mon?.uid === uid);
+  if (pending.kind === "melee" || pending.kind === "gnaw") {
+    return theirs(pending.attacker) && mine(pending.defender) ? { foe: pending.attacker, aimed: [pending.defender] } : null;
+  }
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") {
+    if (("back" in pending && pending.back) || !theirs(pending.caster) || !harmSkill(ownerCard(state, pending.caster), pending.index)) return null;
+    const spread = pending.kind === "beam" ? (spreadHits(state) ?? []).filter(mine) : [];
+    const aimed = spread.length > 0 ? spread : mine(pending.target) ? [pending.target as string] : [];
+    return aimed.length > 0 ? { foe: pending.caster, aimed } : null;
+  }
+  return null;
+}
+
+/** The monsters of `side` Quả trứng thiên sứ may pick to strike back now: those aimed at that still may act; when none
+ *  may, those aimed at (it then only stops the blow). */
+export function eggAllies(state: Duel, side: Side): string[] {
+  const aim = eggAim(state, side);
+  if (!aim) return [];
+  const free = aim.aimed.filter((uid) => {
+    const mon = state.players[side].field.find((unit) => unit?.uid === uid);
+    return Boolean(mon && eggCanStrike(mon));
+  });
+  return free.length > 0 ? free : aim.aimed;
+}
+
+/** Trả đòn rules (alive, not held, not abroad), without the front-row rule. */
+function eggCanStrike(mon: FieldMon): boolean {
+  if (mon.hp <= 0 || mon.abroad !== undefined) return false;
+  return !(mon.stun > 0 || mon.cage || (mon.chain ?? 0) > 0 || (mon.path ?? 0) > 0 || hexLocked(mon));
+}
+
+/** Quả trứng thiên sứ lands: the attack or skill is stopped, its maker tires as when blocked, and `allyUid` may strike
+ *  back as a Trả đòn without its 1-mana fee, from the back row too. */
+function eggStrike(state: Duel, allyUid: string, foeUid: string): Duel {
+  const side = ownerSide(state, allyUid);
+  const foeSide = ownerSide(state, foeUid);
+  let open: Duel = { ...state, step: "main" as const, pending: null, hold: null };
+  if (foeSide !== null) {
+    const field = open.players[foeSide].field.map((mon) => (mon?.uid === foeUid ? { ...mon, dim: true } : mon));
+    open = patch(open, foeSide, { ...open.players[foeSide], field });
+  }
+  const ally = side === null ? null : open.players[side].field.find((mon) => mon?.uid === allyUid) ?? null;
+  const attacker = foeSide === null ? null : open.players[foeSide].field.find((mon) => mon?.uid === foeUid) ?? null;
+  const stopped = note(open, "Quả trứng thiên sứ chặn đòn tấn công.", "spell");
+  if (side === null || !ally || !attacker || attacker.hp <= 0 || !eggCanStrike(ally) || boulder(ally) || boulder(attacker)) return releaseLegend(stopped);
+  const asked = note({ ...stopped, counterAsk: { uid: ally.uid, from: attacker.uid, free: true }, turn: side }, `${cardOf(ally).name} được Trả đòn.`, "info");
+  return releaseLegend(asked.mode === "ai" && side === 1 ? pickCounter(asked, "phys") : asked);
 }
 
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
@@ -4464,6 +4674,7 @@ function passResponseCore(state: Duel): Duel {
   }
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.trap) return trapSpring(state, hold.trap.uid);
+  if (hold.egg) return eggStrike(state, hold.egg.ally, hold.egg.foe);
   if (hold.ward) return landWard(state, hold.ward.bird);
   if (pending.kind === "spell" && pending.corrode) return landVirus(state);
   if (hold.mirror && (pending.kind === "melee" || (pending.kind === "face" && !pending.skill))) return mirrorBlock(state, pending.attacker);
@@ -5769,8 +5980,10 @@ function tideSkill(before: Duel, after: Duel, uid: string, targetUid: string | n
 }
 
 function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Duel {
-  return lavaStrike(state, attackerUid, defenderUid, (armed) =>
-    envGuard(armed, [attackerUid, defenderUid], [attackerUid, defenderUid], () => resolveMeleeCore(armed, attackerUid, defenderUid)),
+  return rebukeGuard(state, attackerUid, (armed0) =>
+    lavaStrike(armed0, attackerUid, defenderUid, (armed) =>
+      envGuard(armed, [attackerUid, defenderUid], [attackerUid, defenderUid], () => resolveMeleeCore(armed, attackerUid, defenderUid)),
+    ),
   );
 }
 
@@ -6228,7 +6441,7 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
   const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
   const run = (armed: Duel) =>
     envGuard(armed, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(armed, blockerUid, withSkill));
-  return attackerUid && !withSkill ? lavaStrike(state, attackerUid, blockerUid, run) : run(state);
+  return rebukeGuard(state, attackerUid, (start) => (attackerUid && !withSkill ? lavaStrike(start, attackerUid, blockerUid, run) : run(start)));
 }
 
 /** Mũi tên thiên sứ (chủ game 22/11): nội tại, gây sát thương lên người chơi đối thủ thì rút 1 lá. */
@@ -6473,7 +6686,7 @@ function counterStart(state: Duel, uid: string): { state: Duel } | { refused: Du
   const side = ownerSide(state, uid);
   if (side === null) return null;
   // Luật L1: kỹ năng dùng để Trả đòn tốn thêm 1 mana, thu trước khi kỹ năng tính mana của nó.
-  const charged = payCounter(state, side);
+  const charged = ask.free ? state : payCounter(state, side);
   if (!charged) return { refused: note(state, `Trả đòn cần thêm ${COUNTER_FEE} gem.`) };
   const player = charged.players[side];
   const field = player.field.map((mon) => (mon?.uid === uid ? { ...mon, dim: false } : mon));
@@ -6822,7 +7035,7 @@ export function eatFor(state: Duel, side: Side): boolean {
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
-const EATABLE = new Set(["bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi"]);
+const EATABLE = new Set(["bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"]);
 
 /** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
 function restoreEaten(now: Duel, back: Duel): Duel {
@@ -6899,6 +7112,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "co-may-thoi-gian",
     "giap-co-khi",
     "hop-ma-thuat",
+    "qua-trung-thien-su",
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
     ...(state.step === "respond" ? [TRAP_CARD] : []),
   ]);
@@ -6915,6 +7129,9 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
+  }
+  if (!replay && card.id === "qua-trung-thien-su" && !eggAim(state, side)) {
+    return note(state, "Quả trứng thiên sứ chỉ dùng khi quái của bạn bị quái đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến.");
   }
   if (!replay && card.id === "virus-an-mon") {
     if (!virusPick(state, side, targetUid)) return note(state, "Virus ăn mòn chỉ dùng khi quái 1 sao đồng minh có thể bị hạ.");
@@ -7296,6 +7513,18 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     shifted = patch(shifted, foe, { ...enemy, field: theirs });
     return note(shifted, `Phản nguyền chuyển trạng thái xấu từ ${cardOf(ally).name} sang ${cardOf(foeMon).name}.`, "spell");
   }
+  if (card.id === "qua-trung-thien-su") {
+    // Chủ game 21/11: only against an enemy monster's attack or damaging skill aimed at a monster of its side.
+    const aim = eggAim(state, side);
+    if (!aim) return note(state, "Quả trứng thiên sứ chỉ dùng khi quái của bạn bị quái đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến.");
+    const picks = eggAllies(state, side);
+    const pick = targetUid && picks.includes(targetUid) ? targetUid : sourceUid && picks.includes(sourceUid) ? sourceUid : picks.length === 1 ? picks[0] : null;
+    if (!pick || !next.hold) return note(state, "Chọn 1 quái bị nhắm đến để trả đòn.");
+    const ally = next.players[side].field.find((mon) => mon?.uid === pick) ?? null;
+    const attacker = next.players[foe].field.find((mon) => mon?.uid === aim.foe) ?? null;
+    if (!ally || !attacker) return note(state, "Chọn 1 quái bị nhắm đến để trả đòn.");
+    return keep(note({ ...next, hold: { ...next.hold, egg: { ally: ally.uid, foe: attacker.uid } } }, `Quả trứng thiên sứ: ${cardOf(ally).name} chờ trả đòn ${cardOf(attacker).name}.`, "spell"));
+  }
   if (card.id === "phuc-kich") {
     // Chủ game 29/10: it stops a damaging skill aimed at its side (not a plain attack); the ally picked strikes the
     // one who used it.
@@ -7502,17 +7731,17 @@ function boxSwap(state: Duel, allyUid: string, foeUid: string): Duel {
   return note(next, `Hộp ma thuật đổi chỗ ${cardOf(ally).name} với ${cardOf(foe).name} tới hết vòng.`, "spell");
 }
 
-/* ---------- Luật L2 quái ẩn (chủ game 14/11, hidden-kinds.ts) ---------- */
+/* ---------- Luật quái ẩn (chủ game 14/11, sửa 21/11; hidden-kinds.ts) ---------- */
 
-/** Tác dụng riêng khi quái ẩn kiểu 2 kích hoạt: chủ game mô tả từng quái sau. Không có thì chỉ lật và về xấp. */
+/** Tác dụng riêng khi quái ẩn kích hoạt (chủ động hoặc phản ứng, tuỳ lá): chủ game mô tả từng quái sau. Không có thì
+ *  chỉ lật. */
 const LURK_ACTS: Record<string, (state: Duel, side: Side, uid: string) => Duel> = {};
 
-/** Quái ẩn vừa ra sân: đếm lại từ đầu (quái 5 sao chưa có cơ chế này). */
-function hideOnSummon(state: Duel, side: Side, mon: FieldMon): FieldMon {
-  const kind = hiddenKind(mon.cardId);
-  if (!kind || cardStars(mon.cardId, mon.level) >= 5) return mon.lurk ? { ...mon, lurk: undefined } : mon;
-  const wake = kind === 2 ? (attackRound(state) === side ? LURK_WAKE : LURK_WAKE + 1) : undefined;
-  return { ...mon, lurk: { left: LURK_ROUNDS, ...(wake !== undefined ? { wake } : {}) } };
+/** Quái vừa ra sân: triệu hồi Ẩn thì đứng úp và đếm từ đầu; cách ra sân khác thì là quái thường. Quái 5 sao không ẩn. */
+function hideOnSummon(state: Duel, side: Side, mon: FieldMon, hide = false): FieldMon {
+  if (!hide || cardStars(mon.cardId, mon.level) >= 5) return mon.lurk ? { ...mon, lurk: undefined } : mon;
+  const wake = attackRound(state) === side ? LURK_WAKE : LURK_WAKE + 1;
+  return { ...mon, lurk: { left: LURK_ROUNDS, wake } };
 }
 
 /** Quái đang đứng úp: đối thủ không thấy tên. */
@@ -7520,17 +7749,34 @@ export function lurking(mon: FieldMon | null | undefined): boolean {
   return Boolean(mon?.lurk);
 }
 
-/** Quái ẩn kiểu 2 đã đủ vòng chờ: chủ bấm Kích hoạt. */
+/** Quái ẩn đã đủ vòng chờ: chủ bấm Kích hoạt (lật chủ động). */
 export function lurkReady(mon: FieldMon | null | undefined): boolean {
   return Boolean(mon?.lurk?.ready);
 }
 
+/** Có lá môi trường Sương mù trên sân của bên này: quái ẩn lật xong thì về xấp bài. */
+export function fogged(player: Player): boolean {
+  return player.env === FOG_ENV;
+}
+
+/** Quái vừa kích hoạt (lật hoặc skill phản ứng): trang trận chớp sáng bằng hiệu ứng phát quang có sẵn. */
+function flashMon(uid: string) {
+  if (!dodgeOff && !listingChoices) dodgeSeen.push(uid);
+}
+
+/** Gắn các quái vừa chớp vào trận (trang trận so `dodge.id` để chớp). */
+function withFlash(before: Duel, after: Duel): Duel {
+  const seen = dodgeSeen.splice(0);
+  return seen.length ? { ...after, dodge: { id: (before.dodge?.id ?? 0) + 1, uids: [...new Set(seen)] } } : after;
+}
+
 const LURK_ACTING = new Set<TraceEvent["kind"]>(["attack-monster", "attack-face", "skill", "reel"]);
-const LURK_HITTING = new Set<TraceEvent["kind"]>(["pass", "skill", "attack-monster", "attack-face", "reel"]);
+const LURK_HITTING = new Set<TraceEvent["kind"]>(["pass", "skill", "attack-monster", "attack-face", "reel", "spell"]);
 
 /**
- * Sau mỗi việc: quái ẩn tự đánh hoặc dùng kỹ năng ở lượt của mình thì lộ diện, thành quái thường; quái ẩn bị đánh hoặc
- * bị kỹ năng (bị nhắm, chặn đòn, hoặc mất máu/bị khống chế) thì đánh dấu để giao tranh xong về xấp.
+ * Sau mỗi việc: quái ẩn tự đánh hoặc dùng kỹ năng ở lượt của mình thì lộ diện, thành quái thường; quái ẩn bị đánh, bị
+ * kỹ năng hoặc bị phép của đối thủ (bị nhắm, chặn đòn, hoặc mất máu/bị khống chế) thì đánh dấu để giao tranh xong lật
+ * (kích hoạt bị động).
  */
 function markLurk(before: Duel, after: Duel, event: TraceEvent): Duel {
   if (!before.players.some((player) => player.field.some((mon) => mon?.lurk))) return after;
@@ -7561,17 +7807,19 @@ function markLurk(before: Duel, after: Duel, event: TraceEvent): Duel {
   if (before.hold?.blocker) named.add(before.hold.blocker);
   for (const row of before.hold?.covers ?? []) named.add(row.blocker);
   if (before.counterAsk) named.add(before.counterAsk.from);
+  if (event.kind === "spell" && event.target?.kind === "monster" && event.target.uid) named.add(event.target.uid);
   const attacker = pending?.kind === "melee" || pending?.kind === "gnaw" || pending?.kind === "face" ? pending.attacker : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.caster : null;
-  const spellOnly = pending?.kind === "spell";
+  // Phép của chính chủ (buff, giải trừ) không làm quái ẩn lật; chỉ phép của đối thủ.
+  const spellBy = event.kind === "spell" ? event.actor : pending?.kind === "spell" ? pending.owner : null;
   for (const side of [0, 1] as const) {
+    if (spellBy === side) continue;
     const player = next.players[side];
     let changed = false;
     const field = player.field.map((mon) => {
       const was = mon ? prior.get(mon.uid) : undefined;
       if (!mon?.lurk || !was || mon.lurk.hit || mon.uid === attacker) return mon;
-      // Lá phép nhắm vào không tính (chủ game: chỉ đòn đánh và kỹ năng).
-      const aimed = named.has(mon.uid) && !(spellOnly && pending?.kind === "spell" && pending.target === mon.uid);
-      const hurt = !spellOnly && (mon.hp < was.hp || mon.stun > was.stun || (mon.chain ?? 0) > (was.chain ?? 0));
+      const aimed = named.has(mon.uid);
+      const hurt = mon.hp < was.hp || mon.stun > was.stun || (mon.chain ?? 0) > (was.chain ?? 0);
       if (!aimed && !hurt) return mon;
       changed = true;
       return { ...mon, lurk: { ...mon.lurk, hit: true } };
@@ -7581,19 +7829,19 @@ function markLurk(before: Duel, after: Duel, event: TraceEvent): Duel {
   return next;
 }
 
-/** Giao tranh đã xong hẳn (kể cả Trả đòn): quái ẩn bị đánh mà còn sống thì lật, về xấp (kiểu 3). */
+/** Giao tranh đã xong hẳn (kể cả Trả đòn): quái ẩn bị đánh mà còn sống thì lật (kích hoạt bị động). */
 function settleLurk(state: Duel): Duel {
   if (!settled(state) || (state.counterQueue?.uids.length ?? 0) > 0) return state;
   let next = state;
   for (const side of [0, 1] as const) {
     for (const mon of state.players[side].field) {
-      if (mon?.lurk?.hit && mon.hp > 0) next = lurkHome(next, side, mon.uid, "hit");
+      if (mon?.lurk?.hit && mon.hp > 0) next = lurkFlip(next, side, mon.uid, "hit");
     }
   }
   return next;
 }
 
-/** Sang vòng mới: quái ẩn đếm lùi; kiểu 2 đủ vòng chờ thì sẵn sàng; hết 4 vòng thì tự lật về xấp (kiểu 1). */
+/** Sang vòng mới: quái ẩn đếm lùi; đủ vòng chờ thì lật chủ động được; hết 4 vòng thì tự lật. */
 function lurkTick(state: Duel): Duel {
   if (state.winner !== null) return state;
   let next = state;
@@ -7613,13 +7861,27 @@ function lurkTick(state: Duel): Duel {
   }
   const first = next.round ?? next.turn;
   due.sort((a, b) => Number(a.side !== first) - Number(b.side !== first));
-  for (const row of due) next = lurkHome(next, row.side, row.uid, "time");
+  for (const row of due) next = lurkFlip(next, row.side, row.uid, "time");
   return next;
 }
 
 /**
- * Hành động 1 (kiểu 1): quái ẩn lật cho đối thủ xem, về xấp (giữ máu, chỉ số, trạng thái), xáo bài, chủ rút 1 lá, rồi
- * được hỏi triệu hồi phản ứng 1 quái ẩn trên tay vào ô vừa trống.
+ * Quái ẩn lật mặt (mọi cách kích hoạt), có loé sáng: có Sương mù trên sân của chủ thì về xấp bài (`lurkHome`), không thì
+ * thành quái thường, đứng lại trên sân (chủ game 21/11).
+ */
+function lurkFlip(state: Duel, side: Side, uid: string, why: "hit" | "time" | "wake"): Duel {
+  const mon = state.players[side].field.find((unit) => unit?.uid === uid);
+  if (!mon?.lurk) return state;
+  flashMon(uid);
+  if (fogged(state.players[side])) return lurkHome(state, side, uid, why);
+  const field = state.players[side].field.map((unit) => (unit?.uid === uid ? { ...unit, lurk: undefined } : unit)) as Player["field"];
+  const why_ = why === "hit" ? "bị lộ mặt" : why === "wake" ? "kích hoạt" : `hết ${LURK_ROUNDS} vòng`;
+  return note(patch(state, side, { ...state.players[side], field }), `Quái ẩn lật mặt: ${cardOf(mon).name} (${why_}), thành quái thường.`, "info");
+}
+
+/**
+ * Có Sương mù: quái ẩn lật cho đối thủ xem, về xấp (giữ máu, chỉ số, trạng thái), xáo bài, chủ rút 1 lá, rồi được hỏi
+ * triệu hồi phản ứng Ẩn 1 quái trên tay vào ô vừa trống.
  */
 function lurkHome(state: Duel, side: Side, uid: string, why: "hit" | "time" | "wake"): Duel {
   const player = state.players[side];
@@ -7642,19 +7904,19 @@ function lurkHome(state: Duel, side: Side, uid: string, why: "hit" | "time" | "w
   const players = [...next.players] as [Player, Player];
   players[side] = { ...players[side], spent: state.players[side].spent };
   next = { ...next, players };
-  const why_ = why === "hit" ? "bị lộ mặt" : why === "wake" ? "kích hoạt xong" : `hết ${LURK_ROUNDS} vòng`;
-  next = note(next, `Quái ẩn lật mặt: ${cardOf(mon).name} (${why_}) về xấp bài, xáo bài.`, "info");
+  const why_ = why === "hit" ? "bị lộ mặt" : why === "wake" ? "kích hoạt" : `hết ${LURK_ROUNDS} vòng`;
+  next = note(next, `Quái ẩn lật mặt: ${cardOf(mon).name} (${why_}) về xấp bài trong sương mù, xáo bài.`, "info");
   if (drew) next = note(next, `${sideName(side)} rút ${drew}.`);
   const ask = { side, slot: slot as Slot };
   if (next.lurkAsk) return { ...next, lurkAsk: { ...next.lurkAsk, rest: [...(next.lurkAsk.rest ?? []), ask] } };
   return { ...next, lurkAsk: { ...ask, back: next.turn }, turn: side };
 }
 
-/** Quái ẩn trên tay của bên này (để bảng chọn triệu hồi phản ứng). */
+/** Quái trên tay của bên này triệu hồi Ẩn được (bảng triệu hồi phản ứng sau khi quái ẩn về xấp). */
 export function lurkChoices(state: Duel, side: Side): Array<{ index: number; id: string; ok: boolean; why: string | null }> {
   const player = state.players[side];
   return player.reserve.flatMap((held, index) => {
-    if (!hiddenKind(held.id) || cardStars(held.id, held.saved?.level ?? 1) >= 5) return [];
+    if (!monsterCard(held.id) || cardStars(held.id, held.saved?.level ?? 1) >= 5) return [];
     const why = lurkBill(player, held);
     return [{ index, id: held.id, ok: why === null, why }];
   });
@@ -7665,12 +7927,12 @@ function lurkBill(player: Player, held: PileMon): string | null {
   if (!card) return "Không có lá này.";
   const stars = cardStars(held.id, held.saved?.level ?? 1);
   if (player.stars < stars) return `Cần ${stars} sao.`;
-  return playBill(card.gems, Boolean(held.toll), player.orb, player.flask);
+  return playBill(card.gems + HIDE_FEE, Boolean(held.toll), player.orb, player.flask);
 }
 
 /**
- * Trả lời bảng triệu hồi phản ứng: chọn 1 quái ẩn trên tay (đủ sao, đủ mana; không tính lượt triệu hồi của vòng), hoặc
- * bỏ qua (null) thì mất lượt free này.
+ * Trả lời bảng triệu hồi phản ứng: chọn 1 quái trên tay (đủ sao, đủ mana kể cả phí Ẩn; không tính lượt triệu hồi của
+ * vòng), quái ra sân đứng úp; hoặc bỏ qua (null) thì mất lượt free này.
  */
 export function answerLurk(state: Duel, pick: number | null): Duel {
   const ask = state.lurkAsk;
@@ -7679,12 +7941,12 @@ export function answerLurk(state: Duel, pick: number | null): Duel {
   const close = (from: Duel): Duel => {
     const [head, ...rest] = ask.rest ?? [];
     const next: Duel = head ? { ...from, lurkAsk: { side: head.side, slot: head.slot, back: ask.back, rest }, turn: head.side } : { ...from, lurkAsk: null, turn: ask.back };
-    return head ? next : settleLurk(next);
+    return withFlash(state, head ? next : settleLurk(next));
   };
   if (pick === null) return close(state);
   const player = state.players[side];
   const held = player.reserve[pick];
-  if (!held || !hiddenKind(held.id)) return note(state, "Chỉ chọn được quái ẩn.");
+  if (!held || cardStars(held.id, held.saved?.level ?? 1) >= 5) return note(state, "Quái 5 sao không ẩn được.");
   const card = monsterCard(held.id);
   if (!card) return state;
   const bill = lurkBill(player, held);
@@ -7692,18 +7954,18 @@ export function answerLurk(state: Duel, pick: number | null): Duel {
   const rowOk = (at: number) => !player.field[at] && (player.locked?.[at] ?? 0) === 0 && !guardBarred(held.id, at) && !boxShut(state, side, at);
   const slot = rowOk(ask.slot) ? ask.slot : ([0, 1, 2, 3, 4, 5] as const).find((at) => rowOk(at));
   if (slot === undefined) return note(state, "Không còn ô trống.");
-  const paid = payPlayed(player, card.gems, Boolean(held.toll));
-  if (!paid) return note(state, `Cần ${card.gems} gem đang có.`);
-  const born = hideOnSummon(state, side, place({ ...state, seq: state.seq + 1 }, side, held.id, held));
+  const paid = payPlayed(player, card.gems + HIDE_FEE, Boolean(held.toll));
+  if (!paid) return note(state, `Cần ${card.gems + HIDE_FEE} gem đang có.`);
+  const born = hideOnSummon(state, side, place({ ...state, seq: state.seq + 1 }, side, held.id, held), true);
   const field = [...paid.field] as Player["field"];
   field[slot] = born;
   const reserve = paid.reserve.filter((_, index) => index !== pick);
   const harp = harpSummoned(shuffleSea({ ...paid, field, reserve }), held.id);
   const placed = pingStars(patch({ ...state, seq: state.seq + 2 }, side, harp.player), side, player.stars, harp.player.stars);
-  return close(note(placed, `${sideName(side)} triệu hồi phản ứng ${card.name}.${harp.line}`));
+  return close(note(placed, `${sideName(side)} triệu hồi phản ứng${born.lurk ? " ẩn" : ""} ${card.name}.${harp.line}`));
 }
 
-/** Quái ẩn kiểu 2 đủ vòng chờ: dùng tác dụng riêng rồi lật, về xấp như kiểu 1. */
+/** Lật chủ động: quái ẩn đủ vòng chờ, chủ bấm Kích hoạt; dùng tác dụng riêng (nếu lá có) rồi lật. */
 export function wakeLurk(state: Duel, uid: string): Duel {
   const locked = talkLock(state);
   if (locked) return locked;
@@ -7715,7 +7977,7 @@ export function wakeLurk(state: Duel, uid: string): Duel {
   if (stuck(mon)) return note(state, "Quái đang bị khống chế.");
   const act = LURK_ACTS[mon.cardId];
   const acted = note(act ? act(state, side, uid) : state, `${cardOf(mon).name} kích hoạt.`, "spell");
-  const next = lurkHome(acted, side, uid, "wake");
+  const next = lurkFlip(acted, side, uid, "wake");
   return traced(state, next, { kind: "skill", actor: side, ok: true, cardId: mon.cardId, target: null, end: null });
 }
 
@@ -8510,6 +8772,114 @@ export function answerPlume(state: Duel, yes: boolean): Duel {
   return openLash(next, side, bird.uid, attacker.uid, true, line);
 }
 
+/* ---------- Đồng hồ khó đoán (chủ game 21/11) ---------- */
+
+/** Lá đồng hồ trên tay, trong xấp, trong mộ. Ra sân thì chủ chọn 1 trong 2 dạng, mỗi 2 vòng (lượt chung) tự đổi dạng. */
+export const CLOCK = "dong-ho-kho-doan";
+export const CLOCK_FIERCE = "dong-ho-hung-bao";
+export const CLOCK_FRAIL = "dong-ho-mong-manh";
+const CLOCK_TURNS = 2;
+
+export function clockForm(id: string | null | undefined): boolean {
+  return id === CLOCK_FIERCE || id === CLOCK_FRAIL;
+}
+
+/** Dạng của đồng hồ rời sân thì lại là lá Đồng hồ khó đoán. */
+export function clockBase(id: string): string {
+  return clockForm(id) ? CLOCK : id;
+}
+
+/**
+ * Đổi dạng: công, thủ, thủ phép đổi theo chênh lệch giữa hai lá (giữ buff/debuff đang có); máu tối đa tăng bao nhiêu
+ * thì máu hiện tại tăng bấy nhiêu, máu tối đa giảm thì máu hiện tại không vượt máu tối đa mới.
+ */
+function shiftClock(mon: FieldMon, to: string): FieldMon {
+  const from = monsterCard(mon.cardId);
+  const next = monsterCard(to);
+  if (!from || !next) return mon;
+  const gain = next.hp - from.hp;
+  const maxHp = Math.max(1, (mon.maxHp || mon.hp) + gain);
+  const hp = gain > 0 ? mon.hp + gain : Math.min(mon.hp, maxHp);
+  return {
+    ...mon,
+    cardId: to,
+    atk: Math.max(0, mon.atk + next.atk - from.atk),
+    def: Math.max(0, mon.def + next.def - from.def),
+    mdef: Math.max(0, mon.mdef + next.mdef - from.mdef),
+    maxHp,
+    hp,
+    clockLeft: CLOCK_TURNS,
+  };
+}
+
+/** Đồng hồ úp (quái ẩn): không hỏi, đứng ở dạng hung bạo. */
+function clockHidden(player: Player): Player {
+  if (!player.field.some((mon) => mon?.cardId === CLOCK && mon.lurk)) return player;
+  return { ...player, field: player.field.map((mon) => (mon?.cardId === CLOCK && mon.lurk ? shiftClock(mon, CLOCK_FIERCE) : mon)) as Player["field"] };
+}
+
+/** Đồng hồ vừa ra sân: hỏi chủ của nó chọn dạng. Đang ở lượt chính thì quyền tạm về chủ đồng hồ tới khi chọn xong. */
+function askClock(state: Duel, side: Side): Duel {
+  if (state.clockAsk) return state;
+  const mon = state.players[side].field.find((unit) => unit?.cardId === CLOCK && !unit.lurk) ?? null;
+  if (!mon) return state;
+  // Đã chọn dạng lúc kéo lá ra: đổi luôn, không hỏi.
+  const pick = state.clockPick;
+  if (pick && clockForm(pick.form)) {
+    const players = [...state.players] as [Player, Player];
+    players[side] = { ...players[side], field: players[side].field.map((unit) => (unit?.uid === mon.uid ? shiftClock(unit, pick.form) : unit)) as Player["field"] };
+    return { ...state, players };
+  }
+  return { ...state, clockAsk: { uid: mon.uid, side, back: state.turn }, ...(state.step === "main" ? { turn: side } : {}) };
+}
+
+/** Chủ đồng hồ chọn dạng: hung bạo hoặc mỏng manh. Xong thì việc vừa làm (triệu hồi…) nhường quyền như thường. */
+export function chooseClock(state: Duel, form: string): Duel {
+  const ask = state.clockAsk;
+  if (!ask || !clockForm(form)) return state;
+  const you = state.players[ask.side];
+  const mon = you.field.find((unit) => unit?.uid === ask.uid && unit.cardId === CLOCK) ?? null;
+  const open: Duel = { ...state, clockAsk: null, ...(state.step === "main" ? { turn: ask.back } : {}) };
+  if (!mon) return open;
+  const field = you.field.map((unit) => (unit?.uid === mon.uid ? shiftClock(unit, form) : unit)) as Player["field"];
+  const chosen = note(patch(open, ask.side, { ...you, field }), `${cardOf(mon).name} chọn ${monsterCard(form)?.name ?? ""}.`, "info");
+  if (chosen.clockAsk) return chosen;
+  return chosen.step === "main" && ask.back === ask.side && settled(chosen) && chosen.turn === ask.side ? yieldTurn(chosen) : chosen;
+}
+
+/**
+ * Triệu hồi Đồng hồ khó đoán đã chọn dạng trước (chủ game 22/11). Ẩn (quái ẩn) luôn hung bạo, không qua đây (`clockHidden`).
+ * `run` là việc triệu hồi thật (summon / summonVow).
+ */
+export function summonClock(state: Duel, form: string, run: (state: Duel) => Duel): Duel {
+  if (!clockForm(form)) return run(state);
+  const armed: Duel = { ...state, clockPick: { form } };
+  const done = run(armed);
+  if (done === armed) return state;
+  const { clockPick: _drop, ...rest } = done;
+  return rest as Duel;
+}
+
+/** Đầu mỗi vòng: đồng hồ đang đứng (không úp) đếm lùi; hết 2 vòng thì tự đổi sang dạng kia. */
+function clockTick(state: Duel): { state: Duel; line: string } {
+  let next = state;
+  const bits: string[] = [];
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon && clockForm(mon.cardId) && !mon.lurk && mon.hp > 0)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon || !clockForm(mon.cardId) || mon.lurk || mon.hp <= 0) return mon;
+      const left = (mon.clockLeft ?? CLOCK_TURNS) - 1;
+      if (left > 0) return { ...mon, clockLeft: left };
+      const to = mon.cardId === CLOCK_FIERCE ? CLOCK_FRAIL : CLOCK_FIERCE;
+      bits.push(`${cardOf(mon).name} chuyển thành ${monsterCard(to)?.name ?? ""}.`);
+      return shiftClock(mon, to);
+    }) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return { state: next, line: bits.join(" ") };
+}
+
 export function evolveBird(state: Duel, formId: string): Duel {
   const ask = state.birdAsk;
   if (!ask) return state;
@@ -8903,7 +9273,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
 }
 
 function castSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
-  return lizardGuard(state, (next) => castSkillBody(next, uid, targetUid, skillIndex, skipGnaw, extra));
+  return lizardGuard(state, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra)));
 }
 
 function castSkillBody(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
@@ -8919,6 +9289,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   if (mon?.cardId === "sat-nhan-bat-giu") return castSeize(state, side, mon, targetUid);
   if (mon?.cage) return note(state, "Đang bị khoá cứng.");
   if (!mon || stuck(mon) || hexLocked(mon) || (mon.dim && !(mon.cardId === "ken-ngai" && skillIndex === 1) && !(mon.cardId === PERFECT && (skillIndex === 0 || skillIndex === 2))) || (mon.path ?? 0) > 0) return state;
+  if (mon.cardId === EGG) return castRebirth(state, side, mon, extra);
   if (mon.cardId === "mat-xanh-huy-diet") {
     if (mon.gaze) return note(state, "Cầu sấm ánh sáng đã nạp cho đòn tiếp theo.");
     const before = you.stars;
@@ -10715,7 +11086,8 @@ function endTurnCore(state: Duel): Duel {
   const eroded = erosionTick(next);
   const virused = virusTick(eroded.state);
   const lava = lavaTick(virused.state);
-  let startedTurn = lava.state;
+  const ticked = clockTick(lava.state);
+  let startedTurn = ticked.state;
   for (const at of [0, 1] as const) {
     const board = startedTurn.players[at];
     if (!board.hats) continue;
@@ -10741,7 +11113,7 @@ function endTurnCore(state: Duel): Duel {
     .join(". ");
   const offered = offerPrey(startedTurn);
   startedTurn = offered.state;
-  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, owed.line, offered.line].filter(Boolean).join(" ");
+  const extra = [vowLine, healLine, bloomed.line, eroded.line, virused.line, lava.line, ticked.line, owed.line, offered.line].filter(Boolean).join(" ");
   const mute = startedTurn.players[foe].drawLock ? " Lượt này không được rút bài." : "";
   const noted = note(stampTurn(startedTurn), extra ? `${due}${mute} ${extra}` : `${due}${mute}`);
   const mends = [...(noted.mends ?? []), ...vowHeals];
@@ -11063,6 +11435,7 @@ function askedNow(prev: Duel, next: Duel): boolean {
       (next.parley && !prev.parley) ||
       (next.preyAsk && !prev.preyAsk) ||
       (next.birdAsk && !prev.birdAsk) ||
+      (next.clockAsk && !prev.clockAsk) ||
       (next.plumeAsk && !prev.plumeAsk) ||
       (next.recall && !prev.recall) ||
       (next.legs && !prev.legs),
@@ -11122,6 +11495,7 @@ export function aiAnswerAsk(state: Duel): Duel | null {
   }
   if (state.wileAsk?.[0]?.side === 1) return withLive(answerWile(state, aiWilePick(state, state.wileAsk[0])));
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
+  if (state.clockAsk?.side === 1) return withLive(chooseClock(state, CLOCK_FIERCE));
   if (state.plumeAsk && state.turn === 1) return withLive(answerPlume(state, state.players[1].orb >= harpyKit(state.players[1].field.find((mon) => mon?.uid === state.plumeAsk?.bird)?.cardId ?? "").lash));
   if (state.recall?.side === 1) return withLive(confirmRecall(state, chooseRecall(state.players[1].reserve, state.recall.caps, state.players[1].orb)));
   if (state.legs && state.turn === 1 && state.step === "main") {

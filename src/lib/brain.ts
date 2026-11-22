@@ -177,6 +177,7 @@ function moved(prev: Duel, next: Duel): boolean {
     next.preyAsk !== prev.preyAsk ||
     next.birdAsk !== prev.birdAsk ||
     next.wileAsk !== prev.wileAsk ||
+    next.clockAsk !== prev.clockAsk ||
     next.plumeAsk !== prev.plumeAsk ||
     next.lurkAsk !== prev.lurkAsk
   );
@@ -243,6 +244,7 @@ function askOf(state: Duel): Side | null {
   if (state.parley && state.step === "main") return null;
   if (state.swap) return state.swap.side;
   if (state.lurkAsk) return state.lurkAsk.side;
+  if (state.clockAsk) return state.clockAsk.side;
   if (state.upkeep || state.legs || state.preyAsk || state.plumeAsk) return state.turn;
   return null;
 }
@@ -391,7 +393,6 @@ function faceSkill(id: string, index: number) {
     id === "rong-ac-ma" ||
     id === "rong-con" ||
     id === "rong-ngan-tuoi" ||
-    id === "sua-hut-ma-phap" ||
     id === "con-thinh-no-cua-hai-vuong" ||
     (id === "rong-phun-hoa-cau" && index === 1) ||
     (id === "ga-he-dang-so" && index === 1) ||

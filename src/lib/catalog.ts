@@ -346,12 +346,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "sua-hut-ma-phap",
     "name": "Sứa hút ma pháp",
     "stars": 2,
-    "gems": 1,
-    "skill": "__**Tích luỹ ma pháp**__: \n- Phần sát thương phép bị thủ phép chặn được tích lại.\n- Tốn 0 mana gây 3 cộng với số sát thương đã tích tụ lên 1 kẻ địch hoặc người chơi.",
-    "atk": 1,
+    "gems": 0,
+    "skill": "**__Phản phép__**:\nBất kỳ quái thú nào tấn công phép thuật vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công phép thuật là đòn tấn công có nhiều dame phép thuật hơn.",
+    "atk": 3,
     "def": 0,
-    "mdef": 4,
-    "hp": 5,
+    "mdef": 0,
+    "hp": 2,
     "art": "sua"
   },
   {
@@ -409,12 +409,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "kraken",
     "name": "Kraken",
     "stars": 2,
-    "gems": 1,
-    "skill": "**__Đắm tàu__**: \nKhi giáp lá cà, phần sát thương bị thủ của Kraken chặn được sẽ thêm vào công của hắn.",
+    "gems": 0,
+    "skill": "**__Đắm tàu__**:\nBất kỳ quái thú nào tấn công vật lý vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công vật lý là đòn tấn công có nhiều dame vật lý hơn.",
     "atk": 3,
-    "def": 3,
+    "def": 0,
     "mdef": 0,
-    "hp": 4,
+    "hp": 3,
     "art": "kraken",
     "strong": "Trao đổi vật lý, dame rất to, thủ rất mạnh.\n",
     "weak": "Không có thủ phép, máu không cao",
@@ -567,6 +567,30 @@ export const MONSTERS: MonsterCard[] = [
     "strong": "Quái 1 sao duy nhất có sát thương chuẩn trong skill.",
     "weak": "Máu cực yếu, thủ cực yếu",
     "counter": "Quái vật lý đụng nhẹ là đi. "
+  },
+  {
+    "id": "qua-trung-sinh-menh",
+    "name": "Quả trứng sinh mệnh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Sinh mệnh mới**__\nTiêu hao 1 (lần đầu, 0 các lần sau) mana, bạn bỏ 1 lá bài bạn chọn trên tay, đối phương bỏ 1 lá ngẫu nhiên, sau đó cả hai bên đều rút 1 lá bài.\nNếu đây là lần đầu tiên kích hoạt sinh mệnh mới thì bạn rút thêm 1 lá nữa.",
+    "atk": 0,
+    "def": 1,
+    "mdef": 0,
+    "hp": 1,
+    "art": "qua-trung-sinh-menh"
+  },
+  {
+    "id": "dong-ho-kho-doan",
+    "name": "Đồng hồ khó đoán",
+    "stars": 2,
+    "gems": 1,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "dong-ho-kho-doan"
   },
   {
     "id": "chien-binh-ky-nhong",
@@ -770,6 +794,30 @@ export const FORMS: MonsterCard[] = [
     "mdef": 1,
     "hp": 6,
     "art": "chien-binh-cuoi-rong"
+  },
+  {
+    "id": "dong-ho-hung-bao",
+    "name": "Đồng hồ hung bạo",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 5,
+    "def": 0,
+    "mdef": 0,
+    "hp": 6,
+    "art": "dong-ho-hung-bao"
+  },
+  {
+    "id": "dong-ho-mong-manh",
+    "name": "Đồng hồ mỏng manh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "dong-ho-mong-manh"
   },
   {
     "id": "phu-thuy-tap-su",
@@ -1191,6 +1239,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 1,
     "effect": "Phản ứng.\nKhi quái thú có máu thấp hơn 4 được triệu hồi hoặc phát động tấn công. Tiêu diệt ngay nó.",
     "picture": "spell:bay-thu"
+  },
+  {
+    "id": "qua-trung-thien-su",
+    "name": "Quả trứng thiên sứ",
+    "gems": 0,
+    "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
+    "picture": "spell:qua-trung-thien-su"
   }
 ];
 

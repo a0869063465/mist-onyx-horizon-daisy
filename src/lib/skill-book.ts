@@ -17,7 +17,7 @@ export type SkillKind = "active" | "risk" | "spell" | "passive" | "note";
  * words (with their indented follow-on lines). Used when one heading holds several small skills, e.g. Khiên
  * Ân Huệ holds the blessings of the knight, the king and the queen.
  */
-export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[]; chain?: boolean; slow?: boolean };
+export type SkillEntry = { name: string; kind: SkillKind; icon: string; head?: string; pick?: string[]; chain?: boolean; slow?: boolean; buff?: boolean };
 export type SkillShown = SkillEntry & { text: string; keyword?: KeywordId };
 
 const A = (name: string, icon: string, head = name): SkillEntry => ({ name, kind: "active", icon, head });
@@ -35,6 +35,8 @@ const SP = (name: string, icon: string, ...pick: string[]): SkillEntry => ({ nam
 const joined = (entry: SkillEntry): SkillEntry => ({ ...entry, chain: true });
 /** A slow skill: only on its owner's main round, never as a reaction. Its rim is the dark red one (chủ game 03/11). */
 const slow = (entry: SkillEntry): SkillEntry => ({ ...entry, slow: true });
+/** A buff skill (chủ game 21/11): siêu tốc ngoài giao tranh, nổ ngay ở lượt của mình; viền xanh lá như phép buff. */
+const buff = (entry: SkillEntry): SkillEntry => ({ ...entry, buff: true });
 /** Lưu ý: the lines of the card text that are notes for the whole skill set. */
 const NOTE = (...pick: string[]): SkillEntry => ({ name: "Lưu ý", kind: "note", icon: "info", pick });
 const KNIGHT = PP("Lời chúc của kỵ sĩ", "black-knight-helm", "lời chúc của kỵ sĩ");
@@ -73,7 +75,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
     joined(PP("Nở", "butterfly", "đầu lượt của bạn", "đủ 4 lần", "đủ 5 lần", "đủ 6 lần", "chết từ mốc")),
   ],
   "trai-tim-hai-long": [A("Triều lên", "wave-crest"), joined(PP("Con nước lớn tàn phá", "big-wave")), joined(PP("Đại hồng thuỷ huỷ diệt", "waves")), NOTE("kẻ bị đòn này hạ")],
-  "sua-hut-ma-phap": [A("Tích luỹ ma pháp", "jellyfish")],
+  "sua-hut-ma-phap": [SP("Phản phép", "jellyfish", "tấn công phép thuật vào ta"), NOTE("lưu ý")],
   "con-thinh-no-cua-hai-vuong": [
     P("Hộ thần", "guardian-shield"),
     P("Đè nén", "trident-shield"),
@@ -83,7 +85,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "chien-binh-lan-khuat": [A("Ẩn mình", "hooded-assassin"), NOTE("số cam cho thấy")],
   "ke-san-moi-tu-than": [P("Kẻ săn mồi tử thần", "grim-reaper")],
   "sat-nhan-bat-giu": [A("Bắt Giữ", "manacles")],
-  "kraken": [P("Đắm tàu", "kraken-tentacle")],
+  "kraken": [SP("Đắm tàu", "kraken-tentacle", "tấn công vật lý vào ta"), NOTE("lưu ý")],
   "kazura": [P("Săn bắt vì bạn", "hunting-bolas"), NOTE("điểm số phía trên", "không thể bị chọn làm mục tiêu")],
   "kizuran": [S("Chịu đòn vì bạn", "heart-shield"), NOTE("số cam:", "điểm do kazura kiếm được")],
   "ke-giam-ho-linh-hon": [P("Phẫn nộ", "enrage"), R("Kiếm hấp thụ linh hồn", "bloody-sword")],
@@ -106,6 +108,10 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   ],
   "rong-con": [A("Hơi thở rồng", "dragon-breath")],
   "chien-binh-ky-nhong": [P("Linh hoạt", "flex-wings")],
+  "qua-trung-sinh-menh": [buff(A("Sinh mệnh mới", "card-exchange"))],
+  "dong-ho-kho-doan": [P("Tiktok", "sands-of-time")],
+  "dong-ho-hung-bao": [P("Tiktok", "sands-of-time")],
+  "dong-ho-mong-manh": [P("Tiktok", "sands-of-time")],
   "chien-binh-cuoi-rong": [P("Linh hoạt", "flex-wings"), P("Cưỡi rồng", "dragon-rider")],
   "rong-ngan-tuoi": [A("Hơi thở rồng", "dragon-breath")],
   "chien-binh-rong": [P("Vảy rồng", "scale-mail")],

@@ -26,6 +26,8 @@ export const BALANCE_BASE: Record<string, Snap> = {
   "khung-long-vay-kiem": {"kind":"monster","name":"Khủng long vãy kiếm","stars":2,"mana":1,"atk":1,"def":3,"mdef":0,"hp":5},
   "rong-boc-trung": {"kind":"monster","name":"Rồng bọc trứng","stars":3,"mana":1,"atk":0,"def":1,"mdef":0,"hp":8},
   "ga-he-dang-so": {"kind":"monster","name":"Gã hề đáng sợ","stars":1,"mana":0,"atk":2,"def":0,"mdef":2,"hp":5},
+  "qua-trung-sinh-menh": {"kind":"monster","name":"Quả trứng sinh mệnh","stars":2,"mana":0,"atk":0,"def":1,"mdef":0,"hp":1},
+  "dong-ho-kho-doan": {"kind":"monster","name":"Đồng hồ khó đoán","stars":2,"mana":1,"atk":2,"def":0,"mdef":0,"hp":2},
   "chien-binh-ky-nhong": {"kind":"monster","name":"Chiến binh kỳ nhông","stars":2,"mana":1,"atk":3,"def":1,"mdef":1,"hp":4},
   "tho-den-tinh-nghich": {"kind":"monster","name":"Thỏ đen tinh nghịch","stars":1,"mana":1,"atk":4,"def":0,"mdef":0,"hp":2},
   "cuc-bong-ma-quai": {"kind":"monster","name":"Cục bông ma quái","stars":1,"mana":0,"atk":2,"def":0,"mdef":0,"hp":1},
@@ -93,6 +95,7 @@ export const BALANCE_BASE: Record<string, Snap> = {
   "don-cuoi-cung": {"kind":"spell","name":"Đòn cuối cùng","stars":0,"mana":1,"atk":0,"def":0,"mdef":0,"hp":0},
   "huy-diet": {"kind":"spell","name":"Huỷ diệt","stars":0,"mana":2,"atk":0,"def":0,"mdef":0,"hp":0},
   "bay-thu": {"kind":"spell","name":"Bẫy thú","stars":0,"mana":1,"atk":0,"def":0,"mdef":0,"hp":0},
+  "qua-trung-thien-su": {"kind":"spell","name":"Quả trứng thiên sứ","stars":0,"mana":0,"atk":0,"def":0,"mdef":0,"hp":0},
   "hiep-si-ho-ve": {"kind":"monster","name":"Hiệp sĩ hộ vệ","stars":2,"mana":1,"atk":2,"def":0,"mdef":0,"hp":2},
   "hiep-si-cua-hau": {"kind":"monster","name":"Hiệp sĩ của hậu","stars":2,"mana":1,"atk":1,"def":0,"mdef":3,"hp":2},
 };
