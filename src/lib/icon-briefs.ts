@@ -1,3 +1,4 @@
+import { hexBonus } from "@/lib/fusion";
 import { monsterCard, spellCard } from "@/lib/catalog";
 import { plainCopy } from "@/lib/copy-mark";
 import {
@@ -131,7 +132,9 @@ function lines(at: SkillAt): string[] {
     case "cuc-bong-ma-quai":
       return name === "Phát nổ" && mon ? ["Tự huỷ", deal(blow(mon, spellOnly(liveAtk(mon)), false))] : [];
     case "phu-thuy-ti-hon":
-      return [deal(blow(mon, spellOnly(Math.max(0, 3 + (side === null ? 0 : duel.players[side].stars) - (mon?.fake ? 1 : 0)))))];
+    case "phu-thuy-tap-su":
+    case "phu-thuy-bac-thay":
+      return [deal(blow(mon, spellOnly(Math.max(0, 2 + hexBonus(mon?.cardId) + (side === null ? 0 : duel.players[side].stars) + (mon?.skillUp ?? 0) - (mon?.fake ? 1 : 0)))))];
     case "trai-tim-hai-long": {
       const step = name === "Đại hồng thuỷ huỷ diệt" ? 2 : name === "Con nước lớn tàn phá" ? 1 : 0;
       const pack = blow(mon, spellOnly(num(t, /gây\s*(\d+)\s*sát thương phép/, [4, 5, 6][step], step)));

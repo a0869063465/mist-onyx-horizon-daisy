@@ -3,20 +3,21 @@ import { KEYWORDS, titleKeywords } from "@/lib/keywords";
 import { CopyText } from "@/components/game/copy-text";
 import { RowArrow, type SummonRow } from "@/components/game/row-arrow";
 import { SKILL_ICONS } from "@/lib/skill-icons";
+import { SKILL_ART } from "@/lib/skill-art-ids";
 import { skillCost, type SkillKind, type SkillShown } from "@/lib/skill-book";
 import { SPELL_KINDS } from "@/lib/spell-kinds";
 import { tr } from "@/lib/i18n";
 import { useSwipe } from "@/lib/swipe";
 
 /** gold: Triệu hồi. red: Triệu hồi hiến tế. purple: spare. fuse: Dung hợp and summoning a fused monster (the fused-monster pink over red of the notice board). */
-export type SheetTone = "gold" | "red" | "purple" | "fuse";
+export type SheetTone = "gold" | "red" | "purple" | "fuse" | "mist";
 /** `swirl`: a round emblem holding the owner's whirlpool picture (Dung hợp), like Hiến tế's round emblem. */
-export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl"; onPress?: () => void; rows?: SheetRows };
+export type SheetAction = { key: string; label: string; tone: SheetTone; cost: number; emblem?: "swirl" | "veil"; onPress?: () => void; rows?: SheetRows };
 /**
  * A summon button (chủ game 28/10): pressing it hides it, and ↑ (hàng trước) and ↓ (hàng sau) show side by side where it
  * stood; the arrow summons into that row. `front`/`back` false: the row takes no monster, its arrow is dark.
  */
-export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow) => void };
+export type SheetRows = { front: boolean; back: boolean; onRow: (row: SummonRow) => void; /** Hàng khuyên dùng của quái này (mũi tên toả sáng). */ advice?: SummonRow | null };
 
 /**
  * An icon on a sheet that is not one of the card's skills: Cân bằng (the deck builder) or a spell's kind (the
@@ -49,6 +50,14 @@ export function Glyph({ name, fill = "url(#sk3d-glyph)" }: { name: string; fill?
       : (SKILL_ICONS[name] ?? SKILL_ICONS["info"] ?? "");
   const body = raw.replaceAll('fill="currentColor"', `fill="${fill}"`);
   return <svg className="glyph3d" viewBox="0 0 512 512" aria-hidden="true" dangerouslySetInnerHTML={{ __html: body }} />;
+}
+
+/** A skill's icon: the painted picture when it has one (chủ game 20/11, no rim: the rim is drawn by the page), else the glyph. */
+export const hasSkillArt = (name: string) => SKILL_ART.has(name);
+export function SkillGlyph({ name, center = false }: { name: string; center?: boolean }) {
+  if (!SKILL_ART.has(name)) return <Glyph name={name} />;
+  // `center`: the big picture in the middle of the board, with its own feathered edge (chủ game 21/11).
+  return <img className="skill-art" src={`/ui/${center ? "skill-c" : "skill"}/${name}.webp`} alt="" draggable={false} />;
 }
 
 /** Gradients the 3D glyphs and gems share; rendered once per sheet. */
@@ -197,6 +206,7 @@ const CRYSTAL: Record<SheetTone, { top: string[]; low: string[]; glow: string }>
   red: { top: ["#ffe4de", "#ff8a76", "#ff4a35"], low: ["#e0281a", "#a8140a", "#600400"], glow: "#ff5a40" },
   purple: { top: ["#f6e8ff", "#d4a2ff", "#b46cff"], low: ["#9346f0", "#6a22c0", "#3a0a78"], glow: "#c88cff" },
   fuse: { top: ["#ffe6ff", "#f39cff", "#ee5bff"], low: ["#ff3a3a", "#c0101a", "#6a0008"], glow: "#ff6ad8" },
+  mist: { top: ["#ffffff", "#eef3fb", "#d6dfeb"], low: ["#b9c4d4", "#8794a8", "#4d5868"], glow: "#eef4ff" },
 };
 
 /** A faceted crystal floating over a gold ring pedestal (simple 3D, after the owner's reference picture). */
@@ -250,7 +260,7 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
   const tile = (
     <button type="button" className={`act3d is-${action.tone}${mini ? " is-mini" : ""}`} data-ui="confirm" onClick={rows ? () => setRowsOpen(true) : action.onPress}>
       <span className={`act3d-ico${crystal ? " is-crystal" : ""}${action.emblem ? ` is-${action.emblem}` : ""}`}>
-        {action.emblem === "swirl" ? <i className="act3d-swirl" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
+        {action.emblem === "swirl" ? <i className="act3d-swirl" /> : action.emblem === "veil" ? <i className="act3d-veil" /> : crystal ? <Crystal tone={action.tone} /> : <Glyph name="candle-skull" fill="url(#act3d-red)" />}
       </span>
       <span className="act3d-label">
         {tr(action.label)}
@@ -266,8 +276,8 @@ export function ActionButton({ action, mini = false }: { action: SheetAction; mi
   if (!rows || !rowsOpen) return tile;
   return (
     <span className={`act3d-rows${mini ? " is-mini" : ""}`}>
-      <RowArrow row="front" off={!rows.front} onPick={() => rows.onRow("front")} />
-      <RowArrow row="back" off={!rows.back} onPick={() => rows.onRow("back")} />
+      <RowArrow row="front" off={!rows.front} advised={rows.advice === "front"} onPick={() => rows.onRow("front")} />
+      <RowArrow row="back" off={!rows.back} advised={rows.advice === "back"} onPick={() => rows.onRow("back")} />
     </span>
   );
 }
@@ -388,7 +398,7 @@ export function MonsterSheet({
     >
       <span className="sk3d-gem">
         <span className="sk3d-core">
-          <Glyph name={skill.icon} />
+          <SkillGlyph name={skill.icon} />
         </span>
         <Rim kind={skill.slow ? "slow" : skill.kind} />
       </span>

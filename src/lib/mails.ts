@@ -62,4 +62,11 @@ export const MAILS: Mail[] = [
     title: "Hộp thư đã mở cửa",
     body: "Hộp thư có bốn tab: Thư, Báo vi phạm, Thư quà và Tin tức. Quà trong thư được nhận một lần, thư hết hạn sau 30 ngày kể từ lúc bạn nhận được.",
   },
+  {
+    id: "qua-fusion-200-sao",
+    from: MAIL_FROM,
+    title: "Quà tặng 200 sao",
+    body: "Cảm ơn bạn đã cùng Clash of the Beasts đi đến hôm nay! Tuần này game có thêm dung hợp Khổng lồ, Phù thuỷ và Chiến binh cưỡi rồng, cùng bộ bài Fusion cho thuê để bạn thử ngay. Chúng tôi gửi bạn 200 sao để mở thêm gói bài. Hãy nhận quà và chúc bạn chiến thắng!",
+    gifts: [{ kind: "stars", n: 200 }],
+  },
 ];

@@ -24,13 +24,13 @@ function shape(row: SummonRow) {
   return `M${UP.map(([x, y]) => `${x} ${y * flip}`).join("L")}Z`;
 }
 
-export function RowArrow({ row, off = false, onPick }: { row: SummonRow; off?: boolean; onPick: () => void }) {
+export function RowArrow({ row, off = false, advised = false, onPick }: { row: SummonRow; off?: boolean; /** Hàng khuyên dùng của quái này: toả hào quang như nút OK. */ advised?: boolean; onPick: () => void }) {
   const id = `ra${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const d = shape(row);
   return (
     <button
       type="button"
-      className={`row-arrow is-${row}${off ? " is-off" : ""}`}
+      className={`row-arrow is-${row}${off ? " is-off" : ""}${advised && !off ? " is-advised" : ""}`}
       aria-label={tr(row === "front" ? "Hàng trước" : "Hàng sau")}
       aria-disabled={off || undefined}
       onClick={(event) => {
@@ -38,6 +38,7 @@ export function RowArrow({ row, off = false, onPick }: { row: SummonRow; off?: b
         if (!off) onPick();
       }}
     >
+      {advised && !off ? <i className="row-halo" aria-hidden="true" /> : null}
       <svg viewBox="-34 -38 68 76" aria-hidden="true">
         <defs>
           <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="0" y2="1">

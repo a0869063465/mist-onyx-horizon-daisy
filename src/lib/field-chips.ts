@@ -45,7 +45,7 @@ const ROWS: Row[] = [
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["rong-con", "rong-ngan-tuoi"], key: "breath", cast: "aim", skill: 0, gate: pay(1) },
-  { ids: ["phu-thuy-ti-hon"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },
+  { ids: ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },
   { ids: ["ma-dao-si"], key: "dan", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["loi-nguyen-cua-rong"], key: "fire", cast: "aim", skill: 0, gate: pay(0) },
   { ids: ["rong-ac-ma"], key: "orb", cast: "aim", skill: 0, gate: pay(1) },
@@ -62,7 +62,6 @@ const ROWS: Row[] = [
   { ids: ["trieu-hoi-ac-ma"], key: "hex", cast: "aim", skill: 0 },
   { ids: ["sau-non"], key: "cocoon", cast: "self", skill: 0, gate: orb(1) },
   { ids: ["ngai-khong-lo", "ngai-nu-hoang", "ngai-hoan-my"], key: "dust", cast: "aim", skill: 0, gate: orb(1) },
-  { ids: ["sua-hut-ma-phap"], key: "spit", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "spit")} ${3 + ctx.stored}` },
   { ids: ["con-thinh-no-cua-hai-vuong"], key: "rage", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(1) },
   { ids: ["chien-binh-lan-khuat"], key: "hide", cast: "self", skill: 0, gate: (ctx) => ctx.afford(1) },
 ];

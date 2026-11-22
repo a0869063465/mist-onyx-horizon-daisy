@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { CastShow } from "@/components/game/cast-show";
 import { speedTone } from "@/lib/spell-kinds";
-import { Glyph, Rim } from "@/components/game/monster-sheet";
+import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
 import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
 import type { Side } from "@/lib/duel";
@@ -678,7 +678,7 @@ export function IconFace({ look }: { look: IconLook }) {
     return (
       <span className={`rx-gem is-${look.kind}`}>
         <span className="rx-gem-core">
-          <Glyph name={look.icon} />
+          <SkillGlyph name={look.icon} />
         </span>
         <Rim kind={look.kind} />
       </span>
