@@ -1757,6 +1757,27 @@ test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến ho�
   assert.equal(at(evolved, 0, 0).cardId, "nu-chua-dieu-nhan");
 });
 
+test("Tinh linh đàn hạc: triệu hồi chính nó +2 mana vào mộ mana (dư lên sao); đầu lượt +1 mana mỗi con; quái khác triệu hồi không kích", () => {
+  const spent = (p) => D.STAR_COST.slice(0, p.stars).reduce((a, b) => a + b, 0) + p.starGems;
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 2, starGems: 0 })) };
+  s = D.testGrant(s, 0, "tinh-linh-dan-hac", false);
+  const harp = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "tinh-linh-dan-hac"), 0);
+  assert.equal(harp.players[0].field[0]?.cardId, "tinh-linh-dan-hac", harp.live);
+  assert.equal(spent(harp.players[0]) - spent(s.players[0]), 4, "2 mana trả + 2 mana trao");
+  assert.match(harp.live, /Tiếng nhạc du dương/);
+  let other = D.testGrant(s, 0, "may-chem", false);
+  other = { ...other, players: other.players.map((p, i) => (i === 0 ? { ...p, field: [harp.players[0].field[0], null, null, null, null, null] } : p)) };
+  const plain = D.summon(other, other.players[0].reserve.findIndex((p) => p.id === "may-chem"), 1);
+  const fee = C.MONSTERS.find((m) => m.id === "may-chem").gems;
+  assert.equal(spent(plain.players[0]) - spent(other.players[0]), fee, "chỉ mana trả cho Máy chém: đàn hạc trên sân không kích");
+  let t = board({}, { 0: ["tinh-linh-dan-hac"], 1: ["tinh-linh-dan-hac"] });
+  t = { ...t, players: t.players.map((p) => ({ ...p, orb: 0, flask: 0 })) };
+  const closed = D.endTurn(D.endTurn(t));
+  assert.equal(closed.players[1].orb, 3, "1 + 2 con đàn hạc");
+  assert.match(closed.live + (closed.log ?? []).join(" "), /Tiếng nhạc du dương cho thêm 2 gem/);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

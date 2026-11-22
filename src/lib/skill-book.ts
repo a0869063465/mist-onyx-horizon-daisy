@@ -59,6 +59,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "tho-den-tinh-nghich": [P("Nhảy qua lại", "rabbit")],
   "cuc-bong-ma-quai": [P("Phát nổ", "spiky-explosion"), A("Cấp số nhân", "three-friends")],
   "quai-thu-thien-su": [P("Cầu nguyện", "prayer"), P("Ân huệ thiên sứ", "angel-wings")],
+  "tinh-linh-dan-hac": [P("Tiếng nhạc du dương", "harp")],
   "te-giac-be-con": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
   "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhino-banner")],
@@ -165,7 +166,7 @@ const tidy = (lines: string[]) =>
     .trim();
 
 /**
- * The mana a skill costs, read from its description: every "N mana" except mana gained ("nhận thêm 1 mana")
+ * The mana a skill costs, read from its description: every "N mana" except mana gained ("nhận thêm 1 mana", "trao 2 mana")
  * or an alternative ("Hoặc tiêu hao 2 mana để tiến hoá"). Several different costs show as "0/1"; none, or
  * only 0, shows nothing.
  */
@@ -173,7 +174,7 @@ export function skillCost(text: string): string {
   const costs: number[] = [];
   for (const hit of text.matchAll(/(\d+)\s*mana/gi)) {
     const before = text.slice(Math.max(0, (hit.index ?? 0) - 28), hit.index).toLowerCase();
-    if (/nhận|hoặc/.test(before)) continue;
+    if (/nhận|hoặc|trao/.test(before)) continue;
     const value = Number(hit[1]);
     if (!costs.includes(value)) costs.push(value);
   }

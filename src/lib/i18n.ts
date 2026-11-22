@@ -44,6 +44,8 @@ const PAIRS: Array<[string, string]> = [
   ["Chiến binh cưỡi rồng", "Dragon Rider Warrior"],
   ["Kuriboh", "Kuriboh"],
   ["Quái thú thiên sứ", "Angel Beast"],
+  ["Tinh linh đàn hạc", "Harp Spirit"],
+  ["Tiếng nhạc du dương", "Melodious Tune"],
   ["Tê giác bé con", "Baby Rhino"],
   ["Phù thuỷ tí hơn", "Tiny Witch"],
   ["Sâu non", "Larva"],

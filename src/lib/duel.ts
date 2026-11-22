@@ -534,9 +534,27 @@ function pour(orb: number, flask: number, gain: number): { orb: number; flask: n
   return { orb: nextOrb, flask: Math.min(1, pool - nextOrb) };
 }
 
-function refill(player: Player): Player {
+/** Tinh linh đàn hạc (chủ game 22/11): Tiếng nhạc du dương. */
+const HARP_SPIRIT = "tinh-linh-dan-hac";
+/** Mana trao vào mộ mana (`starGems`) khi chính Tinh linh đàn hạc được triệu hồi; dư thì lên sao kế (`grantUsed`). */
+const HARP_GIFT = 2;
+
+/** Mana thêm đầu lượt: mỗi Quái thú thiên sứ và mỗi Tinh linh đàn hạc trên sân +1 (cộng dồn). */
+function turnGifts(player: Player): { angels: number; harps: number } {
   const angels = player.field.filter((mon) => mon?.cardId === "quai-thu-thien-su").length;
-  return { ...player, ...pour(player.orb, player.flask, 1 + angels), draws: 0, summons: 0, fresh: [], aside: 0, acted: false };
+  const harps = player.field.filter((mon) => mon?.cardId === HARP_SPIRIT).length;
+  return { angels, harps };
+}
+
+/** "Khi triệu hồi" của Tinh linh đàn hạc: chỉ chạy khi chính nó vừa được triệu hồi (luật dự án). */
+function harpSummoned(player: Player, cardId: string): { player: Player; line: string } {
+  if (cardId !== HARP_SPIRIT) return { player, line: "" };
+  return { player: grantUsed(player, HARP_GIFT), line: ` Tiếng nhạc du dương: +${HARP_GIFT} mana vào mộ mana.` };
+}
+
+function refill(player: Player): Player {
+  const { angels, harps } = turnGifts(player);
+  return { ...player, ...pour(player.orb, player.flask, 1 + angels + harps), draws: 0, summons: 0, fresh: [], aside: 0, acted: false };
 }
 
 export function createDuel(
@@ -3178,6 +3196,8 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
     .filter((_, index) => index !== reserveIndex)
     .map((pile) => (pile.freeAt == null ? pile : { ...pile, freeAt: undefined }));
   let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, fresh: [...(paid.fresh ?? []), next.uid], aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
+  const harp = harpSummoned(placed, cardId);
+  placed = harp.player;
   const vow = absorbVow(placed, next.uid);
   placed = vow.player;
   if (placed.hats) placed = { ...placed, field: mixRow(placed.field) as Player["field"] };
@@ -3185,7 +3205,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot): Duel {
     ? `${card.name} bị hiến tế.`
     : forced
       ? `${sideName(side)} bất chấp triệu hồi ${card.name}. Đầu lượt phải trả khế ước.${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`
-      : `${sideName(side)} triệu hồi ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`;
+      : `${sideName(side)} triệu hồi ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}${harp.line ? `.${harp.line}` : ""}`;
   return note(
     pingStars(patch({ ...state, seq: state.seq + 1, rite: vow.eaten ? { side, slot, seq: state.seq + 1 } : state.rite }, side, placed), side, before, placed.stars),
     line,
@@ -3288,12 +3308,14 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: str
   field[land] = born;
   const reserve = paid.reserve.filter((_, index) => index !== reserveIndex).map((pile) => (pile.freeAt == null ? pile : { ...pile, freeAt: undefined }));
   let placed = shuffleSea({ ...paid, field, reserve, summons: witch ? paid.summons : paid.summons + 1, fresh: [...(paid.fresh ?? []), born.uid], aside: witch ? (paid.aside ?? 0) + 1 : paid.aside });
+  const harp = harpSummoned(placed, cardId);
+  placed = harp.player;
   const vow = absorbVow(placed, born.uid);
   placed = vow.player;
   if (placed.hats) placed = { ...placed, field: mixRow(placed.field) as Player["field"] };
   const bits = [hp ? `+${hp} máu` : "", atk ? `+${atk} công` : "", skill ? `+${skill} sát thương kỹ năng` : "", def ? `+${def} phòng ngự` : ""].filter(Boolean);
   const eaten = names.length ? `${names.join(", ")} bị hiến tế. ` : "";
-  const line = vow.eaten ? `${eaten}${card.name} bị hiến tế.` : `${eaten}${sideName(side)} triệu hồi ${card.name}${bits.length ? `. ${bits.join(", ")}.` : "."}`;
+  const line = vow.eaten ? `${eaten}${card.name} bị hiến tế.` : `${eaten}${sideName(side)} triệu hồi ${card.name}${bits.length ? `. ${bits.join(", ")}.` : "."}${harp.line}`;
   const seq = state.seq + 1;
   return note(
     pingStars(
@@ -7584,8 +7606,9 @@ export function answerLurk(state: Duel, pick: number | null): Duel {
   const field = [...paid.field] as Player["field"];
   field[slot] = born;
   const reserve = paid.reserve.filter((_, index) => index !== pick);
-  const placed = patch({ ...state, seq: state.seq + 2 }, side, shuffleSea({ ...paid, field, reserve }));
-  return close(note(placed, `${sideName(side)} triệu hồi phản ứng ${card.name}.`));
+  const harp = harpSummoned(shuffleSea({ ...paid, field, reserve }), held.id);
+  const placed = pingStars(patch({ ...state, seq: state.seq + 2 }, side, harp.player), side, player.stars, harp.player.stars);
+  return close(note(placed, `${sideName(side)} triệu hồi phản ứng ${card.name}.${harp.line}`));
 }
 
 /** Quái ẩn kiểu 2 đủ vòng chờ: dùng tác dụng riêng rồi lật, về xấp như kiểu 1. */
@@ -10528,8 +10551,8 @@ function endTurnCore(state: Duel): Duel {
   let next = patch(state, side, current);
   const incoming = next.players[foe];
   const drawBan = incoming.drawBan ?? 0;
-  const angels = incoming.field.filter((mon) => mon?.cardId === "quai-thu-thien-su").length;
-  const incomingMana = pour(incoming.orb, incoming.flask, 1 + angels);
+  const { angels, harps } = turnGifts(incoming);
+  const incomingMana = pour(incoming.orb, incoming.flask, 1 + angels + harps);
   const capped = incomingMana.orb >= 3 && incomingMana.flask >= 1;
   const usedRelease = Boolean(next.gemUsed?.[foe]);
   const warnedRelease = Boolean(next.gemWarned?.[foe]);
@@ -10608,7 +10631,8 @@ function endTurnCore(state: Duel): Duel {
   }
   const owed = settleDragonDebt(startedTurn);
   startedTurn = owed.state;
-  const started = angels > 0 ? `${sideName(foe)} bắt đầu lượt. Quái thú thiên sứ cho thêm ${angels} gem.` : `${sideName(foe)} bắt đầu lượt.`;
+  const gifts = [angels > 0 ? `Quái thú thiên sứ cho thêm ${angels} gem.` : "", harps > 0 ? `Tiếng nhạc du dương cho thêm ${harps} gem.` : ""].filter(Boolean);
+  const started = [`${sideName(foe)} bắt đầu lượt.`, ...gifts].join(" ");
   const pact = dueNow?.cardId === "trieu-hoi-ac-ma" ? `${cardOf(dueNow).name} thiếu sao phải trả khế ước: 1 mana, hoặc rời sân.` : "";
   const pray = angels > 0 ? "Quái thú thiên sứ cần cầu nguyện: tiêu 1 mana, hoặc rời sân." : "";
   const due = [started, pact, pray].filter(Boolean).join(" ");

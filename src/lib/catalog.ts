@@ -262,6 +262,18 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Tiêu diệt nó ngay khi có thể."
   },
   {
+    "id": "tinh-linh-dan-hac",
+    "name": "Tinh linh đàn hạc",
+    "stars": 2,
+    "gems": 2,
+    "skill": "__**Tiếng nhạc du dương**__\nKhi triệu hồi trao 2 mana vào mộ mana của bạn. Đầu mỗi lượt của bạn, bạn sẽ được nhận thêm 1 mana.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
+    "art": "tinh-linh-dan-hac"
+  },
+  {
     "id": "te-giac-be-con",
     "name": "Tê giác bé con",
     "stars": 1,
