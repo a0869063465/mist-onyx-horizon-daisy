@@ -12,6 +12,8 @@ const B = await server.ssrLoadModule("/src/lib/brain.ts");
 const P = await server.ssrLoadModule("/src/lib/preview.ts");
 const K = await server.ssrLoadModule("/src/lib/keywords.ts");
 const H = await server.ssrLoadModule("/src/lib/hidden-kinds.ts");
+const SB = await server.ssrLoadModule("/src/lib/skill-book.ts");
+const SP = await server.ssrLoadModule("/src/lib/seal-passives.ts");
 
 /** Gắn tạm quái ẩn (luật L2) trong lúc chạy fn (HIDDEN_CARDS thật đang rỗng). */
 function withHidden(map, fn) {
@@ -1687,6 +1689,80 @@ test("Tước đoạt: không dùng skill, vẫn đánh thường; Rồng bọc 
   assert.ok(at(hidden, 1, 2).seal);
   const cocoon = sealOn(s, 3);
   assert.equal(at(cocoon, 1, 3).cardId, "ken-ngai");
+});
+
+function drain(x) {
+  for (let i = 0; i < 8 && x.step === "respond"; i += 1) x = D.passResponse(x);
+  return x;
+}
+
+test("Giải giới siêu tốc lúc đòn sừng đã lên chuỗi: đòn sừng vẫn là sát thương phép, tính bằng công gốc", () => {
+  let s = board({ 0: ["rong-phun-hoa-cau", { horn: "plain", atk: 7, raised: { atk: 3, def: 0, mdef: 0, hp: 0 } }] }, { 0: ["may-chem", { atk: 0, def: 5, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(swung.pending?.kind, "melee", swung.live);
+  const cut = D.sealMon(swung, 0, uid(swung, 0, 0), "Giải giới");
+  const mon = at(cut, 0, 0);
+  assert.equal(mon.atk, 4, "công về gốc ngay");
+  assert.equal(mon.horn, "plain", "đòn sừng vẫn còn");
+  assert.ok(mon.seal?.launch, "đánh dấu đã phóng");
+  const done = drain(cut);
+  assert.equal(at(done, 1, 0).hp, 16, "4 sát thương phép (thủ 5 không chặn): " + done.live);
+  const after = at(done, 0, 0);
+  assert.ok(after.seal && !after.seal.launch, "hết đòn thì hết dấu");
+  assert.equal(after.horn, undefined, "không còn sừng tới hết vòng");
+  const back = at(closeRound({ ...done, counterAsk: null }), 0, 0);
+  assert.equal(back.horn, "plain");
+  assert.equal(back.atk, 7, "hết vòng trả lại +3");
+});
+
+test("Giải giới lúc đòn đánh thường đã lên chuỗi: đòn vẫn đánh, bằng công hiện tại", () => {
+  let s = board({ 0: ["rong-phun-hoa-cau", { atk: 7, raised: { atk: 3, def: 0, mdef: 0, hp: 0 } }] }, { 0: ["may-chem", { atk: 0, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const done = drain(D.sealMon(swung, 0, uid(swung, 0, 0), "Giải giới"));
+  assert.equal(at(done, 1, 0).hp, 16, done.live);
+});
+
+test("Giải giới lúc skill đã lên chuỗi: skill vẫn nổ", () => {
+  let s = board({ 0: ["rong-phun-hoa-cau", {}] }, { 0: ["may-chem", { atk: 0, def: 0, mdef: 1, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const cast = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 1);
+  assert.equal(cast.pending?.kind, "beam", cast.live);
+  const cut = D.sealMon(cast, 0, uid(cast, 0, 0), "Giải giới");
+  const done = drain(cut);
+  assert.ok(at(done, 1, 0).hp < 20, "Hoả cầu vẫn trúng: " + done.live);
+  assert.ok(!at(done, 0, 0).seal?.launch);
+  const fresh = { ...done, turn: 0, round: 0, step: "main", counterAsk: null, players: done.players.map((p, i) => ({ ...p, orb: 5, field: i === 0 ? p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) : p.field })) };
+  const again = D.useSkill(fresh, uid(done, 0, 0), uid(done, 1, 0), 1);
+  assert.ok(/vô hiệu hoá/.test(again.live), "skill mới vẫn bị chặn: " + again.live);
+});
+
+test("Giải giới lúc Cò quay đã lên chuỗi: máy quay vẫn chạy hết, xong thì hết dấu", () => {
+  let s = board({ 0: ["thuong-quan-long", {}] }, { 0: ["may-chem", { atk: 0, def: 0, mdef: 0, hp: 20, maxHp: 20 }], 1: ["kizuran", { hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const cast = D.declareSkill(s, uid(s, 0, 0), null, 0);
+  assert.equal(cast.pending?.kind, "beam", cast.live);
+  let x = drain(D.sealMon(cast, 0, uid(cast, 0, 0), "Giải giới"));
+  assert.ok(x.reel, "máy quay mở: " + x.live);
+  assert.ok(at(x, 0, 0).seal?.launch, "còn dấu khi máy quay chạy");
+  x = D.pullReel(x);
+  x = D.settleReel(x);
+  x = drain(x);
+  assert.ok(!x.reel, "máy quay đóng");
+  assert.ok(at(x, 0, 0).seal && !at(x, 0, 0).seal.launch, "hết dấu");
+});
+
+test("Giải giới: mọi lá có skill bị động/phản ứng đều có dòng trong seal-passives.ts", () => {
+  const need = Object.entries(SB.SKILL_BOOK)
+    .filter(([, list]) => list.some((e) => e.kind === "passive" || e.kind === "spell"))
+    .map(([id]) => id);
+  const missing = need.filter((id) => !SP.SEAL_PASSIVES[id]);
+  assert.deepEqual(missing, [], "lá mới có skill bị động, thêm vào seal-passives.ts và chặn khi bị giải giới: " + missing.join(", "));
+  const stale = Object.keys(SP.SEAL_PASSIVES).filter((id) => !need.includes(id));
+  assert.deepEqual(stale, [], "dòng thừa trong seal-passives.ts: " + stale.join(", "));
+  const open = Object.entries(SP.SEAL_PASSIVES).filter(([, v]) => v.status === "chua").length;
+  console.log(`     (giải giới: ${open} lá skill bị động chưa rà)`);
 });
 
 let failed = 0;
