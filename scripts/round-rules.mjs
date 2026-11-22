@@ -1653,40 +1653,40 @@ function sealOn(s, foeSlot) {
   return next;
 }
 
-test("Tê liệt (Đôi mắt trấn giữ): khoá 2 lượt, đồng hồ về Đồng hồ khó đoán, không tự đổi dạng", () => {
-  const s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["dong-ho-hung-bao", { clockLeft: 1 }] });
+test("Tước đoạt: đồng hồ về Đồng hồ khó đoán, chỉ số gốc, mất buff; hết vòng trở lại như cũ", () => {
+  const s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["dong-ho-hung-bao", { clockLeft: 1, atk: 8, hp: 6, maxHp: 6, raised: { atk: 3, def: 0, mdef: 0, hp: 0 } }] });
   const done = sealOn(s, 0);
   const mon = at(done, 1, 0);
   assert.equal(mon.cardId, "dong-ho-kho-doan", done.live);
-  assert.equal(mon.seal, 2);
-  assert.ok(mon.stun >= 2);
+  assert.equal(mon.atk, 2);
+  assert.equal(mon.hp, 2);
+  assert.ok(mon.seal);
+  assert.equal(mon.stun, 0, "không bị khoá hành động");
   assert.ok(done.players[0].orb < 5, "tốn mana");
-  const later = closeRound(done);
-  assert.equal(at(later, 1, 0).cardId, "dong-ho-kho-doan", "không tự đổi dạng");
-  const free = closeRound(later);
-  assert.ok(!(at(free, 1, 0).seal > 0), "hết 2 lượt");
-  assert.equal(at(free, 1, 0).stun, 0);
+  const back = closeRound(done);
+  const after = at(back, 1, 0);
+  assert.ok(!after.seal, "hết vòng");
+  assert.ok(after.cardId === "dong-ho-hung-bao" || after.cardId === "dong-ho-mong-manh", after.cardId);
+  assert.ok(after.raised, "buff trở lại");
 });
 
-test("Tê liệt: Rồng bọc trứng mất thế thủ, không đổi thế; quái ẩn bị lật", () => {
-  const s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["rong-boc-trung", { stance: "guard" }], 1: ["may-chem", { lurk: { left: 4 } }] });
-  const done = sealOn(s, 0);
-  const dragon = at(done, 1, 0);
-  assert.equal(dragon.stance, "attack");
-  assert.equal(dragon.seal, 2, done.live);
-  const revealed = sealOn({ ...s, players: [s.players[0], s.players[1]] }, 1);
-  assert.ok(!at(revealed, 1, 1).lurk, "quái ẩn lật: " + revealed.live);
-  assert.equal(at(revealed, 1, 1).seal, 2);
-});
-
-test("Tê liệt: Kén ngài đang hoá kén về Sâu non, chân kén mất hết", () => {
-  let s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["ken-ngai", { level: 2 }] });
-  const host = uid(s, 1, 0);
-  s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["ken-ngai", { level: 2 }], 1: ["chan-ken", { host }] });
-  const fixed = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m, k) => (m && k === 1 ? { ...m, host: p.field[0].uid } : m)) } : p)) };
-  const done = sealOn(fixed, 0);
-  assert.equal(at(done, 1, 0).cardId, "sau-non", done.live);
-  assert.equal(at(done, 1, 1), null, "chân kén mất");
+test("Tước đoạt: không dùng skill, vẫn đánh thường; Rồng bọc trứng bỏ thế; quái ẩn vẫn ẩn; Kén ngài giữ dạng", () => {
+  let s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["ong-khong-lo", {}], 1: ["rong-boc-trung", { stance: "guard" }], 2: ["may-chem", { lurk: { left: 4 } }], 3: ["ken-ngai", { level: 2 }] });
+  const bee = sealOn(s, 0);
+  assert.ok(at(bee, 1, 0).seal, bee.live);
+  const flip = { ...bee, turn: 1, round: 1, step: "main", players: bee.players.map((p) => ({ ...p, orb: 5 })) };
+  const tried = D.useSkill(flip, uid(flip, 1, 0), uid(flip, 0, 0), 0);
+  assert.ok(/vô hiệu hoá/.test(tried.live), "skill bị chặn: " + tried.live);
+  const swing = D.attackMonster(flip, uid(flip, 1, 0), uid(flip, 0, 0));
+  assert.notEqual(swing.pending, null, "vẫn đánh thường: " + swing.live);
+  const dragon = sealOn(s, 1);
+  assert.equal(at(dragon, 1, 1).stance, "attack");
+  assert.equal(closeRound(dragon).players[1].field[1].stance, "guard", "thế trở lại");
+  const hidden = sealOn(s, 2);
+  assert.ok(at(hidden, 1, 2).lurk, "vẫn ẩn: " + hidden.live);
+  assert.ok(at(hidden, 1, 2).seal);
+  const cocoon = sealOn(s, 3);
+  assert.equal(at(cocoon, 1, 3).cardId, "ken-ngai");
 });
 
 let failed = 0;

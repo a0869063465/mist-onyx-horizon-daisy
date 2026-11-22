@@ -77,6 +77,7 @@ import {
   canStand,
   canStandHand,
   hexLocked,
+  sealed,
   standFor,
   standIn,
   canGuardCover,
@@ -9536,6 +9537,11 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
     y.unshift({ key: "lurk-wake", label: "Kích hoạt", go: () => apply(wakeLurk(duel, uid)) });
   }
   const strikeShown = attackable && sword && !noAttack && (visibleStats(mon, you.field).atk > 0 || boulder(mon));
+  // Tước đoạt (chủ game 22/11): quái bị vô hiệu hoá chỉ còn đánh thường.
+  if (sealed(mon)) {
+    y.length = 0;
+    z.length = 0;
+  }
   if (!strikeShown && y.length === 0 && z.length === 0) return null;
 
   // Each button shows the skill's emblem and name as on the monster sheet: the colour of its kind there, or blue
@@ -9809,7 +9815,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}
         {spot("hp", mon.hp, stats.blueHp, fakeCut(mon, "hp", mon.hp))}
-        <KeywordRow cardId={mon.cardId} />
+        {sealed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
       </span>
     </span>
   );
@@ -10035,7 +10041,7 @@ function BoardSlot({
         {unveil === "foe" ? <FogWipe /> : null}
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
-        {veil || decoy || mask ? null : <KeywordRow cardId={mon.cardId} />}
+        {veil || decoy || mask || sealed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
         <span className="badges">
           {bind > 0 ? <i className="is-hold">{bind >= 90 ? "∞" : bind}</i> : null}
