@@ -705,6 +705,10 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
  *  and the ring round a player's health its light runs into, in % of the board's width. */
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
+/** The ring a flow of Gió dịu đi runs round a mana mark. */
+const MANA_RING = 4.2;
+/** How long the blown-away mana keeps its old number: the pink flow's way to it (ms). */
+const DRAIN_WAIT = 1500;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
 const iconRoom = () => (ICON / boardRatio() + 1.2) * 1.6;
 
@@ -1998,6 +2002,9 @@ function PlayPage() {
   const briefSeen = useRef(new Map<string, string>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
+  /** Gió dịu đi (chủ game 22/11): the blown-away mana keeps its old number while the pink flow runs, then blinks and falls. */
+  const [drainHold, setDrainHold] = useState<{ side: Side; orb: boolean; gems: boolean } | null>(null);
+  const [drainBlink, setDrainBlink] = useState<{ side: Side; orb: boolean; gems: boolean } | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
   const [hornAsk, setHornAsk] = useState<{ uid: string; foeUid: string; mode: "splash" | "plus" | null } | null>(null);
   const [cottonAsk, setCottonAsk] = useState<null | "hand">(null);
@@ -3229,6 +3236,15 @@ function PlayPage() {
         setLift(uid);
         window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
       }
+    }
+    if (!quiet && !tutorial && prev.mid === duel.mid && duel.drain && duel.drain.id !== prev.drain?.id) {
+      const drain = { side: duel.drain.side, orb: duel.drain.orb, gems: duel.drain.gems };
+      setDrainHold(drain);
+      window.setTimeout(() => {
+        setDrainHold(null);
+        setDrainBlink(drain);
+        window.setTimeout(() => setDrainBlink(null), 1300);
+      }, DRAIN_WAIT);
     }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
@@ -5837,19 +5853,19 @@ function PlayPage() {
   };
   const marksView = [
     ["foeHp", laserHp[`face:${foeSide}`] ?? hpHold[`face:${foeSide}`] ?? heldHp(foeSide) ?? foe.hp, ""],
-    ["foeOrb", tutView?.foeOrb ?? foe.orb, ""],
+    ["foeOrb", (tutView?.foeOrb ?? foe.orb) + (drainHold?.orb && drainHold.side !== viewer ? 1 : 0), ""],
     ["foeFlask", Math.min(1, foe.flask), "bình"],
     ["foeStars", foe.stars, "sao"],
-    ["foeGems", foe.starGems, "thừa"],
+    ["foeGems", foe.starGems + (drainHold?.gems && drainHold.side !== viewer ? 1 : 0), "thừa"],
     // Xấp bài úp bên đỏ (tấm in 3 lá) ghi số lá còn trong xấp của đối thủ; số lá trên tay họ ở chính giữa khay để bài
     // (băng rôn đỏ trên cùng), trên dải lá úp xoè (chủ game 28/10).
     ["foeHand", pileLeft(foe), "bài"],
     ["foeReserve", foe.reserve.length + foe.hand.length, "lá"],
     ["youHp", laserHp[`face:${viewer}`] ?? hpHold[`face:${viewer}`] ?? heldHp(viewer) ?? you.hp, ""],
-    ["youOrb", tutView?.youOrb ?? you.orb, ""],
+    ["youOrb", (tutView?.youOrb ?? you.orb) + (drainHold?.orb && drainHold.side === viewer ? 1 : 0), ""],
     ["youFlask", Math.min(1, you.flask), "bình"],
     ["youStars", tutView?.youStars ?? you.stars, "sao"],
-    ["youGems", tutView?.youGems ?? you.starGems, "thừa"],
+    ["youGems", (tutView?.youGems ?? you.starGems) + (drainHold?.gems && drainHold.side === viewer ? 1 : 0), "thừa"],
   ] as const;
 
   const reserveHeld = inspect?.pile === "reserve" ? you.reserve[inspect.index] : undefined;
@@ -6372,6 +6388,9 @@ function PlayPage() {
         }
       } else if ("face" in end) {
         xs.push((end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
+      } else if ("mana" in end) {
+        const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+        xs.push(board.marks[name].x);
       }
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
@@ -6437,6 +6456,15 @@ function PlayPage() {
       const dy = (mark.y - from.y) * 1.6 * boardCut().v;
       const len = Math.hypot(dx, dy) || 1;
       return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
+    }
+    if ("mana" in end) {
+      // Gió dịu đi (chủ game 22/11): a ring round the attacker's ngọc mana, mana in the grave or star frame.
+      const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+      const mark = board.marks[name];
+      const dx = (mark.x - from.x) * 0.9;
+      const dy = (mark.y - from.y) * 1.6 * boardCut().v;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: MANA_RING } };
     }
     if ("hand" in end || "pile" in end) {
       // Virus ăn mòn eats a card in the hand or the deck (chủ game 30/10): the flow runs into a moat that follows the
@@ -7088,7 +7116,7 @@ function PlayPage() {
           const seen = hpSide !== null && sight ? sight.hp[hpSide] : null;
           const shift = seen !== null && hpSide !== null ? seen - duel.players[hpSide].hp : 0;
           return (
-            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `calc(${marks[key].size * markScale(key)} * var(--cqmin))`, color: shift ? undefined : color }}>
+            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${drainBlink && (key === (drainBlink.side === viewer ? "youOrb" : "foeOrb") ? drainBlink.orb : key === (drainBlink.side === viewer ? "youGems" : "foeGems") ? drainBlink.gems : false) ? " is-drain" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `calc(${marks[key].size * markScale(key)} * var(--cqmin))`, color: shift ? undefined : color }}>
               <b>{shift ? seen : value}</b>
             </div>
           );

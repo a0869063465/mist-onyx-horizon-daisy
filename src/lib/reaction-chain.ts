@@ -9,7 +9,7 @@ import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
  * into its own icon. When the wait ends, the icon of what waited fires if both sides let it through, or fizzles if an
  * answer stopped it; the others have done their work and fade with it.
  */
-export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side };
+export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side } | { mana: Side; part: "orb" | "gems" | "stars" };
 
 /** Where a bite of Virus ăn mòn lands (chủ game 30/10): the card on the field, the hand for a reserve card, the
  *  face-down deck for one still in it. */
@@ -413,7 +413,14 @@ function mirrorOrb(next: Duel, live: ChainOrb, side: Side): ChainOrb {
  * skill icon stands by it and the attack surges into it.
  */
 function breezeOrb(next: Duel, live: ChainOrb, side: Side, uid: string): ChainOrb {
+  // The attacker's ngọc mana, and its mana in the grave (the star frame when the grave is hidden): a branch each.
+  const foe = (1 - side) as Side;
+  const loser = next.players[foe];
+  const to: FlowLink[] = [];
+  if (loser.orb > 0) to.push({ end: { mana: foe, part: "orb" }, tone: "pink", fork: true });
+  if (loser.starGems > 0) to.push({ end: { mana: foe, part: loser.stars >= 4 ? "stars" : "gems" }, tone: "pink", fork: true });
   return {
+    spread: to.length ? foe : null,
     id: `orb${orbSeq++}`,
     kind: "skill",
     side,
@@ -422,7 +429,7 @@ function breezeOrb(next: Duel, live: ChainOrb, side: Side, uid: string): ChainOr
     spell: null,
     near: uid,
     by: live.id,
-    to: [],
+    to,
     tone: "pink",
     skill: 1,
     strike: null,

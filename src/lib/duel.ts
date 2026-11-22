@@ -279,6 +279,8 @@ export type Duel = {
   counterQueue?: { from: string; uids: string[] } | null;
   /** Linh hoạt (chủ game 18/11): quái vừa né đòn, để trang trận chớp sáng nó (id tăng mỗi lần có né mới). */
   dodge?: { id: number; uids: string[] } | null;
+  /** Gió dịu đi (chủ game 22/11): whose ngọc mana / mana trong mộ it just blew away, for the numbers to flash and fall. */
+  drain?: { id: number; side: Side; orb: boolean; gems: boolean } | null;
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
    *  giữ quyền trước đó; `rest` = các lần về xấp khác đang chờ hỏi. */
   lurkAsk?: { side: Side; slot: Slot; back: Side; rest?: Array<{ side: Side; slot: Slot }> } | null;
@@ -4325,7 +4327,8 @@ function breezeBlock(state: Duel, pending: Exclude<Pending, null>): Duel {
   const blown = { ...you, field, orb: Math.max(0, you.orb - 1), starGems: Math.max(0, you.starGems - 1) };
   const attacker = you.field.find((mon) => mon?.uid === from) ?? null;
   const who = attacker ? (shadeHidden(attacker) ? "quái thú ẩn mình" : cardOf(attacker).name) : "đòn";
-  return releaseLegend(note(patch(open, side, blown), `Gió dịu đi chặn đòn của ${who}, thổi bay 1 ngọc mana và 1 mana trong mộ.`, "spell"));
+  const drained = note(patch(open, side, blown), `Gió dịu đi chặn đòn của ${who}, thổi bay 1 ngọc mana và 1 mana trong mộ.`, "spell");
+  return releaseLegend({ ...drained, drain: { id: (state.drain?.id ?? 0) + 1, side, orb: you.orb > 0, gems: you.starGems > 0 } });
 }
 
 /** Whether the defender's Gương phòng hộ stands against this action: a plain attack on its owner's monster or face. */
