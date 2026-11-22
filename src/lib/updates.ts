@@ -1095,6 +1095,7 @@ export const PENDING_NOTES: string[] = [
   "Icon skill đổi sang hình vẽ mới, ở bảng quái, nút trên sân và thanh phản ứng. Lúc quái phát skill thì hình skill hiện to giữa sân rồi thu vào icon, thay cho hình lá quái.",
   "Lính chiến đá khổng lồ: công 2, thủ 3, thủ phép 3, máu 6, mana 2, tranh mới. Tường thành: quái địch chỉ được chọn Lính chiến đá khổng lồ làm mục tiêu tấn công; mỗi đợt công kích trúng nó thì thủ và thủ phép giảm 1. Bỏ đỡ đòn cho đồng minh.",
   "Mỹ điểu nhân đổi tên Harpie Lady, máu 2. Vào sân chưa có kỹ năng nào: lúc triệu hồi và mỗi 3 lượt sau đó được chọn 1 trong 2 kỹ năng ngẫu nhiên, dùng 1 lần. Thi triển 3 hành động khác nhau thì tiến hoá.",
+  "Số đếm trên quái giờ là icon gốc của kỹ năng kèm số màu: trắng là bình thường; Gã hề đáng sợ hồng khi đủ thi triển, đỏ khi đã mạnh hơn; Kén ngài hồng khi đủ lượt mở kén, đỏ khi qua mốc đó; số nợ Vảy rồng của Chiến binh rồng vàng (vật lý), tím (phép), xám (chuẩn).",
 ];
 
 function remarkOf(notes: string[]) {

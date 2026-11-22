@@ -14779,3 +14779,53 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .sk3d-core:has(.skill-art)::after, .rx-gem-core:has(.skill-art)::after { display: none; }
 .rx-show-skill { position: relative; display: block; width: 100%; aspect-ratio: 1; }
 .rx-show-skill .skill-art { left: 0; top: 0; width: 100%; height: 100%; }
+
+/* ---- Ô số đếm trên quái (chủ game 22/11): icon gốc của skill dạng ô vuông + số màu bên phải, màu theo bảng thông báo. ---- */
+.cntb {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+.cntb-ico {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  overflow: hidden;
+  border-radius: 0.2em;
+  background: #120d0a;
+  box-shadow: 0 0 0 0.06em rgba(255, 224, 150, 0.85), 0 0.08em 0.2em rgba(0, 0, 0, 0.75);
+}
+/* Hình gốc tròn: phóng để phủ kín ô vuông, không đổi hình. */
+.cntb-ico .skill-art { left: 0; top: 0; width: 100%; height: 100%; transform: scale(1.38); }
+.cntb-ico .glyph3d { position: absolute; inset: 12%; width: 76%; height: 76%; }
+.cntb-n { display: inline-flex; gap: 0.2em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cntb-n b {
+  font-weight: 800;
+  color: #fff;
+  -webkit-text-stroke: 0.06em #000;
+  paint-order: stroke fill;
+  text-shadow: 0 0.04em 0 #000, 0 0 0.12em #000;
+}
+.cntb-n b.is-pink { color: #ff4f93; }
+.cntb-n b.is-red { color: #ff4d4d; }
+.cntb-n b.is-green { color: #3ddc6a; }
+.cntb-n b.is-phys { color: #ffe14a; }
+.cntb-n b.is-ward { color: #c084fc; }
+.cntb-n b.is-tru { color: #d6d6d6; }
+.count-blink .cntb { animation: count-blink 0.55s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .count-blink .cntb { animation: none; }
+}
+.msheet-cntb { position: absolute; left: 0.1rem; top: -0.9rem; z-index: 4; }
+.msheet-cntb .cntb { position: relative; left: auto; top: auto; transform: none !important; font-size: 1.5rem; padding: 0.12em 0.3em 0.12em 0.14em; border-radius: 0.5em; background: rgba(14, 10, 8, 0.82); box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.7); }
+/* Ba số nợ của Vảy rồng: thu nhỏ và lùi trái để khỏi tràn mép lá. */
+.cntb.is-debt { transform: translate(-64%, -50%) scale(0.82); }
+.cntb.is-debt .cntb-n { gap: 0.2em; }

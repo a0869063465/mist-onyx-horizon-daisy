@@ -313,6 +313,7 @@ export function MonsterSheet({
   name,
   card,
   count,
+  countBadge,
   skills,
   extras = [],
   actions,
@@ -337,6 +338,8 @@ export function MonsterSheet({
   card: ReactNode;
   /** The orange number the monster shows on the field; empty hides the badge. */
   count: string;
+  /** Ô số đếm kiểu mới (icon skill + số màu); có thì thay vòng cam. */
+  countBadge?: ReactNode;
   skills: SkillShown[];
   /** Icons after the skills that are not skills: a spell's kind on the spell sheet. */
   extras?: SheetExtra[];
@@ -576,7 +579,7 @@ export function MonsterSheet({
           >
             {card}
             {badge}
-            {count ? <span className="msheet-count">{count}</span> : null}
+            {countBadge ? <span className="msheet-cntb">{countBadge}</span> : count ? <span className="msheet-count">{count}</span> : null}
           </div>
           <div className="msheet-side">
             <div className="msheet-head">

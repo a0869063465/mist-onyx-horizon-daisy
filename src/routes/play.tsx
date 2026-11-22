@@ -19,6 +19,7 @@ import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
 import { MatchIntro, type IntroSide } from "@/components/game/match-intro";
 import { OpenerPanel, type OpenerCard } from "@/components/game/opener-panel";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
+import { CountBadge, type CountPart } from "@/components/game/count-badge";
 import { ActionButton, GlyphDefs, hasSkillArt, MonsterSheet, Rim, SkillGlyph, type SheetAction, type UnitActKind } from "@/components/game/monster-sheet";
 import { FUSE_BEATS, FuseDance, FusePic } from "@/components/game/fuse-dance";
 import { Medal } from "@/components/game/medal";
@@ -6334,6 +6335,7 @@ function PlayPage() {
           name={fieldName(mon)}
           card={<SheetCard mon={mon} allies={allies} layout={fieldLayout} />}
           count={sheetCount(mon, allies)}
+          countBadge={sheetBadge(mon, allies)}
           tag={{ stars: monsterCard(formOf(mon))?.stars }}
           skills={skillsOf(formOf(mon), monsterCard(formOf(mon))?.skill ?? "")}
           actions={actions}
@@ -9682,6 +9684,38 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
   );
 }
 
+/** Icon gốc của skill đứng cạnh số đếm của từng quái (chủ game 22/11: dùng đúng icon skill, không đổi). */
+const COUNT_ICON: Record<string, string> = {
+  "cuc-bong-ma-quai": "three-friends",
+  "ga-he-dang-so": "concentration-orb",
+  "tho-den-tinh-nghich": "rabbit",
+  "kazura": "hunting-bolas",
+  "kizuran": "heart-shield",
+  "ken-ngai": "butterfly",
+  "con-thinh-no-cua-hai-vuong": "guardian-shield",
+  "hiep-si-cua-hau": "shaking-hands",
+  "hiep-si-ho-ve": "growth",
+  "chien-binh-rong": "scale-mail",
+  "nu-chua-dieu-nhan-hoan-my": "spiked-shell",
+  "hiep-si-huyen-bi": "magic-shield",
+};
+
+/** Màu số đếm: trắng là lượt bình thường; Gã hề hồng khi đủ thi triển, đỏ khi đã mạnh hơn lần sau; Kén hồng khi đủ lượt
+ *  mở kén, đỏ khi qua mốc đó. */
+function countTone(mon: FieldMon): CountPart["tone"] {
+  if (mon.cardId === "ga-he-dang-so") return mon.charge >= 4 ? "red" : mon.charge >= 2 ? "pink" : "white";
+  if (mon.cardId === "ken-ngai") return (mon.level ?? 0) >= 6 ? "red" : (mon.level ?? 0) >= 4 ? "pink" : "white";
+  return "white";
+}
+
+/** The number parts beside the icon: one number, or the three debts of Vảy rồng (vật lý vàng, phép tím, chuẩn xám). */
+function countParts(mon: FieldMon, text: string, debt: Array<{ k: "p" | "s" | "t"; n: number }>): CountPart[] {
+  if (debt.some((part) => part.n > 0)) {
+    return debt.map((part) => ({ text: part.n > 0 ? String(part.n) : "", tone: part.k === "p" ? "phys" : part.k === "s" ? "ward" : "tru" }));
+  }
+  return [{ text, tone: countTone(mon) }];
+}
+
 /** The monster as it stands on the field, without its name (the sheet shows the name beside it). */
 function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<FieldMon | null>; layout: ReturnType<typeof loadField> }) {
   const stats = visibleStats(mon, allies);
@@ -9715,6 +9749,22 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
       </span>
     </span>
   );
+}
+
+/** The count tile on the monster sheet: the skill icon square with its coloured number(s), like on the field. */
+function sheetBadge(mon: FieldMon, allies: Array<FieldMon | null>) {
+  const text = sheetCount(mon, allies);
+  const due = mon.cardId === "chien-binh-rong" || mon.cardId === "nu-chua-dieu-nhan-hoan-my" || mon.cardId === "hiep-si-ho-ve" || mon.cardId === "hiep-si-huyen-bi" ? mon.debt?.[0] : undefined;
+  const slim = mon.cardId === "nu-chua-dieu-nhan-hoan-my" || mon.cardId === "hiep-si-ho-ve" || mon.cardId === "hiep-si-huyen-bi";
+  const debt = [
+    { k: "p" as const, n: due?.p ?? 0 },
+    { k: "s" as const, n: due?.s ?? 0 },
+    ...(slim ? [] : [{ k: "t" as const, n: due?.t ?? 0 }]),
+  ];
+  const owed = debt.some((part) => part.n > 0);
+  if (!owed && !text) return null;
+  const counted = owed || (() => { const c = fieldCount(mon, allies); return c !== "" && c !== 0; })();
+  return <CountBadge sheet debt={owed} icon={counted ? COUNT_ICON[mon.cardId] : undefined} parts={countParts(mon, text, owed ? debt : [])} />;
 }
 
 function sheetCount(mon: FieldMon, allies: Array<FieldMon | null>): string {
@@ -9953,23 +10003,18 @@ function BoardSlot({
         {veil || mask || decoy ? null : spot("mdef", stats.mdef, stats.blueMdef, false, fakeCut(mon, "mdef", stats.mdef))}
         {veil || mask || decoy ? null : spot("atk", stats.atk, stats.blueAtk, false, fakeCut(mon, "atk", stats.atk))}
         {veil ? null : spot("hp", decoy ? (mon.stored ?? 1) : mask ? 1 : (hpOverride ?? mon.hp), decoy || mask ? false : stats.blueHp, false, !decoy && !mask && fakeCut(mon, "hp", mon.hp))}
-        {!veil && !mask && !decoy && debtOn ? (
-          <span
-            className="fstat is-debt"
+        {!mask && (debtOn ? !veil && !decoy : Boolean(countShown)) ? (
+          <CountBadge
+            icon={counted || debtOn ? COUNT_ICON[mon.cardId] : undefined}
+            debt={debtOn}
+            parts={countParts(mon, countShown, debtOn ? debtSlots : [])}
             style={{
               left: `${layout.count.x}%`,
               top: `${layout.count.y}%`,
-              width: `${layout.count.width}%`,
-              height: `${layout.count.height}%`,
               fontSize: cardText(layout.count.size, "cqmin"),
             }}
-          >
-            {debtSlots.map((part) => (
-              <b key={part.k} className={`is-${part.k}`}>{part.n > 0 ? part.n : ""}</b>
-            ))}
-          </span>
+          />
         ) : null}
-        {!mask && !debtOn && countShown ? spot("count", countShown, false, false) : null}
         </span>
       </span>
     </button>
