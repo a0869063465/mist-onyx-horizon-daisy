@@ -1,4 +1,5 @@
 import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
+import { monsterCard } from "./catalog.ts";
 
 /**
  * The reaction icons (chủ game 23/10, in place of the fixed reaction line of 21/10): one icon for what is waiting (an
@@ -32,7 +33,7 @@ export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: bo
 
 export type ChainOrb = {
   id: string;
-  kind: "attack" | "skill" | "spell" | "block";
+  kind: "attack" | "skill" | "spell" | "block" | "seal";
   /** Who acts: the attacker's side, the caster's side, the spell's owner or the blocker's side. */
   side: Side;
   /** The monster that acts (attacker, caster, the bird of Roi điện, the blocker); null for a spell from the hand. */
@@ -608,6 +609,31 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
       }
       coverShields.set(cover.target, orb);
     }
+    // Khoá 1 (chủ game 22/11): an icon beside the striker's own, pink light to the monster it locked.
+    const seal = next.hold?.seal ?? null;
+    const sealKey = `block:${base}`;
+    if (seal && !list.some((orb) => orb.kind === "seal" && orb.base === sealKey && !orb.done)) {
+      const locked = monOf(next, seal.uid);
+      list.push({
+        id: `orb${orbSeq++}`,
+        kind: "seal",
+        side: sideOf(next, seal.by) ?? next.turn,
+        source: seal.by,
+        cardId: monOf(next, seal.by)?.cardId ?? null,
+        spell: null,
+        near: seal.by,
+        by: null,
+        to: [{ end: { uid: seal.uid }, tone: "pink" }],
+        tone: "pink",
+        skill: null,
+        strike: null,
+        base: sealKey,
+        aim: null,
+        notice: locked ? `Khoá 1: ${(monsterCard(locked.cardId)?.name ?? "Quái")} bị khoá hành động.` : next.live,
+        done: false,
+        end: null,
+      });
+    }
     // Giáp cơ khí or Lá chắn phản đòn throwing the skill back: the spell's icon is where the skill turns.
     const turner = next.pending && "back" in next.pending && next.pending.back ? [...list].reverse().find((orb) => orb.spell && REFLECT_SPELLS.has(orb.spell)) ?? null : null;
     // Giáp cơ khí is a dam only once its buff is enough to throw the skill back (chủ game 30/10): the skill surges
@@ -662,7 +688,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();
   list = list.map((orb) => {
-    if (orb.kind === "block") return orb;
+    if (orb.kind === "block" || orb.kind === "seal") return orb;
     // The mirror stands until the attack it stops is over.
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
@@ -679,7 +705,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };
   });
   return list.map((orb) => {
-    if (orb.kind !== "block" || orb.done) return orb;
+    if ((orb.kind !== "block" && orb.kind !== "seal") || orb.done) return orb;
     // A block icon on one branch goes with the spread it blocks ("block:<base>:<target>").
     const key = orb.base && orb.cover ? orb.base.slice(0, -(orb.cover.length + 1)) : orb.base;
     if (key && ended.has(key)) return { ...orb, done: true, end: ended.get(key) ?? "fizzle" };

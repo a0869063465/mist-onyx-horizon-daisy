@@ -194,6 +194,7 @@ import {
   doomWaiting,
   trapPicks,
   TRAP_CARD,
+  lockChoices,
 } from "@/lib/duel";
 import { queueRuns, reachOf, settle, type Reach } from "@/lib/preview";
 import { advisedRow } from "@/lib/row-advice";
@@ -1923,6 +1924,8 @@ function PlayPage() {
   // K4: việc đối thủ vừa làm (phép, kỹ năng); K5: bảng xác nhận trước khi mình dùng kỹ năng / phép.
   const [foeNote, setFoeNote] = useState<{ key: string; head: NoteHead; lines: string[] } | null>(null);
   const [useAsk, setUseAsk] = useState<{ head: NoteHead; lines: string[]; text?: string; go: () => void } | null>(null);
+  /** Khoá 1 (chủ game 22/11): the attacker is choosing the enemy monster to lock; `go` goes on with the strike. */
+  const [lockPick, setLockPick] = useState<{ uid: string; go: (base?: Duel) => void } | null>(null);
   const [confirmUse, setConfirmUse] = useState(true);
   useEffect(() => setConfirmUse(confirmOn()), []);
   // Bàn đổi (đối thủ đi, hết lượt) thì bảng xác nhận đang mở không còn đúng nữa.
@@ -4270,7 +4273,7 @@ function PlayPage() {
   const markId = aimMark?.spellId ?? (swapAsk ? "hoan-doi" : null);
   // X (chủ game 31/10): opens as soon as a skill, an attack or a target choice is under way, and cancels that choice, not
   // only what stands in the queue.
-  const picking = Boolean((aim && aim.kind !== "unit" && aim.kind !== "menu" && aim.kind !== "skill-info" && aim.kind !== "cast" && aim.kind !== "innate") || vowAsk || hornAsk || knightAsk || chronoAsk || digPick);
+  const picking = Boolean((aim && aim.kind !== "unit" && aim.kind !== "menu" && aim.kind !== "skill-info" && aim.kind !== "cast" && aim.kind !== "innate") || lockPick || vowAsk || hornAsk || knightAsk || chronoAsk || digPick);
   /** Hộp ma thuật: the card becomes an icon in the middle; pick the ally struck (when several are), then the enemy. */
   function startBox(index: number) {
     if (!duel) return;
@@ -4285,6 +4288,7 @@ function PlayPage() {
   }
   function cancelPick() {
     setAim(null);
+    setLockPick(null);
     setVowAsk(null);
     setHornAsk(null);
     setKnightAsk(null);
@@ -4986,6 +4990,19 @@ function PlayPage() {
     const cast = spellAim();
     const uid = drag?.kind === "unit" ? drag.uid : cast ? `spell:${cast.id}:${cast.index}:${cast.from ?? ""}` : null;
     const cache = planCache.current;
+    if (lockPick) {
+      // Khoá 1: every living enemy monster can be locked.
+      const lockUid = `lock:${lockPick.uid}`;
+      if (cache.duel === duel && cache.aim === aim && cache.uid === lockUid) return cache.plan;
+      const picks = lockChoices(duel, lockPick.uid);
+      const keys = new Set<string>();
+      foe.field.forEach((mon, slot) => {
+        if (mon && picks.includes(mon.uid)) keys.add(`${(1 - viewer) as Side}-${slot}`);
+      });
+      const plan = { keys, foe: true, you: false, caster: lockPick.uid };
+      planCache.current = { duel, aim, uid: lockUid, plan };
+      return plan;
+    }
     if (cache.duel === duel && cache.aim === aim && cache.uid === uid) return cache.plan;
     if (cast) {
       // Phép có mục tiêu (V8B): only the monsters it can take glow; the others on its side are marked as not pickable.
@@ -5481,7 +5498,11 @@ function PlayPage() {
         setKnightAsk({ uid: payload.uid, foeUid, face: false, room });
         return;
       }
-      apply(face ? attackFace(duel, payload.uid) : attackMonster(duel, payload.uid, foeUid));
+      const dragged = payload.uid;
+      withLock(dragged, (base) => {
+        const from = base ?? duel;
+        apply(face ? attackFace(from, dragged) : attackMonster(from, dragged, foeUid));
+      });
       return;
     }
     holdNotice("Kéo lên quái địch, hoặc lên vùng máu địch để đánh người.");
@@ -5647,7 +5668,37 @@ function PlayPage() {
    * Huỷ về lại danh sách. Đánh thường chỉ hỏi với quái có điều kiện riêng (Khổng lồ 1 mắt tốn mana). Tắt trong Cài đặt thì
    * chạy thẳng; nút không có gì để ghi cũng chạy thẳng.
    */
-  function askRow(uid: string, row: UnitRow) {
+  function withLock(uid: string, go: (base?: Duel) => void) {
+    const mon = duel ? fieldMon(duel, uid) : null;
+    if (!duel || !mon || tutorial || lockChoices(duel, uid).length === 0) {
+      go();
+      return;
+    }
+    const card = monsterCard(mon.cardId);
+    playUi("select");
+    setUseAsk({
+      head: { name: "Khoá 1", tone: "#3cff4a", art: "/ui/kw/luon-lach-1.webp", who: card ? tr(card.name) : "" },
+      lines: ["Chọn 1 quái địch để khoá hành động"],
+      go: () => {
+        holdNotice("Khoá 1: chọn 1 quái địch để khoá hành động.");
+        setLockPick({ uid, go });
+      },
+    });
+  }
+  /** Khoá 1: the locked monster is set on the match; the strike that follows carries it into the queue. */
+  function pickLock(foeUid: string) {
+    const pick = lockPick;
+    if (!pick || !duel) return;
+    setLockPick(null);
+    holdNotice("");
+    playUi("confirm");
+    const armed: Duel = { ...duel, lockAim: { by: pick.uid, uid: foeUid } };
+    setDuel(armed);
+    pick.go(armed);
+  }
+
+  function askRow(uid: string, plain: UnitRow) {
+    const row: UnitRow = { ...plain, go: () => withLock(uid, plain.go) };
     const mon = duel ? fieldMon(duel, uid) : null;
     if (!duel || !mon || !confirmUse || tutorial) {
       row.go();
@@ -5723,6 +5774,10 @@ function PlayPage() {
       return;
     }
     if (!mine || !duel) return;
+    if (lockPick) {
+      if (side !== viewer && lockChoices(duel, lockPick.uid).includes(mon.uid)) pickLock(mon.uid);
+      return;
+    }
     if (side === viewer) turnOneHint();
     // Hoán đổi: tap a glowing ally to trade places with the monster aimed at.
     if (swapAsk) {
@@ -6585,7 +6640,8 @@ function PlayPage() {
         // A blow and its blocker on a cut board: their icons close in on their cards to leave the flow between them.
         const squeeze = duel.hold?.blocker && orb.kind !== "spell" ? Math.min(tall * 0.5, Math.max(0, -blockRoom() / 2)) : 0;
         spot = {
-          x: card.x,
+          // Khoá 1's icon stands beside the striker's own (chủ game 22/11).
+          x: orb.kind === "seal" ? Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, card.x + (card.x > 50 ? -1 : 1) * ICON * 1.15)) : card.x,
           // Clear of the card, just in front of its edge (chủ game 23/10).
           y: card.top ? card.y + card.h / 2 + tall / 2 + 0.6 - squeeze : card.y - card.h / 2 - tall / 2 - 0.6 + squeeze,
           face: card.top ? 1 : -1,
@@ -6693,6 +6749,7 @@ function PlayPage() {
   };
   const iconLook = (orb: ChainOrb): IconLook => {
     if (orb.kind === "block") return { type: "medal", tone: "gold", icon: "crossed-swords" };
+    if (orb.kind === "seal") return { type: "art", src: "/ui/kw/luon-lach-1.webp", ring: orb.tone };
     if (orb.kind === "spell") return { type: "art", src: orb.spell ? spellSrc(orb.spell) : null, ring: orb.tone };
     if (orb.kind === "attack" && orb.strike === "horn") return { type: "art", src: spellSrc("sung-loi-pha"), ring: "blue" };
     if (orb.kind === "attack" && orb.strike !== "gaze") return { type: "medal", tone: "red", icon: "sword-brandish" };
