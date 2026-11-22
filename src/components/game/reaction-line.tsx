@@ -443,6 +443,7 @@ export function ReactionLine({
         a: trunkA,
         b: trunkB,
         arc: fork.front.length ? undefined : keepOff(flows.filter((f) => !f.key.startsWith(`${orb.id}|`)), trunk, trunkA, trunkB),
+        calm: fork.front.length ? undefined : true,
         out: here.face !== 0 ? { x: 0, y: here.face } : unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         into: unitDir((fork.x - here.x) * 0.9, (fork.y - here.y) * 1.6),
         tone: orb.tone,
@@ -528,6 +529,7 @@ export function ReactionLine({
         // curse's or a mirror's way back to the attacker (no damage) takes a third of the arc and half the tail.
         arc: way ? way.swing * (way.wide ? 1.1 : 1.1 / 3) : arcs.get(key) ?? keep,
         after: link.fork ? trunk : way?.after,
+        calm: "mana" in link.end ? true : undefined,
         tail: way && !way.wide ? 0.5 : 1,
       });
     }
