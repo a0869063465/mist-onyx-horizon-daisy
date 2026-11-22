@@ -28,7 +28,8 @@ export type FxEvent =
    *  card, then bursts out toward the target (`ang`, radians on the screen). Always played. */
   | { t: "rouse"; x: number; y: number; color: string; ang?: number; pack?: FxPack }
   /** Chủ game 16/11: quái vừa lên hàng chờ phản ứng với kỹ năng: phát quang một lần quanh lá (video + âm của chủ game). `w` = bề ngang lá, % bàn. */
-  | { t: "flare"; x: number; y: number; w: number; pack?: FxPack };
+  | { t: "flare"; x: number; y: number; w: number; pack?: FxPack }
+  | { t: "seal"; x: number; y: number; w: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

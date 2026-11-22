@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, SealBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -3255,6 +3255,17 @@ function PlayPage() {
         emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
         setLift(uid);
         window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
+      }
+    }
+    // Tước đoạt (chủ game 22/11): quái vừa bị vô hiệu hoá thì chạy hiệu ứng ở ô của nó (quái ẩn mình thì không lộ).
+    if (!quiet && !tutorial && prev.mid === duel.mid) {
+      for (const side of [0, 1] as const) {
+        duel.players[side].field.forEach((mon, index) => {
+          if (!mon?.seal || mon.lurk) return;
+          if (fieldMon(prev, mon.uid)?.seal) return;
+          const box = SLOT_BOX[screenSide(side, viewerNow)][index];
+          emitFx({ t: "seal", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        });
       }
     }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
@@ -9174,6 +9185,7 @@ function PlayPage() {
         <FireBurst />
         <HealBlast />
         <FlareBlast />
+        <SealBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
@@ -10032,7 +10044,7 @@ function BoardSlot({
       {thrust === "rouse" || thrust === "cast" ? <i className="rouse-aura" aria-hidden="true" /> : null}
       {thrust === "ram" && ramAng !== undefined ? <i className="ram-trail" style={{ "--ang": `${ramAng}rad` } as CSSProperties} aria-hidden="true" /> : null}
       <span
-        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
+        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}${!mask && sealed(mon) ? " is-sealed" : ""}`}
       >
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>

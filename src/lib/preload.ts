@@ -80,6 +80,7 @@ export const FX_VIDEOS = [
   "/fx/dai-hong-thuy.webm?v=1",
   "/fx/hoi-mau.webm?v=1",
   "/fx/phat-quang.webm?v=1",
+  "/fx/vo-hieu.webm?v=1",
   "/fx/suong-mu-hinh1.webm?v=1",
   "/fx/suong-mu-hinh2.webm?v=1",
   "/fx/thuy-tru.webm?v=1",
