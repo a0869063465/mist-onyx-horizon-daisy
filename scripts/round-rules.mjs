@@ -1753,6 +1753,21 @@ test("Giải giới lúc Cò quay đã lên chuỗi: máy quay vẫn chạy hế
   assert.ok(at(x, 0, 0).seal && !at(x, 0, 0).seal.launch, "hết dấu");
 });
 
+test("Giải giới tắt skill bị động: Chiến binh rồng nhận đủ sát thương, Khổng lồ 1 mắt đánh không tốn mana, không tăng công", () => {
+  let s = board({ 0: ["khong-lo-mot-mat", { atk: 4, def: 0, hp: 20, maxHp: 20 }] }, { 0: ["chien-binh-rong", { atk: 0, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  const plain = drain(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  const sealedBoth = D.sealMon(D.sealMon(s, 0, uid(s, 0, 0), "Giải giới"), 1, uid(s, 1, 0), "Giải giới");
+  const giant = at(sealedBoth, 0, 0);
+  const swung = drain(D.attackMonster(sealedBoth, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(swung.players[0].orb, 5, "không tốn mana: " + swung.live);
+  assert.equal(at(swung, 0, 0).atk, giant.atk, "không tăng công");
+  const lost = at(sealedBoth, 1, 0).hp - at(swung, 1, 0).hp;
+  const dragon = at(sealedBoth, 1, 0);
+  assert.equal(lost, Math.min(Math.max(0, giant.atk - dragon.def), dragon.hp), "nhận đủ sát thương ngay (trừ thủ gốc): " + swung.live);
+  assert.ok(20 - at(plain, 1, 0).hp < lost, "không bị giải giới thì Vảy rồng chia nhỏ");
+});
+
 test("Giải giới: mọi lá có skill bị động/phản ứng đều có dòng trong seal-passives.ts", () => {
   const need = Object.entries(SB.SKILL_BOOK)
     .filter(([, list]) => list.some((e) => e.kind === "passive" || e.kind === "spell"))
