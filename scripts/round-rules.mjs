@@ -1646,6 +1646,49 @@ test("Hấp thụ ma pháp nuốt Quả trứng thiên sứ: đòn đánh vẫn 
   assert.ok(at(done, 1, 0).hp < 20, "đòn vẫn vào: " + done.live);
 });
 
+function sealOn(s, foeSlot) {
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+  let next = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, foeSlot), 0);
+  for (let i = 0; i < 4 && next.step === "respond"; i += 1) next = D.passResponse(next);
+  return next;
+}
+
+test("Tê liệt (Đôi mắt trấn giữ): khoá 2 lượt, đồng hồ về Đồng hồ khó đoán, không tự đổi dạng", () => {
+  const s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["dong-ho-hung-bao", { clockLeft: 1 }] });
+  const done = sealOn(s, 0);
+  const mon = at(done, 1, 0);
+  assert.equal(mon.cardId, "dong-ho-kho-doan", done.live);
+  assert.equal(mon.seal, 2);
+  assert.ok(mon.stun >= 2);
+  assert.ok(done.players[0].orb < 5, "tốn mana");
+  const later = closeRound(done);
+  assert.equal(at(later, 1, 0).cardId, "dong-ho-kho-doan", "không tự đổi dạng");
+  const free = closeRound(later);
+  assert.ok(!(at(free, 1, 0).seal > 0), "hết 2 lượt");
+  assert.equal(at(free, 1, 0).stun, 0);
+});
+
+test("Tê liệt: Rồng bọc trứng mất thế thủ, không đổi thế; quái ẩn bị lật", () => {
+  const s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["rong-boc-trung", { stance: "guard" }], 1: ["may-chem", { lurk: { left: 4 } }] });
+  const done = sealOn(s, 0);
+  const dragon = at(done, 1, 0);
+  assert.equal(dragon.stance, "attack");
+  assert.equal(dragon.seal, 2, done.live);
+  const revealed = sealOn({ ...s, players: [s.players[0], s.players[1]] }, 1);
+  assert.ok(!at(revealed, 1, 1).lurk, "quái ẩn lật: " + revealed.live);
+  assert.equal(at(revealed, 1, 1).seal, 2);
+});
+
+test("Tê liệt: Kén ngài đang hoá kén về Sâu non, chân kén mất hết", () => {
+  let s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["ken-ngai", { level: 2 }] });
+  const host = uid(s, 1, 0);
+  s = board({ 0: ["doi-mat-tran-giu", {}] }, { 0: ["ken-ngai", { level: 2 }], 1: ["chan-ken", { host }] });
+  const fixed = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m, k) => (m && k === 1 ? { ...m, host: p.field[0].uid } : m)) } : p)) };
+  const done = sealOn(fixed, 0);
+  assert.equal(at(done, 1, 0).cardId, "sau-non", done.live);
+  assert.equal(at(done, 1, 1), null, "chân kén mất");
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

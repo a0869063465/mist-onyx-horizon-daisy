@@ -148,6 +148,9 @@ export type FieldMon = {
   /** Luật L2 quái ẩn (hidden-kinds.ts): `left` vòng còn đứng úp, `wake` vòng còn chờ kích hoạt (kiểu 2), `ready` đã
    *  chớp hồng, `hit` đã bị đánh/kỹ năng (giao tranh xong thì về xấp). */
   lurk?: { left: number; wake?: number; ready?: boolean; hit?: boolean };
+  /** Tê liệt của Đôi mắt trấn giữ (chủ game 22/11): số lượt còn bị vô hiệu hoá mọi skill (kể cả đổi dạng, tự đổi
+   *  trạng thái, hiệu ứng lật); đi kèm `stun` cùng số lượt. */
+  seal?: number;
 };
 
 export type PileKind = "monster" | "spell";
@@ -721,6 +724,7 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "phu-thuy-thoi-gian": [{ index: 0, cast: "aim" }],
   "kiem-si-lua-thieng": [{ index: 0, cast: "aim" }],
   "ong-khong-lo": [{ index: 0, cast: "aim" }],
+  "doi-mat-tran-giu": [{ index: 0, cast: "aim" }],
   "phu-thuy-rung-den": [{ index: 0, cast: "aim" }],
   "mo-voi-ma-mut": [{ index: 0, cast: "aim" }],
   "yeu-tinh-chuc-phuc": [{ index: 0, cast: "aim" }],
@@ -2066,6 +2070,19 @@ function stuck(mon: FieldMon) {
   return mon.stun > 0 || (mon.chain ?? 0) > 0;
 }
 
+/** Đôi mắt trấn giữ (chủ game 22/11). */
+export const SEALER = "doi-mat-tran-giu";
+
+/** Đang bị Tê liệt: mọi skill bị vô hiệu hoá (cả thế công/thủ, tự đổi trạng thái của đồng hồ). */
+export function sealed(mon: FieldMon | null | undefined): boolean {
+  return (mon?.seal ?? 0) > 0;
+}
+
+/** Số lượt khoá của Tê liệt, đọc từ chữ lá. */
+function sealTurns(): number {
+  return grabNums(skillText(SEALER), /(\d+)\s*lượt/gi)[0] ?? 2;
+}
+
 /** Không hành động được: khống chế, hoặc đang đứng ở sân bên kia vì Hộp ma thuật (không ai điều khiển). */
 function held(mon: FieldMon) {
   return stuck(mon) || mon.abroad !== undefined;
@@ -2088,7 +2105,7 @@ function barred(mon: FieldMon) {
 }
 
 function guardBonus(mon: FieldMon) {
-  return mon.cardId === "rong-boc-trung" && mon.stance === "guard" ? skillFigure(mon.cardId, "guard", 2) : 0;
+  return mon.cardId === "rong-boc-trung" && mon.stance === "guard" && !sealed(mon) ? skillFigure(mon.cardId, "guard", 2) : 0;
 }
 
 function auraGuard(allies: Array<FieldMon | null> | undefined, mon: FieldMon) {
@@ -2129,12 +2146,14 @@ export function harmShift(mon: FieldMon) {
   if ((mon.chain ?? 0) > 0 || (mon.gag ?? 0) > 0 || mon.poison || mon.erode) return true;
   if (mon.wet && mon.wet < 90) return true;
   if (mon.hex && mon.hex.left > 0) return true;
+  if ((mon.seal ?? 0) > 0) return true;
   return mon.noBlock && !isStill(mon.cardId);
 }
 
 function freshHarm(mon: FieldMon): Partial<FieldMon> {
   const part: Partial<FieldMon> = {};
-  if (mon.stun > 0) part.stun = grabNums(skillText("ong-khong-lo"), /(\d+)\s*lượt/gi)[0] ?? 5;
+  if (mon.stun > 0) part.stun = (mon.seal ?? 0) > 0 ? sealTurns() : grabNums(skillText("ong-khong-lo"), /(\d+)\s*lượt/gi)[0] ?? 5;
+  if ((mon.seal ?? 0) > 0) part.seal = sealTurns();
   if (mon.bleed > 0) part.bleed = mon.bleed;
   if (mon.curse) part.curse = true;
   if (mon.vulnerable > 0) part.vulnerable = mon.vulnerable;
@@ -2164,6 +2183,7 @@ function clearHarm(mon: FieldMon): FieldMon {
     erode: undefined,
     wet: mon.wet && mon.wet >= 90 ? mon.wet : undefined,
     hex: undefined,
+    seal: undefined,
     noBlock: isStill(mon.cardId) ? true : false,
   };
 }
@@ -2184,7 +2204,7 @@ function liveMdef(mon: FieldMon, allies?: Array<FieldMon | null>) {
 
 function rawAtk(mon: FieldMon) {
   let atk = mon.atk + (mon.blessAtk ?? 0) + (mon.clash?.atk ?? 0);
-  if (mon.cardId === "rong-boc-trung" && mon.stance === "attack") atk += skillFigure(mon.cardId, "atk", 4);
+  if (mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !sealed(mon)) atk += skillFigure(mon.cardId, "atk", 4);
   if (mon.cardId === "con-thinh-no-cua-hai-vuong") atk += 3 * (mon.stored ?? 0);
   return atk;
 }
@@ -2202,7 +2222,7 @@ export function hexLocked(mon: FieldMon | null | undefined) {
 
 export function visibleStats(mon: FieldMon, allies: Array<FieldMon | null>) {
   const aura = auraGuard(allies, mon);
-  const stanceAtk = mon.cardId === "rong-boc-trung" && mon.stance === "attack";
+  const stanceAtk = mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !sealed(mon);
   return {
     atk: liveAtk(mon) + (mon.lava ?? 0),
     def: liveDef(mon, allies),
@@ -6635,6 +6655,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "ken-ngai") return chipLabel(cardId, "hatch");
   if (isHexer(cardId) || cardId === "trieu-hoi-ac-ma") return chipLabel(cardId, "hex");
   if (cardId === "ong-khong-lo") return chipLabel(cardId, "stun");
+  if (cardId === SEALER) return chipLabel(cardId, "seal");
   if (cardId === "mo-voi-ma-mut") return chipLabel(cardId, "burst");
   if (cardId === "ngai-khong-lo" || cardId === "ngai-nu-hoang" || cardId === "ngai-hoan-my") return chipLabel(cardId, "dust");
   if (cardId === "sua-hut-ma-phap") return chipLabel(cardId, "spit");
@@ -6686,7 +6707,7 @@ function rebound(state: Duel, victimUid: string): Duel {
   if (!victim) return note(state, "Chọn một kẻ địch để phản đòn.");
   const casterUid = pending.kind === "beam" ? pending.caster : pending.kind === "face" || pending.kind === "melee" ? pending.attacker : "";
   const caster = state.players[0].field.find((mon) => mon?.uid === casterUid) ?? state.players[1].field.find((mon) => mon?.uid === casterUid) ?? null;
-  if (pending.kind === "beam" && caster?.cardId === "ong-khong-lo") return note(state, "Lá chắn phản đòn không phản được đòn trói.");
+  if (pending.kind === "beam" && (caster?.cardId === "ong-khong-lo" || caster?.cardId === SEALER)) return note(state, "Lá chắn phản đòn không phản được đòn trói.");
   if (pending.kind === "beam" && !caster) return note(state, "Không còn quái thi triển.");
   if ((pending.kind === "face" || pending.kind === "melee") && !caster?.horn && !caster?.gaze && !isHell(caster?.cardId ?? "")) return note(state, "Không có đòn kỹ năng để phản.");
   if (pending.kind !== "beam" && pending.kind !== "face" && pending.kind !== "melee") return note(state, "Không có đòn kỹ năng để phản.");
@@ -7014,7 +7035,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     const horn = Boolean(attacker?.horn || attacker?.gaze);
     if (pending?.kind === "beam") {
       const caster = state.players[0].field.find((mon) => mon?.uid === pending.caster) ?? state.players[1].field.find((mon) => mon?.uid === pending.caster);
-      if (caster?.cardId === "ong-khong-lo") return note(state, "Lá chắn phản đòn không phản được đòn trói.");
+      if (caster?.cardId === "ong-khong-lo" || caster?.cardId === SEALER) return note(state, "Lá chắn phản đòn không phản được đòn trói.");
     }
     if (pending?.kind !== "beam" && !horn) return note(state, "Chỉ phản được đòn kỹ năng.");
     const reactor = state.hold?.priority ?? ((1 - state.turn) as Side);
@@ -7680,6 +7701,44 @@ function lurkFlip(state: Duel, side: Side, uid: string, why: "hit" | "time" | "w
   const field = state.players[side].field.map((unit) => (unit?.uid === uid ? { ...unit, lurk: undefined } : unit)) as Player["field"];
   const why_ = why === "hit" ? "bị lộ mặt" : why === "wake" ? "kích hoạt" : `hết ${LURK_ROUNDS} vòng`;
   return note(patch(state, side, { ...state.players[side], field }), `Quái ẩn lật mặt: ${cardOf(mon).name} (${why_}), thành quái thường.`, "info");
+}
+
+/**
+ * Tê liệt (Đôi mắt trấn giữ, chủ game 22/11): khoá quái trong 2 lượt (tê liệt), vô hiệu hoá mọi skill. Quái ẩn bị lật
+ * lên, không có hiệu ứng lật (kể cả về xấp trong Sương mù). Quái nhiều dạng về dạng ban đầu: đồng hồ về Đồng hồ khó
+ * đoán, Rồng bọc trứng bỏ thế công/thủ; Kén ngài đang hoá kén thì huỷ, về Sâu non, chân kén mất hết. Áp cả quái 5 sao.
+ */
+function sealMon(state: Duel, side: Side, uid: string, skill: string): Duel {
+  const player = state.players[side];
+  const mon = player.field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon) return state;
+  const turns = sealTurns();
+  const bits: string[] = [];
+  let unit: FieldMon = mon;
+  if (unit.lurk) {
+    flashMon(uid);
+    unit = { ...unit, lurk: undefined };
+    bits.push(`Quái ẩn lật mặt: ${cardOf(unit).name}.`);
+  }
+  if (clockForm(unit.cardId)) {
+    unit = shiftClock(unit, CLOCK);
+    unit = { ...unit, clockLeft: undefined };
+    bits.push(`${cardOf(mon).name} về ${cardOf(unit).name}.`);
+  }
+  if (unit.cardId === "rong-boc-trung") unit = { ...unit, stance: "attack", stanceUsed: true };
+  let legs = new Set<string>();
+  if (unit.cardId === "ken-ngai") {
+    const card = monsterCard("sau-non");
+    legs = new Set(player.field.flatMap((leg) => (leg?.host === uid ? [leg.uid] : [])));
+    if (card) {
+      unit = { ...unit, cardId: "sau-non", atk: card.atk, def: card.def, mdef: card.mdef, maxHp: card.hp, hp: Math.max(1, Math.min(card.hp, unit.hp)), level: 1, noBlock: false };
+      bits.push(`Hoá Kén bị huỷ, về ${card.name}${legs.size ? ", chân kén mất hết" : ""}.`);
+    }
+  }
+  unit = { ...unit, dim: true, stun: Math.max(unit.stun, turns), seal: Math.max(unit.seal ?? 0, turns) };
+  const field = player.field.map((slot) => (slot?.uid === uid ? unit : slot && legs.has(slot.uid) ? null : slot)) as Player["field"];
+  const next = patch(state, side, { ...player, field });
+  return note(next, [`${skill} lên ${cardOf(unit).name} trong ${turns} lượt, vô hiệu hoá mọi kỹ năng.`, ...bits].join(" "), "spell");
 }
 
 /**
@@ -8665,7 +8724,7 @@ function clockTick(state: Duel): { state: Duel; line: string } {
     const player = next.players[side];
     if (!player.field.some((mon) => mon && clockForm(mon.cardId) && !mon.lurk && mon.hp > 0)) continue;
     const field = player.field.map((mon) => {
-      if (!mon || !clockForm(mon.cardId) || mon.lurk || mon.hp <= 0) return mon;
+      if (!mon || !clockForm(mon.cardId) || mon.lurk || mon.hp <= 0 || sealed(mon)) return mon;
       const left = (mon.clockLeft ?? CLOCK_TURNS) - 1;
       if (left > 0) return { ...mon, clockLeft: left };
       const to = mon.cardId === CLOCK_FIERCE ? CLOCK_FRAIL : CLOCK_FIERCE;
@@ -9254,6 +9313,17 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
     let next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
     next = patch(next, foe, { ...them, field: foeField });
     return note(next, `${castName(mon.cardId, skillIndex)} lên ${cardOf(target).name}.`);
+  }
+  if (mon.cardId === SEALER) {
+    if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
+    const target = state.players[foe].field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
+    if (!target) return note(state, "Chọn một quái đối thủ.");
+    const before = you.stars;
+    const paid = pay(you, skillManaCost(mon.cardId, 1));
+    if (!paid) return note(state, "Cần 1 gem.");
+    const yourField = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
+    const next = pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars);
+    return sealMon(next, foe, target.uid, castName(mon.cardId, skillIndex));
   }
   if (mon.cardId === "ong-khong-lo") {
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
@@ -10015,6 +10085,7 @@ export function toggleStance(state: Duel, uid: string): Duel {
   const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
   if (!mon || mon.dim || held(mon)) return state;
   if (mon.cardId !== "rong-boc-trung") return note(state, `Chỉ ${monsterCard("rong-boc-trung")?.name ?? ""} đổi được thế.`);
+  if (sealed(mon)) return note(state, `${cardOf(mon).name} đang bị vô hiệu hoá kỹ năng.`);
   if (mon.stanceUsed) return note(state, "Mỗi lượt chỉ đổi thế một lần, trước khi tấn công.");
   const stance: "attack" | "guard" = mon.stance === "attack" ? "guard" : "attack";
   const field = you.field.map((unit) => (unit?.uid === uid ? { ...unit, stance, stanceUsed: true } : unit));
@@ -10690,7 +10761,7 @@ function endTurnCore(state: Duel): Duel {
       if (!mon || mon.copy) return null;
       if (mon.cardId === PREY && mon.preyAim) return null;
       const heal =
-        (mon.cardId === "rong-boc-trung" && mon.stance === "guard" ? skillFigure(mon.cardId, "heal", 3) : 0) +
+        (mon.cardId === "rong-boc-trung" && mon.stance === "guard" && !sealed(mon) ? skillFigure(mon.cardId, "heal", 3) : 0) +
         (mon.cardId === "ken-ngai" || mon.cardId === "chan-ken" ? skillFigure(mon.cardId, "heal", 1) : 0);
       const clown = mon.cardId === "ga-he-dang-so";
       const rabbit = mon.cardId === "tho-den-tinh-nghich";
@@ -10711,6 +10782,7 @@ function endTurnCore(state: Duel): Duel {
         stored: mon.cardId === SHADE && (mon.shown ?? 0) === 1 ? undefined : mon.stored,
         hp: Math.min(cap, mon.hp + heal),
         stun: Math.max(0, mon.stun - 1),
+        seal: (mon.seal ?? 0) > 1 ? (mon.seal ?? 0) - 1 : undefined,
         hex: mon.hex && mon.hex.left > 1 ? { left: mon.hex.left - 1 } : undefined,
         vulnerable: Math.max(0, mon.vulnerable - 1),
         safe: Math.max(0, (mon.safe ?? 0) - 1),
@@ -10772,6 +10844,7 @@ function endTurnCore(state: Duel): Duel {
         hp: cocoon ? Math.min(cap, mon.hp + skillFigure(mon.cardId, "heal", 1)) : mon.hp,
         level: mon.cardId === "ken-ngai" ? (mon.level ?? 0) + 1 : mon.level,
         stun: Math.max(0, mon.stun - 1),
+        seal: (mon.seal ?? 0) > 1 ? (mon.seal ?? 0) - 1 : undefined,
         hex: mon.hex && mon.hex.left > 1 ? { left: mon.hex.left - 1 } : undefined,
         vulnerable: Math.max(0, mon.vulnerable - 1),
         chain: Math.max(0, (mon.chain ?? 0) - 1),
