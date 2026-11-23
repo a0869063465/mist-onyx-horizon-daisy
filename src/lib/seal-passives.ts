@@ -58,6 +58,7 @@ export const SEAL_PASSIVES: Record<string, { status: SealStatus; note?: string }
   "ky-si-cuoi-rong": { status: "chan", note: "Mũi thương bị nguyền rủa, Lửa địa ngục (riding)" },
   "chien-binh-huyen-thoai": { status: "chan", note: "Chiến sư (withLegend), Bền bỉ" },
   "chan-ken": { status: "chan", note: "Chân kén (không đỡ hộ kén, không hồi máu)" },
+  "lang-nha-bac": { status: "chan", note: "Thủ lĩnh (không tốn mana, không buff khi bị giải giới)" },
   // Chỉ dùng từ tay
   "cuc-bong-ma-quai": { status: "tay", note: "Bông mềm" },
   // Cố ý giữ

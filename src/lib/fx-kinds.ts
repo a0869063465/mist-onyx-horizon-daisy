@@ -58,6 +58,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "rong-con": ["fire", "claw"],
   "chien-binh-rong": ["fire", "blade"],
   "chien-binh-ky-nhong": ["nature", "blade"],
+  "lang-nha-bac": ["nature", "blade"],
+  "soi-con": ["nature", "blade"],
   "qua-trung-sinh-menh": ["holy", "magic"],
   "dong-ho-kho-doan": ["holy", "magic"],
   "dong-ho-hung-bao": ["holy", "magic"],

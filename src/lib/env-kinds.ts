@@ -57,6 +57,8 @@ export const ENV_KINDS: Record<string, string[]> = {
     "te-giac-be-con",
     "te-giac-hieu-thang",
     "te-giac-chien-binh",
+    "lang-nha-bac",
+    "soi-con",
     "hoa-an-thit-nguoi",
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
