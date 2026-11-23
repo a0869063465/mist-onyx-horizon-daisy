@@ -1,5 +1,13 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Z2 — bàn giao cho tài khoản khác (23/11, nhánh `Z2`, CHƯA áp `main`)
+1. Việc vừa làm: lưu toàn bộ nhánh `gop-giai-gioi` (gộp main + Giải giới, mục ngay dưới, tsc sạch, round-rules 120/120) lên nhánh `Z2`. Chưa sửa thêm gì cho việc Chọn bộ bài.
+2. Hiện trạng: chưa nhận ảnh/video mới. Việc Chọn bộ bài chưa làm: A3, A4 là ảnh linh kiện chủ game gửi cho màn Chọn bộ bài (đã nằm trong `public/ui/deck/`, xem mục "Màn Chọn bộ bài mới" bên dưới); hỏi chủ game gửi lại nếu cần.
+3. Việc sắp làm (**Sonnet 5.5 medium**, đọc skill `giao-dien` trước):
+   a. Ghi lỗi vào `TIEP-TUC.md` + `AGENTS.project.md`: chủ game đưa ảnh linh kiện thì CẮT NGUYÊN ảnh gắn lên, không tự vẽ lại bằng CSS/SVG (đã có sẵn một dòng luật này trong AGENTS.project.md, kiểm lại, thêm "LỖI ĐÃ MẮC" nếu thiếu).
+   b. Cắt A3, A4 thành các miếng ảnh, gắn vào màn Chọn bộ bài, bỏ phần CSS `.dk2-*` tự vẽ. Xong DỪNG, gửi ảnh miếng cắt cho chủ game xem.
+   Ngoài ra: nhánh còn chờ chủ game cho đẩy và áp `main` (xem mục Gộp main + Giải giới); bài Phục kích chập chờn có từ trước; chưa chụp trong game các cảnh Giải giới/Lính đá/Tinh linh đàn hạc/Tử thần/Nắng và gió/Sát nhân bắt giữ.
+
 ## Gộp main + Giải giới (23/11, Opus 5.5 high, nhánh `gop-giai-gioi`, CHƯA đẩy, CHƯA áp `main`)
 1. Việc vừa làm: nhánh `doi-ten-khoa-1` (main, Khoá 1 đổi tên `blockLock*`) gộp với `ccr-42ba0a1d-w5tvmy` (Giải giới, Lang Nha Bạc, skill `la-moi`); gỡ 19 đoạn xung đột. Chủ game chốt: A1 quái bị Giải giới không cho mana đầu lượt (`turnGifts`); A2 Lính đá giữ thủ đã mòn (min gốc/hiện tại), không ép đánh, không mòn thêm; A3 `rabbitDodge` giữ cả 2 điều kiện (Giải giới, Đòn cuối cùng). C: chặn nội tại Tinh linh đàn hạc, Thiên sứ vô hình (Khoá 1 qua `monKeywords`, Mũi tên thiên sứ), Nắng và gió (Gió dịu đi), Tử thần (Gặt hồn); Sát nhân bắt giữ đặt sau cửa chặn Giải giới.
 2. Hiện trạng: tsc sạch, round-rules 120/120 (+2 bài; bài Phục kích chập chờn cũ). Chưa chụp trong game.
