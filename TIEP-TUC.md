@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Skill làm lá mới (23/11, Haiku 5.5, nhánh `ccr-42ba0a1d-w5tvmy`, ĐÃ LÀM)
+1. Việc vừa làm: tạo `.claude/skills/la-moi/SKILL.md` (thứ tự làm, mô hình từng phần, file dễ quên). Mỗi lần làm lá mới phải đọc skill này.
+2. Hiện trạng: Lang Nha Bạc + Sói con mới có dữ liệu, chưa có luật. Skill vừa viết chưa được dùng thử.
+3. Việc sắp làm: chờ chủ game đổi mô hình + ok. Tiếng hú gọi bầy = Sonnet 5.5 high; Thủ lĩnh = Opus 5.5 high.
+
 ## Lang Nha Bạc + Sói con (23/11, Sonnet 5.5, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
 1. Việc vừa làm: dữ liệu lá `lang-nha-bac` (2★ 0 mana 2/0/0/3, Rừng rậm, chữ lá chủ game) + `soi-con` (FORMS, 1★ 1/0/0/1, ngoài bộ, không skill); ảnh `public/art/lang-nha-bac.jpg`, `soi-con.jpg` (có nền, chưa cắt); i18n, fx-kinds, power-balance-base, card-edits chip `howl`, field-chips, skill-book (Thủ lĩnh P, Tiếng hú slow A), seal-passives. tsc sạch, round-rules 95/95.
 2. Hiện trạng: nhận 2 ảnh. CHƯA có luật: Lang Nha Bạc hiện là quái thường. Chủ game chốt: Thủ lĩnh +2 công CỘNG DỒN, "công thấp hơn" theo công hiện tại, Sói con ngoài bộ; "không tốn thêm mana" hiểu là chỉ miễn 1 mana tấn công của Thủ lĩnh (2 mana gọi bầy vẫn trả). Icon skill chưa có (đang dùng laurel-crown, wolf-head), chưa xin ảnh không nền.
