@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Z3: Lá chắn gộp 1 loại + video khiên (23/11, CHƯA LÀM CODE, chủ game dừng để tài khoản khác làm tiếp)
+1. Việc vừa làm: chỉ nghiên cứu, chưa sửa code. Ghi hết yêu cầu, câu trả lời chốt, đo video, bản đồ code vào `docs/z3-khien/README.md` (kèm 3 video `buffkhien/dokhien/matkhien.mp4`). Tên Z3 trùng mục Z3 khung mô tả quái trong `docs/y-chua-lam.md` nhưng là việc KHÁC.
+2. Hiện trạng: nhận 3 video. Luật chốt: 1 loại lá chắn thay hết khiên vật lý/phép, chặn trọn 1 đòn (mọi loại sát thương, mọi đợt), vỡ ngay, tự mất sau 2 lượt chung, khiên vĩnh viễn cũng thành 2 lượt; 3 lá Hiệp sĩ (hộ vệ, hậu, vua) để chủ game sửa sau.
+3. Việc sắp làm: luật = **Opus 5.5, nỗ lực high**; ghép video + canh âm khớp lúc đòn tới = **Sonnet 5.5, nỗ lực medium**; xong đưa mô tả cũ cho chủ game viết lại.
+
 ## Tử thần của những lá bài + hiệu ứng bỏ lá (22/11, nhánh `khong-lo-moi`, CHƯA áp `main`)
 1. Việc vừa làm (Opus 5.5, phần luật): lá `tu-than-cua-nhung-la-bai` (2★ 0 mana 4/0/0/2, hệ Vương quốc `ENV_KINDS["vuong-quoc"]`, ảnh chủ game, chữ nguyên văn), nội tại Gặt hồn: duel.ts `REAPER`, `reapPlain` (tấn công chủ động tốn 1 mana như Khổng lồ 1 mắt; chặn/Trả đòn không tốn), `reapHand` (đòn vào được người chơi, người đó còn sống: huỷ 1 lá ngẫu nhiên trong cả tay, nối "Gặt hồn: …" vào thông báo đòn). `Duel.discard` {id, drops[{side, at "r:i"/"s:i" theo tay trước khi bỏ, card}]} ghi cả ở Gặt hồn và Sinh mệnh mới (cho hiệu ứng bỏ lá). Album Vương đô giờ có 1 lá (No.541, bìa = hình Tử thần, `ENV_TITLES`). Icon tạm `grim-reaper` (trùng Kẻ săn mồi tử thần). round-rules 88/88 (+1 bài).
 2. Hiện trạng: nhận 1 ảnh lá + 1 video bỏ lá (`9e8e8963`, 960×960 3 s, lá nền xanh 496×690 tỉ lệ 0,72 ≈ lá tay 0,71, tan thành lửa xanh lá cuốn sang phải, có âm nhỏ).
