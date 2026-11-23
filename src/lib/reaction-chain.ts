@@ -33,7 +33,7 @@ export type FlowLink = { from?: FlowEnd; end: FlowEnd; tone: FlowTone; fork?: bo
 
 export type ChainOrb = {
   id: string;
-  kind: "attack" | "skill" | "spell" | "block" | "seal";
+  kind: "attack" | "skill" | "spell" | "block" | "blockLock";
   /** Who acts: the attacker's side, the caster's side, the spell's owner or the blocker's side. */
   side: Side;
   /** The monster that acts (attacker, caster, the bird of Roi điện, the blocker); null for a spell from the hand. */
@@ -671,24 +671,24 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
       coverShields.set(cover.target, orb);
     }
     // Khoá 1 (chủ game 22/11): an icon beside the striker's own, pink light to the monster it locked.
-    const seal = next.hold?.seal ?? null;
-    const sealKey = `block:${base}`;
-    if (seal && !list.some((orb) => orb.kind === "seal" && orb.base === sealKey && !orb.done)) {
-      const locked = monOf(next, seal.uid);
+    const blockLock = next.hold?.blockLock ?? null;
+    const blockLockKey = `block:${base}`;
+    if (blockLock && !list.some((orb) => orb.kind === "blockLock" && orb.base === blockLockKey && !orb.done)) {
+      const locked = monOf(next, blockLock.uid);
       list.push({
         id: `orb${orbSeq++}`,
-        kind: "seal",
-        side: sideOf(next, seal.by) ?? next.turn,
-        source: seal.by,
-        cardId: monOf(next, seal.by)?.cardId ?? null,
+        kind: "blockLock",
+        side: sideOf(next, blockLock.by) ?? next.turn,
+        source: blockLock.by,
+        cardId: monOf(next, blockLock.by)?.cardId ?? null,
         spell: null,
-        near: seal.by,
+        near: blockLock.by,
         by: null,
-        to: [{ end: { uid: seal.uid }, tone: "pink" }],
+        to: [{ end: { uid: blockLock.uid }, tone: "pink" }],
         tone: "pink",
         skill: null,
         strike: null,
-        base: sealKey,
+        base: blockLockKey,
         aim: null,
         notice: locked ? `Khoá 1: ${(monsterCard(locked.cardId)?.name ?? "Quái")} bị khoá hành động.` : next.live,
         done: false,
@@ -753,7 +753,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();
   list = list.map((orb) => {
-    if (orb.kind === "block" || orb.kind === "seal") return orb;
+    if (orb.kind === "block" || orb.kind === "blockLock") return orb;
     // The mirror stands until the attack it stops is over.
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);
@@ -770,7 +770,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
     return { ...orb, done, end, result: !orb.end && end === "fire" ? next.live : orb.result };
   });
   return list.map((orb) => {
-    if ((orb.kind !== "block" && orb.kind !== "seal") || orb.done) return orb;
+    if ((orb.kind !== "block" && orb.kind !== "blockLock") || orb.done) return orb;
     // A block icon on one branch goes with the spread it blocks ("block:<base>:<target>").
     const key = orb.base && orb.cover ? orb.base.slice(0, -(orb.cover.length + 1)) : orb.base;
     if (key && ended.has(key)) return { ...orb, done: true, end: ended.get(key) ?? "fizzle" };

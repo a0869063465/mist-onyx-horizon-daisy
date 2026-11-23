@@ -157,7 +157,7 @@ export type FieldMon = {
   lurk?: { left: number; wake?: number; ready?: boolean; hit?: boolean };
   /** Khoá 1 (chủ game 22/11): bị quái có keyword Khoá 1 khoá hành động trong hàng chờ đòn của nó (uid kẻ khoá). Là
    *  khống chế: không chặn, không Trả đòn, không làm gì; hết khi đòn đó xong hẳn. */
-  seal?: string;
+  blockLock?: string;
 };
 
 export type PileKind = "monster" | "spell";
@@ -273,7 +273,7 @@ export type Hold = {
    */
   eat?: { card: string; side: Side; back: Duel };
   /** Khoá 1 (chủ game 22/11): `by` (quái ra đòn) khoá hành động `uid` (1 quái địch) trong hàng chờ này. */
-  seal?: { by: string; uid: string };
+  blockLock?: { by: string; uid: string };
 };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
@@ -297,8 +297,8 @@ export type Duel = {
   skipped?: [boolean, boolean];
   /** Trả đòn: quái hàng trước vừa chịu đòn mà còn sống được đánh trả kẻ ra đòn (đánh thường hoặc kỹ năng). */
   counterAsk?: { uid: string; from: string; free?: boolean } | null;
-  /** Khoá 1 (chủ game 22/11): quái địch đã chọn khoá, chờ đòn kế tiếp của `by` vào hàng chờ (`lockStrike`). */
-  lockAim?: { by: string; uid: string } | null;
+  /** Khoá 1 (chủ game 22/11): quái địch đã chọn khoá, chờ đòn kế tiếp của `by` vào hàng chờ (`blockLockStrike`). */
+  blockLockAim?: { by: string; uid: string } | null;
   /** Bên đang Trả đòn bằng kỹ năng: xong thì quyền ở lại bên đó, như sau đòn của đối thủ. */
   countering?: Side | null;
   /** Trả đòn after a skill that landed on several (chủ game 29/10): the front-row monsters still to strike back at
@@ -1072,7 +1072,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))));
+  const after = settleBlockLock(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -2142,7 +2142,7 @@ function isSea(id: string) {
 }
 
 function stuck(mon: FieldMon) {
-  return mon.stun > 0 || (mon.chain ?? 0) > 0 || Boolean(mon.seal);
+  return mon.stun > 0 || (mon.chain ?? 0) > 0 || Boolean(mon.blockLock);
 }
 
 /** Không hành động được: khống chế, hoặc đang đứng ở sân bên kia vì Hộp ma thuật (không ai điều khiển). */
@@ -4379,7 +4379,7 @@ function answersLater(attacker: FieldMon, defender: FieldMon, meleeBlow: boolean
 function frontCounter(victim: FieldMon | null, attacker: FieldMon | null): victim is FieldMon {
   if (!victim || !attacker || victim.hp <= 0 || attacker.hp <= 0) return false;
   if (victim.row === "back" || attacker.row === "back" || victim.abroad !== undefined) return false;
-  if (victim.stun > 0 || victim.cage || (victim.chain ?? 0) > 0 || (victim.path ?? 0) > 0 || victim.seal || hexLocked(victim)) return false;
+  if (victim.stun > 0 || victim.cage || (victim.chain ?? 0) > 0 || (victim.path ?? 0) > 0 || victim.blockLock || hexLocked(victim)) return false;
   return true;
 }
 
@@ -5271,18 +5271,18 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
  * Khoá 1 (chủ game 22/11): quái có keyword Khoá 1 chọn 1 quái địch rồi mới đánh hoặc dùng skill; quái đó bị khoá hành
  * động suốt hàng chờ của đòn ấy. `act` là hành động đánh / skill như thường. Không khoá được thì chạy như thường.
  */
-export function lockStrike(state: Duel, attackerUid: string, foeUid: string | null, act: (state: Duel) => Duel): Duel {
+export function blockLockStrike(state: Duel, attackerUid: string, foeUid: string | null, act: (state: Duel) => Duel): Duel {
   if (!foeUid) return act(state);
   const side = ownerSide(state, attackerUid);
   const attacker = side === null ? null : state.players[side].field.find((mon) => mon?.uid === attackerUid) ?? null;
   const foe = side === null ? null : state.players[(1 - side) as Side].field.find((mon) => mon?.uid === foeUid && mon.hp > 0) ?? null;
   if (!attacker || !foe || !keywordsOf(attacker.cardId).includes("khoa-1")) return act(state);
-  const next = act({ ...state, lockAim: { by: attackerUid, uid: foeUid } });
-  return next.lockAim ? { ...next, lockAim: null } : next;
+  const next = act({ ...state, blockLockAim: { by: attackerUid, uid: foeUid } });
+  return next.blockLockAim ? { ...next, blockLockAim: null } : next;
 }
 
 /** Quái có thể bị Khoá 1 bởi `attackerUid`: mọi quái địch còn sống. Rỗng thì không hỏi Khoá 1. */
-export function lockChoices(state: Duel, attackerUid: string): string[] {
+export function blockLockChoices(state: Duel, attackerUid: string): string[] {
   const side = ownerSide(state, attackerUid);
   const attacker = side === null ? null : state.players[side].field.find((mon) => mon?.uid === attackerUid) ?? null;
   if (side === null || !attacker || !keywordsOf(attacker.cardId).includes("khoa-1")) return [];
@@ -5290,8 +5290,8 @@ export function lockChoices(state: Duel, attackerUid: string): string[] {
 }
 
 /** Máy chọn Khoá 1: quái hàng trước mạnh nhất có thể chặn hoặc Trả đòn (ưu tiên mục tiêu nếu nó Trả đòn được). */
-export function aiLockPick(state: Duel, attackerUid: string, targetUid: string | null): string | null {
-  const picks = lockChoices(state, attackerUid);
+export function aiBlockLockPick(state: Duel, attackerUid: string, targetUid: string | null): string | null {
+  const picks = blockLockChoices(state, attackerUid);
   if (!picks.length) return null;
   const side = ownerSide(state, attackerUid);
   if (side === null) return null;
@@ -5304,27 +5304,27 @@ export function aiLockPick(state: Duel, attackerUid: string, targetUid: string |
 }
 
 /** Áp Khoá 1 khi đòn của kẻ khoá vừa vào hàng chờ; gỡ khoá khi mọi thứ đã xong hẳn. */
-function settleSeal(state: Duel): Duel {
+function settleBlockLock(state: Duel): Duel {
   let next = state;
-  const aim = next.lockAim;
+  const aim = next.blockLockAim;
   if (aim) {
     const striker = pendingStriker(next);
     if (next.hold && striker?.uid === aim.by) {
       const side = ownerSide(next, aim.uid);
       const foe = side === null ? null : next.players[side].field.find((mon) => mon?.uid === aim.uid) ?? null;
       if (side !== null && foe) {
-        next = patch(next, side, { ...next.players[side], field: next.players[side].field.map((mon) => (mon?.uid === aim.uid ? { ...mon, seal: aim.by } : mon)) as Player["field"] });
-        next = note({ ...next, hold: next.hold ? { ...next.hold, seal: { by: aim.by, uid: aim.uid } } : next.hold }, `Khoá 1: ${cardOf(foe).name} bị khoá hành động.`);
+        next = patch(next, side, { ...next.players[side], field: next.players[side].field.map((mon) => (mon?.uid === aim.uid ? { ...mon, blockLock: aim.by } : mon)) as Player["field"] });
+        next = note({ ...next, hold: next.hold ? { ...next.hold, blockLock: { by: aim.by, uid: aim.uid } } : next.hold }, `Khoá 1: ${cardOf(foe).name} bị khoá hành động.`);
       }
     }
-    next = { ...next, lockAim: null };
+    next = { ...next, blockLockAim: null };
   }
-  const sealed = next.players.some((player) => player.field.some((mon) => mon?.seal));
-  if (!sealed || !settled(next)) return next;
+  const blockLocked = next.players.some((player) => player.field.some((mon) => mon?.blockLock));
+  if (!blockLocked || !settled(next)) return next;
   for (const side of [0, 1] as const) {
     const player = next.players[side];
-    if (!player.field.some((mon) => mon?.seal)) continue;
-    next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.seal ? { ...mon, seal: undefined } : mon)) as Player["field"] });
+    if (!player.field.some((mon) => mon?.blockLock)) continue;
+    next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.blockLock ? { ...mon, blockLock: undefined } : mon)) as Player["field"] });
   }
   return next;
 }

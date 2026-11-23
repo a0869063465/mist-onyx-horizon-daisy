@@ -2011,25 +2011,25 @@ test("Khoá 1: quái bị khoá không chặn, không Trả đòn; hết đòn t
   const settle = (x) => { for (let i = 0; i < 6 && x.step === "respond"; i += 1) x = D.passResponse(x); return x; };
   let s = board({ 0: ["thien-su-vo-hinh"] }, { 0: ["rong-con", { atk: 2, def: 0, hp: 9, maxHp: 9 }], 1: ["may-chem", { atk: 2, def: 0, hp: 9, maxHp: 9 }] });
   const angel = uid(s, 0, 0);
-  assert.deepEqual(D.lockChoices(s, angel).sort(), [uid(s, 1, 0), uid(s, 1, 1)].sort());
-  const locked = D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackFace(x, angel));
-  assert.equal(locked.hold?.seal?.uid, uid(s, 1, 0), locked.live);
-  assert.equal(at(locked, 1, 0).seal, angel);
+  assert.deepEqual(D.blockLockChoices(s, angel).sort(), [uid(s, 1, 0), uid(s, 1, 1)].sort());
+  const locked = D.blockLockStrike(s, angel, uid(s, 1, 0), (x) => D.attackFace(x, angel));
+  assert.equal(locked.hold?.blockLock?.uid, uid(s, 1, 0), locked.live);
+  assert.equal(at(locked, 1, 0).blockLock, angel);
   assert.equal(D.assignBlock(locked, uid(s, 1, 0)).hold?.blocker ?? null, null, "quái bị khoá không chặn được");
   const pile = D.pileLeft(s.players[0]);
   const done = settle(locked);
   assert.ok(done.players[1].hp < s.players[1].hp);
   assert.equal(D.pileLeft(done.players[0]), pile - 1, "Mũi tên thiên sứ rút 1 lá");
   assert.equal(done.players[0].draws, s.players[0].draws, "không tính lượt rút");
-  assert.equal(at(done, 1, 0).seal, undefined, "hết đòn thì gỡ khoá");
+  assert.equal(at(done, 1, 0).blockLock, undefined, "hết đòn thì gỡ khoá");
   const blocked = settle(D.assignBlock(D.attackFace(s, angel), uid(s, 1, 1)));
   assert.equal(blocked.players[1].hp, s.players[1].hp);
   assert.equal(D.pileLeft(blocked.players[0]), pile, "bị chặn hết thì không rút");
   const free = settle(D.attackMonster(s, angel, uid(s, 1, 0)));
   assert.ok(free.counterAsk, "không khoá thì mục tiêu được Trả đòn");
-  const sealed = settle(D.lockStrike(s, angel, uid(s, 1, 0), (x) => D.attackMonster(x, angel, uid(s, 1, 0))));
-  assert.ok(!sealed.counterAsk, "mục tiêu bị khoá thì không Trả đòn");
-  assert.equal(at(sealed, 1, 0).seal, undefined);
+  const blockLocked = settle(D.blockLockStrike(s, angel, uid(s, 1, 0), (x) => D.attackMonster(x, angel, uid(s, 1, 0))));
+  assert.ok(!blockLocked.counterAsk, "mục tiêu bị khoá thì không Trả đòn");
+  assert.equal(at(blockLocked, 1, 0).blockLock, undefined);
 });
 
 test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 65% máu hiện tại + sao chuẩn lên quái/người chơi, phá lá tường thành; đạn mất trước thì huỷ, không tốn mana", () => {

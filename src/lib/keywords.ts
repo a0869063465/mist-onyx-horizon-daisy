@@ -8,7 +8,7 @@
  *
  * Bộ cũ (15): CÓ LUẬT CHUNG (duel.ts `keywordBarred`, `magicStrike`, `pierceLeft`): Bọc thép (thủ + thủ phép ≥ 3 mới chặn
  * được), Khổng lồ (máu ≥ 5), Siêu tốc (không ai chặn), Nanh vuốt (công ≥ 4), Luồn lách 2, Khoá 1 (trước là Luồn lách 1, chủ game 22/11: trước khi đánh hoặc
- * dùng skill chọn 1 quái địch, nó bị khoá hành động suốt hàng chờ đòn đó, duel.ts `lockStrike`), Đòn đánh phép (đòn đánh thường
+ * dùng skill chọn 1 quái địch, nó bị khoá hành động suốt hàng chờ đòn đó, duel.ts `blockLockStrike`), Đòn đánh phép (đòn đánh thường
  * gây sát thương phép), Đâm xuyên (sát thương thừa vào người chơi). NHÃN NHÓM, không luật chung:
  * - "khe-uoc" Khế ước (trước là Hiến tế): hy sinh máu của 1 hay nhiều quái để tạo hiệu ứng có lợi (sát thương người chơi
  *   địch, hồi máu người chơi, sát thương quái địch, tăng chỉ số...; chỉ là ví dụ).
