@@ -647,6 +647,34 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerTone": null,
     "shiftAt": null
   },
+  "doi-mat-tran-giu": {
+    "kind": "monster",
+    "stars": 2,
+    "mana": 0,
+    "atk": 2,
+    "def": 0,
+    "mdef": 1,
+    "hp": 4,
+    "text": "4e7e5adc",
+    "added": null,
+    "powerAt": "2026-11-22",
+    "powerTone": "down",
+    "shiftAt": "2026-11-23"
+  },
+  "lang-nha-bac": {
+    "kind": "monster",
+    "stars": 2,
+    "mana": 0,
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
+    "text": "bce334b0",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
   "chien-binh-ky-nhong": {
     "kind": "monster",
     "stars": 2,
@@ -811,6 +839,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "hp": 4,
     "text": "640758a0",
     "added": "2026-10-14",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "soi-con": {
+    "kind": "monster",
+    "stars": 1,
+    "mana": 0,
+    "atk": 1,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "text": "811c9dc5",
+    "added": null,
     "powerAt": null,
     "powerTone": null,
     "shiftAt": null

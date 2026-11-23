@@ -97,6 +97,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "thuong-quan-long": [A("Cò quay", "revolver")],
   "may-nem-bom-hinh-nhen": [A("Súng phóng lựu", "carpet-bombing")],
   "khong-lo-mot-mat": [P("Đập phá", "cyclops")],
+  "lang-nha-bac": [P("Thủ lĩnh", "laurel-crown"), slow(A("Tiếng hú gọi bầy", "wolf-head"))],
   "khong-lo-mac-giap": [P("Đập phá", "cyclops")],
   "khong-lo-thu-linh": [P("Đập phá", "cyclops")],
   "may-quay-thuong": [

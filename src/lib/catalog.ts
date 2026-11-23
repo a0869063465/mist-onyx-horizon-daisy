@@ -631,6 +631,30 @@ export const MONSTERS: MonsterCard[] = [
     "art": "dong-ho-kho-doan"
   },
   {
+    "id": "doi-mat-tran-giu",
+    "name": "Đôi mắt trấn giữ",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Giải giới**__\nTiêu hao 1 mana, chọn 1 mục tiêu quái địch và vô hiệu hoá nó trong lượt này.\n\nLưu ý: Quái bị vô hiệu hoá sẽ không kích hoạt được bất kỳ skill nào và bị loại bỏ hết tất cả buff, quay về hình dạng ban đầu của nó.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 1,
+    "hp": 4,
+    "art": "doi-mat-tran-giu"
+  },
+  {
+    "id": "lang-nha-bac",
+    "name": "Lang Nha Bạc",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Thủ lĩnh**__\nNội tại: Khi lao lên tấn công sẽ tiêu hao 1 mana, tăng công cho chính nó thêm 2 trong 3 lượt. Quái Thú đồng minh có công thấp hơn nó được +1 công.\n\n__**Tiếng hú gọi bầy**__\n(chậm): 2 mana, gọi ra 2 Sói con (ưu tiên hàng trước), khi đó dùng Thủ lĩnh trong cùng lượt sẽ không tốn thêm mana.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
+    "art": "lang-nha-bac"
+  },
+  {
     "id": "chien-binh-ky-nhong",
     "name": "Chiến binh kỳ nhông",
     "stars": 2,
@@ -785,6 +809,18 @@ export const MONSTERS: MonsterCard[] = [
 ];
 
 export const FORMS: MonsterCard[] = [
+  {
+    "id": "soi-con",
+    "name": "Sói con",
+    "stars": 1,
+    "gems": 0,
+    "skill": "",
+    "atk": 1,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "soi-con"
+  },
   {
     "id": "hiep-si-huyen-bi",
     "name": "Hiệp sĩ huyền bí",

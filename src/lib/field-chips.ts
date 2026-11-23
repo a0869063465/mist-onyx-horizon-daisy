@@ -58,6 +58,8 @@ const ROWS: Row[] = [
   { ids: ["phu-thuy-thoi-gian"], key: "age", cast: "aim", skill: 0 },
   { ids: ["kiem-si-lua-thieng"], key: "fire", cast: "aim", skill: 0 },
   { ids: ["ong-khong-lo"], key: "stun", cast: "aim", skill: 0, gate: orb(1) },
+  { ids: ["doi-mat-tran-giu"], key: "disarm", cast: "aim", skill: 0, gate: orb(1) },
+  { ids: ["lang-nha-bac"], key: "howl", cast: "declare", skill: 0, gate: (ctx) => ctx.room >= 1 && ctx.orb >= 2 },
   { ids: ["phu-thuy-rung-den"], key: "curse", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["mo-voi-ma-mut"], key: "burst", cast: "aim", skill: 0, gate: orb(1) },
   { ids: ["yeu-tinh-chuc-phuc"], key: "aid", cast: "aim", skill: 0, gate: pay(1) },

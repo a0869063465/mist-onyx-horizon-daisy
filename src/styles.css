@@ -15025,3 +15025,5 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .slot.is-thrust.is-mount .field-unit { filter: brightness(1.15) drop-shadow(0 0.35rem 0.5rem rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px rgba(255, 120, 190, 0.85)); }
 /* Lá tường thành của đối thủ chọn được làm mục tiêu Pháo kích. */
 .wall-card.is-shell { --alert-color: #ff4fa6; z-index: 13; box-shadow: 0 0 0 2px #ff4fa6, 0 0 0.9rem #ff4fa6, 0 0 1.6rem rgba(255, 79, 166, 0.7); animation: react-breathe 1.2s ease-in-out infinite; }
+/* Giải giới (chủ game 22/11): quái bị vô hiệu hoá xám đi như trong video, sáng lại khi hết vòng. */
+.field-unit.is-disarmed { filter: grayscale(0.85) brightness(0.92); transition: filter 0.6s ease 0.5s; }

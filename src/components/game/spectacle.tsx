@@ -469,7 +469,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom" || event.t === "disarm") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -887,6 +887,39 @@ export function BoomBlast() {
           muted
           playsInline
           style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Chủ game 22/11: Giải giới. Video 512×512 cùng cỡ/tâm với phát quang (lá 50% rộng, tâm 50% / 44,8%): tia sét xanh lục quét qua lá rồi lá xám đi. */
+export function DisarmBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "disarm") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
+      playCue("disarm");
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="flare-blast"
+          src={fxUrl("/fx/vo-hieu.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w * 2}%` }}
           onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
         />
       ))}

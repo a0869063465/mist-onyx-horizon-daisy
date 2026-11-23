@@ -1115,6 +1115,11 @@ export const PENDING_NOTES: string[] = [
   "Pháo kích của Rùa máy bắn đá: sát thương chuẩn bằng 65% máu hiện tại của quái làm đạn cộng số sao của nó.",
   "Thêm Tử thần của những lá bài (2 sao, công 4, máu 2, hệ Vương quốc) với nội tại Gặt hồn: tiêu hao 1 mana để tấn công, đánh vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên trên tay.",
   "Lá bị bỏ khỏi tay (Gặt hồn của Tử thần của những lá bài, Sinh mệnh mới của Quả trứng sinh mệnh) nhấc lên, bay vòng cung về góc phải trên rồi cháy tan thành lửa xanh lá; lá của đối thủ cũng vậy nhưng úp.",
+  "Thêm quái Đôi mắt trấn giữ (2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 4). Giải giới: 1 mana, vô hiệu hoá 1 quái địch tới hết lượt: về dạng ban đầu, chỉ số gốc, mất buff, kỹ năng và keyword; vẫn đánh thường và chặn đòn. Hết lượt mọi thứ trở lại.",
+  "Giải giới tắt tất cả kỹ năng bị động của quái bị vô hiệu hoá (né đòn, Vảy rồng, Đập phá, lời chúc, khiên…). Đòn đã tung ra trước đó vẫn trúng, tính bằng chỉ số hiện tại.",
+  "Giải giới có hiệu ứng tia sét xanh lục quét qua lá, lá xám đi tới hết vòng, kèm âm thanh mới.",
+  "Lang Nha Bạc có kỹ năng Tiếng hú gọi bầy (chậm): tốn 2 mana, gọi 2 Sói con vào ô trống, hàng trước trước. Dùng xong Lang Nha Bạc vẫn tấn công được trong lượt.",
+  "Giải giới tắt cả nội tại của Tinh linh đàn hạc, Thiên sứ vô hình, Nắng và gió, Tử thần của những lá bài. Lính chiến đá khổng lồ bị Giải giới giữ thủ đã mòn, không ép đánh vào nó.",
 ];
 
 function remarkOf(notes: string[]) {
