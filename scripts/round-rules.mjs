@@ -1780,6 +1780,23 @@ test("Giải giới: mọi lá có skill bị động/phản ứng đều có d�
   console.log(`     (giải giới: ${open} lá skill bị động chưa rà)`);
 });
 
+test("Lang Nha Bạc: Tiếng hú gọi bầy (chậm) trả 2 mana, gọi 2 Sói con hàng trước, vẫn đánh được trong lượt", () => {
+  let s = board({ 0: ["lang-nha-bac"] }, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? 4 : p.orb })) };
+  const wolf = uid(s, 0, 0);
+  const declared = D.declareSkill(s, wolf, null, 0);
+  assert.equal(declared.step, "respond", "vào hàng chờ: " + declared.live);
+  assert.equal(declared.players[0].orb, 4, "chưa trả mana khi mới xếp hàng chờ");
+  const done = D.passResponse(declared);
+  const pups = done.players[0].field.filter((unit) => unit?.cardId === "soi-con");
+  assert.equal(pups.length, 2, "gọi 2 Sói con: " + done.live);
+  assert.equal(done.players[0].orb, 2, "trả 2 mana");
+  const slots = done.players[0].field.map((unit, at) => (unit?.cardId === "soi-con" ? at : -1)).filter((at) => at >= 0);
+  assert.ok(slots.every((at) => at <= 2), "hàng trước trước: " + slots.join(","));
+  const poor = D.declareSkill({ ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? 1 : p.orb })) }, wolf, null, 0);
+  assert.match(poor.live, /Cần 2/);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

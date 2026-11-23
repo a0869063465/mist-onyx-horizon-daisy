@@ -3005,6 +3005,8 @@ function yieldTurn(state: Duel): Duel {
 
 /** Kỹ năng ghi "phép tự do": không tính là hành động, không nhường quyền. */
 function skillIsFree(cardId: string, index: number): boolean {
+  // Tiếng hú gọi bầy: Lang Nha Bạc vẫn tấn công được trong cùng lượt (chữ lá: "dùng Thủ lĩnh trong cùng lượt").
+  if (cardId === "lang-nha-bac") return index === 0;
   const text = monsterCard(cardId)?.skill ?? "";
   if (!/phép tự do/i.test(text)) return false;
   const parts = text.split(/\n(?=__\*\*|\*\*__)/).filter((part) => part.trim().length > 0);
@@ -5177,6 +5179,7 @@ export function spreadHits(state: Duel): string[] | null {
 export function waitSkill(cardId: string, index: number): boolean {
   if (cardId === "phu-thuy-thoi-gian") return index <= 2;
   if (cardId === "mo-voi-ma-mut") return index === 0;
+  if (cardId === "lang-nha-bac") return index === 0;
   if (cardId === PERFECT) return index === 0 || index === 3;
   if (isHarpy(cardId)) return index === 0 || index === 1 || index === 3;
   return false;
@@ -6772,6 +6775,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "phu-thuy-rung-den") return chipLabel(cardId, "curse");
   if (cardId === "rong-ac-ma") return chipLabel(cardId, "orb");
   if (cardId === "cuc-bong-ma-quai") return chipLabel(cardId, index === 0 ? "boom" : "barrage");
+  if (cardId === "lang-nha-bac") return chipLabel(cardId, "howl");
   if (cardId === QUEEN_KNIGHT) return chipLabel(cardId, "sword");
   return monsterCard(cardId)?.name ?? "Kỹ năng";
 }
@@ -9592,6 +9596,27 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
     return note(
       pingStars(patch({ ...state, seq: seq + 1 }, side, { ...paid, field: yourField }), side, before, paid.stars),
       `${castName(mon.cardId, 1)}: ${cardOf(mon).name} nhân bản chính nó.`,
+    );
+  }
+  if (mon.cardId === "lang-nha-bac") {
+    // Tiếng hú gọi bầy: 2 mana, gọi tới 2 Sói con vào ô trống, hàng trước trước.
+    const before = you.stars;
+    const paid = pay(you, 2);
+    if (!paid) return note(state, "Cần 2 gem.");
+    const field = [...paid.field] as Player["field"];
+    let seq = state.seq + 1;
+    let called = 0;
+    for (const at of ALL_SLOTS) {
+      if (called >= 2) break;
+      if (field[at] || (paid.locked?.[at] ?? 0) > 0) continue;
+      field[at] = place({ ...state, seq }, side, "soi-con");
+      seq += 1;
+      called += 1;
+    }
+    if (called === 0) return note(state, "Không đủ ô trống.");
+    return note(
+      pingStars(patch({ ...state, seq }, side, { ...paid, field }), side, before, paid.stars),
+      `${castName(mon.cardId, 0)}: ${cardOf(mon).name} gọi ${called} Sói con.`,
     );
   }
   if (mon.cardId === "te-giac-be-con") {
