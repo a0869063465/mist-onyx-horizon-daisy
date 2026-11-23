@@ -43,6 +43,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "con-thinh-no-cua-hai-vuong": ["water", "pierce"],
   kraken: ["water", "smash"],
   "nang-va-gio": ["fire", "magic"],
+  "rua-may-ban-da": ["fire", "smash"],
   "chien-binh-lan-khuat": ["shadow", "blade"],
   "ke-san-moi-tu-than": ["blood", "claw"],
   "sat-nhan-bat-giu": ["shadow", "blade"],

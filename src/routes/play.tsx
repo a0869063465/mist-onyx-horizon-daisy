@@ -28,7 +28,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
+import { CATAPULT, cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -884,6 +884,10 @@ function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: numb
 /** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
  *  toward its target, and only then (ROUSE_MS) does the skill's own effect, its sound and its numbers land. */
 const ROUSE_MS = 720;
+/** Pháo kích (chủ game 23/11): đạn leo lên lưng rùa trong MOUNT_MS rồi chờ trên nòng AIM_HOLD_MS mới bay. */
+const MOUNT_MS = 400;
+const AIM_HOLD_MS = 1000;
+const CANNON_MS = MOUNT_MS + AIM_HOLD_MS;
 /** Chủ game 16/11: a monster whose skill is queued lifts off the board and flares (the clip is 2 s long; it lifts as the light builds, drops once it fades). */
 const FLARE_MS = 1800;
 const ROUSE_CAST = 400;
@@ -951,7 +955,7 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
 const BOOM_SPAN = 3.2;
 
 /** Kuriboh tự lao vào rồi nổ ngay (chủ game 21/11): đòn không qua hàng chờ nên không có `pending`, kẻ lao và mục tiêu lấy từ `Duel.boom`. */
-function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }): Landing | null {
+function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }, wallAt?: (side: Side) => { x: number; y: number }): Landing | null {
   const boom = next.boom;
   if (!boom || boom.id === prev.boom?.id) return null;
   for (const uid of boom.uids) {
@@ -967,6 +971,11 @@ function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
       const top = screenSide(foe, viewer) === 1;
       const orb = top ? marks.foeHp : marks.youHp;
       return { kind: "face", uid, thrust: toward(orb, 1), ang: Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x), at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path: [], orb };
+    }
+    // Pháo kích bắn vào lá tường thành: lao tới lá nằm ngang đó.
+    if (to.startsWith("wall:") && wallAt) {
+      const target = wallAt(Number(to.slice(5)) as Side);
+      return { kind: "clash", uid, thrust: toward(target, 0.9), at: { x: target.x, y: target.y }, target, ang: Math.atan2((target.y - from.y) / boardAspect(), target.x - from.x) };
     }
     const where = seatOf(prev, to);
     if (!where) continue;
@@ -1644,7 +1653,7 @@ function damageShot(cardId: string, index: number) {
 }
 
 function faceSkill(id: string, index: number) {
-  return isHexer(id) || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
+  return id === CATAPULT || isHexer(id) || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
 }
 
 function skillChoices(text: string): string[] {
@@ -2022,7 +2031,7 @@ function PlayPage() {
   const [lift, setLift] = useState<string | null>(null);
   /** Quái ẩn vừa lật (chủ game 21/11): bên mình lật bài, bên kia xoá sương mù; uid → kiểu hiệu ứng. */
   const [unveil, setUnveil] = useState<Record<string, "own" | "foe">>({});
-  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
+  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast" | "mount"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
   const sentAlly = duel?.step === "respond" ? duel.hold?.ambush?.ally ?? null : null;
@@ -3139,7 +3148,48 @@ function PlayPage() {
     // K2 (chủ game 14/11): kỹ năng đã chờ trong chuỗi vừa được thông qua (cả hai bỏ qua): quái dùng nó tụ sáng tại chỗ, giật về
     // phía mục tiêu, rồi hiệu ứng, âm và số của kỹ năng mới tới (`pre` ms sau). Bị chặn, bị hoá giải, vòng quay / máy quay
     // mở ra thì không.
+    // Pháo kích (chủ game 23/11): chuỗi xong thì quái làm đạn leo lên lưng rùa (MOUNT_MS), chờ trên nòng (AIM_HOLD_MS)
+    // rồi mới lao vào mục tiêu như đòn đánh thường và nổ kiểu Kuriboh; mọi số, âm và hiệu ứng chờ tới lúc đó.
+    const cannon = (() => {
+      const boom = duel.boom;
+      if (quiet || tutorial || !boom?.from || boom.id === prev.boom?.id) return null;
+      if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return null;
+      const ammo = boom.uids.find((uid) => boom.from?.[uid]);
+      const turtle = ammo ? boom.from[ammo] : null;
+      if (!ammo || !turtle) return null;
+      const seat = seatOf(prev, ammo);
+      const base = seatOf(prev, turtle);
+      if (!seat || !base) return null;
+      const home = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+      const deck = SLOT_BOX[screenSide(base.side, viewerNow)][base.index];
+      const to = boom.to[ammo] ?? "";
+      const wallSpot = (side: Side) => {
+        const layout = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env);
+        return side === viewerNow ? layout.wall : layout.wallFoe;
+      };
+      const marksNow = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
+      const aimAt = to.startsWith("face:")
+        ? (screenSide(Number(to.slice(5)) as Side, viewerNow) === 1 ? marksNow.foeHp : marksNow.youHp)
+        : to.startsWith("wall:")
+          ? wallSpot(Number(to.slice(5)) as Side)
+          : (() => {
+              const where = seatOf(prev, to);
+              if (!where) return null;
+              const box = SLOT_BOX[screenSide(where.side, viewerNow)][where.index];
+              return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+            })();
+      // Nằm trên lưng rùa, lệch về phía mục tiêu, còn thấy khoảng 1/4 lá rùa bên dưới.
+      const deckMid = { x: deck.x + deck.w / 2, y: deck.y + deck.h / 2 };
+      const dx = aimAt ? aimAt.x - deckMid.x : 0;
+      const dy = aimAt ? (aimAt.y - deckMid.y) / boardAspect() : -1;
+      const far = Math.hypot(dx, dy) || 1;
+      const lean = { x: (dx / far) * deck.w * 0.3, y: (dy / far) * deck.w * 0.3 * boardAspect() };
+      const seatMid = { x: home.x + home.w / 2, y: home.y + home.h / 2 };
+      const mount = { x: ((deckMid.x + lean.x - seatMid.x) * 100) / home.w, y: ((deckMid.y + lean.y - seatMid.y) * 100) / home.h };
+      return { ammo, mount, ang: Math.atan2(dy, dx) };
+    })();
     const rouse = (() => {
+      if (cannon) return null;
       const cast = prev.pending;
       if (quiet || tutorial || prev.mid !== duel.mid || prev.step !== "respond" || !cast || duel.pending) return null;
       if (cast.kind !== "beam" && cast.kind !== "gnaw-skill" && !(cast.kind === "face" && cast.skill)) return null;
@@ -3165,7 +3215,11 @@ function PlayPage() {
       const tone = SKILL_GLOW[facts?.slow ? "slow" : facts?.buff ? "buff" : facts?.kind ?? "active"] ?? SKILL_GLOW.active;
       return { uid, from, jolt, ang: far < 1 ? undefined : Math.atan2(dy, dx), tone };
     })();
-    const pre = rouse ? ROUSE_MS : 0;
+    const pre = cannon ? CANNON_MS : rouse ? ROUSE_MS : 0;
+    if (cannon) {
+      setThrust({ uid: cannon.ammo, ...cannon.mount, phase: "mount", ang: cannon.ang });
+      playHit("dash", 0);
+    }
     const cueAt = (kind: Cue, delay?: number, offset = 0) => playCue(kind, delay, offset, pre / 1000);
     const fxAt = (event: FxEvent) => {
       if (pre) window.setTimeout(() => emitFx(event), pre);
@@ -3414,7 +3468,8 @@ function PlayPage() {
     // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
     // lightning to reach it.
     const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
-    const landing = quiet ? null : (attackLanding(prev, duel, viewerNow, hud) ?? boomLanding(prev, duel, viewerNow, hud));
+    const hudWalls = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env);
+    const landing = quiet ? null : (attackLanding(prev, duel, viewerNow, hud) ?? boomLanding(prev, duel, viewerNow, hud, (side) => (side === viewerNow ? hudWalls.wall : hudWalls.wallFoe)));
     // Kuriboh phát nổ (chủ game 21/11): vụ nổ ở giữa hai lá lúc chạm, lá Kuriboh còn đứng đó tới đỉnh nổ rồi mất hẳn, không vỡ lá.
     const boomOn = !quiet && !tutorial && Boolean(duel.boom && duel.boom.id !== prev.boom?.id) && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const boomIds = new Set<string>(boomOn ? duel.boom?.uids ?? [] : []);
@@ -3668,16 +3723,40 @@ function PlayPage() {
     const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
+    // Pháo kích: cú lao bắt đầu sau khi đạn đã lên nòng và chờ xong (`pre`).
+    const lead = cannon && landing?.uid === cannon.ammo ? pre : 0;
     if (landing && shown) {
       for (const item of shown.floaters) {
         if (item.heal) continue;
-        item.delay = Math.max(item.delay ?? 0, LAND_MS / 1000);
+        item.delay = Math.max(item.delay ?? 0, (lead + LAND_MS) / 1000);
       }
       {
-        const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
-        setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
-        window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), WIND_MS);
-        playHit("dash", (WIND_MS - 40) / 1000);
+        const lunged = lead && cannon ? cannon.mount : (attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 });
+        const wind = () => setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
+        if (lead) window.setTimeout(wind, lead);
+        else wind();
+        window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), lead + WIND_MS);
+        playHit("dash", (lead + WIND_MS - 40) / 1000);
+      }
+      if (lead) {
+        // Máu trên lá và viên máu giữ số cũ tới lúc đạn chạm.
+        const held: Record<string, number> = {};
+        for (const side of [0, 1] as const) {
+          if (duel.players[side].hp !== prev.players[side].hp) held[`face:${side}`] = prev.players[side].hp;
+          for (const was of prev.players[side].field) {
+            const now = was ? fieldMon(duel, was.uid) : null;
+            if (was && now && now.hp !== was.hp) held[`mon:${was.uid}`] = was.hp;
+          }
+        }
+        const keys = Object.keys(held);
+        if (keys.length) {
+          setHpHold((now) => ({ ...now, ...held }));
+          window.setTimeout(() => setHpHold((now) => {
+            const rest = { ...now };
+            for (const key of keys) delete rest[key];
+            return rest;
+          }), lead + LAND_MS + 60);
+        }
       }
       if (landing.kind === "face") {
         const struck = ([0, 1] as const).find((side) => duel.players[side].hp < prev.players[side].hp);
@@ -3691,7 +3770,7 @@ function PlayPage() {
           }), LAND_MS + 60);
         }
       }
-      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) + 130);
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), lead + LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) + 130);
       if (boomOn) {
         const seat = seatOf(prev, landing.uid);
         const cardW = seat ? SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index].w : 15;
@@ -3956,7 +4035,7 @@ function PlayPage() {
       const gone = new Set(boomFalls.map((fall) => fall.floater.id));
       // Không có cú lao (đòn không dựng được đường bay) thì nổ ngay tại ô của nó.
       if (!landing) for (const fall of boomFalls) fxAt({ t: "boom", x: fall.floater.x, y: fall.floater.y, w: 15 * BOOM_SPAN });
-      window.setTimeout(() => setLinger((current) => current.filter((item) => !gone.has(item.id))), (landing ? LAND_MS : 0) + BOOM_PEAK_MS);
+      window.setTimeout(() => setLinger((current) => current.filter((item) => !gone.has(item.id))), (landing ? LAND_MS : 0) + BOOM_PEAK_MS + pre);
     }
     shown.falls = shown.falls.filter((fall) => !boomIds.has(fall.mon.uid));
     // Số mất máu / "Hạ" ở ô Kuriboh nổ không hiện: nó biến mất trong vụ nổ, số sát thương hiện trên kẻ bị trúng.
@@ -4004,7 +4083,7 @@ function PlayPage() {
     }
     if (shown.motion.pops.length || shown.motion.lunges.length || shown.motion.hits.length) {
       // Lá bị tông giật lúc đòn chạm, không giật trước.
-      const late = rammed ? LAND_MS : pre;
+      const late = rammed ? LAND_MS + pre : pre;
       if (late) window.setTimeout(() => wave.current === token && setMotion(shown.motion), late);
       else setMotion(shown.motion);
       window.setTimeout(() => {
@@ -4970,6 +5049,12 @@ function PlayPage() {
       each(foeSide, () => true);
       return keys;
     }
+    // Pháo kích (chủ game 23/11): bước 1 là mục tiêu (quái địch, người chơi; lá tường thành bấm thẳng vào lá), bước 2 là đạn.
+    if (card.id === CATAPULT) {
+      each(foeSide, (mon) => mon.hp > 0);
+      keys.add("face");
+      return keys;
+    }
     if (allySkill(card.id)) {
       const selfOk = card.id === "thien-than-be-nho";
       each(viewer, (mon) => (selfOk || mon.uid !== caster.uid) && changed(useSkill(duel, caster.uid, mon.uid, slide.index, true)));
@@ -5669,7 +5754,8 @@ function PlayPage() {
   slideFire.current = (key: string) => {
     if (!duel) return;
     if (key === "face") {
-      if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
+      if (shelling()) shellTap("face", otherSide);
+      else if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
       else if (aim?.kind === "skill") apply(declareSkill(duel, aim.uid, null, aim.index));
       return;
     }
@@ -5865,6 +5951,35 @@ function PlayPage() {
     return rows.length ? { rows, box: plan.box } : null;
   }
 
+  /** Pháo kích của Rùa máy bắn đá đang chọn mục tiêu hoặc đạn. */
+  function shelling(): boolean {
+    return Boolean(duel && aim?.kind === "skill" && fieldMon(duel, aim.uid)?.cardId === CATAPULT);
+  }
+
+  /**
+   * Pháo kích (chủ game 23/11): bấm trước mục tiêu (quái địch, người chơi hoặc lá tường thành của đối thủ), rồi 1 quái
+   * thú khác của mình làm đạn. `key`: uid quái, "face" hoặc "wall".
+   */
+  function shellTap(key: string, side: Side | null) {
+    if (!duel || aim?.kind !== "skill") return;
+    if (!aim.also) {
+      if (side === otherSide) {
+        setAim({ ...aim, also: key });
+        holdNotice("Chọn 1 quái thú của bạn làm đạn pháo");
+        return;
+      }
+      holdNotice("Chọn quái, người chơi hoặc lá tường thành của đối thủ");
+      return;
+    }
+    if (side !== viewer || key === aim.uid) {
+      holdNotice("Chọn 1 quái thú khác của bạn làm đạn pháo");
+      return;
+    }
+    const also = aim.also;
+    const target = also === "face" || also === "wall" ? null : also;
+    apply(useSkill(duel, aim.uid, target, aim.index, true, also === "wall" ? `${key}|wall` : key));
+  }
+
   function onUnit(side: Side, mon: FieldMon) {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -5879,6 +5994,14 @@ function PlayPage() {
     // Hoán đổi: tap a glowing ally to trade places with the monster aimed at.
     if (swapAsk) {
       if (side === viewer && swapFit(mon)) apply(confirmSwap(duel, swapAsk.locked!, `f:${mon.uid}`));
+      return;
+    }
+    if (shelling()) {
+      if (side === viewer && aim?.kind === "skill" && mon.uid === aim.uid && !aim.also) {
+        setAim(null);
+        return;
+      }
+      shellTap(mon.uid, side);
       return;
     }
     if (aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian") {
@@ -6740,6 +6863,13 @@ function PlayPage() {
       const below = from.y > spot.y;
       return { x: spot.x, y: below ? spot.y + spot.h * 0.5 : spot.y - spot.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: spot.x, y: spot.y, w: spot.w, h: spot.h } };
     }
+    // Pháo kích bắn vào lá tường thành (chủ game 23/11): dòng chạy vào hào quanh lá nằm ngang đầu tiên của bên đó.
+    if ("wall" in end) {
+      const lying = wallCards(end.wall)[0];
+      if (!lying) return null;
+      const below = from.y > lying.y;
+      return { x: lying.x, y: below ? lying.y + lying.h * 0.5 : lying.y - lying.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: lying.x, y: lying.y, w: lying.w, h: lying.h } };
+    }
     const card = cardSpot(end.uid);
     if (!card) return null;
     const below = from.y > card.y;
@@ -7296,9 +7426,16 @@ function PlayPage() {
             <button
               key={`wall-${side}-${wall.id}`}
               type="button"
-              className="wall-card"
+              className={`wall-card${side === otherSide && shelling() && aim?.kind === "skill" && !aim.also ? " is-shell" : ""}`}
               style={{ left: `${wall.x}%`, top: `${wall.y}%`, width: `${wall.w}%`, height: `${wall.h}%` }}
-              onClick={() => setInspect({ pile: "env", id: wall.id })}
+              onClick={() => {
+                // Pháo kích chọn lá tường thành của đối thủ làm mục tiêu.
+                if (side === otherSide && shelling() && aim?.kind === "skill" && !aim.also) {
+                  shellTap("wall", otherSide);
+                  return;
+                }
+                setInspect({ pile: "env", id: wall.id });
+              }}
               aria-label={`${spellCard(wall.id)?.name ?? ""}: còn ${wall.left} lượt`}
             >
               <img src={spellSrc(wall.id)} alt="" draggable={false} />
@@ -8409,7 +8546,7 @@ function PlayPage() {
             </span>
           ))}
         </div>
-        {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
+        {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && !(shelling() && aim.also) && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
           <button
             type="button"
             className={`face-drop${snap === "face" || (!snap && !drag && aimLit === "face") ? " is-snap" : ""}`}
@@ -8417,6 +8554,10 @@ function PlayPage() {
             onClick={() => {
               if (suppressClick.current) {
                 suppressClick.current = false;
+                return;
+              }
+              if (shelling()) {
+                shellTap("face", otherSide);
                 return;
               }
               if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
@@ -10194,7 +10335,7 @@ function BoardSlot({
   attack: boolean;
   shift?: { x: number; y: number } | null;
   /** The last thrust of a landing blow: a quick move in place of the slow lunge. */
-  thrust?: false | "back" | "ram" | "rouse" | "cast";
+  thrust?: false | "back" | "ram" | "rouse" | "cast" | "mount";
   /** K2: the light of the skill this monster is rousing for. */
   rouseTone?: string;
   /** Chủ game 16/11: the card is lifted off the board for a moment while it flares (its skill is queued). */
@@ -10233,7 +10374,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : thrust === "mount" ? " is-mount" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = bare ? { left: 0, top: 0, width: "100%", height: "100%" } : { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };

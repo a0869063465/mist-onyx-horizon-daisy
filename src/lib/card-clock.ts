@@ -437,6 +437,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerTone": null,
     "shiftAt": "2026-11-22"
   },
+  "rua-may-ban-da": {
+    "kind": "monster",
+    "stars": 2,
+    "mana": 0,
+    "atk": 0,
+    "def": 3,
+    "mdef": 1,
+    "hp": 3,
+    "text": "9993fef4",
+    "added": "2026-11-23",
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
   "kazura": {
     "kind": "monster",
     "stars": 2,

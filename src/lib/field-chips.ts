@@ -43,6 +43,8 @@ const ROWS: Row[] = [
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
   { ids: ["nang-va-gio"], key: "sun", cast: "declare", skill: 0, gate: pay(2) },
+  // Pháo kích: cần 1 quái thú khác của mình trên sân làm đạn (sân 6 ô, còn trống nhiều nhất 4 ô).
+  { ids: ["rua-may-ban-da"], key: "shell", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && ctx.room <= 4 },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["rong-con", "rong-ngan-tuoi"], key: "breath", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },

@@ -60,6 +60,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "hoa-an-thit-nguoi": [{ key: "bite", label: "Hấp thụ", tone: "y" }],
   "thuong-quan-long": [{ key: "spin", label: "Cò quay", tone: "y" }],
   "nang-va-gio": [{ key: "sun", label: "Nắng ấm lên", tone: "y" }],
+  "rua-may-ban-da": [{ key: "shell", label: "Pháo kích", tone: "y" }],
   "may-nem-bom-hinh-nhen": [{ key: "bomb", label: "Súng phóng lựu", tone: "y" }],
   "may-quay-thuong": [
     { key: "reel", label: "Quay thưởng", tone: "y" },

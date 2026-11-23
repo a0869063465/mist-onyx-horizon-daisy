@@ -317,7 +317,14 @@ export type Duel = {
   /** Gió dịu đi (chủ game 22/11): whose ngọc mana / mana trong mộ it just blew away, for the numbers to flash and fall. */
   drain?: { id: number; side: Side; orb: boolean; gems: boolean } | null;
   /** Kuriboh vừa phát nổ khi giáp lá cà (chủ game 21/11): biến mất ngay, không vỡ lá như quái bị hạ (id tăng mỗi lần nổ). */
-  boom?: { id: number; uids: string[]; /** Kuriboh đang tự lao vào: uid → mục tiêu (uid quái hoặc `face:<bên>`); quái bị đánh / chặn nổ thì không có. */ to: Record<string, string> } | null;
+  boom?: {
+    id: number;
+    uids: string[];
+    /** Kuriboh đang tự lao vào: uid → mục tiêu (uid quái, `face:<bên>` hoặc `wall:<bên>`); quái bị đánh / chặn nổ thì không có. */
+    to: Record<string, string>;
+    /** Pháo kích (Rùa máy bắn đá): uid đạn pháo → uid con rùa nó leo lên trước khi bay. */
+    from?: Record<string, string>;
+  } | null;
   /** Kuriboh mang Cấp số nhân đã tách ra 2 con mới (để không tách 2 lần). */
   bred?: string[];
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
@@ -2892,6 +2899,7 @@ export function harmSkill(cardId: string, index = 0) {
   // Kim châm gây thêm sát thương phép (chủ game 01/11).
   if (cardId === "ong-khong-lo") return true;
   if (cardId === BREEZE) return index === 0;
+  if (cardId === CATAPULT) return index === 0;
   return false;
 }
 
@@ -4794,6 +4802,8 @@ function passResponseCore(state: Duel): Duel {
     if (pending.index === 9 && open.last === pending.caster) return swordLast(open, target, true);
     const resolved = releaseGuardMark(withCovers(hold.covers, () => useSkill(open, pending.caster, target, pending.index, true, pending.extra ?? null, true)), target);
     if (!harmSkill(ownerCard(state, pending.caster), pending.index)) return resolved;
+    // Pháo kích bị huỷ (đạn đã mất): không có đòn nào trúng, không ai Trả đòn.
+    if (witch?.cardId === CATAPULT && resolved.boom === state.boom) return resolved;
     const landed = struckFront(state, resolved, foe, hold.covers);
     return landed.length > 1 || hold.covers?.length ? afterSpread(state, resolved, pending.caster, landed) : afterBlow(state, resolved, target, pending.caster);
   }
@@ -5344,6 +5354,7 @@ export function spreadHits(state: Duel): string[] | null {
  */
 export function waitSkill(cardId: string, index: number): boolean {
   if (cardId === BREEZE) return index === 0;
+  if (cardId === CATAPULT) return index === 0;
   if (cardId === "phu-thuy-thoi-gian") return index <= 2;
   if (cardId === "mo-voi-ma-mut") return index === 0;
   if (cardId === PERFECT) return index === 0 || index === 3;
@@ -6894,6 +6905,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "ma-dao-si") return chipLabel(cardId, "dan");
   if (cardId === "loi-nguyen-cua-rong") return chipLabel(cardId, "fire");
   if (cardId === BREEZE) return index === 1 ? "Gió dịu đi" : chipLabel(cardId, "sun");
+  if (cardId === CATAPULT) return chipLabel(cardId, "shell");
   if (cardId === "phu-thuy-rung-den") return chipLabel(cardId, "curse");
   if (cardId === "rong-ac-ma") return chipLabel(cardId, "orb");
   if (cardId === "cuc-bong-ma-quai") return chipLabel(cardId, "mult");
@@ -9409,6 +9421,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
     return { ...armed, mends: [{ uid: mon.uid, n: 0 }] };
   }
   if (mon.cardId === BREEZE && skillIndex === 0) return castSunlight(state, side, mon);
+  if (mon.cardId === CATAPULT && skillIndex === 0) return castCatapult(state, side, mon, targetUid, extra);
   if (mon.cardId === "thien-than-be-nho") {
     const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
     if (!ally) return note(state, "Chọn một đồng minh.");
@@ -12135,6 +12148,71 @@ function trapSpring(state: Duel, uid: string): Duel {
 
 /** Kuriboh (chủ game 21/11). */
 export const KURIBOH = "cuc-bong-ma-quai";
+
+/** Rùa máy bắn đá (chủ game 23/11). */
+export const CATAPULT = "rua-may-ban-da";
+
+/** Pháo kích: `extra` = uid của đạn pháo, thêm "|wall" khi bắn vào lá tường thành của đối thủ. */
+export function catapultShell(extra: string | null | undefined): { ammo: string; wall: boolean } | null {
+  if (!extra) return null;
+  const [ammo, mode] = extra.split("|");
+  return ammo ? { ammo, wall: mode === "wall" } : null;
+}
+
+/** Sát thương chuẩn của Pháo kích: 250% số sao của quái làm đạn, làm tròn (số % đọc từ chữ lá). */
+export function catapultDamage(ammoCardId: string): number {
+  const stars = monsterCard(ammoCardId)?.stars ?? 1;
+  const pct = grabNums(skillText(CATAPULT), /(\d+)\s*%/g)[0] ?? 250;
+  return Math.round((stars * pct) / 100);
+}
+
+/**
+ * Pháo kích (chủ game 23/11): skill chậm, chờ trong chuỗi. Lúc nổ, 1 quái thú của mình trên sân làm đạn pháo: nó bay
+ * vào mục tiêu (quái, người chơi hoặc lá tường thành của đối thủ) và nổ, gây sát thương chuẩn bằng 250% số sao của nó;
+ * đạn mất theo vụ nổ (vào mộ như quái bị hạ). Đạn đã mất trước lúc nổ thì không bắn được, skill bị huỷ, không tốn mana.
+ */
+function castCatapult(state: Duel, side: Side, mon: FieldMon, targetUid: string | null, extra: string | null): Duel {
+  const foe = (1 - side) as Side;
+  const shell = catapultShell(extra);
+  const you = state.players[side];
+  const ammo = shell ? you.field.find((unit) => unit?.uid === shell.ammo && unit.hp > 0 && unit.uid !== mon.uid) ?? null : null;
+  if (!shell) return note(state, "Chọn 1 quái thú của bạn làm đạn pháo.");
+  if (!ammo) return note(state, "Đạn pháo đã mất, Pháo kích bị huỷ.");
+  const them = state.players[foe];
+  const target = targetUid ? them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null : null;
+  if (targetUid && !target) return note(state, "Chọn một quái đối thủ.");
+  if (shell.wall && them.mirror <= 0) return note(state, "Đối thủ không có lá tường thành.");
+  const cost = skillManaCost(CATAPULT, 1);
+  const before = you.stars;
+  const paid = pay(you, cost);
+  if (!paid) return note(state, `Cần ${cost} gem.`);
+  const raw = catapultDamage(ammo.cardId);
+  const skill = castName(CATAPULT, 0);
+  const field = paid.field.map((unit) => (unit?.uid === ammo.uid ? { ...unit, hp: 0 } : unit)) as Player["field"];
+  let next = pingStars(patch(state, side, settleCocoon(dropDead({ ...paid, field }))), side, before, paid.stars);
+  let line: string;
+  let to: string;
+  if (target) {
+    const shown = truLanded(target, raw, them.field);
+    const hit = trueDamage(target, raw, them.field);
+    const foeField = them.field.map((unit) => (unit?.uid === target.uid ? hit : unit)) as Player["field"];
+    next = patch(next, foe, settleCocoon(dropDead({ ...next.players[foe], field: foeField })));
+    line = `${fieldName(mon)} dùng ${skill}: ${fieldName(ammo)} bay vào ${fieldName(target)}, gây ${shown} sát thương chuẩn.`;
+    to = target.uid;
+  } else if (shell.wall) {
+    next = patch(next, foe, { ...next.players[foe], mirror: 0 });
+    line = `${fieldName(mon)} dùng ${skill}: ${fieldName(ammo)} bay vào lá tường thành, phá huỷ nó.`;
+    to = `wall:${foe}`;
+  } else {
+    const dealt = raw + charmDamage;
+    next = patch(next, foe, { ...next.players[foe], hp: next.players[foe].hp - dealt });
+    line = `${fieldName(mon)} dùng ${skill}: ${fieldName(ammo)} bay vào người chơi, gây ${dealt} sát thương chuẩn.`;
+    to = `face:${foe}`;
+  }
+  const boom = { id: (state.boom?.id ?? 0) + 1, uids: [ammo.uid], to: { [ammo.uid]: to }, from: { [ammo.uid]: mon.uid } };
+  next = note({ ...next, boom }, line, "hit");
+  return checkWinner({ ...next, skill: { id: CATAPULT, index: 0, aim: target?.uid ?? null, hits: target ? [target.uid] : [] } });
+}
 
 /** Kuriboh that exploded in the action now running, for the board to show the blast (flushed by `traced`). */
 const boomSeen: Array<{ uid: string; to?: string }> = [];

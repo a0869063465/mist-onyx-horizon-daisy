@@ -1,4 +1,4 @@
-import { harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
+import { CATAPULT, catapultShell, harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
 import { monsterCard } from "./catalog.ts";
 
 /**
@@ -10,7 +10,7 @@ import { monsterCard } from "./catalog.ts";
  * into its own icon. When the wait ends, the icon of what waited fires if both sides let it through, or fizzles if an
  * answer stopped it; the others have done their work and fade with it.
  */
-export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side } | { mana: Side; part: "orb" | "gems" | "stars" };
+export type FlowEnd = { uid: string } | { face: Side } | { orb: string } | { hand: Side } | { pile: Side } | { mana: Side; part: "orb" | "gems" | "stars" } | { wall: Side };
 
 /** Where a bite of Virus ăn mòn lands (chủ game 30/10): the card on the field, the hand for a reserve card, the
  *  face-down deck for one still in it. */
@@ -166,6 +166,8 @@ function pendingTone(duel: Duel, pending: Pending): FlowTone {
   if (!pending) return "red";
   if (pending.kind === "spell") return spellTone(pending.cardId);
   if (faceSkill(pending)) return "blue";
+  // Pháo kích (chủ game 23/11): hồng tới quái làm đạn và hồng tới mục tiêu.
+  if (pending.kind === "beam" && monOf(duel, pending.caster)?.cardId === CATAPULT) return "pink";
   // Lão hoá / Cường hoá (chủ game 30/10): pink on a foe, buff green on an ally (as Giáp cơ khí).
   if (pending.kind === "beam" && pending.target && monOf(duel, pending.caster)?.cardId === "phu-thuy-thoi-gian" && pending.index <= 1) return sideOf(duel, pending.target) !== sideOf(duel, pending.caster) ? "pink" : "green";
   if (pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw") return strikeOf(duel, pending) ? "blue" : "red";
@@ -211,6 +213,15 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: strin
       if ("back" in pending && pending.back) {
         const victim = pending.target ?? pending.caster;
         return reflect ? [{ end: { orb: reflect.id }, tone, dam: reflect.dam }, { from: { orb: reflect.id }, end: { uid: victim }, tone, back: true }] : [link({ uid: victim })];
+      }
+      // Pháo kích (chủ game 23/11): một dòng hồng tới quái làm đạn, một dòng hồng tới mục tiêu (quái, người chơi hoặc
+      // lá tường thành của đối thủ).
+      const shooter = monOf(duel, pending.caster);
+      const shell = shooter?.cardId === CATAPULT && pending.kind === "beam" ? catapultShell(pending.extra) : null;
+      if (shooter && shell) {
+        const foe = (1 - (sideOf(duel, pending.caster) ?? duel.turn)) as Side;
+        const aimEnd: FlowEnd = pending.target ? { uid: pending.target } : shell.wall ? { wall: foe } : { face: foe };
+        return [link({ uid: shell.ammo }), link(aimEnd)];
       }
       if (pending.target) return [link({ uid: pending.target })];
       // A damaging skill with no monster aimed at hits the player (Cầu sấm, Ma đạo sĩ, Súng phóng lựu…): its flow runs

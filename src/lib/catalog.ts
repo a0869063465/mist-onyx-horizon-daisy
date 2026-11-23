@@ -434,6 +434,19 @@ export const MONSTERS: MonsterCard[] = [
     "since": "2026-11-22"
   },
   {
+    "id": "rua-may-ban-da",
+    "name": "Rùa máy bắn đá",
+    "stars": 2,
+    "gems": 0,
+    "skill": "**__Pháo kích__**:\n1 mana, dùng 1 quái thú đang trên sân của mình làm đạn pháo. Gây sát thương chuẩn bằng 250% sao của quái đó lên 1 mục tiêu (quái, người chơi, tường thành).",
+    "atk": 0,
+    "def": 3,
+    "mdef": 1,
+    "hp": 3,
+    "art": "rua-may-ban-da",
+    "since": "2026-11-23"
+  },
+  {
     "id": "kazura",
     "name": "Kazura",
     "stars": 2,

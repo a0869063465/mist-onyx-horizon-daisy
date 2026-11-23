@@ -15000,3 +15000,9 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   0%, 30%, 60% { color: #fff; filter: drop-shadow(0 0 0.5em #ff4fa6) drop-shadow(0 0 0.9em #ff4fa6); transform: scale(1.3); }
   15%, 45%, 100% { color: #ff4141; filter: none; transform: scale(1); }
 }
+
+/* Pháo kích (chủ game 23/11): quái làm đạn leo lên lưng Rùa máy bắn đá rồi nằm chờ trên nòng. */
+.slot.is-thrust.is-mount { z-index: 14; transition: transform 400ms cubic-bezier(0.25, 0.85, 0.3, 1); }
+.slot.is-thrust.is-mount .field-unit { filter: brightness(1.15) drop-shadow(0 0.35rem 0.5rem rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px rgba(255, 120, 190, 0.85)); }
+/* Lá tường thành của đối thủ chọn được làm mục tiêu Pháo kích. */
+.wall-card.is-shell { --alert-color: #ff4fa6; z-index: 13; box-shadow: 0 0 0 2px #ff4fa6, 0 0 0.9rem #ff4fa6, 0 0 1.6rem rgba(255, 79, 166, 0.7); animation: react-breathe 1.2s ease-in-out infinite; }
