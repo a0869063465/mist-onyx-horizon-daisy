@@ -1098,9 +1098,9 @@ export const PENDING_NOTES: string[] = [
   "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
   "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
   "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
-  "Thêm quái Đôi mắt trấn giữ (2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 4). Tước đoạt: 1 mana, vô hiệu hoá 1 quái địch tới hết lượt: về dạng ban đầu, chỉ số gốc, mất buff, kỹ năng và keyword; vẫn đánh thường và chặn đòn. Hết lượt mọi thứ trở lại.",
-  "Tước đoạt tắt tất cả kỹ năng bị động của quái bị vô hiệu hoá (né đòn, Vảy rồng, Đập phá, lời chúc, khiên…). Đòn đã tung ra trước đó vẫn trúng, tính bằng chỉ số hiện tại.",
-  "Tước đoạt có hiệu ứng tia sét xanh lục quét qua lá, lá xám đi tới hết vòng, kèm âm thanh mới.",
+  "Thêm quái Đôi mắt trấn giữ (2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 4). Giải giới: 1 mana, vô hiệu hoá 1 quái địch tới hết lượt: về dạng ban đầu, chỉ số gốc, mất buff, kỹ năng và keyword; vẫn đánh thường và chặn đòn. Hết lượt mọi thứ trở lại.",
+  "Giải giới tắt tất cả kỹ năng bị động của quái bị vô hiệu hoá (né đòn, Vảy rồng, Đập phá, lời chúc, khiên…). Đòn đã tung ra trước đó vẫn trúng, tính bằng chỉ số hiện tại.",
+  "Giải giới có hiệu ứng tia sét xanh lục quét qua lá, lá xám đi tới hết vòng, kèm âm thanh mới.",
 ];
 
 function remarkOf(notes: string[]) {

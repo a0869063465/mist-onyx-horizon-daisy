@@ -4,18 +4,18 @@
  * Mỗi lá có skill bị động ("passive") hoặc skill dùng như phép ("spell") trong SKILL_BOOK phải có một dòng ở đây.
  * Thêm lá mới có skill bị động mà quên dòng này thì `scripts/round-rules.mjs` báo lỗi, ghi rõ tên lá.
  *
- * - "chan": đã chặn khi quái bị giải giới (có `!sealed(...)` ở chỗ skill chạy trong duel.ts).
+ * - "chan": đã chặn khi quái bị giải giới (có `!disarmed(...)` ở chỗ skill chạy trong duel.ts).
  * - "tay":  skill chỉ dùng từ trên tay, quái chưa ở sân nên không bị giải giới.
  * - "giu":  cố ý giữ: là điều kiện phải trả (cầu nguyện, khế ước), không phải lợi; bỏ đi thì quái được lợi.
  * - "chua": chưa rà; skill bị động này có thể vẫn chạy khi quái bị giải giới.
  *
  * Lá mới có skill bị động: chặn bằng `numb(mon)` (tắt khi bị giải giới, trừ lúc đòn đã phóng đang nổ) ở chỗ skill chạy
- * trong duel.ts, hoặc thêm trường trạng thái của nó vào `SEAL_KEEP` (+ `SEAL_KIT` nếu là đồ của đòn) để giải giới gỡ đi.
+ * trong duel.ts, hoặc thêm trường trạng thái của nó vào `DISARM_KEEP` (+ `DISARM_KIT` nếu là đồ của đòn) để giải giới gỡ đi.
  */
-export type SealStatus = "chan" | "tay" | "giu" | "chua";
+export type DisarmStatus = "chan" | "tay" | "giu" | "chua";
 
-export const SEAL_PASSIVES: Record<string, { status: SealStatus; note?: string }> = {
-  // Đã chặn (kỹ năng chủ động: cửa chung castSkillBody; bị động: numb()/sealed() hoặc SEAL_KEEP gỡ trạng thái)
+export const DISARM_PASSIVES: Record<string, { status: DisarmStatus; note?: string }> = {
+  // Đã chặn (kỹ năng chủ động: cửa chung castSkillBody; bị động: numb()/disarmed() hoặc DISARM_KEEP gỡ trạng thái)
   "quai-thu-thien-su": { status: "chan", note: "Ân huệ thiên sứ (mana)" },
   "chien-si-gam-nham": { status: "chan", note: "Khiên thú sĩ" },
   "yeu-tinh-chuc-phuc": { status: "chan", note: "hào quang, Hộ thủ" },

@@ -573,7 +573,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Đôi mắt trấn giữ",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Tước đoạt**__\nTiêu hao 1 mana, chọn 1 mục tiêu quái địch và vô hiệu hoá nó trong lượt này.\n\nLưu ý: Quái bị vô hiệu hoá sẽ không kích hoạt được bất kỳ skill nào và bị loại bỏ hết tất cả buff, quay về hình dạng ban đầu của nó.",
+    "skill": "__**Giải giới**__\nTiêu hao 1 mana, chọn 1 mục tiêu quái địch và vô hiệu hoá nó trong lượt này.\n\nLưu ý: Quái bị vô hiệu hoá sẽ không kích hoạt được bất kỳ skill nào và bị loại bỏ hết tất cả buff, quay về hình dạng ban đầu của nó.",
     "atk": 2,
     "def": 0,
     "mdef": 1,

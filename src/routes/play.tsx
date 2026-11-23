@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, FireBurst, FlareBlast, SealBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, FireBurst, FlareBlast, DisarmBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -77,7 +77,7 @@ import {
   canStand,
   canStandHand,
   hexLocked,
-  sealed,
+  disarmed,
   standFor,
   standIn,
   canGuardCover,
@@ -3257,14 +3257,14 @@ function PlayPage() {
         window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
       }
     }
-    // Tước đoạt (chủ game 22/11): quái vừa bị vô hiệu hoá thì chạy hiệu ứng ở ô của nó (quái ẩn mình thì không lộ).
+    // Giải giới (chủ game 22/11): quái vừa bị vô hiệu hoá thì chạy hiệu ứng ở ô của nó (quái ẩn mình thì không lộ).
     if (!quiet && !tutorial && prev.mid === duel.mid) {
       for (const side of [0, 1] as const) {
         duel.players[side].field.forEach((mon, index) => {
-          if (!mon?.seal || mon.lurk) return;
-          if (fieldMon(prev, mon.uid)?.seal) return;
+          if (!mon?.disarm || mon.lurk) return;
+          if (fieldMon(prev, mon.uid)?.disarm) return;
           const box = SLOT_BOX[screenSide(side, viewerNow)][index];
-          emitFx({ t: "seal", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+          emitFx({ t: "disarm", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
         });
       }
     }
@@ -9185,7 +9185,7 @@ function PlayPage() {
         <FireBurst />
         <HealBlast />
         <FlareBlast />
-        <SealBlast />
+        <DisarmBlast />
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
@@ -9549,8 +9549,8 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
     y.unshift({ key: "lurk-wake", label: "Kích hoạt", go: () => apply(wakeLurk(duel, uid)) });
   }
   const strikeShown = attackable && sword && !noAttack && (visibleStats(mon, you.field).atk > 0 || boulder(mon));
-  // Tước đoạt (chủ game 22/11): quái bị vô hiệu hoá chỉ còn đánh thường.
-  if (sealed(mon)) {
+  // Giải giới (chủ game 22/11): quái bị vô hiệu hoá chỉ còn đánh thường.
+  if (disarmed(mon)) {
     y.length = 0;
     z.length = 0;
   }
@@ -9827,7 +9827,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
         {spot("mdef", stats.mdef, stats.blueMdef, fakeCut(mon, "mdef", stats.mdef))}
         {spot("atk", stats.atk, stats.blueAtk, fakeCut(mon, "atk", stats.atk))}
         {spot("hp", mon.hp, stats.blueHp, fakeCut(mon, "hp", mon.hp))}
-        {sealed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
+        {disarmed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
       </span>
     </span>
   );
@@ -10044,7 +10044,7 @@ function BoardSlot({
       {thrust === "rouse" || thrust === "cast" ? <i className="rouse-aura" aria-hidden="true" /> : null}
       {thrust === "ram" && ramAng !== undefined ? <i className="ram-trail" style={{ "--ang": `${ramAng}rad` } as CSSProperties} aria-hidden="true" /> : null}
       <span
-        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}${!mask && sealed(mon) ? " is-sealed" : ""}`}
+        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}${!mask && disarmed(mon) ? " is-disarmed" : ""}`}
       >
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>
@@ -10053,7 +10053,7 @@ function BoardSlot({
         {unveil === "foe" ? <FogWipe /> : null}
         {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
-        {veil || decoy || mask || sealed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
+        {veil || decoy || mask || disarmed(mon) ? null : <KeywordRow cardId={mon.cardId} />}
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
         <span className="badges">
           {bind > 0 ? <i className="is-hold">{bind >= 90 ? "∞" : bind}</i> : null}
