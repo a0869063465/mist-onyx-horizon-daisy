@@ -2106,6 +2106,19 @@ test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát th�
   assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 1 }, { n: 2, group: 1, rank: 0 }, { n: 2, group: 1, rank: 2 }], 3), [1, 2, 0]);
 });
 
+test("Thiên thần hạnh phúc: Cầu sấm ánh sáng (Mắt xanh) không có số nên chỉ bị giảm công, không bị giảm sát thương kỹ năng (23/11)", () => {
+  const make = (angel) => {
+    const mine = { 0: ["mat-xanh-huy-diet", { atk: 5, hp: 9, maxHp: 9, gaze: true }] };
+    if (angel) mine[1] = ["thien-than-hanh-phuc"];
+    let s = board(mine, { 0: ["khong-lo-mot-mat", { atk: 1, hp: 20, maxHp: 20, def: 3, mdef: 3 }] });
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0 })) };
+    return D.refreshJoy(s);
+  };
+  const hit = (s) => 20 - at(D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0))), 1, 0).hp;
+  assert.equal(hit(make(false)), 5, "không có angel: chuẩn bằng công 5");
+  assert.equal(hit(make(true)), 4, "có angel: công 5 → 4, không trừ thêm");
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();
