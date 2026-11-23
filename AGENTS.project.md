@@ -84,3 +84,7 @@ Quái 5 sao là trường hợp đặc biệt. Cơ chế mới mà người chơ
 Chủ game đưa ảnh linh kiện (khung, nút, ô, glow) để chèn lên thì cắt nguyên ảnh đó rồi gắn, không tự vẽ lại bằng CSS hay SVG. Muốn dựng lại bằng code thì hỏi trước.
 
 Hiệu ứng "Khi triệu hồi" của một quái chỉ chạy khi chính quái đó được triệu hồi, không chạy khi quái khác được triệu hồi. Quái triệu hồi có hiệu ứng riêng sẽ còn thêm, theo luật này.
+
+Giảm sát thương kỹ năng (engine chung, áp cho mọi hiệu ứng "giảm N sát thương kỹ năng", hào quang hay không): giảm theo thứ tự sát thương phép, rồi vật lý, rồi chuẩn. Kỹ năng nhiều đợt thì mỗi lần giảm 1 vào từng đợt, từ đợt đầu tới đợt cuối rồi quay lại đợt đầu, cho tới khi hết số giảm. Đợt nào về 0 thì mất luôn đợt đó. Hiệu ứng giảm lên cùng một quái thì cộng dồn.
+
+Skill dùng được ở lượt nào: skill nào có thể đưa máu đối phương về 0 hoặc tiêu diệt đối phương (dạng gây sát thương, chọn mục tiêu) thì chỉ dùng ở vòng tấn công của mình (`harmSkill`). Skill không gây sát thương hay tiêu diệt lên đối phương (buff, hào quang, hồi máu…) là chủ động dùng được ở bất kỳ lượt nào. Skill buff/phép có lợi mang màu xanh lá.
