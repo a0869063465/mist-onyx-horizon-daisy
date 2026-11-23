@@ -447,6 +447,19 @@ export const MONSTERS: MonsterCard[] = [
     "since": "2026-11-23"
   },
   {
+    "id": "thien-than-hanh-phuc",
+    "name": "Thiên thần hạnh phúc",
+    "stars": 1,
+    "gems": 0,
+    "skill": "**__Tia sáng hạnh phúc__**:\nHào quang: giảm 1 công và 1 sát thương kỹ năng của tất cả quái thú trên sân.\nTa có thể kích hoạt, tiêu hao 1 mana, để tăng thêm 2 lần hiệu ứng nữa, kéo dài trong 3 lượt.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "thien-than-hanh-phuc",
+    "since": "2026-11-23"
+  },
+  {
     "id": "kazura",
     "name": "Kazura",
     "stars": 2,

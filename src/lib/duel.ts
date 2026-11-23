@@ -137,6 +137,10 @@ export type FieldMon = {
   seized?: boolean;
   debt?: [{ p: number; s: number; t: number }, { p: number; s: number; t: number }];
   hex?: { left: number };
+  /** Hào quang Thiên thần hạnh phúc đang đè lên quái này: trừ N công và N sát thương kỹ năng (`stampJoy`). */
+  joy?: number;
+  /** Thiên thần hạnh phúc đã kích hoạt: mỗi phần tử là số lượt còn lại của một lần (+2 lần hiệu ứng). */
+  joyUp?: number[];
   beat?: number;
   /** Hàng sau (ô 3–5). Không có là hàng trước. Luôn theo ô đang đứng (`withRows`). */
   row?: "back";
@@ -789,6 +793,7 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "loi-nguyen-cua-rong": [{ index: 0, cast: "aim" }],
   "rong-ac-ma": [{ index: 0, cast: "aim" }],
   "cuc-bong-ma-quai": [{ index: 0, cast: "self" }],
+  "thien-than-hanh-phuc": [{ index: 0, cast: "self" }],
   "thien-than-be-nho": [{ index: 0, cast: "aim" }, { index: 1, cast: "aim" }],
   "rong-phun-hoa-cau": [{ index: 0, cast: "declare" }, { index: 1, cast: "aim" }],
   "phu-thuy-thoi-gian": [{ index: 0, cast: "aim" }],
@@ -830,6 +835,7 @@ function lookProbe(state: Duel, run: (copy: Duel) => Duel): { copy: Duel; next: 
   const saved = wardLines.splice(0, wardLines.length);
   const charm = charmDamage;
   const hex = skillHex;
+  const dull = dullMark();
   try {
     return { copy, next: run(copy) };
   } catch {
@@ -838,6 +844,7 @@ function lookProbe(state: Duel, run: (copy: Duel) => Duel): { copy: Duel; next: 
     wardLines.splice(0, wardLines.length, ...saved);
     charmDamage = charm;
     skillHex = hex;
+    dull();
   }
 }
 
@@ -1348,6 +1355,7 @@ function patch(state: Duel, side: Side, rawPlayer: Player): Duel {
   const spent = [...(player.spent ?? prev.spent ?? []), ...gone];
   const players = [...state.players] as [Player, Player];
   players[side] = tidyHats({ ...player, spent });
+  stampJoy(players);
   let born = state.born;
   player.field.forEach((mon, slot) => {
     if (!mon || born?.[mon.uid]) return;
@@ -2271,8 +2279,8 @@ function rawAtk(mon: FieldMon) {
 }
 
 export function liveAtk(mon: FieldMon) {
-  const atk = rawAtk(mon);
-  if (!mon.hex || mon.hex.left <= 0) return atk;
+  const atk = rawAtk(mon) - (mon.joy ?? 0);
+  if (!mon.hex || mon.hex.left <= 0) return Math.max(0, atk);
   return Math.max(0, atk - 3);
 }
 
@@ -2734,7 +2742,7 @@ function soak(mon: FieldMon, kind: "phys" | "spell", amount: number): { mon: Fie
 
 function damageSpell(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): FieldMon {
   mon = openShade(mon);
-  const total = source ? outgoing(source, amount + charmDamage) : amount + charmDamage;
+  const total = source ? outgoing(source, amount + charmDamage, 0) : amount + charmDamage;
   const gated = swallowOath(mon, "spell", total);
   if (gated.mon !== mon) return settleMystic(mon, gated.mon, null, allies, Boolean(mon.guarding)).mon;
   if (mon.cardId === "chien-binh-rong") {
@@ -2791,7 +2799,7 @@ function landTrue(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>
 }
 
 function truLanded(target: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): number {
-  const total = (source ? outgoing(source, amount) : amount) + charmDamage;
+  const total = (source ? outgoing(source, amount, 2) : amount) + charmDamage;
   const slice = target.cardId === "chien-binh-rong" ? third(total) : total;
   return shownTru(target, hurt(target, slice), allies);
 }
@@ -2824,9 +2832,139 @@ function combatErode(attacker: FieldMon, defender: FieldMon, attackerSide: Side)
   return { attacker: nextAttacker, defender: nextDefender };
 }
 
-function outgoing(mon: FieldMon, amount: number): number {
+function outgoing(mon: FieldMon, amount: number, rank?: number): number {
   const cut = hexCut(mon, amount, "spend");
-  return mon.curse ? Math.floor(cut / 2) : cut;
+  return dullCut(mon, mon.curse ? Math.floor(cut / 2) : cut, rank);
+}
+
+/**
+ * Giảm sát thương kỹ năng (engine chung, chủ game 23/11): số giảm chia lần lượt mỗi đợt 1, từ đợt đầu tới đợt cuối rồi
+ * quay lại; trong một đợt giảm phép trước, rồi vật lý, rồi chuẩn; đợt về 0 thì mất. Vì chưa biết trước kỹ năng có mấy
+ * đợt, `dullRun` chạy thử một lần ghi các đợt (`plan` null), chia số giảm, rồi chạy thật với cùng mầm.
+ */
+type DullPart = { n: number; group: number; rank: number };
+let skillDull: { uid: string; log: DullPart[]; plan: number[] | null; i: number; group: number; rank: number | null } | null = null;
+
+function dullCut(mon: FieldMon, amount: number, rank?: number): number {
+  const dull = skillDull;
+  if (!dull || dull.uid !== mon.uid) return amount;
+  const at = dull.i;
+  dull.i += 1;
+  if (!dull.plan) {
+    if (dull.rank === null) dull.group += 1;
+    dull.log.push({ n: amount, group: dull.group, rank: dull.rank ?? rank ?? 1 });
+    return amount;
+  }
+  return Math.max(0, amount - (dull.plan[at] ?? 0));
+}
+
+/** Một đợt có cả phép, vật lý, chuẩn: tính là một đợt khi chia số giảm. */
+function outPack(mon: FieldMon, parts: { phys: number; spell: number; tru: number }): { phys: number; spell: number; tru: number } {
+  const dull = skillDull && skillDull.uid === mon.uid ? skillDull : null;
+  if (dull) dull.group += 1;
+  const at = (rank: number, n: number) => {
+    if (dull) dull.rank = rank;
+    try {
+      return outgoing(mon, n);
+    } finally {
+      if (dull) dull.rank = null;
+    }
+  };
+  const spell = at(0, parts.spell);
+  const phys = at(1, parts.phys);
+  const tru = at(2, parts.tru);
+  return { phys, spell, tru };
+}
+
+export function dullPlan(log: DullPart[], budget: number): number[] {
+  const left = log.map((part) => Math.max(0, part.n));
+  const cut = log.map(() => 0);
+  const first = new Map<number, { at: number; rank: number }>();
+  log.forEach((part, index) => {
+    const seen = first.get(part.group);
+    if (!seen) first.set(part.group, { at: index, rank: part.rank });
+    else seen.rank = Math.min(seen.rank, part.rank);
+  });
+  const groups = [...first.entries()].sort((a, b) => a[1].rank - b[1].rank || a[1].at - b[1].at).map(([group]) => group);
+  while (budget > 0) {
+    let any = false;
+    for (const group of groups) {
+      if (budget <= 0) break;
+      const pick = log
+        .map((part, index) => ({ part, index }))
+        .filter((row) => row.part.group === group && left[row.index] > 0)
+        .sort((a, b) => a.part.rank - b.part.rank)[0];
+      if (!pick) continue;
+      left[pick.index] -= 1;
+      cut[pick.index] += 1;
+      budget -= 1;
+      any = true;
+    }
+    if (!any) break;
+  }
+  return cut;
+}
+
+/** Dry runs inside a skill (guards, look probes) must not move the planned cuts. */
+function dullMark(): () => void {
+  const dull = skillDull;
+  if (!dull) return () => {};
+  const len = dull.log.length;
+  const { i, group } = dull;
+  return () => {
+    dull.log.length = len;
+    dull.i = i;
+    dull.group = group;
+    dull.rank = null;
+  };
+}
+
+function dullRun(caster: FieldMon | null, run: () => Duel): Duel {
+  const budget = caster?.joy ?? 0;
+  if (!caster || budget <= 0 || skillDull?.uid === caster.uid) return run();
+  const prev = skillDull;
+  const seed = Math.floor(Math.random() * 2147483646) + 1;
+  const ward = wardLines.slice();
+  const charm = charmDamage;
+  const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
+  const reset = () => {
+    wardLines.splice(0, wardLines.length, ...ward);
+    charmDamage = charm;
+    skillHex = hex ? { ...hex, clips: hex.clips.map((clip) => ({ ...clip })) } : null;
+  };
+  const sign = (duel: Duel) =>
+    JSON.stringify(duel.players.map((player) => [player.hp, player.mirror ?? 0, player.field.map((mon) => (mon ? `${mon.uid}:${mon.hp}:${mon.maxHp}` : "-"))]));
+  const trial = (plan: number[] | null) => {
+    skillDull = { uid: caster.uid, log: [], plan, i: 0, group: 0, rank: null };
+    try {
+      return withSeed(seed, run);
+    } finally {
+      reset();
+    }
+  };
+  try {
+    const base = trial(null);
+    const log = skillDull!.log;
+    const baseSign = sign(base);
+    // Lần gọi nào thật sự làm mất máu (lần còn lại chỉ để hiện số trong thông báo).
+    const real = log.map((part, index) => part.n > 0 && sign(trial(log.map((_, k) => (k === index ? 1 : 0)))) !== baseSign);
+    const plan = log.map(() => 0);
+    const picked = log.map((part, index) => ({ part, index })).filter((row) => real[row.index]);
+    dullPlan(picked.map((row) => row.part), budget).forEach((cut, k) => {
+      plan[picked[k].index] = cut;
+    });
+    // Lần chỉ để hiện số lấy cùng mức giảm với lần thật có cùng số gốc, gần nhất phía sau.
+    log.forEach((part, index) => {
+      if (real[index] || part.n <= 0) return;
+      const twins = picked.filter((row) => row.part.n === part.n);
+      const twin = twins.find((row) => row.index > index) ?? twins[twins.length - 1];
+      if (twin) plan[index] = plan[twin.index];
+    });
+    skillDull = { uid: caster.uid, log: [], plan, i: 0, group: 0, rank: null };
+    return withSeed(seed, run);
+  } finally {
+    skillDull = prev;
+  }
 }
 
 type HexClip = { gross: number; net: number; seen: boolean; applied: boolean };
@@ -3783,6 +3921,7 @@ function lizardGuard(state: Duel, outer: (state: Duel) => Duel): Duel {
   const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def: 0, mdef: 0, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
   const ward = wardLines.splice(0);
   const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
+  const dull = dullMark();
   dodgeOff = true;
   let dry: Duel;
   try {
@@ -3791,6 +3930,7 @@ function lizardGuard(state: Duel, outer: (state: Duel) => Duel): Duel {
     dodgeOff = false;
     wardLines.splice(0, wardLines.length, ...ward);
     skillHex = hex;
+    dull();
   }
   const after = new Map(dry.players.flatMap((player) => player.field.flatMap((mon) => (mon ? [[mon.uid, mon] as const] : []))));
   const dodgers = lizards.filter((mon) => {
@@ -3839,6 +3979,7 @@ function rebukeGuard(state: Duel, attackerUid: string | null, outer: (state: Due
     const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def, mdef, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
     const ward = wardLines.splice(0);
     const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
+    const dull = dullMark();
     dodgeOff = true;
     let dry: Duel;
     try {
@@ -3847,6 +3988,7 @@ function rebukeGuard(state: Duel, attackerUid: string | null, outer: (state: Due
       dodgeOff = false;
       wardLines.splice(0, wardLines.length, ...ward);
       skillHex = hex;
+      dull();
     }
     const after = new Map(dry.players.flatMap((player) => player.field.flatMap((mon) => (mon ? [[mon.uid, mon] as const] : []))));
     return new Map(guards.map((mon) => [mon.uid, Math.max(0, mon.hp + BULK - (after.get(mon.uid)?.hp ?? mon.hp + BULK))] as const));
@@ -5657,11 +5799,7 @@ function resolveHell(state: Duel, attacker: FieldMon, defender: FieldMon): Duel 
   const figures = hellFigures(attacker.cardId);
   if (attacker.skillUp) figures.spell += attacker.skillUp;
   const shaved = shaveHex(attacker, figures);
-  const shot: HellPack = {
-    phys: outgoing(attacker, shaved.phys),
-    spell: outgoing(attacker, shaved.spell),
-    tru: outgoing(attacker, shaved.tru),
-  };
+  const shot: HellPack = outPack(attacker, shaved);
   releaseHex();
   const mainPool = phantomPool(defender, them.field);
   const landed = landHell(defender, shot, them.field);
@@ -6527,11 +6665,7 @@ function resolveHellFace(state: Duel, attacker: FieldMon, blocker: FieldMon | nu
   const figures = hellFigures(attacker.cardId);
   if (attacker.skillUp) figures.spell += attacker.skillUp;
   const shaved = shaveHex(attacker, figures);
-  const shot = {
-    phys: outgoing(caster, shaved.phys),
-    spell: outgoing(caster, shaved.spell),
-    tru: outgoing(caster, shaved.tru),
-  };
+  const shot = outPack(caster, shaved);
   releaseHex();
   const dealt = shot.phys + shot.spell + shot.tru;
   const field = armed.players[side].field.map((mon) => (mon?.uid === caster.uid ? { ...mon, dim: true } : mon));
@@ -6944,6 +7078,7 @@ export function castName(cardId: string, index: number): string {
   if (cardId === "loi-nguyen-cua-rong") return chipLabel(cardId, "fire");
   if (cardId === BREEZE) return index === 1 ? "Gió dịu đi" : chipLabel(cardId, "sun");
   if (cardId === CATAPULT) return chipLabel(cardId, "shell");
+  if (cardId === JOY_ANGEL) return chipLabel(cardId, "joy");
   if (cardId === "phu-thuy-rung-den") return chipLabel(cardId, "curse");
   if (cardId === "rong-ac-ma") return chipLabel(cardId, "orb");
   if (cardId === "cuc-bong-ma-quai") return chipLabel(cardId, "mult");
@@ -9275,11 +9410,7 @@ function strikeQueenSword(state: Duel, ownerSide: Side, mon: FieldMon, victimSid
     spell: swing.pack.spell + (swing.pack.spell > 0 ? charm : 0),
     tru: swing.pack.tru + (swing.pack.tru > 0 ? charm : 0),
   });
-  const shot: HellPack = {
-    phys: outgoing(mon, shaved.phys),
-    spell: outgoing(mon, shaved.spell),
-    tru: outgoing(mon, shaved.tru),
-  };
+  const shot: HellPack = outPack(mon, shaved);
   releaseHex();
   const them = state.players[victimSide];
   const pool = phantomPool(victim, them.field);
@@ -9376,7 +9507,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
   charmDamage = bonus;
   skillHex = caster?.hex && caster.hex.left > 0 ? { uid: caster.uid, left: 3, clips: [] } : null;
   try {
-    const result = castSkill(state, uid, targetUid, skillIndex, skipGnaw, extra);
+    const result = dullRun(caster, () => castSkill(state, uid, targetUid, skillIndex, skipGnaw, extra));
     const armed = caster && ((caster.blessAtk ?? 0) > 0 || (caster.blessDmg ?? 0) > 0 || (caster.nextDef ?? 0) > 0) && aidSpent(state, result)
       ? dropAid(result, caster.uid)
       : result;
@@ -9460,6 +9591,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   }
   if (mon.cardId === BREEZE && skillIndex === 0) return castSunlight(state, side, mon);
   if (mon.cardId === CATAPULT && skillIndex === 0) return castCatapult(state, side, mon, targetUid, extra);
+  if (mon.cardId === JOY_ANGEL && skillIndex === 0) return castJoy(state, side, mon);
   if (mon.cardId === "thien-than-be-nho") {
     const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
     if (!ally) return note(state, "Chọn một đồng minh.");
@@ -9635,11 +9767,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
       const figures = hellFigures(mon.cardId);
       if (caster.skillUp) figures.spell += caster.skillUp;
       const shaved = shaveHex(caster, figures);
-      const shot = {
-        phys: outgoing(caster, shaved.phys),
-        spell: outgoing(caster, shaved.spell),
-        tru: outgoing(caster, shaved.tru),
-      };
+      const shot = outPack(caster, shaved);
       const dealt = shot.phys + shot.spell + shot.tru;
       const field = armed.players[side].field.map((unit) => (unit?.uid === uid ? { ...unit, dim: true } : unit));
       let next = patch(armed, side, { ...armed.players[side], field });
@@ -11149,6 +11277,7 @@ function endTurnCore(state: Duel): Duel {
         hp: Math.min(cap, mon.hp + heal),
         stun: Math.max(0, mon.stun - 1),
         hex: mon.hex && mon.hex.left > 1 ? { left: mon.hex.left - 1 } : undefined,
+        joyUp: tickJoy(mon.joyUp),
         vulnerable: Math.max(0, mon.vulnerable - 1),
         safe: Math.max(0, (mon.safe ?? 0) - 1),
         hornNew: false,
@@ -11210,6 +11339,7 @@ function endTurnCore(state: Duel): Duel {
         level: mon.cardId === "ken-ngai" ? (mon.level ?? 0) + 1 : mon.level,
         stun: Math.max(0, mon.stun - 1),
         hex: mon.hex && mon.hex.left > 1 ? { left: mon.hex.left - 1 } : undefined,
+        joyUp: tickJoy(mon.joyUp),
         vulnerable: Math.max(0, mon.vulnerable - 1),
         chain: Math.max(0, (mon.chain ?? 0) - 1),
         gag: Math.max(0, (mon.gag ?? 0) - 1),
@@ -12358,4 +12488,68 @@ function settleMult(before: Duel, after: Duel): Duel {
     }
   }
   return next;
+}
+
+/** Thiên thần hạnh phúc (chủ game 23/11). */
+export const JOY_ANGEL = "thien-than-hanh-phuc";
+
+function joyFigures() {
+  const text = skillText(JOY_ANGEL);
+  return {
+    base: grabNums(text, /giảm\s*(\d+)\s*công/gi)[0] ?? 1,
+    extra: grabNums(text, /thêm\s*(\d+)\s*lần/gi)[0] ?? 2,
+    turns: grabNums(text, /trong\s*(\d+)\s*lượt/gi)[0] ?? 3,
+  };
+}
+
+/** Số lần hiệu ứng hào quang một Thiên thần hạnh phúc đang toả ra (gốc + mỗi lần kích hoạt còn hạn). */
+export function joyPower(mon: FieldMon | null | undefined): number {
+  if (!mon || mon.cardId !== JOY_ANGEL || mon.hp <= 0) return 0;
+  const { base, extra } = joyFigures();
+  return base + extra * (mon.joyUp?.length ?? 0);
+}
+
+/** Hào quang đè lên mọi quái thú hai bên, trừ chính thiên thần đó; nhiều nguồn thì cộng dồn. */
+function stampJoy(players: [Player, Player]) {
+  const angels = players.flatMap((player) => player.field.filter((mon): mon is FieldMon => joyPower(mon) > 0));
+  for (const side of [0, 1] as const) {
+    const field = players[side].field;
+    let changed = false;
+    const next = field.map((mon) => {
+      if (!mon) return mon;
+      const joy = angels.reduce((sum, angel) => sum + (angel.uid === mon.uid ? 0 : joyPower(angel)), 0) || undefined;
+      if (joy === mon.joy) return mon;
+      changed = true;
+      return { ...mon, joy };
+    });
+    if (changed) players[side] = { ...players[side], field: next as Player["field"] };
+  }
+}
+
+function tickJoy(list: number[] | undefined): number[] | undefined {
+  if (!list?.length) return list;
+  const next = list.map((left) => left - 1).filter((left) => left > 0);
+  return next.length ? next : undefined;
+}
+
+/** Kích hoạt Tia sáng hạnh phúc: 1 mana, thêm 2 lần hiệu ứng trong 3 lượt, cộng dồn; skill ngoài giao tranh. */
+function castJoy(state: Duel, side: Side, mon: FieldMon): Duel {
+  if (state.counterAsk || state.hold) return note(state, "Không dùng trong giao tranh.");
+  const you = state.players[side];
+  const before = you.stars;
+  const paid = pay(you, skillManaCost(JOY_ANGEL, 1));
+  if (!paid) return note(state, "Cần 1 mana.");
+  const { extra, turns } = joyFigures();
+  const field = paid.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, joyUp: [...(unit.joyUp ?? []), turns] } : unit));
+  const next = pingStars(patch(state, side, { ...paid, field: field as Player["field"] }), side, before, paid.stars);
+  const power = joyPower(next.players[side].field.find((unit) => unit?.uid === mon.uid));
+  const done = note(next, `${castName(JOY_ANGEL, 0)}: hào quang thêm ${extra} lần trong ${turns} lượt, giảm ${power} công và ${power} sát thương kỹ năng của mọi quái thú khác.`, "heal");
+  return { ...done, mends: [{ uid: mon.uid, n: 0 }] };
+}
+
+/** Tính lại hào quang Thiên thần hạnh phúc trên cả hai sân (dùng khi sân được đặt thẳng, không qua `patch`). */
+export function refreshJoy(state: Duel): Duel {
+  const players = [...state.players] as [Player, Player];
+  stampJoy(players);
+  return { ...state, players };
 }

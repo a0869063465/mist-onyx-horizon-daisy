@@ -1115,6 +1115,7 @@ export const PENDING_NOTES: string[] = [
   "Pháo kích của Rùa máy bắn đá: sát thương chuẩn bằng 65% máu hiện tại của quái làm đạn cộng số sao của nó.",
   "Thêm Tử thần của những lá bài (2 sao, công 4, máu 2, hệ Vương quốc) với nội tại Gặt hồn: tiêu hao 1 mana để tấn công, đánh vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên trên tay.",
   "Lá bị bỏ khỏi tay (Gặt hồn của Tử thần của những lá bài, Sinh mệnh mới của Quả trứng sinh mệnh) nhấc lên, bay vòng cung về góc phải trên rồi cháy tan thành lửa xanh lá; lá của đối thủ cũng vậy nhưng úp.",
+  "Thêm Thiên thần hạnh phúc (1 sao, máu 1): hào quang giảm 1 công và 1 sát thương kỹ năng của mọi quái thú khác trên sân; tiêu 1 mana để thêm 2 lần hiệu ứng trong 3 lượt, cộng dồn.",
 ];
 
 function remarkOf(notes: string[]) {

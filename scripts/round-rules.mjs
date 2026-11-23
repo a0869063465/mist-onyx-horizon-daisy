@@ -2074,6 +2074,38 @@ test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 65% 
   assert.notEqual(D.useSkill(make(), uid(s, 0, 0), uid(s, 1, 0), 0, true, null).step, "respond");
 });
 
+test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát thương kỹ năng mọi quái trừ nó; kích hoạt 1 mana thêm 2 lần, cộng dồn; giảm chia từng đợt", () => {
+  const make = (angel) => {
+    const mine = { 0: ["rong-con", { atk: 3, hp: 6, maxHp: 6 }] };
+    if (angel) mine[1] = ["thien-than-hanh-phuc"];
+    let s = board(mine, { 0: ["khong-lo-mot-mat", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0 })) };
+    return D.refreshJoy(s);
+  };
+  const s = make(true);
+  assert.equal(D.liveAtk(at(s, 0, 0)), 2, "đồng minh cũng bị giảm 1 công");
+  assert.equal(D.liveAtk(at(s, 1, 0)), 3, "quái địch bị giảm 1 công");
+  assert.equal(at(s, 0, 1).joy, undefined, "không giảm chính nó");
+  const cast = (state) => {
+    const used = D.useSkill(state, uid(state, 0, 0), uid(state, 1, 0), 0);
+    return used.step === "respond" ? D.passResponse(used) : used;
+  };
+  const plain = cast(make(false));
+  const dull = cast(s);
+  const lost = (x) => 20 - at(x, 1, 0).hp;
+  assert.ok(lost(plain) > 0, plain.live);
+  assert.equal(lost(dull), lost(plain) - 1, `Hơi thở rồng giảm 1 | ${plain.live} | ${dull.live}`);
+  const up = D.useSkill(s, uid(s, 0, 1), null, 0);
+  assert.equal(up.players[0].orb, 4, up.live);
+  assert.deepEqual(at(up, 0, 1).joyUp, [3]);
+  assert.equal(at(up, 1, 0).joy, 3, "1 + 2");
+  const twice = D.refreshJoy({ ...up, players: up.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === uid(s, 0, 1) ? { ...m, joyUp: [3, 2], used: false, dim: false } : m)) } : p)) });
+  assert.equal(at(twice, 1, 0).joy, 5, "cộng dồn");
+  // Chia số giảm: mỗi đợt 1, lần lượt rồi quay lại; trong một đợt phép trước, rồi vật lý, rồi chuẩn.
+  assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 0 }, { n: 1, group: 2, rank: 0 }, { n: 3, group: 3, rank: 0 }], 5), [2, 1, 2]);
+  assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 1 }, { n: 2, group: 1, rank: 0 }, { n: 2, group: 1, rank: 2 }], 3), [1, 2, 0]);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();
