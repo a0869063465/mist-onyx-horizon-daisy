@@ -1,4 +1,4 @@
-import { DEFAULT_DECK, FORMS, MONSTERS, copyCap, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
+import { DEFAULT_DECK, FORMS, MONSTERS, artSrc, copyCap, SPELLS, monsterCard, spellCard, spellSrc } from "./catalog.ts";
 import { ENV_KINDS } from "./env-kinds.ts";
 import { trialTag } from "./owned-cards.ts";
 import { addOwned, addStars, loadRates, naturalTier, ownedCount, ownedIds, starCount, tierOf, type PackEntry, type Rates, type Tier } from "./shop.ts";
@@ -18,6 +18,8 @@ export const BLOCK = 60;
 export const SPELL_START = 601;
 /** The spell album's cover. */
 const SPELL_COVER = "sam-set-tan-the";
+/** Names of environments that have no card yet. */
+const ENV_TITLES: Record<string, string> = { "vuong-quoc": "Vương đô" };
 
 /** A kind inside an environment's block, starting `offset` numbers in; `rest` takes the monsters no kind lists. */
 type Part = { label: string; offset: number; ids?: string[]; rest?: boolean };
@@ -142,7 +144,9 @@ export function albums(): Album[] {
   ALBUM_ENVS.forEach((row, index) => {
     const cards = numberEnv(row.env, 1 + index * BLOCK, row.parts, sets);
     if (!cards.length) return;
-    list.push({ id: row.env, name: spellCard(row.env)?.name ?? row.env, env: spellCard(row.env) ? row.env : null, cover: spellSrc(row.env), cards });
+    // Môi trường chưa có lá (Vương quốc): tên theo kệ sách, bìa lấy hình quái đầu tiên.
+    const envCard = spellCard(row.env);
+    list.push({ id: row.env, name: envCard?.name ?? ENV_TITLES[row.env] ?? row.env, env: envCard ? row.env : null, cover: envCard ? spellSrc(row.env) : artSrc(cards[0].id), cards });
   });
   const spells = SPELLS.map((card) => card.id).sort((a, b) => spellKindRank(a) - spellKindRank(b));
   list.push({

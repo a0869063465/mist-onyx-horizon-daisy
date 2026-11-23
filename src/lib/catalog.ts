@@ -607,6 +607,18 @@ export const MONSTERS: MonsterCard[] = [
     "art": "qua-trung-sinh-menh"
   },
   {
+    "id": "tu-than-cua-nhung-la-bai",
+    "name": "Tử thần của những lá bài",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Gặt hồn**__\nNội tại: Tiêu hao 1 mana để tấn công, khi tấn công được vào người chơi, đối thủ phải huỷ 1 lá ngẫu nhiên trên tay. ",
+    "atk": 4,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "tu-than-cua-nhung-la-bai"
+  },
+  {
     "id": "dong-ho-kho-doan",
     "name": "Đồng hồ khó đoán",
     "stars": 2,

@@ -58,6 +58,7 @@ import { AttackEmblem } from "@/components/game/attack-emblem";
 import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
 import { DeckPile } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
+import { CardBurn, type BurnRect } from "@/components/game/card-burn";
 import { CardShow } from "@/components/game/card-show";
 import { ConfirmNote, FoeNote, type NoteHead } from "@/components/game/act-notes";
 import { confirmOn, setConfirmOn } from "@/lib/confirm-ask";
@@ -894,7 +895,7 @@ const ROUSE_CAST = 400;
 
 /** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
 function attackTerms(mon: FieldMon): string | null {
-  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
+  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh", "tu-than-cua-nhung-la-bai"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
     const cost = /Tiêu hao\s*(\d+)\s*mana/i.exec(plainCopy(monsterCard(mon.cardId)?.skill ?? ""))?.[1] ?? "1";
     return `Tiêu hao ${cost} mana để tấn công`;
   }
@@ -2220,6 +2221,11 @@ function PlayPage() {
   const starTimer = useRef(0);
   // Lá bốc bay từ xấp lên tay (chủ game 30/10).
   const [flights, setFlights] = useState<DrawFlight[]>([]);
+  // Chủ game 22/11: lá bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới) nhấc lên, bay cung về 2 giờ rồi cháy tan (card-burn.tsx).
+  const [burns, setBurns] = useState<Array<{ id: number; rect: BurnRect; face: ReactNode }>>([]);
+  const burnSeen = useRef<{ mid: string | null; id: number }>({ mid: null, id: 0 });
+  const handRects = useRef<Record<string, BurnRect>>({});
+  const burnPrev = useRef<Duel | null>(null);
   const flightId = useRef(0);
   const flightDone = (id: number) => setFlights((list) => list.filter((flight) => flight.id !== id));
   // Số lá còn trong xấp / trên tay: ẩn, chỉ hiện khi bấm (chủ game 30/10). Địch: bấm xấp hoặc khay tay bật/tắt; xấp mình: nhấp
@@ -3030,7 +3036,9 @@ function PlayPage() {
           }
         });
       }
-      if (nowFoe.hand.length < wasFoe.hand.length) born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "spell" });
+      // Phép bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới; chủ game 22/11) không phải phép đánh ra: nó cháy tan, không loé trên khay.
+      const burned = duel.discard && duel.discard.id !== prev.discard?.id ? duel.discard.drops.filter((drop) => drop.side === foeSide && drop.at.startsWith("s:")).length : 0;
+      if (nowFoe.hand.length < wasFoe.hand.length - burned) born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "spell" });
     }
     ([0, 1] as const).forEach((side) => {
       const was = prev.players[side];
@@ -3058,6 +3066,67 @@ function PlayPage() {
     if (born.length) setFlights((list) => [...list, ...born]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, openerOpen, loaded]);
+
+  // Lá bị bỏ khỏi tay: dựng lá bay từ chỗ cũ của nó (đo ở lần vẽ trước), phía đối thủ là lá úp trong khay.
+  useLayoutEffect(() => {
+    const old = handRects.current;
+    const prev = burnPrev.current;
+    if (!duel) return;
+    const seen = burnSeen.current;
+    const now = duel.discard;
+    if (seen.mid !== duel.mid) {
+      burnSeen.current = { mid: duel.mid ?? null, id: now?.id ?? 0 };
+      return;
+    }
+    if (!now || now.id === seen.id) return;
+    burnSeen.current = { mid: duel.mid ?? null, id: now.id };
+    if (!loaded || document.hidden) return;
+    const born: Array<{ id: number; rect: BurnRect; face: ReactNode }> = [];
+    for (const drop of now.drops) {
+      const rect = drop.side === viewer ? old[drop.at] : undefined;
+      let face: ReactNode = null;
+      let place: BurnRect | undefined = rect;
+      if (drop.side === viewer) {
+        const hit = /^([rs]):(\d+)$/.exec(drop.at);
+        const was = hit && prev ? prev.players[viewer] : null;
+        if (hit && was && place) {
+          const index = Number(hit[2]);
+          if (hit[1] === "r") {
+            const held = was.reserve[index];
+            const card = held ? monsterCard(held.id) : null;
+            if (held && card) face = <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} />;
+          } else {
+            const spell = was.hand[index];
+            if (spell) face = <CardFace spellId={spell} hand gems={was.tolls?.[index] ? `${spellCard(spell)?.gems ?? 0}+1` : undefined} />;
+          }
+        }
+      } else {
+        const back = document.querySelector<HTMLElement>(".foe-fan img");
+        const box = back?.getBoundingClientRect();
+        if (box && box.width > 0) {
+          place = { left: box.left, top: box.top, width: box.width, height: box.height };
+          face = <img src="/ui/card-back-foe.webp" alt="" draggable={false} />;
+        }
+      }
+      if (face && place) born.push({ id: (flightId.current += 1), rect: place, face });
+    }
+    if (born.length) {
+      playCue("burn");
+      setBurns((list) => [...list, ...born]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel?.discard?.id, duel?.mid]);
+  // Sau mỗi lần vẽ: nhớ chỗ từng lá trên tay và ván hiện tại, để lần bỏ lá kế còn biết lá nằm đâu và là lá gì.
+  useLayoutEffect(() => {
+    const rects: Record<string, BurnRect> = {};
+    document.querySelectorAll<HTMLElement>(".hand [data-hand]").forEach((pick) => {
+      const box = pick.querySelector<HTMLElement>(".hand-card")?.getBoundingClientRect();
+      const key = pick.getAttribute("data-hand");
+      if (box && key && box.width > 0) rects[key] = { left: box.left, top: box.top, width: box.width, height: box.height };
+    });
+    handRects.current = rects;
+    burnPrev.current = duel;
+  });
 
   // The reaction icons fade out a moment after the wait is over and then report it (onClosed); this is the backstop
   // in case the fade never runs.
@@ -7230,6 +7299,11 @@ function PlayPage() {
     <main className={`stage is-play${replay ? " is-replay" : ""}${countBlink ? " count-blink" : ""}`} data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       <DrawFlights flights={flights} onDone={flightDone} />
+      {burns.map((item) => (
+        <CardBurn key={item.id} rect={item.rect} onDone={() => setBurns((list) => list.filter((row) => row.id !== item.id))}>
+          {item.face}
+        </CardBurn>
+      ))}
       {watch ? (
         <>
           <div className="watch-shield" aria-hidden="true" />

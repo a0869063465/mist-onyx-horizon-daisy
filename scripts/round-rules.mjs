@@ -1820,6 +1820,27 @@ test("Quả trứng sinh mệnh (21/11): Sinh mệnh mới lần đầu 1 mana +
   assert.equal(same.players[0].orb, n.players[0].orb, same.live);
 });
 
+test("Tử thần của những lá bài (22/11): Gặt hồn tốn 1 mana để tấn công; vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên; bị chặn thì không", () => {
+  let s = board({ 0: ["tu-than-cua-nhung-la-bai", {}] }, { 0: ["may-chem", {}] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? 1 : 0, reserve: i === 1 ? [{ id: "rong-con", hp: 2, maxHp: 2 }] : p.reserve, hand: i === 1 ? ["hoan-doi"] : p.hand, tolls: i === 1 ? [false] : p.tolls })) };
+  const broke = D.attackFace({ ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, orb: 0 } : p)) }, uid(s, 0, 0));
+  assert.notEqual(broke.pending?.kind, "face", "thiếu mana không đánh được");
+  const swung = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(swung.players[0].orb, 0, "tấn công tốn 1 mana");
+  const hand = (p) => p.reserve.length + p.hand.length;
+  const done = D.passResponse(swung);
+  assert.ok(done.players[1].hp < s.players[1].hp, done.live);
+  assert.equal(hand(done.players[1]), hand(s.players[1]) - 1, "đối thủ huỷ 1 lá: " + done.live);
+  assert.match(done.live, /Gặt hồn/);
+  assert.equal(done.discard?.drops.length, 1);
+  assert.equal(done.discard.drops[0].side, 1);
+  assert.ok(["rong-con", "hoan-doi"].includes(done.discard.drops[0].card));
+  // Bị chặn: không vào người chơi, không mất lá.
+  const blocked = D.passResponse(D.assignBlock(swung, uid(s, 1, 0)));
+  const settled = blocked.step === "respond" ? D.passResponse(blocked) : blocked;
+  assert.equal(hand(settled.players[1]), hand(s.players[1]), "bị chặn thì không huỷ lá: " + settled.live);
+});
+
 test("Quả trứng thiên sứ chặn đòn đánh thường, kẻ đánh mệt, quái bị đánh Trả đòn không tốn phí", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 3, def: 0, hp: 20, maxHp: 20 }] }, { 0: ["may-chem", { atk: 4, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
   s = D.testGrant(s, 1, "qua-trung-thien-su", false);
