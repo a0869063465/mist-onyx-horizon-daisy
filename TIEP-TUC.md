@@ -1,7 +1,7 @@
 # Việc đang dở (đọc trước khi làm)
 
-## Z3: Lá chắn gộp 1 loại + video khiên (23/11, CHƯA LÀM CODE, chủ game dừng để tài khoản khác làm tiếp)
-1. Việc vừa làm: chỉ nghiên cứu, chưa sửa code. Ghi hết yêu cầu, câu trả lời chốt, đo video, bản đồ code vào `docs/z3-khien/README.md` (kèm 3 video `buffkhien/dokhien/matkhien.mp4`). Tên Z3 trùng mục Z3 khung mô tả quái trong `docs/y-chua-lam.md` nhưng là việc KHÁC.
+## Z4: Lá chắn gộp 1 loại + video khiên (23/11, CHƯA LÀM CODE, chủ game dừng để tài khoản khác làm tiếp)
+1. Việc vừa làm: chỉ nghiên cứu, chưa sửa code. Ghi hết yêu cầu, câu trả lời chốt, đo video, bản đồ code vào `docs/z4-khien/README.md` (kèm 3 video `buffkhien/dokhien/matkhien.mp4`). Đây là Z4, KHÁC mục Z3 khung mô tả quái trong `docs/y-chua-lam.md`.
 2. Hiện trạng: nhận 3 video. Luật chốt: 1 loại lá chắn thay hết khiên vật lý/phép, chặn trọn 1 đòn (mọi loại sát thương, mọi đợt), vỡ ngay, tự mất sau 2 lượt chung, khiên vĩnh viễn cũng thành 2 lượt; 3 lá Hiệp sĩ (hộ vệ, hậu, vua) để chủ game sửa sau.
 3. Việc sắp làm: luật = **Opus 5.5, nỗ lực high**; ghép video + canh âm khớp lúc đòn tới = **Sonnet 5.5, nỗ lực medium**; xong đưa mô tả cũ cho chủ game viết lại.
 

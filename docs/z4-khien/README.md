@@ -1,6 +1,6 @@
-# Z3: Lá chắn gộp 1 loại + video khiên (23/11, CHƯA LÀM CODE, để tài khoản khác làm tiếp)
+# Z4: Lá chắn gộp 1 loại + video khiên (23/11, CHƯA LÀM CODE, để tài khoản khác làm tiếp)
 
-Chủ game dừng giữa chừng. Chưa sửa dòng code nào (git status sạch lúc dừng). Chỉ có nghiên cứu + câu trả lời chốt dưới đây. LƯU Ý: tên "Z3" cũng đang dùng cho mục khung mô tả quái trong `docs/y-chua-lam.md`; đây là việc KHÁC.
+Chủ game dừng giữa chừng. Chưa sửa dòng code nào (git status sạch lúc dừng). Chỉ có nghiên cứu + câu trả lời chốt dưới đây. LƯU Ý: đây là Z4 (không phải Z3 khung mô tả quái trong `docs/y-chua-lam.md`).
 
 ## Yêu cầu của chủ game (nguyên ý)
 Bây giờ chỉ dùng 1 loại lá chắn (bỏ khiên vật lý / khiên phép riêng), chặn cả sát thương vật lý, phép và chuẩn. Sát thương hỗn hợp chặn hết, nhiều đợt cũng chặn hết. Khiên chỉ tồn tại 2 lượt rồi mất. 3 video chèn (trong thư mục này):
