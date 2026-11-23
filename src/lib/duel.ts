@@ -12159,16 +12159,17 @@ export function catapultShell(extra: string | null | undefined): { ammo: string;
   return ammo ? { ammo, wall: mode === "wall" } : null;
 }
 
-/** Sát thương chuẩn của Pháo kích: 250% số sao của quái làm đạn, làm tròn (số % đọc từ chữ lá). */
-export function catapultDamage(ammoCardId: string): number {
-  const stars = monsterCard(ammoCardId)?.stars ?? 1;
-  const pct = grabNums(skillText(CATAPULT), /(\d+)\s*%/g)[0] ?? 250;
-  return Math.round((stars * pct) / 100);
+/** Sát thương chuẩn của Pháo kích (chủ game 23/11): 65% máu HIỆN TẠI của quái làm đạn (làm tròn thường) + số sao của nó.
+ *  Số % đọc từ chữ lá. */
+export function catapultDamage(ammo: { cardId: string; hp: number }): number {
+  const stars = monsterCard(ammo.cardId)?.stars ?? 1;
+  const pct = grabNums(skillText(CATAPULT), /(\d+)\s*%/g)[0] ?? 65;
+  return Math.round((Math.max(0, ammo.hp) * pct) / 100) + stars;
 }
 
 /**
  * Pháo kích (chủ game 23/11): skill chậm, chờ trong chuỗi. Lúc nổ, 1 quái thú của mình trên sân làm đạn pháo: nó bay
- * vào mục tiêu (quái, người chơi hoặc lá tường thành của đối thủ) và nổ, gây sát thương chuẩn bằng 250% số sao của nó;
+ * vào mục tiêu (quái, người chơi hoặc lá tường thành của đối thủ) và nổ, gây sát thương chuẩn bằng 65% máu hiện tại + số sao của nó;
  * đạn mất theo vụ nổ (vào mộ như quái bị hạ). Đạn đã mất trước lúc nổ thì không bắn được, skill bị huỷ, không tốn mana.
  */
 function castCatapult(state: Duel, side: Side, mon: FieldMon, targetUid: string | null, extra: string | null): Duel {
@@ -12186,7 +12187,7 @@ function castCatapult(state: Duel, side: Side, mon: FieldMon, targetUid: string 
   const before = you.stars;
   const paid = pay(you, cost);
   if (!paid) return note(state, `Cần ${cost} gem.`);
-  const raw = catapultDamage(ammo.cardId);
+  const raw = catapultDamage(ammo);
   const skill = castName(CATAPULT, 0);
   const field = paid.field.map((unit) => (unit?.uid === ammo.uid ? { ...unit, hp: 0 } : unit)) as Player["field"];
   let next = pingStars(patch(state, side, settleCocoon(dropDead({ ...paid, field }))), side, before, paid.stars);

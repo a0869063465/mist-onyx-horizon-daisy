@@ -438,7 +438,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Rùa máy bắn đá",
     "stars": 2,
     "gems": 0,
-    "skill": "**__Pháo kích__**:\n1 mana, dùng 1 quái thú đang trên sân của mình làm đạn pháo. Gây sát thương chuẩn bằng 250% sao của quái đó lên 1 mục tiêu (quái, người chơi, tường thành).",
+    "skill": "**__Pháo kích__**:\n1 mana, dùng 1 quái thú đang trên sân của mình làm đạn pháo. Gây sát thương chuẩn bằng 65% máu của quái đó + số sao của nó lên 1 mục tiêu (quái, người chơi, tường thành).",
     "atk": 0,
     "def": 3,
     "mdef": 1,

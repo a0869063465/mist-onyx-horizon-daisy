@@ -2011,12 +2011,12 @@ test("Khoá 1: quái bị khoá không chặn, không Trả đòn; hết đòn t
   assert.equal(at(sealed, 1, 0).seal, undefined);
 });
 
-test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 250% sao chuẩn lên quái/người chơi, phá lá tường thành; đạn mất trước thì huỷ, không tốn mana", () => {
+test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 65% máu hiện tại + sao chuẩn lên quái/người chơi, phá lá tường thành; đạn mất trước thì huỷ, không tốn mana", () => {
   const make = () => {
     let s = board({ 0: ["rua-may-ban-da", { hp: 3, maxHp: 3 }], 1: ["rong-con", { hp: 5, maxHp: 5 }], 3: ["may-chem", { hp: 2, maxHp: 2 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10, def: 5 }] });
     return { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
   };
-  // Bắn quái: đạn Rồng con → 250% sao chuẩn, bỏ qua thủ.
+  // Bắn quái: đạn Rồng con máu 5 (1 sao) → làm tròn(3,25) + 1 = 4 chuẩn, bỏ qua thủ.
   let s = make();
   const shell = uid(s, 0, 1);
   const queued = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0, true, shell);
@@ -2024,16 +2024,17 @@ test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 250%
   assert.equal(queued.players[0].orb, 3, "chưa trả mana lúc lên hàng chờ");
   assert.match(D.assignBlock(queued, uid(s, 1, 0)).live, /không chặn được/);
   const done = D.passResponse(queued);
-  const blow = D.catapultDamage("rong-con");
+  const blow = Math.round(5 * 0.65) + 1;
+  assert.equal(D.catapultDamage(at(s, 0, 1)), blow, "65% máu hiện tại (5) làm tròn + 1 sao");
   assert.equal(at(done, 1, 0).hp, 10 - blow, `Khổng lồ mất ${blow} dù thủ 5 | ${done.live}`);
   assert.equal(at(done, 0, 1), null, "đạn mất");
   assert.equal(done.players[0].orb, 2, "trả 1 mana lúc nổ");
   assert.ok(done.boom?.from?.[shell], "hiệu ứng biết con rùa");
-  // Bắn người chơi: đạn Máy chém (1 sao) → 3 chuẩn (2,5 làm tròn).
+  // Bắn người chơi: đạn Máy chém máu 2 (1 sao) → làm tròn(1,3) + 1 = 2 chuẩn.
   s = make();
   const hp = s.players[1].hp;
   const face = D.passResponse(D.useSkill(s, uid(s, 0, 0), null, 0, true, uid(s, 0, 3)));
-  assert.equal(face.players[1].hp, hp - 3, face.live);
+  assert.equal(face.players[1].hp, hp - 2, face.live);
   // Bắn lá tường thành: Gương phòng hộ của đối thủ bị phá.
   s = make();
   s = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, mirror: 3 } : p)) };

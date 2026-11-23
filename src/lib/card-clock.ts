@@ -445,11 +445,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 3,
     "mdef": 1,
     "hp": 3,
-    "text": "9993fef4",
+    "text": "34601796",
     "added": "2026-11-23",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-23"
   },
   "kazura": {
     "kind": "monster",

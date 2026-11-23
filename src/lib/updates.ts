@@ -1112,6 +1112,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
   "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
   "Thêm lá Rùa máy bắn đá: Pháo kích lấy 1 quái thú của mình làm đạn, bắn vào quái, người chơi hoặc lá tường thành của đối thủ.",
+  "Pháo kích của Rùa máy bắn đá: sát thương chuẩn bằng 65% máu hiện tại của quái làm đạn cộng số sao của nó.",
 ];
 
 function remarkOf(notes: string[]) {
