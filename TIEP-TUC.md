@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Đổi tên Tước đoạt → Giải giới (23/11, Opus 5.5 high, nhánh `ccr-42ba0a1d-w5tvmy`, CHƯA áp `main`)
+1. Việc vừa làm: tên trong game "Tước đoạt" → "Giải giới" (chữ lá, nút, PENDING_NOTES, `STALE_SKILLS`); tên trong code `seal` → `disarm` (`FieldMon.disarm`, `disarmed()`, `disarmMon`, `rearmMon`, `rearmAll`, `settleDisarm`, `DISARMER`, `DISARM_KEEP/KIT`, cue/fx `disarm`, `DisarmBlast`, `.is-disarmed`, file `disarm-passives.ts` + `DISARM_PASSIVES`). Không đổi luật. tsc sạch, round-rules 96/96.
+2. Hiện trạng: lý do đổi = `main` có Khoá 1 (keyword của Thiên sứ vô hình, phiên khác) cũng dùng `FieldMon.seal` (chuỗi uid) và `settleSeal`, gộp sẽ lẫn. Còn giữ `seal` không liên quan: `sealHarpy`, `seal(prev, duel)` lưu lịch sử trận, UiCue "seal" (ổ khoá), mail `Seal`, `SEALED` updates.
+3. Việc sắp làm: chủ game chọn đổi Khoá 1 `seal` → `lock` hay không, rồi gộp `main` vào nhánh và áp `main` (**Opus 5.5 high**).
+
 ## Skill làm lá mới (23/11, Haiku 5.5, nhánh `ccr-42ba0a1d-w5tvmy`, ĐÃ LÀM)
 1. Việc vừa làm: tạo `.claude/skills/la-moi/SKILL.md` (thứ tự làm, mô hình từng phần, file dễ quên). Mỗi lần làm lá mới phải đọc skill này.
 2. Hiện trạng: Lang Nha Bạc + Sói con mới có dữ liệu, chưa có luật. Skill vừa viết chưa được dùng thử.

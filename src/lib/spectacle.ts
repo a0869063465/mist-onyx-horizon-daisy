@@ -29,7 +29,7 @@ export type FxEvent =
   | { t: "rouse"; x: number; y: number; color: string; ang?: number; pack?: FxPack }
   /** Chủ game 16/11: quái vừa lên hàng chờ phản ứng với kỹ năng: phát quang một lần quanh lá (video + âm của chủ game). `w` = bề ngang lá, % bàn. */
   | { t: "flare"; x: number; y: number; w: number; pack?: FxPack }
-  | { t: "seal"; x: number; y: number; w: number; pack?: FxPack };
+  | { t: "disarm"; x: number; y: number; w: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

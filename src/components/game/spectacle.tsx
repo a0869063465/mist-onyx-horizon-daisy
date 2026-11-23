@@ -469,7 +469,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "seal") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "disarm") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -861,16 +861,16 @@ export function FlareBlast() {
   );
 }
 
-/** Chủ game 22/11: Tước đoạt. Video 512×512 cùng cỡ/tâm với phát quang (lá 50% rộng, tâm 50% / 44,8%): tia sét xanh lục quét qua lá rồi lá xám đi. */
-export function SealBlast() {
+/** Chủ game 22/11: Giải giới. Video 512×512 cùng cỡ/tâm với phát quang (lá 50% rộng, tâm 50% / 44,8%): tia sét xanh lục quét qua lá rồi lá xám đi. */
+export function DisarmBlast() {
   const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
   useEffect(() => {
     const stop = subscribeFx((event) => {
-      if (event.t !== "seal") return;
+      if (event.t !== "disarm") return;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
       setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
-      playCue("seal");
+      playCue("disarm");
     });
     return () => {
       stop();

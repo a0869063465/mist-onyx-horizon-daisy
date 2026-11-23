@@ -14917,5 +14917,5 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
   .slot .fu-body.is-flip, .slot .field-unit > .lurk-turn, .slot .fu-body > .fog-wipe { animation-duration: 0.01s; }
 }
 
-/* Tước đoạt (chủ game 22/11): quái bị vô hiệu hoá xám đi như trong video, sáng lại khi hết vòng. */
-.field-unit.is-sealed { filter: grayscale(0.85) brightness(0.92); transition: filter 0.6s ease 0.5s; }
+/* Giải giới (chủ game 22/11): quái bị vô hiệu hoá xám đi như trong video, sáng lại khi hết vòng. */
+.field-unit.is-disarmed { filter: grayscale(0.85) brightness(0.92); transition: filter 0.6s ease 0.5s; }
