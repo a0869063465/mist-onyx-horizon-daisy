@@ -1524,6 +1524,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 2",
      "tag": "",
      "text": "Đội mồ:\nMỗi lượt, hắn sẽ gọi 1 thây ma từ lòng đất với 1 công và 1 máu. Những thay ma này không thể chặn đòn nhưng có thể tấn công ngay mà không qua hàng chờ.\nKhi hắn chết, những bóng ma cũng huỷ theo."
+    },
+    {
+     "id": "thien-than-tinh-lang",
+     "name": "Thiên thần tĩnh lặng",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 3 · Thủ 0 · Thủ phép 2 · Máu 4",
+     "tag": "",
+     "text": "Kết thúc:\nLật: huỷ 1 lá bài trên tay đối thủ"
     }
    ]
   }
