@@ -1443,6 +1443,15 @@
      "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 2",
      "tag": "",
      "text": "Con mồi:\nMỗi một quái thú đồng minh triệu hồi sau nó, ra đòn lên nó và rút 1 lá bài, kích hoạt hiệu ứng tương tác với con mồi của quái thú đó nếu có."
+    },
+    {
+     "id": "bo-hung-thu-linh",
+     "name": "Bọ Hung thủ lĩnh",
+     "cost": 3,
+     "mana": 1,
+     "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 3",
+     "tag": "",
+     "text": "Tướng lĩnh:\nKhi triệu hồi, với mỗi quái thú đồng minh khác trên sân, hắn nhận được 1 công và 1 máu.\nTừ đồng minh thứ 3, hắn được nhận thêm 1 phòng ngự nữa với mỗi đồng minh.\nPhóng lao: Tiêu hao 1 mana, phóng mũi giáo về 1 mục tiêu quái hàng sau của địch, với sát thương vật lý bằng với công của hắn mà không thể bị chặn đòn."
     }
    ]
   }
