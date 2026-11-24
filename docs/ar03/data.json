@@ -1425,6 +1425,15 @@
      "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 2",
      "tag": "",
      "text": "Siêu giáp:\nNội tại: khi ta triệu hồi và mỗi lần bị ra đòn, ban cho ta 1 công 2 thủ 2 thủ phép và 2 máu tối đa trong 3 lượt.\nNội tại: mỗi khi tấn công, đối thủ bắt buộc phải trả đòn trước bằng đòn đánh tay, rồi ta mới ra đòn."
+    },
+    {
+     "id": "qua-cau-phat-no",
+     "name": "Quả cầu phát nổ",
+     "cost": 3,
+     "mana": 0,
+     "stats": "Công 3 · Thủ 0 · Thủ phép 0 · Máu 1",
+     "tag": "",
+     "text": "Cài bom:\nNội tại: khi triệu hồi chọn 1 quái thú để áp vào. Sau 3 lượt hoặc khi quái thú bị tác động bởi sát thương. Cầu sẽ lập tức tự phát nổ, gây sát thương chuẩn bằng công cộng với số sao của quái thú đó thành sát thương chuẩn."
     }
    ]
   }
