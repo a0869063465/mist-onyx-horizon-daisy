@@ -1551,6 +1551,15 @@
      "stats": "Công 3 · Thủ 0 · Thủ phép 4 · Máu 3",
      "tag": "",
      "text": "Phủ sương mù:\nTiêu hao 1 mana, để đổi 1 lá bài đồng minh trên sân, với 1 lá bài có chỉ số máu chênh lệch không quá 2 đơn vị trong bộ bài (lựa chọn từ 2 lá) về sân ở trạng thái úp."
+    },
+    {
+     "id": "than-gio",
+     "name": "Thần gió",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 2 · Thủ 0 · Thủ phép 3 · Máu 5",
+     "tag": "",
+     "text": "Nổi gió:\n1 mana, thổi 1 lá tường thành hoặc 1 quái thú về tay đối phương."
     }
    ]
   }
