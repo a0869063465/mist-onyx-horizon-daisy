@@ -1416,6 +1416,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 1",
      "tag": "",
      "text": "Thế mạng:\nNội tại: Nó có thể chặn thay cho bất kỳ mục tiêu nào, kể cả quái hàng trước.\nNội tại: Mỗi đầu lượt của bạn, bạn phải trả số mana để duy trì tiếp nó trên sân bằng với số lần mà nó đã hồi sinh trước đó."
+    },
+    {
+     "id": "te-giap-phi-thu",
+     "name": "Tê giáp phi thú",
+     "cost": 2,
+     "mana": 1,
+     "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 2",
+     "tag": "",
+     "text": "Siêu giáp:\nNội tại: khi ta triệu hồi và mỗi lần bị ra đòn, ban cho ta 1 công 2 thủ 2 thủ phép và 2 máu tối đa trong 3 lượt.\nNội tại: mỗi khi tấn công, đối thủ bắt buộc phải trả đòn trước bằng đòn đánh tay, rồi ta mới ra đòn."
     }
    ]
   }
