@@ -1479,6 +1479,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 3",
      "tag": "",
      "text": "Ném lựu đạn:\nLật: tiêu diệt 1 quái thú địch bất kỳ."
+    },
+    {
+     "id": "linh-chien-chim-canh-cut",
+     "name": "Lính chiến chim cánh cụt",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 2 · Thủ 1 · Thủ phép 0 · Máu 2",
+     "tag": "",
+     "text": "Đáng Yêu:\nLật: Chọn tối đa 2 quái thú địch và đẩy chúng trở về tay."
     }
    ]
   }
