@@ -1533,6 +1533,15 @@
      "stats": "Công 3 · Thủ 0 · Thủ phép 2 · Máu 4",
      "tag": "",
      "text": "Kết thúc:\nLật: huỷ 1 lá bài trên tay đối thủ"
+    },
+    {
+     "id": "ke-dieu-phoi-thoi-tiet",
+     "name": "Kẻ điều phối thời tiết",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 2",
+     "tag": "",
+     "text": "Bão tuyết:\n1 mana, Gây 1 sát thương chuẩn lên tất cả người chơi, quái và phá huỷ tất cả các lá tường thành trên sân."
     }
    ]
   }
