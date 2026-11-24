@@ -1434,6 +1434,15 @@
      "stats": "Công 3 · Thủ 0 · Thủ phép 0 · Máu 1",
      "tag": "",
      "text": "Cài bom:\nNội tại: khi triệu hồi chọn 1 quái thú để áp vào. Sau 3 lượt hoặc khi quái thú bị tác động bởi sát thương. Cầu sẽ lập tức tự phát nổ, gây sát thương chuẩn bằng công cộng với số sao của quái thú đó thành sát thương chuẩn."
+    },
+    {
+     "id": "mam-non-thanh-tinh",
+     "name": "Mầm non thành tinh",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 2",
+     "tag": "",
+     "text": "Con mồi:\nMỗi một quái thú đồng minh triệu hồi sau nó, ra đòn lên nó và rút 1 lá bài, kích hoạt hiệu ứng tương tác với con mồi của quái thú đó nếu có."
     }
    ]
   }
