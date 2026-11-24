@@ -1542,6 +1542,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 2",
      "tag": "",
      "text": "Bão tuyết:\n1 mana, Gây 1 sát thương chuẩn lên tất cả người chơi, quái và phá huỷ tất cả các lá tường thành trên sân."
+    },
+    {
+     "id": "vua-suong-mu",
+     "name": "Vua sương mù",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 3 · Thủ 0 · Thủ phép 4 · Máu 3",
+     "tag": "",
+     "text": "Phủ sương mù:\nTiêu hao 1 mana, để đổi 1 lá bài đồng minh trên sân, với 1 lá bài có chỉ số máu chênh lệch không quá 2 đơn vị trong bộ bài (lựa chọn từ 2 lá) về sân ở trạng thái úp."
     }
    ]
   }
