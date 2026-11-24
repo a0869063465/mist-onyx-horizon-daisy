@@ -175,13 +175,14 @@ const KEY = "qt-groups-v1";
 const COPYSVG = document.getElementById("copy").innerHTML, OKSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 let granSel = null, arrange = false, picks = new Set(), bonusOn = false;
 let D = null, setId = null, curId = null, mode = "sort", ST = {}, dir = "up", lastKid = {};
-try { { const v = localStorage.getItem("qt-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : v === "pair" ? "pair" : "up"; } } catch (e) {}
+try { { const v = localStorage.getItem("qt-dir"); dir = v === "down" ? "down" : v === "star" ? "star" : v === "pair" ? "pair" : v === "dup" ? "dup" : "up"; } } catch (e) {}
 try { ST = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
 const $ = (id) => document.getElementById(id);
 /* Ảnh lá s1-113..237 nằm gộp trong một ảnh ghép (atlas/b1.webp, 10 cột, ô 150×214) vì mỗi bản đăng chỉ chứa tối đa 511 tệp; cắt ra bằng canvas khi mở trang. */
 const ATLAS = { file: "atlas/b1.webp", first: 113, last: 237, cols: 10, w: 150, h: 214 };
 const IMGS = {};
-const cardSrc = (id) => IMGS[id] || "cards/" + id + ".webp";
+const baseId = (id) => String(id).split("~")[0];
+const cardSrc = (id) => IMGS[baseId(id)] || "cards/" + baseId(id) + ".webp";
 async function loadAtlas() {
   try {
     const bm = await createImageBitmap(await (await fetch(ATLAS.file)).blob());
@@ -247,6 +248,22 @@ function find(id, list = roots(), path = []) {
 }
 function allCards(list) { return list.flatMap((g) => [...g.cards, ...allCards(g.children)]); }
 const total = (g) => g.cards.length + allCards(g.children).length;
+/* Bản nhân đôi: lưu ở ST[setId]._dups = [{id, of}], id dạng "<idGốc>~<số>"; render() dựng lại thành lá y hệt lá gốc và để ở ô chưa sắp xếp. */
+function applyDups() {
+  for (const set of D.sets) {
+    const o = ST[set.id]; if (!o || !o._dups) continue;
+    for (const d of o._dups) { if (set.cards.some((c) => c.id === d.id)) continue; const b = set.cards.find((c) => c.id === d.of); if (b) set.cards.push(Object.assign({}, b, { id: d.id })); }
+  }
+}
+function dupAsk(c) {
+  open(`<h3>Nhân đôi lá?</h3><div class="note">${escS(c.name)} · tạo thêm 1 lá copy y hệt ở ô chưa sắp xếp.</div><div class="rowb"><button id="no">Huỷ</button><button id="ok" class="ok">Nhân đôi</button></div>`);
+  $("no").onclick = close;
+  $("ok").onclick = () => {
+    roots(); const o = ST[setId]; if (!o._dups) o._dups = [];
+    const b = baseId(c.id); let n = 2; while (curSet().cards.some((x) => x.id === b + "~" + n)) n++;
+    o._dups.push({ id: b + "~" + n, of: b }); applyDups(); save(); close(); render();
+  };
+}
 const cardOf = (id) => curSet().cards.find((c) => c.id === id);
 function open(html) { $("panel").innerHTML = html; $("sheet").style.display = "flex"; }
 function close() { $("sheet").style.display = "none"; }
@@ -404,11 +421,11 @@ function moveOut(g, at, id) {
   save(); render();
 }
 function dirUi() {
-  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "star" ? "✱" : "⇄";
-  $("dir").classList.toggle("starred", dir === "star" || dir === "pair");
-  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng và điều kiện: bấm lá để chọn từ khoá" : "Ghép cặp: bấm lần lượt 2 lá để ghép");
+  $("dir").textContent = dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "star" ? "✱" : dir === "dup" ? "x2" : "⇄";
+  $("dir").classList.toggle("starred", dir === "star" || dir === "pair" || dir === "dup");
+  $("dir").setAttribute("aria-label", dir === "up" ? "Hướng chuyển lá: lên nhóm mẹ" : dir === "down" ? "Hướng chuyển lá: xuống nhóm con" : dir === "star" ? "Thưởng và điều kiện: bấm lá để chọn từ khoá" : dir === "dup" ? "Nhân đôi: bấm một lá để tạo thêm 1 bản copy" : "Ghép cặp: bấm lần lượt 2 lá để ghép");
 }
-$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "pair" : "up"; pairPicks = []; try { localStorage.setItem("qt-dir", dir); } catch (e) {} stay(() => {}); };
+$("dir").onclick = () => { dir = dir === "up" ? "down" : dir === "down" ? "star" : dir === "star" ? "pair" : dir === "pair" ? "dup" : "up"; pairPicks = []; try { localStorage.setItem("qt-dir", dir); } catch (e) {} stay(() => {}); };
 /* Bấm một tab nhóm con: chuyển thẳng sang giao diện của nhóm đó (ô chưa sắp xếp = nguyên liệu từ nhóm mẹ của nó, khung dưới = nhóm đó). Giữ khung nhóm đúng chỗ trên màn hình, không bay lên đầu trang. */
 function stay(change) {
   const before = $("nav").getBoundingClientRect().top;
@@ -520,6 +537,7 @@ function migrate1() {}
 function render() {
   const keepY = window.scrollY;
   migrate1();
+  applyDups();
   bonusOn = tagMode();
   const set = curSet(), rs = roots(); norm(rs);
   let at = find(curId);
@@ -546,11 +564,11 @@ function render() {
   $("pt").textContent = mom ? `Chưa sắp xếp (từ nhóm mẹ “${mom.name}”)` : "Chưa sắp xếp";
   $("pool").innerHTML = "";
   if (!free.length) $("pool").innerHTML = mom ? '<span class="none">Nhóm mẹ không còn lá nào để chia xuống.</span>' : '<span class="none">Đã xếp hết các lá.</span>';
-  mountList($("pool"), free.map((c) => c.id), (c) => tile(c, mode === "view" ? () => show(c) : dir === "pair" ? () => pairTap(c, "pool") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { if (mom) mom.cards = mom.cards.filter((x) => x !== c.id); g.cards.push(c.id); save(); render(); }));
+  mountList($("pool"), free.map((c) => c.id), (c) => tile(c, mode === "view" ? () => show(c) : dir === "dup" ? () => dupAsk(c) : dir === "pair" ? () => pairTap(c, "pool") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { if (mom) mom.cards = mom.cards.filter((x) => x !== c.id); g.cards.push(c.id); save(); render(); }));
   $("dn").textContent = "Đã xếp: " + g.name;
   dirUi();
   { const t = targetOf(g, at);
-    $("dsub").textContent = mode === "view" ? "" : dir === "pair" ? "Đang ở chế độ ghép cặp: bấm lần lượt 2 lá để ghép. Muốn thêm lá thứ 3, bấm 1 lá ngoài rồi bấm 1 lá trong khung (tối đa 4 lá). Bấm một lá trong khung khi chưa chọn lá nào để huỷ ghép. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
+    $("dsub").textContent = mode === "view" ? "" : dir === "dup" ? "Đang ở chế độ nhân đôi (x2): bấm một lá để xác nhận tạo thêm 1 bản copy ở ô chưa sắp xếp. Bấm nút bên cạnh Trở về để đổi chế độ." : dir === "pair" ? "Đang ở chế độ ghép cặp: bấm lần lượt 2 lá để ghép. Muốn thêm lá thứ 3, bấm 1 lá ngoài rồi bấm 1 lá trong khung (tối đa 4 lá). Bấm một lá trong khung khi chưa chọn lá nào để huỷ ghép. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : tagMode() ? "Đang ở chế độ Thưởng: bấm một lá để chọn từ khoá thưởng hoặc điều kiện. Bấm nút mũi tên cạnh Trở về để đổi chế độ." : `Bấm một lá ở đây để chuyển ${dir === "up" ? "lên nhóm mẹ" : "xuống nhóm con"} ${t ? "“" + t.name + "”" : "(không có, lá sẽ về ô chưa sắp xếp)"}. Đổi hướng bằng nút mũi tên cạnh Trở về.`; }
   $("nd").textContent = g.cards.length;
   $("done").innerHTML = "";
   const sub = total(g) - g.cards.length;
@@ -558,7 +576,7 @@ function render() {
   /* Chỉ đổi cách hiển thị: lá cùng từ khoá Thưởng đứng cạnh nhau (theo tên từ khoá), lá chưa có từ khoá ở cuối, thứ tự cũ giữ nguyên trong mỗi cụm. */
   const kwKey = (id) => { const k = kwOf(id, KINDS.bonus); return k.length ? k.map(fold).sort().join("|") : "\uffff"; };
   const shown = g.cards.map((id, i) => ({ id, i, k: kwKey(id) })).sort((x, y) => (x.k < y.k ? -1 : x.k > y.k ? 1 : x.i - y.i)).map((x) => x.id);
-  mountList($("done"), shown, (c) => tile(c, mode === "view" ? () => show(c) : dir === "pair" ? () => pairTap(c, "done") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, c.id); }));
+  mountList($("done"), shown, (c) => tile(c, mode === "view" ? () => show(c) : dir === "dup" ? () => dupAsk(c) : dir === "pair" ? () => pairTap(c, "done") : tagMode() ? (e) => openBonus(c, e.currentTarget) : () => { moveOut(g, at, c.id); }));
   $("edit").style.display = mode === "view" ? "none" : "";
   if (Math.abs(window.scrollY - keepY) > 1) window.scrollTo(0, keepY);
 }
