@@ -1488,6 +1488,15 @@
      "stats": "Công 2 · Thủ 1 · Thủ phép 0 · Máu 2",
      "tag": "",
      "text": "Đáng Yêu:\nLật: Chọn tối đa 2 quái thú địch và đẩy chúng trở về tay."
+    },
+    {
+     "id": "binh-bien-hinh",
+     "name": "Bình biến hình",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 0 · Thủ 1 · Thủ phép 1 · Máu 1",
+     "tag": "",
+     "text": "Mô phỏng:\nBắt chước y hệt 1 quái thú trên sân, kể cả trạng thái và chỉ số. Chỉ trở về hình dạng ban đầu sau khi tham gia 1 giao tranh."
     }
    ]
   }
