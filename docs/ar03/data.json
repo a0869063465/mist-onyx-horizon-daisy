@@ -1407,6 +1407,15 @@
      "stats": "",
      "tag": "Phép chậm",
      "text": "Tẩy não:\n2 mana, lấy 1 quái thú trên sân của đối thủ về phe sân phe mình trong 1 lượt. (Nếu đã hết chỗ hàng trên hoặc dưới vị trí quái đó đang đứng thì không dùng được) Những quái thú từ 3 sao trở lên thì không thể dùng làm nguyên liệu hiến tế hay dung hợp để triệu hồi 1 quái khác."
+    },
+    {
+     "id": "slime-hoi-sinh",
+     "name": "Slime hồi sinh",
+     "cost": 2,
+     "mana": 1,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 1",
+     "tag": "",
+     "text": "Thế mạng:\nNội tại: Nó có thể chặn thay cho bất kỳ mục tiêu nào, kể cả quái hàng trước.\nNội tại: Mỗi đầu lượt của bạn, bạn phải trả số mana để duy trì tiếp nó trên sân bằng với số lần mà nó đã hồi sinh trước đó."
     }
    ]
   }
