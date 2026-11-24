@@ -1560,6 +1560,15 @@
      "stats": "Công 2 · Thủ 0 · Thủ phép 3 · Máu 5",
      "tag": "",
      "text": "Nổi gió:\n1 mana, thổi 1 lá tường thành hoặc 1 quái thú về tay đối phương."
+    },
+    {
+     "id": "pha-thuy-ranh-manh",
+     "name": "Phù thuỷ ranh mãnh",
+     "cost": 1,
+     "mana": 1,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 1 · Máu 3",
+     "tag": "",
+     "text": "Chơi khăm:\nTiêu hao 0 mana, ở giao tranh kế tiếp, quái đồng minh sẽ được tăng 25% tất cả chỉ số (công, máu, sát thương kỹ năng, phòng ngự) còn kẻ địch thì bị giảm đi 25%.\nTiêu hao 1 mana, để dùng ở trạng thái skill phản ứng, khi giao tranh đang diễn ra."
     }
    ]
   }
