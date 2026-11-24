@@ -1353,6 +1353,51 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 1",
      "tag": "",
      "text": "Tiktok:\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo."
+    },
+    {
+     "id": "thien-than-hanh-phuc",
+     "name": "Thiên thần hạnh phúc",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 1",
+     "tag": "",
+     "text": "Tia sáng hạnh phúc:\nHào quang: giảm 1 công và 1 sát thương kỹ năng của tất cả quái thú trên sân.\nTa có thể kích hoạt, tiêu hao 1 mana, để tăng thêm 2 lần hiệu ứng nữa, kéo dài trong 3 lượt."
+    },
+    {
+     "id": "lang-nha-bac",
+     "name": "Lang Nha Bạc",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 2 · Thủ 0 · Thủ phép 0 · Máu 3",
+     "tag": "",
+     "text": "Thủ lĩnh:\nNội tại: Khi lao lên tấn công sẽ tiêu hao 1 mana, tăng công cho chính nó thêm 2 trong 3 lượt. Quái Thú đồng minh có công thấp hơn nó được +1 công.\n\nTiếng hú gọi bầy\n(chậm): 2 mana, gọi ra 2 Sói con (ưu tiên hàng trước), khi đó dùng Thủ lĩnh trong cùng lượt sẽ không tốn thêm mana."
+    },
+    {
+     "id": "soi-con",
+     "name": "Sói con",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 1 · Thủ 0 · Thủ phép 0 · Máu 1",
+     "tag": "",
+     "text": ""
+    },
+    {
+     "id": "doi-mat-tran-giu",
+     "name": "Đôi mắt trấn giữ",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 2 · Thủ 0 · Thủ phép 1 · Máu 4",
+     "tag": "",
+     "text": "Giải giới:\nTiêu hao 1 mana, chọn 1 mục tiêu quái địch và vô hiệu hoá nó trong lượt này.\n\nLưu ý: Quái bị vô hiệu hoá sẽ không kích hoạt được bất kỳ skill nào và bị loại bỏ hết tất cả buff, quay về hình dạng ban đầu của nó."
+    },
+    {
+     "id": "te-giap-co-canh",
+     "name": "Tê giáp có cánh",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 1 · Thủ 1 · Thủ phép 1 · Máu 2",
+     "tag": "",
+     "text": "Siêu giáp: Tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần."
     }
    ]
   }
