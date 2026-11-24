@@ -1398,6 +1398,15 @@
      "stats": "Công 1 · Thủ 1 · Thủ phép 1 · Máu 2",
      "tag": "",
      "text": "Siêu giáp: Tiêu hao 1 mana, cường hoá Siêu giáp, tăng vĩnh viễn tất cả các chỉ số thêm 1. Được dùng tối đa 3 lần."
+    },
+    {
+     "id": "tay-nao",
+     "name": "Tẩy não",
+     "cost": 0,
+     "mana": 2,
+     "stats": "",
+     "tag": "Phép chậm",
+     "text": "Tẩy não:\n2 mana, lấy 1 quái thú trên sân của đối thủ về phe sân phe mình trong 1 lượt. (Nếu đã hết chỗ hàng trên hoặc dưới vị trí quái đó đang đứng thì không dùng được) Những quái thú từ 3 sao trở lên thì không thể dùng làm nguyên liệu hiến tế hay dung hợp để triệu hồi 1 quái khác."
     }
    ]
   }
