@@ -1506,6 +1506,15 @@
      "stats": "Công 0 · Thủ 2 · Thủ phép 1 · Máu 2",
      "tag": "",
      "text": "Nuốt chửng:\nNuốt 1 quái thú bất kỳ của kẻ địch, và tiêu hoá nó dần trong x lượt (x là số máu của quái thú đó).\nMỗi lượt gây 1 sát thương chuẩn lên quái thú trong bụng nó."
+    },
+    {
+     "id": "luu-dan-ma-thuat",
+     "name": "Lựu đạn ma thuật",
+     "cost": 2,
+     "mana": 0,
+     "stats": "Công 6 · Thủ 1 · Thủ phép 0 · Máu 1",
+     "tag": "",
+     "text": "Bùm:\nKhi bị nhắm đến bới 1 quái thú. Lao thẳng vào quái thú đó và phát nổ, gây sát thương chuẩn bằng với công, trước khi quái thú đó kịp ra đòn."
     }
    ]
   }
