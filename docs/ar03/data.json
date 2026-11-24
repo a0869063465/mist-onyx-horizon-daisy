@@ -1578,6 +1578,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 2 · Máu 2",
      "tag": "",
      "text": "Phong ấn:\n0 mana, phong ấn kỹ năng bị động của 1 quái thú trong 3 lượt.\nTiêu hao 1 mana, để biến thành kỹ năng siêu tốc, phong ấn kỹ năng bị động của 1 quái thú ngay trước khi nó kịp phát động."
+    },
+    {
+     "id": "rong-tien-ngan-nam",
+     "name": "Rồng tiên ngàn năm",
+     "cost": 4,
+     "mana": 0,
+     "stats": "Công 0 · Thủ 1 · Thủ phép 4 · Máu 7",
+     "tag": "",
+     "text": "Phong ấn:\nHào quang: phong ấn kỹ năng bị động của tất cả quái thú đối thủ trên sân.\nBảo hộ:\n1 mana, Ban khiên phép cho 1 đồng minh kéo dài trong 4 lượt."
     }
    ]
   }
