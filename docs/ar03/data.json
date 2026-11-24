@@ -1515,6 +1515,15 @@
      "stats": "Công 6 · Thủ 1 · Thủ phép 0 · Máu 1",
      "tag": "",
      "text": "Bùm:\nKhi bị nhắm đến bới 1 quái thú. Lao thẳng vào quái thú đó và phát nổ, gây sát thương chuẩn bằng với công, trước khi quái thú đó kịp ra đòn."
+    },
+    {
+     "id": "vua-bong-ma",
+     "name": "Vua bóng ma",
+     "cost": 2,
+     "mana": 1,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 2",
+     "tag": "",
+     "text": "Đội mồ:\nMỗi lượt, hắn sẽ gọi 1 thây ma từ lòng đất với 1 công và 1 máu. Những thay ma này không thể chặn đòn nhưng có thể tấn công ngay mà không qua hàng chờ.\nKhi hắn chết, những bóng ma cũng huỷ theo."
     }
    ]
   }
