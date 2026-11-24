@@ -1470,6 +1470,15 @@
      "stats": "",
      "tag": "Phép nhanh",
      "text": "Mùi máu:\nTiêu diệt ngay 1 quái thú đang bị thương hoặc gây vĩnh viễn 1 sát thương chuẩn mỗi lượt (gấp đôi khi ở lượt đối thủ) lên quái thú đó."
+    },
+    {
+     "id": "thang-lan-mang-bom",
+     "name": "Thằn lằn mang bom",
+     "cost": 1,
+     "mana": 0,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 0 · Máu 3",
+     "tag": "",
+     "text": "Ném lựu đạn:\nLật: tiêu diệt 1 quái thú địch bất kỳ."
     }
    ]
   }
