@@ -1569,6 +1569,15 @@
      "stats": "Công 0 · Thủ 0 · Thủ phép 1 · Máu 3",
      "tag": "",
      "text": "Chơi khăm:\nTiêu hao 0 mana, ở giao tranh kế tiếp, quái đồng minh sẽ được tăng 25% tất cả chỉ số (công, máu, sát thương kỹ năng, phòng ngự) còn kẻ địch thì bị giảm đi 25%.\nTiêu hao 1 mana, để dùng ở trạng thái skill phản ứng, khi giao tranh đang diễn ra."
+    },
+    {
+     "id": "rong-tien-be",
+     "name": "Rồng tiên bé",
+     "cost": 1,
+     "mana": 1,
+     "stats": "Công 0 · Thủ 0 · Thủ phép 2 · Máu 2",
+     "tag": "",
+     "text": "Phong ấn:\n0 mana, phong ấn kỹ năng bị động của 1 quái thú trong 3 lượt.\nTiêu hao 1 mana, để biến thành kỹ năng siêu tốc, phong ấn kỹ năng bị động của 1 quái thú ngay trước khi nó kịp phát động."
     }
    ]
   }
