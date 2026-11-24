@@ -1461,6 +1461,15 @@
      "stats": "Công 5 · Thủ 0 · Thủ phép 2 · Máu 4",
      "tag": "",
      "text": "Mối nguy:\nCô ấy có thể tấn công ở cả lượt của đối thủ"
+    },
+    {
+     "id": "mui-mau",
+     "name": "Mùi máu",
+     "cost": 0,
+     "mana": 1,
+     "stats": "",
+     "tag": "Phép nhanh",
+     "text": "Mùi máu:\nTiêu diệt ngay 1 quái thú đang bị thương hoặc gây vĩnh viễn 1 sát thương chuẩn mỗi lượt (gấp đôi khi ở lượt đối thủ) lên quái thú đó."
     }
    ]
   }
