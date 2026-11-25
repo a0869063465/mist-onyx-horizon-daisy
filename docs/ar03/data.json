@@ -2064,6 +2064,15 @@
      "stats": "",
      "tag": "Phép phản ứng",
      "text": "Linh thể:\nDùng linh hồn của 1 quái thú đồng minh, gây 5 sát thương chuẩn lên 1 quái địch bất kỳ."
+    },
+    {
+     "id": "giao-keo-voi-ac-quy",
+     "name": "Giao kèo với ác quỷ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Phép phản ứng",
+     "text": "Giao kèo với ác quỷ:\nHy sinh 1 quái thú đồng minh để rút 2 lá bài."
     }
    ]
   }
