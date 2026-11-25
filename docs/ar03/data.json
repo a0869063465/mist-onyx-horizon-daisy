@@ -1911,6 +1911,42 @@
      "stats": "",
      "tag": "Bài phản ứng",
      "text": "Chặn Cường Binh:\nKhi đối phương triệu hồi hoặc triệu hồi đặc biệt một quái vật bậc 6 từ trên tay xuống sân, phá hủy quái vật đó."
+    },
+    {
+     "id": "moi-truong-ao-than",
+     "name": "Môi Trường Ảo Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Ảo Thần:\nTất cả quái vật Ảo Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "hiep-uoc-dinh-chien",
+     "name": "Hiệp Ước Đình Chiến",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Hiệp Ước Đình Chiến:\nKhi lá bài này đang ngửa trên sân, đối phương không thể tấn công. Lá bài này bị phá huỷ vào cuối lượt kế tiếp của đối phương."
+    },
+    {
+     "id": "loi-thien-su",
+     "name": "Lõi Thiên Sứ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Lõi Thiên Sứ:\nMỗi lượt, lần đầu tiên một quái vật Cơ Giới của bạn bị tiêu diệt hoặc bị phá huỷ, thêm 1 linh kiện lên Lõi Thiên Sứ chưa đủ linh kiện có nhiều linh kiện nhất của bạn. Khi lá bài này có 2 linh kiện, có thể phá huỷ lá bài này để triệu hồi đặc biệt 1 Cơ Thiên Sứ từ bộ bài hoặc trên tay."
+    },
+    {
+     "id": "trung-rong",
+     "name": "Trứng Rồng",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Trứng Rồng:\nKhi lá bài này được đặt ngửa lên sân, đặt 1 điểm ấp lên lá bài này. Vào đầu mỗi lượt của bạn, thêm 1 điểm ấp. Khi lá bài này có 4 điểm ấp, có thể phá huỷ lá bài này để triệu hồi đặc biệt 1 Rồng Ngọc Bích từ bộ bài hoặc trên tay."
     }
    ]
   }
