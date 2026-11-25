@@ -140,6 +140,9 @@ export type FieldMon = {
   beat?: number;
   /** Hàng sau (ô 3–5). Không có là hàng trước. Luôn theo ô đang đứng (`withRows`). */
   row?: "back";
+  /** Song sát (chủ game 25/11): phần thủ (p) và thủ phép (s) đã chặn sát thương trong giao tranh Song sát, mất tới khi
+   *  giao tranh xong (mỗi đợt bị chặn trừ đúng phần đã chặn). */
+  shred?: { p: number; s: number };
   /** Đã đánh hoặc dùng kỹ năng trong vòng này: mỗi quái một lần mỗi vòng. */
   used?: boolean;
   /** Quả trứng sinh mệnh đã dùng Sinh mệnh mới lần đầu (chủ game 21/11): các lần sau miễn mana, không rút thêm. */
@@ -269,7 +272,12 @@ export type Hold = {
   eat?: { card: string; side: Side; back: Duel };
   /** Khoá 1 (chủ game 22/11): `by` (quái ra đòn) khoá hành động `uid` (1 quái địch) trong hàng chờ này. */
   seal?: { by: string; uid: string };
+  /** Song sát (chủ game 25/11): chờ trong chuỗi; chuỗi nổ thì 2 quái của `side` lần lượt ra đòn lên `target`. */
+  duo?: { side: Side; target: string; picks: DuoPick[] };
 };
+
+/** Một quái của Song sát và việc nó làm: "atk" = đánh thường, số = kỹ năng gây sát thương thứ mấy. */
+export type DuoPick = { uid: string; act: "atk" | number };
 
 /** A side as the VS screen shows it (chủ game 22/10): its deck's name and champion (the deck's cover); a machine
  *  also has its own name (a Japanese name, chủ game 22/10). `cards`: the deck it brought, for Tìm hiểu bộ bài on the
@@ -2228,6 +2236,19 @@ function clearHarm(mon: FieldMon): FieldMon {
 }
 
 function liveDef(mon: FieldMon, allies?: Array<FieldMon | null>) {
+  return shredGuard(liveDefRaw(mon, allies), mon.shred?.p);
+}
+
+function liveMdef(mon: FieldMon, allies?: Array<FieldMon | null>) {
+  return shredGuard(liveMdefRaw(mon, allies), mon.shred?.s);
+}
+
+/** Song sát: lớp phòng ngự còn lại sau phần đã chặn trong giao tranh. */
+function shredGuard(value: number, spent = 0): number {
+  return spent > 0 && value > 0 ? Math.max(0, value - spent) : value;
+}
+
+function liveDefRaw(mon: FieldMon, allies?: Array<FieldMon | null>) {
   if (bareUids.has(mon.uid)) return 0;
   const hex = mon.hex && mon.hex.left > 0 ? 2 : 0;
   if ((mon.chain ?? 0) > 0) return 0 - hex;
@@ -2235,7 +2256,7 @@ function liveDef(mon: FieldMon, allies?: Array<FieldMon | null>) {
   return mon.def + (mon.tempGuard ?? 0) + (mon.nextDef ?? 0) + guardBonus(mon) + (mon.clash?.def ?? 0) + auraGuard(allies, mon) - hex;
 }
 
-function liveMdef(mon: FieldMon, allies?: Array<FieldMon | null>) {
+function liveMdefRaw(mon: FieldMon, allies?: Array<FieldMon | null>) {
   if (bareUids.has(mon.uid)) return 0;
   const hex = mon.hex && mon.hex.left > 0 ? 2 : 0;
   if ((mon.chain ?? 0) > 0) return 0 - hex;
@@ -2931,6 +2952,10 @@ function plateBank(mon: FieldMon) {
 }
 
 function bankPlate(mon: FieldMon, kind: "phys" | "spell", blocked: number): FieldMon {
+  // Song sát: mỗi đợt bị thủ hay thủ phép chặn thì lớp đó mất đúng phần đã chặn tới hết giao tranh.
+  if (mon.shred && blocked > 0) {
+    mon = { ...mon, shred: { p: mon.shred.p + (kind === "phys" ? blocked : 0), s: mon.shred.s + (kind === "spell" ? blocked : 0) } };
+  }
   if (mon.cardId !== PERFECT || blocked <= 0) return mon;
   const cur = plateBank(mon);
   const next = { p: cur.p + (kind === "phys" ? blocked : 0), s: cur.s + (kind === "spell" ? blocked : 0), t: 0 };
@@ -4672,6 +4697,8 @@ function passResponseCore(state: Duel): Duel {
     const cleared = { ...(rewound ?? state), hold: { ...hold, rewind: undefined } };
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
+  if (hold.duo) return passResponseCore(duoLand(state));
+  if (pending.kind === "spell" && pending.cardId === DUO_CARD) return { ...state, step: "main", pending: null, hold: null };
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.trap) return trapSpring(state, hold.trap.uid);
   if (hold.egg) return eggStrike(state, hold.egg.ally, hold.egg.foe);
@@ -7035,7 +7062,7 @@ export function eatFor(state: Duel, side: Side): boolean {
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
-const EATABLE = new Set(["bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"]);
+const EATABLE = new Set(["song-sat", "bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"]);
 
 /** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
 function restoreEaten(now: Duel, back: Duel): Duel {
@@ -7113,6 +7140,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "giap-co-khi",
     "hop-ma-thuat",
     "qua-trung-thien-su",
+    DUO_CARD,
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
     ...(state.step === "respond" ? [TRAP_CARD] : []),
   ]);
@@ -7265,6 +7293,9 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
       return note(state, "Vòng nguyền chỉ chặn skill gây sát thương.");
     }
   }
+  if (!replay && card.id === DUO_CARD && !duoReady(state, side)) {
+    return note(state, state.hold?.duo ? "Đang có Song sát chờ trong chuỗi." : "Song sát cần 2 quái đồng minh và 1 quái địch.");
+  }
   let next = state;
   if (!replay) {
     const before = player.stars;
@@ -7277,6 +7308,22 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     const buried = { ...dropped, spent: [...(dropped.spent ?? paid.spent ?? []), card.id] };
     next = pingStars(patch(state, side, buried), side, before, buried.stars);
     const burst = new Set(["mua-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
+    if (card.id === DUO_CARD) {
+      const picks = duoParse(sourceUid);
+      const bad = duoCheck(next, side, picks, targetUid);
+      if (bad) return note(state, bad);
+      const duo = { side, target: targetUid as string, picks };
+      const [a, b] = picks.map((pick) => cardOf(next.players[side].field.find((mon) => mon?.uid === pick.uid)!).name);
+      const victim = next.players[foe].field.find((mon) => mon?.uid === targetUid)!;
+      const line = `Song sát: ${a} và ${b} cùng nhắm ${cardOf(victim).name}.`;
+      // Lượt chính: tự mở chuỗi như phép chậm. Trong chuỗi: chờ như Phục kích, chuỗi nổ mới ra đòn.
+      if (state.step === "main") {
+        const opened = beginHold(next, { kind: "spell", owner: side, cardId: card.id, target: targetUid, source: null }, line);
+        return opened.hold ? { ...opened, hold: { ...opened.hold, duo } } : opened;
+      }
+      if (!next.hold) return note(state, "Song sát chỉ dùng khi đang có chuỗi.");
+      return keep(note({ ...next, hold: { ...next.hold, duo } }, line, "spell"));
+    }
     if (card.id === "vong-nguyen-rua-ac-ma" && state.step === "respond" && state.pending) {
       const pending = state.pending;
       const uid = pending.kind === "face" || pending.kind === "melee" ? pending.attacker : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : "";
@@ -12131,4 +12178,156 @@ function settleMult(before: Duel, after: Duel): Duel {
     }
   }
   return next;
+}
+
+/** Song sát (chủ game 25/11): phép nhanh 2 mana. Chọn 2 quái đồng minh cùng nhắm 1 quái địch; chờ trong chuỗi (dùng ở
+ *  lượt chính thì tự mở chuỗi như phép chậm, hoặc đáp lại phép nhanh của đối thủ), chuỗi nổ thì 2 quái lần lượt ra đòn
+ *  (đánh thường hoặc kỹ năng gây sát thương). Không ai chặn, che hay Trả đòn; không tính lượt đánh và hành động của vòng;
+ *  quái bị khống chế vẫn ra đòn, chỉ quái bị khoá kỹ năng thì không bật kỹ năng. Mỗi đợt sát thương bị thủ hay thủ phép
+ *  của quái địch chặn thì lớp đó mất đúng phần đã chặn tới hết giao tranh (`FieldMon.shred`). */
+export const DUO_CARD = "song-sat";
+
+/** Gói 2 lựa chọn của Song sát vào `sourceUid` của castSpell: "uid~atk|uid~2". */
+export function duoCode(picks: DuoPick[]): string {
+  return picks.map((pick) => `${pick.uid}~${pick.act}`).join("|");
+}
+
+function duoParse(code: string | null): DuoPick[] {
+  if (!code) return [];
+  return code.split("|").map((part) => {
+    const [uid, act] = part.split("~");
+    return { uid: uid ?? "", act: act === "atk" ? ("atk" as const) : Number(act) };
+  }).filter((pick) => pick.uid && (pick.act === "atk" || Number.isInteger(pick.act)));
+}
+
+/** Kỹ năng bị khoá (Song sát không bật kỹ năng được). */
+function duoSkillBarred(mon: FieldMon): boolean {
+  return Boolean(mon.cage) || hexLocked(mon);
+}
+
+/** Đánh thường được trong Song sát: không phải lá đứng yên, có công. */
+export function duoCanAttack(mon: FieldMon): boolean {
+  return !isStill(mon.cardId) && mon.cardId !== "mu" && liveAtk(mon) > 0;
+}
+
+/** Kỹ năng `index` dùng được trong Song sát: gây sát thương và không bị khoá. */
+export function duoCanSkill(mon: FieldMon, index: number): boolean {
+  return harmSkill(mon.cardId, index) && !duoSkillBarred(mon);
+}
+
+/** Quái của `side` chọn được cho Song sát: còn sống, ở sân mình. */
+export function duoAllies(state: Duel, side: Side): string[] {
+  return state.players[side].field
+    .filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.abroad === undefined && mon.cardId !== "mu"))
+    .map((mon) => mon.uid);
+}
+
+/** Quái địch Song sát nhắm được: mọi quái địch còn sống (kể cả hàng sau, quái 5 sao). */
+export function duoTargets(state: Duel, side: Side): string[] {
+  return state.players[(1 - side) as Side].field
+    .filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && mon.cardId !== "mu"))
+    .map((mon) => mon.uid);
+}
+
+/** Song sát dùng được lúc này cho `side` (đủ quái, đủ mục tiêu, không có Song sát khác đang chờ). */
+export function duoReady(state: Duel, side: Side): boolean {
+  if (state.hold?.duo) return false;
+  return duoAllies(state, side).length >= 2 && duoTargets(state, side).length > 0;
+}
+
+function setShred(state: Duel, uid: string, shred: FieldMon["shred"]): Duel {
+  const side = ownerSide(state, uid);
+  if (side === null) return state;
+  const player = state.players[side];
+  const field = player.field.map((mon) => (mon?.uid === uid ? { ...mon, shred } : mon)) as Player["field"];
+  return patch(state, side, { ...player, field });
+}
+
+/** Một quái của Song sát ra đòn lên `target` (trận đang ở bước chính, quyền ở `side`). */
+function duoStrike(state: Duel, side: Side, pick: DuoPick, target: string): Duel {
+  const foe = (1 - side) as Side;
+  const mon = state.players[side].field.find((unit) => unit?.uid === pick.uid) ?? null;
+  const victim = state.players[foe].field.find((unit) => unit?.uid === target) ?? null;
+  if (!victim || victim.hp <= 0) return state;
+  if (!mon || mon.hp <= 0 || mon.abroad !== undefined) return note(state, "Song sát: quái đồng minh không còn trên sân.", "info");
+  if (pick.act === "atk") {
+    if (!duoCanAttack(mon)) return note(state, `Song sát: ${cardOf(mon).name} không đánh thường được.`, "info");
+    const raw = liveAtk(mon);
+    const magic = spellAtk(mon);
+    const field = state.players[foe].field;
+    const hit = magic ? damageSpell(victim, raw, field) : takePhysical(victim, raw, field).mon;
+    const lost = Math.max(0, victim.hp - Math.max(0, hit.hp));
+    const next = field.map((unit) => (unit?.uid === victim.uid ? hit : unit)) as Player["field"];
+    const struck = note(
+      patch(state, foe, dropDead({ ...state.players[foe], field: next })),
+      `Song sát: ${cardOf(mon).name} đánh thường lên ${cardOf(victim).name}, gây ${lost} sát thương${magic ? " phép" : ""}.`,
+      "hit",
+    );
+    return traced(state, checkWinner(struck), { kind: "attack-monster", actor: side, ok: true, cardId: mon.cardId, target: monsterTarget(state, victim.uid), end: null });
+  }
+  const index = pick.act;
+  if (!duoCanSkill(mon, index)) return note(state, `Song sát: ${cardOf(mon).name} không bật được kỹ năng.`, "info");
+  // Khống chế không ngăn Song sát (chủ game 25/11): gỡ tạm rồi trả lại sau đòn; đòn không tính hành động của vòng.
+  const kept = { stun: mon.stun, chain: mon.chain, seal: mon.seal, dim: mon.dim, path: mon.path, used: mon.used, knack: mon.knack };
+  const you = state.players[side];
+  const freedField = you.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, stun: 0, chain: 0, seal: undefined, dim: false, path: 0 } : unit)) as Player["field"];
+  const open = patch(state, side, { ...you, field: freedField });
+  const uid = mon.uid;
+  const ran = lavaSkill(open, uid, (armed) => envGuard(armed, [uid], [], () => useSkillCore(armed, uid, target, index, true, null, false)));
+  if (ran === open || onlyNoted(open, ran) || ran.step !== "main") {
+    return note(state, `Song sát: ${cardOf(mon).name} không dùng được ${castName(mon.cardId, index)}.`, "info");
+  }
+  const now = ran.players[side];
+  const back = now.field.map((unit) => (unit?.uid === uid ? { ...unit, ...kept } : unit)) as Player["field"];
+  return { ...patch(ran, side, { ...now, field: back }), counterAsk: state.counterAsk ?? null, counterQueue: state.counterQueue ?? null };
+}
+
+/** Chạy cả 2 đòn trên bản sao trận (trận ở bước chính, quyền ở `side`), trả trận sau giao tranh. */
+function duoRun(state: Duel, side: Side, picks: DuoPick[], target: string): Duel {
+  let cur: Duel = { ...state, step: "main", pending: null, hold: null, turn: side, counterAsk: null, counterQueue: null };
+  cur = setShred(cur, target, { p: 0, s: 0 });
+  for (const pick of picks) {
+    if (cur.winner !== null) break;
+    cur = duoStrike(cur, side, pick, target);
+  }
+  return setShred(cur, target, undefined);
+}
+
+/** Kiểm 2 lựa chọn lúc dùng lá (trên trận đã trả mana): lỗi thì trả câu báo. */
+function duoCheck(state: Duel, side: Side, picks: DuoPick[], target: string | null): string | null {
+  if (picks.length !== 2 || picks[0]!.uid === picks[1]!.uid) return "Chọn 2 quái đồng minh.";
+  if (!target || !duoTargets(state, side).includes(target)) return "Chọn 1 quái địch.";
+  const allies = duoAllies(state, side);
+  for (const pick of picks) {
+    const mon = state.players[side].field.find((unit) => unit?.uid === pick.uid) ?? null;
+    if (!mon || !allies.includes(mon.uid)) return "Chọn 2 quái đồng minh.";
+    if (pick.act === "atk" ? !duoCanAttack(mon) : !duoCanSkill(mon, pick.act)) {
+      return `${cardOf(mon).name} không ${pick.act === "atk" ? "đánh thường" : "dùng kỹ năng này"} được.`;
+    }
+  }
+  // Chạy thử: kỹ năng bị từ chối (thiếu mana, sai mục tiêu…) thì báo ngay.
+  let cur: Duel = { ...state, step: "main", pending: null, hold: null, turn: side, counterAsk: null, counterQueue: null };
+  cur = setShred(cur, target, { p: 0, s: 0 });
+  for (const pick of picks) {
+    if (pick.act === "atk") {
+      cur = duoStrike(cur, side, pick, target);
+      continue;
+    }
+    const before = cur;
+    const after = duoStrike(cur, side, pick, target);
+    if (after.live !== before.live && after.players === before.players) return after.live.replace(/^Song sát: /, "");
+    cur = after;
+  }
+  return null;
+}
+
+/** Song sát nổ trong chuỗi: 2 đòn chạy, rồi chuỗi đi tiếp như cũ (việc đang chờ vẫn giải quyết sau đó). */
+function duoLand(state: Duel): Duel {
+  const hold = state.hold;
+  const duo = hold?.duo;
+  if (!hold || !duo) return state;
+  const run = duoRun(state, duo.side, duo.picks, duo.target);
+  const marked = note(run, "Song sát kết thúc giao tranh.", "spell");
+  if (marked.winner !== null) return { ...marked, step: "over", hold: null };
+  return { ...marked, step: state.step, pending: state.pending, turn: state.turn, hold: { ...hold, duo: undefined } };
 }

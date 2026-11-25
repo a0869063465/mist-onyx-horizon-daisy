@@ -1970,6 +1970,61 @@ test("Khoá 1: quái bị khoá không chặn, không Trả đòn; hết đòn t
   assert.equal(at(sealed, 1, 0).seal, undefined);
 });
 
+test("Song sát (25/11): 2 quái lần lượt ra đòn, thủ mất đúng phần đã chặn tới hết giao tranh; không chặn, không Trả đòn", () => {
+  const make = (mine, theirs, hand1 = []) => {
+    const s = board(mine, theirs);
+    return { ...s, players: s.players.map((p, i) => ({ ...p, orb: 4, flask: 0, hand: i === 0 ? ["song-sat"] : hand1, tolls: [] })) };
+  };
+  let s = make({ 0: ["may-chem", { atk: 5 }], 1: ["may-chem", { atk: 5 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 4, mdef: 0 }] });
+  const [a, b, foe] = [uid(s, 0, 0), uid(s, 0, 1), uid(s, 1, 0)];
+  const code = D.duoCode([{ uid: a, act: "atk" }, { uid: b, act: "atk" }]);
+  const cast = D.castSpell(s, 0, foe, false, code);
+  assert.equal(cast.step, "respond", "tự mở chuỗi: " + cast.live);
+  assert.equal(cast.players[0].orb, 2, "2 mana");
+  const done = D.passResponse(cast);
+  // Đòn 1: thủ 4 chặn 4, vào 1; thủ mất 4. Đòn 2: vào nguyên 5.
+  assert.equal(at(done, 1, 0).hp, 14, done.live);
+  assert.equal(at(done, 1, 0).def, 4, "hết giao tranh trả lại thủ");
+  assert.equal(at(done, 1, 0).shred, undefined);
+  assert.ok(!at(done, 0, 0).used && !at(done, 0, 1).used, "không tính hành động của vòng");
+  assert.ok(!done.counterAsk, "không Trả đòn");
+  assert.equal(done.step, "main");
+  // Thiếu quái: không dùng được; lựa chọn sai bị từ chối.
+  const one = make({ 0: ["may-chem", {}] }, { 0: ["khong-lo-mot-mat", {}] });
+  assert.match(D.castSpell(one, 0, uid(one, 1, 0), false, "").live, /2 quái/);
+  // Kỹ năng khi đang bị khống chế: vẫn ra đòn, khống chế còn nguyên sau đó.
+  let k = make({ 0: ["rong-con", { stun: 2 }], 1: ["may-chem", { atk: 3 }] }, { 0: ["khong-lo-mot-mat", { hp: 30, maxHp: 30, def: 0, mdef: 0 }] });
+  const kc = D.castSpell(k, 0, uid(k, 1, 0), false, D.duoCode([{ uid: uid(k, 0, 0), act: 0 }, { uid: uid(k, 0, 1), act: "atk" }]));
+  assert.equal(kc.step, "respond", kc.live);
+  const kd = D.passResponse(kc);
+  assert.ok(at(kd, 1, 0).hp < 27, "Hơi thở rồng + đánh thường đều vào: " + kd.live);
+  assert.equal(at(kd, 0, 0).stun, 2, "khống chế trả lại");
+});
+
+test("Song sát (25/11): đáp lại trong chuỗi, nổ trước đòn đang chờ; Hấp thụ ma pháp nuốt được", () => {
+  const make = (hand1) => {
+    let s = board({ 0: ["may-chem", { atk: 4 }], 1: ["may-chem", { atk: 4 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, atk: 1, def: 0, mdef: 0 }] }, { turn: 1, round: 1 });
+    s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 4, flask: 0, hand: i === 0 ? ["song-sat"] : hand1, tolls: [] })) };
+    return D.attackMonster(s, uid(s, 1, 0), uid(s, 0, 0));
+  };
+  const s = make([]);
+  assert.equal(s.step, "respond", s.live);
+  assert.equal(s.hold.priority, 0);
+  const code = D.duoCode([{ uid: uid(s, 0, 0), act: "atk" }, { uid: uid(s, 0, 1), act: "atk" }]);
+  const cast = D.castSpell(s, 0, uid(s, 1, 0), false, code);
+  assert.ok(cast.hold?.duo, "chờ trong chuỗi: " + cast.live);
+  assert.equal(cast.hold.priority, 1);
+  const done = D.passResponse(cast);
+  assert.equal(at(done, 1, 0)?.hp ?? 0, 12, "8 sát thương trước khi đòn đánh giải quyết: " + done.live);
+  // Hấp thụ ma pháp nuốt Song sát: không ai mất máu vì nó.
+  const e = make(["hap-thu-ma-phap"]);
+  let eat = D.castSpell(e, 0, uid(e, 1, 0), false, D.duoCode([{ uid: uid(e, 0, 0), act: "atk" }, { uid: uid(e, 0, 1), act: "atk" }]));
+  eat = D.castSpell(eat, 0, null);
+  assert.equal(eat.hold?.duo, undefined, "bị nuốt: " + eat.live);
+  for (let n = 0; n < 4 && eat.step === "respond"; n += 1) eat = D.passResponse(eat);
+  assert.equal(at(eat, 1, 0).hp, 20, eat.live);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

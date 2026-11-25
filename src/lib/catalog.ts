@@ -1246,6 +1246,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
     "picture": "spell:qua-trung-thien-su"
+  },
+  {
+    "id": "song-sat",
+    "name": "Song sát",
+    "gems": 2,
+    "effect": "Chọn 2 quái thú đồng minh để cùng nhắm vào 1 kẻ địch, mỗi đợt sát thương bị chặn bởi thủ hay thủ phép của kẻ địch đó sẽ làm nó mất lớp phòng ngự đó cho đến hết giao tranh.",
+    "picture": "spell:song-sat"
   }
 ];
 

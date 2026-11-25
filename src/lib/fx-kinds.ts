@@ -108,6 +108,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "don-cuoi-cung": ["shadow", "magic"],
   "huy-diet": ["shadow", "magic"],
   "bay-thu": ["steel", "magic"],
+  "song-sat": ["steel", "magic"],
   "qua-trung-thien-su": ["holy", "magic"],
 };
 
