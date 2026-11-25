@@ -1116,6 +1116,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm Tử thần của những lá bài (2 sao, công 4, máu 2, hệ Vương quốc) với nội tại Gặt hồn: tiêu hao 1 mana để tấn công, đánh vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên trên tay.",
   "Lá bị bỏ khỏi tay (Gặt hồn của Tử thần của những lá bài, Sinh mệnh mới của Quả trứng sinh mệnh) nhấc lên, bay vòng cung về góc phải trên rồi cháy tan thành lửa xanh lá; lá của đối thủ cũng vậy nhưng úp.",
   "Harpie Lady: công 3, thủ 0, thủ phép 0, máu 3. Giáp và Vuốt giờ né đòn đánh thường nhắm vào (1 mana, tăng vĩnh viễn 2 thủ và 2 máu tối đa, trả 5 sát thương phép vào kẻ tấn công). Roi điện giờ né skill hoặc phép nhắm tới (1 mana, tăng vĩnh viễn 2 công, trả đòn trực tiếp lên kẻ ra đòn).",
+  "Harpie Lady: Mê hoặc 0 mana, chọn 1 quái địch rồi 1 quái đồng minh khác, quái địch đánh thường vào quái đó. Không còn cấm hành động lượt sau.",
 ];
 
 function remarkOf(notes: string[]) {

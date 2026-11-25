@@ -5114,7 +5114,7 @@ function PlayPage() {
       each(foeSide, (mon) => Boolean(chronoChoice(duel, caster.uid, mon.uid)) && !chronoImmortal(mon));
       return keys;
     }
-    if (slide.index === 3 && (card.id === "nu-chua-dieu-nhan" || card.id === "nu-chua-dieu-nhan-hoan-my")) {
+    if (twoStep(card.id, slide.index)) {
       each(foeSide, () => true);
       return keys;
     }
@@ -5690,23 +5690,22 @@ function PlayPage() {
       return;
     }
     const aimingSkill = aim?.kind === "skill";
-    if (aimingSkill && aim.index === 3) {
-      const caster = you.field.find((unit) => unit?.uid === aim.uid);
-      if (caster?.cardId === "nu-chua-dieu-nhan" || caster?.cardId === "nu-chua-dieu-nhan-hoan-my") {
+    if (aimingSkill && twoStep(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "", aim.index)) {
+      {
         if (!aim.also) {
           if (!foeUid || owner === viewer) {
             holdNotice("Chọn một quái đối thủ");
             return;
           }
-          setAim({ kind: "skill", uid: aim.uid, index: 3, also: foeUid });
+          setAim({ kind: "skill", uid: aim.uid, index: aim.index, also: foeUid });
           holdNotice("Chọn quái của ta");
           return;
         }
-        if (owner !== viewer || !foeUid) {
+        if (owner !== viewer || !foeUid || foeUid === aim.uid) {
           holdNotice("Chọn quái của ta");
           return;
         }
-        apply(useSkill(duel, aim.uid, foeUid, 3, true, aim.also));
+        apply(useSkill(duel, aim.uid, foeUid, aim.index, true, aim.also));
         return;
       }
     }
@@ -6159,23 +6158,22 @@ function PlayPage() {
       apply(attackMonster(duel, aim.uid, mon.uid));
       return;
     }
-    if (aim?.kind === "skill" && aim.index === 3) {
-      const caster = you.field.find((unit) => unit?.uid === aim.uid);
-      if (caster?.cardId === "nu-chua-dieu-nhan" || caster?.cardId === "nu-chua-dieu-nhan-hoan-my") {
+    if (aim?.kind === "skill" && twoStep(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "", aim.index)) {
+      {
         if (!aim.also) {
           if (side === viewer) {
             holdNotice("Chọn một quái đối thủ");
             return;
           }
-          setAim({ kind: "skill", uid: aim.uid, index: 3, also: mon.uid });
+          setAim({ kind: "skill", uid: aim.uid, index: aim.index, also: mon.uid });
           holdNotice("Chọn quái của ta");
           return;
         }
-        if (side !== viewer) {
+        if (side !== viewer || mon.uid === aim.uid) {
           holdNotice("Chọn quái của ta");
           return;
         }
-        apply(useSkill(duel, aim.uid, mon.uid, 3, true, aim.also));
+        apply(useSkill(duel, aim.uid, mon.uid, aim.index, true, aim.also));
         return;
       }
     }
@@ -10647,4 +10645,10 @@ function ReplayBar({ pos, onMove, at, total, round, playing, speed, onSeek, onSt
       </div>
     </div>
   );
+}
+
+/** Skill chọn 2 mục tiêu (quái địch rồi quái của ta): Dụ dỗ của 2 nữ chúa, Mê hoặc của Harpie Lady (chủ game 25/11). */
+function twoStep(cardId: string, index: number): boolean {
+  if (cardId === "nu-chua-dieu-nhan" || cardId === "nu-chua-dieu-nhan-hoan-my") return index === 3;
+  return cardId === "my-dieu-nhan" && index === 1;
 }

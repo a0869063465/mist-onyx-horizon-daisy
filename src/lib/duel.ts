@@ -6866,7 +6866,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   }
   if (isHarpy(mon.cardId) && skillIndex === 1) {
     if ((mon.shed ?? []).includes("charm")) return note(state, "Mê hoặc đã biến mất.");
-    if (!aimed) return note(state, "Chọn một quái đối thủ.");
+    if (!aimed) return note(state, mon.cardId === GIRL ? "Chọn một quái đồng minh." : "Chọn một quái đối thủ.");
     if (you.orb < harpyKit(mon.cardId).charm) return note(state, "Cần 1 mana.");
   }
   if (mon.cardId === "may-quay-thuong" && skillIndex === 1) {
@@ -9168,7 +9168,7 @@ function aiWilePick(state: Duel, ask: { side: Side; picks: string[] }): string {
   return [...ask.picks].sort((a, b) => score(b) - score(a))[0]!;
 }
 
-function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, targetUid: string | null): Duel {
+function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, targetUid: string | null, extra: string | null = null): Duel {
   const you = state.players[side];
   const foe = (1 - side) as Side;
   const kit = harpyKit(mon.cardId);
@@ -9190,6 +9190,7 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`]), "spell");
   }
   if (spent.includes("charm")) return note(state, mon.wit && !mon.wit.picked.includes("charm") ? "Chưa nhận Mê hoặc." : "Mê hoặc đã biến mất.");
+  if (mon.cardId === GIRL) return charmAlly(state, side, mon, extra, targetUid);
   const them = state.players[foe];
   const target = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
   if (!target) return note(state, "Chọn một quái đối thủ.");
@@ -9205,6 +9206,38 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     return note({ ...next, plumeAsk: { bird: mon.uid, foe: target.uid } }, `${cardOf(mon).name} mê hoặc ${cardOf(target).name}. Dùng ${WILE_NAMES[dodgeKey]} để né?`, "info");
   }
   return charmStrike(next, mon.uid, target.uid);
+}
+
+/**
+ * Mê hoặc của Harpie Lady (chủ game 25/11): 0 mana, kích động 1 quái địch (`foeUid`) đánh thường vào 1 quái thú đồng
+ * minh khác của cô (`allyUid`), như Dụ dỗ. Quái địch không bị cấm hành động ở lượt sau.
+ */
+function charmAlly(state: Duel, side: Side, mon: FieldMon, foeUid: string | null, allyUid: string | null): Duel {
+  const pair = foeUid && allyUid ? [foeUid, allyUid] : [];
+  return envGuard(state, pair, pair, () => charmAllyCore(state, side, mon, foeUid, allyUid));
+}
+
+function charmAllyCore(state: Duel, side: Side, mon: FieldMon, foeUid: string | null, allyUid: string | null): Duel {
+  const you = state.players[side];
+  const foe = (1 - side) as Side;
+  const them = state.players[foe];
+  const enemy = them.field.find((unit) => unit?.uid === foeUid && unit.hp > 0) ?? null;
+  const ally = you.field.find((unit) => unit?.uid === allyUid && unit.uid !== mon.uid && unit.hp > 0) ?? null;
+  if (!enemy) return note(state, "Chọn một quái đối thủ.");
+  if (!ally) return note(state, "Chọn một quái đồng minh.");
+  const paid = pay(you, harpyKit(mon.cardId).charm);
+  if (!paid) return note(state, "Cần 1 mana.");
+  const grown = markDeed({ ...mon, dim: true, shed: [...shedOf(mon), "charm"] }, "charm");
+  let next = patch(state, side, { ...paid, field: paid.field.map((unit) => (unit?.uid === mon.uid ? grown : unit)) });
+  const owner = next.players[side];
+  const foeNow = next.players[foe];
+  const attacker = foeNow.field.find((unit) => unit?.uid === enemy.uid) ?? enemy;
+  const defender = owner.field.find((unit) => unit?.uid === ally.uid) ?? ally;
+  const hit = strikePair(withLegend(attacker), withLegend(defender), foeNow.field, owner.field, foeNow.roster, owner.roster, rockOf(next, attacker), rockOf(next, defender));
+  next = patch(next, foe, dropDead({ ...foeNow, field: foeNow.field.map((unit) => (unit?.uid === attacker.uid ? hit.attacker : unit)) }));
+  next = patch(next, side, dropDead({ ...owner, field: owner.field.map((unit) => (unit?.uid === defender.uid ? hit.defender : unit)) }));
+  const line = actNotice("Mê hoặc", [`${cardOf(attacker).name} đánh thường vào ${cardOf(defender).name}`]);
+  return growSmash(sealHarpy(next, side, mon.uid, line, "hit"), attacker.uid, isSmasher(attacker.cardId));
 }
 
 function castLure(state: Duel, side: Side, mon: FieldMon, foeUid: string | null, allyUid: string | null): Duel {
@@ -9525,7 +9558,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   }
   if (mon.cardId === PERFECT) return castPerfect(state, side, mon, skillIndex, targetUid, extra);
   if (mon.cardId === QUEEN && skillIndex === 3) return castLure(state, side, mon, extra, targetUid);
-  if (isHarpy(mon.cardId) && (skillIndex === 0 || skillIndex === 1)) return castHarpy(state, side, mon, skillIndex, targetUid);
+  if (isHarpy(mon.cardId) && (skillIndex === 0 || skillIndex === 1)) return castHarpy(state, side, mon, skillIndex, targetUid, extra);
   targetUid = redirectCover(state.players[foe].field, targetUid);
   if (!skipGnaw && targetUid && canTargetFoe(state)) {
     const foeMon = state.players[foe].field.find((unit) => unit?.uid === targetUid) ?? null;
@@ -11864,7 +11897,8 @@ export function aiStep(state: Duel): Duel {
     if (cast) return cast;
   }
   if (bird && !bird.lure && canTargetFoe(state) && !(bird.shed ?? []).includes("charm") && me.orb >= harpyKit(bird.cardId).charm && threats[0]) {
-    const cast = progress(state, declareSkill(state, bird.uid, threats[0].uid, 1));
+    const mate = bird.cardId === GIRL ? me.field.filter((unit): unit is FieldMon => Boolean(unit && unit.hp > 0)).sort((a, b) => b.hp + b.def - (a.hp + a.def)).find((unit) => unit.uid !== bird.uid) ?? null : null;
+    const cast = bird.cardId === GIRL ? (mate ? progress(state, declareSkill(state, bird.uid, mate.uid, 1, threats[0].uid)) : null) : progress(state, declareSkill(state, bird.uid, threats[0].uid, 1));
     if (cast) return cast;
   }
 

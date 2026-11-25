@@ -191,6 +191,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["my-dieu-nhan", "Mỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn"],
   ["my-dieu-nhan", "tiêu hao 2 mana để huỷ nó"],
   ["my-dieu-nhan", "tiêu hao 2 mana để né"],
+  ["my-dieu-nhan", "đánh thường vào ta"],
   ["linh-chien-da-khong-lo", "Tiêu hao 1 mana để đỡ cho đồng minh đó"],
   ["kraken", "sẽ thêm vào công của hắn"],
   ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
