@@ -2037,6 +2037,15 @@
      "stats": "",
      "tag": "Phép chậm",
      "text": "Cứu rỗi linh hồn:\nHồi sinh 1 quái thú bất kỳ đã chết cửa địch, tồn tại trong 4 lượt."
+    },
+    {
+     "id": "loi-the-hiep-si",
+     "name": "Lời thề hiệp sĩ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Phép siêu tốc",
+     "text": "Lời thề hiệp sĩ:\nHồi sinh 1 kỵ sĩ đã chết về lại trên tay hoặc rút 1 lá kỵ sĩ chưa từng được thấy trong trận vào tay bài."
     }
    ]
   }
