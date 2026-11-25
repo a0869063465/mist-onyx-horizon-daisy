@@ -6854,7 +6854,9 @@ function PlayPage() {
         return Math.hypot(x - (a.x + t * dx), (y - (a.y + (t * dy) / rows)) * rows) < ICON * 0.95;
       });
     const clear = (x: number, y: number) => !onRun(x, y) && [...iconSpots.values()].every((other) => Math.hypot(x - other.x, (y - other.y) * rows) >= ICON * 1.08);
-    for (const orb of chain) {
+    // Song sát: the allies' icons first, so the spell's icon finds its place between them clear of their flows.
+    const placing = [...chain].sort((a, b) => Number(Boolean(b.base?.startsWith("duo:"))) - Number(Boolean(a.base?.startsWith("duo:"))));
+    for (const orb of placing) {
       const kept = keptSpots.current.get(orb.id);
       // Once the wait is over an icon stays where it stood (the attacker leaves its lunge before its icon fires).
       if (kept && (orb.done || !responding)) {
@@ -6889,6 +6891,13 @@ function PlayPage() {
         const anchor = orb.by ? iconSpots.get(orb.by) ?? null : null;
         let x = 44;
         let y = halfY;
+        // Song sát (chủ game 25/11): between its 2 allies' icons and a step toward the middle, so the pink light runs
+        // down into them without crossing their own light into the enemy.
+        const allies = orb.spell === DUO_CARD ? orb.to.flatMap((link) => ("orb" in link.end ? [iconSpots.get(link.end.orb)] : [])).filter((one): one is IconSpot => Boolean(one)) : [];
+        if (allies.length > 0) {
+          x = allies.reduce((sum, one) => sum + one.x, 0) / allies.length;
+          y = allies.reduce((sum, one) => sum + one.y, 0) / allies.length + (mine ? -1 : 1) * (ICON * 1.9) / rows;
+        }
         // Icons of a chain line up toward the middle of the board, the earlier an answer the nearer the icon it
         // answers (chủ game 28/10): a monster on the right sends them left, one on the left sends them right.
         const dir = anchor ? (anchor.x < 50 ? 1 : -1) : 1;
@@ -6900,10 +6909,36 @@ function PlayPage() {
         }
         const from = x;
         const lane = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((step) => [from + dir * step * ICON * 1.15]).concat([1, 2, 3, 4].map((step) => from - dir * step * ICON * 1.15));
-        for (const next of lane) {
-          if (clear(x, y)) break;
-          x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, next));
-        }
+        if (allies.length > 0) {
+          // The spot standing farthest from every flow placed before (the allies' light into the enemy bows out wide).
+          const baseX = x;
+          const baseY = y;
+          const row = mine ? -1 : 1;
+          let best = -1;
+          for (const step of [0.4, 1.2, 2, 2.8]) {
+            for (const side of [0, 1, -1, 2, -2, 3, -3]) {
+              const tx = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, baseX + side * ICON * 1.15));
+              const ty = baseY + (row * step * ICON) / rows;
+              if (![...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (ty - other.y) * rows) >= ICON * 1.08)) continue;
+              const gap = Math.min(99, ...runs.map(([from, to]) => {
+                const dx = to.x - from.x;
+                const dy = (to.y - from.y) * rows;
+                const len2 = dx * dx + dy * dy || 1;
+                const t = Math.max(0, Math.min(1, ((tx - from.x) * dx + (ty - from.y) * rows * dy) / len2));
+                return Math.hypot(tx - (from.x + t * dx), (ty - (from.y + (t * dy) / rows)) * rows);
+              }));
+              if (gap > best) {
+                best = gap;
+                x = tx;
+                y = ty;
+              }
+            }
+          }
+        } else
+          for (const next of lane) {
+            if (clear(x, y)) break;
+            x = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, next));
+          }
         spot = { x, y, face: 0, delay: 0, appear: 0 };
       }
       if (!spot) spot = kept ?? null;

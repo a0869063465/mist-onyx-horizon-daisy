@@ -728,7 +728,12 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
         }
         duoIds.add(ally.id);
       }
-      list = list.map((orb) => (orb.id === duoOrb.id ? { ...orb, to: duo.picks.map((pick): FlowLink => ({ end: { uid: pick.uid }, tone: "pink" })), done: false, end: null } : orb));
+      // Pink from the spell's icon into each ally's icon; the ally's own light runs on into the enemy.
+      const into = duo.picks.flatMap((pick): FlowLink[] => {
+        const ally = list.find((orb) => orb.base === `duo:${duoOrb.id}:${pick.uid}`);
+        return ally ? [{ end: { orb: ally.id }, tone: "pink" }] : [];
+      });
+      list = list.map((orb) => (orb.id === duoOrb.id ? { ...orb, to: into, done: false, end: null } : orb));
     }
   }
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
