@@ -168,6 +168,8 @@ function pendingTone(duel: Duel, pending: Pending): FlowTone {
   if (faceSkill(pending)) return "blue";
   // Pháo kích (chủ game 23/11): hồng tới quái làm đạn và hồng tới mục tiêu.
   if (pending.kind === "beam" && monOf(duel, pending.caster)?.cardId === CATAPULT) return "pink";
+  // Mê hoặc (chủ game 25/11): dòng hồng tới quái địch bị kích động.
+  if (charmFoe(duel, pending)) return "pink";
   // Lão hoá / Cường hoá (chủ game 30/10): pink on a foe, buff green on an ally (as Giáp cơ khí).
   if (pending.kind === "beam" && pending.target && monOf(duel, pending.caster)?.cardId === "phu-thuy-thoi-gian" && pending.index <= 1) return sideOf(duel, pending.target) !== sideOf(duel, pending.caster) ? "pink" : "green";
   if (pending.kind === "face" || pending.kind === "melee" || pending.kind === "gnaw") return strikeOf(duel, pending) ? "blue" : "red";
@@ -223,6 +225,9 @@ function pendingLinks(duel: Duel, guardIcon: string | null, reflect: { id: strin
         const aimEnd: FlowEnd = pending.target ? { uid: pending.target } : shell.wall ? { wall: foe } : { face: foe };
         return [link({ uid: shell.ammo }), link(aimEnd)];
       }
+      // Mê hoặc của Harpie Lady (chủ game 25/11): dòng hồng tới quái địch bị kích động (`extra`), quái đó đánh (dòng đỏ, `charmOrb`).
+      const lured = charmFoe(duel, pending);
+      if (lured) return [link({ uid: lured })];
       if (pending.target) return [link({ uid: pending.target })];
       // A damaging skill with no monster aimed at hits the player (Cầu sấm, Ma đạo sĩ, Súng phóng lựu…): its flow runs
       // to that player (chủ game 30/10).
@@ -370,6 +375,36 @@ function answerOrb(prev: Duel, next: Duel, spell: string, side: Side, target: Fl
     done: true,
     end: "fire",
     stops: answered && DAM_SPELLS.has(spell) ? answered.id : null,
+  };
+}
+
+/** The enemy Harpie Lady's Mê hoặc provokes (the ally it strikes is the target); null for any other action. */
+function charmFoe(duel: Duel, pending: Pending): string | null {
+  if (pending?.kind !== "beam" || pending.index !== 1 || !pending.target || !pending.extra || pending.back) return null;
+  return monOf(duel, pending.caster)?.cardId === "my-dieu-nhan" ? pending.extra : null;
+}
+
+/** The provoked enemy of Mê hoặc: an attack icon by it, red into the ally it strikes, waiting with the skill. */
+function charmOrb(next: Duel, live: ChainOrb, foe: string, ally: string): ChainOrb {
+  return {
+    id: `orb${orbSeq++}`,
+    kind: "attack",
+    side: sideOf(next, foe) ?? ((1 - live.side) as Side),
+    source: foe,
+    cardId: monOf(next, foe)?.cardId ?? null,
+    spell: null,
+    near: foe,
+    by: null,
+    to: [{ end: { uid: ally }, tone: "red" }],
+    tone: "red",
+    skill: null,
+    strike: null,
+    base: live.base,
+    aim: ally,
+    notice: next.live,
+    done: false,
+    end: null,
+    sent: true,
   };
 }
 
@@ -749,6 +784,11 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
           }
         : orb,
     );
+  }
+  // Mê hoặc waiting: the provoked enemy's attack icon stands with it until the chain lands.
+  const lured = live && open ? charmFoe(next, next.pending) : null;
+  if (live && lured && next.pending?.kind === "beam" && next.pending.target && !list.some((orb) => orb.sent && orb.source === lured && orb.base === live.base && !orb.done)) {
+    list.push(charmOrb(next, live, lured, next.pending.target));
   }
   // Done: what waited and no longer does fires or fizzles; a block icon goes with what it blocked.
   const ended = new Map<string, ChainOrb["end"]>();

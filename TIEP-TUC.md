@@ -3,6 +3,7 @@
 ## Harpie Lady Mê hoặc, BƯỚC B (25/11, Opus 5.5 high, nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`)
 1. Việc vừa làm: Mê hoặc của Harpie Lady: 0 mana, skill chậm (chờ trong chuỗi), chọn 1 quái địch rồi 1 quái đồng minh KHÁC cô (như Dụ dỗ, play.tsx `twoStep`), quái địch đánh thường vào quái đó, bỏ cấm hành động lượt sau, bỏ hỏi né (plumeAsk) cho Harpie Lady. duel.ts `charmAlly` (targetUid = đồng minh, extra = quái địch); Nữ chúa giữ luật cũ. Máy (brain.ts + aiStep) chọn được. Chữ lá = chữ chủ game. round-rules 110/111 (+1 bài; Phục kích chập chờn cũ).
 2. Hiện trạng: không ảnh mới. Chụp Chromium 412×915 trận Test: chọn quái địch, đồng minh sáng, bảng sau 2 giây, vào hàng chờ. Dòng chảy chỉ tới quái đồng minh (không có dòng tới quái địch), như Dụ dỗ. Harpie Lady đứng một mình thì không dùng được Mê hoặc.
+   25/11 (sau, Sonnet 5.5): dòng chảy Mê hoặc như Phục kích (chủ game chọn): hồng từ icon skill tới quái địch bị kích động, quái đó hiện icon tấn công, dòng đỏ sang quái đồng minh bị đánh (reaction-chain.ts `charmFoe`, `charmOrb`; `pendingLinks`/`pendingTone` nhánh beam). CHỈ Mê hoặc của Harpie Lady; Dụ dỗ chưa đổi (hỏi chủ game có muốn không). Chụp Chromium 412×915; chưa thấy lúc nổ (bấm Xác nhận) và phía đối thủ dùng.
 3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
 
 ## Harpie Lady đổi kỹ năng, BƯỚC A (25/11, Sonnet 5.5 high, nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`)
