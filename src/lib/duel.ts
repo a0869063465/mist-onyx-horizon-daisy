@@ -5325,6 +5325,12 @@ export function slowWaiting(state: Duel): boolean {
  * Skill chậm (chủ game 29/10): a skill that lands on several is used only while its monster stands in its slot, on
  * its own turn; never to strike back (Trả đòn). Sấm địa ngục only lands on several when more than one foe is wet.
  */
+/** Luật chung (chủ game 25/11): skill dùng được lúc phản ứng (Trả đòn, phép phản ứng cho quái ra đòn như Song sát) là
+ *  skill không chậm; skill đa mục tiêu đều là skill chậm. Mọi chỗ cho quái ra đòn lúc phản ứng đều hỏi hàm này. */
+export function reactSkillOk(state: Duel, uid: string, index: number, targetUid: string | null = null): boolean {
+  return !slowSkill(state, uid, index, targetUid);
+}
+
 export function slowSkill(state: Duel, uid: string, index: number, targetUid: string | null = null): boolean {
   const side = ownerSide(state, uid);
   if (side === null) return false;
@@ -6664,7 +6670,7 @@ export function declareSkill(state: Duel, uid: string, targetUid: string | null,
   const second = knackRun(state, uid, (from) => declareSkill(from, uid, targetUid, skillIndex, extra));
   if (second) return second;
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
-  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
+  if (state.counterAsk?.uid === uid && !reactSkillOk(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   // Trả đòn bằng kỹ năng đánh ngay vào kẻ ra đòn, không qua hàng chờ (chủ game 15/11).
   if (state.counterAsk?.uid === uid) return useSkill(state, uid, state.counterAsk.from, skillIndex, false, extra);
   const counter = counterStart(state, uid);
@@ -9235,7 +9241,7 @@ function useSkillBody(state: Duel, uid: string, targetUid: string | null, skillI
   if (state.players.some((player) => player.field.some((unit) => unit?.uid === uid && unit.abroad !== undefined))) {
     return note(state, "Quái đang ở sân bên kia, không ai điều khiển được.");
   }
-  if (state.counterAsk?.uid === uid && slowSkill(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
+  if (state.counterAsk?.uid === uid && !reactSkillOk(state, uid, skillIndex, targetUid)) return note(state, "Kỹ năng chậm không dùng để Trả đòn được.");
   // These wait in the chain now (chủ game 30/10), from any caller.
   const caster = state.step === "main" ? state.players[state.turn].field.find((unit) => unit?.uid === uid) ?? null : null;
   if (caster && waitSkill(caster.cardId, skillIndex)) return declareSkill(state, uid, targetUid, skillIndex, extra);
@@ -12210,9 +12216,9 @@ export function duoCanAttack(mon: FieldMon): boolean {
   return !isStill(mon.cardId) && mon.cardId !== "mu" && liveAtk(mon) > 0;
 }
 
-/** Kỹ năng `index` dùng được trong Song sát: gây sát thương và không bị khoá. */
-export function duoCanSkill(mon: FieldMon, index: number): boolean {
-  return harmSkill(mon.cardId, index) && !duoSkillBarred(mon);
+/** Kỹ năng `index` dùng được trong Song sát: skill Trả đòn được (`reactSkillOk`), gây sát thương, không bị khoá. */
+export function duoCanSkill(state: Duel, mon: FieldMon, index: number, targetUid: string | null = null): boolean {
+  return harmSkill(mon.cardId, index) && reactSkillOk(state, mon.uid, index, targetUid) && !duoSkillBarred(mon);
 }
 
 /** Quái của `side` chọn được cho Song sát: còn sống, ở sân mình. */
@@ -12266,7 +12272,7 @@ function duoStrike(state: Duel, side: Side, pick: DuoPick, target: string): Duel
     return traced(state, checkWinner(struck), { kind: "attack-monster", actor: side, ok: true, cardId: mon.cardId, target: monsterTarget(state, victim.uid), end: null });
   }
   const index = pick.act;
-  if (!duoCanSkill(mon, index)) return note(state, `Song sát: ${cardOf(mon).name} không bật được kỹ năng.`, "info");
+  if (!duoCanSkill(state, mon, index, target)) return note(state, `Song sát: ${cardOf(mon).name} không bật được kỹ năng.`, "info");
   // Khống chế không ngăn Song sát (chủ game 25/11): gỡ tạm rồi trả lại sau đòn; đòn không tính hành động của vòng.
   const kept = { stun: mon.stun, chain: mon.chain, seal: mon.seal, dim: mon.dim, path: mon.path, used: mon.used, knack: mon.knack };
   const you = state.players[side];
@@ -12301,7 +12307,7 @@ function duoCheck(state: Duel, side: Side, picks: DuoPick[], target: string | nu
   for (const pick of picks) {
     const mon = state.players[side].field.find((unit) => unit?.uid === pick.uid) ?? null;
     if (!mon || !allies.includes(mon.uid)) return "Chọn 2 quái đồng minh.";
-    if (pick.act === "atk" ? !duoCanAttack(mon) : !duoCanSkill(mon, pick.act)) {
+    if (pick.act === "atk" ? !duoCanAttack(mon) : !duoCanSkill(state, mon, pick.act, target)) {
       return `${cardOf(mon).name} không ${pick.act === "atk" ? "đánh thường" : "dùng kỹ năng này"} được.`;
     }
   }

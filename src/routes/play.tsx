@@ -103,6 +103,7 @@ import {
   fieldName,
   harmShift,
   harmSkill,
+  reactSkillOk,
   slowSkill,
   attackRound,
   hornFit,
@@ -9582,7 +9583,7 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
     })) {
       if (!sword && harmSkill(card.id, chip.skill)) continue;
       // Skill chậm (chủ game 29/10): a skill that lands on several is not for striking back; its button is hidden.
-      if (riposte && slowSkill(duel, uid, chip.skill)) continue;
+      if (riposte && !reactSkillOk(duel, uid, chip.skill)) continue;
       // Trả đòn: kỹ năng có mục tiêu đánh ngay vào kẻ ra đòn, không chọn mục tiêu, không qua hàng chờ.
       if (riposte && chip.aims && duel.counterAsk) {
         const from = duel.counterAsk.from;

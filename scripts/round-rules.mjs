@@ -2001,6 +2001,14 @@ test("Song sát (25/11): 2 quái lần lượt ra đòn, thủ mất đúng ph�
   assert.equal(at(kd, 0, 0).stun, 2, "khống chế trả lại");
 });
 
+test("Song sát (25/11): chỉ skill Trả đòn được và gây sát thương (skill chậm, đa mục tiêu bị từ chối)", () => {
+  let s = board({ 0: ["loi-nguyen-cua-rong", {}], 1: ["may-chem", { atk: 3 }] }, { 0: ["khong-lo-mot-mat", { hp: 30, maxHp: 30 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 5, flask: 0, hand: i === 0 ? ["song-sat"] : [], tolls: [] })) };
+  const slow = D.castSpell(s, 0, uid(s, 1, 0), false, D.duoCode([{ uid: uid(s, 0, 0), act: 0 }, { uid: uid(s, 0, 1), act: "atk" }]));
+  assert.notEqual(slow.step, "respond", "Địa ngục lửa (skill chậm) không được chọn: " + slow.live);
+  assert.equal(slow.players[0].orb, 5, "không mất mana");
+});
+
 test("Song sát (25/11): đáp lại trong chuỗi, nổ trước đòn đang chờ; Hấp thụ ma pháp nuốt được", () => {
   const make = (hand1) => {
     let s = board({ 0: ["may-chem", { atk: 4 }], 1: ["may-chem", { atk: 4 }] }, { 0: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, atk: 1, def: 0, mdef: 0 }] }, { turn: 1, round: 1 });
