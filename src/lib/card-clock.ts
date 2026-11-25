@@ -778,14 +778,14 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "stars": 2,
     "mana": 0,
     "atk": 3,
-    "def": 1,
-    "mdef": 1,
-    "hp": 2,
-    "text": "d455df93",
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
+    "text": "25c2fb7e",
     "added": "2026-10-05",
-    "powerAt": "2026-11-22",
-    "powerTone": "down",
-    "shiftAt": "2026-11-22"
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": "2026-11-25"
   },
   "the-than-cua-shien": {
     "kind": "monster",

@@ -749,11 +749,11 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Harpie Lady",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
+    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
     "atk": 3,
-    "def": 1,
-    "mdef": 1,
-    "hp": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
     "art": "my-dieu-nhan"
   },
   {

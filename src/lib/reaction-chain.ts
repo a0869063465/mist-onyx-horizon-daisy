@@ -49,7 +49,7 @@ export type ChainOrb = {
   /** The colour of the icon's own smoke and ring. */
   tone: FlowTone;
   /** The skill's index for a skill icon ("lash" for Roi điện), to name it and open its sheet on it. */
-  skill: number | "lash" | null;
+  skill: number | "lash" | "armor" | null;
   /** An attack that is really a skill: Sừng lôi phá's strike shows the spell, Mắt xanh's its own skill. */
   strike: "horn" | "gaze" | null;
   /** The waiting action this icon stands for, without its target, so a block or a swap only turns its flow. */
@@ -279,7 +279,7 @@ function pendingOrb(duel: Duel, by: string | null = null): ChainOrb | null {
     by,
     to,
     tone,
-    skill: pending.kind === "lash" ? "lash" : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.index : faceSkill(pending) ? faceSkillIndex(cardId) : null,
+    skill: pending.kind === "lash" ? (pending.key ?? "lash") : pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.index : faceSkill(pending) ? faceSkillIndex(cardId) : null,
     strike: swing ? strikeOf(duel, pending) : null,
     base,
     aim,

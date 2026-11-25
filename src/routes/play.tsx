@@ -864,12 +864,12 @@ const SKILL_GLOW: Record<string, string> = { active: "#62b8ff", risk: "#ff8f3d",
 
 type SkillFacts = { cardId: string; name: string; icon: string; kind: string; slow: boolean; buff?: boolean };
 /** The skill a monster is using, as its sheet names it: by its number among the monster's skills ("lash" = Roi điện). */
-function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | null): SkillFacts | null {
+function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | "armor" | null): SkillFacts | null {
   const cardId = mon ? formOf(mon) : fallbackId;
   if (!cardId) return null;
   const card = monsterCard(cardId);
   const book = skillsOf(cardId, card?.skill ?? "");
-  const label = skill === "lash" ? chipLabel(cardId, "lash") : skill !== null ? castName(cardId, skill) : "";
+  const label = skill === "lash" || skill === "armor" ? chipLabel(cardId, skill) : skill !== null ? castName(cardId, skill) : "";
   // A skill the rules name after its monster is the only one it can use.
   const sole = () => {
     const usable = book.filter((row) => row.kind !== "passive" && row.kind !== "note");
@@ -1369,7 +1369,7 @@ function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   const offer = harpyOffer(duel, viewer);
   const pending = duel.pending;
   if (!offer || !pending) return false;
-  if (offer === "lash") return pending.kind === "melee" && (duel.hold?.blocker ?? pending.defender) === mon.uid;
+  if (pending.kind === "melee") return (duel.hold?.blocker ?? pending.defender) === mon.uid;
   return (pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell") && pending.target === mon.uid;
 }
 
@@ -7174,7 +7174,7 @@ function PlayPage() {
     const card = monsterCard(mon.cardId);
     if (!card) return null;
     const stats = visibleStats(mon, duel.players[orb.side].field);
-    const name = orb.skill === "lash" ? chipLabel(mon.cardId, "lash") : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
+    const name = orb.skill === "lash" || orb.skill === "armor" ? chipLabel(mon.cardId, orb.skill) : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
     // A skill with painted art shows just that picture, feathered and glowing, without a rim (chủ game 20/11), then it
     // shrinks into the round icon.
     const sk = iconSkill(orb);
