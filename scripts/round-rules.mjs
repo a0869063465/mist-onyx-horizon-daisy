@@ -2113,6 +2113,60 @@ test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 65% 
   assert.notEqual(D.useSkill(make(), uid(s, 0, 0), uid(s, 1, 0), 0, true, null).step, "respond");
 });
 
+test("Hiệp sĩ của vua/hậu (25/11): Kiếm hỏi lúc tấn công chủ động, 1 mana +3 công cho đòn đó; thiếu mana thì không hỏi", () => {
+  const make = (orb) => {
+    const s = board({ 0: ["hiep-si-cua-vua", { atk: 3, def: 0, mdef: 0, hp: 3, maxHp: 3 }] }, { 0: ["may-chem", { atk: 0, def: 0, mdef: 0, hp: 20, maxHp: 20 }] });
+    return { ...s, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? orb : 0 })) };
+  };
+  let s = make(2);
+  const asked = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(asked.swordAsk?.kind, "melee", asked.live);
+  assert.equal(asked.pending, null, "chưa lên hàng chờ khi đang hỏi");
+  const yes = D.answerSword(asked, true);
+  assert.equal(yes.pending?.kind, "melee", yes.live);
+  assert.equal(yes.players[0].orb, 1, "Kiếm tốn 1 mana");
+  const hit = D.passResponse(yes);
+  assert.equal(at(hit, 1, 0).hp, 14, "3 công + 3 Kiếm: " + hit.live);
+  assert.equal(at(hit, 0, 0).blessAtk ?? 0, 0, "hết đòn thì mất +3");
+  const no = D.passResponse(D.answerSword(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)), false));
+  assert.equal(at(no, 1, 0).hp, 17, "không dùng Kiếm: " + no.live);
+  assert.equal(no.players[0].orb, 2);
+  s = make(0);
+  const broke = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(broke.swordAsk ?? null, null, "0 mana thì không hỏi");
+  assert.equal(broke.pending?.kind, "melee");
+  // Đánh người chơi cũng hỏi.
+  s = make(1);
+  const face = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(face.swordAsk?.kind, "face", face.live);
+  const landed = D.passResponse(D.answerSword(face, true));
+  assert.equal(landed.players[1].hp, s.players[1].hp - 6, landed.live);
+});
+
+test("Hiệp sĩ của vua/hậu (25/11): Khiên +4 thủ trước đòn vật lý đầu tiên trong lượt, +4 thủ phép trước đòn phép (đòn đánh của hậu là phép); hết lượt thì mất", () => {
+  const make = (foe) => {
+    const s = board({ 0: ["hiep-si-cua-vua", { atk: 0, def: 0, mdef: 0, hp: 10, maxHp: 10 }] }, { 0: [foe, { atk: 5, def: 0, mdef: 0, hp: 20, maxHp: 20 }], 1: ["may-chem", { atk: 5, def: 0, mdef: 0, hp: 20, maxHp: 20 }] }, { turn: 1, round: 1 });
+    return { ...s, players: s.players.map((p) => ({ ...p, orb: 0 })) };
+  };
+  let s = make("may-chem");
+  let hit = D.passResponse(D.attackMonster(s, uid(s, 1, 0), uid(s, 0, 0)));
+  assert.equal(at(hit, 0, 0).hp, 9, "5 công - 4 thủ của Khiên: " + hit.live);
+  assert.deepEqual(at(hit, 0, 0).kGuard, { def: 4, mdef: 0 });
+  assert.ok(hit.log.some((line) => /giương Khiên, \+4 thủ/.test(line)), hit.log.slice(-3).join(" | "));
+  // Lần thứ hai trong cùng lượt: không bật lại, thủ +4 vẫn còn.
+  hit = { ...hit, counterAsk: null, turn: 1, step: "main", pending: null, hold: null };
+  const again = D.passResponse(D.attackMonster(hit, uid(s, 1, 1), uid(s, 0, 0)));
+  assert.equal(at(again, 0, 0).hp, 8, again.live);
+  // Hết lượt: Khiên mất, lượt sau bật lại được.
+  const next = closeRound(again);
+  assert.equal(at(next, 0, 0)?.kGuard, undefined);
+  // Đòn đánh của Hiệp sĩ của hậu là sát thương phép: Khiên vào thủ phép.
+  s = make("hiep-si-cua-hau");
+  const magic = D.passResponse(D.attackMonster(s, uid(s, 1, 0), uid(s, 0, 0)));
+  assert.equal(at(magic, 0, 0).hp, 9, magic.live);
+  assert.deepEqual(at(magic, 0, 0).kGuard, { def: 0, mdef: 4 });
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

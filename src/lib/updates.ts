@@ -1117,6 +1117,7 @@ export const PENDING_NOTES: string[] = [
   "Lá bị bỏ khỏi tay (Gặt hồn của Tử thần của những lá bài, Sinh mệnh mới của Quả trứng sinh mệnh) nhấc lên, bay vòng cung về góc phải trên rồi cháy tan thành lửa xanh lá; lá của đối thủ cũng vậy nhưng úp.",
   "Harpie Lady: công 3, thủ 0, thủ phép 0, máu 3. Giáp và Vuốt giờ né đòn đánh thường nhắm vào (1 mana, tăng vĩnh viễn 2 thủ và 2 máu tối đa, trả 5 sát thương phép vào kẻ tấn công). Roi điện giờ né skill hoặc phép nhắm tới (1 mana, tăng vĩnh viễn 2 công, trả đòn trực tiếp lên kẻ ra đòn).",
   "Harpie Lady: Mê hoặc 0 mana, chọn 1 quái địch rồi 1 quái đồng minh khác, quái địch đánh thường vào quái đó. Không còn cấm hành động lượt sau.",
+  "Hiệp sĩ của vua, Hiệp sĩ của hậu: Khiên +4 thủ hoặc thủ phép trước lần nhận sát thương đầu tiên trong lượt; Kiếm tốn 1 mana +3 công khi tấn công; Hiệp sĩ của hậu đánh thường gây sát thương phép. Bỏ lời chúc vua/hậu, Đàm phán, Kiếm phép, Kiếm tấn công cũ.",
 ];
 
 function remarkOf(notes: string[]) {

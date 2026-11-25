@@ -151,6 +151,8 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
   "chien-si-gam-nham": ["ben-bi"],
   "chien-binh-rong": ["ben-bi"],
   "hiep-si-ho-ve": ["ben-bi", "ho-ve"],
+  // Chủ game 25/11: Hiệp sĩ của hậu có keyword Đòn đánh phép (đòn đánh thường gây sát thương phép).
+  "hiep-si-cua-hau": ["phep"],
   "khong-lo-mot-mat": ["luc-luong", "cuong-hoa-vinh-vien"],
   "may-chem": ["luc-luong"],
   "trai-tim-hai-long": ["tan-pha"],
@@ -197,6 +199,7 @@ export const CARD_KEYWORDS: Record<string, KeywordId[]> = {
 export const KEYWORD_LINES: Record<string, Record<string, KeywordId>> = {
   "chien-si-gam-nham": { "Khiên thú sĩ": "ben-bi" },
   "chien-binh-rong": { "Vảy rồng": "ben-bi" },
+  "hiep-si-cua-hau": { "Kiếm": "phep" },
   "hiep-si-ho-ve": { "Kiếm hộ vệ": "ho-ve", "Lời chúc của kỵ sĩ": "ben-bi", "Lời chúc của vua": "ben-bi", "Lời chúc của hậu": "ben-bi" },
   "trai-tim-hai-long": { "Đại hồng thuỷ huỷ diệt": "tan-pha" },
   "loi-nguyen-cua-rong": { "Địa ngục lửa": "tan-pha" },

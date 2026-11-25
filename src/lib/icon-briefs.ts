@@ -6,7 +6,6 @@ import {
   favorShots,
   hellFigures,
   liveAtk,
-  queenSwing,
   skillLoss,
   type Duel,
   type FieldMon,
@@ -196,8 +195,6 @@ function lines(at: SkillAt): string[] {
         `-${num(t, /-(\d+)\s*thủ(?!\s*phép)/, 2)} thủ, -${num(t, /-(\d+)\s*thủ phép/, 2)} thủ phép`,
         `Trong ${num(t, /trong\s*(\d+)\s*lượt/, 6)} lượt`,
       ];
-    case "hiep-si-cua-hau":
-      return name === "Kiếm phép" && mon ? [deal(blow(mon, queenSwing(mon).pack))] : [];
     case "my-dieu-nhan":
     case "nu-chua-dieu-nhan":
     case "nu-chua-dieu-nhan-hoan-my":

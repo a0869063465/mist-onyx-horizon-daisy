@@ -143,6 +143,8 @@ import {
   answerFairy,
   answerSoul,
   soulAskLine,
+  swordAskLine,
+  answerSword,
   armHorn,
   spellAtk,
   setCover,
@@ -1419,6 +1421,8 @@ function tired(mon: FieldMon) {
 function holdingMend(mon: FieldMon) {
   if (mon.clash && (mon.clash.atk > 0 || mon.clash.def > 0 || mon.clash.maxHp > 0)) return true;
   if ((mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0) return true;
+  // Khiên của Hiệp sĩ của vua / hậu: buff tạm tới hết lượt.
+  if ((mon.kGuard?.def ?? 0) > 0 || (mon.kGuard?.mdef ?? 0) > 0) return true;
   return Boolean(mon.buff && ((mon.buff.def ?? 0) > 0 || (mon.buff.mdef ?? 0) > 0 || (mon.buff.maxHp ?? 0) > 0));
 }
 
@@ -1534,6 +1538,8 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
           now.def - was.def,
           now.mdef - was.mdef,
           (now.blessAtk ?? 0) - (was.blessAtk ?? 0),
+          (now.kGuard?.def ?? 0) - (was.kGuard?.def ?? 0),
+          (now.kGuard?.mdef ?? 0) - (was.kGuard?.mdef ?? 0),
           (now.clash?.atk ?? 0) - (was.clash?.atk ?? 0),
           (now.clash?.def ?? 0) - (was.clash?.def ?? 0),
           stance,
@@ -4614,7 +4620,7 @@ function PlayPage() {
   function queueStep(prev: Duel, next: Duel): { next: Duel; kind: "act" | "answer" } | null {
     if (!mine || tutorial || next.winner !== null || next.mid !== prev.mid) return null;
     // A choice the rules ask for while an action resolves (Kỵ sĩ bóng tối's stance, a pick of cards…) is made at once.
-    if (prev.parley || next.parley || prev.soulAsk || prev.plumeAsk || prev.birdAsk || prev.clockAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
+    if (prev.parley || next.parley || prev.soulAsk || prev.swordAsk || prev.plumeAsk || prev.birdAsk || prev.clockAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
     const declared =
       !queue &&
       prev.step === "main" &&
@@ -5041,10 +5047,10 @@ function PlayPage() {
     foe.field.forEach((mon, slot) => {
       if (!mon) return;
       const next = attackMonster(duel, uid, mon.uid);
-      if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk))) keys.add(`${side}-${slot}`);
+      if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk) || Boolean(next.swordAsk && !duel.swordAsk))) keys.add(`${side}-${slot}`);
     });
     const face = attackFace(duel, uid);
-    if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
+    if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk) || Boolean(face.swordAsk && !duel.swordAsk))) keys.add("face");
     return keys;
   }
 
@@ -8095,6 +8101,15 @@ function PlayPage() {
             </div>
           </div>
         ) : null}
+        {duel.swordAsk && duel.turn === viewer ? (
+          <div className="overlay is-ask">
+            <div className="ask-card is-keep">
+              <p>{tr(swordAskLine(you.field.find((unit) => unit?.uid === duel.swordAsk?.uid) ?? ({ cardId: "" } as never)))}</p>
+              <button type="button" onClick={() => apply(answerSword(duel, true))}>{tr("Dùng Kiếm")}</button>
+              <button type="button" onClick={() => apply(answerSword(duel, false))}>{tr("Không")}</button>
+            </div>
+          </div>
+        ) : null}
         {duel.soulAsk && duel.turn === viewer ? (
           <div className="overlay is-ask">
             <div className="ask-card is-keep">
@@ -9825,7 +9840,6 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       orb: you.orb,
       level: mon.level ?? 1,
       hp: mon.hp,
-      beat: mon.beat ?? 0,
       stored: mon.stored ?? 0,
       skillText: plainCopy(card.skill),
       afford,
@@ -9887,9 +9901,6 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
         ...(card.id === "nu-chua-dieu-nhan" ? {} : { slide: aimed(1) }),
       });
     }
-  }
-  if (attackable && !noSkill && card.id === "hiep-si-cua-hau" && !duel.parley && you.orb >= 1) {
-    y.push({ key: "talk", label: tr("Đàm phán"), go: () => apply(startParley(duel, uid)) });
   }
   if (attackable && !noSkill && card.id === "hiep-si-huyen-bi" && !duel.parley && you.orb >= 2) {
     z.push({ key: "talk", label: tr("Đàm phán"), go: () => apply(startParley(duel, uid)) });
@@ -10211,8 +10222,6 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
         ? mon.level ?? 0
         : mon.cardId === "con-thinh-no-cua-hai-vuong"
           ? 2 + 3 * (mon.stored ?? 0)
-        : mon.cardId === "hiep-si-cua-hau"
-          ? mon.beat === 1 ? 2 : 1
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""
@@ -10228,7 +10237,6 @@ const COUNT_ICON: Record<string, string> = {
   "kizuran": "heart-shield",
   "ken-ngai": "butterfly",
   "con-thinh-no-cua-hai-vuong": "guardian-shield",
-  "hiep-si-cua-hau": "shaking-hands",
   "hiep-si-ho-ve": "growth",
   "chien-binh-rong": "scale-mail",
   "nu-chua-dieu-nhan-hoan-my": "spiked-shell",

@@ -6,7 +6,6 @@ export type FieldBindCtx = {
   orb: number;
   level: number;
   hp: number;
-  beat: number;
   stored: number;
   skillText: string;
   afford: (cost: number) => boolean;
@@ -37,7 +36,6 @@ const orb = (n: number): Gate => (ctx) => ctx.orb >= n;
 
 const ROWS: Row[] = [
   { ids: ["te-giac-be-con"], key: "up", cast: "self", skill: 0, gate: (ctx) => ctx.level < 3 && ctx.afford(ctx.level >= 2 ? 2 : 1) },
-  { ids: ["hiep-si-cua-hau"], key: "sword", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "sword")} ${ctx.beat === 1 ? 2 : 1}` },
   { ids: ["mat-do-tan-pha"], key: "ball", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["cuc-bong-ma-quai"], key: "mult", cast: "self", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && !ctx.spent.includes("mult") },
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },

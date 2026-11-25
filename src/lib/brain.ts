@@ -333,7 +333,6 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
     orb: me.orb,
     level: mon.level ?? 1,
     hp: mon.hp,
-    beat: mon.beat ?? 0,
     stored: mon.stored ?? 0,
     skillText: card.skill ?? "",
     afford: (cost) => me.orb >= cost,
