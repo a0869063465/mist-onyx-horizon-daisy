@@ -162,6 +162,14 @@ import {
   canCastSwap,
   shelterPicks,
   boxAllies,
+  DUO_CARD,
+  duoAllies,
+  duoTargets,
+  duoReady,
+  duoCode,
+  duoCanAttack,
+  duoCanSkill,
+  type DuoPick,
   eggAim,
   eggAllies,
   boxFoes,
@@ -363,7 +371,7 @@ type Aim =
   | { kind: "innate"; uid: string }
   | { kind: "skill"; uid: string; index: number; also?: string }
   | { kind: "tide"; uid: string }
-  | { kind: "spell"; index: number; spellId: string; from?: string };
+  | { kind: "spell"; index: number; spellId: string; from?: string; duo?: { picks: DuoPick[]; ask?: string } };
 
 type Strike = { uid: string; face: boolean; foeUid: string | null };
 /** Centre and width of a card on the board, in % of the board. */
@@ -994,7 +1002,7 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su"]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD]);
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1175,6 +1183,7 @@ const ANSWER_SPELLS = new Set([
   "phan-nguyen",
   "hop-ma-thuat",
   "qua-trung-thien-su",
+  DUO_CARD,
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1203,6 +1212,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   // Huỷ diệt chỉ Hấp thụ ma pháp hoá giải được (chủ game 20/11).
   if (doomWaiting(duel)) return id === "hap-thu-ma-phap";
   if (id === TRAP_CARD) return duel.hold ? trapPicks(duel, duel.hold.priority).length > 0 : false;
+  // Song sát: tự phát động, chờ trong chuỗi như Phục kích (chủ game 25/11).
+  if (id === DUO_CARD) return duel.hold?.priority !== undefined && duoReady(duel, duel.hold.priority);
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   // Quả trứng thiên sứ (chủ game 21/11): an enemy monster's attack or damaging skill aimed at a monster of yours.
   if (id === "qua-trung-thien-su") return duel.hold?.priority !== undefined && eggAim(duel, duel.hold.priority) !== null;
@@ -1285,6 +1296,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (id === RITE_CARD) return riteDeadFor(duel, viewer).length > 0;
   // Bẫy thú (chủ game 20/11): ngay lúc quyền về sau khi quái địch máu dưới 4 vừa triệu hồi.
   if (id === TRAP_CARD) return trapPicks(duel, viewer).length > 0;
+  if (id === DUO_CARD) return duoReady(duel, viewer);
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -4337,6 +4349,60 @@ function PlayPage() {
     setAim({ kind: "spell", index, spellId: "hop-ma-thuat", ...(allies.length === 1 ? { from: allies[0] } : {}) });
     holdNotice(allies.length === 1 ? "Chọn quái đối thủ để đổi chỗ." : "Chọn đồng minh đang bị nhắm.");
   }
+  /** Song sát: the card becomes an icon; pick the enemy, then ally 1 and its blow, then ally 2 and its blow. */
+  function startDuo(index: number) {
+    if (!duel) return;
+    if (!duoReady(duel, viewer)) {
+      holdNotice("Cần ít nhất 2 quái đồng minh và 1 quái địch.");
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: DUO_CARD, duo: { picks: [] } });
+    holdNotice("Chọn 1 quái địch.");
+  }
+  /** The blows ally `uid` can strike the enemy `target` with in Song sát: Tấn công and the damage skills allowed. */
+  function duoActs(uid: string, target: string): { act: DuoPick["act"]; label: string }[] {
+    const mon = you.field.find((unit) => unit?.uid === uid);
+    const card = mon ? monsterCard(mon.cardId) : undefined;
+    if (!duel || !mon || !card) return [];
+    const out: { act: DuoPick["act"]; label: string }[] = [];
+    if (duoCanAttack(mon)) out.push({ act: "atk", label: "Tấn công" });
+    for (const chip of fieldBindsFor(card.id, {
+      cardId: card.id,
+      orb: you.orb,
+      level: mon.level ?? 1,
+      hp: mon.hp,
+      beat: mon.beat ?? 0,
+      stored: mon.stored ?? 0,
+      skillText: plainCopy(card.skill),
+      afford: () => true,
+      aim: () => undefined,
+      cast: () => undefined,
+      declare: () => undefined,
+      spent: [...(mon.shed ?? []), ...(mon.mult ? ["mult"] : [])],
+      room: 0,
+    })) {
+      if (!chip.aims || !duoCanSkill(duel, mon, chip.skill, target)) continue;
+      if (out.some((one) => one.act === chip.skill)) continue;
+      out.push({ act: chip.skill, label: castName(card.id, chip.skill) });
+    }
+    return out;
+  }
+  /** The ally's blow picked: the second one casts the spell. */
+  function duoPick(act: DuoPick["act"]) {
+    if (!duel || aim?.kind !== "spell" || aim.spellId !== DUO_CARD || !aim.duo?.ask || !aim.from) return;
+    const picks = [...aim.duo.picks, { uid: aim.duo.ask, act }];
+    if (picks.length < 2) {
+      setAim({ ...aim, duo: { picks } });
+      holdNotice("Chọn quái đồng minh thứ 2.");
+      return;
+    }
+    const target = aim.from;
+    const index = aim.index;
+    setAim(null);
+    holdNotice("");
+    apply(castSpell(duel, index, target, false, duoCode(picks)));
+  }
   /** Quả trứng thiên sứ: one monster aimed at = cast at once; several = an icon waits while one of them is picked. */
   function startEgg(index: number) {
     if (!duel) return;
@@ -4900,6 +4966,11 @@ function PlayPage() {
       else each(viewer, (mon) => harmShift(mon));
       return keys;
     }
+    if (id === DUO_CARD) {
+      if (!from) each(foeSide, (mon) => duoTargets(duel, viewer).includes(mon.uid));
+      else each(viewer, (mon) => duoAllies(duel, viewer).includes(mon.uid) && !(aim?.kind === "spell" && aim.duo?.picks.some((pick) => pick.uid === mon.uid)));
+      return keys;
+    }
     if (id === "hop-ma-thuat") {
       if (from) each(foeSide, (mon) => boxFoes(duel, viewer).includes(mon.uid));
       else each(viewer, (mon) => boxAllies(duel, viewer).includes(mon.uid));
@@ -4923,7 +4994,7 @@ function PlayPage() {
   /** The spell being aimed now (dragged, or picked with Use), if it takes a target. */
   function spellAim(): { id: string; index: number; from?: string } | null {
     if (drag?.kind === "spell") return spellAimOf(drag.spellId) ? { id: drag.spellId, index: drag.index } : null;
-    if (aim?.kind === "spell" && (spellAimOf(aim.spellId) || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat")) return { id: aim.spellId, index: aim.index, from: aim.from };
+    if (aim?.kind === "spell" && (spellAimOf(aim.spellId) || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat" || aim.spellId === DUO_CARD)) return { id: aim.spellId, index: aim.index, from: aim.from };
     return null;
   }
 
@@ -5075,7 +5146,7 @@ function PlayPage() {
     if (cast) {
       // Phép có mục tiêu (V8B): only the monsters it can take glow; the others on its side are marked as not pickable.
       const keys = spellKeys(cast.id, cast.index, cast.from);
-      const onFoe = cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : spellAimOf(cast.id) === "foe";
+      const onFoe = cast.id === DUO_CARD ? !cast.from : cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : spellAimOf(cast.id) === "foe";
       const plan = { keys, foe: onFoe, you: !onFoe, caster: "" };
       planCache.current = { duel, aim, uid, plan };
       return plan;
@@ -5341,6 +5412,11 @@ function PlayPage() {
           return;
         }
         startEgg(payload.index);
+        return;
+      }
+      if (payload.spellId === DUO_CARD) {
+        if (hit?.closest(".hand")) return;
+        startDuo(payload.index);
         return;
       }
       // Hộp ma thuật: dropped on an enemy with one ally struck, it is cast; elsewhere it waits as an icon.
@@ -5890,6 +5966,25 @@ function PlayPage() {
       if (side !== viewer) {
         apply(castSpell(duel, aim.index, mon.uid, false, aim.from));
         setAim(null);
+      }
+      return;
+    }
+    if (aim?.kind === "spell" && aim.spellId === DUO_CARD) {
+      if (aim.duo?.ask) return;
+      if (side !== viewer) {
+        if (duoTargets(duel, viewer).includes(mon.uid)) {
+          setAim({ ...aim, from: mon.uid, duo: { picks: [] } });
+          holdNotice("Chọn quái đồng minh thứ 1.");
+        }
+        return;
+      }
+      if (!aim.from) {
+        holdNotice("Chọn 1 quái địch trước.");
+        return;
+      }
+      if (duoAllies(duel, viewer).includes(mon.uid) && !aim.duo?.picks.some((pick) => pick.uid === mon.uid)) {
+        setAim({ ...aim, duo: { picks: aim.duo?.picks ?? [], ask: mon.uid } });
+        holdNotice("Chọn đòn của quái này.");
       }
       return;
     }
@@ -7605,6 +7700,23 @@ function PlayPage() {
             }}
           />
         ) : null}
+        {mine && aim?.kind === "spell" && aim.spellId === DUO_CARD && aim.duo?.ask && aim.from ? (
+          <div className="overlay is-ask">
+            <div className="ask-card">
+              <p>
+                <b>Chọn đòn</b>
+              </p>
+              {duoActs(aim.duo.ask, aim.from).map((one) => (
+                <button key={String(one.act)} type="button" onClick={() => duoPick(one.act)}>
+                  {one.label}
+                </button>
+              ))}
+              <button type="button" onClick={() => setAim({ ...aim, duo: { picks: aim.duo?.picks ?? [] } })}>
+                Quay lại
+              </button>
+            </div>
+          </div>
+        ) : null}
         {mine && aim?.kind === "tide" ? (
           <div className="overlay is-ask">
             <div className="ask-card">
@@ -8559,6 +8671,10 @@ function PlayPage() {
                               apply(castSpell(duel, index, aimedUid(duel)));
                               return;
                             }
+                            if (id === DUO_CARD) {
+                              startDuo(index);
+                              return;
+                            }
                             if (slowUse && id === "sung-loi-pha") {
                               setAim({ kind: "spell", index, spellId: id });
                               holdNotice("Chọn quái để gắn sừng.");
@@ -9089,6 +9205,11 @@ function PlayPage() {
                           if (shownSpell.id === "hop-ma-thuat") {
                             setInspect(null);
                             startBox(index);
+                            return;
+                          }
+                          if (shownSpell.id === DUO_CARD) {
+                            setInspect(null);
+                            startDuo(index);
                             return;
                           }
                           if (shownSpell.id === "qua-trung-thien-su") {

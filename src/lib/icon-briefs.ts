@@ -252,6 +252,8 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Chặn đòn tấn công", "Một quái bị nhắm được trả đòn"];
       case "hoan-doi":
         return ["Đổi chỗ quái bị nhắm với quái khác"];
+      case "song-sat":
+        return ["2 đồng minh cùng đánh 1 kẻ địch", "Lớp thủ bị chặn mất tới hết giao tranh"];
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
       case "don-cuoi-cung":
