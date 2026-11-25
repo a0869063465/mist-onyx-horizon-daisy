@@ -1587,6 +1587,87 @@
      "stats": "Công 0 · Thủ 1 · Thủ phép 4 · Máu 7",
      "tag": "",
      "text": "Phong ấn:\nHào quang: phong ấn kỹ năng bị động của tất cả quái thú đối thủ trên sân.\nBảo hộ:\n1 mana, Ban khiên phép cho 1 đồng minh kéo dài trong 4 lượt."
+    },
+    {
+     "id": "muon-xac-hoan-hon",
+     "name": "Mượn Xác Hoàn Hồn",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Mượn Xác Hoàn Hồn:\nChọn 1 quái vật có bậc 6 trở xuống trong mộ bài của đối phương và triệu hồi đặc biệt nó lên sân của bạn."
+    },
+    {
+     "id": "troi-day",
+     "name": "Trỗi Dậy",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Trỗi Dậy:\nChọn 1 quái vật có bậc 6 trở xuống trong mộ bài của bạn và triệu hồi đặc biệt nó."
+    },
+    {
+     "id": "song-ve-lien-thu",
+     "name": "Song Vệ Liên Thủ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Song Vệ Liên Thủ:\nHiệu ứng này chỉ có thể kích hoạt một lần mỗi lượt. Triệu hồi đặc biệt 1 Cơ Thiên Vệ từ trên tay hoặc bộ bài. Khi bạn kết thúc lượt này, phá huỷ quái vật đó."
+    },
+    {
+     "id": "tam-su-xuat-chien",
+     "name": "Tam Sư Xuất Chiến",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Tam Sư Xuất Chiến:\nHiệu ứng này chỉ có thể kích hoạt một lần mỗi lượt. Triệu hồi đặc biệt 1 Hỏa Sư, Kim Sư hoặc Thủy Sư từ trên tay hoặc bộ bài. Vào đầu lượt tiếp theo của bạn, phá huỷ quái vật đó."
+    },
+    {
+     "id": "linh-kien-dien-tu",
+     "name": "Linh Kiện Điện Tử",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Linh Kiện Điện Tử:\nHiệu ứng này chỉ có thể kích hoạt một lần mỗi lượt. Chọn 1 Lôi Thiên Sứ của bạn trên sân, thêm 1 linh kiện lên lá bài đó."
+    },
+    {
+     "id": "dai-hong-thuy",
+     "name": "Đại Hồng Thủy",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Đại Hồng Thủy:\nChỉ có thể kích hoạt khi Ngư Tinh đang ngửa trên sân của bạn. Loại khỏi trận đấu 4 quái vật khác tên nhau trong mộ bài của bạn để phá huỷ toàn bộ quái vật của đối phương."
+    },
+    {
+     "id": "cuu-vi-hien-hinh",
+     "name": "Cửu Vĩ Hiện Hình",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Cửu Vĩ Hiện Hình:\nChỉ có thể kích hoạt khi bạn đang điều khiển quái vật của đối phương. Nếu quái vật đó chưa hành động và không bị khóa, có thể hiến tế nó để triệu hồi đặc biệt Cửu Vĩ Hồ từ bộ bài hoặc trên tay."
+    },
+    {
+     "id": "bao-cat",
+     "name": "Bão Cát",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Bão Cát:\nChỉ có thể kích hoạt khi Thần Trụ Trời đang ngửa trên sân của bạn. Phá huỷ toàn bộ bài ma pháp trên sân đối phương."
+    },
+    {
+     "id": "giua-vong-vay",
+     "name": "Giữa Vòng Vây",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Giữa Vòng Vây:\nChỉ có thể kích hoạt khi đối phương có nhiều hơn 2 quái vật trở lên. Triệu hồi đặc biệt 1 Thần Trụ Trời từ trên tay."
     }
    ]
   }
