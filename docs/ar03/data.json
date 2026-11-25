@@ -2055,6 +2055,15 @@
      "stats": "",
      "tag": "Phép phản ứng",
      "text": "Diệt khổng lồ:\nTiêu diệt 1 quái thú có từ 7 máu trở lên trên sân đối thủ ngay thời điểm nó triệu hồi hoặc vừa tăng đến ngưỡng 7 máu."
+    },
+    {
+     "id": "linh-the",
+     "name": "Linh thể",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Phép phản ứng",
+     "text": "Linh thể:\nDùng linh hồn của 1 quái thú đồng minh, gây 5 sát thương chuẩn lên 1 quái địch bất kỳ."
     }
    ]
   }
