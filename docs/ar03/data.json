@@ -1830,6 +1830,87 @@
      "stats": "",
      "tag": "Bài phản ứng",
      "text": "Báo Thù:\nKhi quái vật của bạn bị quái vật đối phương tấn công và bị tiêu diệt, phá hủy quái vật đó."
+    },
+    {
+     "id": "lac-huong",
+     "name": "Lạc Hướng",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Lạc Hướng:\nKhi quái vật đối phương tấn công quái vật của bạn, nếu đối phương có ít nhất 2 quái vật trên sân, chuyển mục tiêu tấn công sang 1 quái vật khác ngẫu nhiên của đối phương."
+    },
+    {
+     "id": "suc-manh-tiem-an",
+     "name": "Sức Mạnh Tiềm Ẩn",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Sức Mạnh Tiềm Ẩn:\nNếu quái vật đã được ngửa trong lượt của bạn, tăng cho quái vật đó vĩnh viễn 2 bậc khi bị quái vật đối phương tấn công."
+    },
+    {
+     "id": "hien-te-do-vo",
+     "name": "Hiến Tế Đổ Vỡ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Hiến Tế Đổ Vỡ:\nKhi đối phương triệu hồi hiến tế, phá hủy ngẫu nhiên 1 quái vật được chọn làm hiến tế và hủy lần triệu hồi đó."
+    },
+    {
+     "id": "nghich-chuyen",
+     "name": "Nghịch Chuyển",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Nghịch Chuyển:\nKhi quái vật đối phương tấn công, nếu quái vật đó đang được tăng bậc, phá hủy quái vật đó."
+    },
+    {
+     "id": "chan-vien-binh",
+     "name": "Chặn Viện Binh",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Chặn Viện Binh:\nKhi đối phương triệu hồi thường hoặc úp quái vật thứ 2 trong cùng một lượt, phá hủy quái vật đó."
+    },
+    {
+     "id": "hoa-giai",
+     "name": "Hóa Giải",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Hóa Giải:\nKhi đối phương kích hoạt bài phản ứng trong lượt của bạn, hủy hiệu ứng của bài phản ứng đó và phá hủy nó."
+    },
+    {
+     "id": "pha-chieu",
+     "name": "Phá Chiêu",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Phá Chiêu:\nKhi đối phương kích hoạt bài hành động hoặc bài hỗ trợ, hủy hiệu ứng của lá bài đó và phá hủy nó."
+    },
+    {
+     "id": "pha-mai-phuc",
+     "name": "Phá Mai Phục",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Phá Mai Phục:\nKhi đối phương úp một quái vật, phá hủy quái vật đó."
+    },
+    {
+     "id": "chan-cuong-binh",
+     "name": "Chặn Cường Binh",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Chặn Cường Binh:\nKhi đối phương triệu hồi hoặc triệu hồi đặc biệt một quái vật bậc 6 từ trên tay xuống sân, phá hủy quái vật đó."
     }
    ]
   }
