@@ -1749,6 +1749,87 @@
      "stats": "",
      "tag": "Bài hành động",
      "text": "Quân Lệnh:\nChỉ có thể kích hoạt khi bạn điều khiển Chỉ Huy đang ngửa. Tìm 1 quái vật Nhân Hình bậc 6 trở xuống trong bộ bài và đưa lên tay."
+    },
+    {
+     "id": "nguon-linh-luc",
+     "name": "Nguồn Linh Lực",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Nguồn Linh Lực:\nNhận 10 linh lực."
+    },
+    {
+     "id": "van-bai-moi",
+     "name": "Ván Bài Mới",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Ván Bài Mới:\nCả hai người chơi bỏ toàn bộ bài trên tay vào mộ bài, sau đó mỗi người rút số lá bằng số lá mình vừa bỏ."
+    },
+    {
+     "id": "thu-hoi",
+     "name": "Thu Hồi",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Thu Hồi:\nĐưa toàn bộ bài ma pháp trên sân của cả hai người chơi trở lại tay chủ nhân."
+    },
+    {
+     "id": "tang-cap",
+     "name": "Tăng Cấp",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Tăng Cấp:\nChọn 1 quái vật đang ngửa trên sân của bạn. Quái vật đó tăng vĩnh viễn 2 bậc."
+    },
+    {
+     "id": "ha-cap",
+     "name": "Hạ Cấp",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Hạ Cấp:\nChọn 1 quái vật đang ngửa trên sân đối phương. Quái vật đó giảm vĩnh viễn 3 bậc."
+    },
+    {
+     "id": "loi-nguyen-medusa",
+     "name": "Lời Nguyền Của Medusa",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Lời Nguyền Của Medusa:\nTất cả quái vật đang ngửa của đối phương bị hóa đá đến hết 1 lượt tiếp theo của đối phương (không thể hành động hay hiến tế)."
+    },
+    {
+     "id": "luat-can-bang",
+     "name": "Luật Cân Bằng",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Luật Cân Bằng:\nKhi quái vật đối phương tấn công quái vật của bạn, nếu quái vật tấn công có bậc cao hơn quái vật bị tấn công từ 0 đến 2 bậc, phá hủy quái vật tấn công."
+    },
+    {
+     "id": "phan-don",
+     "name": "Phản Đòn",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Phản Đòn:\nKhi một quái vật đối phương tấn công trực tiếp, hủy đòn tấn công đó và phá hủy quái vật đó."
+    },
+    {
+     "id": "bao-thu",
+     "name": "Báo Thù",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài phản ứng",
+     "text": "Báo Thù:\nKhi quái vật của bạn bị quái vật đối phương tấn công và bị tiêu diệt, phá hủy quái vật đó."
     }
    ]
   }
