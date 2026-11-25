@@ -6910,18 +6910,28 @@ function PlayPage() {
         const from = x;
         const lane = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((step) => [from + dir * step * ICON * 1.15]).concat([1, 2, 3, 4].map((step) => from - dir * step * ICON * 1.15));
         if (allies.length > 0) {
-          // Between the allies' icons on their row (chủ game 25/11, marked on a shot); sideways only when something is there.
+          // On the line between the two halves, between its allies, at the x farthest from the flows already drawn (chủ game 25/11).
           const baseX = x;
-          // A step down toward its own cards, over their top edge between the two (chủ game 25/11).
-          const baseY = y + ((mine ? 1 : -1) * ICON * 0.9) / rows;
-          search: for (const side of [0, 1.2, -1.2, 2.4, -2.4]) {
-            const tx = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, baseX + side * ICON));
-            // Own icons stay on own half, never over the enemy's side.
-            if (mine ? baseY < ry(51) : baseY > ry(51)) break;
-            if ([...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (baseY - other.y) * rows) >= ICON * 0.85)) {
+          const mid = ry(51);
+          let best = -1;
+          const lo = Math.min(...allies.map((one) => one.x));
+          const hi = Math.max(...allies.map((one) => one.x));
+          for (let tx = lo; tx <= hi; tx += 0.5) {
+            if (![...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (mid - other.y) * rows) >= ICON * 0.85)) continue;
+            const gap = Math.min(
+              99,
+              ...runs.map(([from, to]) => {
+                const dx = to.x - from.x;
+                const dy = (to.y - from.y) * rows;
+                const len2 = dx * dx + dy * dy || 1;
+                const t = Math.max(0, Math.min(1, ((tx - from.x) * dx + (mid - from.y) * rows * dy) / len2));
+                return Math.hypot(tx - (from.x + t * dx), (mid - (from.y + (t * dy) / rows)) * rows);
+              }),
+            ) - Math.abs(tx - baseX) * 0.05;
+            if (gap > best) {
+              best = gap;
               x = tx;
-              y = baseY;
-              break search;
+              y = mid;
             }
           }
         } else
