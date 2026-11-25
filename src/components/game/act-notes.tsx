@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import { Glyph, Rim } from "@/components/game/monster-sheet";
+import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { tr } from "@/lib/i18n";
 
 /** What a note names: a skill (its round icon in the colour of its kind) or a spell (its picture). */
@@ -29,7 +29,7 @@ function Head({ head }: { head: NoteHead }) {
           {head.icon ? (
             <span className={`an-gem is-${head.kind ?? "active"}`}>
               <span className="unit-act-core">
-                <Glyph name={head.icon} />
+                <SkillGlyph name={head.icon} />
               </span>
               <Rim kind={head.kind ?? "active"} />
             </span>

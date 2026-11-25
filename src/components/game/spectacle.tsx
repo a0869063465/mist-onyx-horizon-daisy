@@ -469,7 +469,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -861,6 +861,39 @@ export function FlareBlast() {
   );
 }
 
+/** Chủ game 21/11: Kuriboh phát nổ giữa hai lá lúc chạm. Video đã cắt gọn (0,7 giây, tâm nổ ở 50% / 52,7% khung). */
+export function BoomBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "boom") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
+      playCue("kuriBoom");
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="boom-blast"
+          src={fxUrl("/fx/kuriboh-no.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
 export function FireBurst() {
   const [clips, setClips] = useState<{ id: number; x: number; y: number }[]>([]);
   useEffect(() => {
@@ -998,4 +1031,23 @@ export function ShieldBurst() {
       ))}
     </>
   );
+}
+
+// Sương mù tan khi quái ẩn của đối thủ lật (chủ game 22/11): 2 hình × 2 âm trộn ngẫu nhiên = 4 kiểu.
+// Video 960×960: lá chiếm 50,5% bề ngang, tâm lá ở (50%; 44,75%) khung.
+export const FOG_MS = 1750;
+const FOG_PICS = ["/fx/suong-mu-hinh1.webm?v=1", "/fx/suong-mu-hinh2.webm?v=1"];
+export function FogWipe() {
+  const [pic] = useState(() => Math.floor(Math.random() * FOG_PICS.length));
+  const [sound] = useState(() => (Math.random() < 0.5 ? "fogA" : "fogB") as "fogA" | "fogB");
+  const played = useRef(false);
+  useEffect(() => {
+    if (played.current) return;
+    played.current = true;
+    playCue(sound);
+  }, [sound]);
+  if (document.documentElement.hasAttribute("data-flatfx") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return <i className="fog-wipe" aria-hidden="true" />;
+  }
+  return <video className="fog-video" src={fxUrl(FOG_PICS[pic])} autoPlay muted playsInline aria-hidden="true" />;
 }

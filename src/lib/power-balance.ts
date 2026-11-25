@@ -446,6 +446,45 @@ export const BALANCE_LOG: BalanceEntry[] = [
     wave: 36,
     stats: { hp: { from: 3, to: 2 } },
   },
+  {
+    id: "cuc-bong-ma-quai",
+    at: "2026-11-21",
+    wave: 37,
+    tone: "shift",
+    stats: { atk: { from: 2, to: 1 } },
+    notes: ["Đổi tên Kuriboh", "Phát nổ thành nội tại: giáp lá cà thì tự nổ, gây sát thương chuẩn bằng công", "Cấp số nhân: 1 mana, bị tiêu diệt thì nhân đôi", "Bỏ Pháo kích và Bông mềm"],
+  },
+  {
+    id: "linh-chien-da-khong-lo",
+    at: "2026-11-21",
+    wave: 38,
+    tone: "shift",
+    stats: { atk: { from: 1, to: 2 }, def: { from: 2, to: 3 }, mdef: { from: 2, to: 3 }, hp: { from: 8, to: 6 }, mana: { from: 1, to: 2 } },
+    notes: ["Tường thành thành nội tại: quái địch chỉ được chọn Lính đá làm mục tiêu tấn công", "Mỗi đợt công kích trúng Lính đá thì thủ và thủ phép giảm 1, vĩnh viễn", "Bỏ đỡ đòn cho đồng minh"],
+  },  {
+    id: "my-dieu-nhan",
+    at: "2026-11-21",
+    wave: 39,
+    tone: "shift",
+    stats: { hp: { from: 4, to: 2 } },
+    notes: ["Đổi tên Harpie Lady", "Giảo hoạt: lúc triệu hồi và mỗi 3 lượt chung, chọn 1 trong 2 kỹ năng ngẫu nhiên chưa nhận, dùng 1 lần", "Tiến hoá khi thi triển 3 hành động khác nhau, thay Lông vũ"],
+  },
+  {
+    id: "kraken",
+    at: "2026-11-21",
+    wave: 40,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, def: { from: 3, to: 0 }, hp: { from: 4, to: 3 } },
+    notes: ["Đắm tàu mới: quái nào tấn công vật lý vào Kraken bị tiêu diệt ngay"],
+  },
+  {
+    id: "sua-hut-ma-phap",
+    at: "2026-11-21",
+    wave: 41,
+    tone: "shift",
+    stats: { mana: { from: 1, to: 0 }, atk: { from: 1, to: 3 }, mdef: { from: 4, to: 0 }, hp: { from: 5, to: 2 } },
+    notes: ["Phản phép mới: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay", "Có keyword Đòn đánh phép"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

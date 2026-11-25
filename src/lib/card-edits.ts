@@ -12,11 +12,9 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "charge", label: "Tích luỹ", tone: "y" },
     { key: "cast", label: "Quả cầu bóng đêm", tone: "z" },
   ],
-  "cuc-bong-ma-quai": [
-    { key: "boom", label: "Phát nổ", tone: "y" },
-    { key: "barrage", label: "Pháo kích", tone: "y" },
-  ],
+  "cuc-bong-ma-quai": [{ key: "mult", label: "Cấp số nhân", tone: "y" }],
   "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
+  "qua-trung-sinh-menh": [{ key: "life", label: "Sinh mệnh mới", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
   "rong-phun-hoa-cau": [
     { key: "peek", label: "Lộ diện", tone: "y" },
@@ -52,7 +50,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ngai-khong-lo": [{ key: "dust", label: "Thổi độc", tone: "y" }],
   "ngai-nu-hoang": [{ key: "dust", label: "Thổi độc 2", tone: "y" }],
   "ngai-hoan-my": [{ key: "dust", label: "Thổi độc 3", tone: "y" }],
-  "sua-hut-ma-phap": [{ key: "spit", label: "Tích luỹ ma pháp", tone: "y" }],
   "con-thinh-no-cua-hai-vuong": [{ key: "rage", label: "Cơn thịnh nộ của hải thần", tone: "y" }],
   "chien-binh-lan-khuat": [{ key: "hide", label: "Ẩn mình", tone: "y" }],
   "sat-nhan-bat-giu": [{ key: "seize", label: "Bắt Giữ", tone: "y" }],
@@ -62,6 +59,8 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ky-si-bong-toi": [{ key: "vow", label: "Hiến Tế", tone: "y" }],
   "hoa-an-thit-nguoi": [{ key: "bite", label: "Hấp thụ", tone: "y" }],
   "thuong-quan-long": [{ key: "spin", label: "Cò quay", tone: "y" }],
+  "nang-va-gio": [{ key: "sun", label: "Nắng ấm lên", tone: "y" }],
+  "rua-may-ban-da": [{ key: "shell", label: "Pháo kích", tone: "y" }],
   "may-nem-bom-hinh-nhen": [{ key: "bomb", label: "Súng phóng lựu", tone: "y" }],
   "may-quay-thuong": [
     { key: "reel", label: "Quay thưởng", tone: "y" },
@@ -122,7 +121,6 @@ export const MONSTER_ASKS: Record<string, AskDef[]> = {
     { key: "surge", title: "Con nước lớn", label: "Con nước lớn tàn phá" },
     { key: "doom", title: "Đại hồng thuỷ", label: "Đại hồng thuỷ huỷ diệt" },
   ],
-  "cuc-bong-ma-quai": [{ key: "soft", title: "Bông mềm", label: "Triệu hồi bản thân ra chặn. Tốn 1 mana, các bản sao lấp đầy sân." }],
 };
 
 type Store = {
@@ -190,6 +188,10 @@ function write(store: Store) {
 }
 
 const STALE_SKILLS: Array<[string, string]> = [
+  ["my-dieu-nhan", "Mỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn"],
+  ["linh-chien-da-khong-lo", "Tiêu hao 1 mana để đỡ cho đồng minh đó"],
+  ["kraken", "sẽ thêm vào công của hắn"],
+  ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
   ["khong-lo-mot-mat", "Sau mỗi lần giáp lá cà"],
   ["khong-lo-mot-mat", "tốn thêm 1 mana"],
   ["tho-den-tinh-nghich", "tăng lên đến 75% khi đấu với quái thú"],
@@ -227,6 +229,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["nu-chua-dieu-nhan", "không được rút bài"],
   ["nu-chua-dieu-nhan", "không khoá rút bài"],
   ["cuc-bong-ma-quai", "Dùng để tấn công"],
+  ["cuc-bong-ma-quai", "Pháo kích"],
   ["ong-khong-lo", "__**Tê liệt**__"],
   ["sua-hut-ma-phap", "Ma pháp tích tụ"],
   ["kiem-si-lua-thieng", "Long Hoả"],

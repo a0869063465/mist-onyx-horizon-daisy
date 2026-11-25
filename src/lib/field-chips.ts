@@ -39,10 +39,12 @@ const ROWS: Row[] = [
   { ids: ["te-giac-be-con"], key: "up", cast: "self", skill: 0, gate: (ctx) => ctx.level < 3 && ctx.afford(ctx.level >= 2 ? 2 : 1) },
   { ids: ["hiep-si-cua-hau"], key: "sword", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "sword")} ${ctx.beat === 1 ? 2 : 1}` },
   { ids: ["mat-do-tan-pha"], key: "ball", cast: "aim", skill: 0, gate: pay(1) },
-  { ids: ["cuc-bong-ma-quai"], key: "boom", cast: "aim", skill: 0 },
-  { ids: ["cuc-bong-ma-quai"], key: "barrage", cast: "self", skill: 1, gate: (ctx) => ctx.room >= 1 && ctx.afford(1) && !ctx.spent.includes("barrage") },
+  { ids: ["cuc-bong-ma-quai"], key: "mult", cast: "self", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && !ctx.spent.includes("mult") },
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
+  { ids: ["nang-va-gio"], key: "sun", cast: "declare", skill: 0, gate: pay(2) },
+  // Pháo kích: cần 1 quái thú khác của mình trên sân làm đạn (sân 6 ô, còn trống nhiều nhất 4 ô).
+  { ids: ["rua-may-ban-da"], key: "shell", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && ctx.room <= 4 },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["rong-con", "rong-ngan-tuoi"], key: "breath", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },
@@ -62,7 +64,6 @@ const ROWS: Row[] = [
   { ids: ["trieu-hoi-ac-ma"], key: "hex", cast: "aim", skill: 0 },
   { ids: ["sau-non"], key: "cocoon", cast: "self", skill: 0, gate: orb(1) },
   { ids: ["ngai-khong-lo", "ngai-nu-hoang", "ngai-hoan-my"], key: "dust", cast: "aim", skill: 0, gate: orb(1) },
-  { ids: ["sua-hut-ma-phap"], key: "spit", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "spit")} ${3 + ctx.stored}` },
   { ids: ["con-thinh-no-cua-hai-vuong"], key: "rage", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(1) },
   { ids: ["chien-binh-lan-khuat"], key: "hide", cast: "self", skill: 0, gate: (ctx) => ctx.afford(1) },
 ];

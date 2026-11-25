@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { CopyText } from "@/components/game/copy-text";
-import { Glyph, Rim } from "@/components/game/monster-sheet";
+import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { KEYWORDS, keywordsOf } from "@/lib/keywords";
 import { skillCost, type SkillShown } from "@/lib/skill-book";
 import { tr } from "@/lib/i18n";
@@ -63,7 +63,7 @@ export function HandPeek({ info, at, onPick, top, onTap }: { info: PeekInfo; at:
       <div className="hp-desc">
         {shown ? (
           <>
-            <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}`}>
+            <b className={`msheet-desc-title is-${shown.kind}${shown.slow ? " is-slow" : ""}${shown.buff ? " is-buff" : ""}`}>
               {tr(shown.name)}
               {cost ? (
                 <span className="act3d-cost">
@@ -92,7 +92,7 @@ export function HandPeek({ info, at, onPick, top, onTap }: { info: PeekInfo; at:
             <button
               key={`${skill.name}-${index}`}
               type="button"
-              className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${index === Math.min(at, info.skills.length - 1) ? " on" : ""}`}
+              className={`sk3d is-${skill.kind}${skill.slow ? " is-slow" : ""}${skill.buff ? " is-buff" : ""}${index === Math.min(at, info.skills.length - 1) ? " on" : ""}`}
               aria-label={tr(skill.name)}
               onClick={(event) => {
                 event.stopPropagation();
@@ -101,9 +101,9 @@ export function HandPeek({ info, at, onPick, top, onTap }: { info: PeekInfo; at:
             >
               <span className="sk3d-gem">
                 <span className="sk3d-core">
-                  <Glyph name={skill.icon} />
+                  <SkillGlyph name={skill.icon} />
                 </span>
-                <Rim kind={skill.slow ? "slow" : skill.kind} />
+                <Rim kind={skill.slow ? "slow" : skill.buff ? "green" : skill.kind} />
               </span>
             </button>
           ))}

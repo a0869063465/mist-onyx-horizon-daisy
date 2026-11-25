@@ -6,7 +6,7 @@
  * Thánh địa thiên sứ. Guarded: the angels (thiên sứ, yêu tinh, tinh linh: frail buffers) and the sanctuary's
  * buffing priests (none yet). Warriors: the angel warriors who fight (none yet).
  */
-export const SANCTUARY_GUARDED = ["quai-thu-thien-su", "yeu-tinh-chuc-phuc", "thien-than-be-nho"];
+export const SANCTUARY_GUARDED = ["quai-thu-thien-su", "yeu-tinh-chuc-phuc", "thien-than-be-nho", "tinh-linh-dan-hac", "thien-su-vo-hinh", "qua-trung-sinh-menh", "dong-ho-kho-doan", "dong-ho-hung-bao", "dong-ho-mong-manh"];
 export const SANCTUARY_WARRIORS: string[] = [];
 
 /** Quái biển: Biển sâu ẩn chỉ số và xáo ô của chúng (luật trong duel.ts, che tên trong play.tsx). */
@@ -61,6 +61,8 @@ export const ENV_KINDS: Record<string, string[]> = {
   ],
   // Máy móc (thân làm phần lớn bằng sắt)
   "cu-dia-may-moc": ["thuong-quan-long", "may-chem", "may-nem-bom-hinh-nhen", "may-quay-thuong"],
+  // Vương quốc (chủ game 22/11; chưa có lá môi trường): Tử thần của những lá bài
+  "vuong-quoc": ["tu-than-cua-nhung-la-bai"],
   // Núi dung nham: quái hệ lửa (chủ game 19/10: chưa có quái nào; mỗi quái chỉ thuộc một môi trường)
   "nui-dung-nham": [],
   // Thiên sứ: thiên sứ, thuật sư phục vụ thánh địa, chiến binh thiên sứ

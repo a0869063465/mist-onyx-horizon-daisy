@@ -164,12 +164,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "linh-chien-da-khong-lo",
     "name": "Lính chiến đá khổng lồ",
     "stars": 2,
-    "gems": 1,
-    "skill": "**__Tường thành__**: \nKhi một quái thú đồng minh bị đánh thường, hoặc kỹ năng gây sát thương chọn làm mục tiêu. Tiêu hao 1 mana để đỡ cho đồng minh đó.\nChỉ đỡ đòn được 2 lần, tính cả dùng skill.",
-    "atk": 1,
-    "def": 2,
-    "mdef": 2,
-    "hp": 8,
+    "gems": 2,
+    "skill": "**__Tường thành__**: \nNội tại: khi ta trên sân, quái địch không thể chọn mục tiêu tấn công khác ngoài ta.\nNội tại: với mỗi đợt công kích phòng ngự của ta giảm đi 1.",
+    "atk": 2,
+    "def": 3,
+    "mdef": 3,
+    "hp": 6,
     "art": "linh-da",
     "strong": "Thủ mạnh, máu nhiều, còn đỡ được đòn cho team.",
     "weak": "Không có công",
@@ -234,11 +234,11 @@ export const MONSTERS: MonsterCard[] = [
   },
   {
     "id": "cuc-bong-ma-quai",
-    "name": "Cục bông ma quái",
+    "name": "Kuriboh",
     "stars": 1,
     "gems": 0,
-    "skill": "__**Phát nổ**__\nKhông hao mana, Tự huỷ, gây sát thương phép lên kẻ địch bằng với công.\n\n__**Pháo kích**__\nDùng 1 mana nhân bản chính nó. \n\n__**Bông mềm**__\nKhi người chơi bị tấn công, Trên tay người chơi bấm Use: Triệu hồi bản thân chặn tốn 1 mana, các bản sao còn lại sẽ lấp đầy sân đấu.\n\n__**Lưu ý:**__\nMỗi loại kỹ năng chỉ dùng 1 lần rồi mất. \nCác kỹ năng ngoài Phát nổ đều không tính là đã hành động.",
-    "atk": 2,
+    "skill": "__**Phát nổ**__\nNội tại: kuriboh sẽ tự phát nổ khi giáp lá cà. Gây 1 sát thương chuẩn lên quái đối đầu.\n\n__**Cấp số nhân**__\ntiêu hao 1 mana, kuriboh sẽ tự nhân đôi sau khi bị tiêu diệt.",
+    "atk": 1,
     "def": 0,
     "mdef": 0,
     "hp": 1,
@@ -260,6 +260,30 @@ export const MONSTERS: MonsterCard[] = [
     "strong": "Trade mana giúp đẩy ván đấu cực nhanh",
     "weak": "Dễ bị khắc chế, và ngốn mana nếu dùng sai.",
     "counter": "Tiêu diệt nó ngay khi có thể."
+  },
+  {
+    "id": "tinh-linh-dan-hac",
+    "name": "Tinh linh đàn hạc",
+    "stars": 2,
+    "gems": 2,
+    "skill": "__**Tiếng nhạc du dương**__\nKhi triệu hồi trao 2 mana vào mộ mana của bạn. Đầu mỗi lượt của bạn, bạn sẽ được nhận thêm 1 mana.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
+    "art": "tinh-linh-dan-hac"
+  },
+  {
+    "id": "thien-su-vo-hinh",
+    "name": "Thiên sứ vô hình",
+    "stars": 1,
+    "gems": 2,
+    "skill": "__**Mũi tên thiên sứ**__\nNội tại: Khi gây sát thương lên người chơi đối thủ, rút 1 lá bài.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "thien-su-vo-hinh"
   },
   {
     "id": "te-giac-be-con",
@@ -322,12 +346,12 @@ export const MONSTERS: MonsterCard[] = [
     "id": "sua-hut-ma-phap",
     "name": "Sứa hút ma pháp",
     "stars": 2,
-    "gems": 1,
-    "skill": "__**Tích luỹ ma pháp**__: \n- Phần sát thương phép bị thủ phép chặn được tích lại.\n- Tốn 0 mana gây 3 cộng với số sát thương đã tích tụ lên 1 kẻ địch hoặc người chơi.",
-    "atk": 1,
+    "gems": 0,
+    "skill": "**__Phản phép__**:\nBất kỳ quái thú nào tấn công phép thuật vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công phép thuật là đòn tấn công có nhiều dame phép thuật hơn.",
+    "atk": 3,
     "def": 0,
-    "mdef": 4,
-    "hp": 5,
+    "mdef": 0,
+    "hp": 2,
     "art": "sua"
   },
   {
@@ -385,16 +409,42 @@ export const MONSTERS: MonsterCard[] = [
     "id": "kraken",
     "name": "Kraken",
     "stars": 2,
-    "gems": 1,
-    "skill": "**__Đắm tàu__**: \nKhi giáp lá cà, phần sát thương bị thủ của Kraken chặn được sẽ thêm vào công của hắn.",
+    "gems": 0,
+    "skill": "**__Đắm tàu__**:\nBất kỳ quái thú nào tấn công vật lý vào ta, tiêu diệt ngay quái thú đó.\n\nLưu ý: Tấn công vật lý là đòn tấn công có nhiều dame vật lý hơn.",
     "atk": 3,
-    "def": 3,
+    "def": 0,
     "mdef": 0,
-    "hp": 4,
+    "hp": 3,
     "art": "kraken",
     "strong": "Trao đổi vật lý, dame rất to, thủ rất mạnh.\n",
     "weak": "Không có thủ phép, máu không cao",
     "counter": "Đánh phép trúng nó"
+  },
+  {
+    "id": "nang-va-gio",
+    "name": "Nắng và gió",
+    "stars": 2,
+    "gems": 1,
+    "skill": "**__Gió dịu đi__**:\nKhi trạng thái ẩn, bị nhắm đến bởi 1 quái thú, chặn đòn tấn công đó, thổi bay 1 ngọc mana và 1 mana trong mộ của đối thủ.\n\n**__Nắng ấm lên__**:\nTiêu hao 2 mana, gây 1 sát thương chuẩn lên toàn bộ quái thú trên sân và người chơi 2 bên. Đồng thời trả lại 1 mana sau khi thi triển thành công.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 4,
+    "art": "nang-va-gio",
+    "since": "2026-11-22"
+  },
+  {
+    "id": "rua-may-ban-da",
+    "name": "Rùa máy bắn đá",
+    "stars": 2,
+    "gems": 0,
+    "skill": "**__Pháo kích__**:\n1 mana, dùng 1 quái thú đang trên sân của mình làm đạn pháo. Gây sát thương chuẩn bằng 65% máu của quái đó + số sao của nó lên 1 mục tiêu (quái, người chơi, tường thành).",
+    "atk": 0,
+    "def": 3,
+    "mdef": 1,
+    "hp": 3,
+    "art": "rua-may-ban-da",
+    "since": "2026-11-23"
   },
   {
     "id": "kazura",
@@ -545,6 +595,42 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Quái vật lý đụng nhẹ là đi. "
   },
   {
+    "id": "qua-trung-sinh-menh",
+    "name": "Quả trứng sinh mệnh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Sinh mệnh mới**__\nTiêu hao 1 (lần đầu, 0 các lần sau) mana, bạn bỏ 1 lá bài bạn chọn trên tay, đối phương bỏ 1 lá ngẫu nhiên, sau đó cả hai bên đều rút 1 lá bài.\nNếu đây là lần đầu tiên kích hoạt sinh mệnh mới thì bạn rút thêm 1 lá nữa.",
+    "atk": 0,
+    "def": 1,
+    "mdef": 0,
+    "hp": 1,
+    "art": "qua-trung-sinh-menh"
+  },
+  {
+    "id": "tu-than-cua-nhung-la-bai",
+    "name": "Tử thần của những lá bài",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Gặt hồn**__\nNội tại: Tiêu hao 1 mana để tấn công, khi tấn công được vào người chơi, đối thủ phải huỷ 1 lá ngẫu nhiên trên tay. ",
+    "atk": 4,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "tu-than-cua-nhung-la-bai"
+  },
+  {
+    "id": "dong-ho-kho-doan",
+    "name": "Đồng hồ khó đoán",
+    "stars": 2,
+    "gems": 1,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "dong-ho-kho-doan"
+  },
+  {
     "id": "chien-binh-ky-nhong",
     "name": "Chiến binh kỳ nhông",
     "stars": 2,
@@ -660,14 +746,14 @@ export const MONSTERS: MonsterCard[] = [
   },
   {
     "id": "my-dieu-nhan",
-    "name": "Mỹ điểu nhân",
+    "name": "Harpie Lady",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Giáp và Vuốt**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\n__**Lông vũ:**__ \nMỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn.\nĐủ 4 kỹ năng thì chờ tiến hoá.",
+    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
     "atk": 3,
     "def": 1,
     "mdef": 1,
-    "hp": 4,
+    "hp": 2,
     "art": "my-dieu-nhan"
   },
   {
@@ -746,6 +832,30 @@ export const FORMS: MonsterCard[] = [
     "mdef": 1,
     "hp": 6,
     "art": "chien-binh-cuoi-rong"
+  },
+  {
+    "id": "dong-ho-hung-bao",
+    "name": "Đồng hồ hung bạo",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 5,
+    "def": 0,
+    "mdef": 0,
+    "hp": 6,
+    "art": "dong-ho-hung-bao"
+  },
+  {
+    "id": "dong-ho-mong-manh",
+    "name": "Đồng hồ mỏng manh",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Tiktok**__\nKhi ra sân chọn 1 trong 2 trạng thái hung bạo hoặc mỏng manh.\nĐồng hồ sẽ tự chuyển đổi trạng thái mỗi 2 lượt. \n\nĐồng hồ hung bạo\nCông 5 thủ 0 thủ phép 0 Máu 6\n(Đòn đánh phép)\n\nĐồng hồ mỏng manh\nCông 0 thủ 0 thủ phép 0 Máu 1\n\nLưu ý: \nKhi úp thì đồng hồ không tự chuyển đổi trạng thái, và mặc định ở trạng thái hung bạo.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 1,
+    "art": "dong-ho-mong-manh"
   },
   {
     "id": "phu-thuy-tap-su",
@@ -1146,6 +1256,34 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Khi 1 quái thú đồng minh bị nhắm đến bởi kỹ năng của đối phương, hoán đổi vị trí của nó với 1 quái thú của đối phương, cho đến hết lượt đấu.",
     "picture": "spell:hop-ma-thuat"
+  },
+  {
+    "id": "don-cuoi-cung",
+    "name": "Đòn cuối cùng",
+    "gems": 1,
+    "effect": "Khi 1 quái của bạn bị tiêu diệt bởi quái thú đối phương, kích hoạt lá bài này để chọn ra đòn hoặc skill đơn mục tiêu dạng trả đòn (tức là không phản ứng được) lên quái thú đó.\nTất cả sát thương biến thành sát thương chuẩn.",
+    "picture": "spell:don-cuoi-cung"
+  },
+  {
+    "id": "huy-diet",
+    "name": "Huỷ diệt",
+    "gems": 2,
+    "effect": "Tiêu diệt 1 quái thú địch bất kỳ.",
+    "picture": "spell:huy-diet"
+  },
+  {
+    "id": "bay-thu",
+    "name": "Bẫy thú",
+    "gems": 1,
+    "effect": "Phản ứng.\nKhi quái thú có máu thấp hơn 4 được triệu hồi hoặc phát động tấn công. Tiêu diệt ngay nó.",
+    "picture": "spell:bay-thu"
+  },
+  {
+    "id": "qua-trung-thien-su",
+    "name": "Quả trứng thiên sứ",
+    "gems": 0,
+    "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
+    "picture": "spell:qua-trung-thien-su"
   }
 ];
 
@@ -1173,7 +1311,7 @@ export function isWarrior(name: string): boolean {
   return /kiếm sĩ|chiến binh|chiến sĩ/i.test(name);
 }
 
-const ART_REV = "48";
+const ART_REV = "50";
 
 export function librarySrc(picture: string): string {
   if (picture.startsWith("spell:")) return `/art/spells/${picture.slice(6)}.jpg?v=${ART_REV}`;

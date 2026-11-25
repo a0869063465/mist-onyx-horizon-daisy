@@ -5,7 +5,7 @@ const MUSIC_KEY = "clash-vol-music";
 /** Sent when the sound switch or the music volume changes, so the music follows at once. */
 export const MUSIC_EVENT = "clash-music-level";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "mazeStep" | "flare" | "ramHit" | "shatter" | "equipMerge";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "mazeStep" | "flare" | "ramHit" | "shatter" | "equipMerge" | "kuriBoom" | "fogA" | "fogB" | "burn";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/trieu-hoi.mp3?v=1",
@@ -31,10 +31,16 @@ const CLIPS: Partial<Record<Cue, string>> = {
   heal: "/sfx/hoi-mau.mp3?v=1",
   // Chủ game 16/11: quái phát động kỹ năng lên hàng chờ; âm lấy từ video Grok 2, hình từ video Grok 1.
   flare: "/sfx/phat-quang.mp3?v=1",
+  fogA: "/sfx/suong-mu-am1.mp3?v=1",
+  fogB: "/sfx/suong-mu-am2.mp3?v=1",
   // Chủ game 16/11: âm đòn đánh thường tông vào (Grok 17-00-10, cắt 0,85–1,7 giây), thay tiếng tổng hợp cũ.
   ramHit: "/sfx/tong.mp3?v=1",
   // Chủ game 16/11: quái bị hạ (video Grok 17-37-50, âm cắt từ khung 16, lúc vỡ ở 0,29 giây).
   shatter: "/sfx/vo-la.mp3?v=1",
+  // Chủ game 22/11: lá bị bỏ khỏi tay (video Grok `9e8e8963`, âm rất nhỏ nên nâng +35 dB, nhanh 3 lần như hình).
+  burn: "/sfx/bo-la.mp3?v=1",
+  // Chủ game 21/11: Kuriboh phát nổ (video Grok 09-38-19, âm cắt từ 0,27 giây, tốc độ gốc).
+  kuriBoom: "/sfx/kuriboh-no.mp3?v=1",
   reflect: "/sfx/guong-vo.mp3?v=1",
   chain: "/sfx/xich.mp3?v=2",
   dispel: "/sfx/giai-tru.mp3?v=1",
