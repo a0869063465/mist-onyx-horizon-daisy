@@ -6912,7 +6912,8 @@ function PlayPage() {
         if (allies.length > 0) {
           // Between the allies' icons on their row (chủ game 25/11, marked on a shot); sideways only when something is there.
           const baseX = x;
-          const baseY = y;
+          // A step down toward its own cards, over their top edge between the two (chủ game 25/11).
+          const baseY = y + ((mine ? 1 : -1) * ICON * 0.9) / rows;
           search: for (const side of [0, 1.2, -1.2, 2.4, -2.4]) {
             const tx = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, baseX + side * ICON));
             // Own icons stay on own half, never over the enemy's side.
