@@ -6896,7 +6896,7 @@ function PlayPage() {
         const allies = orb.spell === DUO_CARD ? orb.to.flatMap((link) => ("orb" in link.end ? [iconSpots.get(link.end.orb)] : [])).filter((one): one is IconSpot => Boolean(one)) : [];
         if (allies.length > 0) {
           x = allies.reduce((sum, one) => sum + one.x, 0) / allies.length;
-          y = allies.reduce((sum, one) => sum + one.y, 0) / allies.length + (mine ? -1 : 1) * (ICON * 1.9) / rows;
+          y = allies.reduce((sum, one) => sum + one.y, 0) / allies.length;
         }
         // Icons of a chain line up toward the middle of the board, the earlier an answer the nearer the icon it
         // answers (chủ game 28/10): a monster on the right sends them left, one on the left sends them right.
@@ -6910,28 +6910,17 @@ function PlayPage() {
         const from = x;
         const lane = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((step) => [from + dir * step * ICON * 1.15]).concat([1, 2, 3, 4].map((step) => from - dir * step * ICON * 1.15));
         if (allies.length > 0) {
-          // The spot standing farthest from every flow placed before (the allies' light into the enemy bows out wide).
+          // Between the allies' icons on their row (chủ game 25/11, marked on a shot); sideways only when something is there.
           const baseX = x;
           const baseY = y;
-          const row = mine ? -1 : 1;
-          let best = -1;
-          for (const step of [0.4, 1.2, 2, 2.8]) {
-            for (const side of [0, 1, -1, 2, -2, 3, -3]) {
-              const tx = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, baseX + side * ICON * 1.15));
-              const ty = baseY + (row * step * ICON) / rows;
-              if (![...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (ty - other.y) * rows) >= ICON * 1.08)) continue;
-              const gap = Math.min(99, ...runs.map(([from, to]) => {
-                const dx = to.x - from.x;
-                const dy = (to.y - from.y) * rows;
-                const len2 = dx * dx + dy * dy || 1;
-                const t = Math.max(0, Math.min(1, ((tx - from.x) * dx + (ty - from.y) * rows * dy) / len2));
-                return Math.hypot(tx - (from.x + t * dx), (ty - (from.y + (t * dy) / rows)) * rows);
-              }));
-              if (gap > best) {
-                best = gap;
-                x = tx;
-                y = ty;
-              }
+          search: for (const side of [0, 1.2, -1.2, 2.4, -2.4]) {
+            const tx = Math.min(99 - ICON / 2, Math.max(ICON / 2 + 1, baseX + side * ICON));
+            // Own icons stay on own half, never over the enemy's side.
+            if (mine ? baseY < ry(51) : baseY > ry(51)) break;
+            if ([...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (baseY - other.y) * rows) >= ICON * 0.85)) {
+              x = tx;
+              y = baseY;
+              break search;
             }
           }
         } else
