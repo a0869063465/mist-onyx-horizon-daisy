@@ -1981,7 +1981,7 @@ test("Harpie Lady: Giảo hoạt mời lại ở lượt chung thứ 3 sau lư�
 });
 
 test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến hoá", () => {
-  let s = board({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }] }, { 3: ["may-chem", { hp: 20, maxHp: 20 }] });
+  let s = board({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }], 1: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] }, { 3: ["may-chem", { hp: 20, maxHp: 20 }] });
   s = rich(s);
   s = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
   assert.deepEqual(at(s, 0, 0).wit.deeds, ["attack"]);
@@ -1995,12 +1995,34 @@ test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến ho�
   assert.deepEqual(at(gust, 0, 0).wit.deeds, ["attack", "gust"], gust.live);
   assert.equal(gust.birdAsk ?? null, null);
   s = { ...gust, turn: 0, players: gust.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
-  let charm = D.useSkill(s, uid(s, 0, 0), uid(s, 1, 3), 1);
+  let charm = D.useSkill(s, uid(s, 0, 0), uid(s, 0, 1), 1, true, uid(s, 1, 3));
   if (charm.step === "respond") charm = D.passResponse(charm);
-  if (charm.plumeAsk) charm = D.answerPlume(charm, false);
   assert.ok(charm.birdAsk, charm.live);
   const evolved = D.evolveBird(charm, "nu-chua-dieu-nhan");
   assert.equal(at(evolved, 0, 0).cardId, "nu-chua-dieu-nhan");
+});
+
+test("Harpie Lady: Mê hoặc 0 mana, chờ trong chuỗi, quái địch đánh thường vào 1 quái đồng minh khác, không bị cấm hành động", () => {
+  let s = board(
+    { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }], 1: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] },
+    { 0: ["may-chem", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] },
+  );
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 0 })) };
+  const bird = uid(s, 0, 0);
+  const ally = uid(s, 0, 1);
+  const foe = uid(s, 1, 0);
+  const self = D.useSkill(s, bird, bird, 1, true, foe);
+  assert.equal(self.step, "main", "không chọn chính cô");
+  const charm = D.useSkill(s, bird, ally, 1, true, foe);
+  assert.equal(charm.step, "respond", charm.live);
+  assert.equal(at(charm, 0, 1).hp, 20, "chưa nổ khi còn chờ");
+  const done = D.passResponse(charm);
+  assert.equal(at(done, 0, 1).hp, 16, done.live);
+  assert.equal(at(done, 0, 0).hp, 20, "Harpie Lady không bị đánh");
+  assert.equal(at(done, 1, 0).stun, 0, "quái địch không bị cấm hành động");
+  assert.equal(done.plumeAsk ?? null, null);
+  assert.ok(at(done, 0, 0).shed.includes("charm"));
+  assert.equal(done.players[0].orb, 0);
 });
 
 test("Tinh linh đàn hạc: triệu hồi chính nó +2 mana vào mộ mana (dư lên sao); đầu lượt +1 mana mỗi con; quái khác triệu hồi không kích", () => {

@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Harpie Lady Mê hoặc, BƯỚC B (25/11, Opus 5.5 high, nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`)
+1. Việc vừa làm: Mê hoặc của Harpie Lady: 0 mana, skill chậm (chờ trong chuỗi), chọn 1 quái địch rồi 1 quái đồng minh KHÁC cô (như Dụ dỗ, play.tsx `twoStep`), quái địch đánh thường vào quái đó, bỏ cấm hành động lượt sau, bỏ hỏi né (plumeAsk) cho Harpie Lady. duel.ts `charmAlly` (targetUid = đồng minh, extra = quái địch); Nữ chúa giữ luật cũ. Máy (brain.ts + aiStep) chọn được. Chữ lá = chữ chủ game. round-rules 110/111 (+1 bài; Phục kích chập chờn cũ).
+2. Hiện trạng: không ảnh mới. Chụp Chromium 412×915 trận Test: chọn quái địch, đồng minh sáng, bảng sau 2 giây, vào hàng chờ. Dòng chảy chỉ tới quái đồng minh (không có dòng tới quái địch), như Dụ dỗ. Harpie Lady đứng một mình thì không dùng được Mê hoặc.
+3. Việc sắp làm: chờ chủ game xem; áp `main` khi được bảo.
+
 ## Harpie Lady đổi kỹ năng, BƯỚC A (25/11, Sonnet 5.5 high, nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`)
 1. Việc vừa làm: chủ game đổi Harpie Lady (`my-dieu-nhan`): chỉ số 3/0/0/3. Giáp và Vuốt giờ NÉ ĐÒN ĐÁNH THƯỜNG (1 mana, +2 thủ, +2 máu tối đa, trả 5 sát thương phép), Roi điện giờ NÉ SKILL/PHÉP (1 mana, +2 công, trả đòn trực tiếp = công của cô ấy, vật lý, chỉ lên quái ra skill; phép thì không trả). duel.ts: `meleeKey`/`skillKey` (Harpie Lady đảo khoá, Nữ chúa điểu nhân giữ như cũ), `meleeDodge`/`skillDodge`/`landWard(key)`, `harpyOffer` trả khoá theo kỹ năng; `Pending lash.key`, `hold.ward.key`; play.tsx `harpyAlert`, chip/nhãn dùng khoá "armor"|"lash". `BALANCE_LOG` wave 42, `stamp-cards`, STALE_SKILLS, icon-briefs, PENDING_NOTES. round-rules 110/110 (+1 bài, sửa 2 bài; bài Phục kích chập chờn cũ).
 2. Hiện trạng: chủ game gửi ảnh Harpie Lady mới (đã đổi hình trong artifact `docs/ar03`). Chưa chụp giao diện bằng mắt, chưa thử máy dùng, online, điện thoại. Chữ lá Mê hoặc CHƯA đổi (còn bản cũ, vì code Mê hoặc chưa đổi).

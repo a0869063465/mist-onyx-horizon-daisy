@@ -84,6 +84,7 @@ function harpy(name: string, t: string, target: FieldMon | null, cardId = ""): s
     case "Thổi bay":
       return ["Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ"];
     case "Mê hoặc":
+      if (cardId === "my-dieu-nhan") return [`1 quái địch đánh thường vào ${target ? monsterCard(target.cardId)?.name ?? "1 quái đồng minh" : "1 quái đồng minh"}`];
       return [`${who} đánh thường vào ta`, "Quái đó không thể hành động ở lượt sau"];
     case "Dụ dỗ":
       return [`${who} đánh thường vào 1 quái của ta`];

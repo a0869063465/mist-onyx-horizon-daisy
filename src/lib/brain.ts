@@ -356,7 +356,10 @@ function skillMoves(state: Duel, mon: FieldMon, list: Move[]) {
   if (id === "my-dieu-nhan" || id === "nu-chua-dieu-nhan") {
     const spent = new Set(mon.shed ?? []);
     if (!spent.has("gust") && me.orb >= (id === "nu-chua-dieu-nhan" ? 0 : 1)) selfs.push(0);
-    if (id === "my-dieu-nhan" && !spent.has("charm")) aims.push(1);
+    // Mê hoặc của Harpie Lady (chủ game 25/11): quái địch rồi 1 quái đồng minh khác của cô.
+    if (id === "my-dieu-nhan" && !spent.has("charm")) {
+      for (const foe of foes) for (const ally of allies) if (ally.uid !== mon.uid) tryMove(list, state, ["skill", mon.uid, ally.uid, 1, true, foe.uid]);
+    }
   }
   if (id === "phu-thuy-thoi-gian" && me.orb >= 2) tryMove(list, state, ["skill", mon.uid, null, 2, true, null]);
   if (id === "rong-boc-trung") tryMove(list, state, ["stance", mon.uid]);
