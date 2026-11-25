@@ -98,7 +98,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "lure", label: "Dụ dỗ", tone: "y" },
     { key: "bolt", label: "Roi sấm", tone: "y" },
   ],
-  "hiep-si-cua-hau": [{ key: "sword", label: "Kiếm phép", tone: "y" }],
 };
 
 export const MONSTER_ASKS: Record<string, AskDef[]> = {
