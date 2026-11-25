@@ -235,6 +235,8 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["ong-khong-lo", "__**Tê liệt**__"],
   ["sua-hut-ma-phap", "Ma pháp tích tụ"],
   ["kiem-si-lua-thieng", "Long Hoả"],
+  ["hiep-si-cua-vua", "Kiếm tấn công"],
+  ["hiep-si-cua-hau", "Đàm phán"],
 ];
 
 const FRESH_SKILL: Array<[string, string]> = [

@@ -121,9 +121,9 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "ma-dao-si": [A("Ma đạn", "bolt-spell-cast")],
   "loi-nguyen-cua-rong": [A("Địa ngục lửa", "fire-ring")],
   "thien-than-be-nho": [A("Thiên thần hộ mệnh", "angel-outfit"), S("Tinh linh bé nhỏ", "fairy")],
-  "hiep-si-cua-vua": [KNIGHT, QUEEN, P("Kiếm tấn công", "attack-sword")],
+  "hiep-si-cua-vua": [P("Khiên", "checked-shield"), A("Kiếm", "attack-sword")],
   "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
-  "hiep-si-cua-hau": [KNIGHT, KING, A("Đàm phán", "shaking-hands"), A("Kiếm phép", "energy-sword")],
+  "hiep-si-cua-hau": [P("Khiên", "checked-shield"), A("Kiếm", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
   // Harpie Lady (chủ game 21/11): Giảo hoạt đứng đầu, 4 kỹ năng giữ nguyên, Tiến hoá cuối cùng (chữ theo chữ lá chủ game viết).
   "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Tiến hoá", "round-star")],
