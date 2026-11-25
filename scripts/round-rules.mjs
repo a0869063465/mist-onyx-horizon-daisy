@@ -2167,6 +2167,54 @@ test("Hiệp sĩ của vua/hậu (25/11): Khiên +4 thủ trước đòn vật l
   assert.deepEqual(at(magic, 0, 0).kGuard, { def: 0, mdef: 4 });
 });
 
+// Suối nguồn sinh mệnh (chủ game 25/11)
+test("Suối nguồn sinh mệnh lần 1: hồi 1 + 2 máu tối đa tới hết lượt, về bộ bài thành bản đã dùng, xáo, rút 1 lá miễn phí", () => {
+  let s = board({ 0: ["rong-con", { hp: 3, maxHp: 5 }] }, { 0: ["khong-lo-mot-mat"] });
+  s = D.testGrant(s, 0, C.SPRING, false);
+  const me = s.players[0];
+  const deckBefore = me.spellDeck.length + me.monsterDeck.length;
+  const done = D.castSpell(s, me.hand.indexOf(C.SPRING), uid(s, 0, 0));
+  assert.equal(at(done, 0, 0).hp, 6, done.live);
+  assert.equal(at(done, 0, 0).maxHp, 7);
+  assert.ok(!done.players[0].hand.includes(C.SPRING), "lá rời tay");
+  const pile = [...done.players[0].spellDeck, ...done.players[0].hand];
+  assert.ok(pile.includes(C.SPRING_WORN), "lá về bộ bài thành bản đã dùng");
+  assert.equal(done.players[0].spellDeck.length + done.players[0].monsterDeck.length, deckBefore, "về 1 lá, rút 1 lá");
+  assert.equal(done.players[0].hand.length + done.players[0].reserve.length, me.hand.length + me.reserve.length, "rút bù 1 lá");
+  assert.equal(done.players[0].draws, me.draws, "rút miễn phí, không tính lá rút của vòng");
+  assert.ok(!(done.players[0].spent ?? []).includes(C.SPRING), "không vào mộ");
+  assert.equal(done.turn, 1, "phép dùng ở lượt mình thì quyền sang đối thủ");
+  const over = closeRound(done);
+  assert.equal(at(over, 0, 0).maxHp, 5, "hết lượt máu tối đa về lại");
+  assert.equal(at(over, 0, 0).hp, 5, "máu hiện tại kẹp xuống");
+});
+
+test("Suối nguồn sinh mệnh lần 2: vào mộ, không rút", () => {
+  let s = board({ 0: ["rong-con", { hp: 5, maxHp: 5 }] }, { 0: ["khong-lo-mot-mat"] });
+  s = D.testGrant(s, 0, C.SPRING_WORN, false);
+  const me = s.players[0];
+  const done = D.castSpell(s, me.hand.indexOf(C.SPRING_WORN), uid(s, 0, 0));
+  assert.equal(at(done, 0, 0).hp, 7, done.live);
+  assert.ok((done.players[0].spent ?? []).includes(C.SPRING), "vào mộ");
+  assert.equal(done.players[0].hand.length, me.hand.length - 1, "không rút");
+  assert.equal(done.players[0].spellDeck.length, me.spellDeck.length);
+  assert.ok(!done.players[0].spellDeck.includes(C.SPRING_WORN));
+});
+
+test("Suối nguồn sinh mệnh siêu tốc trong chuỗi: nổ ngay, quyền đáp vẫn ở người dùng; nhắm được quái Ẩn của mình; không nhắm quái địch", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20 }] }, { 0: ["khong-lo-mot-mat", { hp: 4, maxHp: 6, lurk: { left: 4 } }] });
+  s = D.testGrant(s, 1, C.SPRING, false);
+  const hit = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(hit.step, "respond", hit.live);
+  const wrong = D.castSpell(hit, hit.players[1].hand.indexOf(C.SPRING), uid(s, 0, 0));
+  assert.equal(wrong.players[1].hand.length, hit.players[1].hand.length, "quái địch không nhắm được");
+  const done = D.castSpell(hit, hit.players[1].hand.indexOf(C.SPRING), uid(s, 1, 0));
+  assert.equal(at(done, 1, 0).hp, 7, done.live);
+  assert.equal(done.step, "respond", "đòn vẫn chờ");
+  assert.equal(done.hold.priority, 1, "quyền đáp vẫn ở người dùng");
+  assert.deepEqual(D.springAllies(hit, 1), [uid(s, 1, 0)]);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

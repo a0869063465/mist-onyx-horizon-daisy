@@ -1284,14 +1284,30 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Phát động khi 1 quái thú bị quái thú đối phương tấn công hoặc dùng kỹ năng gây sát thương nhắm đến, ngăn chặn đòn tấn công đó, và cho phép 1 quái thú bị nhắm đến được trả đòn (dưới dạng hàng chờ).",
     "picture": "spell:qua-trung-thien-su"
+  },
+  {
+    "id": "suoi-nguon-sinh-menh",
+    "name": "Suối nguồn sinh mệnh",
+    "gems": 0,
+    "effect": "Độ bền: 2 lần dùng\nSiêu tốc 0 mana\nHồi 1 máu cho 1 đồng minh và bạn cho nó 2 máu tối đa đến hết lượt.\nSau đó đặt lại vào deck, xáo bài và rút 1 lá bài.",
+    "picture": "spell:suoi-nguon-sinh-menh"
   }
 ];
 
+/** Suối nguồn sinh mệnh (chủ game 25/11): độ bền 2 lần dùng trong cả trận. */
+export const SPRING = "suoi-nguon-sinh-menh";
+/** Bản đã dùng 1 lần của Suối nguồn sinh mệnh: lá về lại bộ bài dưới id này (cùng tên, cùng tranh, cùng chữ), nên bộ
+ *  đếm lần dùng đi theo đúng lá. Không nằm trong SPELLS: không vào kho bài, gói, album, bộ bài. */
+export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
+
+/** Bản khác của một lá phép, chỉ sinh ra trong trận (không bỏ vào bộ). */
+const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }];
+
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([SPRING]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
-const spellById = new Map(SPELLS.map((card) => [card.id, card]));
+const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));
 
 export function monsterCard(id: string): MonsterCard | undefined {
   const card = monsterById.get(id);
@@ -1352,7 +1368,7 @@ export const MIN_SPELLS = 0;
  * mọi lá khác 1 bản. Dạng ngoài bộ (tiến hoá, dung hợp) không bỏ vào bộ: 0. Lá môi trường vẫn chỉ 1 lá mỗi bộ.
  */
 export function copyCap(id: string): number {
-  if (FORMS.some((card) => card.id === id)) return 0;
+  if (FORMS.some((card) => card.id === id) || SPELL_FORMS.some((card) => card.id === id)) return 0;
   const monster = monsterCard(id);
   if (monster) return monster.stars <= 1 ? 3 : monster.stars === 2 ? 2 : 1;
   const spell = spellCard(id);

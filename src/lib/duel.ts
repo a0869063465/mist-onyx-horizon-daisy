@@ -5,6 +5,8 @@ import {
   isStill,
   monsterCard,
   spellCard,
+  SPRING,
+  SPRING_WORN,
   type MonsterCard,
 } from "./catalog.ts";
 import { chooseSwing, readLean, tilt, type Lean } from "./adapt.ts";
@@ -139,6 +141,9 @@ export type FieldMon = {
   /** Khiên của Hiệp sĩ của vua / Hiệp sĩ của hậu (chủ game 25/11): đã bật trong lượt chung này, +thủ hoặc +thủ phép tới
    *  hết lượt. Còn thì không bật lại; hết lượt thì xoá (`stampTurn`). */
   kGuard?: { def: number; mdef: number };
+  /** Suối nguồn sinh mệnh (chủ game 25/11): máu tối đa ban tạm tới hết lượt chung; hết lượt thì trừ lại, máu hiện tại
+   *  kẹp xuống nếu vượt (`stampTurn`). */
+  spring?: number;
   /** Hàng sau (ô 3–5). Không có là hàng trước. Luôn theo ô đang đứng (`withRows`). */
   row?: "back";
   /** Đã đánh hoặc dùng kỹ năng trong vòng này: mỗi quái một lần mỗi vòng. */
@@ -463,7 +468,8 @@ function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon 
 
 function pileFromField(mon: FieldMon): PileMon {
   if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
-  const { uid: _uid, lurk: _lurk, ...saved } = mon;
+  const { uid: _uid, lurk: _lurk, ...kept } = mon;
+  const saved = kept.spring ? dropSpring(kept) : kept;
   const cap = saved.maxHp || saved.hp;
   return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
 }
@@ -2089,6 +2095,23 @@ export function answerSword(state: Duel, yes: boolean): Duel {
   return ask.kind === "face" ? attackFace(next, ask.uid, true) : attackMonster(next, ask.uid, ask.target ?? "", false, true);
 }
 
+/** Hết lượt chung: máu tối đa Suối nguồn sinh mệnh ban tạm mất đi, máu hiện tại kẹp xuống nếu vượt. */
+function dropSpring<T extends { hp: number; maxHp: number; spring?: number }>(mon: T): T {
+  const grant = mon.spring ?? 0;
+  const maxHp = Math.max(1, (mon.maxHp || mon.hp) - grant);
+  return { ...mon, spring: undefined, maxHp, hp: Math.min(mon.hp, maxHp) };
+}
+
+function dropSprings(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.spring)) continue;
+    next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.spring ? dropSpring(mon) : mon)) });
+  }
+  return next;
+}
+
 function dropShields(state: Duel): Duel {
   if (!state.players.some((player) => player.field.some((mon) => mon?.kGuard))) return state;
   let next = state;
@@ -2421,7 +2444,7 @@ export function visibleStats(mon: FieldMon, allies: Array<FieldMon | null>) {
     blueAtk: (mon.lava ?? 0) > 0 || (mon.blessAtk ?? 0) > 0 || (mon.clash?.atk ?? 0) > 0 || stanceAtk || (mon.raised?.atk ?? 0) > 0 || (mon.cardId === "con-thinh-no-cua-hai-vuong" && (mon.stored ?? 0) > 0),
     blueDef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.kGuard?.def ?? 0) > 0 || (mon.nextDef ?? 0) > 0 || (mon.blessDef ?? 0) > 0 || guardBonus(mon) > 0 || (mon.clash?.def ?? 0) > 0 || aura > 0 || (mon.raised?.def ?? 0) > 0 || (mon.buff?.def ?? 0) > 0),
     blueMdef: !mon.cage && ((mon.tempGuard ?? 0) > 0 || (mon.kGuard?.mdef ?? 0) > 0 || (mon.blessMdef ?? 0) > 0 || guardBonus(mon) > 0 || aura > 0 || (mon.raised?.mdef ?? 0) > 0 || (mon.buff?.mdef ?? 0) > 0 || (mon.clash?.mdef ?? 0) > 0),
-    blueHp: !mon.cage && ((mon.raised?.hp ?? 0) > 0 || (mon.clash?.maxHp ?? 0) > 0 || (mon.buff?.maxHp ?? 0) > 0),
+    blueHp: !mon.cage && ((mon.spring ?? 0) > 0 || (mon.raised?.hp ?? 0) > 0 || (mon.clash?.maxHp ?? 0) > 0 || (mon.buff?.maxHp ?? 0) > 0),
   };
 }
 
@@ -7300,7 +7323,9 @@ export function castSpell(state: Duel, handIndex: number, targetUid: string | nu
   if (replay || next === state) return next;
   const held = next.pending?.kind === "spell" && next.pending.cardId === cardId;
   const removed = cardId !== null && handCopies(state.players[side].hand, cardId) > handCopies(next.players[side].hand, cardId);
-  const ok = held || removed;
+  // Suối nguồn sinh mệnh có thể rút lại đúng bản cùng id: thấy tay/bộ bài đổi là đã dùng.
+  const sprung = (cardId === SPRING || cardId === SPRING_WORN) && next.players[side] !== state.players[side];
+  const ok = held || removed || sprung;
   if (!ok && next.upkeep && !state.upkeep && next.players === state.players) return next;
   const marked = traced(state, next, {
     kind: "spell",
@@ -7324,6 +7349,75 @@ export function castSpell(state: Duel, handIndex: number, targetUid: string | nu
 
 function ownerCard(state: Duel, uid: string): string {
   return state.players.flatMap((player) => player.field).find((mon) => mon?.uid === uid)?.cardId ?? "";
+}
+
+/** Đồng minh Suối nguồn sinh mệnh nhắm được: quái của `side` trên sân (kể cả quái Ẩn của mình, quái đang ở sân bên kia
+ *  vì Hộp ma thuật), không phải mũ. */
+export function springAllies(state: Duel, side: Side): string[] {
+  return state.players.flatMap((player, at) =>
+    player.field.flatMap((mon) => {
+      if (!mon || mon.hp <= 0 || mon.cardId === "mu") return [];
+      const owner = mon.abroad ?? at;
+      return owner === side ? [mon.uid] : [];
+    }),
+  );
+}
+
+/**
+ * Suối nguồn sinh mệnh (chủ game 25/11): siêu tốc 0 mana, nổ ngay như Hoán đổi / Hộp ma thuật (dùng trong chuỗi thì quyền
+ * đáp vẫn ở người dùng). Hồi máu + ban máu tối đa tới hết lượt chung (máu tối đa tăng bao nhiêu máu hiện tại tăng bấy
+ * nhiêu). Độ bền 2 lần dùng cả trận: lần 1 lá về bộ bài thành bản đã dùng (`SPRING_WORN`), xáo, rồi rút 1 lá (miễn phí,
+ * không tính lá rút của vòng, như Sinh mệnh mới); lần 2 lá vào mộ, không rút.
+ */
+function castSpring(state: Duel, side: Side, handIndex: number, targetUid: string | null, replay: boolean): Duel {
+  const player = state.players[side];
+  const id = player.hand[handIndex] ?? "";
+  const card = spellCard(id);
+  if (!card) return state;
+  const where = targetUid && springAllies(state, side).includes(targetUid) ? ownerSide(state, targetUid) : null;
+  const ally = where === null ? null : state.players[where].field.find((mon) => mon?.uid === targetUid) ?? null;
+  if (where === null || !ally) return note(state, "Chọn 1 quái thú đồng minh.");
+  const before = player.stars;
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  if (!replay) {
+    const bill = playBill(card.gems, tolled, player.orb, player.flask);
+    if (bill) return note(state, bill);
+  }
+  const paid = replay ? player : payPlayed(player, card.gems, tolled);
+  if (!paid) return note(state, `Cần ${card.gems} gem.`);
+  const worn = id === SPRING_WORN;
+  let you = dropHandCard(paid, handIndex);
+  let drawn = 0;
+  if (worn) {
+    you = { ...you, spent: [...(you.spent ?? []), SPRING] };
+  } else {
+    // Đặt lại vào bộ bài (xấp chung), xáo cả bộ, rồi rút 1 lá.
+    const synced = syncOrder(you);
+    const spellPile = shuffle([...synced.spellDeck.map((one, index): [string, boolean] => [one, synced.spellTax?.[index] ?? false]), [SPRING_WORN, tolled] as [string, boolean]]);
+    const monsterDeck = shuffle(synced.monsterDeck);
+    you = {
+      ...synced,
+      monsterDeck,
+      spellDeck: spellPile.map(([one]) => one),
+      spellTax: spellPile.map(([, tax]) => tax),
+      order: mixOrder(monsterDeck.length, spellPile.length),
+    };
+    const draw = freeDraws(you, 1);
+    you = draw.player;
+    drawn = draw.got;
+  }
+  let next = pingStars(patch(state, side, you), side, before, you.stars);
+  const heal = grabNums(card.effect, /Hồi\s+(\d+)\s*máu/gi)[0] ?? 1;
+  const grant = grabNums(card.effect, /(\d+)\s*máu tối đa/gi)[0] ?? 2;
+  const owner = next.players[where];
+  const mon = owner.field.find((unit) => unit?.uid === ally.uid) ?? ally;
+  const cap = mon.maxHp || mon.hp;
+  const mended = Math.min(cap, mon.hp + heal);
+  const body: FieldMon = { ...mon, maxHp: cap + grant, hp: mended + grant, spring: (mon.spring ?? 0) + grant };
+  next = patch(next, where, { ...owner, field: owner.field.map((unit) => (unit?.uid === mon.uid ? body : unit)) as Player["field"] });
+  const tail = worn ? " Suối nguồn cạn." : drawn > 0 ? ` Suối nguồn về lại bộ bài, xáo bài, ${sideName(side)} được rút ${drawn} lá.` : " Suối nguồn về lại bộ bài, xáo bài.";
+  const line = `Suối nguồn sinh mệnh hồi ${mended - mon.hp} máu và ban ${grant} máu tối đa cho ${cardOf(mon).name} đến hết lượt.${tail}`;
+  return { ...note(next, line, "heal"), mends: [{ uid: mon.uid, n: body.hp - mon.hp }] };
 }
 
 function castSpellCore(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
@@ -7362,6 +7456,8 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "giap-co-khi",
     "hop-ma-thuat",
     "qua-trung-thien-su",
+    SPRING,
+    SPRING_WORN,
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
     ...(state.step === "respond" ? [TRAP_CARD] : []),
   ]);
@@ -7376,6 +7472,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && doomWaiting(state) && card.id !== "hap-thu-ma-phap") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được Huỷ diệt.");
   }
+  if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
@@ -11002,7 +11099,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = dropShields(start);
+  const state = dropSprings(dropShields(start));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
