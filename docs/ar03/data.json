@@ -1080,9 +1080,9 @@
      "name": "Mỹ điểu nhân",
      "cost": 2,
      "mana": 0,
-     "stats": "Công 3 · Thủ 1 · Thủ phép 1 · Máu 4",
+     "stats": "Công 3 · Thủ 0 · Thủ phép 0 · Máu 3",
      "tag": "",
-     "text": "Giáp và Vuốt\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\nThổi bay\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\nMê hoặc\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\nRoi điện\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\nLông vũ:\nMỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn.\nĐủ 4 kỹ năng thì chờ tiến hoá."
+     "text": "Giảo hoạt\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu thứ 3 (không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\nGiáp và Vuốt\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó. Tăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\nThổi bay\nTiêu hao 1 mana, huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\nMê hoặc\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\nRoi điện\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn. Tăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\nTiến hoá\nKhi cô ấy thi triển 3 hành động khác nhau."
     },
     {
      "id": "the-than-cua-shien",
