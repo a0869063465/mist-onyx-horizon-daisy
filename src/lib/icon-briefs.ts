@@ -78,7 +78,7 @@ function came(result: string | undefined): string[] {
   return result ? [result.replace(/^\d+\.\s*/, "").replace(/[.\s]+$/, "").trim()] : [];
 }
 
-function harpy(name: string, t: string, target: FieldMon | null): string[] {
+function harpy(name: string, t: string, target: FieldMon | null, cardId = ""): string[] {
   const who = target ? monsterCard(target.cardId)?.name ?? "1 quái địch" : "1 quái địch";
   switch (name) {
     case "Thổi bay":
@@ -91,8 +91,14 @@ function harpy(name: string, t: string, target: FieldMon | null): string[] {
       return ["Thổi bay 1 phép ngẫu nhiên của địch", "Lượt sau đối thủ không được rút bài"];
     case "Roi sấm":
       return ["Đòn đánh kế tiếp thành sát thương phép"];
+    case "Giáp và Vuốt": {
+      if (cardId !== "my-dieu-nhan") return [];
+      const armor = t.slice(Math.max(0, t.indexOf("Giáp và Vuốt")));
+      return ["Né đòn đánh thường", `+${num(armor, /tăng vĩnh viễn\s*(\d+)\s*thủ/, 2)} thủ và +${num(armor, /và\s*(\d+)\s*máu tối đa/, 2)} máu tối đa vĩnh viễn`, `Trả ${num(armor, /trả\s*(\d+)\s*sát thương phép/, 5)} sát thương phép`];
+    }
     case "Roi điện": {
       const lash = t.slice(Math.max(0, t.indexOf("Roi điện")));
+      if (cardId === "my-dieu-nhan") return ["Né skill hoặc phép nhắm vào", `+${num(lash, /tăng vĩnh viễn\s*(\d+)\s*công/, 2)} công vĩnh viễn`, "Trả đòn trực tiếp lên kẻ ra đòn"];
       return ["Né đòn", `+${num(lash, /tăng vĩnh viễn\s*(\d+)\s*công/, 3)} công vĩnh viễn`, `Trả ${num(lash, /trả\s*(\d+)\s*sát thương phép/, 5)} sát thương phép`];
     }
   }
@@ -194,7 +200,7 @@ function lines(at: SkillAt): string[] {
     case "my-dieu-nhan":
     case "nu-chua-dieu-nhan":
     case "nu-chua-dieu-nhan-hoan-my":
-      return harpy(name, t, target);
+      return harpy(name, t, target, cardId);
     case "chien-si-gam-nham":
       return ["Gấp đôi phòng ngự", `+${num(t, /thêm\s*(\d+)\s*máu tối đa/, 2)} máu tối đa`];
     case "ngai-khong-lo":

@@ -1,5 +1,10 @@
 # Việc đang dở (đọc trước khi làm)
 
+## Harpie Lady đổi kỹ năng, BƯỚC A (25/11, Sonnet 5.5 high, nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`)
+1. Việc vừa làm: chủ game đổi Harpie Lady (`my-dieu-nhan`): chỉ số 3/0/0/3. Giáp và Vuốt giờ NÉ ĐÒN ĐÁNH THƯỜNG (1 mana, +2 thủ, +2 máu tối đa, trả 5 sát thương phép), Roi điện giờ NÉ SKILL/PHÉP (1 mana, +2 công, trả đòn trực tiếp = công của cô ấy, vật lý, chỉ lên quái ra skill; phép thì không trả). duel.ts: `meleeKey`/`skillKey` (Harpie Lady đảo khoá, Nữ chúa điểu nhân giữ như cũ), `meleeDodge`/`skillDodge`/`landWard(key)`, `harpyOffer` trả khoá theo kỹ năng; `Pending lash.key`, `hold.ward.key`; play.tsx `harpyAlert`, chip/nhãn dùng khoá "armor"|"lash". `BALANCE_LOG` wave 42, `stamp-cards`, STALE_SKILLS, icon-briefs, PENDING_NOTES. round-rules 110/110 (+1 bài, sửa 2 bài; bài Phục kích chập chờn cũ).
+2. Hiện trạng: chủ game gửi ảnh Harpie Lady mới (đã đổi hình trong artifact `docs/ar03`). Chưa chụp giao diện bằng mắt, chưa thử máy dùng, online, điện thoại. Chữ lá Mê hoặc CHƯA đổi (còn bản cũ, vì code Mê hoặc chưa đổi).
+3. Việc sắp làm: BƯỚC B Mê hoặc: "0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh", bỏ câu cấm hành động lượt sau (cần bước chọn mục tiêu thứ hai, như Dụ dỗ). Chờ chủ game "ok" và duyệt mô hình.
+
 ## AR03 (22/11, Sonnet 5.5): nhân bản artifact "Xếp quái thú" sang tài khoản khác
 1. Việc vừa làm: chụp cố định artifact thành `docs/ar03/` (đúng phiên bản 6) + công thức đăng `docs/ar03/AR03.md`, script `docs/ar03/prep.py`.
 2. Hiện trạng: chủ game nhắc "AR03" ở tài khoản khác thì ĐỌC `docs/ar03/AR03.md` rồi đăng artifact y hệt (đăng mới trong tài khoản đó), dữ liệu sắp xếp chủ game tự chép sang. Nhánh `ccr-72f1eb1c-jqkpoo`, CHƯA áp `main`; artifact gốc: https://claude.ai/artifact/2mPabbW3H8f4NeVfadQHRH. Chưa có nút xuất dữ liệu trong trang (chỉ nhập bằng ấn giữ nút sao chép).
