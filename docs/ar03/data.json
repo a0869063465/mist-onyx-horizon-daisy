@@ -1947,6 +1947,87 @@
      "stats": "",
      "tag": "Bài hỗ trợ",
      "text": "Trứng Rồng:\nKhi lá bài này được đặt ngửa lên sân, đặt 1 điểm ấp lên lá bài này. Vào đầu mỗi lượt của bạn, thêm 1 điểm ấp. Khi lá bài này có 4 điểm ấp, có thể phá huỷ lá bài này để triệu hồi đặc biệt 1 Rồng Ngọc Bích từ bộ bài hoặc trên tay."
+    },
+    {
+     "id": "hu-linh-hon",
+     "name": "Hũ Linh Hồn",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Hũ Linh Hồn:\nMỗi khi một quái vật bị tiêu diệt trong chiến đấu, lá bài này tích 1 dấu (tối đa 4 dấu). Khi lá bài này có 4 dấu, trong lượt của bạn, có thể đặt lại số dấu về 0 để nhận 10 linh lực."
+    },
+    {
+     "id": "phong-an-phan-ung",
+     "name": "Phong Ấn Phản Ứng",
+     "cost": 0,
+     "mana": 10,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Phong Ấn Phản Ứng:\nVào đầu mỗi lượt của bạn, trả 5 linh lực để duy trì lá bài này; nếu không, phá hủy nó. Khi lá bài này đang ngửa trên sân, đối phương không thể kích hoạt bài phản ứng."
+    },
+    {
+     "id": "cam-hien-te",
+     "name": "Cấm Hiến Tế",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Cấm Hiến Tế:\nVào đầu mỗi lượt của bạn, trả 5 linh lực để duy trì lá bài này; nếu không, phá hủy nó. Khi lá bài này đang ngửa trên sân, đối phương không thể triệu hồi hiến tế."
+    },
+    {
+     "id": "sinh-menh-thu-hai",
+     "name": "Sinh Mệnh Thứ Hai",
+     "cost": 0,
+     "mana": 5,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Sinh Mệnh Thứ Hai:\nChọn 1 quái vật trong mộ bài của bạn và triệu hồi đặc biệt nó. Gắn lá bài này vào quái vật đó. Khi một trong hai lá rời sân, phá hủy lá còn lại. Sau 2 lượt của bạn, phá hủy cả hai."
+    },
+    {
+     "id": "moi-truong-am-than",
+     "name": "Môi Trường Ám Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Ám Thần:\nTất cả quái vật Ám Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "moi-truong-quang-than",
+     "name": "Môi Trường Quang Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Quang Thần:\nTất cả quái vật Quang Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "moi-truong-dia-than",
+     "name": "Môi Trường Địa Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Địa Thần:\nTất cả quái vật Địa Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "moi-truong-thuy-than",
+     "name": "Môi Trường Thủy Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Thủy Thần:\nTất cả quái vật Thủy Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "moi-truong-moc-than",
+     "name": "Môi Trường Mộc Thần",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hỗ trợ",
+     "text": "Môi Trường Mộc Thần:\nTất cả quái vật Mộc Thần của bạn tăng 1 bậc."
     }
    ]
   }
