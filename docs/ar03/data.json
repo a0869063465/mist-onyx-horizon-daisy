@@ -2028,6 +2028,15 @@
      "stats": "",
      "tag": "Bài hỗ trợ",
      "text": "Môi Trường Mộc Thần:\nTất cả quái vật Mộc Thần của bạn tăng 1 bậc."
+    },
+    {
+     "id": "cuu-roi-linh-hon",
+     "name": "Cứu rỗi linh hồn",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Phép chậm",
+     "text": "Cứu rỗi linh hồn:\nHồi sinh 1 quái thú bất kỳ đã chết cửa địch, tồn tại trong 4 lượt."
     }
    ]
   }
