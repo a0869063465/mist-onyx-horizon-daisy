@@ -1668,6 +1668,87 @@
      "stats": "",
      "tag": "Bài hành động",
      "text": "Giữa Vòng Vây:\nChỉ có thể kích hoạt khi đối phương có nhiều hơn 2 quái vật trở lên. Triệu hồi đặc biệt 1 Thần Trụ Trời từ trên tay."
+    },
+    {
+     "id": "lo-ap",
+     "name": "Lò Ấp",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Lò Ấp:\nHiệu ứng này chỉ có thể kích hoạt một lần mỗi lượt. Chọn 1 Trứng Rồng của bạn trên sân, thêm 2 điểm ấp lên lá bài đó."
+    },
+    {
+     "id": "trieu-dang",
+     "name": "Triều Dâng",
+     "cost": 0,
+     "mana": 10,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Triều Dâng:\nLoại khỏi trận đấu 3 quái vật khác tên nhau trong mộ bài của bạn để triệu hồi đặc biệt 1 Ngư Tinh từ trên tay hoặc mộ bài."
+    },
+    {
+     "id": "may-chem-hanh-dong",
+     "name": "Máy Chém",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Máy Chém:\nHiệu ứng này chỉ có thể kích hoạt một lần mỗi lượt. Chỉ có thể kích hoạt khi Huyết Đao Phủ đang ngửa trên sân của bạn. Chọn 1 quái vật của đối phương và phá huỷ nó."
+    },
+    {
+     "id": "an-tu",
+     "name": "Ấn Tử",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Ấn Tử:\nPhá huỷ 1 quái vật đồng minh đã triệu hồi đặc biệt 1 Huyết Đao Phủ từ trên tay."
+    },
+    {
+     "id": "xieng-xich-troi-hon",
+     "name": "Xiềng Xích Trói Hồn",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Xiềng Xích Trói Hồn:\nChọn 1 quái vật trên sân đối phương. Quái vật đó bị khóa trong 2 lượt tiếp theo của đối phương."
+    },
+    {
+     "id": "phoi-di-the",
+     "name": "Phôi Dị Thể",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Phôi Dị Thể:\nChỉ có thể kích hoạt khi bạn điều khiển Kẻ Lai Tạo đang ngửa. Tìm 1 quái vật Dị Thể bậc 6 trở xuống trong bộ bài và đưa lên tay."
+    },
+    {
+     "id": "coi-huan-luyen",
+     "name": "Còi Huấn Luyện",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Còi Huấn Luyện:\nChỉ có thể kích hoạt khi bạn điều khiển Người Luyện Thú đang ngửa. Tìm 1 quái vật Thú Hình bậc 6 trở xuống trong bộ bài và đưa lên tay."
+    },
+    {
+     "id": "giao-keo-ac-quy",
+     "name": "Giao Kèo Ác Quỷ",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Giao Kèo Ác Quỷ:\nChỉ có thể kích hoạt khi bạn điều khiển Kẻ Ký Khế Ước đang ngửa. Tìm 1 quái vật Quỷ Hình bậc 6 trở xuống trong bộ bài và đưa lên tay."
+    },
+    {
+     "id": "quan-lenh",
+     "name": "Quân Lệnh",
+     "cost": 0,
+     "mana": 0,
+     "stats": "",
+     "tag": "Bài hành động",
+     "text": "Quân Lệnh:\nChỉ có thể kích hoạt khi bạn điều khiển Chỉ Huy đang ngửa. Tìm 1 quái vật Nhân Hình bậc 6 trở xuống trong bộ bài và đưa lên tay."
     }
    ]
   }
