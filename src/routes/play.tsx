@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, BoomBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -436,7 +436,7 @@ type Grab =
   | { kind: "unit"; uid: string; card: MonsterCard; live: { name: string; atk: number; def: number; mdef: number; hp: number; level: number } };
 
 type Drag = Grab & { x: number; y: number };
-type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean };
+type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean; buff?: boolean; mend?: number };
 
 function floaterStyle(item: Floater) {
   return {
@@ -1443,16 +1443,6 @@ function tired(mon: FieldMon) {
   return mon.dim && !knackOpen(mon);
 }
 
-function holdingMend(mon: FieldMon) {
-  if (mon.clash && (mon.clash.atk > 0 || mon.clash.def > 0 || mon.clash.maxHp > 0)) return true;
-  if ((mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0) return true;
-  // Suối nguồn sinh mệnh: máu tối đa tạm tới hết lượt chung.
-  if ((mon.spring ?? 0) > 0) return true;
-  // Khiên của Hiệp sĩ của vua / hậu: buff tạm tới hết lượt.
-  if ((mon.kGuard?.def ?? 0) > 0 || (mon.kGuard?.mdef ?? 0) > 0) return true;
-  return Boolean(mon.buff && ((mon.buff.def ?? 0) > 0 || (mon.buff.mdef ?? 0) > 0 || (mon.buff.maxHp ?? 0) > 0));
-}
-
 function gnawBoosted(prev: Duel, next: Duel) {
   for (const side of [0, 1] as const) {
     for (const mon of next.players[side].field) {
@@ -1543,7 +1533,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
         if (beam) floaters.push(...laserTicks(beam));
         else if (!(rose && delta < 0) && !(bombOn && bombHits.includes(was.uid)) && !(danOn && danHits.includes(was.uid)) && !riderIds.has(was.uid)) {
           // grow: the rise came with a max-HP rise (tăng máu tối đa), which keeps its old ring.
-          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp });
+          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp, mend: delta - Math.max(0, now.maxHp - was.maxHp) });
           if (delta < 0 && !(next.skill && skillLook(next.skill.id, next.skill.index))) hits.push(now.uid);
         }
       }
@@ -1571,7 +1561,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
           (now.clash?.def ?? 0) - (was.clash?.def ?? 0),
           stance,
         );
-        if (gain > 0) floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${gain}`, heal: true, spot: where });
+        if (gain > 0) floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${gain}`, heal: true, spot: where, buff: true });
       }
       if (was && now && now.uid === was.uid && (now.chain ?? 0) > (was.chain ?? 0)) hits.push(now.uid);
       if (was && !now && !(next.fx !== prev.fx && /Thu hồi quái/.test(next.live))) {
@@ -3913,6 +3903,21 @@ function PlayPage() {
       if (shown.shake && !quiet && !rammed) fxAt({ t: "shake", act: "shake", spot: "center", power: 1 });
       const casting = shown.burst?.tone === "heal" ? "healSpell" : shown.burst ? "spell" : null;
       const grouped = look === "spell" || look === "fire" || look === "gun" || look === "bolt" || look === "spark" || look === "tide-small" || look === "tide-mid" || look === "tide-big";
+      // Một chỗ chỉ chạy một video buff trong một lần cập nhật (mends + số bay cùng chỉ một quái).
+      const buffed = new Set<string>();
+      const fxBuffOnce = (spot: "self" | "target", x: number, y: number) => {
+        const key = `${x.toFixed(1)}:${y.toFixed(1)}`;
+        if (buffed.has(key)) return;
+        buffed.add(key);
+        fxAt({ t: "buff", act: "buff", spot, x, y });
+      };
+      const mendedAt = new Set<string>();
+      const fxMendOnce = (spot: "self" | "target", x: number, y: number) => {
+        const key = `${x.toFixed(1)}:${y.toFixed(1)}`;
+        if (mendedAt.has(key)) return;
+        mendedAt.add(key);
+        fxAt({ t: "heal", act: "heal", spot, x, y });
+      };
       if (!quiet && duel.fx !== prev.fx) {
         for (const mend of duel.mends ?? []) {
           for (const side of [0, 1] as const) {
@@ -3920,7 +3925,12 @@ function PlayPage() {
             if (index < 0) continue;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
             if (!spot) continue;
-            fxAt({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
+            const where = side === viewerNow ? "self" : "target";
+            // Chủ game 26/11: buff chỉ số (kể cả máu tối đa) là video vòng cam; chỉ phần máu thật hồi lại mới là video hồi máu.
+            const was = prev.players[side].field.find((unit) => unit?.uid === mend.uid);
+            const rise = Math.max(0, (duel.players[side].field[index]?.maxHp ?? 0) - (was?.maxHp ?? 0));
+            if (mend.n - rise > 0) fxMendOnce(where, spot.x, spot.y);
+            if (mend.n === 0 || rise > 0) fxBuffOnce(where, spot.x, spot.y);
           }
         }
       }
@@ -3933,8 +3943,13 @@ function PlayPage() {
         if (item.hush) continue;
         // Đòn tông: vụ nổ ở chỗ chạm thay chớp đỏ cũ trên lá bị trúng.
         if (rammed && !item.heal && item.text !== "Hạ") continue;
-        if (item.heal && !item.grow) fxAt({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
-        else if (item.heal) fxAt({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
+        if (item.buff) fxBuffOnce(item.spot, item.x, item.y);
+        else if (item.heal && !item.grow) fxAt({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
+        else if (item.heal) {
+          // Máu tối đa tăng = buff (video cam); phần máu hồi thật (nếu có) thêm video hồi máu.
+          fxBuffOnce(item.spot, item.x, item.y);
+          if ((item.mend ?? 0) > 0) fxMendOnce(item.spot, item.x, item.y);
+        }
         else {
           fxAt({
             t: "burst",
@@ -9720,6 +9735,7 @@ function PlayPage() {
         <ArenaFx />
         <FireBurst />
         <HealBlast />
+        <BuffBlast />
         <FlareBlast />
         <BoomBlast />
         <BoltBurst />
@@ -10617,7 +10633,7 @@ function BoardSlot({
       {thrust === "rouse" || thrust === "cast" ? <i className="rouse-aura" aria-hidden="true" /> : null}
       {thrust === "ram" && ramAng !== undefined ? <i className="ram-trail" style={{ "--ang": `${ramAng}rad` } as CSSProperties} aria-hidden="true" /> : null}
       <span
-        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
+        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>

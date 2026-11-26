@@ -12,9 +12,9 @@ Mọi buff và debuff đều làm tròn. Ví dụ tăng 1/3 của 2 là 2/3, là
 
 Lão hoá của phù thuỷ: đối thủ còn 1/3 chỉ số, làm tròn. Đồng minh tăng 40% chỉ số, làm tròn.
 
-Hiệu ứng buff và tự tăng chỉ số cũng là hiệu ứng hồi máu. Số tăng bay lên và có vòng hồi máu, kể cả khi máu không đổi.
+Buff và tự tăng chỉ số (công, thủ, thủ phép, máu tối đa) KHÔNG phải hồi phục: chạy video buff vòng cam (`fx/buff-chi-so.webm`), số tăng bay lên. Chỉ phần máu hiện tại hồi lại thật mới chạy video hồi máu xanh lục. Lá vừa hồi vừa buff (Suối nguồn sinh mệnh) chạy cả hai.
 
-Buff tạm thì hiệu ứng hồi máu giữ liên tục trên đối tượng cho đến khi buff hết. Gồm giáp lá cà của kỵ sĩ bóng tối, phù hộ công của yêu tinh, và tăng chỉ số của chiến sĩ gặm nhắm.
+Buff tạm (giáp lá cà của kỵ sĩ bóng tối, phù hộ công của yêu tinh, tăng chỉ số của chiến sĩ gặm nhắm, Suối nguồn sinh mệnh) chỉ chạy video buff một lần lúc xảy ra, không còn vòng giữ liên tục đến hết buff (chủ game 26/11).
 
 Yêu tinh chớp cam khi đối thủ tấn công người chơi hoặc bất kỳ quái nào. Bấm vào lúc đang chớp thì hiện skill đỏ, không mở bảng thông tin.
 

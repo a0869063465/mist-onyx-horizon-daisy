@@ -465,6 +465,8 @@ export function Spectacle() {
     };
 
     const onFx = (event: FxEvent) => {
+      // Buff chỉ số (26/11) chỉ có video (BuffBlast), không có hiệu ứng canvas.
+      if (event.t === "buff") return;
       if (fxStyle() === "new") {
         ailmentMarks = [];
         return;
@@ -817,6 +819,45 @@ export function HealBlast() {
           key={clip.id}
           className="heal-blast"
           src={fxUrl("/fx/hoi-mau.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
+let lastBuffSound = 0;
+
+/** Chủ game 26/11: buff chỉ số (không phải hồi phục) = video vòng cam, mũi tên bay lên. Video 400×416, đáy vòng ở ~78% chiều cao. */
+export function BuffBlast() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "buff") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-4), { id, x: event.x, y: event.y }]);
+      const now = performance.now();
+      if (now - lastBuffSound > 350) {
+        lastBuffSound = now;
+        playCue("buff");
+      }
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="buff-blast"
+          src={fxUrl("/fx/buff-chi-so.webm?v=1")}
           autoPlay
           muted
           playsInline
