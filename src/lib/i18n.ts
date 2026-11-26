@@ -87,6 +87,7 @@ const PAIRS: Array<[string, string]> = [
   ["Huỷ diệt", "Annihilate"],
   ["Bẫy thú", "Beast Trap"],
   ["Quả trứng thiên sứ", "Angel Egg"],
+  ["Suối nguồn sinh mệnh", "Spring of Life"],
   ["Vòng xoáy bảo hộ", "Guard Whirl"],
   ["Ngăn chặn phòng ngự", "Defense Block"],
   ["Thanh gươm ánh sáng", "Sword of Light"],

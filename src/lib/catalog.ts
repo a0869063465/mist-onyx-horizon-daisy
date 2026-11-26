@@ -1304,7 +1304,7 @@ export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
 const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([SPRING]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));

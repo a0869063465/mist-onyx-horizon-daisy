@@ -8,7 +8,7 @@ import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
 import { BoltBurst, BoomBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
-import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
+import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
 import { blueStart, boardAspect, boardCut, boardRatio, byBoard, planCut, redEnd, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
@@ -164,6 +164,7 @@ import {
   canCastSwap,
   shelterPicks,
   boxAllies,
+  springAllies,
   eggAim,
   eggAllies,
   boxFoes,
@@ -1011,6 +1012,8 @@ const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "virus-an-mon": "ally",
   "phuc-kich": "ally",
   "qua-trung-thien-su": "ally",
+  [SPRING]: "ally",
+  [SPRING_WORN]: "ally",
   "ngan-chan-phong-ngu": "foe",
   "la-chan-phan-don": "foe",
 };
@@ -1020,7 +1023,17 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su"]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", SPRING, SPRING_WORN]);
+
+/** Suối nguồn sinh mệnh (chủ game 25/11): siêu tốc, dùng được ở lượt chính lẫn lúc đáp trong chuỗi; nhắm 1 đồng minh. */
+function isSpring(id: string) {
+  return id === SPRING || id === SPRING_WORN;
+}
+function springLive(duel: Duel, viewer: Side) {
+  if (springAllies(duel, viewer).length === 0) return false;
+  if (duel.step === "respond") return duel.hold?.priority === viewer && !duel.hold?.stage && !slowWaiting(duel) && !doomWaiting(duel);
+  return duel.step === "main" && duel.turn === viewer && !duel.upkeep && duel.gemCap !== viewer && duel.gemWarn !== viewer;
+}
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1305,6 +1318,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   const you = duel.players[viewer];
   if (you.orb < (spellCard(id)?.gems ?? 0)) return false;
   // Sừng lôi phá only in the round its side holds the sword (chủ game 29/10).
+  if (isSpring(id)) return duel.step === "main" && springLive(duel, viewer);
   if (id === "sung-loi-pha") return attackRound(duel) === viewer && you.field.some((mon) => mon && hornFit(mon.cardId));
   if (id === "ke-dao-mo") return canTargetFoe(duel) && digChoices(duel, viewer).length > 0;
   // Đòn cuối cùng (chủ game 20/11): ngay lúc quyền về sau khi quái mình bị quái địch hạ.
@@ -1333,6 +1347,7 @@ function answerPayoff(id: string, duel: Duel, viewer: Side) {
 function answerUsable(id: string, duel: Duel, viewer: Side, index: number) {
   const you = duel.players[viewer];
   const card = spellCard(id);
+  if (card && isSpring(id)) return duel.step === "respond" && springLive(duel, viewer) && tollOk(card.gems, Boolean(you.tolls?.[index]), you.orb, you.flask);
   if (!card || duel.hold?.priority !== viewer || !spellCanAnswer(id, duel)) return false;
   if (!tollOk(card.gems, Boolean(you.tolls?.[index]), you.orb, you.flask)) return false;
   if (!answerPayoff(id, duel, viewer)) return false;
@@ -1344,6 +1359,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const card = spellCard(id);
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
+  if (isSpring(id)) return springLive(duel, viewer);
   if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
@@ -1430,6 +1446,8 @@ function tired(mon: FieldMon) {
 function holdingMend(mon: FieldMon) {
   if (mon.clash && (mon.clash.atk > 0 || mon.clash.def > 0 || mon.clash.maxHp > 0)) return true;
   if ((mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0) return true;
+  // Suối nguồn sinh mệnh: máu tối đa tạm tới hết lượt chung.
+  if ((mon.spring ?? 0) > 0) return true;
   // Khiên của Hiệp sĩ của vua / hậu: buff tạm tới hết lượt.
   if ((mon.kGuard?.def ?? 0) > 0 || (mon.kGuard?.mdef ?? 0) > 0) return true;
   return Boolean(mon.buff && ((mon.buff.def ?? 0) > 0 || (mon.buff.mdef ?? 0) > 0 || (mon.buff.maxHp ?? 0) > 0));
@@ -4552,6 +4570,23 @@ function PlayPage() {
     setAim({ kind: "spell", index, spellId: "qua-trung-thien-su" });
     holdNotice("Chọn 1 quái bị nhắm đến để trả đòn.");
   }
+  /** Suối nguồn sinh mệnh: 1 đồng minh thì dùng ngay; nhiều thì icon chờ giữa sân trong lúc chọn. */
+  function startSpring(index: number) {
+    if (!duel) return;
+    const id = duel.players[viewer].hand[index] ?? SPRING;
+    const picks = springAllies(duel, viewer);
+    if (picks.length === 0) {
+      holdNotice("Chưa có quái thú đồng minh nào trên sân.");
+      return;
+    }
+    if (picks.length === 1) {
+      apply(castSpell(duel, index, picks[0]));
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: id });
+    holdNotice("Chọn 1 quái thú đồng minh để hồi máu.");
+  }
   function cancelPick() {
     setAim(null);
     setLockPick(null);
@@ -5104,6 +5139,12 @@ function PlayPage() {
       else each(viewer, (mon) => boxAllies(duel, viewer).includes(mon.uid));
       return keys;
     }
+    if (isSpring(id)) {
+      const picks = springAllies(duel, viewer);
+      each(0, (mon) => picks.includes(mon.uid));
+      each(1, (mon) => picks.includes(mon.uid));
+      return keys;
+    }
     const aims = spellAimOf(id);
     if (!aims) return keys;
     const cards = duel.players[viewer].hand.length;
@@ -5558,6 +5599,17 @@ function PlayPage() {
           return;
         }
         startBox(payload.index);
+        return;
+      }
+      // Suối nguồn sinh mệnh: dropped on an ally it is cast; elsewhere it waits as an icon.
+      if (isSpring(payload.spellId)) {
+        if (hit?.closest(".hand")) return;
+        const uid = slotEl?.dataset.uid ?? "";
+        if (uid && springAllies(duel, viewer).includes(uid)) {
+          apply(castSpell(duel, payload.index, uid));
+          return;
+        }
+        startSpring(payload.index);
         return;
       }
       // Ngăn chặn phòng ngự: dropped on a monster it can take, it is cast; elsewhere on the board it waits as an icon.
@@ -6151,6 +6203,13 @@ function PlayPage() {
     }
     if (aim?.kind === "spell" && aim.spellId === "ngan-chan-phong-ngu") {
       if (side !== viewer && shelterPicks(duel).includes(mon.uid)) {
+        apply(castSpell(duel, aim.index, mon.uid));
+        setAim(null);
+      }
+      return;
+    }
+    if (aim?.kind === "spell" && isSpring(aim.spellId)) {
+      if (springAllies(duel, viewer).includes(mon.uid)) {
         apply(castSpell(duel, aim.index, mon.uid));
         setAim(null);
       }
@@ -8856,6 +8915,10 @@ function PlayPage() {
                               apply(castSpell(duel, index, aimedUid(duel)));
                               return;
                             }
+                            if (isSpring(id)) {
+                              startSpring(index);
+                              return;
+                            }
                             if (slowUse && id === "sung-loi-pha") {
                               setAim({ kind: "spell", index, spellId: id });
                               holdNotice("Chọn quái để gắn sừng.");
@@ -9369,7 +9432,7 @@ function PlayPage() {
               id={shownSpell.id}
               gems={spellToll ? `${shownSpell.gems}+1` : undefined}
               actions={
-                mine && inspect.pile === "spell" && !(queue && (queue.kind === "act" || duel.step !== "respond")) && (duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
+                mine && inspect.pile === "spell" && !(queue && (queue.kind === "act" || duel.step !== "respond")) && (isSpring(shownSpell.id) ? springLive(duel, viewer) : duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
                   ? [
                       {
                         key: "cast",
@@ -9386,6 +9449,11 @@ function PlayPage() {
                           if (shownSpell.id === "hop-ma-thuat") {
                             setInspect(null);
                             startBox(index);
+                            return;
+                          }
+                          if (isSpring(shownSpell.id)) {
+                            setInspect(null);
+                            startSpring(index);
                             return;
                           }
                           if (shownSpell.id === "qua-trung-thien-su") {
