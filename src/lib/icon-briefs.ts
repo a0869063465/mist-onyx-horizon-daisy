@@ -274,7 +274,7 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "harpie-thoi-bay":
         return ["Chọn 1 Harpie Lady", "Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ"];
       case "harpie-me-hoac":
-        return ["Chọn 1 Harpie Lady phát động", "1 quái địch đánh thường vào 1 quái đồng minh", "Được chọn chính cô"];
+        return ["Chọn 1 Harpie Lady phát động", "Quái địch đánh thường vào 1 đồng minh", "Được chọn chính cô"];
       case "hoi-sinh-quai-thu":
         return ["Hồi sinh quái thú đã chết của cả 2 phe", "Lao ra chặn đòn đánh, ở lại 2 lượt (phép chậm: 3 lượt)"];
       case "bay-thu":
