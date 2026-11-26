@@ -1316,13 +1316,12 @@ export const SPRING = "suoi-nguon-sinh-menh";
 export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
 
 /** Bản khác của một lá phép, chỉ sinh ra trong trận (không bỏ vào bộ). */
-/** Lá phép Harpie Lady tạo trên tay bằng Giảo hoạt (chủ game 26/11): không vào kho, gói, album, bộ bài. Tranh tạm là
- *  tranh Harpie Lady (phần lá làm sau). */
+/** Lá phép Harpie Lady tạo trên tay bằng Giảo hoạt (chủ game 26/11): không vào kho, gói, album, bộ bài. Tranh do chủ game gửi 26/11. */
 const WILE_SPELLS: SpellCard[] = [
-  { id: "harpie-giap-va-vuot", name: "Giáp và Vuốt", gems: 1, effect: "Phép phản ứng 1 mana\nKhi bị đòn đánh thường nhắm vào, Chọn 1 harpie lady để phát động. Huỷ đòn nhắm đến harpie đó. Đồng thời tăng vĩnh viễn 1 thủ và ban cho cô ấy đòn đánh phép tạm thời, và trả đòn ngay lập tức (nếu có đòn trả đòn nữa ở phía sau thì sẽ huỷ đòn đó)", picture: "monster:my-dieu-nhan" },
-  { id: "harpie-thoi-bay", name: "Thổi bay", gems: 1, effect: "Phép chậm 1 mana\nChọn 1 lá harpie lady. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.", picture: "monster:my-dieu-nhan" },
-  { id: "harpie-me-hoac", name: "Mê hoặc", gems: 0, effect: "Phép chậm 0 mana\nChọn 1 harpie lady phát động phép, tiêu hao 0 mana, kích động 1 quái địch tấn công vào 1 đồng minh phe ta. (Được dùng lên chính cô ấy)", picture: "monster:my-dieu-nhan" },
-  { id: "harpie-roi-dien", name: "Roi điện", gems: 1, effect: "Phép phản ứng 1 mana\nKhi harpie lady bị skill của 1 quái thú nhắm tới, chọn harpie đó để dùng phép này, huỷ đòn đó. tăng cho cô ấy vĩnh viễn 1 công và trả đòn ngay trực tiếp lên kẻ ra đòn (huỷ đòn trả đòn của cô ấy sau đó nữa, nếu có)", picture: "monster:my-dieu-nhan" },
+  { id: "harpie-giap-va-vuot", name: "Giáp và Vuốt", gems: 1, effect: "Phép phản ứng 1 mana\nKhi bị đòn đánh thường nhắm vào, Chọn 1 harpie lady để phát động. Huỷ đòn nhắm đến harpie đó. Đồng thời tăng vĩnh viễn 1 thủ và ban cho cô ấy đòn đánh phép tạm thời, và trả đòn ngay lập tức (nếu có đòn trả đòn nữa ở phía sau thì sẽ huỷ đòn đó)", picture: "spell:harpie-giap-va-vuot" },
+  { id: "harpie-thoi-bay", name: "Thổi bay", gems: 1, effect: "Phép chậm 1 mana\nChọn 1 lá harpie lady. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.", picture: "spell:harpie-thoi-bay" },
+  { id: "harpie-me-hoac", name: "Mê hoặc", gems: 0, effect: "Phép chậm 0 mana\nChọn 1 harpie lady phát động phép, tiêu hao 0 mana, kích động 1 quái địch tấn công vào 1 đồng minh phe ta. (Được dùng lên chính cô ấy)", picture: "spell:harpie-me-hoac" },
+  { id: "harpie-roi-dien", name: "Roi điện", gems: 1, effect: "Phép phản ứng 1 mana\nKhi harpie lady bị skill của 1 quái thú nhắm tới, chọn harpie đó để dùng phép này, huỷ đòn đó. tăng cho cô ấy vĩnh viễn 1 công và trả đòn ngay trực tiếp lên kẻ ra đòn (huỷ đòn trả đòn của cô ấy sau đó nữa, nếu có)", picture: "spell:harpie-roi-dien" },
 ];
 
 const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }, ...WILE_SPELLS];
@@ -1351,7 +1350,7 @@ export function isWarrior(name: string): boolean {
   return /kiếm sĩ|chiến binh|chiến sĩ/i.test(name);
 }
 
-const ART_REV = "50";
+const ART_REV = "51";
 
 export function librarySrc(picture: string): string {
   if (picture.startsWith("spell:")) return `/art/spells/${picture.slice(6)}.jpg?v=${ART_REV}`;

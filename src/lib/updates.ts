@@ -1125,6 +1125,7 @@ export const PENDING_NOTES: string[] = [
   "Harpie Lady đổi kỹ năng: Giảo hoạt tạo lá phép của cô lên tay, mời 2 lá chọn 1 (bảng chọn 20 giây). Giáp và Vuốt và Roi điện là phép phản ứng 1 mana, Thổi bay là phép chậm 1 mana, Mê hoặc là phép chậm 0 mana. Hết Harpie Lady trên sân thì các lá này trên tay biến mất.",
   "Harpie Lady: Càng xinh đẹp. Mỗi lần bạn chọn cô làm mục tiêu, cô +1 công, +1 máu tối đa trong 3 lượt và hồi 1 máu, cộng dồn. Cô bị chọn không hành động được trong lượt đó. Tiến hoá sau 4 hành động.",
   "Thêm lá phép Hồi sinh quái thú: 1 mana, phản ứng khi quái địch đánh thường, hồi sinh 1 quái trong mộ của cả 2 phe lao ra chặn đòn, ở lại 2 lượt. Dùng như phép chậm thì ở lại 3 lượt.",
+  "Harpie Lady có tranh mới. Các lá phép Giáp và Vuốt, Roi điện, Mê hoặc, Thổi bay của cô cũng có tranh riêng.",
 ];
 
 function remarkOf(notes: string[]) {
