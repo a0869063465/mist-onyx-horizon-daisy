@@ -12304,6 +12304,24 @@ button.watch-back {
 }
 /* Xấp của mình to hơn một chút cho dễ nhìn (xấp địch giữ 12,calc(6 * var(--cqw))). */
 .face-pile .deck-pile img { width: calc(14.1 * var(--cqw)); }
+/* Xáo bài (chủ game 26/11): video xấp bài trong suốt phủ đúng lá trên cùng (mặt lá trong video rộng 0,636 khung, mặt lá
+   trong game 0,92 lá), xấp tĩnh mờ đi rồi hiện lại. Tâm mặt lá trong video: bài xanh (53,8%; 60,5%), bài đỏ (54,5%; 62,2%). */
+.deck-pile { --pile-card: calc(12.6 * var(--cqw)); }
+.face-pile .deck-pile { --pile-card: calc(14.1 * var(--cqw)); }
+.deck-pile img { transition: opacity 0.15s linear; }
+.deck-pile.is-shuffling > img { opacity: 0; transition-duration: 0.08s; }
+.deck-pile .shuffle-fx {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--pile-card) * 1.447);
+  height: auto;
+  pointer-events: none;
+  animation: shuffle-fx 1.9s linear both;
+}
+.deck-pile .shuffle-fx.is-you { transform: translate(-53.8%, -60.5%); }
+.deck-pile .shuffle-fx.is-foe { transform: translate(-54.5%, -62.2%); }
+@keyframes shuffle-fx { 0% { opacity: 0; } 5% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
 /* Chưa rút bài: viền và glow sáng quanh lá trên cùng, thở nhẹ. */
 .deck-pile.is-ready img:last-of-type {
   filter: drop-shadow(0 0 0.1em #fff) drop-shadow(0 0 0.15em #fff) drop-shadow(0 0 0.5em #b4ecff) drop-shadow(0 0 1.1em #4fb4ff);

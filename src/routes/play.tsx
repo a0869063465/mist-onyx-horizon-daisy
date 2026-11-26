@@ -56,7 +56,7 @@ import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
 import { AttackEmblem } from "@/components/game/attack-emblem";
 import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
-import { DeckPile } from "@/components/game/deck-pile";
+import { DeckPile, SHUFFLE_MS } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
 import { CardBurn, type BurnRect } from "@/components/game/card-burn";
 import { CardShow } from "@/components/game/card-show";
@@ -484,6 +484,15 @@ const DOUBLE_TAP = 350;
 const TURN_ONE_HINTS_OFF = true;
 /** Lá tự rút của lượt đầu bay sau 3 lá đầu (3 lá cách 0,15 giây + 0,62 giây bay) cộng một nhịp nghỉ (chủ game 13/11). */
 const AUTO_DRAW_AT = 1.5;
+
+/** Bên nào vừa xáo bộ bài giữa `prev` và `next` (chủ game 26/11). Trận mới mở chỉ tính khi đang đổi bài đầu trận. */
+function shuffledSides(prev: Duel | null, next: Duel): Side[] {
+  const now = next.shuffles ?? [0, 0];
+  const fresh = !prev || prev.mid !== next.mid;
+  if (fresh && !next.opener) return [];
+  const was = fresh ? [0, 0] : prev?.shuffles ?? [0, 0];
+  return ([0, 1] as const).filter((side) => now[side] > was[side]);
+}
 
 let floaterSeq = 1;
 
@@ -2227,6 +2236,9 @@ function PlayPage() {
   const starTimer = useRef(0);
   // Lá bốc bay từ xấp lên tay (chủ game 30/10).
   const [flights, setFlights] = useState<DrawFlight[]>([]);
+  // Hiệu ứng xáo bài: số lần xấp mình / xấp địch vừa bị xáo; đổi bài đầu trận thì chờ bảng đóng mới xáo (chủ game 26/11).
+  const [shuf, setShuf] = useState({ you: 0, foe: 0 });
+  const shufflePending = useRef<Side[]>([]);
   // Chủ game 22/11: lá bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới) nhấc lên, bay cung về 2 giờ rồi cháy tan (card-burn.tsx).
   const [burns, setBurns] = useState<Array<{ id: number; rect: BurnRect; face: ReactNode }>>([]);
   const burnSeen = useRef<{ mid: string | null; id: number }>({ mid: null, id: 0 });
@@ -3001,15 +3013,26 @@ function PlayPage() {
     drawPrev.current = duel;
     if (!duel) return;
     const me = viewer;
+    const shufSides = tutorial || replay ? [] : shuffledSides(prev, duel);
+    const startShuffle = (sides: Side[]) => {
+      if (sides.length === 0 || document.hidden) return;
+      setShuf((was) => ({ you: was.you + (sides.includes(me) ? 1 : 0), foe: was.foe + (sides.includes((1 - me) as Side) ? 1 : 0) }));
+      for (const side of sides) playCue(side === me ? "shuffleYou" : "shuffleFoe");
+    };
     if (openerWas.current && !openerOpen && !duel.opener) {
       openerWas.current = false;
+      // Xáo bài xong mới chia 3 lá đầu (chủ game 26/11).
+      const swept = [...new Set([...shufflePending.current, ...shufSides])];
+      shufflePending.current = [];
+      startShuffle(swept);
+      const lag = swept.length ? SHUFFLE_MS / 1000 : 0;
       // Lá tự rút của lượt đầu (chủ game 13/11): 3 lá đầu bay lên tay hết, chậm 1 nhịp rồi lá rút mới bay riêng.
       const you = duel.players[me];
       const drawn = you.draws >= 1 ? (you.reserve.length > 2 ? `r:${you.reserve.length - 1}` : you.hand.length > 1 ? `s:${you.hand.length - 1}` : null) : null;
       const mine = [...you.reserve.map((_, i) => `r:${i}`), ...you.hand.map((_, i) => `s:${i}`)].filter((target) => target !== drawn).slice(0, OPENING_CARDS);
-      const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
-      for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
-      for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: lag + i * 0.15, deal: true }));
+      for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: lag + i * 0.15, deal: true });
+      for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", lag + i * 0.15);
       if (drawn) {
         // Lá tự rút của lượt đầu cũng như lần rút thường (chủ game 15/11): hiện giữa màn rồi mới về tay, sau 3 lá đầu.
         const key = (flightId.current += 1);
@@ -3018,16 +3041,21 @@ function PlayPage() {
           setDrawShows((list) => list.map((show) => (show.key === key ? { ...show, wait: false } : show)));
           playPack("flip", 0.26);
           playPack("flash", 0.3);
-        }, AUTO_DRAW_AT * 1000);
+        }, (AUTO_DRAW_AT + lag) * 1000);
       }
-      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
+      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT + lag });
       setFlights((list) => [...list, ...born]);
       return;
     }
     if (openerOpen) openerWas.current = true;
     // Bảng đổi bài còn đóng dần: lá tự rút của lượt đầu chưa bay ở đây, nó bay sau 3 lá đầu (nhánh trên).
+    // Đổi bài đầu trận: nhớ ai đã xáo, chờ bảng đóng mới chạy hiệu ứng.
+    if ((openerWas.current || duel.opener) && !watch) {
+      if (shufSides.length) shufflePending.current = [...new Set([...shufflePending.current, ...shufSides])];
+    }
     if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
+    startShuffle(shufSides);
     const born: DrawFlight[] = [];
     // Chủ game 16/11: lá đối thủ đánh ra rời khay bài thấy rõ: quái bay úp xuống ô rồi lật, phép loé sáng rồi tan.
     {
@@ -7543,7 +7571,7 @@ function PlayPage() {
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
           <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `calc(${board.stack.size} * var(--cqmin))` }}>
-            <DeckPile count={pileLeft(foe)} side="foe" />
+            <DeckPile count={pileLeft(foe)} side="foe" shuffle={shuf.foe} />
           </div>
         )}
         {/* Nút ba gạch (chủ game 14/11): mở bảng Lịch sử + Cài đặt; đứng ngay dưới bộ bài địch, về phía giữa sân. Thay nút
@@ -8683,7 +8711,7 @@ function PlayPage() {
             }, DOUBLE_TAP);
           }}
         >
-          <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} />
+          <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} shuffle={shuf.you} />
           {tutorial ? null : <DrawHint on={canDrawNow} />}
         </button>
         )}
