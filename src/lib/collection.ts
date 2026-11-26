@@ -30,7 +30,7 @@ const ALBUM_ENVS: Array<{ env: string; parts?: Part[] }> = [
     env: "nui",
     parts: [
       { label: "Rồng", offset: 0, ids: ["mat-xanh-huy-diet", "loi-nguyen-cua-rong", "rong-boc-trung", "rong-phun-hoa-cau", "rong-con"], rest: true },
-      { label: "Chim", offset: 30, ids: ["my-dieu-nhan"] },
+      { label: "Chim", offset: 30, ids: ["my-dieu-nhan", "chi-em-harpie"] },
     ],
   },
   { env: "bong-toi" },

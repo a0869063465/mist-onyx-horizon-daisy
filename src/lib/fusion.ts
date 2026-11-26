@@ -47,6 +47,8 @@ export const SET_FUSIONS: Array<{ result: string; materials: string[] }> = [
   { result: "phu-thuy-tap-su", materials: ["phu-thuy-ti-hon", "phu-thuy-ti-hon"] },
   { result: "phu-thuy-bac-thay", materials: ["phu-thuy-tap-su", "phu-thuy-ti-hon"] },
   { result: "phu-thuy-bac-thay", materials: ["phu-thuy-ti-hon", "phu-thuy-ti-hon", "phu-thuy-ti-hon"] },
+  // Chị em Harpie = 2 Harpie Lady (chủ game 26/11), nguyên liệu trên tay hoặc trên sân; ra sân tự tách 3 lá (duel.ts `settleKin`).
+  { result: "chi-em-harpie", materials: ["my-dieu-nhan", "my-dieu-nhan"] },
 ];
 
 /** One material of a set fusion: a card in the hand (by index) or a monster on the field (by uid). */

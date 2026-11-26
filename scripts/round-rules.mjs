@@ -1997,6 +1997,11 @@ test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến ho�
   s = { ...gust, turn: 0, players: gust.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
   let charm = D.useSkill(s, uid(s, 0, 0), uid(s, 0, 1), 1, true, uid(s, 1, 3));
   if (charm.step === "respond") charm = D.passResponse(charm);
+  // Chủ game 26/11: Tiến hoá tạm ẩn (BIRD_HIDDEN), đủ 3 hành động cũng không mời tiến hoá.
+  if (D.BIRD_HIDDEN) {
+    assert.equal(charm.birdAsk ?? null, null, "Tiến hoá đang ẩn");
+    return;
+  }
   assert.ok(charm.birdAsk, charm.live);
   const evolved = D.evolveBird(charm, "nu-chua-dieu-nhan");
   assert.equal(at(evolved, 0, 0).cardId, "nu-chua-dieu-nhan");
@@ -2213,6 +2218,89 @@ test("Suối nguồn sinh mệnh siêu tốc trong chuỗi: nổ ngay, quyền �
   assert.equal(done.step, "respond", "đòn vẫn chờ");
   assert.equal(done.hold.priority, 1, "quyền đáp vẫn ở người dùng");
   assert.deepEqual(D.springAllies(hit, 1), [uid(s, 1, 0)]);
+});
+
+/** Chị em Harpie (chủ game 26/11): dung hợp 2 Harpie Lady (1 trên sân nếu `onField`) ra 3 lá chung chỉ số. */
+function sisters(onField = true) {
+  let s = D.createDuel(DECK, "test");
+  s = { ...s, players: s.players.map((p) => ({ ...p, field: Array(6).fill(null), hand: [] })) };
+  s = D.testGrant(s, 0, "my-dieu-nhan", onField);
+  s = D.testGrant(s, 0, "my-dieu-nhan", false);
+  s = D.testGrant(s, 1, "khong-lo-mot-mat", true);
+  const wit = { wit: { born: 1, last: 1, picked: ["charm"], deeds: [] }, shed: ["armor", "gust", "lash"] };
+  s = { ...s, turn: 0, round: 0, step: "main", pending: null, hold: null, wileAsk: null, opening: false };
+  s = { ...s, players: s.players.map((p) => ({ ...p, stars: 3, orb: 3, summons: 0, field: p.field.map((m) => m && { ...m, dim: false, ...(m.cardId === "my-dieu-nhan" ? wit : {}) }) })) };
+  return D.fuseSet(s, s.players[0].reserve.findIndex((r) => r.id === "my-dieu-nhan"), "chi-em-harpie", 0);
+}
+const sis = (s, id) => s.players[0].field.find((m) => m?.cardId === id);
+const settle = (s) => {
+  let g = 0;
+  while (s.step === "respond" && g++ < 30) s = D.passResponse(s);
+  return s;
+};
+
+test("Chị em Harpie: 2 Harpie Lady dung hợp, giữ chỉ số Harpie trên sân +1/1/1/3, tự vào 1 ô trước + 2 ô sau, giữ Giảo hoạt", () => {
+  const s = sisters();
+  assert.equal(at(s, 0, 0)?.cardId, "harpie-chi-thu", s.live);
+  assert.deepEqual([at(s, 0, 3)?.cardId, at(s, 0, 4)?.cardId], ["harpie-chi-ca", "harpie-em-ut"]);
+  for (const slot of [0, 3, 4]) assert.deepEqual([at(s, 0, slot).atk, at(s, 0, slot).def, at(s, 0, slot).mdef, at(s, 0, slot).hp, at(s, 0, slot).maxHp], [4, 1, 1, 6, 6]);
+  assert.deepEqual(at(s, 0, 3).wit.picked, ["charm"], "Giảo hoạt giữ lại sau dung hợp");
+  assert.equal(s.wileAsk ?? null, null);
+  const both = sisters(false);
+  assert.equal(both.wileAsk?.length, 1, "2 lá trên tay: mời Giảo hoạt 1 lần cho cả nhóm");
+});
+
+test("Chị em Harpie: thiếu ô (1 trước + 2 sau) thì không dung hợp được", () => {
+  let s = D.createDuel(DECK, "test");
+  s = { ...s, players: s.players.map((p) => ({ ...p, field: Array(6).fill(null) })) };
+  for (let i = 0; i < 3; i += 1) s = D.testGrant(s, 0, "khong-lo-mot-mat", true);
+  s = D.testGrant(D.testGrant(s, 0, "my-dieu-nhan", false), 0, "my-dieu-nhan", false);
+  s = { ...s, turn: 0, step: "main", players: s.players.map((p) => ({ ...p, stars: 3, summons: 0 })) };
+  const out = D.fuseSet(s, s.players[0].reserve.findIndex((r) => r.id === "my-dieu-nhan"), "chi-em-harpie", 0);
+  assert.equal(out.players, s.players, out.live);
+});
+
+test("Chị em Harpie: chung bể máu; đòn vào 1 lá trừ 1 lần, đòn lan vào cả 3 cộng dồn (5×3 hạ cả nhóm)", () => {
+  let s = sisters();
+  const foe = s.players[1].field.find(Boolean).uid;
+  s = { ...s, turn: 1, round: 1, players: s.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m) => m && { ...m, dim: false, used: false }) } : p)) };
+  s = settle(D.attackMonster(s, foe, sis(s, "harpie-chi-thu").uid));
+  const hp = [0, 3, 4].map((slot) => at(s, 0, slot).hp);
+  assert.ok(hp[0] < 6 && hp.every((n) => n === hp[0]), `cả 3 cùng máu: ${hp}`);
+  let aoe = sisters();
+  aoe = { ...aoe, turn: 1, round: 1, players: aoe.players.map((p, i) => (i === 1 ? { ...p, orb: 5, stars: 3, hand: ["sam-set-tan-the"], tolls: [false] } : p)) };
+  aoe = settle(D.castSpell(aoe, 0, null));
+  assert.ok(aoe.players[0].field.every((m) => !m), aoe.live);
+});
+
+test("Chị em Harpie: 1 lá tấn công thì cả 3 mất lượt tấn công vòng này; skill vẫn riêng", () => {
+  let s = sisters();
+  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => m && { ...m, dim: false }) })) };
+  const foe = s.players[1].field.find(Boolean).uid;
+  let a = settle(D.attackMonster(s, sis(s, "harpie-chi-ca").uid, foe));
+  a = { ...a, turn: 0 };
+  const again = D.attackMonster(a, sis(a, "harpie-em-ut").uid, foe);
+  assert.match(again.live, /đã tấn công/);
+  const skill = D.useSkill(a, sis(a, "harpie-chi-thu").uid, sis(a, "harpie-chi-thu").uid, D.SISTER_SKILL);
+  assert.ok(sis(skill, "harpie-chi-thu").fury, skill.live);
+});
+
+test("Chị em Harpie: Động viên hồi 2 + 1 công, Máu chiến ban Đâm xuyên, Hoá đá khoá và bỏ thủ; hết lượt thì mất", () => {
+  let s = sisters();
+  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => m && { ...m, dim: false, ...(m.kin ? { hp: 3, kin: { ...m.kin, base: { ...m.kin.base, hp: 3 } } } : {}) }) })) };
+  const foe = s.players[1].field.find(Boolean).uid;
+  let k = D.useSkill(s, sis(s, "harpie-chi-ca").uid, sis(s, "harpie-chi-thu").uid, D.SISTER_SKILL);
+  assert.deepEqual([0, 3, 4].map((slot) => at(k, 0, slot).hp), [5, 5, 5], k.live);
+  assert.equal(D.liveAtk(at(k, 0, 4)), 5);
+  k = D.useSkill({ ...k, turn: 0 }, sis(k, "harpie-chi-thu").uid, sis(k, "harpie-em-ut").uid, D.SISTER_SKILL);
+  assert.ok(at(k, 0, 4).fury);
+  k = D.useSkill({ ...k, turn: 0 }, sis(k, "harpie-em-ut").uid, foe, D.SISTER_SKILL);
+  const stoned = k.players[1].field.find(Boolean);
+  assert.deepEqual([stoned.def, stoned.mdef, D.cannotAct(stoned)], [0, 0, true], k.live);
+  k = { ...k, turn: 0, players: k.players.map((p) => ({ ...p, orb: 1, flask: 0 })) };
+  k = D.endTurn(D.endTurn(k));
+  const back = k.players[1].field.find(Boolean);
+  assert.deepEqual([back.def, Boolean(back.stone), D.liveAtk(at(k, 0, 4)), Boolean(at(k, 0, 4).fury)], [1, false, 4, false]);
 });
 
 for (const [name, fn] of tests) {

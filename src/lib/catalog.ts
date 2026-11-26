@@ -786,6 +786,54 @@ export const MONSTERS: MonsterCard[] = [
 
 export const FORMS: MonsterCard[] = [
   {
+    "id": "chi-em-harpie",
+    "name": "Chị em Harpie",
+    "stars": 3,
+    "gems": 0,
+    "skill": "__**Chị em**__\nKhi lá bài này ra sân tách làm 3 lá chị em Harpie khác nhau. Dùng chung các chỉ số/khi các hiệu ứng bất lợi, có lợi cũng gánh chung, coi như tuy 3 lá bài mà 1/ và chung 1 lần tấn công.\n\nNếu có harpie trên sân, giữ hoàn toàn các chỉ số và keyword của cô, sau đó + với các chỉ số này, nếu không có lấy chỉ số gốc trên lá bài.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "art": "chi-em-harpie"
+  },
+  {
+    "id": "harpie-chi-ca",
+    "name": "Harpie chị cả",
+    "stars": 3,
+    "gems": 0,
+    "skill": "__**Động viên**__\nSkill ngoài giao tranh, 0 mana, Hồi 2 máu và +1 công cho 1 đồng minh trong vòng này.\n\n__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Chị em**__\nKhi lá bài này ra sân tách làm 3 lá chị em Harpie khác nhau. Dùng chung các chỉ số/khi các hiệu ứng bất lợi, có lợi cũng gánh chung, coi như tuy 3 lá bài mà 1/ và chung 1 lần tấn công.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "art": "harpie-chi-ca"
+  },
+  {
+    "id": "harpie-chi-thu",
+    "name": "Harpie chị thứ",
+    "stars": 3,
+    "gems": 0,
+    "skill": "__**Máu chiến**__\nSkill ngoài giao tranh, 0 mana, ban keyword xuyên thủng, và khả năng vô hiệu hoá skill bị động của mục tiêu khi phát động đánh thường, cho 1 đồng minh.\n\n__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Chị em**__\nKhi lá bài này ra sân tách làm 3 lá chị em Harpie khác nhau. Dùng chung các chỉ số/khi các hiệu ứng bất lợi, có lợi cũng gánh chung, coi như tuy 3 lá bài mà 1/ và chung 1 lần tấn công.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "art": "harpie-chi-thu"
+  },
+  {
+    "id": "harpie-em-ut",
+    "name": "Harpie em út",
+    "stars": 3,
+    "gems": 0,
+    "skill": "__**Hoá đá**__\nHoá đá 1 quái địch, nó sẽ không thể hành động, mất hoàn toàn phòng ngự trong lượt này.\n\n__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Chị em**__\nKhi lá bài này ra sân tách làm 3 lá chị em Harpie khác nhau. Dùng chung các chỉ số/khi các hiệu ứng bất lợi, có lợi cũng gánh chung, coi như tuy 3 lá bài mà 1/ và chung 1 lần tấn công.",
+    "atk": 4,
+    "def": 1,
+    "mdef": 1,
+    "hp": 6,
+    "art": "harpie-em-ut"
+  },
+  {
     "id": "hiep-si-huyen-bi",
     "name": "Hiệp sĩ huyền bí",
     "stars": 5,

@@ -13,7 +13,7 @@ import { chooseSwing, readLean, tilt, type Lean } from "./adapt.ts";
 import { readStyle } from "./habits.ts";
 import { chipLabel } from "./card-edits.ts";
 import { skillVisual } from "./card-fx.ts";
-import { findFusion, findKnightFusion, hexBonus, isHexer, setFusions } from "./fusion.ts";
+import { findFusion, findKnightFusion, hexBonus, isHexer, setFusions, type FuseMat } from "./fusion.ts";
 import { envFavors, SANCTUARY_GUARDED, SEA_KINDS } from "./env-kinds.ts";
 import { plainCopy } from "./copy-mark.ts";
 import { keywordsOf } from "./keywords.ts";
@@ -164,7 +164,19 @@ export type FieldMon = {
   /** Khoá 1 (chủ game 22/11): bị quái có keyword Khoá 1 khoá hành động trong hàng chờ đòn của nó (uid kẻ khoá). Là
    *  khống chế: không chặn, không Trả đòn, không làm gì; hết khi đòn đó xong hẳn. */
   seal?: string;
+  /** Chị em Harpie (chủ game 26/11): 3 lá chung một bể máu, chỉ số, trạng thái và 1 lần tấn công mỗi vòng. `id` của
+   *  nhóm, `n` số lá, `swung` = nhóm đã tấn công vòng này, `base`/`snap` = chỉ số và trạng thái chung lần đồng bộ trước
+   *  (`settleKin`). */
+  kin?: { id: string; n: number; swung?: boolean; base: KinStats; snap: string };
+  /** Động viên (Harpie chị cả): công tạm cộng thêm tới hết lượt. */
+  cheer?: number;
+  /** Máu chiến (Harpie chị thứ): mang Đâm xuyên tới hết lượt. */
+  fury?: boolean;
+  /** Hoá đá (Harpie em út): không hành động, thủ và thủ phép về 0 tới hết lượt; giữ phần thủ đã trừ để trả lại. */
+  stone?: { def: number; mdef: number };
 };
+
+export type KinStats = { hp: number; maxHp: number; atk: number; def: number; mdef: number };
 
 export type PileKind = "monster" | "spell";
 
@@ -1093,7 +1105,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))));
+  const after = settleKin(settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event)))))), event.kind === "end-turn");
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -2124,6 +2136,18 @@ function dropSprings(state: Duel): Duel {
   return next;
 }
 
+/** Hết lượt chung: Động viên, Máu chiến và Hoá đá của Chị em Harpie mất (chủ game 26/11). */
+function dropSisterTemps(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon && (mon.cheer || mon.fury || mon.stone))) continue;
+    const field = player.field.map((mon) => (mon && (mon.cheer || mon.fury || mon.stone) ? unstone({ ...mon, cheer: undefined, fury: undefined }) : mon)) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return next;
+}
+
 function dropShields(state: Duel): Duel {
   if (!state.players.some((player) => player.field.some((mon) => mon?.kGuard))) return state;
   let next = state;
@@ -2307,7 +2331,7 @@ function isSea(id: string) {
 }
 
 function stuck(mon: FieldMon) {
-  return mon.stun > 0 || (mon.chain ?? 0) > 0 || Boolean(mon.seal);
+  return mon.stun > 0 || (mon.chain ?? 0) > 0 || Boolean(mon.seal) || Boolean(mon.stone);
 }
 
 /** Không hành động được: khống chế, hoặc đang đứng ở sân bên kia vì Hộp ma thuật (không ai điều khiển). */
@@ -2373,6 +2397,7 @@ export function harmShift(mon: FieldMon) {
   if ((mon.chain ?? 0) > 0 || (mon.gag ?? 0) > 0 || mon.poison || mon.erode) return true;
   if (mon.wet && mon.wet < 90) return true;
   if (mon.hex && mon.hex.left > 0) return true;
+  if (mon.stone) return true;
   return mon.noBlock && !isStill(mon.cardId);
 }
 
@@ -2395,9 +2420,15 @@ function freshHarm(mon: FieldMon): Partial<FieldMon> {
   return part;
 }
 
+/** Hết Hoá đá: trả lại phần thủ và thủ phép đã mất. */
+function unstone<T extends { def: number; mdef: number; stone?: { def: number; mdef: number } }>(mon: T): T {
+  if (!mon.stone) return mon;
+  return { ...mon, def: mon.def + mon.stone.def, mdef: mon.mdef + mon.stone.mdef, stone: undefined };
+}
+
 function clearHarm(mon: FieldMon): FieldMon {
   return {
-    ...mon,
+    ...unstone(mon),
     stun: 0,
     bleed: 0,
     curse: false,
@@ -2429,7 +2460,7 @@ function liveMdef(mon: FieldMon, allies?: Array<FieldMon | null>) {
 }
 
 function rawAtk(mon: FieldMon) {
-  let atk = mon.atk + (mon.blessAtk ?? 0) + (mon.clash?.atk ?? 0);
+  let atk = mon.atk + (mon.blessAtk ?? 0) + (mon.clash?.atk ?? 0) + (mon.cheer ?? 0);
   if (mon.cardId === "rong-boc-trung" && mon.stance === "attack") atk += skillFigure(mon.cardId, "atk", 4);
   if (mon.cardId === "con-thinh-no-cua-hai-vuong") atk += 3 * (mon.stored ?? 0);
   return atk;
@@ -3656,6 +3687,8 @@ function fuseSetCore(state: Duel, reserveIndex: number, resultId: string, slot: 
   const handIdx = new Set(way.mats.flatMap((mat) => (mat.from === "hand" ? [mat.index] : [])));
   const bar = fuseSummonBar(player, fieldUids);
   if (bar) return note(state, bar);
+  // Chị em Harpie tự phân bố 3 lá (chủ game 26/11): không chọn ô, chỉ có nút Triệu hồi.
+  if (result.id === SISTERS_CARD) return fuseSisters(state, side, way.mats);
   const there = player.field[slot];
   if (there && !fieldUids.includes(there.uid)) return note(state, "Ô này đã có quái.");
   const guardRow = guardBarred(result.id, slot);
@@ -3670,6 +3703,57 @@ function fuseSetCore(state: Duel, reserveIndex: number, resultId: string, slot: 
   const placed = { ...player, field, reserve, summons: player.summons + 1, spent: [...(player.spent ?? []), ...[...handIdx].map((i) => player.reserve[i].id)] };
   const names = usedIds.map((id) => monsterCard(id)?.name ?? id);
   return note(patch({ ...state, seq: state.seq + 2 }, side, placed), `Hợp nhất ${names.join(", ")} trở thành ${result.name}.`);
+}
+
+/**
+ * Ô hệ thống chọn cho Chị em Harpie (chủ game 26/11): 1 ô hàng trước cho chị thứ, 2 ô hàng sau cho chị cả và em út.
+ * Ô của nguyên liệu trên sân tính là trống. Thiếu ô thì null (không dung hợp được).
+ */
+export function sisterSlots(state: Duel, side: Side, fieldUids: string[]): { front: Slot; back: [Slot, Slot] } | null {
+  const player = state.players[side];
+  const open = (slot: Slot) => {
+    const mon = player.field[slot];
+    if (mon && !fieldUids.includes(mon.uid)) return false;
+    if ((player.locked?.[slot] ?? 0) > 0 || boxShut(state, side, slot)) return false;
+    return true;
+  };
+  const freed = (slot: Slot) => Boolean(player.field[slot] && fieldUids.includes(player.field[slot]!.uid));
+  const fronts = ([0, 1, 2] as Slot[]).filter(open).sort((a, b) => Number(freed(b)) - Number(freed(a)));
+  const backs = ([3, 4, 5] as Slot[]).filter(open).sort((a, b) => Number(freed(b)) - Number(freed(a)));
+  if (fronts.length < 1 || backs.length < 2) return null;
+  return { front: fronts[0], back: [backs[0], backs[1]] };
+}
+
+/** Dung hợp 2 Harpie Lady ra Chị em Harpie: 3 lá chung chỉ số. Có Harpie Lady trên sân thì giữ hết chỉ số và trạng thái
+ *  của cô rồi cộng thêm (công +1, thủ +1, thủ phép +1, máu +3); không có thì lấy chỉ số trên lá. */
+function fuseSisters(state: Duel, side: Side, mats: FuseMat[]): Duel {
+  const player = state.players[side];
+  const card = monsterCard(SISTERS_CARD);
+  if (!card) return state;
+  const fieldUids = mats.flatMap((mat) => (mat.from === "field" ? [mat.uid] : []));
+  const handIdx = new Set(mats.flatMap((mat) => (mat.from === "hand" ? [mat.index] : [])));
+  const spots = sisterSlots(state, side, fieldUids);
+  if (!spots) return note(state, "Cần 1 ô hàng trước và 2 ô hàng sau còn trống.");
+  const source = player.field.find((mon) => mon && fieldUids.includes(mon.uid)) ?? null;
+  const lift = { atk: card.atk - (monsterCard(GIRL)?.atk ?? 3), def: card.def - (monsterCard(GIRL)?.def ?? 0), mdef: card.mdef - (monsterCard(GIRL)?.mdef ?? 0), hp: card.hp - (monsterCard(GIRL)?.hp ?? 3) };
+  const stats: KinStats = source
+    ? { atk: source.atk + lift.atk, def: source.def + lift.def, mdef: source.mdef + lift.mdef, maxHp: (source.maxHp || source.hp) + lift.hp, hp: source.hp + lift.hp }
+    : { atk: card.atk, def: card.def, mdef: card.mdef, maxHp: card.hp, hp: card.hp };
+  const kept: Partial<FieldMon> = source ? { ...kinPart(source), raised: markRaised(source, lift) } : {};
+  const field = player.field.map((mon) => (mon && fieldUids.includes(mon.uid) ? null : mon)) as Player["field"];
+  const order: Array<[string, Slot]> = [[SISTER_FRONT, spots.front], [SISTER_BACK[0], spots.back[0]], [SISTER_BACK[1], spots.back[1]]];
+  let kinId = "";
+  order.forEach(([id, slot], k) => {
+    const fresh = place({ ...state, seq: state.seq + 1 + k * 7 }, side, id);
+    if (!kinId) kinId = `kin-${fresh.uid}`;
+    const mon: FieldMon = { ...fresh, ...kept, ...stats, kin: { id: kinId, n: 3, base: stats, snap: "" } };
+    field[slot] = fuseShort(kinStamp(mon), player, card.stars);
+  });
+  const usedIds = [...[...handIdx].map((i) => player.reserve[i].id), ...player.field.flatMap((mon) => (mon && fieldUids.includes(mon.uid) ? [mon.cardId] : []))];
+  const reserve = player.reserve.filter((_, index) => !handIdx.has(index));
+  const placed = withRows({ ...player, field, reserve, summons: player.summons + 1, spent: [...(player.spent ?? []), ...[...handIdx].map((i) => player.reserve[i].id)] });
+  const names = usedIds.map((id) => monsterCard(id)?.name ?? id);
+  return note(patch({ ...state, seq: state.seq + 30 }, side, placed), `Hợp nhất ${names.join(", ")} trở thành ${card.name}.`);
 }
 
 function absorbVow(player: Player, uid: string): { player: Player; eaten: boolean } {
@@ -4111,7 +4195,7 @@ export function spellAtk(mon: FieldMon): boolean {
 /** Keyword Đâm xuyên (chủ game 09/11): đòn đánh thường hạ quái thì sát thương thừa đánh thẳng lên người chơi. */
 function pierceLeft(attacker: FieldMon, fallen: FieldMon, surplus: number): number {
   if (attacker.horn || attacker.gaze || attacker.bolt) return 0;
-  if (!keywordsOf(attacker.cardId).includes("dam-xuyen")) return 0;
+  if (!keywordsOf(attacker.cardId).includes("dam-xuyen") && !attacker.fury) return 0;
   return fallen.hp <= 0 && surplus > 0 ? surplus : 0;
 }
 
@@ -6570,6 +6654,7 @@ function attackMonsterCore(state: Duel, attackerUid: string, defenderUid: string
   const you = state.players[state.turn];
   const them = state.players[(1 - state.turn) as Side];
   if (you.field.find((mon) => mon?.uid === attackerUid)?.used) return note(state, "Quái này đã hành động trong vòng này.");
+  if (you.field.find((mon) => mon?.uid === attackerUid)?.kin?.swung) return note(state, KIN_SWUNG);
   const taunted = tauntBar(state, attackerUid, defenderUid);
   if (taunted) return note(state, taunted);
   defenderUid = redirectCover(them.field, defenderUid) ?? defenderUid;
@@ -6630,7 +6715,7 @@ function attackMonsterCore(state: Duel, attackerUid: string, defenderUid: string
           : `${cardOf(named).name} lao vào ${cardOf(landed).name}`;
   const acted = markQueenAct(cast, state.turn, named.uid);
   const cover = landed.row === "back" ? ". Có thể chặn" : "";
-  return beginHold(markUsed(acted.state, state.turn, named.uid), { kind: "melee", attacker: named.uid, defender: landed.uid }, `${line}${cover}${acted.extra}`);
+  return beginHold(kinSwing(markUsed(acted.state, state.turn, named.uid), named.uid), { kind: "melee", attacker: named.uid, defender: landed.uid }, `${line}${cover}${acted.extra}`);
 }
 
 export function attackFace(state: Duel, attackerUid: string, soulChosen = false): Duel {
@@ -6656,6 +6741,7 @@ function attackFaceCore(state: Duel, attackerUid: string, soulChosen = false): D
   if (you.attackLock > 0) return note(state, "Bạn đang bị cấm tấn công.");
   const attacker = you.field.find((mon) => mon?.uid === attackerUid) ?? null;
   if (attacker?.used) return note(state, "Quái này đã hành động trong vòng này.");
+  if (attacker?.kin?.swung) return note(state, KIN_SWUNG);
   const tauntedFace = tauntBar(state, attackerUid, "face");
   if (tauntedFace) return note(state, tauntedFace);
   if (attacker && (attacker.path ?? 0) > 0) return note(state, `${cardOf(attacker).name} không thể hành động.`);
@@ -6679,7 +6765,7 @@ function attackFaceCore(state: Duel, attackerUid: string, soulChosen = false): D
   }
   const line = attacker.horn || attacker.gaze || attacker.bolt ? `${cardOf(attacker).name} bắn phép vào người. Có thể chặn` : mysticDue(attacker) ? `${cardOf(attacker).name} dùng Tấn công, đánh vào người. Có thể chặn` : `${cardOf(attacker).name} đánh vào người. Có thể chặn`;
   const acted = markQueenAct(cast, state.turn, attacker.uid);
-  return beginHold(markUsed(acted.state, state.turn, attacker.uid), { kind: "face", attacker: attacker.uid }, `${line}${acted.extra}`);
+  return beginHold(kinSwing(markUsed(acted.state, state.turn, attacker.uid), attacker.uid), { kind: "face", attacker: attacker.uid }, `${line}${acted.extra}`);
 }
 
 function resolveHellFace(state: Duel, attacker: FieldMon, blocker: FieldMon | null): Duel {
@@ -7036,7 +7122,7 @@ function declareSkillCore(state: Duel, uid: string, targetUid: string | null, sk
   }
   if (isHarpy(mon.cardId) && skillIndex === 1) {
     if ((mon.shed ?? []).includes("charm")) return note(state, "Mê hoặc đã biến mất.");
-    if (!aimed) return note(state, mon.cardId === GIRL ? "Chọn một quái đồng minh." : "Chọn một quái đối thủ.");
+    if (!aimed) return note(state, isGirl(mon.cardId) ? "Chọn một quái đồng minh." : "Chọn một quái đối thủ.");
     if (you.orb < harpyKit(mon.cardId).charm) return note(state, "Cần 1 mana.");
   }
   if (mon.cardId === "may-quay-thuong" && skillIndex === 1) {
@@ -7096,6 +7182,7 @@ export function castName(cardId: string, index: number): string {
     if (index === 3) return "Dụ dỗ";
     return "Gió xoáy";
   }
+  if (isSister(cardId) && index === SISTER_SKILL) return cardId === SISTER_FRONT ? "Máu chiến" : cardId === SISTER_BACK[0] ? "Động viên" : "Hoá đá";
   if (isHarpy(cardId)) {
     if (index === 3) return "Dụ dỗ";
     return chipLabel(cardId, index === 1 ? "charm" : "gust");
@@ -7691,7 +7778,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     const wash = (mon: FieldMon): FieldMon => {
       const cap = mon.maxHp || mon.hp;
       return {
-        ...mon,
+        ...unstone(mon),
         hp: Math.min(cap, mon.hp + amount),
         stun: 0,
         bleed: 0,
@@ -8864,9 +8951,29 @@ function scoreReelCore(state: Duel, uid: string, faces: ReelFace[]): Duel {
 const GIRL = "my-dieu-nhan";
 const QUEEN = "nu-chua-dieu-nhan";
 const PRINCESS = "cong-chua-dieu-nhan";
+/** Tiến hoá của Harpie Lady tạm ẩn (chủ game 26/11). */
+export const BIRD_HIDDEN = true;
+
+/** Chị em Harpie (chủ game 26/11): lá dung hợp từ 2 Harpie Lady, ra sân tách 3 lá. */
+export const SISTERS_CARD = "chi-em-harpie";
+/** Ba lá trên sân: chị thứ (tóc hồng) đứng hàng trước, chị cả (tóc cam) và em út (tóc xanh) hàng sau. */
+export const SISTER_FRONT = "harpie-chi-thu";
+export const SISTER_BACK = ["harpie-chi-ca", "harpie-em-ut"] as const;
+const SISTERS = [SISTER_FRONT, ...SISTER_BACK] as const;
+/** Skill riêng của từng chị em nằm ở chỉ số skill này (0 Thổi bay, 1 Mê hoặc, 3 Dụ dỗ đã dùng cho Harpie). */
+export const SISTER_SKILL = 4;
+
+export function isSister(id: string | null | undefined): boolean {
+  return Boolean(id && (SISTERS as readonly string[]).includes(id));
+}
+
+/** Harpie Lady hoặc một trong Chị em Harpie: cùng Giảo hoạt và bộ 4 kỹ năng của Harpie Lady. */
+function isGirl(id: string | null | undefined): boolean {
+  return id === GIRL || isSister(id);
+}
 
 function isHarpy(id: string) {
-  return id === GIRL || id === QUEEN;
+  return isGirl(id) || id === QUEEN;
 }
 
 function harpyKit(id: string) {
@@ -8877,12 +8984,12 @@ function harpyKit(id: string) {
 
 /** Kỹ năng né ĐÒN ĐÁNH THƯỜNG: Giáp và Vuốt của Harpie Lady, Roi điện của Nữ chúa điểu nhân. */
 function meleeKey(id: string): "armor" | "lash" {
-  return id === GIRL ? "armor" : "lash";
+  return isGirl(id) ? "armor" : "lash";
 }
 
 /** Kỹ năng huỷ SKILL hoặc PHÉP nhắm vào: Roi điện của Harpie Lady, Giáp và Vuốt của Nữ chúa điểu nhân. */
 function skillKey(id: string): "armor" | "lash" {
-  return id === GIRL ? "lash" : "armor";
+  return isGirl(id) ? "lash" : "armor";
 }
 
 function dodgeGrowth(kit: ReturnType<typeof harpyKit>, key: "armor" | "lash") {
@@ -9044,7 +9151,7 @@ function landWard(state: Duel, birdUid: string, key: "armor" | "lash" = "armor")
   const bits = [`huỷ ${what} nhắm vào ${cardOf(bird).name}`, gain];
   let next = patch(open, side, { ...owner, field });
   // Roi điện của Harpie Lady (chủ game 25/11): trả đòn trực tiếp lên kẻ ra đòn bằng công của cô ấy (vật lý); phép thì không có quái nào để trả.
-  if (bird.cardId === GIRL && key === "lash" && (pending.kind === "beam" || pending.kind === "gnaw-skill")) {
+  if (isGirl(bird.cardId) && key === "lash" && (pending.kind === "beam" || pending.kind === "gnaw-skill")) {
     const foeSide = (1 - side) as Side;
     const them = next.players[foeSide];
     const caster = them.field.find((unit) => unit?.uid === pending.caster && unit.hp > 0) ?? null;
@@ -9315,29 +9422,132 @@ function settleWit(before: Duel, after: Duel): Duel {
   const clock = after.clock ?? 1;
   const asks = [...(after.wileAsk ?? [])];
   let next = after;
+  let askName = "Harpie Lady";
   for (const side of [0, 1] as const) {
     const board = next.players[side];
     let changed = false;
+    // Chị em Harpie (chủ game 26/11): cả 3 lá chung một Giảo hoạt, chỉ lá đầu tiên của nhóm được mời chọn.
+    const kinSeen = new Set<string>();
+    const kinOf = (uid: string) => [...next.players[0].field, ...next.players[1].field].find((unit) => unit?.uid === uid)?.kin?.id ?? null;
     const field = board.field.map((mon) => {
-      if (!mon || mon.cardId !== GIRL || mon.hp <= 0 || mon.copy) return mon;
+      if (!mon || !isGirl(mon.cardId) || mon.hp <= 0 || mon.copy) return mon;
+      if (mon.kin) {
+        if (kinSeen.has(mon.kin.id) || asks.some((ask) => kinOf(ask.uid) === mon.kin?.id)) return mon;
+        kinSeen.add(mon.kin.id);
+      }
       const wit = mon.wit;
       const due = !wit || (clock > (before.clock ?? 1) && clock - wit.born >= WILE_EVERY && (clock - wit.born) % WILE_EVERY === 0 && wit.last !== clock);
       if (!due || asks.some((ask) => ask.uid === mon.uid)) return mon;
       const fresh: FieldMon = wit ? { ...mon, wit: { ...wit, last: clock } } : { ...mon, shed: [...WILE_KEYS], wit: { born: clock, last: clock, picked: [], deeds: [] } };
       changed = true;
       const left = WILE_KEYS.filter((key) => !fresh.wit!.picked.includes(key));
-      if (left.length > 0) asks.push({ side: mon.abroad ?? side, uid: mon.uid, picks: shuffled(left).slice(0, 2) });
+      if (left.length > 0) {
+        asks.push({ side: mon.abroad ?? side, uid: mon.uid, picks: shuffled(left).slice(0, 2) });
+        askName = mon.kin ? (monsterCard(SISTERS_CARD)?.name ?? "Chị em Harpie") : cardOf(mon).name;
+      }
       return fresh;
     });
     if (changed) next = patch(next, side, { ...board, field });
   }
   if (asks.length === (after.wileAsk?.length ?? 0) && next === after) return after;
   const opened = asks.length > (after.wileAsk?.length ?? 0);
-  return opened ? note({ ...next, wileAsk: asks }, "Giảo hoạt: chọn 1 kỹ năng cho Harpie Lady.", "info") : { ...next, wileAsk: asks };
+  return opened ? note({ ...next, wileAsk: asks }, `Giảo hoạt: chọn 1 kỹ năng cho ${askName}.`, "info") : { ...next, wileAsk: asks };
+}
+
+/** Trạng thái chung của Chị em Harpie: mọi hiệu ứng có lợi, bất lợi và bộ kỹ năng Giảo hoạt (chủ game 26/11). */
+const KIN_SHARED = [
+  "stun", "bleed", "curse", "vulnerable", "noBlock", "noCover", "chain", "gag", "buff", "erode", "wet", "poison", "blessAtk",
+  "blessDmg", "lava", "nextDef", "blessDef", "blessMdef", "tempGuard", "raised", "ward", "wardStay", "veil", "oath", "oathBack",
+  "hex", "seal", "shed", "wit", "level", "spring", "cheer", "fury", "stone", "gear", "cage", "cageHp", "cageMax", "safe", "soul",
+  "vows", "skillUp", "envHp", "armor", "envArmor", "envSkill", "path", "fed", "debt", "kGuard", "horn", "hornNew", "gaze", "bolt",
+] as const;
+const KIN_STATS = ["hp", "maxHp", "atk", "def", "mdef"] as const;
+
+function kinPart(mon: FieldMon): Partial<FieldMon> {
+  const part: Record<string, unknown> = {};
+  for (const key of KIN_SHARED) part[key] = (mon as Record<string, unknown>)[key];
+  return part as Partial<FieldMon>;
+}
+
+function kinStats(mon: { hp: number; maxHp: number; atk: number; def: number; mdef: number }): KinStats {
+  return { hp: mon.hp, maxHp: mon.maxHp || mon.hp, atk: mon.atk, def: mon.def, mdef: mon.mdef };
+}
+
+/** Ghi lại chỉ số và trạng thái chung hiện tại làm mốc cho lần đồng bộ sau. */
+function kinStamp(mon: FieldMon): FieldMon {
+  if (!mon.kin) return mon;
+  return { ...mon, kin: { ...mon.kin, base: kinStats(mon), snap: JSON.stringify(kinPart(mon)) } };
+}
+
+/**
+ * Chị em Harpie (chủ game 26/11): sau mỗi việc, gom thay đổi của 3 lá về một. Máu mất của từng lá cộng dồn vào bể chung
+ * (đòn 2 vào cả 3 lá là mất 6), máu hồi và chỉ số tăng giảm tính một lần, trạng thái của lá vừa đổi phủ lên cả nhóm.
+ * Hết lượt (`tick`) thì mọi thay đổi là của trạng thái chung nên chỉ tính một lần. Bể máu về 0 hoặc một lá rời sân thì
+ * cả nhóm rời sân.
+ */
+function settleKin(state: Duel, tick = false): Duel {
+  if (!state.players.some((player) => player.field.some((mon) => mon?.kin))) return state;
+  let next = state;
+  const all = () => [...next.players[0].field, ...next.players[1].field].filter((mon): mon is FieldMon => Boolean(mon?.kin));
+  const ids = [...new Set(all().map((mon) => mon.kin!.id))];
+  for (const id of ids) {
+    const members = all().filter((mon) => mon.kin!.id === id);
+    const base = members[0].kin!.base;
+    const broken = members.length < members[0].kin!.n;
+    const stats = { ...base };
+    for (const key of KIN_STATS) {
+      const deltas = members.map((mon) => (key === "maxHp" ? mon.maxHp || mon.hp : mon[key]) - base[key]);
+      if (key === "hp" && !tick) {
+        const lost = deltas.filter((d) => d < 0).reduce((sum, d) => sum + d, 0);
+        const gained = Math.max(0, ...deltas);
+        stats.hp = base.hp + lost + gained;
+      } else {
+        const delta = deltas.reduce((best, d) => (Math.abs(d) > Math.abs(best) ? d : best), 0);
+        stats[key] = base[key] + delta;
+      }
+    }
+    stats.maxHp = Math.max(0, stats.maxHp);
+    stats.hp = Math.min(stats.hp, stats.maxHp);
+    const snap = members[0].kin!.snap;
+    const moved = members.find((mon) => JSON.stringify(kinPart(mon)) !== snap) ?? members[0];
+    const shared = kinPart(moved);
+    const dead = broken || stats.hp <= 0;
+    for (const side of [0, 1] as const) {
+      const player = next.players[side];
+      if (!player.field.some((mon) => mon?.kin?.id === id)) continue;
+      const field = player.field.map((mon) => {
+        if (!mon?.kin || mon.kin.id !== id) return mon;
+        const joined: FieldMon = { ...mon, ...shared, ...stats, hp: dead ? 0 : stats.hp };
+        return kinStamp(joined);
+      }) as Player["field"];
+      next = patch(next, side, dead ? dropDead({ ...player, field }) : { ...player, field });
+    }
+    if (dead) next = note(next, `${monsterCard(SISTERS_CARD)?.name ?? "Chị em Harpie"} rời sân cùng nhau.`, "hit");
+  }
+  return next;
+}
+
+const KIN_SWUNG = "Chị em Harpie đã tấn công trong vòng này.";
+
+/** Chị em Harpie đã tấn công thì cả 3 lá mất lượt tấn công vòng này (skill và hành động khác vẫn riêng từng lá). */
+function kinSwing(state: Duel, uid: string): Duel {
+  const side = ownerSide(state, uid);
+  if (side === null) return state;
+  const id = state.players[side].field.find((mon) => mon?.uid === uid)?.kin?.id;
+  if (!id) return state;
+  let next = state;
+  for (const at of [0, 1] as const) {
+    const player = next.players[at];
+    if (!player.field.some((mon) => mon?.kin?.id === id)) continue;
+    next = patch(next, at, { ...player, field: player.field.map((mon) => (mon?.kin?.id === id ? { ...mon, kin: { ...mon.kin, swung: true } } : mon)) as Player["field"] });
+  }
+  return next;
 }
 
 /** Tiến hoá (chủ game 21/11): Harpie Lady đã thi triển 3 hành động khác nhau (đánh, chặn, mỗi kỹ năng là 1 loại). */
 function settleBird(state: Duel): Duel {
+  // Chủ game 26/11: Tiến hoá tạm ẩn, làm cơ chế sau. Bỏ dòng này là bật lại.
+  if (BIRD_HIDDEN) return state;
   if (state.birdAsk || state.wileAsk?.length || state.winner !== null) return state;
   if (!settled({ ...state, birdAsk: null })) return state;
   for (const side of [0, 1] as const) {
@@ -9356,14 +9566,15 @@ export function answerWile(state: Duel, key: string | null): Duel {
   const pick = key && ask.picks.includes(key) ? key : ask.picks[Math.floor(Math.random() * ask.picks.length)]!;
   const side = ownerSide(state, ask.uid);
   const board = side === null ? null : state.players[side];
-  const mon = board?.field.find((unit) => unit?.uid === ask.uid && unit.cardId === GIRL && unit.hp > 0) ?? null;
+  const mon = board?.field.find((unit) => unit?.uid === ask.uid && isGirl(unit.cardId) && unit.hp > 0) ?? null;
   let next: Duel = { ...state, wileAsk: rest.length ? rest : null };
   if (side !== null && board && mon) {
     const wit = mon.wit ?? { born: state.clock ?? 1, last: state.clock ?? 1, picked: [], deeds: [] };
     const grown: FieldMon = { ...mon, shed: shedOf(mon).filter((row) => row !== pick), wit: { ...wit, picked: [...wit.picked, pick] } };
-    next = note(patch(next, side, { ...board, field: board.field.map((unit) => (unit?.uid === mon.uid ? grown : unit)) }), `Giảo hoạt: ${cardOf(mon).name} nhận ${WILE_NAMES[pick]}.`, "heal");
+    const who = mon.kin ? (monsterCard(SISTERS_CARD)?.name ?? cardOf(mon).name) : cardOf(mon).name;
+    next = note(patch(next, side, { ...board, field: board.field.map((unit) => (unit?.uid === mon.uid ? grown : unit)) }), `Giảo hoạt: ${who} nhận ${WILE_NAMES[pick]}.`, "heal");
   }
-  return payYield(settleBird(next));
+  return payYield(settleBird(settleKin(next)));
 }
 
 /** Máy chọn kỹ năng Giảo hoạt hợp nhất lúc này. */
@@ -9376,6 +9587,44 @@ function aiWilePick(state: Duel, ask: { side: Side; picks: string[] }): string {
     return 1;
   };
   return [...ask.picks].sort((a, b) => score(b) - score(a))[0]!;
+}
+
+/**
+ * Skill riêng của Chị em Harpie (chủ game 26/11), ngoài giao tranh, 0 mana, tới hết lượt:
+ * - Động viên (chị cả): hồi 2 máu và +1 công cho 1 đồng minh.
+ * - Máu chiến (chị thứ): ban Đâm xuyên cho 1 đồng minh.
+ * - Hoá đá (em út): 1 quái địch không hành động được, thủ và thủ phép về 0. Là trạng thái xấu, giải trừ được.
+ */
+function castSister(state: Duel, side: Side, mon: FieldMon, targetUid: string | null): Duel {
+  const you = state.players[side];
+  const foe = (1 - side) as Side;
+  const skill = castName(mon.cardId, SISTER_SKILL);
+  const spend = (player: Player): Player => ({ ...player, field: player.field.map((unit) => (unit?.uid === mon.uid ? { ...unit, dim: true } : unit)) as Player["field"] });
+  if (mon.cardId === SISTER_BACK[1]) {
+    if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
+    const them = state.players[foe];
+    const target = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
+    if (!target) return note(state, "Chọn một quái đối thủ.");
+    if (sanctuaryShielded(state, target.uid)) return note(state, sanctuaryLine(target));
+    const kept = target.stone ?? { def: 0, mdef: 0 };
+    const stoned: FieldMon = { ...target, stone: { def: kept.def + target.def, mdef: kept.mdef + target.mdef }, def: 0, mdef: 0 };
+    let next = patch(state, side, spend(you));
+    next = patch(next, foe, { ...them, field: them.field.map((unit) => (unit?.uid === target.uid ? stoned : unit)) as Player["field"] });
+    return note(next, `${cardOf(mon).name} dùng ${skill} lên ${cardOf(target).name}: không thể hành động, mất hết thủ và thủ phép đến hết lượt.`, "spell");
+  }
+  const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
+  if (!ally) return note(state, "Chọn một đồng minh.");
+  if (mon.cardId === SISTER_BACK[0]) {
+    const heal = grabNums(skillText(mon.cardId), /Hồi\s+(\d+)\s*máu/gi)[0] ?? 2;
+    const gain = grabNums(skillText(mon.cardId), /\+\s*(\d+)\s*công/gi)[0] ?? 1;
+    const cap = ally.maxHp || ally.hp;
+    const mended = Math.min(cap, ally.hp + heal);
+    const field = spend(you).field.map((unit) => (unit?.uid === ally.uid ? { ...unit, hp: mended, cheer: (unit.cheer ?? 0) + gain } : unit)) as Player["field"];
+    const next = note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng ${skill}, hồi ${mended - ally.hp} máu và +${gain} công cho ${cardOf(ally).name} đến hết lượt.`, "heal");
+    return { ...next, mends: [{ uid: ally.uid, n: mended - ally.hp }] };
+  }
+  const field = spend(you).field.map((unit) => (unit?.uid === ally.uid ? { ...unit, fury: true } : unit)) as Player["field"];
+  return note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng ${skill}, ban Đâm xuyên cho ${cardOf(ally).name} đến hết lượt.`, "heal");
 }
 
 function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, targetUid: string | null, extra: string | null = null): Duel {
@@ -9400,7 +9649,7 @@ function castHarpy(state: Duel, side: Side, mon: FieldMon, skillIndex: number, t
     return sealHarpy(next, side, mon.uid, actNotice("Thổi bay", [`huỷ ${spellCard(pick.id)?.name ?? "1 phép"} trên tay đối thủ`]), "spell");
   }
   if (spent.includes("charm")) return note(state, mon.wit && !mon.wit.picked.includes("charm") ? "Chưa nhận Mê hoặc." : "Mê hoặc đã biến mất.");
-  if (mon.cardId === GIRL) return charmAlly(state, side, mon, extra, targetUid);
+  if (isGirl(mon.cardId)) return charmAlly(state, side, mon, extra, targetUid);
   const them = state.players[foe];
   const target = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
   if (!target) return note(state, "Chọn một quái đối thủ.");
@@ -9710,6 +9959,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   }
   if (mon.cardId === PERFECT) return castPerfect(state, side, mon, skillIndex, targetUid, extra);
   if (mon.cardId === QUEEN && skillIndex === 3) return castLure(state, side, mon, extra, targetUid);
+  if (isSister(mon.cardId) && skillIndex === SISTER_SKILL) return castSister(state, side, mon, targetUid);
   if (isHarpy(mon.cardId) && (skillIndex === 0 || skillIndex === 1)) return castHarpy(state, side, mon, skillIndex, targetUid, extra);
   targetUid = redirectCover(state.players[foe].field, targetUid);
   if (!skipGnaw && targetUid && canTargetFoe(state)) {
@@ -11112,7 +11362,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = dropSprings(dropShields(start));
+  const state = dropSisterTemps(dropSprings(dropShields(start)));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -11365,6 +11615,7 @@ function endTurnCore(state: Duel): Duel {
         stanceUsed: false,
         used: false,
         knack: undefined,
+        kin: mon.kin ? { ...mon.kin, swung: false } : undefined,
         noBlock: isStill(mon.cardId) ? true : false,
         chain: Math.max(0, (mon.chain ?? 0) - 1),
         gag: Math.max(0, (mon.gag ?? 0) - 1),
@@ -11428,6 +11679,7 @@ function endTurnCore(state: Duel): Duel {
         dim: mon.cardId === "ken-ngai" || mon.cardId === "chan-ken" ? true : false,
         used: false,
         knack: undefined,
+        kin: mon.kin ? { ...mon.kin, swung: false } : undefined,
         noBlock: isStill(mon.cardId) ? true : mon.noBlock,
         charge: mon.cardId === "tho-den-tinh-nghich" ? 0 : mon.charge,
         hp: cocoon ? Math.min(cap, mon.hp + skillFigure(mon.cardId, "heal", 1)) : mon.hp,
@@ -12041,8 +12293,8 @@ export function aiStep(state: Duel): Duel {
     if (cast) return cast;
   }
   if (bird && !bird.lure && canTargetFoe(state) && !(bird.shed ?? []).includes("charm") && me.orb >= harpyKit(bird.cardId).charm && threats[0]) {
-    const mate = bird.cardId === GIRL ? me.field.filter((unit): unit is FieldMon => Boolean(unit && unit.hp > 0)).sort((a, b) => b.hp + b.def - (a.hp + a.def)).find((unit) => unit.uid !== bird.uid) ?? null : null;
-    const cast = bird.cardId === GIRL ? (mate ? progress(state, declareSkill(state, bird.uid, mate.uid, 1, threats[0].uid)) : null) : progress(state, declareSkill(state, bird.uid, threats[0].uid, 1));
+    const mate = isGirl(bird.cardId) ? me.field.filter((unit): unit is FieldMon => Boolean(unit && unit.hp > 0)).sort((a, b) => b.hp + b.def - (a.hp + a.def)).find((unit) => unit.uid !== bird.uid) ?? null : null;
+    const cast = isGirl(bird.cardId) ? (mate ? progress(state, declareSkill(state, bird.uid, mate.uid, 1, threats[0].uid)) : null) : progress(state, declareSkill(state, bird.uid, threats[0].uid, 1));
     if (cast) return cast;
   }
 

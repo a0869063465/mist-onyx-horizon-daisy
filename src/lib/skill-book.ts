@@ -126,7 +126,12 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "hiep-si-cua-hau": [P("Khiên", "checked-shield"), A("Kiếm", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
   // Harpie Lady (chủ game 21/11): Giảo hoạt đứng đầu, 4 kỹ năng giữ nguyên, Tiến hoá cuối cùng (chữ theo chữ lá chủ game viết).
-  "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Tiến hoá", "round-star")],
+  "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip")], // Tiến hoá tạm ẩn (chủ game 26/11)
+  // Chị em Harpie (chủ game 26/11): lá dung hợp và 3 lá trên sân, mỗi lá thêm 1 skill riêng.
+  "chi-em-harpie": [P("Chị em", "angel-wings")],
+  "harpie-chi-ca": [buff(A("Động viên", "heart-plus")), P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Chị em", "angel-wings")],
+  "harpie-chi-thu": [buff(A("Máu chiến", "bloody-sword")), P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Chị em", "angel-wings")],
+  "harpie-em-ut": [A("Hoá đá", "stone-wall"), P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Chị em", "angel-wings")],
   "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), slow(A("Dụ dỗ", "lips")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), slow(A("Gió xoáy", "tornado")), slow(A("Dụ dỗ", "lips")), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],

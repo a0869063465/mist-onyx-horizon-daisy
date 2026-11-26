@@ -55,7 +55,7 @@ export const BUILTIN_STRATEGIES: Strategy[] = [
   {
     id: "don-chien",
     name: "Đơn chiến và tiến hoá",
-    cards: ["my-dieu-nhan", "nu-chua-dieu-nhan", "nu-chua-dieu-nhan-hoan-my"],
+    cards: ["my-dieu-nhan"], // Nữ chúa điểu nhân và bản hoàn mỹ tạm ẩn cùng Tiến hoá (chủ game 26/11)
     text: "Harpie có thể đơn chiến hiệu quả 1 mình trên sân đấu, cô đa năng và có khả năng tự bảo vệ cao.",
     source: "",
   },
@@ -120,8 +120,7 @@ export const EVOLUTIONS: { result: string; needs: string[] }[] = [
   { result: "ngai-khong-lo", needs: ["sau-non"] },
   { result: "ngai-nu-hoang", needs: ["sau-non"] },
   { result: "ngai-hoan-my", needs: ["sau-non"] },
-  { result: "nu-chua-dieu-nhan", needs: ["my-dieu-nhan"] },
-  { result: "nu-chua-dieu-nhan-hoan-my", needs: ["my-dieu-nhan"] },
+  // Tiến hoá của Harpie Lady tạm ẩn (chủ game 26/11): Nữ chúa điểu nhân và bản hoàn mỹ không hiện.
   { result: "chien-binh-huyen-thoai", needs: ["ky-si-bong-toi"] },
   { result: "ky-si-cuoi-rong", needs: ["ky-si-bong-toi", "loi-nguyen-cua-rong"] },
   { result: "rong-ac-ma", needs: ["mat-do-tan-pha", "trieu-hoi-ac-ma"] },
