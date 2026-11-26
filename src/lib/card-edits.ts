@@ -59,6 +59,8 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
   "ky-si-bong-toi": [{ key: "vow", label: "Hiến Tế", tone: "y" }],
   "hoa-an-thit-nguoi": [{ key: "bite", label: "Hấp thụ", tone: "y" }],
   "thuong-quan-long": [{ key: "spin", label: "Cò quay", tone: "y" }],
+  "nang-va-gio": [{ key: "sun", label: "Nắng ấm lên", tone: "y" }],
+  "rua-may-ban-da": [{ key: "shell", label: "Pháo kích", tone: "y" }],
   "may-nem-bom-hinh-nhen": [{ key: "bomb", label: "Súng phóng lựu", tone: "y" }],
   "may-quay-thuong": [
     { key: "reel", label: "Quay thưởng", tone: "y" },
@@ -96,7 +98,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "lure", label: "Dụ dỗ", tone: "y" },
     { key: "bolt", label: "Roi sấm", tone: "y" },
   ],
-  "hiep-si-cua-hau": [{ key: "sword", label: "Kiếm phép", tone: "y" }],
 };
 
 export const MONSTER_ASKS: Record<string, AskDef[]> = {
@@ -187,6 +188,9 @@ function write(store: Store) {
 
 const STALE_SKILLS: Array<[string, string]> = [
   ["my-dieu-nhan", "Mỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn"],
+  ["my-dieu-nhan", "tiêu hao 2 mana để huỷ nó"],
+  ["my-dieu-nhan", "tiêu hao 2 mana để né"],
+  ["my-dieu-nhan", "đánh thường vào ta"],
   ["linh-chien-da-khong-lo", "Tiêu hao 1 mana để đỡ cho đồng minh đó"],
   ["kraken", "sẽ thêm vào công của hắn"],
   ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
@@ -231,6 +235,8 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["ong-khong-lo", "__**Tê liệt**__"],
   ["sua-hut-ma-phap", "Ma pháp tích tụ"],
   ["kiem-si-lua-thieng", "Long Hoả"],
+  ["hiep-si-cua-vua", "Kiếm tấn công"],
+  ["hiep-si-cua-hau", "Đàm phán"],
 ];
 
 const FRESH_SKILL: Array<[string, string]> = [

@@ -421,6 +421,32 @@ export const MONSTERS: MonsterCard[] = [
     "counter": "Đánh phép trúng nó"
   },
   {
+    "id": "nang-va-gio",
+    "name": "Nắng và gió",
+    "stars": 2,
+    "gems": 1,
+    "skill": "**__Gió dịu đi__**:\nKhi trạng thái ẩn, bị nhắm đến bởi 1 quái thú, chặn đòn tấn công đó, thổi bay 1 ngọc mana và 1 mana trong mộ của đối thủ.\n\n**__Nắng ấm lên__**:\nTiêu hao 2 mana, gây 1 sát thương chuẩn lên toàn bộ quái thú trên sân và người chơi 2 bên. Đồng thời trả lại 1 mana sau khi thi triển thành công.",
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 4,
+    "art": "nang-va-gio",
+    "since": "2026-11-22"
+  },
+  {
+    "id": "rua-may-ban-da",
+    "name": "Rùa máy bắn đá",
+    "stars": 2,
+    "gems": 0,
+    "skill": "**__Pháo kích__**:\n1 mana, dùng 1 quái thú đang trên sân của mình làm đạn pháo. Gây sát thương chuẩn bằng 65% máu của quái đó + số sao của nó lên 1 mục tiêu (quái, người chơi, tường thành).",
+    "atk": 0,
+    "def": 3,
+    "mdef": 1,
+    "hp": 3,
+    "art": "rua-may-ban-da",
+    "since": "2026-11-23"
+  },
+  {
     "id": "kazura",
     "name": "Kazura",
     "stars": 2,
@@ -581,6 +607,18 @@ export const MONSTERS: MonsterCard[] = [
     "art": "qua-trung-sinh-menh"
   },
   {
+    "id": "tu-than-cua-nhung-la-bai",
+    "name": "Tử thần của những lá bài",
+    "stars": 2,
+    "gems": 0,
+    "skill": "__**Gặt hồn**__\nNội tại: Tiêu hao 1 mana để tấn công, khi tấn công được vào người chơi, đối thủ phải huỷ 1 lá ngẫu nhiên trên tay. ",
+    "atk": 4,
+    "def": 0,
+    "mdef": 0,
+    "hp": 2,
+    "art": "tu-than-cua-nhung-la-bai"
+  },
+  {
     "id": "dong-ho-kho-doan",
     "name": "Đồng hồ khó đoán",
     "stars": 2,
@@ -675,9 +713,9 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Hiệp sĩ của vua",
     "stars": 2,
     "gems": 1,
-    "skill": "__**Khiên Ân Huệ**__:\n- Ta nhận được lời chúc của kỵ sĩ, nếu có Hiệp sĩ hộ vệ trong bộ bài.\n    Khi lá chắn do Khiên Ân Huệ ban tặng bị mất, đầu mỗi lượt của người chơi, ta được nhận ngay 3 điểm thủ (hoặc thủ phép, tuỳ loại khiên đã mất).\n    Cuối lượt đó, khiên đã mất sẽ được hồi lại nếu ta đã gây được loại sát thương ngược với loại khiên ta đã mất.\n- Ta nhận được lời chúc của hậu, nếu có Hiệp sĩ của hậu trong bộ bài, ban cho ta 1 khiên phép vĩnh viễn. \n\n__**Kiếm tấn công**__:\n- Đòn đánh thứ 1 mài sắc thanh gươm (+5 công).\n- Đòn đánh thứ 2 tiêu hao 1 mana, gây sát thương, rồi trả thanh gươm về trạng thái ban đầu.",
-    "atk": 2,
-    "def": 3,
+    "skill": "__**Khiên**__\nTrước lần nhận sát thương đầu tiên trong lượt, ta +4 thủ hoặc thủ phép tuỳ vào sát thương ta sắp nhận.\n\n__**Kiếm**__\nTiêu hao 1 mana, để +3 công khi tấn công",
+    "atk": 3,
+    "def": 0,
     "mdef": 0,
     "hp": 3,
     "art": "hiep-si-cua-vua"
@@ -699,10 +737,10 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Hiệp sĩ của hậu",
     "stars": 2,
     "gems": 1,
-    "skill": "__**Khiên Ân Huệ**__:\n- Ta nhận được lời chúc của kỵ sĩ, nếu có Hiệp sĩ hộ vệ trong bộ bài.\n    Khi lá chắn do Khiên Ân Huệ ban tặng bị mất, đầu mỗi lượt của người chơi, ta được nhận ngay 3 điểm thủ (hoặc thủ phép, tuỳ loại khiên đã mất).\n    Cuối lượt đó, khiên đã mất sẽ được hồi lại nếu ta đã gây được loại sát thương ngược với loại khiên ta đã mất.\n- Ta nhận được lời chúc của vua, nếu có Hiệp sĩ của vua trong bộ bài, ban cho ta 1 lá chắn vật lý vĩnh viễn. \n\n__**Đàm phán**__:\n- Tiêu hao 1 mana cho cả hai đòn. Ngoài ta, mỗi bên cần ít nhất 1 quái trên sân.\n- Đòn 1: ta chọn quái của ta để chịu đòn, đối thủ chọn quái của họ để lao vào.\n- Đòn 2: đối thủ chọn quái của họ để chịu đòn, ta chọn quái của ta để lao vào.\n\n- Trong lúc phản ứng, skill của quái và đòn đánh vốn tốn mana đều không hao mana.\n- Quái tham gia không mất trạng thái có lợi và không tính là đã hành động trong lượt này.\n\n__**Kiếm phép**__:\n- Đếm lần lượt 1, 2, 1, 2. Cùng lượt hay khác lượt đều tính.\n- Lần 1: tiêu hao 0 mana. Gây 1 sát thương phép và 1 sát thương vật lý lên 1 quái địch.\n- Lần 2: tiêu hao 1 mana. Gây 3 sát thương vật lý, 3 sát thương phép và 1 sát thương chuẩn lên 1 quái địch.",
-    "atk": 1,
+    "skill": "__**Khiên**__\nTrước lần nhận sát thương đầu tiên trong lượt, ta +4 thủ hoặc thủ phép tuỳ vào sát thương ta sắp nhận.\n\n__**Kiếm**__\nTiêu hao 1 mana, để +3 công khi tấn công",
+    "atk": 3,
     "def": 0,
-    "mdef": 3,
+    "mdef": 0,
     "hp": 3,
     "art": "hiep-si-cua-hau"
   },
@@ -711,11 +749,11 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Harpie Lady",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 2 mana để huỷ nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 1 mana. Kích động 1 quái địch đánh thường vào ta.\nQuái đó không thể hành động ở lượt sau.\n\n__**Roi điện**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 2 mana để né.\nTăng vĩnh viễn 3 công và trả 5 sát thương phép.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
+    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
     "atk": 3,
-    "def": 1,
-    "mdef": 1,
-    "hp": 2,
+    "def": 0,
+    "mdef": 0,
+    "hp": 3,
     "art": "my-dieu-nhan"
   },
   {
@@ -1253,14 +1291,31 @@ export const SPELLS: SpellCard[] = [
     "gems": 2,
     "effect": "Chọn 2 quái thú đồng minh để cùng nhắm vào 1 kẻ địch, mỗi đợt sát thương bị chặn bởi thủ hay thủ phép của kẻ địch đó sẽ làm nó mất lớp phòng ngự đó cho đến hết giao tranh.",
     "picture": "spell:song-sat"
+
+  },
+  {
+    "id": "suoi-nguon-sinh-menh",
+    "name": "Suối nguồn sinh mệnh",
+    "gems": 0,
+    "effect": "Độ bền: 2 lần dùng\nSiêu tốc 0 mana\nHồi 1 máu cho 1 đồng minh và bạn cho nó 2 máu tối đa đến hết lượt.\nSau đó đặt lại vào deck, xáo bài và rút 1 lá bài.",
+    "picture": "spell:suoi-nguon-sinh-menh"
   }
 ];
 
+/** Suối nguồn sinh mệnh (chủ game 25/11): độ bền 2 lần dùng trong cả trận. */
+export const SPRING = "suoi-nguon-sinh-menh";
+/** Bản đã dùng 1 lần của Suối nguồn sinh mệnh: lá về lại bộ bài dưới id này (cùng tên, cùng tranh, cùng chữ), nên bộ
+ *  đếm lần dùng đi theo đúng lá. Không nằm trong SPELLS: không vào kho bài, gói, album, bộ bài. */
+export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
+
+/** Bản khác của một lá phép, chỉ sinh ra trong trận (không bỏ vào bộ). */
+const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }];
+
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>([]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
-const spellById = new Map(SPELLS.map((card) => [card.id, card]));
+const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));
 
 export function monsterCard(id: string): MonsterCard | undefined {
   const card = monsterById.get(id);
@@ -1321,7 +1376,7 @@ export const MIN_SPELLS = 0;
  * mọi lá khác 1 bản. Dạng ngoài bộ (tiến hoá, dung hợp) không bỏ vào bộ: 0. Lá môi trường vẫn chỉ 1 lá mỗi bộ.
  */
 export function copyCap(id: string): number {
-  if (FORMS.some((card) => card.id === id)) return 0;
+  if (FORMS.some((card) => card.id === id) || SPELL_FORMS.some((card) => card.id === id)) return 0;
   const monster = monsterCard(id);
   if (monster) return monster.stars <= 1 ? 3 : monster.stars === 2 ? 2 : 1;
   const spell = spellCard(id);

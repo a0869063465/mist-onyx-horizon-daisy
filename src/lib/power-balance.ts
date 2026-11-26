@@ -484,6 +484,29 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     stats: { mana: { from: 1, to: 0 }, atk: { from: 1, to: 3 }, mdef: { from: 4, to: 0 }, hp: { from: 5, to: 2 } },
     notes: ["Phản phép mới: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay", "Có keyword Đòn đánh phép"],
+  },  {
+    id: "my-dieu-nhan",
+    at: "2026-11-25",
+    wave: 42,
+    tone: "shift",
+    stats: { def: { from: 1, to: 0 }, mdef: { from: 1, to: 0 }, hp: { from: 2, to: 3 } },
+    notes: ["Giáp và Vuốt né đòn đánh thường, Roi điện né skill hoặc phép nhắm vào (đổi chỗ cho nhau)", "Mê hoặc kích động quái địch đánh thường vào 1 quái đồng minh, bỏ cấm hành động lượt sau"],
+  },
+  {
+    id: "hiep-si-cua-vua",
+    at: "2026-11-25",
+    wave: 43,
+    tone: "shift",
+    stats: { atk: { from: 2, to: 3 }, def: { from: 3, to: 0 } },
+    notes: ["Khiên: trước lần nhận sát thương đầu tiên trong lượt, +4 thủ hoặc thủ phép", "Kiếm: tiêu hao 1 mana, +3 công khi tấn công", "Bỏ Khiên Ân Huệ và Kiếm tấn công cũ"],
+  },
+  {
+    id: "hiep-si-cua-hau",
+    at: "2026-11-25",
+    wave: 43,
+    tone: "shift",
+    stats: { atk: { from: 1, to: 3 }, mdef: { from: 3, to: 0 } },
+    notes: ["Khiên: trước lần nhận sát thương đầu tiên trong lượt, +4 thủ hoặc thủ phép", "Kiếm: tiêu hao 1 mana, +3 công khi tấn công, có keyword Đòn đánh phép", "Bỏ Khiên Ân Huệ, Đàm phán và Kiếm phép cũ"],
   },
 ];
 

@@ -42,6 +42,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "sua-hut-ma-phap": ["water", "magic"],
   "con-thinh-no-cua-hai-vuong": ["water", "pierce"],
   kraken: ["water", "smash"],
+  "nang-va-gio": ["fire", "magic"],
+  "rua-may-ban-da": ["fire", "smash"],
   "chien-binh-lan-khuat": ["shadow", "blade"],
   "ke-san-moi-tu-than": ["blood", "claw"],
   "sat-nhan-bat-giu": ["shadow", "blade"],
@@ -61,6 +63,7 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "chien-binh-rong": ["fire", "blade"],
   "chien-binh-ky-nhong": ["nature", "blade"],
   "qua-trung-sinh-menh": ["holy", "magic"],
+  "tu-than-cua-nhung-la-bai": ["shadow", "blade"],
   "dong-ho-kho-doan": ["holy", "magic"],
   "dong-ho-hung-bao": ["holy", "magic"],
   "dong-ho-mong-manh": ["holy", "magic"],
@@ -110,6 +113,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "bay-thu": ["steel", "magic"],
   "song-sat": ["steel", "magic"],
   "qua-trung-thien-su": ["holy", "magic"],
+  "suoi-nguon-sinh-menh": ["nature", "magic"],
+  "suoi-nguon-sinh-menh-2": ["nature", "magic"],
 };
 
 export function fxKindOf(cardId: string | null | undefined): [FxKind, FxStrike] {

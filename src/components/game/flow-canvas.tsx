@@ -56,6 +56,8 @@ export type FlowSpec = {
   /** A branch out of a fork (hình vẽ vòi nước của chủ game, 29/10): its whole way, cubic Bézier pieces end to end
    *  (its start, two controls and an end, two controls and an end…); it ends where it meets its moat. */
   path?: BoxPt[];
+  /** At most one gentle bend, never the S (the pink flows to a player's mana, chủ game 22/11). */
+  calm?: boolean;
 };
 
 type Rgb = [number, number, number];
@@ -644,7 +646,7 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
     // S on the way, the way a river never runs straight. Its width breathes along it, and it folds now and then (where
     // it narrows it burns brighter, as a ribbon of light seen edge on).
     const sigOf = (spec: FlowSpec) =>
-      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.land ?? ""},${spec.width ?? 1},${spec.tail ?? 1},${spec.path ? spec.path.map((pt) => `${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`).join(";") : ""},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
+      `${W}x${H}:${spec.a.x},${spec.a.y},${spec.b.x},${spec.b.y},${spec.out.x},${spec.out.y},${spec.into.x},${spec.into.y},${spec.bend ?? ""},${spec.arc ?? ""},${spec.calm ? 1 : 0},${spec.land ?? ""},${spec.width ?? 1},${spec.tail ?? 1},${spec.path ? spec.path.map((pt) => `${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`).join(";") : ""},${spec.moat ? JSON.stringify(spec.moat) : ""}`;
     const build = (track: Track) => {
       const spec = track.spec;
       const unit = sx();
@@ -687,9 +689,9 @@ export function FlowCanvas({ flows }: { flows: FlowSpec[] }) {
           const pt = base(i / 16);
           stray = Math.max(stray, Math.abs((pt.x - ax) * nx + (pt.y - ay) * ny));
         }
-        if (stray < len * 0.06) bends = len > H * 0.5 ? 2 : 1;
+        if (stray < len * 0.06) bends = len > H * 0.5 && !spec.calm ? 2 : 1;
       }
-      const wind = (bends === 2 ? Math.min(len * 0.05, unit * 5) : Math.min(len * 0.07, unit * 5)) * (track.seed < 0.5 ? -1 : 1);
+      const wind = (spec.calm ? 0.6 : 1) * (bends === 2 ? Math.min(len * 0.05, unit * 5) : Math.min(len * 0.07, unit * 5)) * (track.seed < 0.5 ? -1 : 1);
       const at = (t: number) => {
         const pt = base(t);
         const s = Math.sin(Math.PI * t);

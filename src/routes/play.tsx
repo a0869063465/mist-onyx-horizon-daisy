@@ -6,9 +6,9 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, BoomBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
-import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
+import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
 import { aimTorch, lightTorch, type TorchBox, type TorchState } from "@/lib/torch";
 import { blueStart, boardAspect, boardCut, boardRatio, byBoard, planCut, redEnd, rh, ry, sameCut, setBoardCut, NO_CUT, type BoardCut } from "@/lib/board-cut";
@@ -28,7 +28,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
+import { CATAPULT, cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -56,8 +56,9 @@ import { pollRoom, pushDuel, type NetSeat } from "@/lib/net-room";
 import { MACHINE, withMachine } from "@/lib/machines";
 import { AttackEmblem } from "@/components/game/attack-emblem";
 import { BoxFx, type BoxSpot } from "@/components/game/box-fx";
-import { DeckPile } from "@/components/game/deck-pile";
+import { DeckPile, SHUFFLE_MS } from "@/components/game/deck-pile";
 import { DrawFlights, type DrawFlight } from "@/components/game/draw-flights";
+import { CardBurn, type BurnRect } from "@/components/game/card-burn";
 import { CardShow } from "@/components/game/card-show";
 import { ConfirmNote, FoeNote, type NoteHead } from "@/components/game/act-notes";
 import { confirmOn, setConfirmOn } from "@/lib/confirm-ask";
@@ -143,6 +144,8 @@ import {
   answerFairy,
   answerSoul,
   soulAskLine,
+  swordAskLine,
+  answerSword,
   armHorn,
   spellAtk,
   setCover,
@@ -170,6 +173,7 @@ import {
   duoCanAttack,
   duoCanSkill,
   type DuoPick,
+  springAllies,
   eggAim,
   eggAllies,
   boxFoes,
@@ -441,7 +445,7 @@ type Grab =
   | { kind: "unit"; uid: string; card: MonsterCard; live: { name: string; atk: number; def: number; mdef: number; hp: number; level: number } };
 
 type Drag = Grab & { x: number; y: number };
-type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean };
+type Floater = { id: number; x: number; y: number; text: string; heal: boolean; spot: "self" | "target"; delay?: number; grow?: boolean; hush?: boolean; buff?: boolean; mend?: number };
 
 function floaterStyle(item: Floater) {
   return {
@@ -490,6 +494,15 @@ const DOUBLE_TAP = 350;
 const TURN_ONE_HINTS_OFF = true;
 /** Lá tự rút của lượt đầu bay sau 3 lá đầu (3 lá cách 0,15 giây + 0,62 giây bay) cộng một nhịp nghỉ (chủ game 13/11). */
 const AUTO_DRAW_AT = 1.5;
+
+/** Bên nào vừa xáo bộ bài giữa `prev` và `next` (chủ game 26/11). Trận mới mở chỉ tính khi đang đổi bài đầu trận. */
+function shuffledSides(prev: Duel | null, next: Duel): Side[] {
+  const now = next.shuffles ?? [0, 0];
+  const fresh = !prev || prev.mid !== next.mid;
+  if (fresh && !next.opener) return [];
+  const was = fresh ? [0, 0] : prev?.shuffles ?? [0, 0];
+  return ([0, 1] as const).filter((side) => now[side] > was[side]);
+}
 
 let floaterSeq = 1;
 
@@ -738,6 +751,12 @@ function knightDue(duel: Duel, viewer: Side): { uid: string; room: 1 | 2 } | nul
  *  and the ring round a player's health its light runs into, in % of the board's width. */
 const FORK_SHARE = 0.25;
 const HP_RING = 7.4;
+/** The ring a flow of Gió dịu đi runs round a mana mark. */
+const MANA_RING = 4.2;
+/** How far along the way to the mana marks the mother flow of Gió dịu đi runs before it splits. */
+const MANA_FORK = 0.55;
+/** How long the blown-away mana keeps its old number: the pink flow's way to it (ms). */
+const DRAIN_WAIT = 1500;
 /** The icon's height and a little air on each side, in box units (the board is 90 × 160). */
 const iconRoom = () => (ICON / boardRatio() + 1.2) * 1.6;
 
@@ -866,12 +885,12 @@ const SKILL_GLOW: Record<string, string> = { active: "#62b8ff", risk: "#ff8f3d",
 
 type SkillFacts = { cardId: string; name: string; icon: string; kind: string; slow: boolean; buff?: boolean };
 /** The skill a monster is using, as its sheet names it: by its number among the monster's skills ("lash" = Roi điện). */
-function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | null): SkillFacts | null {
+function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: number | "lash" | "armor" | null): SkillFacts | null {
   const cardId = mon ? formOf(mon) : fallbackId;
   if (!cardId) return null;
   const card = monsterCard(cardId);
   const book = skillsOf(cardId, card?.skill ?? "");
-  const label = skill === "lash" ? chipLabel(cardId, "lash") : skill !== null ? castName(cardId, skill) : "";
+  const label = skill === "lash" || skill === "armor" ? chipLabel(cardId, skill) : skill !== null ? castName(cardId, skill) : "";
   // A skill the rules name after its monster is the only one it can use.
   const sole = () => {
     const usable = book.filter((row) => row.kind !== "passive" && row.kind !== "note");
@@ -887,13 +906,17 @@ function skillFacts(mon: FieldMon | null, fallbackId: string | null, skill: numb
 /** K2 (chủ game 14/11): a monster rouses before its skill goes off: light gathers on its card (ROUSE_CAST ms), it jolts
  *  toward its target, and only then (ROUSE_MS) does the skill's own effect, its sound and its numbers land. */
 const ROUSE_MS = 720;
+/** Pháo kích (chủ game 23/11): đạn leo lên lưng rùa trong MOUNT_MS rồi chờ trên nòng AIM_HOLD_MS mới bay. */
+const MOUNT_MS = 400;
+const AIM_HOLD_MS = 1000;
+const CANNON_MS = MOUNT_MS + AIM_HOLD_MS;
 /** Chủ game 16/11: a monster whose skill is queued lifts off the board and flares (the clip is 2 s long; it lifts as the light builds, drops once it fades). */
 const FLARE_MS = 1800;
 const ROUSE_CAST = 400;
 
 /** K5: a normal attack that asks first: only a monster whose attack has a condition of its own (chủ game 14/11). */
 function attackTerms(mon: FieldMon): string | null {
-  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
+  if (["khong-lo-mot-mat", "khong-lo-mac-giap", "khong-lo-thu-linh", "tu-than-cua-nhung-la-bai"].includes(mon.cardId) && !mon.horn && !mon.gaze && !mon.bolt) {
     const cost = /Tiêu hao\s*(\d+)\s*mana/i.exec(plainCopy(monsterCard(mon.cardId)?.skill ?? ""))?.[1] ?? "1";
     return `Tiêu hao ${cost} mana để tấn công`;
   }
@@ -954,7 +977,7 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
 const BOOM_SPAN = 3.2;
 
 /** Kuriboh tự lao vào rồi nổ ngay (chủ game 21/11): đòn không qua hàng chờ nên không có `pending`, kẻ lao và mục tiêu lấy từ `Duel.boom`. */
-function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }): Landing | null {
+function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: number; y: number }; foeHp: { x: number; y: number } }, wallAt?: (side: Side) => { x: number; y: number }): Landing | null {
   const boom = next.boom;
   if (!boom || boom.id === prev.boom?.id) return null;
   for (const uid of boom.uids) {
@@ -970,6 +993,11 @@ function boomLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
       const top = screenSide(foe, viewer) === 1;
       const orb = top ? marks.foeHp : marks.youHp;
       return { kind: "face", uid, thrust: toward(orb, 1), ang: Math.atan2((orb.y - from.y) / boardAspect(), orb.x - from.x), at: { x: orb.x, y: orb.y }, dir: top ? -1 : 1, path: [], orb };
+    }
+    // Pháo kích bắn vào lá tường thành: lao tới lá nằm ngang đó.
+    if (to.startsWith("wall:") && wallAt) {
+      const target = wallAt(Number(to.slice(5)) as Side);
+      return { kind: "clash", uid, thrust: toward(target, 0.9), at: { x: target.x, y: target.y }, target, ang: Math.atan2((target.y - from.y) / boardAspect(), target.x - from.x) };
     }
     const where = seatOf(prev, to);
     if (!where) continue;
@@ -993,6 +1021,8 @@ const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "virus-an-mon": "ally",
   "phuc-kich": "ally",
   "qua-trung-thien-su": "ally",
+  [SPRING]: "ally",
+  [SPRING_WORN]: "ally",
   "ngan-chan-phong-ngu": "foe",
   "la-chan-phan-don": "foe",
 };
@@ -1002,7 +1032,17 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD, SPRING, SPRING_WORN]);
+
+/** Suối nguồn sinh mệnh (chủ game 25/11): siêu tốc, dùng được ở lượt chính lẫn lúc đáp trong chuỗi; nhắm 1 đồng minh. */
+function isSpring(id: string) {
+  return id === SPRING || id === SPRING_WORN;
+}
+function springLive(duel: Duel, viewer: Side) {
+  if (springAllies(duel, viewer).length === 0) return false;
+  if (duel.step === "respond") return duel.hold?.priority === viewer && !duel.hold?.stage && !slowWaiting(duel) && !doomWaiting(duel);
+  return duel.step === "main" && duel.turn === viewer && !duel.upkeep && duel.gemCap !== viewer && duel.gemWarn !== viewer;
+}
 const QUIET_SPELLS = new Set(["soi-xich-dia-nguc", "vong-nguyen-rua-ac-ma", "sung-loi-pha"]);
 const REFLECT_SPELLS = new Set(["guong-phong-ho", "la-chan-phan-don", "phan-nguyen"]);
 const DISPEL_SPELLS = new Set(["hap-thu-ma-phap", "mua-ma-thuat", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
@@ -1290,6 +1330,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   const you = duel.players[viewer];
   if (you.orb < (spellCard(id)?.gems ?? 0)) return false;
   // Sừng lôi phá only in the round its side holds the sword (chủ game 29/10).
+  if (isSpring(id)) return duel.step === "main" && springLive(duel, viewer);
   if (id === "sung-loi-pha") return attackRound(duel) === viewer && you.field.some((mon) => mon && hornFit(mon.cardId));
   if (id === "ke-dao-mo") return canTargetFoe(duel) && digChoices(duel, viewer).length > 0;
   // Đòn cuối cùng (chủ game 20/11): ngay lúc quyền về sau khi quái mình bị quái địch hạ.
@@ -1319,6 +1360,7 @@ function answerPayoff(id: string, duel: Duel, viewer: Side) {
 function answerUsable(id: string, duel: Duel, viewer: Side, index: number) {
   const you = duel.players[viewer];
   const card = spellCard(id);
+  if (card && isSpring(id)) return duel.step === "respond" && springLive(duel, viewer) && tollOk(card.gems, Boolean(you.tolls?.[index]), you.orb, you.flask);
   if (!card || duel.hold?.priority !== viewer || !spellCanAnswer(id, duel)) return false;
   if (!tollOk(card.gems, Boolean(you.tolls?.[index]), you.orb, you.flask)) return false;
   if (!answerPayoff(id, duel, viewer)) return false;
@@ -1330,6 +1372,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const card = spellCard(id);
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
+  if (isSpring(id)) return springLive(duel, viewer);
   if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
@@ -1366,7 +1409,7 @@ function harpyAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   const offer = harpyOffer(duel, viewer);
   const pending = duel.pending;
   if (!offer || !pending) return false;
-  if (offer === "lash") return pending.kind === "melee" && (duel.hold?.blocker ?? pending.defender) === mon.uid;
+  if (pending.kind === "melee") return (duel.hold?.blocker ?? pending.defender) === mon.uid;
   return (pending.kind === "beam" || pending.kind === "gnaw-skill" || pending.kind === "spell") && pending.target === mon.uid;
 }
 
@@ -1411,12 +1454,6 @@ function fakeCut(mon: FieldMon, key: "atk" | "def" | "mdef" | "hp", value: numbe
 /** Đã mệt (hành động rồi), trừ quái Tháo vát còn lượt hành động thứ hai. */
 function tired(mon: FieldMon) {
   return mon.dim && !knackOpen(mon);
-}
-
-function holdingMend(mon: FieldMon) {
-  if (mon.clash && (mon.clash.atk > 0 || mon.clash.def > 0 || mon.clash.maxHp > 0)) return true;
-  if ((mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0) return true;
-  return Boolean(mon.buff && ((mon.buff.def ?? 0) > 0 || (mon.buff.mdef ?? 0) > 0 || (mon.buff.maxHp ?? 0) > 0));
 }
 
 function gnawBoosted(prev: Duel, next: Duel) {
@@ -1509,7 +1546,7 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
         if (beam) floaters.push(...laserTicks(beam));
         else if (!(rose && delta < 0) && !(bombOn && bombHits.includes(was.uid)) && !(danOn && danHits.includes(was.uid)) && !riderIds.has(was.uid)) {
           // grow: the rise came with a max-HP rise (tăng máu tối đa), which keeps its old ring.
-          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp });
+          floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `${delta > 0 ? "+" : ""}${delta}`, heal: delta > 0, spot: where, grow: now.maxHp > was.maxHp, mend: delta - Math.max(0, now.maxHp - was.maxHp) });
           if (delta < 0 && !(next.skill && skillLook(next.skill.id, next.skill.index))) hits.push(now.uid);
         }
       }
@@ -1531,11 +1568,13 @@ function showEffects(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x: 
           now.def - was.def,
           now.mdef - was.mdef,
           (now.blessAtk ?? 0) - (was.blessAtk ?? 0),
+          (now.kGuard?.def ?? 0) - (was.kGuard?.def ?? 0),
+          (now.kGuard?.mdef ?? 0) - (was.kGuard?.mdef ?? 0),
           (now.clash?.atk ?? 0) - (was.clash?.atk ?? 0),
           (now.clash?.def ?? 0) - (was.clash?.def ?? 0),
           stance,
         );
-        if (gain > 0) floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${gain}`, heal: true, spot: where });
+        if (gain > 0) floaters.push({ id: floaterSeq++, x: spot.x, y: spot.y, text: `+${gain}`, heal: true, spot: where, buff: true });
       }
       if (was && now && now.uid === was.uid && (now.chain ?? 0) > (was.chain ?? 0)) hits.push(now.uid);
       if (was && !now && !(next.fx !== prev.fx && /Thu hồi quái/.test(next.live))) {
@@ -1651,7 +1690,7 @@ function damageShot(cardId: string, index: number) {
 }
 
 function faceSkill(id: string, index: number) {
-  return isHexer(id) || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
+  return id === CATAPULT || isHexer(id) || id === "mat-do-tan-pha" || id === "may-nem-bom-hinh-nhen" || id === "ma-dao-si" || id === "rong-ac-ma" || id === "rong-con" || id === "rong-ngan-tuoi" || id === "sua-hut-ma-phap" || id === "con-thinh-no-cua-hai-vuong" || (id === "rong-phun-hoa-cau" && index === 1) || (id === "ga-he-dang-so" && index === 1) || (id === "may-quay-thuong" && index === 1);
 }
 
 function skillChoices(text: string): string[] {
@@ -2029,7 +2068,7 @@ function PlayPage() {
   const [lift, setLift] = useState<string | null>(null);
   /** Quái ẩn vừa lật (chủ game 21/11): bên mình lật bài, bên kia xoá sương mù; uid → kiểu hiệu ứng. */
   const [unveil, setUnveil] = useState<Record<string, "own" | "foe">>({});
-  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast"; ang?: number; tone?: string } | null>(null);
+  const [thrust, setThrust] = useState<{ uid: string; x: number; y: number; phase?: "back" | "ram" | "rouse" | "cast" | "mount"; ang?: number; tone?: string } | null>(null);
   /** The ally Phục kích sends, once it has flown out (`POUNCE_AFTER`). */
   const [pounce, setPounce] = useState<string | null>(null);
   const sentAlly = duel?.step === "respond" ? duel.hold?.ambush?.ally ?? null : null;
@@ -2085,6 +2124,9 @@ function PlayPage() {
   const briefSeen = useRef(new Map<string, string>());
   const [motion, setMotion] = useState<Motion>({ pops: [], lunges: [], hits: [] });
   const [starFlash, setStarFlash] = useState<Side | null>(null);
+  /** Gió dịu đi (chủ game 22/11): the blown-away mana keeps its old number while the pink flow runs, then blinks and falls. */
+  const [drainHold, setDrainHold] = useState<{ side: Side; orb: boolean; gems: boolean } | null>(null);
+  const [drainBlink, setDrainBlink] = useState<{ side: Side; orb: boolean; gems: boolean } | null>(null);
   const [knightAsk, setKnightAsk] = useState<{ uid: string; foeUid: string | null; face: boolean; block?: boolean; room: 1 | 2 } | null>(null);
   const [hornAsk, setHornAsk] = useState<{ uid: string; foeUid: string; mode: "splash" | "plus" | null } | null>(null);
   const [askAt, setAskAt] = useState<{ x: number; y: number } | null>(null);
@@ -2215,6 +2257,14 @@ function PlayPage() {
   const starTimer = useRef(0);
   // Lá bốc bay từ xấp lên tay (chủ game 30/10).
   const [flights, setFlights] = useState<DrawFlight[]>([]);
+  // Hiệu ứng xáo bài: số lần xấp mình / xấp địch vừa bị xáo; đổi bài đầu trận thì chờ bảng đóng mới xáo (chủ game 26/11).
+  const [shuf, setShuf] = useState({ you: 0, foe: 0 });
+  const shufflePending = useRef<Side[]>([]);
+  // Chủ game 22/11: lá bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới) nhấc lên, bay cung về 2 giờ rồi cháy tan (card-burn.tsx).
+  const [burns, setBurns] = useState<Array<{ id: number; rect: BurnRect; face: ReactNode }>>([]);
+  const burnSeen = useRef<{ mid: string | null; id: number }>({ mid: null, id: 0 });
+  const handRects = useRef<Record<string, BurnRect>>({});
+  const burnPrev = useRef<Duel | null>(null);
   const flightId = useRef(0);
   const flightDone = (id: number) => setFlights((list) => list.filter((flight) => flight.id !== id));
   // Số lá còn trong xấp / trên tay: ẩn, chỉ hiện khi bấm (chủ game 30/10). Địch: bấm xấp hoặc khay tay bật/tắt; xấp mình: nhấp
@@ -2984,15 +3034,26 @@ function PlayPage() {
     drawPrev.current = duel;
     if (!duel) return;
     const me = viewer;
+    const shufSides = tutorial || replay ? [] : shuffledSides(prev, duel);
+    const startShuffle = (sides: Side[]) => {
+      if (sides.length === 0 || document.hidden) return;
+      setShuf((was) => ({ you: was.you + (sides.includes(me) ? 1 : 0), foe: was.foe + (sides.includes((1 - me) as Side) ? 1 : 0) }));
+      for (const side of sides) playCue(side === me ? "shuffleYou" : "shuffleFoe");
+    };
     if (openerWas.current && !openerOpen && !duel.opener) {
       openerWas.current = false;
+      // Xáo bài xong mới chia 3 lá đầu (chủ game 26/11).
+      const swept = [...new Set([...shufflePending.current, ...shufSides])];
+      shufflePending.current = [];
+      startShuffle(swept);
+      const lag = swept.length ? SHUFFLE_MS / 1000 : 0;
       // Lá tự rút của lượt đầu (chủ game 13/11): 3 lá đầu bay lên tay hết, chậm 1 nhịp rồi lá rút mới bay riêng.
       const you = duel.players[me];
       const drawn = you.draws >= 1 ? (you.reserve.length > 2 ? `r:${you.reserve.length - 1}` : you.hand.length > 1 ? `s:${you.hand.length - 1}` : null) : null;
       const mine = [...you.reserve.map((_, i) => `r:${i}`), ...you.hand.map((_, i) => `s:${i}`)].filter((target) => target !== drawn).slice(0, OPENING_CARDS);
-      const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: i * 0.15, deal: true }));
-      for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: i * 0.15, deal: true });
-      for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", i * 0.15);
+      const born: DrawFlight[] = mine.map((target, i) => ({ id: (flightId.current += 1), side: "you", target, delay: lag + i * 0.15, deal: true }));
+      for (let i = 0; i < OPENING_CARDS; i += 1) born.push({ id: (flightId.current += 1), side: "foe", delay: lag + i * 0.15, deal: true });
+      for (let i = 0; i < OPENING_CARDS; i += 1) playCue("draw", lag + i * 0.15);
       if (drawn) {
         // Lá tự rút của lượt đầu cũng như lần rút thường (chủ game 15/11): hiện giữa màn rồi mới về tay, sau 3 lá đầu.
         const key = (flightId.current += 1);
@@ -3001,16 +3062,21 @@ function PlayPage() {
           setDrawShows((list) => list.map((show) => (show.key === key ? { ...show, wait: false } : show)));
           playPack("flip", 0.26);
           playPack("flash", 0.3);
-        }, AUTO_DRAW_AT * 1000);
+        }, (AUTO_DRAW_AT + lag) * 1000);
       }
-      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT });
+      if (duel.players[1 - me].draws >= 1) born.push({ id: (flightId.current += 1), side: "foe", delay: AUTO_DRAW_AT + lag });
       setFlights((list) => [...list, ...born]);
       return;
     }
     if (openerOpen) openerWas.current = true;
     // Bảng đổi bài còn đóng dần: lá tự rút của lượt đầu chưa bay ở đây, nó bay sau 3 lá đầu (nhánh trên).
+    // Đổi bài đầu trận: nhớ ai đã xáo, chờ bảng đóng mới chạy hiệu ứng.
+    if ((openerWas.current || duel.opener) && !watch) {
+      if (shufSides.length) shufflePending.current = [...new Set([...shufflePending.current, ...shufSides])];
+    }
     if (openerWas.current) return;
     if (!prev || !loaded || duel.opener || prev.mid !== duel.mid) return;
+    startShuffle(shufSides);
     const born: DrawFlight[] = [];
     // Chủ game 16/11: lá đối thủ đánh ra rời khay bài thấy rõ: quái bay úp xuống ô rồi lật, phép loé sáng rồi tan.
     {
@@ -3025,7 +3091,9 @@ function PlayPage() {
           }
         });
       }
-      if (nowFoe.hand.length < wasFoe.hand.length) born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "spell" });
+      // Phép bị bỏ khỏi tay (Gặt hồn, Sinh mệnh mới; chủ game 22/11) không phải phép đánh ra: nó cháy tan, không loé trên khay.
+      const burned = duel.discard && duel.discard.id !== prev.discard?.id ? duel.discard.drops.filter((drop) => drop.side === foeSide && drop.at.startsWith("s:")).length : 0;
+      if (nowFoe.hand.length < wasFoe.hand.length - burned) born.push({ id: (flightId.current += 1), side: "foe", delay: 0, play: "spell" });
     }
     ([0, 1] as const).forEach((side) => {
       const was = prev.players[side];
@@ -3053,6 +3121,67 @@ function PlayPage() {
     if (born.length) setFlights((list) => [...list, ...born]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, openerOpen, loaded]);
+
+  // Lá bị bỏ khỏi tay: dựng lá bay từ chỗ cũ của nó (đo ở lần vẽ trước), phía đối thủ là lá úp trong khay.
+  useLayoutEffect(() => {
+    const old = handRects.current;
+    const prev = burnPrev.current;
+    if (!duel) return;
+    const seen = burnSeen.current;
+    const now = duel.discard;
+    if (seen.mid !== duel.mid) {
+      burnSeen.current = { mid: duel.mid ?? null, id: now?.id ?? 0 };
+      return;
+    }
+    if (!now || now.id === seen.id) return;
+    burnSeen.current = { mid: duel.mid ?? null, id: now.id };
+    if (!loaded || document.hidden) return;
+    const born: Array<{ id: number; rect: BurnRect; face: ReactNode }> = [];
+    for (const drop of now.drops) {
+      const rect = drop.side === viewer ? old[drop.at] : undefined;
+      let face: ReactNode = null;
+      let place: BurnRect | undefined = rect;
+      if (drop.side === viewer) {
+        const hit = /^([rs]):(\d+)$/.exec(drop.at);
+        const was = hit && prev ? prev.players[viewer] : null;
+        if (hit && was && place) {
+          const index = Number(hit[2]);
+          if (hit[1] === "r") {
+            const held = was.reserve[index];
+            const card = held ? monsterCard(held.id) : null;
+            if (held && card) face = <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} />;
+          } else {
+            const spell = was.hand[index];
+            if (spell) face = <CardFace spellId={spell} hand gems={was.tolls?.[index] ? `${spellCard(spell)?.gems ?? 0}+1` : undefined} />;
+          }
+        }
+      } else {
+        const back = document.querySelector<HTMLElement>(".foe-fan img");
+        const box = back?.getBoundingClientRect();
+        if (box && box.width > 0) {
+          place = { left: box.left, top: box.top, width: box.width, height: box.height };
+          face = <img src="/ui/card-back-foe.webp" alt="" draggable={false} />;
+        }
+      }
+      if (face && place) born.push({ id: (flightId.current += 1), rect: place, face });
+    }
+    if (born.length) {
+      playCue("burn");
+      setBurns((list) => [...list, ...born]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel?.discard?.id, duel?.mid]);
+  // Sau mỗi lần vẽ: nhớ chỗ từng lá trên tay và ván hiện tại, để lần bỏ lá kế còn biết lá nằm đâu và là lá gì.
+  useLayoutEffect(() => {
+    const rects: Record<string, BurnRect> = {};
+    document.querySelectorAll<HTMLElement>(".hand [data-hand]").forEach((pick) => {
+      const box = pick.querySelector<HTMLElement>(".hand-card")?.getBoundingClientRect();
+      const key = pick.getAttribute("data-hand");
+      if (box && key && box.width > 0) rects[key] = { left: box.left, top: box.top, width: box.width, height: box.height };
+    });
+    handRects.current = rects;
+    burnPrev.current = duel;
+  });
 
   // The reaction icons fade out a moment after the wait is over and then report it (onClosed); this is the backstop
   // in case the fade never runs.
@@ -3143,7 +3272,48 @@ function PlayPage() {
     // K2 (chủ game 14/11): kỹ năng đã chờ trong chuỗi vừa được thông qua (cả hai bỏ qua): quái dùng nó tụ sáng tại chỗ, giật về
     // phía mục tiêu, rồi hiệu ứng, âm và số của kỹ năng mới tới (`pre` ms sau). Bị chặn, bị hoá giải, vòng quay / máy quay
     // mở ra thì không.
+    // Pháo kích (chủ game 23/11): chuỗi xong thì quái làm đạn leo lên lưng rùa (MOUNT_MS), chờ trên nòng (AIM_HOLD_MS)
+    // rồi mới lao vào mục tiêu như đòn đánh thường và nổ kiểu Kuriboh; mọi số, âm và hiệu ứng chờ tới lúc đó.
+    const cannon = (() => {
+      const boom = duel.boom;
+      if (quiet || tutorial || !boom?.from || boom.id === prev.boom?.id) return null;
+      if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return null;
+      const ammo = boom.uids.find((uid) => boom.from?.[uid]);
+      const turtle = ammo ? boom.from[ammo] : null;
+      if (!ammo || !turtle) return null;
+      const seat = seatOf(prev, ammo);
+      const base = seatOf(prev, turtle);
+      if (!seat || !base) return null;
+      const home = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+      const deck = SLOT_BOX[screenSide(base.side, viewerNow)][base.index];
+      const to = boom.to[ammo] ?? "";
+      const wallSpot = (side: Side) => {
+        const layout = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env);
+        return side === viewerNow ? layout.wall : layout.wallFoe;
+      };
+      const marksNow = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
+      const aimAt = to.startsWith("face:")
+        ? (screenSide(Number(to.slice(5)) as Side, viewerNow) === 1 ? marksNow.foeHp : marksNow.youHp)
+        : to.startsWith("wall:")
+          ? wallSpot(Number(to.slice(5)) as Side)
+          : (() => {
+              const where = seatOf(prev, to);
+              if (!where) return null;
+              const box = SLOT_BOX[screenSide(where.side, viewerNow)][where.index];
+              return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+            })();
+      // Nằm trên lưng rùa, lệch về phía mục tiêu, còn thấy khoảng 1/4 lá rùa bên dưới.
+      const deckMid = { x: deck.x + deck.w / 2, y: deck.y + deck.h / 2 };
+      const dx = aimAt ? aimAt.x - deckMid.x : 0;
+      const dy = aimAt ? (aimAt.y - deckMid.y) / boardAspect() : -1;
+      const far = Math.hypot(dx, dy) || 1;
+      const lean = { x: (dx / far) * deck.w * 0.3, y: (dy / far) * deck.w * 0.3 * boardAspect() };
+      const seatMid = { x: home.x + home.w / 2, y: home.y + home.h / 2 };
+      const mount = { x: ((deckMid.x + lean.x - seatMid.x) * 100) / home.w, y: ((deckMid.y + lean.y - seatMid.y) * 100) / home.h };
+      return { ammo, mount, ang: Math.atan2(dy, dx) };
+    })();
     const rouse = (() => {
+      if (cannon) return null;
       const cast = prev.pending;
       if (quiet || tutorial || prev.mid !== duel.mid || prev.step !== "respond" || !cast || duel.pending) return null;
       if (cast.kind !== "beam" && cast.kind !== "gnaw-skill" && !(cast.kind === "face" && cast.skill)) return null;
@@ -3169,7 +3339,11 @@ function PlayPage() {
       const tone = SKILL_GLOW[facts?.slow ? "slow" : facts?.buff ? "buff" : facts?.kind ?? "active"] ?? SKILL_GLOW.active;
       return { uid, from, jolt, ang: far < 1 ? undefined : Math.atan2(dy, dx), tone };
     })();
-    const pre = rouse ? ROUSE_MS : 0;
+    const pre = cannon ? CANNON_MS : rouse ? ROUSE_MS : 0;
+    if (cannon) {
+      setThrust({ uid: cannon.ammo, ...cannon.mount, phase: "mount", ang: cannon.ang });
+      playHit("dash", 0);
+    }
     const cueAt = (kind: Cue, delay?: number, offset = 0) => playCue(kind, delay, offset, pre / 1000);
     const fxAt = (event: FxEvent) => {
       if (pre) window.setTimeout(() => emitFx(event), pre);
@@ -3321,6 +3495,15 @@ function PlayPage() {
         window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
       }
     }
+    if (!quiet && !tutorial && prev.mid === duel.mid && duel.drain && duel.drain.id !== prev.drain?.id) {
+      const drain = { side: duel.drain.side, orb: duel.drain.orb, gems: duel.drain.gems };
+      setDrainHold(drain);
+      window.setTimeout(() => {
+        setDrainHold(null);
+        setDrainBlink(drain);
+        window.setTimeout(() => setDrainBlink(null), 1300);
+      }, DRAIN_WAIT);
+    }
     const blocked = Boolean(duel.hold?.blocker) && duel.hold?.blocker !== prev.hold?.blocker;
     const beam = duel.pending?.kind === "beam" && prev.pending?.kind !== "beam";
     const attackNow = duel.pending?.kind === "face" || duel.pending?.kind === "melee" ? duel.pending : null;
@@ -3409,7 +3592,8 @@ function PlayPage() {
     // A normal attack landing: the attacker thrusts in, the blow lands ~0.11 s later, the HP number waits for the
     // lightning to reach it.
     const hud = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env).marks;
-    const landing = quiet ? null : (attackLanding(prev, duel, viewerNow, hud) ?? boomLanding(prev, duel, viewerNow, hud));
+    const hudWalls = matchBoard(duel.players[(1 - viewerNow) as Side].env, duel.players[viewerNow].env);
+    const landing = quiet ? null : (attackLanding(prev, duel, viewerNow, hud) ?? boomLanding(prev, duel, viewerNow, hud, (side) => (side === viewerNow ? hudWalls.wall : hudWalls.wallFoe)));
     // Kuriboh phát nổ (chủ game 21/11): vụ nổ ở giữa hai lá lúc chạm, lá Kuriboh còn đứng đó tới đỉnh nổ rồi mất hẳn, không vỡ lá.
     const boomOn = !quiet && !tutorial && Boolean(duel.boom && duel.boom.id !== prev.boom?.id) && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const boomIds = new Set<string>(boomOn ? duel.boom?.uids ?? [] : []);
@@ -3663,16 +3847,40 @@ function PlayPage() {
     const LAND_MS = 110 + WIND_MS;
     const orbLate = new Set<number>();
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
+    // Pháo kích: cú lao bắt đầu sau khi đạn đã lên nòng và chờ xong (`pre`).
+    const lead = cannon && landing?.uid === cannon.ammo ? pre : 0;
     if (landing && shown) {
       for (const item of shown.floaters) {
         if (item.heal) continue;
-        item.delay = Math.max(item.delay ?? 0, LAND_MS / 1000);
+        item.delay = Math.max(item.delay ?? 0, (lead + LAND_MS) / 1000);
       }
       {
-        const lunged = attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 };
-        setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
-        window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), WIND_MS);
-        playHit("dash", (WIND_MS - 40) / 1000);
+        const lunged = lead && cannon ? cannon.mount : (attackShift(prev, landing.uid, viewerNow) ?? { x: 0, y: 0 });
+        const wind = () => setThrust({ uid: landing.uid, x: lunged.x - landing.thrust.x * 0.2, y: lunged.y - landing.thrust.y * 0.2, phase: "back" });
+        if (lead) window.setTimeout(wind, lead);
+        else wind();
+        window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? { uid: landing.uid, ...landing.thrust, phase: "ram", ang: landing.ang } : now)), lead + WIND_MS);
+        playHit("dash", (lead + WIND_MS - 40) / 1000);
+      }
+      if (lead) {
+        // Máu trên lá và viên máu giữ số cũ tới lúc đạn chạm.
+        const held: Record<string, number> = {};
+        for (const side of [0, 1] as const) {
+          if (duel.players[side].hp !== prev.players[side].hp) held[`face:${side}`] = prev.players[side].hp;
+          for (const was of prev.players[side].field) {
+            const now = was ? fieldMon(duel, was.uid) : null;
+            if (was && now && now.hp !== was.hp) held[`mon:${was.uid}`] = was.hp;
+          }
+        }
+        const keys = Object.keys(held);
+        if (keys.length) {
+          setHpHold((now) => ({ ...now, ...held }));
+          window.setTimeout(() => setHpHold((now) => {
+            const rest = { ...now };
+            for (const key of keys) delete rest[key];
+            return rest;
+          }), lead + LAND_MS + 60);
+        }
       }
       if (landing.kind === "face") {
         const struck = ([0, 1] as const).find((side) => duel.players[side].hp < prev.players[side].hp);
@@ -3686,7 +3894,7 @@ function PlayPage() {
           }), LAND_MS + 60);
         }
       }
-      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) + 130);
+      window.setTimeout(() => setThrust((now) => (now?.uid === landing.uid ? null : now)), lead + LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) + 130);
       if (boomOn) {
         const seat = seatOf(prev, landing.uid);
         const cardW = seat ? SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index].w : 15;
@@ -3708,6 +3916,21 @@ function PlayPage() {
       if (shown.shake && !quiet && !rammed) fxAt({ t: "shake", act: "shake", spot: "center", power: 1 });
       const casting = shown.burst?.tone === "heal" ? "healSpell" : shown.burst ? "spell" : null;
       const grouped = look === "spell" || look === "fire" || look === "gun" || look === "bolt" || look === "spark" || look === "tide-small" || look === "tide-mid" || look === "tide-big";
+      // Một chỗ chỉ chạy một video buff trong một lần cập nhật (mends + số bay cùng chỉ một quái).
+      const buffed = new Set<string>();
+      const fxBuffOnce = (spot: "self" | "target", x: number, y: number) => {
+        const key = `${x.toFixed(1)}:${y.toFixed(1)}`;
+        if (buffed.has(key)) return;
+        buffed.add(key);
+        fxAt({ t: "buff", act: "buff", spot, x, y });
+      };
+      const mendedAt = new Set<string>();
+      const fxMendOnce = (spot: "self" | "target", x: number, y: number) => {
+        const key = `${x.toFixed(1)}:${y.toFixed(1)}`;
+        if (mendedAt.has(key)) return;
+        mendedAt.add(key);
+        fxAt({ t: "heal", act: "heal", spot, x, y });
+      };
       if (!quiet && duel.fx !== prev.fx) {
         for (const mend of duel.mends ?? []) {
           for (const side of [0, 1] as const) {
@@ -3715,7 +3938,12 @@ function PlayPage() {
             if (index < 0) continue;
             const spot = SLOT_POS[screenSide(side, viewerNow)][index];
             if (!spot) continue;
-            fxAt({ t: "heal", act: "heal", spot: side === viewerNow ? "self" : "target", x: spot.x, y: spot.y });
+            const where = side === viewerNow ? "self" : "target";
+            // Chủ game 26/11: buff chỉ số (kể cả máu tối đa) là video vòng cam; chỉ phần máu thật hồi lại mới là video hồi máu.
+            const was = prev.players[side].field.find((unit) => unit?.uid === mend.uid);
+            const rise = Math.max(0, (duel.players[side].field[index]?.maxHp ?? 0) - (was?.maxHp ?? 0));
+            if (mend.n - rise > 0) fxMendOnce(where, spot.x, spot.y);
+            if (mend.n === 0 || rise > 0) fxBuffOnce(where, spot.x, spot.y);
           }
         }
       }
@@ -3728,8 +3956,13 @@ function PlayPage() {
         if (item.hush) continue;
         // Đòn tông: vụ nổ ở chỗ chạm thay chớp đỏ cũ trên lá bị trúng.
         if (rammed && !item.heal && item.text !== "Hạ") continue;
-        if (item.heal && !item.grow) fxAt({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
-        else if (item.heal) fxAt({ t: "ring", act, spot: item.spot, x: item.x, y: item.y, color: "#3ec6ff", power: 0.95 });
+        if (item.buff) fxBuffOnce(item.spot, item.x, item.y);
+        else if (item.heal && !item.grow) fxAt({ t: "heal", act: "heal", spot: item.spot, x: item.x, y: item.y });
+        else if (item.heal) {
+          // Máu tối đa tăng = buff (video cam); phần máu hồi thật (nếu có) thêm video hồi máu.
+          fxBuffOnce(item.spot, item.x, item.y);
+          if ((item.mend ?? 0) > 0) fxMendOnce(item.spot, item.x, item.y);
+        }
         else {
           fxAt({
             t: "burst",
@@ -3951,7 +4184,7 @@ function PlayPage() {
       const gone = new Set(boomFalls.map((fall) => fall.floater.id));
       // Không có cú lao (đòn không dựng được đường bay) thì nổ ngay tại ô của nó.
       if (!landing) for (const fall of boomFalls) fxAt({ t: "boom", x: fall.floater.x, y: fall.floater.y, w: 15 * BOOM_SPAN });
-      window.setTimeout(() => setLinger((current) => current.filter((item) => !gone.has(item.id))), (landing ? LAND_MS : 0) + BOOM_PEAK_MS);
+      window.setTimeout(() => setLinger((current) => current.filter((item) => !gone.has(item.id))), (landing ? LAND_MS : 0) + BOOM_PEAK_MS + pre);
     }
     shown.falls = shown.falls.filter((fall) => !boomIds.has(fall.mon.uid));
     // Số mất máu / "Hạ" ở ô Kuriboh nổ không hiện: nó biến mất trong vụ nổ, số sát thương hiện trên kẻ bị trúng.
@@ -3999,7 +4232,7 @@ function PlayPage() {
     }
     if (shown.motion.pops.length || shown.motion.lunges.length || shown.motion.hits.length) {
       // Lá bị tông giật lúc đòn chạm, không giật trước.
-      const late = rammed ? LAND_MS : pre;
+      const late = rammed ? LAND_MS + pre : pre;
       if (late) window.setTimeout(() => wave.current === token && setMotion(shown.motion), late);
       else setMotion(shown.motion);
       window.setTimeout(() => {
@@ -4372,7 +4605,6 @@ function PlayPage() {
       orb: you.orb,
       level: mon.level ?? 1,
       hp: mon.hp,
-      beat: mon.beat ?? 0,
       stored: mon.stored ?? 0,
       skillText: plainCopy(card.skill),
       afford: () => true,
@@ -4418,6 +4650,23 @@ function PlayPage() {
     playCue("chain");
     setAim({ kind: "spell", index, spellId: "qua-trung-thien-su" });
     holdNotice("Chọn 1 quái bị nhắm đến để trả đòn.");
+  }
+  /** Suối nguồn sinh mệnh: 1 đồng minh thì dùng ngay; nhiều thì icon chờ giữa sân trong lúc chọn. */
+  function startSpring(index: number) {
+    if (!duel) return;
+    const id = duel.players[viewer].hand[index] ?? SPRING;
+    const picks = springAllies(duel, viewer);
+    if (picks.length === 0) {
+      holdNotice("Chưa có quái thú đồng minh nào trên sân.");
+      return;
+    }
+    if (picks.length === 1) {
+      apply(castSpell(duel, index, picks[0]));
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: id });
+    holdNotice("Chọn 1 quái thú đồng minh để hồi máu.");
   }
   function cancelPick() {
     setAim(null);
@@ -4515,7 +4764,7 @@ function PlayPage() {
   function queueStep(prev: Duel, next: Duel): { next: Duel; kind: "act" | "answer" } | null {
     if (!mine || tutorial || next.winner !== null || next.mid !== prev.mid) return null;
     // A choice the rules ask for while an action resolves (Kỵ sĩ bóng tối's stance, a pick of cards…) is made at once.
-    if (prev.parley || next.parley || prev.soulAsk || prev.plumeAsk || prev.birdAsk || prev.clockAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
+    if (prev.parley || next.parley || prev.soulAsk || prev.swordAsk || prev.plumeAsk || prev.birdAsk || prev.clockAsk || prev.preyAsk || prev.reel || prev.recall || dueKnight) return null;
     const declared =
       !queue &&
       prev.step === "main" &&
@@ -4942,10 +5191,10 @@ function PlayPage() {
     foe.field.forEach((mon, slot) => {
       if (!mon) return;
       const next = attackMonster(duel, uid, mon.uid);
-      if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk))) keys.add(`${side}-${slot}`);
+      if (next !== duel && (next.pending?.kind === "melee" || Boolean(next.soulAsk && !duel.soulAsk) || Boolean(next.swordAsk && !duel.swordAsk))) keys.add(`${side}-${slot}`);
     });
     const face = attackFace(duel, uid);
-    if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk))) keys.add("face");
+    if (face !== duel && (face.pending?.kind === "face" || Boolean(face.soulAsk && !duel.soulAsk) || Boolean(face.swordAsk && !duel.swordAsk))) keys.add("face");
     return keys;
   }
 
@@ -4974,6 +5223,12 @@ function PlayPage() {
     if (id === "hop-ma-thuat") {
       if (from) each(foeSide, (mon) => boxFoes(duel, viewer).includes(mon.uid));
       else each(viewer, (mon) => boxAllies(duel, viewer).includes(mon.uid));
+      return keys;
+    }
+    if (isSpring(id)) {
+      const picks = springAllies(duel, viewer);
+      each(0, (mon) => picks.includes(mon.uid));
+      each(1, (mon) => picks.includes(mon.uid));
       return keys;
     }
     const aims = spellAimOf(id);
@@ -5020,8 +5275,14 @@ function PlayPage() {
       each(foeSide, (mon) => Boolean(chronoChoice(duel, caster.uid, mon.uid)) && !chronoImmortal(mon));
       return keys;
     }
-    if (slide.index === 3 && (card.id === "nu-chua-dieu-nhan" || card.id === "nu-chua-dieu-nhan-hoan-my")) {
+    if (twoStep(card.id, slide.index)) {
       each(foeSide, () => true);
+      return keys;
+    }
+    // Pháo kích (chủ game 23/11): bước 1 là mục tiêu (quái địch, người chơi; lá tường thành bấm thẳng vào lá), bước 2 là đạn.
+    if (card.id === CATAPULT) {
+      each(foeSide, (mon) => mon.hp > 0);
+      keys.add("face");
       return keys;
     }
     if (allySkill(card.id)) {
@@ -5431,6 +5692,17 @@ function PlayPage() {
         startBox(payload.index);
         return;
       }
+      // Suối nguồn sinh mệnh: dropped on an ally it is cast; elsewhere it waits as an icon.
+      if (isSpring(payload.spellId)) {
+        if (hit?.closest(".hand")) return;
+        const uid = slotEl?.dataset.uid ?? "";
+        if (uid && springAllies(duel, viewer).includes(uid)) {
+          apply(castSpell(duel, payload.index, uid));
+          return;
+        }
+        startSpring(payload.index);
+        return;
+      }
       // Ngăn chặn phòng ngự: dropped on a monster it can take, it is cast; elsewhere on the board it waits as an icon.
       if (payload.spellId === "ngan-chan-phong-ngu") {
         if (hit?.closest(".hand")) return;
@@ -5595,23 +5867,22 @@ function PlayPage() {
       return;
     }
     const aimingSkill = aim?.kind === "skill";
-    if (aimingSkill && aim.index === 3) {
-      const caster = you.field.find((unit) => unit?.uid === aim.uid);
-      if (caster?.cardId === "nu-chua-dieu-nhan" || caster?.cardId === "nu-chua-dieu-nhan-hoan-my") {
+    if (aimingSkill && twoStep(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "", aim.index)) {
+      {
         if (!aim.also) {
           if (!foeUid || owner === viewer) {
             holdNotice("Chọn một quái đối thủ");
             return;
           }
-          setAim({ kind: "skill", uid: aim.uid, index: 3, also: foeUid });
+          setAim({ kind: "skill", uid: aim.uid, index: aim.index, also: foeUid });
           holdNotice("Chọn quái của ta");
           return;
         }
-        if (owner !== viewer || !foeUid) {
+        if (owner !== viewer || !foeUid || foeUid === aim.uid) {
           holdNotice("Chọn quái của ta");
           return;
         }
-        apply(useSkill(duel, aim.uid, foeUid, 3, true, aim.also));
+        apply(useSkill(duel, aim.uid, foeUid, aim.index, true, aim.also));
         return;
       }
     }
@@ -5728,7 +5999,8 @@ function PlayPage() {
   slideFire.current = (key: string) => {
     if (!duel) return;
     if (key === "face") {
-      if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
+      if (shelling()) shellTap("face", otherSide);
+      else if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
       else if (aim?.kind === "skill") apply(declareSkill(duel, aim.uid, null, aim.index));
       return;
     }
@@ -5924,6 +6196,35 @@ function PlayPage() {
     return rows.length ? { rows, box: plan.box } : null;
   }
 
+  /** Pháo kích của Rùa máy bắn đá đang chọn mục tiêu hoặc đạn. */
+  function shelling(): boolean {
+    return Boolean(duel && aim?.kind === "skill" && fieldMon(duel, aim.uid)?.cardId === CATAPULT);
+  }
+
+  /**
+   * Pháo kích (chủ game 23/11): bấm trước mục tiêu (quái địch, người chơi hoặc lá tường thành của đối thủ), rồi 1 quái
+   * thú khác của mình làm đạn. `key`: uid quái, "face" hoặc "wall".
+   */
+  function shellTap(key: string, side: Side | null) {
+    if (!duel || aim?.kind !== "skill") return;
+    if (!aim.also) {
+      if (side === otherSide) {
+        setAim({ ...aim, also: key });
+        holdNotice("Chọn 1 quái thú của bạn làm đạn pháo");
+        return;
+      }
+      holdNotice("Chọn quái, người chơi hoặc lá tường thành của đối thủ");
+      return;
+    }
+    if (side !== viewer || key === aim.uid) {
+      holdNotice("Chọn 1 quái thú khác của bạn làm đạn pháo");
+      return;
+    }
+    const also = aim.also;
+    const target = also === "face" || also === "wall" ? null : also;
+    apply(useSkill(duel, aim.uid, target, aim.index, true, also === "wall" ? `${key}|wall` : key));
+  }
+
   function onUnit(side: Side, mon: FieldMon) {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -5938,6 +6239,14 @@ function PlayPage() {
     // Hoán đổi: tap a glowing ally to trade places with the monster aimed at.
     if (swapAsk) {
       if (side === viewer && swapFit(mon)) apply(confirmSwap(duel, swapAsk.locked!, `f:${mon.uid}`));
+      return;
+    }
+    if (shelling()) {
+      if (side === viewer && aim?.kind === "skill" && mon.uid === aim.uid && !aim.also) {
+        setAim(null);
+        return;
+      }
+      shellTap(mon.uid, side);
       return;
     }
     if (aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian") {
@@ -6009,6 +6318,13 @@ function PlayPage() {
       }
       return;
     }
+    if (aim?.kind === "spell" && isSpring(aim.spellId)) {
+      if (springAllies(duel, viewer).includes(mon.uid)) {
+        apply(castSpell(duel, aim.index, mon.uid));
+        setAim(null);
+      }
+      return;
+    }
     if (aim?.kind === "spell" && aim.spellId === "qua-trung-thien-su") {
       if (side === viewer && eggAllies(duel, viewer).includes(mon.uid)) {
         apply(castSpell(duel, aim.index, mon.uid));
@@ -6045,23 +6361,22 @@ function PlayPage() {
       apply(attackMonster(duel, aim.uid, mon.uid));
       return;
     }
-    if (aim?.kind === "skill" && aim.index === 3) {
-      const caster = you.field.find((unit) => unit?.uid === aim.uid);
-      if (caster?.cardId === "nu-chua-dieu-nhan" || caster?.cardId === "nu-chua-dieu-nhan-hoan-my") {
+    if (aim?.kind === "skill" && twoStep(you.field.find((unit) => unit?.uid === aim.uid)?.cardId ?? "", aim.index)) {
+      {
         if (!aim.also) {
           if (side === viewer) {
             holdNotice("Chọn một quái đối thủ");
             return;
           }
-          setAim({ kind: "skill", uid: aim.uid, index: 3, also: mon.uid });
+          setAim({ kind: "skill", uid: aim.uid, index: aim.index, also: mon.uid });
           holdNotice("Chọn quái của ta");
           return;
         }
-        if (side !== viewer) {
+        if (side !== viewer || mon.uid === aim.uid) {
           holdNotice("Chọn quái của ta");
           return;
         }
-        apply(useSkill(duel, aim.uid, mon.uid, 3, true, aim.also));
+        apply(useSkill(duel, aim.uid, mon.uid, aim.index, true, aim.also));
         return;
       }
     }
@@ -6156,19 +6471,19 @@ function PlayPage() {
   };
   const marksView = [
     ["foeHp", laserHp[`face:${foeSide}`] ?? hpHold[`face:${foeSide}`] ?? heldHp(foeSide) ?? foe.hp, ""],
-    ["foeOrb", tutView?.foeOrb ?? foe.orb, ""],
+    ["foeOrb", (tutView?.foeOrb ?? foe.orb) + (drainHold?.orb && drainHold.side !== viewer ? 1 : 0), ""],
     ["foeFlask", Math.min(1, foe.flask), "bình"],
     ["foeStars", foe.stars, "sao"],
-    ["foeGems", foe.starGems, "thừa"],
+    ["foeGems", foe.starGems + (drainHold?.gems && drainHold.side !== viewer ? 1 : 0), "thừa"],
     // Xấp bài úp bên đỏ (tấm in 3 lá) ghi số lá còn trong xấp của đối thủ; số lá trên tay họ ở chính giữa khay để bài
     // (băng rôn đỏ trên cùng), trên dải lá úp xoè (chủ game 28/10).
     ["foeHand", pileLeft(foe), "bài"],
     ["foeReserve", foe.reserve.length + foe.hand.length, "lá"],
     ["youHp", laserHp[`face:${viewer}`] ?? hpHold[`face:${viewer}`] ?? heldHp(viewer) ?? you.hp, ""],
-    ["youOrb", tutView?.youOrb ?? you.orb, ""],
+    ["youOrb", (tutView?.youOrb ?? you.orb) + (drainHold?.orb && drainHold.side === viewer ? 1 : 0), ""],
     ["youFlask", Math.min(1, you.flask), "bình"],
     ["youStars", tutView?.youStars ?? you.stars, "sao"],
-    ["youGems", tutView?.youGems ?? you.starGems, "thừa"],
+    ["youGems", (tutView?.youGems ?? you.starGems) + (drainHold?.gems && drainHold.side === viewer ? 1 : 0), "thừa"],
   ] as const;
 
   const reserveHeld = inspect?.pile === "reserve" ? you.reserve[inspect.index] : undefined;
@@ -6709,7 +7024,22 @@ function PlayPage() {
         }
       } else if ("face" in end) {
         xs.push((end.face === viewer ? board.marks.youHp : board.marks.foeHp).x);
+      } else if ("mana" in end) {
+        const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+        xs.push(board.marks[name].x);
       }
+    }
+    // Gió dịu đi (chủ game 22/11): the mother flow runs ~half way from its icon to the two mana marks, then splits.
+    const manas = orb.to.filter((link) => link.fork && "mana" in link.end);
+    if (manas.length && manas.length === orb.to.filter((link) => link.fork).length) {
+      const marks = manas.map((link) => {
+        const end = link.end as { mana: Side; part: "orb" | "gems" | "stars" };
+        const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+        return board.marks[name];
+      });
+      const mx = marks.reduce((sum, m) => sum + m.x, 0) / marks.length;
+      const my = marks.reduce((sum, m) => sum + m.y, 0) / marks.length;
+      return { x: from.x + (mx - from.x) * MANA_FORK, y: from.y + (my - from.y) * MANA_FORK, front: [] as Array<{ x: number; y: number; w: number; h: number }> };
     }
     const mean = xs.length ? xs.reduce((sum, x) => sum + x, 0) / xs.length : near.x;
     // The front row it is aimed at, for the branches to find their way round its cards.
@@ -6775,6 +7105,15 @@ function PlayPage() {
       const len = Math.hypot(dx, dy) || 1;
       return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: HP_RING } };
     }
+    if ("mana" in end) {
+      // Gió dịu đi (chủ game 22/11): a ring round the attacker's ngọc mana, mana in the grave or star frame.
+      const name = `${end.mana === viewer ? "you" : "foe"}${end.part === "orb" ? "Orb" : end.part === "gems" ? "Gems" : "Stars"}` as keyof typeof board.marks;
+      const mark = board.marks[name];
+      const dx = (mark.x - from.x) * 0.9;
+      const dy = (mark.y - from.y) * 1.6 * boardCut().v;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: mark.x, y: mark.y, into: { x: dx / len, y: dy / len }, moat: { kind: "ring", x: mark.x, y: mark.y, r: MANA_RING } };
+    }
     if ("hand" in end || "pile" in end) {
       // Virus ăn mòn eats a card in the hand or the deck (chủ game 30/10): the flow runs into a moat that follows the
       // edge of the pile (the printed pile on the board) or of the hand, not a circle.
@@ -6793,6 +7132,13 @@ function PlayPage() {
       const spot = box ?? { x: mark.x, y: mark.y, w: "hand" in end ? 30 : stack.width, h: "hand" in end ? 9 : stack.height };
       const below = from.y > spot.y;
       return { x: spot.x, y: below ? spot.y + spot.h * 0.5 : spot.y - spot.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: spot.x, y: spot.y, w: spot.w, h: spot.h } };
+    }
+    // Pháo kích bắn vào lá tường thành (chủ game 23/11): dòng chạy vào hào quanh lá nằm ngang đầu tiên của bên đó.
+    if ("wall" in end) {
+      const lying = wallCards(end.wall)[0];
+      if (!lying) return null;
+      const below = from.y > lying.y;
+      return { x: lying.x, y: below ? lying.y + lying.h * 0.5 : lying.y - lying.h * 0.5, into: { x: 0, y: below ? -1 : 1 }, moat: { kind: "box", x: lying.x, y: lying.y, w: lying.w, h: lying.h } };
     }
     const card = cardSpot(end.uid);
     if (!card) return null;
@@ -7045,7 +7391,7 @@ function PlayPage() {
     const card = monsterCard(mon.cardId);
     if (!card) return null;
     const stats = visibleStats(mon, duel.players[orb.side].field);
-    const name = orb.skill === "lash" ? chipLabel(mon.cardId, "lash") : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
+    const name = orb.skill === "lash" || orb.skill === "armor" ? chipLabel(mon.cardId, orb.skill) : orb.skill !== null ? castName(mon.cardId, orb.skill) : "";
     // A skill with painted art shows just that picture, feathered and glowing, without a rim (chủ game 20/11), then it
     // shrinks into the round icon.
     const sk = iconSkill(orb);
@@ -7170,6 +7516,11 @@ function PlayPage() {
     <main className={`stage is-play${replay ? " is-replay" : ""}${countBlink ? " count-blink" : ""}`} data-cut={cut.top > 0 ? "" : undefined}>
       <GlyphDefs />
       <DrawFlights flights={flights} onDone={flightDone} />
+      {burns.map((item) => (
+        <CardBurn key={item.id} rect={item.rect} onDone={() => setBurns((list) => list.filter((row) => row.id !== item.id))}>
+          {item.face}
+        </CardBurn>
+      ))}
       {watch ? (
         <>
           <div className="watch-shield" aria-hidden="true" />
@@ -7366,9 +7717,16 @@ function PlayPage() {
             <button
               key={`wall-${side}-${wall.id}`}
               type="button"
-              className="wall-card"
+              className={`wall-card${side === otherSide && shelling() && aim?.kind === "skill" && !aim.also ? " is-shell" : ""}`}
               style={{ left: `${wall.x}%`, top: `${wall.y}%`, width: `${wall.w}%`, height: `${wall.h}%` }}
-              onClick={() => setInspect({ pile: "env", id: wall.id })}
+              onClick={() => {
+                // Pháo kích chọn lá tường thành của đối thủ làm mục tiêu.
+                if (side === otherSide && shelling() && aim?.kind === "skill" && !aim.also) {
+                  shellTap("wall", otherSide);
+                  return;
+                }
+                setInspect({ pile: "env", id: wall.id });
+              }}
               aria-label={`${spellCard(wall.id)?.name ?? ""}: còn ${wall.left} lượt`}
             >
               <img src={spellSrc(wall.id)} alt="" draggable={false} />
@@ -7398,7 +7756,7 @@ function PlayPage() {
         ) : null}
         {board.stack.hidden || marks.foeHand.hidden ? null : (
           <div className="foe-pile" style={{ left: `${marks.foeHand.x}%`, top: `${marks.foeHand.y}%`, width: `${board.stack.width}%`, height: `${board.stack.height}%`, fontSize: `calc(${board.stack.size} * var(--cqmin))` }}>
-            <DeckPile count={pileLeft(foe)} side="foe" />
+            <DeckPile count={pileLeft(foe)} side="foe" shuffle={shuf.foe} />
           </div>
         )}
         {/* Nút ba gạch (chủ game 14/11): mở bảng Lịch sử + Cài đặt; đứng ngay dưới bộ bài địch, về phía giữa sân. Thay nút
@@ -7463,7 +7821,7 @@ function PlayPage() {
           const seen = hpSide !== null && sight ? sight.hp[hpSide] : null;
           const shift = seen !== null && hpSide !== null ? seen - duel.players[hpSide].hp : 0;
           return (
-            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `calc(${marks[key].size * markScale(key)} * var(--cqmin))`, color: shift ? undefined : color }}>
+            <div key={key} data-tut={key} onClick={(key === "youGems" || key === "youStars") && !tutorial && !replay ? starGapHint : undefined} className={`mark${(key === "youGems" || key === "youStars") && !tutorial && !replay ? " is-tap" : ""}${orbKey ? " is-orb" : ""}${starLit ? " is-star" : ""}${drainBlink && (key === (drainBlink.side === viewer ? "youOrb" : "foeOrb") ? drainBlink.orb : key === (drainBlink.side === viewer ? "youGems" : "foeGems") ? drainBlink.gems : false) ? " is-drain" : ""}${COUNT_MARKS.includes(key) ? " is-count" : ""}${shift < 0 ? " is-loss" : shift > 0 ? " is-gain" : ""}`} style={{ left: `${marks[key].x}%`, top: `${marks[key].y}%`, fontSize: `calc(${marks[key].size * markScale(key)} * var(--cqmin))`, color: shift ? undefined : color }}>
               <b>{shift ? seen : value}</b>
             </div>
           );
@@ -7971,6 +8329,15 @@ function PlayPage() {
               >
                 OK
               </button>
+            </div>
+          </div>
+        ) : null}
+        {duel.swordAsk && duel.turn === viewer ? (
+          <div className="overlay is-ask">
+            <div className="ask-card is-keep">
+              <p>{tr(swordAskLine(you.field.find((unit) => unit?.uid === duel.swordAsk?.uid) ?? ({ cardId: "" } as never)))}</p>
+              <button type="button" onClick={() => apply(answerSword(duel, true))}>{tr("Dùng Kiếm")}</button>
+              <button type="button" onClick={() => apply(answerSword(duel, false))}>{tr("Không")}</button>
             </div>
           </div>
         ) : null}
@@ -8497,7 +8864,7 @@ function PlayPage() {
             </span>
           ))}
         </div>
-        {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
+        {drag?.kind === "unit" || aim?.kind === "attack" || (aim?.kind === "skill" && !(shelling() && aim.also) && selectedCard && faceSkill(selectedCard.id, aim.index)) ? (
           <button
             type="button"
             className={`face-drop${snap === "face" || (!snap && !drag && aimLit === "face") ? " is-snap" : ""}`}
@@ -8505,6 +8872,10 @@ function PlayPage() {
             onClick={() => {
               if (suppressClick.current) {
                 suppressClick.current = false;
+                return;
+              }
+              if (shelling()) {
+                shellTap("face", otherSide);
                 return;
               }
               if (aim?.kind === "attack") apply(attackFace(duel, aim.uid));
@@ -8543,7 +8914,7 @@ function PlayPage() {
             }, DOUBLE_TAP);
           }}
         >
-          <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} />
+          <DeckPile count={pileLeft(you)} side="you" ready={canDrawNow} shuffle={shuf.you} />
           {tutorial ? null : <DrawHint on={canDrawNow} />}
         </button>
         )}
@@ -8690,6 +9061,10 @@ function PlayPage() {
                             }
                             if (id === DUO_CARD) {
                               startDuo(index);
+                              return;
+                            }
+                            if (isSpring(id)) {
+                              startSpring(index);
                               return;
                             }
                             if (slowUse && id === "sung-loi-pha") {
@@ -9205,7 +9580,7 @@ function PlayPage() {
               id={shownSpell.id}
               gems={spellToll ? `${shownSpell.gems}+1` : undefined}
               actions={
-                mine && inspect.pile === "spell" && !(queue && (queue.kind === "act" || duel.step !== "respond")) && (duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
+                mine && inspect.pile === "spell" && !(queue && (queue.kind === "act" || duel.step !== "respond")) && (isSpring(shownSpell.id) ? springLive(duel, viewer) : duel.step === "respond" && ANSWER_SPELLS.has(shownSpell.id) ? answerUsable(shownSpell.id, duel, viewer, inspect.index) : shownSpell.id !== "hoan-doi")
                   ? [
                       {
                         key: "cast",
@@ -9227,6 +9602,11 @@ function PlayPage() {
                           if (shownSpell.id === DUO_CARD) {
                             setInspect(null);
                             startDuo(index);
+                            return;
+                          }
+                          if (isSpring(shownSpell.id)) {
+                            setInspect(null);
+                            startSpring(index);
                             return;
                           }
                           if (shownSpell.id === "qua-trung-thien-su") {
@@ -9493,6 +9873,7 @@ function PlayPage() {
         <ArenaFx />
         <FireBurst />
         <HealBlast />
+        <BuffBlast />
         <FlareBlast />
         <BoomBlast />
         <BoltBurst />
@@ -9709,7 +10090,6 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
       orb: you.orb,
       level: mon.level ?? 1,
       hp: mon.hp,
-      beat: mon.beat ?? 0,
       stored: mon.stored ?? 0,
       skillText: plainCopy(card.skill),
       afford,
@@ -9771,9 +10151,6 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
         ...(card.id === "nu-chua-dieu-nhan" ? {} : { slide: aimed(1) }),
       });
     }
-  }
-  if (attackable && !noSkill && card.id === "hiep-si-cua-hau" && !duel.parley && you.orb >= 1) {
-    y.push({ key: "talk", label: tr("Đàm phán"), go: () => apply(startParley(duel, uid)) });
   }
   if (attackable && !noSkill && card.id === "hiep-si-huyen-bi" && !duel.parley && you.orb >= 2) {
     z.push({ key: "talk", label: tr("Đàm phán"), go: () => apply(startParley(duel, uid)) });
@@ -10095,8 +10472,6 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
         ? mon.level ?? 0
         : mon.cardId === "con-thinh-no-cua-hai-vuong"
           ? 2 + 3 * (mon.stored ?? 0)
-        : mon.cardId === "hiep-si-cua-hau"
-          ? mon.beat === 1 ? 2 : 1
         : (mon.level ?? 1) > 1
           ? (mon.level ?? 1)
           : ""
@@ -10112,7 +10487,6 @@ const COUNT_ICON: Record<string, string> = {
   "kizuran": "heart-shield",
   "ken-ngai": "butterfly",
   "con-thinh-no-cua-hai-vuong": "guardian-shield",
-  "hiep-si-cua-hau": "shaking-hands",
   "hiep-si-ho-ve": "growth",
   "chien-binh-rong": "scale-mail",
   "nu-chua-dieu-nhan-hoan-my": "spiked-shell",
@@ -10291,7 +10665,7 @@ function BoardSlot({
   attack: boolean;
   shift?: { x: number; y: number } | null;
   /** The last thrust of a landing blow: a quick move in place of the slow lunge. */
-  thrust?: false | "back" | "ram" | "rouse" | "cast";
+  thrust?: false | "back" | "ram" | "rouse" | "cast" | "mount";
   /** K2: the light of the skill this monster is rousing for. */
   rouseTone?: string;
   /** Chủ game 16/11: the card is lifted off the board for a moment while it flares (its skill is queued). */
@@ -10330,7 +10704,7 @@ function BoardSlot({
   onPointerMove?: (event: ReactPointerEvent) => void;
   onPointerUp?: (event: ReactPointerEvent) => void;
 }) {
-  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
+  const cls = `slot slot-${near ? "y" : "f"}${index}${hot ? ` is-hot is-${tone}` : ""}${fuse ? " is-fuse" : ""}${picked ? " is-picked" : ""}${snapped ? " is-snap" : ""}${blocked && !snapped ? " is-blocked" : ""}${attack ? " is-attack" : ""}${alert ? " is-alert" : ""}${ready && !alert && !lurk ? " is-ready" : ""}${block && !alert && !lurk ? " is-block" : ""}${lurk && !alert ? " is-lurk" : ""}${fading ? " is-falling" : ""}${motion.pops.includes(`${side}-${index}`) ? " summon-pop" : ""}${mon && motion.hits.includes(mon.uid) ? " is-hit" : ""}${lifted ? " is-lift" : ""}${thrust === "rouse" ? " is-rouse" : thrust ? ` is-thrust${thrust === "back" ? " is-windup" : thrust === "cast" ? " is-cast" : thrust === "mount" ? " is-mount" : ""}` : ""}${mon && forecast?.dead && !veil && !mask && !decoy ? " is-doomed" : ""}`;
   // Where the slot stands on the (possibly cut) board; the slot-f / slot-y classes hold the uncut numbers.
   const seat = SLOT_BOX[near ? 0 : 1][index];
   const place: CSSProperties = bare ? { left: 0, top: 0, width: "100%", height: "100%" } : { left: `${seat.x}%`, top: `${seat.y}%`, width: `${seat.w}%`, height: `${seat.h}%`, ...(alert && alertColor ? ({ "--alert-color": alertColor } as CSSProperties) : {}), ...(rouseTone ? ({ "--rouse": rouseTone } as CSSProperties) : {}) };
@@ -10397,7 +10771,7 @@ function BoardSlot({
       {thrust === "rouse" || thrust === "cast" ? <i className="rouse-aura" aria-hidden="true" /> : null}
       {thrust === "ram" && ramAng !== undefined ? <i className="ram-trail" style={{ "--ang": `${ramAng}rad` } as CSSProperties} aria-hidden="true" /> : null}
       <span
-        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}${holdingMend(mon) ? " is-mending" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
+        className={`field-unit${mask ? "" : `${tired(mon) || bind > 0 || lockFlash || hexLocked(mon) ? " is-dim" : ""}${lockFlash ? " is-lockflash" : ""}${prime ? " is-prime" : ""}`}${lunging ? " is-lunging" : ""}${motion.hits.includes(mon.uid) ? " is-hit" : ""}${ghosting ? " is-dim" : ""}${fuseHide ? " is-fuse-hide" : ""}`}
       >
         {unveil === "own" ? <img className="lurk-turn" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         <span className={`fu-body${unveil === "own" ? " is-flip" : ""}`}>
@@ -10529,4 +10903,10 @@ function ReplayBar({ pos, onMove, at, total, round, playing, speed, onSeek, onSt
       </div>
     </div>
   );
+}
+
+/** Skill chọn 2 mục tiêu (quái địch rồi quái của ta): Dụ dỗ của 2 nữ chúa, Mê hoặc của Harpie Lady (chủ game 25/11). */
+function twoStep(cardId: string, index: number): boolean {
+  if (cardId === "nu-chua-dieu-nhan" || cardId === "nu-chua-dieu-nhan-hoan-my") return index === 3;
+  return cardId === "my-dieu-nhan" && index === 1;
 }

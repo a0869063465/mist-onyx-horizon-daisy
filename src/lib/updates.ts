@@ -1107,9 +1107,21 @@ export const PENDING_NOTES: string[] = [
   "Sứa hút ma pháp: 0 mana, công 3, thủ 0, thủ phép 0, máu 2, có Đòn đánh phép. Phản phép: quái nào tấn công phép thuật vào Sứa bị tiêu diệt ngay.",
   "Quái ẩn: bên mình thấy lá úp, đối thủ thấy dạng ẩn. Lúc lật, bên mình có hiệu ứng lật bài, bên đối thủ có hiệu ứng xoá sương mù.",
   "Quái ẩn của đối thủ là lá phủ sương mù; lúc lật sương tan có 4 kiểu, hình và âm trộn ngẫu nhiên.",
+  "Thêm lá Nắng và gió: Gió dịu đi chặn đòn khi đang ẩn, Nắng ấm lên gây 1 sát thương chuẩn lên cả sân.",
+  "Gió dịu đi của Nắng và gió: dòng hồng chung một nhánh mẹ rồi tách 2 dòng tới ngọc mana và mana trong mộ của kẻ bị chặn, số chớp rồi giảm.",
   "Thêm lá phép Quả trứng thiên sứ vào bộ sưu tập (chưa dùng được trong trận).",
   "Quả trứng thiên sứ dùng được trong trận: chặn đòn đánh thường hoặc kỹ năng gây sát thương của quái đối thủ nhắm quái của bạn, kẻ ra đòn bị mệt, 1 quái bị nhắm được Trả đòn không tốn thêm mana, kể cả quái hàng sau.",
   "Thêm lá phép Song sát: 2 quái đồng minh lần lượt ra đòn lên 1 quái địch, không bị chặn, không bị Trả đòn; thủ hay thủ phép chặn bao nhiêu thì mất bấy nhiêu tới hết giao tranh.",
+  "Thêm lá Rùa máy bắn đá: Pháo kích lấy 1 quái thú của mình làm đạn, bắn vào quái, người chơi hoặc lá tường thành của đối thủ.",
+  "Pháo kích của Rùa máy bắn đá: sát thương chuẩn bằng 65% máu hiện tại của quái làm đạn cộng số sao của nó.",
+  "Thêm Tử thần của những lá bài (2 sao, công 4, máu 2, hệ Vương quốc) với nội tại Gặt hồn: tiêu hao 1 mana để tấn công, đánh vào được người chơi thì đối thủ huỷ 1 lá ngẫu nhiên trên tay.",
+  "Lá bị bỏ khỏi tay (Gặt hồn của Tử thần của những lá bài, Sinh mệnh mới của Quả trứng sinh mệnh) nhấc lên, bay vòng cung về góc phải trên rồi cháy tan thành lửa xanh lá; lá của đối thủ cũng vậy nhưng úp.",
+  "Harpie Lady: công 3, thủ 0, thủ phép 0, máu 3. Giáp và Vuốt giờ né đòn đánh thường nhắm vào (1 mana, tăng vĩnh viễn 2 thủ và 2 máu tối đa, trả 5 sát thương phép vào kẻ tấn công). Roi điện giờ né skill hoặc phép nhắm tới (1 mana, tăng vĩnh viễn 2 công, trả đòn trực tiếp lên kẻ ra đòn).",
+  "Harpie Lady: Mê hoặc 0 mana, chọn 1 quái địch rồi 1 quái đồng minh khác, quái địch đánh thường vào quái đó. Không còn cấm hành động lượt sau.",
+  "Hiệp sĩ của vua, Hiệp sĩ của hậu: Khiên +4 thủ hoặc thủ phép trước lần nhận sát thương đầu tiên trong lượt; Kiếm tốn 1 mana +3 công khi tấn công; Hiệp sĩ của hậu đánh thường gây sát thương phép. Bỏ lời chúc vua/hậu, Đàm phán, Kiếm phép, Kiếm tấn công cũ.",
+  "Có hiệu ứng xáo bài, kèm âm thanh: lúc đổi bài đầu trận (xáo xong mới chia bài) và khi quái Ẩn về xấp. Xấp của bạn xáo xanh, xấp đối thủ xáo đỏ.",
+  "Thêm lá phép Suối nguồn sinh mệnh. Siêu tốc 0 mana, hồi 1 máu cho 1 đồng minh và cho nó 2 máu tối đa đến hết lượt chung, hiệu ứng hồi máu giữ tới lúc hết. Độ bền 2 lần dùng: lần 1 lá về bộ bài, xáo bài và bạn rút 1 lá; lần 2 lá biến mất.",
+  "Buff chỉ số (công, thủ, thủ phép, máu tối đa) có hiệu ứng vòng cam, mũi tên bay lên, riêng với hồi máu xanh lục. Bỏ vòng hồi máu giữ liên tục trên quái đang được buff tạm.",
 ];
 
 function remarkOf(notes: string[]) {

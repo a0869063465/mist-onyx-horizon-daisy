@@ -190,6 +190,8 @@ export function spellFxLook(cardId: string): SpellFx | null {
 
 export function skillVisual(cardId: string, index = 0): SkillLook {
   if (cardId === "mat-xanh-huy-diet") return null;
+  // Pháo kích: chỉ vụ nổ kiểu Kuriboh của quái làm đạn, không thêm hiệu ứng skill nào (chủ game 23/11).
+  if (cardId === "rua-may-ban-da") return null;
   const slot = slotFor(cardId, index);
   const picked = slot ? loadCardFx().m[cardId]?.[slot.key] : null;
   if (picked) return picked;

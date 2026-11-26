@@ -6,7 +6,6 @@ export type FieldBindCtx = {
   orb: number;
   level: number;
   hp: number;
-  beat: number;
   stored: number;
   skillText: string;
   afford: (cost: number) => boolean;
@@ -37,11 +36,13 @@ const orb = (n: number): Gate => (ctx) => ctx.orb >= n;
 
 const ROWS: Row[] = [
   { ids: ["te-giac-be-con"], key: "up", cast: "self", skill: 0, gate: (ctx) => ctx.level < 3 && ctx.afford(ctx.level >= 2 ? 2 : 1) },
-  { ids: ["hiep-si-cua-hau"], key: "sword", cast: "aim", skill: 0, label: (ctx) => `${chipLabel(ctx.cardId, "sword")} ${ctx.beat === 1 ? 2 : 1}` },
   { ids: ["mat-do-tan-pha"], key: "ball", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["cuc-bong-ma-quai"], key: "mult", cast: "self", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && !ctx.spent.includes("mult") },
   { ids: ["hoa-an-thit-nguoi"], key: "bite", cast: "aim", skill: 0 },
   { ids: ["thuong-quan-long"], key: "spin", cast: "declare", skill: 0, gate: pay(1) },
+  { ids: ["nang-va-gio"], key: "sun", cast: "declare", skill: 0, gate: pay(2) },
+  // Pháo kích: cần 1 quái thú khác của mình trên sân làm đạn (sân 6 ô, còn trống nhiều nhất 4 ô).
+  { ids: ["rua-may-ban-da"], key: "shell", cast: "aim", skill: 0, gate: (ctx) => ctx.afford(skillManaCost(ctx.cardId, 1)) && ctx.room <= 4 },
   { ids: ["may-nem-bom-hinh-nhen"], key: "bomb", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["rong-con", "rong-ngan-tuoi"], key: "breath", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["phu-thuy-ti-hon", "phu-thuy-tap-su", "phu-thuy-bac-thay"], key: "hex", cast: "aim", skill: 0, gate: orb(1) },

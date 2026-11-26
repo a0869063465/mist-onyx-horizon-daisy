@@ -6,7 +6,6 @@ import {
   favorShots,
   hellFigures,
   liveAtk,
-  queenSwing,
   skillLoss,
   type Duel,
   type FieldMon,
@@ -78,12 +77,13 @@ function came(result: string | undefined): string[] {
   return result ? [result.replace(/^\d+\.\s*/, "").replace(/[.\s]+$/, "").trim()] : [];
 }
 
-function harpy(name: string, t: string, target: FieldMon | null): string[] {
+function harpy(name: string, t: string, target: FieldMon | null, cardId = ""): string[] {
   const who = target ? monsterCard(target.cardId)?.name ?? "1 quái địch" : "1 quái địch";
   switch (name) {
     case "Thổi bay":
       return ["Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ"];
     case "Mê hoặc":
+      if (cardId === "my-dieu-nhan") return [`1 quái địch đánh thường vào ${target ? monsterCard(target.cardId)?.name ?? "1 quái đồng minh" : "1 quái đồng minh"}`];
       return [`${who} đánh thường vào ta`, "Quái đó không thể hành động ở lượt sau"];
     case "Dụ dỗ":
       return [`${who} đánh thường vào 1 quái của ta`];
@@ -91,8 +91,14 @@ function harpy(name: string, t: string, target: FieldMon | null): string[] {
       return ["Thổi bay 1 phép ngẫu nhiên của địch", "Lượt sau đối thủ không được rút bài"];
     case "Roi sấm":
       return ["Đòn đánh kế tiếp thành sát thương phép"];
+    case "Giáp và Vuốt": {
+      if (cardId !== "my-dieu-nhan") return [];
+      const armor = t.slice(Math.max(0, t.indexOf("Giáp và Vuốt")));
+      return ["Né đòn đánh thường", `+${num(armor, /tăng vĩnh viễn\s*(\d+)\s*thủ/, 2)} thủ và +${num(armor, /và\s*(\d+)\s*máu tối đa/, 2)} máu tối đa vĩnh viễn`, `Trả ${num(armor, /trả\s*(\d+)\s*sát thương phép/, 5)} sát thương phép`];
+    }
     case "Roi điện": {
       const lash = t.slice(Math.max(0, t.indexOf("Roi điện")));
+      if (cardId === "my-dieu-nhan") return ["Né skill hoặc phép nhắm vào", `+${num(lash, /tăng vĩnh viễn\s*(\d+)\s*công/, 2)} công vĩnh viễn`, "Trả đòn trực tiếp lên kẻ ra đòn"];
       return ["Né đòn", `+${num(lash, /tăng vĩnh viễn\s*(\d+)\s*công/, 3)} công vĩnh viễn`, `Trả ${num(lash, /trả\s*(\d+)\s*sát thương phép/, 5)} sát thương phép`];
     }
   }
@@ -189,12 +195,10 @@ function lines(at: SkillAt): string[] {
         `-${num(t, /-(\d+)\s*thủ(?!\s*phép)/, 2)} thủ, -${num(t, /-(\d+)\s*thủ phép/, 2)} thủ phép`,
         `Trong ${num(t, /trong\s*(\d+)\s*lượt/, 6)} lượt`,
       ];
-    case "hiep-si-cua-hau":
-      return name === "Kiếm phép" && mon ? [deal(blow(mon, queenSwing(mon).pack))] : [];
     case "my-dieu-nhan":
     case "nu-chua-dieu-nhan":
     case "nu-chua-dieu-nhan-hoan-my":
-      return harpy(name, t, target);
+      return harpy(name, t, target, cardId);
     case "chien-si-gam-nham":
       return ["Gấp đôi phòng ngự", `+${num(t, /thêm\s*(\d+)\s*máu tối đa/, 2)} máu tối đa`];
     case "ngai-khong-lo":
@@ -254,6 +258,9 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Đổi chỗ quái bị nhắm với quái khác"];
       case "song-sat":
         return ["2 đồng minh cùng đánh 1 kẻ địch", "Lớp thủ bị chặn mất tới hết giao tranh"];
+      case "suoi-nguon-sinh-menh":
+      case "suoi-nguon-sinh-menh-2":
+        return [`Hồi ${num(e, /Hồi\s*(\d+)\s*máu/, 1)} máu cho 1 đồng minh`, `+${num(e, /(\d+)\s*máu tối đa/, 2)} máu tối đa tới hết lượt`];
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
       case "don-cuoi-cung":

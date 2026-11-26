@@ -4,16 +4,12 @@ Bản gọn, nạp tự động. Chi tiết từng tính năng đã làm nằm �
 
 Cách ghi: mỗi việc mới/đang làm chỉ ghi 3 dòng ngắn ở mục "Đang dở" dưới đây. Làm xong và chủ game đã duyệt/áp `main` thì chuyển chi tiết sang `docs/nhat-ky.md`, xoá khỏi đây.
 
-## Đang dở (nhánh `ccr-9debffc2-yhepws`, CHƯA áp `main`, chờ chủ game xem; chi tiết trong nhật ký)
+## Đang dở (main: các lá Suối nguồn, Nắng và gió, Tử thần, Rùa, xáo bài, buff chỉ số… đã áp; chi tiết ở nhật ký)
 
-- Lá Song sát (25/11): luật + giao diện đã làm. Chưa thử: đáp trong chuỗi bằng mắt, online, máy (brain.ts chưa dùng), điện thoại. Hấp thụ của Hoa ăn thịt người vẫn dùng được trong Song sát (chờ chủ game quyết).
-- Thiên sứ vô hình + Khoá 1 (22/11): chưa thử skill, bảng thông tin icon Khoá 1, online, điện thoại.
-- Tinh linh đàn hạc (22/11): chưa thử máy dùng lá, online. Số đếm trên quái = icon skill + số màu (22/11): hỏi chủ game số nào là hồi máu (xanh lá).
-- Harpie Lady (21/11): luật xong; bảng chọn kỹ năng `wileAsk` kiểm lại đã có giao diện chưa trước khi tin; chữ mô tả lá chờ chủ game viết.
-- Kuriboh, Lính chiến đá khổng lồ, Bẫy thú, Huỷ diệt, Đòn cuối cùng, Đồng hồ khó đoán, Ẩn + Sương mù + Kraken/Sứa, Sân động Rừng/Bóng tối (20–22/11): đã làm, chờ xem. Tranh Kuriboh mới chưa thay vào lá (hỏi chủ game chỗ thay). Núi dung nham chờ video.
-- Icon vẽ tay chờ = 5 (+ `cupidon-arrow`).
-- Mê cung PvE (`/maze`): phần 1–3 đã làm; còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
-- Chờ chủ game: bài Phục kích thỉnh thoảng FAIL trong round-rules (cũ, chưa tìm nguyên nhân); máy (brain.ts) chưa dùng nhiều lá mới; điện thoại/online chưa thử hầu hết.
+- Chưa thử bằng mắt/online/máy/điện thoại: hầu hết lá mới (xem `docs/nhat-ky.md`, grep tên lá).
+- Nhánh `ccr-9debffc2-yhepws` (Song sát, Thiên sứ vô hình + Khoá 1, Tinh linh đàn hạc…) CHƯA gộp `main`, ghi chú riêng ở nhánh đó.
+- Icon vẽ tay chờ = 5 (+ `cupidon-arrow`). Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
+- Chờ chủ game: bài Phục kích thỉnh thoảng FAIL trong round-rules (cũ).
 
 ## Quy tắc làm việc với chủ game (luật dự án ở `AGENTS.project.md`)
 

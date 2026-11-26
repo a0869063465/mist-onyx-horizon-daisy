@@ -3841,27 +3841,6 @@ button.trail-dot.is-on {
 .field-unit.is-prime {
   animation: prime-glow 1.2s ease-in-out infinite;
 }
-.field-unit.is-mending::after {
-  content: "";
-  position: absolute;
-  inset: 6%;
-  z-index: 4;
-  pointer-events: none;
-  border-radius: 46%;
-  background: radial-gradient(circle, rgba(125, 255, 225, 0.72), rgba(62, 198, 255, 0.08) 68%);
-  mix-blend-mode: screen;
-  animation: mend-hold 1.5s ease-in-out infinite;
-}
-@keyframes mend-hold {
-  0%, 100% {
-    opacity: 0.28;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-}
 @keyframes prime-glow {
   0%, 100% {
     filter: drop-shadow(0 0 calc(var(--alert-size, 32px) * 0.45) #ff8a00);
@@ -5751,6 +5730,15 @@ button.watch-back {
   pointer-events: none;
   object-fit: contain;
 }
+/* Buff chỉ số (26/11): tâm vòng nằm ở ~51% / 78% khung video. */
+.buff-blast {
+  position: absolute;
+  z-index: 13;
+  width: 24%;
+  transform: translate(-51%, -78%);
+  pointer-events: none;
+  object-fit: contain;
+}
 /* Video nước (06/11): vòng sóng ở đáy khung nên đặt tâm vòng (~78% chiều cao) vào điểm trúng. */
 .tide-vid {
   position: absolute;
@@ -5865,12 +5853,6 @@ button.watch-back {
   100% {
     transform: scale(1.4);
     opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .field-unit.is-mending::after {
-    animation: none;
-    opacity: 0.7;
   }
 }
 .fx-lab {
@@ -12304,6 +12286,24 @@ button.watch-back {
 }
 /* Xấp của mình to hơn một chút cho dễ nhìn (xấp địch giữ 12,calc(6 * var(--cqw))). */
 .face-pile .deck-pile img { width: calc(14.1 * var(--cqw)); }
+/* Xáo bài (chủ game 26/11): video xấp bài trong suốt phủ đúng lá trên cùng (mặt lá trong video rộng 0,636 khung, mặt lá
+   trong game 0,92 lá), xấp tĩnh mờ đi rồi hiện lại. Tâm mặt lá trong video: bài xanh (53,8%; 60,5%), bài đỏ (54,5%; 62,2%). */
+.deck-pile { --pile-card: calc(12.6 * var(--cqw)); }
+.face-pile .deck-pile { --pile-card: calc(14.1 * var(--cqw)); }
+.deck-pile img { transition: opacity 0.15s linear; }
+.deck-pile.is-shuffling > img { opacity: 0; transition-duration: 0.08s; }
+.deck-pile .shuffle-fx {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--pile-card) * 1.447);
+  height: auto;
+  pointer-events: none;
+  animation: shuffle-fx 1.9s linear both;
+}
+.deck-pile .shuffle-fx.is-you { transform: translate(-53.8%, -60.5%); }
+.deck-pile .shuffle-fx.is-foe { transform: translate(-54.5%, -62.2%); }
+@keyframes shuffle-fx { 0% { opacity: 0; } 5% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
 /* Chưa rút bài: viền và glow sáng quanh lá trên cùng, thở nhẹ. */
 .deck-pile.is-ready img:last-of-type {
   filter: drop-shadow(0 0 0.1em #fff) drop-shadow(0 0 0.15em #fff) drop-shadow(0 0 0.5em #b4ecff) drop-shadow(0 0 1.1em #4fb4ff);
@@ -14704,6 +14704,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Safari: alpha WebM becomes black-background MP4, so black must vanish by blending. */
 html[data-flatfx] .heal-blast,
+html[data-flatfx] .buff-blast,
 html[data-flatfx] .flare-blast,
 html[data-flatfx] .boom-blast,
 html[data-flatfx] .tide-vid,
@@ -14992,3 +14993,36 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) {
   .slot .fu-body.is-flip, .slot .field-unit > .lurk-turn, .slot .fu-body > .fog-wipe { animation-duration: 0.01s; }
 }
+
+/* Lá bị bỏ khỏi tay (chủ game 22/11): lá nhấc lên, bay cung về 2 giờ và cháy tan theo video, xem card-burn.tsx. */
+.burn { position: fixed; z-index: 120; pointer-events: none; will-change: transform; }
+.burn-mask {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-size: 900% 900%;
+  mask-size: 900% 900%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.burn-card { position: absolute; }
+.burn-card > .card, .burn-card > img { width: 100%; height: 100%; aspect-ratio: auto; display: block; }
+.burn-light {
+  position: absolute;
+  inset: 0;
+  background-size: 900% 900%;
+  background-repeat: no-repeat;
+}
+
+/* Gió dịu đi (chủ game 22/11): mana bị thổi bay chớp rồi giảm. */
+.mark.is-drain,
+.mark.is-drain b { animation: drain-blink 1.2s ease-out 1; }
+@keyframes drain-blink {
+  0%, 30%, 60% { color: #fff; filter: drop-shadow(0 0 0.5em #ff4fa6) drop-shadow(0 0 0.9em #ff4fa6); transform: scale(1.3); }
+  15%, 45%, 100% { color: #ff4141; filter: none; transform: scale(1); }
+}
+
+/* Pháo kích (chủ game 23/11): quái làm đạn leo lên lưng Rùa máy bắn đá rồi nằm chờ trên nòng. */
+.slot.is-thrust.is-mount { z-index: 14; transition: transform 400ms cubic-bezier(0.25, 0.85, 0.3, 1); }
+.slot.is-thrust.is-mount .field-unit { filter: brightness(1.15) drop-shadow(0 0.35rem 0.5rem rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px rgba(255, 120, 190, 0.85)); }
+/* Lá tường thành của đối thủ chọn được làm mục tiêu Pháo kích. */
+.wall-card.is-shell { --alert-color: #ff4fa6; z-index: 13; box-shadow: 0 0 0 2px #ff4fa6, 0 0 0.9rem #ff4fa6, 0 0 1.6rem rgba(255, 79, 166, 0.7); animation: react-breathe 1.2s ease-in-out infinite; }
