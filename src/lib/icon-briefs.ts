@@ -267,6 +267,8 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Quái vừa bị hạ ra đòn cuối lên kẻ hạ nó", "Sát thương chuẩn, không né được"];
       case "huy-diet":
         return ["Tiêu diệt 1 quái địch bất kỳ"];
+      case "hoi-sinh-quai-thu":
+        return ["Hồi sinh quái thú đã chết của cả 2 phe", "Lao ra chặn đòn đánh, ở lại 2 lượt (phép chậm: 3 lượt)"];
       case "bay-thu":
         return ["Tiêu diệt quái máu dưới 4 vừa triệu hồi hoặc phát động tấn công"];
       case "vong-xoay-bao-ho":

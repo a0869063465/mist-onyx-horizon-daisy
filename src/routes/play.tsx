@@ -19,6 +19,7 @@ import { fxUrl, matchJobs } from "@/lib/preload";
 import { LoadScreen, type LoadFace } from "@/components/game/load-screen";
 import { MatchIntro, type IntroSide } from "@/components/game/match-intro";
 import { OpenerPanel, type OpenerCard } from "@/components/game/opener-panel";
+import { PickPanel, type PickCard } from "@/components/game/pick-panel";
 import { RebirthPanel, type RebirthCard } from "@/components/game/rebirth-panel";
 import { Tutorial, type TutView } from "@/components/game/tutorial";
 import { CountBadge, type CountPart } from "@/components/game/count-badge";
@@ -124,6 +125,16 @@ import {
   answerPlume,
   answerPrey,
   evolveBird,
+  answerWile,
+  WILE_CARDS,
+  isWileCard,
+  wileReady,
+  wileBirds,
+  charmCode,
+  REVIVE_CARD,
+  reviveReady,
+  reviveChoices,
+  reviveCode,
   chooseClock,
   summonClock,
   CLOCK,
@@ -375,7 +386,7 @@ type Aim =
   | { kind: "innate"; uid: string }
   | { kind: "skill"; uid: string; index: number; also?: string }
   | { kind: "tide"; uid: string }
-  | { kind: "spell"; index: number; spellId: string; from?: string; duo?: { picks: DuoPick[]; ask?: string } };
+  | { kind: "spell"; index: number; spellId: string; from?: string; duo?: { picks: DuoPick[]; ask?: string }; wile?: { ally?: string } };
 
 type Strike = { uid: string; face: boolean; foeUid: string | null };
 /** Centre and width of a card on the board, in % of the board. */
@@ -1032,7 +1043,7 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD, SPRING, SPRING_WORN]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD, SPRING, SPRING_WORN, WILE_CARDS.gust, WILE_CARDS.charm]);
 
 /** Suối nguồn sinh mệnh (chủ game 25/11): siêu tốc, dùng được ở lượt chính lẫn lúc đáp trong chuỗi; nhắm 1 đồng minh. */
 function isSpring(id: string) {
@@ -1224,6 +1235,9 @@ const ANSWER_SPELLS = new Set([
   "hop-ma-thuat",
   "qua-trung-thien-su",
   DUO_CARD,
+  WILE_CARDS.armor,
+  WILE_CARDS.lash,
+  REVIVE_CARD,
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1254,6 +1268,9 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   if (id === TRAP_CARD) return duel.hold ? trapPicks(duel, duel.hold.priority).length > 0 : false;
   // Song sát: tự phát động, chờ trong chuỗi như Phục kích (chủ game 25/11).
   if (id === DUO_CARD) return duel.hold?.priority !== undefined && duoReady(duel, duel.hold.priority);
+  // Lá phép Harpie Lady và Hồi sinh quái thú (chủ game 26/11): chờ trong chuỗi như Bẫy thú.
+  if (id === WILE_CARDS.armor || id === WILE_CARDS.lash) return duel.hold?.priority !== undefined && wileReady(duel, duel.hold.priority, id);
+  if (id === REVIVE_CARD) return duel.hold?.priority !== undefined && reviveReady(duel, duel.hold.priority);
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   // Quả trứng thiên sứ (chủ game 21/11): an enemy monster's attack or damaging skill aimed at a monster of yours.
   if (id === "qua-trung-thien-su") return duel.hold?.priority !== undefined && eggAim(duel, duel.hold.priority) !== null;
@@ -1338,6 +1355,8 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   // Bẫy thú (chủ game 20/11): ngay lúc quyền về sau khi quái địch máu dưới 4 vừa triệu hồi.
   if (id === TRAP_CARD) return trapPicks(duel, viewer).length > 0;
   if (id === DUO_CARD) return duoReady(duel, viewer);
+  if (isWileCard(id)) return wileReady(duel, viewer, id);
+  if (id === REVIVE_CARD) return reviveReady(duel, viewer);
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -1373,7 +1392,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
   if (isSpring(id)) return springLive(duel, viewer);
-  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD) || duel.step === "respond")) {
+  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD && id !== REVIVE_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
     if (id === "hoan-doi") return canCastSwap(duel, viewer);
@@ -2015,6 +2034,8 @@ function PlayPage() {
   const [lureAsk, setLureAsk] = useState<string | null>(null);
   // Sinh mệnh mới (chủ game 21/11): uid của Quả trứng đang chọn lá để bỏ.
   const [rebirthAsk, setRebirthAsk] = useState<string | null>(null);
+  /** Hồi sinh quái thú đang chọn quái trong mộ: vị trí lá trên tay. */
+  const [reviveAsk, setReviveAsk] = useState<{ index: number } | null>(null);
   const [toast, setToast] = useState("");
   const [help, setHelp] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -4582,6 +4603,81 @@ function PlayPage() {
     setAim({ kind: "spell", index, spellId: "hop-ma-thuat", ...(allies.length === 1 ? { from: allies[0] } : {}) });
     holdNotice(allies.length === 1 ? "Chọn quái đối thủ để đổi chỗ." : "Chọn đồng minh đang bị nhắm.");
   }
+  /**
+   * Lá phép Harpie Lady và Hồi sinh quái thú (chủ game 26/11). Giáp và Vuốt, Roi điện: dùng luôn (harpie bị nhắm đã rõ).
+   * Thổi bay: chọn Harpie Lady. Mê hoặc: quái địch, rồi đồng minh bị đánh, rồi Harpie Lady phát động (nếu có nhiều con).
+   * Hồi sinh quái thú: bảng chọn quái trong mộ.
+   */
+  function startWileSpell(index: number) {
+    if (!duel) return;
+    const id = duel.players[viewer].hand[index] ?? "";
+    if (id === REVIVE_CARD) {
+      if (!reviveReady(duel, viewer)) {
+        holdNotice(duel.step === "respond" ? "Hồi sinh quái thú chỉ phản ứng khi quái địch đánh thường vào bạn hoặc quái của bạn." : "Hồi sinh quái thú cần quái trong mộ và ô trống.");
+        return;
+      }
+      setReviveAsk({ index });
+      return;
+    }
+    if (!isWileCard(id)) return;
+    if (!wileReady(duel, viewer, id)) {
+      holdNotice(id === WILE_CARDS.armor ? "Giáp và Vuốt chỉ dùng khi Harpie Lady chưa hành động bị đòn đánh thường nhắm vào." : id === WILE_CARDS.lash ? "Roi điện chỉ dùng khi Harpie Lady chưa hành động bị kỹ năng của 1 quái thú nhắm tới." : "Cần 1 Harpie Lady chưa hành động trên sân.");
+      return;
+    }
+    if (id === WILE_CARDS.armor || id === WILE_CARDS.lash) {
+      apply(castSpell(duel, index, null));
+      return;
+    }
+    const birds = wileBirds(duel, viewer);
+    if (id === WILE_CARDS.gust && birds.length === 1) {
+      apply(castSpell(duel, index, null, false, birds[0]));
+      return;
+    }
+    playCue("chain");
+    setAim({ kind: "spell", index, spellId: id });
+    holdNotice(id === WILE_CARDS.gust ? "Chọn 1 Harpie Lady." : "Chọn 1 quái địch.");
+  }
+  /** Mê hoặc: bấm quái trong lúc chọn (địch → đồng minh → Harpie Lady phát động). */
+  function wileTap(mon: FieldMon, side: Side) {
+    if (!duel || aim?.kind !== "spell") return;
+    const birds = wileBirds(duel, viewer);
+    if (aim.spellId === WILE_CARDS.gust) {
+      if (side === viewer && birds.includes(mon.uid)) {
+        const index = aim.index;
+        setAim(null);
+        holdNotice("");
+        apply(castSpell(duel, index, null, false, mon.uid));
+      }
+      return;
+    }
+    if (side !== viewer) {
+      if (aim.wile) return;
+      setAim({ ...aim, from: mon.uid });
+      holdNotice("Chọn 1 quái thú đồng minh bị đánh (được là chính Harpie Lady).");
+      return;
+    }
+    if (!aim.from) {
+      holdNotice("Chọn 1 quái địch trước.");
+      return;
+    }
+    const cast = (bird: string, ally: string) => {
+      const index = aim.index;
+      const foe = aim.from!;
+      setAim(null);
+      holdNotice("");
+      apply(castSpell(duel, index, foe, false, charmCode(bird, ally)));
+    };
+    if (!aim.wile) {
+      if (birds.length === 1) {
+        cast(birds[0]!, mon.uid);
+        return;
+      }
+      setAim({ ...aim, wile: { ally: mon.uid } });
+      holdNotice("Chọn Harpie Lady phát động phép.");
+      return;
+    }
+    if (birds.includes(mon.uid)) cast(mon.uid, aim.wile.ally!);
+  }
   /** Song sát: the card becomes an icon; pick the enemy, then ally 1 and its blow, then ally 2 and its blow. */
   function startDuo(index: number) {
     if (!duel) return;
@@ -4677,6 +4773,7 @@ function PlayPage() {
     setChronoAsk(null);
     setDigPick(null);
     setRiteHand(null);
+    setReviveAsk(null);
     holdNotice("");
   }
   /**
@@ -5215,6 +5312,18 @@ function PlayPage() {
       else each(viewer, (mon) => harmShift(mon));
       return keys;
     }
+    if (id === WILE_CARDS.gust) {
+      const birds = wileBirds(duel, viewer);
+      each(viewer, (mon) => birds.includes(mon.uid));
+      return keys;
+    }
+    if (id === WILE_CARDS.charm) {
+      const birds = wileBirds(duel, viewer);
+      if (aim?.kind === "spell" && aim.wile) each(viewer, (mon) => birds.includes(mon.uid));
+      else if (!from) each(foeSide, (mon) => mon.hp > 0);
+      else each(viewer, (mon) => mon.hp > 0);
+      return keys;
+    }
     if (id === DUO_CARD) {
       if (!from) each(foeSide, (mon) => duoTargets(duel, viewer).includes(mon.uid));
       else each(viewer, (mon) => duoAllies(duel, viewer).includes(mon.uid) && !(aim?.kind === "spell" && aim.duo?.picks.some((pick) => pick.uid === mon.uid)));
@@ -5249,7 +5358,7 @@ function PlayPage() {
   /** The spell being aimed now (dragged, or picked with Use), if it takes a target. */
   function spellAim(): { id: string; index: number; from?: string } | null {
     if (drag?.kind === "spell") return spellAimOf(drag.spellId) ? { id: drag.spellId, index: drag.index } : null;
-    if (aim?.kind === "spell" && (spellAimOf(aim.spellId) || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat" || aim.spellId === DUO_CARD)) return { id: aim.spellId, index: aim.index, from: aim.from };
+    if (aim?.kind === "spell" && (spellAimOf(aim.spellId) || aim.spellId === "phan-nguyen" || aim.spellId === "hop-ma-thuat" || aim.spellId === DUO_CARD || aim.spellId === WILE_CARDS.gust || aim.spellId === WILE_CARDS.charm)) return { id: aim.spellId, index: aim.index, from: aim.from };
     return null;
   }
 
@@ -5407,7 +5516,7 @@ function PlayPage() {
     if (cast) {
       // Phép có mục tiêu (V8B): only the monsters it can take glow; the others on its side are marked as not pickable.
       const keys = spellKeys(cast.id, cast.index, cast.from);
-      const onFoe = cast.id === DUO_CARD ? !cast.from : cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : spellAimOf(cast.id) === "foe";
+      const onFoe = cast.id === WILE_CARDS.gust ? false : cast.id === WILE_CARDS.charm ? !cast.from && !(aim?.kind === "spell" && aim.wile) : cast.id === DUO_CARD ? !cast.from : cast.id === "phan-nguyen" || cast.id === "hop-ma-thuat" ? Boolean(cast.from) : spellAimOf(cast.id) === "foe";
       const plan = { keys, foe: onFoe, you: !onFoe, caster: "" };
       planCache.current = { duel, aim, uid, plan };
       return plan;
@@ -5678,6 +5787,11 @@ function PlayPage() {
       if (payload.spellId === DUO_CARD) {
         if (hit?.closest(".hand")) return;
         startDuo(payload.index);
+        return;
+      }
+      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD) {
+        if (hit?.closest(".hand")) return;
+        startWileSpell(payload.index);
         return;
       }
       // Hộp ma thuật: dropped on an enemy with one ally struck, it is cast; elsewhere it waits as an icon.
@@ -6276,6 +6390,10 @@ function PlayPage() {
         apply(castSpell(duel, aim.index, mon.uid, false, aim.from));
         setAim(null);
       }
+      return;
+    }
+    if (aim?.kind === "spell" && (aim.spellId === WILE_CARDS.gust || aim.spellId === WILE_CARDS.charm)) {
+      wileTap(mon, side);
       return;
     }
     if (aim?.kind === "spell" && aim.spellId === DUO_CARD) {
@@ -7453,6 +7571,7 @@ function PlayPage() {
   // Lá tự rút lượt đầu không nằm trong bảng đổi bài: bảng chỉ có 3 lá đầu, lá rút bay lên tay sau khi bảng đóng.
   const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
   const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
+  const wileAsk = duel.wileAsk?.[0] ?? null;
   const openerCards: OpenerCard[] = [
     ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
@@ -7564,6 +7683,44 @@ function PlayPage() {
           startWaiting={Boolean(duel.opener?.done[viewer])}
           onConfirm={confirmOpener}
           onClosed={() => setOpenerOpen(false)}
+        />
+      ) : null}
+      {reviveAsk && duel.players[viewer].hand[reviveAsk.index] === REVIVE_CARD && reviveReady(duel, viewer) ? (
+        <PickPanel
+          key={`revive:${reviveAsk.index}`}
+          title="Hồi sinh quái thú"
+          sub="Chọn 1 quái thú trong mộ"
+          cards={reviveChoices(duel, duel.step === "respond").map((row): PickCard => {
+            const card = monsterCard(row.cardId);
+            return {
+              key: `${row.from}|${row.cardId}`,
+              face: (
+                <>
+                  {card ? <CardFace monster={card} hand /> : null}
+                  <span className="pk-tag">{tr(row.from === viewer ? "Mộ của bạn" : "Mộ đối thủ")}</span>
+                </>
+              ),
+            };
+          })}
+          onCancel={() => setReviveAsk(null)}
+          onTimeout={() => setReviveAsk(null)}
+          onConfirm={(key) => {
+            const [from, cardId] = key.split("|");
+            const index = reviveAsk.index;
+            setReviveAsk(null);
+            apply(castSpell(duel, index, null, false, reviveCode({ from: Number(from) as Side, cardId: cardId!, slot: null })));
+          }}
+        />
+      ) : null}
+      {wileAsk && (wileAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`wile:${wileAsk.uid}:${duel.clock ?? 1}`}
+          mine={wileAsk.side === viewer}
+          title="Giảo hoạt"
+          sub="Chọn 1 lá phép của Harpie Lady"
+          cards={wileAsk.picks.map((pick): PickCard => ({ key: pick, face: <CardFace spellId={WILE_CARDS[pick as keyof typeof WILE_CARDS]} hand /> }))}
+          onConfirm={(pick) => apply(answerWile(duel, pick))}
+          onTimeout={() => apply(answerWile(duel, null))}
         />
       ) : null}
       {rebirthAsk && duel.step === "main" && duel.turn === viewer ? (
@@ -9063,6 +9220,10 @@ function PlayPage() {
                               startDuo(index);
                               return;
                             }
+                            if (isWileCard(id) || id === REVIVE_CARD) {
+                              startWileSpell(index);
+                              return;
+                            }
                             if (isSpring(id)) {
                               startSpring(index);
                               return;
@@ -9602,6 +9763,11 @@ function PlayPage() {
                           if (shownSpell.id === DUO_CARD) {
                             setInspect(null);
                             startDuo(index);
+                            return;
+                          }
+                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD) {
+                            setInspect(null);
+                            startWileSpell(index);
                             return;
                           }
                           if (isSpring(shownSpell.id)) {
