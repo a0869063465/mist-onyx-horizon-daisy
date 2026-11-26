@@ -922,42 +922,6 @@ test("Hấp thụ ma pháp nuốt Vòng nguyền rủa ác ma: đòn đánh ti�
   assert.ok(!at(done, 0, 0).curse, "không bị nguyền");
 });
 
-test("Roi điện của Harpie Lady chờ trong chuỗi (25/11): không ai nuốt thì huỷ kỹ năng, +2 công, trả đòn lên kẻ ra đòn; Hấp thụ ma pháp nuốt thì kỹ năng vào", () => {
-  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, def: 0, mdef: 0, ...ALL_WIT }] });
-  s = rich(withHand(s, 0, ["hap-thu-ma-phap"]));
-  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
-  assert.equal(D.harpyOffer(breath, 1), "lash", breath.live);
-  const atkBefore = at(breath, 1, 0).atk;
-  const ward = D.harpyLash(breath);
-  assert.equal(ward.pending?.kind, "beam", "chưa nổ");
-  assert.equal(ward.hold?.priority, 0);
-  const kept = D.passResponse(ward);
-  assert.equal(at(kept, 1, 0).atk, atkBefore + 2, "chim +2 công");
-  assert.equal(at(kept, 1, 0).hp >= 20, true, "kỹ năng bị huỷ");
-  assert.ok(at(kept, 0, 0).hp < 20, `trả đòn lên kẻ ra đòn: ${kept.live}`);
-  const eaten = D.castSpell(ward, ward.players[0].hand.indexOf("hap-thu-ma-phap"));
-  assert.equal(eaten.hold?.ward, undefined, eaten.live);
-  const done = D.passResponse(eaten);
-  assert.ok(at(done, 1, 0).hp < 20, `kỹ năng vào: ${done.live}`);
-  assert.equal(at(done, 1, 0).atk, atkBefore, "chim không lớn");
-});
-
-test("Giáp và Vuốt của Harpie Lady (25/11): né đòn đánh thường tốn 1 mana, +2 thủ và +2 máu tối đa, trả 5 sát thương phép vào kẻ tấn công", () => {
-  let s = board({ 0: ["may-chem", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, def: 0, mdef: 0, ...ALL_WIT }] });
-  s = rich(s);
-  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
-  assert.equal(D.harpyOffer(swung, 1), "armor", swung.live);
-  const orbBefore = swung.players[1].orb;
-  const dodge = D.harpyWard(swung);
-  assert.equal(dodge.pending?.kind, "lash", dodge.live);
-  assert.equal(dodge.players[1].orb, orbBefore - 1, "1 mana");
-  assert.equal(at(dodge, 1, 0).def, 2);
-  assert.equal(at(dodge, 1, 0).maxHp, 22);
-  const done = D.passResponse(dodge);
-  assert.equal(at(done, 1, 0).hp, 22, `đòn bị né: ${done.live}`);
-  assert.equal(at(done, 0, 0).hp, 15, "trả 5 sát thương phép");
-});
-
 test("Hấp thụ ma pháp không dùng được khi không có gì để nuốt (đòn đánh thường)", () => {
   let s = board({ 0: ["khong-lo-mot-mat", { atk: 4 }] }, { 0: ["may-chem", { hp: 20, maxHp: 20 }] });
   s = rich(withHand(s, 1, ["hap-thu-ma-phap"]));
@@ -1941,90 +1905,6 @@ test("Lính chiến đá khổng lồ: mỗi đợt công kích trúng nó thì 
   assert.equal(D.canWall(s, uid(s, 1, 0)), false);
 });
 
-test("Harpie Lady: Giảo hoạt lúc triệu hồi, chọn 1 trong 2 kỹ năng; trả lời xong mới nhường quyền", () => {
-  const card = C.monsterCard("my-dieu-nhan");
-  assert.equal(card.name, "Harpie Lady");
-  assert.equal(card.hp, 3);
-  let s = board({}, {});
-  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0, stars: 4 })) };
-  s = D.testGrant(s, 0, "my-dieu-nhan", false);
-  const summoned = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "my-dieu-nhan"), 0);
-  const ask = summoned.wileAsk?.[0];
-  assert.ok(ask, summoned.live);
-  assert.equal(ask.side, 0);
-  assert.equal(ask.picks.length, 2);
-  assert.notEqual(ask.picks[0], ask.picks[1]);
-  assert.equal(summoned.turn, 0, "chưa nhường khi chưa chọn");
-  assert.deepEqual([...at(summoned, 0, 0).shed].sort(), ["armor", "charm", "gust", "lash"], "chưa có kỹ năng nào");
-  const picked = D.answerWile(summoned, ask.picks[1]);
-  assert.equal(picked.wileAsk, null);
-  assert.equal(picked.turn, 1, "chọn xong thì nhường");
-  assert.ok(!at(picked, 0, 0).shed.includes(ask.picks[1]), picked.live);
-  assert.ok(at(picked, 0, 0).shed.includes(ask.picks[0]));
-  const timeout = D.answerWile(summoned, null);
-  assert.ok(ask.picks.includes(at(timeout, 0, 0).wit.picked[0]), "hết giờ lấy ngẫu nhiên trong 2 kỹ năng");
-});
-
-test("Harpie Lady: Giảo hoạt mời lại ở lượt chung thứ 3 sau lượt triệu hồi, không mời kỹ năng đã nhận", () => {
-  let s = board({ 0: ["my-dieu-nhan", {}] }, { 0: ["may-chem", {}] });
-  s = D.draw({ ...s, players: s.players.map((p) => ({ ...p, orb: 3 })) }, "spell");
-  const first = s.wileAsk[0].picks[0];
-  s = D.answerWile(s, first);
-  const born = at(s, 0, 0).wit.born;
-  assert.deepEqual(at(s, 0, 0).wit.picked, [first]);
-  for (let n = 1; n <= 3; n += 1) {
-    s = closeRound(s);
-    const clock = s.clock - born;
-    assert.equal(Boolean(s.wileAsk?.length), clock === 3, `lượt +${clock}`);
-  }
-  assert.ok(!s.wileAsk[0].picks.includes(first), "không mời lại kỹ năng đã nhận");
-});
-
-test("Harpie Lady: thi triển 3 hành động khác nhau thì chọn tiến hoá", () => {
-  let s = board({ 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }], 1: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] }, { 3: ["may-chem", { hp: 20, maxHp: 20 }] });
-  s = rich(s);
-  s = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
-  assert.deepEqual(at(s, 0, 0).wit.deeds, ["attack"]);
-  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
-  s = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 3)));
-  assert.equal(at(s, 0, 0).wit.deeds.length, 1, "đánh lần 2 không tính thêm");
-  s = { ...s, turn: 0, players: s.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
-  s = D.testGrant(s, 1, "hap-thu-ma-phap", false);
-  let gust = D.useSkill(s, uid(s, 0, 0), null, 0);
-  if (gust.step === "respond") gust = D.passResponse(gust);
-  assert.deepEqual(at(gust, 0, 0).wit.deeds, ["attack", "gust"], gust.live);
-  assert.equal(gust.birdAsk ?? null, null);
-  s = { ...gust, turn: 0, players: gust.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
-  let charm = D.useSkill(s, uid(s, 0, 0), uid(s, 0, 1), 1, true, uid(s, 1, 3));
-  if (charm.step === "respond") charm = D.passResponse(charm);
-  assert.ok(charm.birdAsk, charm.live);
-  const evolved = D.evolveBird(charm, "nu-chua-dieu-nhan");
-  assert.equal(at(evolved, 0, 0).cardId, "nu-chua-dieu-nhan");
-});
-
-test("Harpie Lady: Mê hoặc 0 mana, chờ trong chuỗi, quái địch đánh thường vào 1 quái đồng minh khác, không bị cấm hành động", () => {
-  let s = board(
-    { 0: ["my-dieu-nhan", { hp: 20, maxHp: 20, ...ALL_WIT }], 1: ["khong-lo-mot-mat", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] },
-    { 0: ["may-chem", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] },
-  );
-  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 0 })) };
-  const bird = uid(s, 0, 0);
-  const ally = uid(s, 0, 1);
-  const foe = uid(s, 1, 0);
-  const self = D.useSkill(s, bird, bird, 1, true, foe);
-  assert.equal(self.step, "main", "không chọn chính cô");
-  const charm = D.useSkill(s, bird, ally, 1, true, foe);
-  assert.equal(charm.step, "respond", charm.live);
-  assert.equal(at(charm, 0, 1).hp, 20, "chưa nổ khi còn chờ");
-  const done = D.passResponse(charm);
-  assert.equal(at(done, 0, 1).hp, 16, done.live);
-  assert.equal(at(done, 0, 0).hp, 20, "Harpie Lady không bị đánh");
-  assert.equal(at(done, 1, 0).stun, 0, "quái địch không bị cấm hành động");
-  assert.equal(done.plumeAsk ?? null, null);
-  assert.ok(at(done, 0, 0).shed.includes("charm"));
-  assert.equal(done.players[0].orb, 0);
-});
-
 test("Tinh linh đàn hạc: triệu hồi chính nó +2 mana vào mộ mana (dư lên sao); đầu lượt +1 mana mỗi con; quái khác triệu hồi không kích", () => {
   const spent = (p) => D.STAR_COST.slice(0, p.stars).reduce((a, b) => a + b, 0) + p.starGems;
   let s = board({}, {});
@@ -2347,6 +2227,134 @@ test("Hồi sinh quái thú: Hấp thụ ma pháp nuốt thì không ai lên sâ
   for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
   assert.equal(at(done, 1, 1)?.cardId, "tinh-linh-dan-hac", rows(done));
   assert.ok(done.players[1].starGems > cast.players[1].starGems || done.players[1].stars > cast.players[1].stars, "Tiếng nhạc du dương chạy: " + done.live);
+});
+
+const GIRL_WIT = { wit: { born: 1, last: 1, picked: [], deeds: [] }, shed: ["armor", "gust", "charm", "lash"] };
+const girlBoard = (mine, theirs) => board(mine, theirs);
+
+test("Harpie Lady (26/11): Giảo hoạt lúc triệu hồi mời 2 lá phép, chọn 1 lên tay; không còn nút kỹ năng trên sân; trả lời xong mới nhường quyền", () => {
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0, stars: 4, hand: [], tolls: [] })) };
+  s = D.testGrant(s, 0, "my-dieu-nhan", false);
+  const summoned = D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "my-dieu-nhan"), 0);
+  const ask = summoned.wileAsk?.[0];
+  assert.ok(ask, summoned.live);
+  assert.equal(ask.picks.length, 2);
+  assert.notEqual(ask.picks[0], ask.picks[1]);
+  assert.equal(summoned.turn, 0, "chưa nhường khi chưa chọn");
+  const picked = D.answerWile(summoned, ask.picks[1]);
+  assert.equal(picked.wileAsk, null);
+  assert.equal(picked.turn, 1, "chọn xong thì nhường");
+  assert.deepEqual(picked.players[0].hand, [D.WILE_CARDS[ask.picks[1]]], "lá lên tay: " + picked.live);
+  assert.deepEqual([...at(picked, 0, 0).shed].sort(), ["armor", "charm", "gust", "lash"], "không có nút kỹ năng trên sân");
+  assert.equal(D.harpyOffer(picked, 0), null);
+  const timeout = D.answerWile(summoned, null);
+  assert.ok(ask.picks.some((key) => timeout.players[0].hand.includes(D.WILE_CARDS[key])), "hết giờ lấy ngẫu nhiên 1 trong 2");
+});
+
+test("Harpie Lady: Giảo hoạt mời lại ở lượt chung thứ 3; không mời lá đã tạo trong vòng hoặc đang trên tay", () => {
+  let s = board({ 0: ["my-dieu-nhan", {}] }, { 0: ["may-chem", {}] });
+  s = D.draw({ ...s, players: s.players.map((p) => ({ ...p, orb: 3, hand: [], tolls: [] })) }, "spell");
+  const first = s.wileAsk[0].picks[0];
+  s = D.answerWile(s, first);
+  const born = at(s, 0, 0).wit.born;
+  for (let n = 1; n <= 3; n += 1) {
+    s = closeRound(s);
+    assert.equal(Boolean(s.wileAsk?.length), s.clock - born === 3, `lượt +${s.clock - born}`);
+  }
+  assert.ok(!s.wileAsk[0].picks.includes(first), "không mời lại lá đã tạo");
+});
+
+test("Giáp và Vuốt (lá phép, 26/11): 1 mana, Harpie Lady bị đánh thường; chuỗi nổ: đòn huỷ, +1 thủ, Càng xinh đẹp, trả đòn phép bằng công; không Trả đòn; cô bị khoá", () => {
+  let s = board({ 0: ["may-chem", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { atk: 3, hp: 20, maxHp: 20, def: 0, mdef: 0, ...GIRL_WIT }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.WILE_CARDS.armor] : ["hap-thu-ma-phap"], tolls: [] })) };
+  assert.equal(D.wileReady(s, 1, D.WILE_CARDS.armor), false, "chưa bị đánh: không dùng được");
+  const swung = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(D.wileReady(swung, 1, D.WILE_CARDS.armor), true, swung.live);
+  const cast = D.castSpell(swung, 0, null);
+  assert.ok(cast.hold?.wile, "chờ trong chuỗi: " + cast.live);
+  assert.equal(cast.players[1].orb, 2, "1 mana");
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  const bird = at(done, 1, 0);
+  assert.equal(bird.def, 1, "+1 thủ: " + done.live);
+  assert.equal(bird.atk, 4, "Càng xinh đẹp +1 công");
+  assert.equal(bird.maxHp, 21);
+  assert.equal(bird.hp, 21, "đòn bị huỷ, hồi 1");
+  assert.equal(at(done, 0, 0).hp, 16, "trả đòn phép bằng công 4");
+  assert.equal(done.counterAsk ?? null, null, "không Trả đòn");
+  assert.equal(bird.dim, true, "bị khoá tới hết lượt");
+  assert.equal(bird.wit.deeds.length, 1, "tính 1 hành động");
+  // Hấp thụ ma pháp nuốt: đòn vào.
+  let eaten = D.castSpell(cast, 0, null);
+  for (let n = 0; n < 4 && eaten.step === "respond"; n += 1) eaten = D.passResponse(eaten);
+  assert.ok(at(eaten, 1, 0).hp < 20, "bị nuốt thì đòn vào: " + eaten.live);
+  // Harpie Lady đã hành động: không dùng được.
+  const tired = { ...swung, players: swung.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m) => (m ? { ...m, dim: true } : m)) } : p)) };
+  assert.equal(D.wileReady(tired, 1, D.WILE_CARDS.armor), false, "đã hành động thì không chọn được");
+});
+
+test("Roi điện (lá phép, 26/11): 1 mana, kỹ năng của quái nhắm Harpie Lady; chuỗi nổ: huỷ kỹ năng, +1 công, trả đòn vật lý lên kẻ ra đòn", () => {
+  let s = board({ 0: ["rong-con", { hp: 20, maxHp: 20, def: 0, mdef: 0 }] }, { 0: ["my-dieu-nhan", { atk: 3, hp: 20, maxHp: 20, def: 0, mdef: 0, ...GIRL_WIT }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.WILE_CARDS.lash] : [], tolls: [] })) };
+  const breath = D.declareSkill(s, uid(s, 0, 0), uid(s, 1, 0), 0);
+  assert.equal(D.wileReady(breath, 1, D.WILE_CARDS.lash), true, breath.live);
+  let done = D.castSpell(breath, 0, null);
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(at(done, 1, 0).atk, 5, "+1 công vĩnh viễn, +1 Càng xinh đẹp: " + done.live);
+  assert.ok(at(done, 1, 0).hp >= 20, "kỹ năng bị huỷ");
+  assert.equal(at(done, 0, 0).hp, 15, "trả đòn vật lý bằng công 5");
+  assert.equal(done.counterAsk ?? null, null);
+});
+
+test("Thổi bay (lá phép, 26/11): chậm 1 mana, chọn Harpie Lady; chuỗi nổ huỷ 1 phép trên tay đối thủ; Càng xinh đẹp hết sau 3 lượt chung; khoá hết lượt", () => {
+  let s = board({ 0: ["my-dieu-nhan", { atk: 3, hp: 3, maxHp: 3, ...GIRL_WIT }] }, { 0: ["may-chem", {}] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [D.WILE_CARDS.gust] : ["phuc-kich"], tolls: [] })) };
+  const bird = uid(s, 0, 0);
+  const cast = D.castSpell(s, 0, null, false, bird);
+  assert.equal(cast.step, "respond", "phép chậm mở chuỗi: " + cast.live);
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(done.players[1].hand.includes("phuc-kich"), false, "huỷ phép đối thủ: " + done.live);
+  assert.equal(at(done, 0, 0).atk, 4);
+  assert.equal(at(done, 0, 0).hp, 4, "+1 máu tối đa và hồi 1 (máu đầy)");
+  assert.equal(at(done, 0, 0).dim, true);
+  let later = closeRound(done);
+  assert.equal(at(later, 0, 0).dim, false, "lượt chung sau hành động lại được");
+  later = closeRound(closeRound(later));
+  assert.equal(at(later, 0, 0).atk, 3, "hết 3 lượt chung: mất Càng xinh đẹp");
+  assert.equal(at(later, 0, 0).maxHp, 3);
+});
+
+test("Mê hoặc (lá phép, 26/11): chậm 0 mana, chọn Harpie Lady phát động, quái địch đánh thường vào đồng minh (được là chính cô)", () => {
+  let s = board({ 0: ["my-dieu-nhan", { atk: 3, hp: 20, maxHp: 20, def: 0, mdef: 0, ...GIRL_WIT }] }, { 0: ["may-chem", { atk: 4, hp: 20, maxHp: 20, def: 0, mdef: 0 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 0, flask: 0, hand: i === 0 ? [D.WILE_CARDS.charm] : [], tolls: [] })) };
+  const bird = uid(s, 0, 0);
+  const cast = D.castSpell(s, 0, uid(s, 1, 0), false, D.charmCode(bird, bird));
+  assert.equal(cast.step, "respond", cast.live);
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(at(done, 0, 0).hp, 17, "21 sau Càng xinh đẹp, chịu 4: " + done.live);
+  assert.equal(at(done, 1, 0).hp, 16, "giáp lá cà: cô đánh lại bằng công 4");
+  assert.equal(at(done, 0, 0).dim, true);
+});
+
+test("Harpie Lady: hết Harpie Lady trên sân thì lá phép của cô trên tay biến mất; 4 hành động bất kỳ thì tiến hoá; lá phép khác chọn cô cũng Càng xinh đẹp", () => {
+  let s = board({ 0: ["may-chem", {}] }, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, hand: i === 0 ? [D.WILE_CARDS.armor, "phuc-kich", D.WILE_CARDS.gust] : [], tolls: [] })) };
+  const gone = D.draw(s, "spell");
+  assert.ok(!gone.players[0].hand.some((id) => D.isWileCard(id)), "lá của cô biến mất: " + gone.players[0].hand.join(","));
+  assert.ok(gone.players[0].hand.includes("phuc-kich"), "lá khác còn");
+  let e = board({ 0: ["my-dieu-nhan", { atk: 3, hp: 3, maxHp: 3, wit: { born: 1, last: 1, picked: [], deeds: ["attack", "attack", "block"] }, shed: ["armor", "gust", "charm", "lash"] }] }, { 0: ["may-chem", {}] });
+  e = { ...e, players: e.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [D.WILE_CARDS.gust] : ["phuc-kich"], tolls: [] })) };
+  let evo = D.castSpell(e, 0, null, false, uid(e, 0, 0));
+  for (let n = 0; n < 4 && evo.step === "respond"; n += 1) evo = D.passResponse(evo);
+  assert.ok(evo.birdAsk, "4 hành động: hỏi tiến hoá: " + evo.live);
+  let f = board({ 0: ["my-dieu-nhan", { atk: 3, hp: 2, maxHp: 3, ...GIRL_WIT }] }, {});
+  f = { ...f, players: f.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [C.SPRING] : [], tolls: [] })) };
+  const spring = D.castSpell(f, 0, uid(f, 0, 0));
+  assert.equal(at(spring, 0, 0).atk, 4, "Càng xinh đẹp từ lá phép khác: " + spring.live);
+  assert.ok(!at(spring, 0, 0).dim, "lá khác không khoá");
 });
 
 for (const [name, fn] of tests) {

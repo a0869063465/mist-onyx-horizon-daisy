@@ -749,7 +749,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Harpie Lady",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần.\n\n__**Giáp và Vuốt**__\nKhi bị đòn đánh thường nhắm vào, tiêu hao 1 mana để né nó.\nTăng vĩnh viễn 2 thủ và 2 máu tối đa và trả 5 sát thương phép vào kẻ tấn công.\n\n__**Thổi bay**__\nTiêu hao 1 mana. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nTiêu hao 0 mana, kích động 1 quái địch đánh thường vào 1 quái thú đồng minh.\n\n__**Roi điện**__\nKhi bị skill hoặc phép nhắm tới, tiêu hao 1 mana để né đòn.\nTăng vĩnh viễn 2 công và trả đòn trực tiếp lên kẻ ra đòn.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 3 hành động khác nhau.",
+    "skill": "__**Giảo hoạt**__\nKhi được triệu hồi và khi bắt đầu mỗi lượt đấu đấu thứ 3. (Không tính lượt triệu hồi). Tạo 1 lá phép của chính cô ấy trên tay bạn.\n\n__**Giáp và Vuốt**__\nPhép phản ứng 1 mana\nKhi bị đòn đánh thường nhắm vào, Chọn 1 harpie lady để phát động. Huỷ đòn nhắm đến harpie đó. Đồng thời tăng vĩnh viễn 1 thủ và ban cho cô ấy đòn đánh phép tạm thời, và trả đòn ngay lập tức (nếu có đòn trả đòn nữa ở phía sau thì sẽ huỷ đòn đó)\n\n__**Thổi bay**__\nPhép chậm 1 mana\nChọn 1 lá harpie lady. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.\n\n__**Mê hoặc**__\nPhép chậm 0 mana\nChọn 1 harpie lady phát động phép, tiêu hao 0 mana, kích động 1 quái địch tấn công vào 1 đồng minh phe ta. (Được dùng lên chính cô ấy)\n\n__**Roi điện**__\nPhép phản ứng 1 mana\nKhi harpie lady bị skill của 1 quái thú nhắm tới, chọn harpie đó để dùng phép này, huỷ đòn đó. tăng cho cô ấy vĩnh viễn 1 công và trả đòn ngay trực tiếp lên kẻ ra đòn (huỷ đòn trả đòn của cô ấy sau đó nữa, nếu có)\n\n__**Càng xinh đẹp**__\nMỗi một lần bạn chọn harpie làm mục tiêu, tăng cho cô ấy 1 công và 1 máu tối đa trong 3 lượt, và hồi 1 máu cho cô ấy.\n\n__**Tiến hoá**__\nKhi cô ấy thi triển 4 hành động.\n\nLưu ý: các lá bài phép này bị loại bỏ khi không có bất kỳ harpie lady nào còn trên sân. Harpie lady bị chọn làm mục tiêu của các lá phép này không thể hành động trong lượt đó; harpie lady đã hành động rồi thì không thể bị chọn làm mục tiêu.",
     "atk": 3,
     "def": 0,
     "mdef": 0,
@@ -1316,7 +1316,16 @@ export const SPRING = "suoi-nguon-sinh-menh";
 export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
 
 /** Bản khác của một lá phép, chỉ sinh ra trong trận (không bỏ vào bộ). */
-const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }];
+/** Lá phép Harpie Lady tạo trên tay bằng Giảo hoạt (chủ game 26/11): không vào kho, gói, album, bộ bài. Tranh tạm là
+ *  tranh Harpie Lady (phần lá làm sau). */
+const WILE_SPELLS: SpellCard[] = [
+  { id: "harpie-giap-va-vuot", name: "Giáp và Vuốt", gems: 1, effect: "Phép phản ứng 1 mana\nKhi bị đòn đánh thường nhắm vào, Chọn 1 harpie lady để phát động. Huỷ đòn nhắm đến harpie đó. Đồng thời tăng vĩnh viễn 1 thủ và ban cho cô ấy đòn đánh phép tạm thời, và trả đòn ngay lập tức (nếu có đòn trả đòn nữa ở phía sau thì sẽ huỷ đòn đó)", picture: "monster:my-dieu-nhan" },
+  { id: "harpie-thoi-bay", name: "Thổi bay", gems: 1, effect: "Phép chậm 1 mana\nChọn 1 lá harpie lady. Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ.", picture: "monster:my-dieu-nhan" },
+  { id: "harpie-me-hoac", name: "Mê hoặc", gems: 0, effect: "Phép chậm 0 mana\nChọn 1 harpie lady phát động phép, tiêu hao 0 mana, kích động 1 quái địch tấn công vào 1 đồng minh phe ta. (Được dùng lên chính cô ấy)", picture: "monster:my-dieu-nhan" },
+  { id: "harpie-roi-dien", name: "Roi điện", gems: 1, effect: "Phép phản ứng 1 mana\nKhi harpie lady bị skill của 1 quái thú nhắm tới, chọn harpie đó để dùng phép này, huỷ đòn đó. tăng cho cô ấy vĩnh viễn 1 công và trả đòn ngay trực tiếp lên kẻ ra đòn (huỷ đòn trả đòn của cô ấy sau đó nữa, nếu có)", picture: "monster:my-dieu-nhan" },
+];
+
+const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }, ...WILE_SPELLS];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
 export const WAITING_CARDS: ReadonlySet<string> = new Set<string>(["hoi-sinh-quai-thu"]);
