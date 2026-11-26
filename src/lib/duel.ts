@@ -7380,7 +7380,7 @@ export function castSpell(state: Duel, handIndex: number, targetUid: string | nu
   if (!cardId || isWileCard(cardId)) return next;
   const used = handCopies(state.players[side].hand, cardId) > handCopies(next.players[side].hand, cardId) || ((cardId === SPRING || cardId === SPRING_WORN) && next.players[side] !== state.players[side]);
   if (!used || !sideGirls(state, side).some((mon) => mon.uid === targetUid)) return next;
-  const blessed = blessGirls(next, [targetUid], false);
+  const blessed = blessKeep(next, [targetUid], false);
   return blessed.line ? note(blessed.state, blessed.line.trim(), "heal") : next;
 }
 
@@ -7413,7 +7413,11 @@ function castSpellRun(state: Duel, handIndex: number, targetUid: string | null =
   if (state.step === "main") return yieldTurn(done);
   // Phép phản ứng kết thúc luôn đòn đang chờ (Phục kích, Gương phòng hộ…): đòn coi như đã xong, quyền sang bên bị đánh.
   if (state.step === "respond" && done.step === "main" && !done.pending) return yieldTurn(done);
-  if (snap && cardId && done.step === "respond" && done.hold && done.pending) return { ...done, hold: { ...done.hold, eat: { card: cardId, side, back: snap } } };
+  if (snap && cardId && done.step === "respond" && done.hold && done.pending) {
+    // Lá Harpie Lady bị nuốt: Càng xinh đẹp và khoá đã có lúc chọn vẫn giữ (chủ game 26/11).
+    const back = done.hold.wile ? blessGirls(snap, [done.hold.wile.bird], true).state : snap;
+    return { ...done, hold: { ...done.hold, eat: { card: cardId, side, back } } };
+  }
   return done;
 }
 
@@ -13178,8 +13182,8 @@ function castWile(state: Duel, side: Side, handIndex: number, targetUid: string 
         bits.push(`huỷ ${spellCard(hand[at]!)?.name ?? "1 phép"} trên tay đối thủ`);
         next = patch(next, foe, dropHandCard(next.players[foe], at));
       } else bits.push("đối thủ không còn phép trên tay");
-      const blessed = bird ? blessGirls(next, [bird], true) : { state: next, line: "" };
-      return settleBird(note(blessed.state, `${actNotice("Thổi bay", bits)}${blessed.line}`, "spell"));
+      void bird;
+      return settleBird(note(next, actNotice("Thổi bay", bits), "spell"));
     }
     if (id === WILE_CARDS.charm) {
       const [bird, allyUid] = (sourceUid ?? "").split("|");
@@ -13187,13 +13191,9 @@ function castWile(state: Duel, side: Side, handIndex: number, targetUid: string 
       const owner = next.players[side];
       const attacker = them.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
       const defender = owner.field.find((unit) => unit?.uid === allyUid && unit.hp > 0) ?? null;
-      const girls = [bird, allyUid].filter((uid): uid is string => Boolean(uid && sideGirls(next, side).some((mon) => mon.uid === uid)));
-      if (!attacker || !defender) {
-        const blessed = blessGirls(next, girls, true);
-        return settleBird(note(blessed.state, `Mê hoặc không còn mục tiêu.${blessed.line}`, "spell"));
-      }
-      const blessed = blessGirls(next, girls, true);
-      next = blessed.state;
+      void bird;
+      if (!attacker || !defender) return settleBird(note(next, "Mê hoặc không còn mục tiêu.", "spell"));
+      const blessed = { line: "" };
       const foeNow = next.players[foe];
       const ownNow = next.players[side];
       const striker = foeNow.field.find((unit) => unit?.uid === attacker.uid) ?? attacker;
@@ -13243,10 +13243,16 @@ function castWile(state: Duel, side: Side, handIndex: number, targetUid: string 
   if (bill) return note(state, bill);
   const paid = payPlayed(player, card.gems, tolled);
   if (!paid) return note(state, `Cần ${card.gems} gem.`);
-  const next = pingStars(patch(state, side, dropHandCard(paid, handIndex)), side, before, paid.stars);
-  if (pending) return beginHold(next, pending, line);
+  const paidState = pingStars(patch(state, side, dropHandCard(paid, handIndex)), side, before, paid.stars);
+  // Càng xinh đẹp + khoá hành động ngay lúc chọn (chủ game 26/11): lá bị nuốt hay huỷ sau đó vẫn giữ.
+  const chosen = wait ? [wait.bird] : pending?.kind === "spell" ? (pending.source ?? "").split("|") : [];
+  const girls = chosen.filter((uid) => sideGirls(paidState, side).some((mon) => mon.uid === uid));
+  const blessed = blessGirls(paidState, girls, true);
+  const next = blessed.state;
+  const said = `${line}${blessed.line}`;
+  if (pending) return beginHold(next, pending, said);
   if (!next.hold || !wait) return state;
-  return keep(note({ ...next, hold: { ...next.hold, wile: wait } }, line, "spell"));
+  return keep(note({ ...next, hold: { ...next.hold, wile: wait } }, said, "spell"));
 }
 
 /** Chuỗi nổ với Giáp và Vuốt / Roi điện đang chờ: đòn bị huỷ, cô lớn lên và trả đòn ngay; không ai Trả đòn sau đó. */
@@ -13267,8 +13273,7 @@ function wileLand(state: Duel): Duel {
     raised: markRaised(bird, grownPart),
   };
   let next = patch(cleared, side, { ...cleared.players[side], field: cleared.players[side].field.map((unit) => (unit?.uid === bird.uid ? grown : unit)) as Player["field"] });
-  const blessed = blessGirls(next, [bird.uid], true);
-  next = blessed.state;
+  const blessed = { line: "" };
   const name = wait.kind === "armor" ? "Giáp và Vuốt" : "Roi điện";
   const gain = wait.kind === "armor" ? "tăng vĩnh viễn 1 thủ" : "tăng vĩnh viễn 1 công";
   const pending = state.pending;
@@ -13293,4 +13298,13 @@ function wileLand(state: Duel): Duel {
   }
   const done = note(next, `${actNotice(name, bits)}${blessed.line}`, "spell");
   return settleBird(releaseLegend({ ...done, step: "main", pending: null, hold: null, counterAsk: null }));
+}
+
+/** Càng xinh đẹp lúc chọn, giữ cả khi lá bị Hấp thụ ma pháp nuốt (bàn cờ lưu để nuốt cũng được cộng). */
+function blessKeep(state: Duel, uids: string[], lock: boolean): { state: Duel; line: string } {
+  const blessed = blessGirls(state, uids, lock);
+  const eat = blessed.state.hold?.eat;
+  if (!blessed.line || !eat || !blessed.state.hold) return blessed;
+  const back = blessGirls(eat.back, uids, lock).state;
+  return { state: { ...blessed.state, hold: { ...blessed.state.hold, eat: { ...eat, back } } }, line: blessed.line };
 }

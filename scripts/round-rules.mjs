@@ -2288,7 +2288,10 @@ test("Giáp và Vuốt (lá phép, 26/11): 1 mana, Harpie Lady bị đánh thư�
   // Hấp thụ ma pháp nuốt: đòn vào.
   let eaten = D.castSpell(cast, 0, null);
   for (let n = 0; n < 4 && eaten.step === "respond"; n += 1) eaten = D.passResponse(eaten);
-  assert.ok(at(eaten, 1, 0).hp < 20, "bị nuốt thì đòn vào: " + eaten.live);
+  assert.ok(at(eaten, 1, 0).hp < at(eaten, 1, 0).maxHp, "bị nuốt thì đòn vào: " + eaten.live);
+  assert.equal(at(eaten, 1, 0).atk, 4, "bị nuốt vẫn giữ Càng xinh đẹp (có lúc chọn)");
+  assert.equal(at(eaten, 1, 0).dim, true, "bị nuốt vẫn khoá");
+  assert.equal(at(cast, 1, 0).atk, 4, "Càng xinh đẹp ngay lúc chọn, trước khi chuỗi nổ");
   // Harpie Lady đã hành động: không dùng được.
   const tired = { ...swung, players: swung.players.map((p, i) => (i === 1 ? { ...p, field: p.field.map((m) => (m ? { ...m, dim: true } : m)) } : p)) };
   assert.equal(D.wileReady(tired, 1, D.WILE_CARDS.armor), false, "đã hành động thì không chọn được");
