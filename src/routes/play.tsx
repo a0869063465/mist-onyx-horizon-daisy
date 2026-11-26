@@ -6958,7 +6958,9 @@ function PlayPage() {
     if (pile === "spell") {
       const card = spellCard(you.hand[index] ?? "");
       if (!card) return null;
-      return { name: card.name, cardId: card.id, gems: you.tolls?.[index] ? `${card.gems}+1` : card.gems, skills: [], tone: speedTone(card.id), text: card.effect };
+      // Bảng ngắn của lá phép ghi tóm tắt từng dòng như bảng Huỷ / OK (chủ game 26/11); lá chưa có thì giữ chữ lá.
+      const brief = spellBrief(duel, card.id, viewer).split("\n").slice(1).filter(Boolean);
+      return { name: card.name, cardId: card.id, gems: you.tolls?.[index] ? `${card.gems}+1` : card.gems, skills: [], tone: speedTone(card.id), text: brief.length ? brief.join("\n") : card.effect };
     }
     const held = you.reserve[index];
     const card = held ? monsterCard(held.id) : undefined;
@@ -6977,7 +6979,7 @@ function PlayPage() {
   // Lá tự rút của lượt đầu chờ (`wait`) tới sau 3 lá đầu: lá thật vẫn ẩn, chưa hiện giữa màn.
   const drawShow = drawShows[0] && !drawShows[0].wait ? drawShows[0] : null;
   const drawPeek = drawShow ? peekOf(drawShow.target.startsWith("r:") ? "reserve" : "spell", Number(drawShow.target.slice(2))) : null;
-  const pickPeekRaw = !tutorial && !drawShow && !fuseShow && !vowAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
+  const pickPeekRaw = !tutorial && !drawShow && !fuseShow && !vowAsk && !useAsk && !stage?.leave && handPick && !inspect ? peekOf(handPick.pile, handPick.index) : null;
   // Đồng hồ khó đoán đã chọn dạng: bảng ngắn hiện dạng đó.
   const clockShown = stage?.clock?.form ? monsterCard(stage.clock.form) : undefined;
   const pickPeek: PeekInfo | null =

@@ -1126,6 +1126,7 @@ export const PENDING_NOTES: string[] = [
   "Harpie Lady: Càng xinh đẹp. Mỗi lần bạn chọn cô làm mục tiêu, cô +1 công, +1 máu tối đa trong 3 lượt và hồi 1 máu, cộng dồn. Cô bị chọn không hành động được trong lượt đó. Tiến hoá sau 4 hành động.",
   "Thêm lá phép Hồi sinh quái thú: 1 mana, phản ứng khi quái địch đánh thường, hồi sinh 1 quái trong mộ của cả 2 phe lao ra chặn đòn, ở lại 2 lượt. Dùng như phép chậm thì ở lại 3 lượt.",
   "Harpie Lady có tranh mới. Các lá phép Giáp và Vuốt, Roi điện, Mê hoặc, Thổi bay của cô cũng có tranh riêng.",
+  "Bảng mô tả ngắn của lá phép trên tay ghi tóm tắt từng dòng như bảng xác nhận dùng phép, và ẩn đi khi bảng xác nhận mở ra.",
 ];
 
 function remarkOf(notes: string[]) {
