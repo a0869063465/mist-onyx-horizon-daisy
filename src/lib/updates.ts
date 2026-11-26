@@ -1122,6 +1122,7 @@ export const PENDING_NOTES: string[] = [
   "Có hiệu ứng xáo bài, kèm âm thanh: lúc đổi bài đầu trận (xáo xong mới chia bài) và khi quái Ẩn về xấp. Xấp của bạn xáo xanh, xấp đối thủ xáo đỏ.",
   "Thêm lá phép Suối nguồn sinh mệnh. Siêu tốc 0 mana, hồi 1 máu cho 1 đồng minh và cho nó 2 máu tối đa đến hết lượt chung, hiệu ứng hồi máu giữ tới lúc hết. Độ bền 2 lần dùng: lần 1 lá về bộ bài, xáo bài và bạn rút 1 lá; lần 2 lá biến mất.",
   "Buff chỉ số (công, thủ, thủ phép, máu tối đa) có hiệu ứng vòng cam, mũi tên bay lên, riêng với hồi máu xanh lục. Bỏ vòng hồi máu giữ liên tục trên quái đang được buff tạm.",
+  "Hiệu ứng xáo bài chạy lại từ đầu mỗi lần xáo, không còn đứng ở một lá nghiêng.",
   "Harpie Lady đổi kỹ năng: Giảo hoạt tạo lá phép của cô lên tay, mời 2 lá chọn 1 (bảng chọn 20 giây). Giáp và Vuốt và Roi điện là phép phản ứng 1 mana, Thổi bay là phép chậm 1 mana, Mê hoặc là phép chậm 0 mana. Hết Harpie Lady trên sân thì các lá này trên tay biến mất.",
   "Harpie Lady: Càng xinh đẹp. Mỗi lần bạn chọn cô làm mục tiêu, cô +1 công, +1 máu tối đa trong 3 lượt và hồi 1 máu, cộng dồn. Cô bị chọn không hành động được trong lượt đó. Tiến hoá sau 4 hành động.",
   "Thêm lá phép Hồi sinh quái thú: 1 mana, phản ứng khi quái địch đánh thường, hồi sinh 1 quái trong mộ của cả 2 phe lao ra chặn đòn, ở lại 2 lượt. Dùng như phép chậm thì ở lại 3 lượt.",

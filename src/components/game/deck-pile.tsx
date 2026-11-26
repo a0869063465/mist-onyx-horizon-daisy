@@ -50,6 +50,19 @@ export function DeckPile({ count, side, ready, shuffle }: { count: number; side:
           autoPlay
           muted
           playsInline
+          preload="auto"
+          ref={(el) => {
+            // Ép phát từ khung đầu, tránh video đứng ở một khung trên điện thoại.
+            if (el && el.dataset.go !== "1") {
+              el.dataset.go = "1";
+              el.currentTime = 0;
+              void el.play().catch(() => undefined);
+            }
+          }}
+          onLoadedData={(event) => {
+            const el = event.currentTarget;
+            if (el.paused) void el.play().catch(() => undefined);
+          }}
           onEnded={() => setLive(false)}
         />
       ) : null}
