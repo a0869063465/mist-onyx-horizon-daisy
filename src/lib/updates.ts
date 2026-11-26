@@ -1119,6 +1119,7 @@ export const PENDING_NOTES: string[] = [
   "Harpie Lady: Mê hoặc 0 mana, chọn 1 quái địch rồi 1 quái đồng minh khác, quái địch đánh thường vào quái đó. Không còn cấm hành động lượt sau.",
   "Hiệp sĩ của vua, Hiệp sĩ của hậu: Khiên +4 thủ hoặc thủ phép trước lần nhận sát thương đầu tiên trong lượt; Kiếm tốn 1 mana +3 công khi tấn công; Hiệp sĩ của hậu đánh thường gây sát thương phép. Bỏ lời chúc vua/hậu, Đàm phán, Kiếm phép, Kiếm tấn công cũ.",
   "Có hiệu ứng xáo bài, kèm âm thanh: lúc đổi bài đầu trận (xáo xong mới chia bài) và khi quái Ẩn về xấp. Xấp của bạn xáo xanh, xấp đối thủ xáo đỏ.",
+  "Thêm lá phép Suối nguồn sinh mệnh. Siêu tốc 0 mana, hồi 1 máu cho 1 đồng minh và cho nó 2 máu tối đa đến hết lượt chung, hiệu ứng hồi máu giữ tới lúc hết. Độ bền 2 lần dùng: lần 1 lá về bộ bài, xáo bài và bạn rút 1 lá; lần 2 lá biến mất.",
 ];
 
 function remarkOf(notes: string[]) {

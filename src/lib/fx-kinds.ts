@@ -112,6 +112,8 @@ export const CARD_FX_KIND: Record<string, [FxKind, FxStrike]> = {
   "huy-diet": ["shadow", "magic"],
   "bay-thu": ["steel", "magic"],
   "qua-trung-thien-su": ["holy", "magic"],
+  "suoi-nguon-sinh-menh": ["nature", "magic"],
+  "suoi-nguon-sinh-menh-2": ["nature", "magic"],
 };
 
 export function fxKindOf(cardId: string | null | undefined): [FxKind, FxStrike] {

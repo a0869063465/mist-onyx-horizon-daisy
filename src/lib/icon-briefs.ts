@@ -256,6 +256,9 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Chặn đòn tấn công", "Một quái bị nhắm được trả đòn"];
       case "hoan-doi":
         return ["Đổi chỗ quái bị nhắm với quái khác"];
+      case "suoi-nguon-sinh-menh":
+      case "suoi-nguon-sinh-menh-2":
+        return [`Hồi ${num(e, /Hồi\s*(\d+)\s*máu/, 1)} máu cho 1 đồng minh`, `+${num(e, /(\d+)\s*máu tối đa/, 2)} máu tối đa tới hết lượt`];
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
       case "don-cuoi-cung":
