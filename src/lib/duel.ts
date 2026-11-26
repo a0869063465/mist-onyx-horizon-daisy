@@ -331,6 +331,9 @@ export type Duel = {
     /** Pháo kích (Rùa máy bắn đá): uid đạn pháo → uid con rùa nó leo lên trước khi bay. */
     from?: Record<string, string>;
   } | null;
+  /** Số lần mỗi bên vừa xáo bộ bài (Suối nguồn sinh mệnh, đổi bài đầu trận, quái Ẩn về xấp), cho trang trận chạy hiệu
+   *  ứng xáo bài (chủ game 26/11): bên nào số tăng là bên đó vừa xáo. */
+  shuffles?: [number, number];
   /** Kuriboh mang Cấp số nhân đã tách ra 2 con mới (để không tách 2 lần). */
   bred?: string[];
   /** Quái ẩn vừa về xấp (luật L2): chủ của nó được triệu hồi phản ứng 1 quái ẩn trên tay vào ô `slot`. `back` = bên
@@ -447,6 +450,14 @@ export type Duel = {
 };
 
 export const STAR_COST = [1, 3, 6, 10];
+
+/** Ghi lại bên `side` vừa xáo bộ bài (hiệu ứng xáo bài). */
+function markShuffle(state: Duel, side: Side): Duel {
+  const was = state.shuffles ?? [0, 0];
+  const next: [number, number] = [was[0], was[1]];
+  next[side] += 1;
+  return { ...state, shuffles: next };
+}
 
 function shuffle<T>(list: T[]): T[] {
   const next = [...list];
@@ -725,7 +736,8 @@ export function openerSwap(state: Duel, side: Side, pick: OpenerPick): Duel {
   };
   const done: [boolean, boolean] = side === 0 ? [true, opener.done[1]] : [opener.done[0], true];
   const players: [Player, Player] = side === 0 ? [swapped, state.players[1]] : [state.players[0], swapped];
-  const next: Duel = { ...state, players, opener: done[0] && done[1] ? null : { done } };
+  const swept: Duel = { ...state, players, opener: done[0] && done[1] ? null : { done } };
+  const next = outMonsters.size + outSpells.size > 0 ? markShuffle(swept, side) : swept;
   return next.opener ? next : openingDraw(next);
 }
 
@@ -7407,6 +7419,7 @@ function castSpring(state: Duel, side: Side, handIndex: number, targetUid: strin
     drawn = draw.got;
   }
   let next = pingStars(patch(state, side, you), side, before, you.stars);
+  if (!worn) next = markShuffle(next, side);
   const heal = grabNums(card.effect, /Hồi\s+(\d+)\s*máu/gi)[0] ?? 1;
   const grant = grabNums(card.effect, /(\d+)\s*máu tối đa/gi)[0] ?? 2;
   const owner = next.players[where];
@@ -8247,7 +8260,7 @@ function lurkHome(state: Duel, side: Side, uid: string, why: "hit" | "time" | "w
     home = top.player;
     drew = top.kind === "monster" ? monsterCard(home.reserve.at(-1)?.id ?? "")?.name ?? "1 quái" : spellCard(home.hand.at(-1) ?? "")?.name ?? "1 phép";
   }
-  let next = patch({ ...state, seq: state.seq + 1 }, side, home);
+  let next = markShuffle(patch({ ...state, seq: state.seq + 1 }, side, home), side);
   // Về xấp không phải bị hạ: không vào mộ.
   const players = [...next.players] as [Player, Player];
   players[side] = { ...players[side], spent: state.players[side].spent };
