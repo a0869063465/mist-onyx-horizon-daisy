@@ -1121,6 +1121,7 @@ export const PENDING_NOTES: string[] = [
   "Có hiệu ứng xáo bài, kèm âm thanh: lúc đổi bài đầu trận (xáo xong mới chia bài) và khi quái Ẩn về xấp. Xấp của bạn xáo xanh, xấp đối thủ xáo đỏ.",
   "Thêm lá phép Suối nguồn sinh mệnh. Siêu tốc 0 mana, hồi 1 máu cho 1 đồng minh và cho nó 2 máu tối đa đến hết lượt chung, hiệu ứng hồi máu giữ tới lúc hết. Độ bền 2 lần dùng: lần 1 lá về bộ bài, xáo bài và bạn rút 1 lá; lần 2 lá biến mất.",
   "Buff chỉ số (công, thủ, thủ phép, máu tối đa) có hiệu ứng vòng cam, mũi tên bay lên, riêng với hồi máu xanh lục. Bỏ vòng hồi máu giữ liên tục trên quái đang được buff tạm.",
+  "Hiệu ứng xáo bài chạy lại từ đầu mỗi lần xáo, không còn đứng ở một lá nghiêng.",
 ];
 
 function remarkOf(notes: string[]) {
