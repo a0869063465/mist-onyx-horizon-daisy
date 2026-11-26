@@ -3841,27 +3841,6 @@ button.trail-dot.is-on {
 .field-unit.is-prime {
   animation: prime-glow 1.2s ease-in-out infinite;
 }
-.field-unit.is-mending::after {
-  content: "";
-  position: absolute;
-  inset: 6%;
-  z-index: 4;
-  pointer-events: none;
-  border-radius: 46%;
-  background: radial-gradient(circle, rgba(125, 255, 225, 0.72), rgba(62, 198, 255, 0.08) 68%);
-  mix-blend-mode: screen;
-  animation: mend-hold 1.5s ease-in-out infinite;
-}
-@keyframes mend-hold {
-  0%, 100% {
-    opacity: 0.28;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-}
 @keyframes prime-glow {
   0%, 100% {
     filter: drop-shadow(0 0 calc(var(--alert-size, 32px) * 0.45) #ff8a00);
@@ -5751,6 +5730,15 @@ button.watch-back {
   pointer-events: none;
   object-fit: contain;
 }
+/* Buff chỉ số (26/11): tâm vòng nằm ở ~51% / 78% khung video. */
+.buff-blast {
+  position: absolute;
+  z-index: 13;
+  width: 24%;
+  transform: translate(-51%, -78%);
+  pointer-events: none;
+  object-fit: contain;
+}
 /* Video nước (06/11): vòng sóng ở đáy khung nên đặt tâm vòng (~78% chiều cao) vào điểm trúng. */
 .tide-vid {
   position: absolute;
@@ -5865,12 +5853,6 @@ button.watch-back {
   100% {
     transform: scale(1.4);
     opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .field-unit.is-mending::after {
-    animation: none;
-    opacity: 0.7;
   }
 }
 .fx-lab {
@@ -14722,6 +14704,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 
 /* Safari: alpha WebM becomes black-background MP4, so black must vanish by blending. */
 html[data-flatfx] .heal-blast,
+html[data-flatfx] .buff-blast,
 html[data-flatfx] .flare-blast,
 html[data-flatfx] .boom-blast,
 html[data-flatfx] .tide-vid,

@@ -29,7 +29,7 @@ export function flatFx(): boolean {
 }
 
 /** Alpha clips that have a black-background MP4 twin (the box clip has none). */
-const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|phat-quang|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
+const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|buff-chi-so|phat-quang|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
 export function alphaSrc(src: string): string {
   return flatFx() && FLAT_TWINS.test(src) ? src.replace(".webm", ".mp4") : src;
 }
@@ -81,6 +81,7 @@ export const FX_VIDEOS = [
   "/fx/xao-bai-do.webm?v=1",
   "/fx/dai-hong-thuy.webm?v=1",
   "/fx/hoi-mau.webm?v=1",
+  "/fx/buff-chi-so.webm?v=1",
   "/fx/phat-quang.webm?v=1",
   "/fx/kuriboh-no.webm?v=1",
   "/fx/suong-mu-hinh1.webm?v=1",
