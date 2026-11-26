@@ -7557,6 +7557,7 @@ function PlayPage() {
             orbs={chain}
             closing={!responding}
             spots={iconSpots}
+            mid={ry(51)}
             endOf={flowEnd}
             lookOf={iconLook}
             noteOf={iconNote}
