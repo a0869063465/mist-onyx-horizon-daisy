@@ -1299,6 +1299,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 0,
     "effect": "Độ bền: 2 lần dùng\nSiêu tốc 0 mana\nHồi 1 máu cho 1 đồng minh và bạn cho nó 2 máu tối đa đến hết lượt.\nSau đó đặt lại vào deck, xáo bài và rút 1 lá bài.",
     "picture": "spell:suoi-nguon-sinh-menh"
+  },
+  {
+    "id": "hoi-sinh-quai-thu",
+    "name": "Hồi sinh quái thú",
+    "gems": 1,
+    "effect": "Phép phản ứng 1 mana\nPhát động khi bị 1 quái thú địch tấn công, hồi sinh 1 quái thú đã chết của cả 2 phe, quái thú đó lập tức lao ra chặn ngay đòn tấn công. Tồn tại tối đa 2 lượt.\nHoặc có thể dùng như phép chậm, hồi sinh quái thú và nó có thể tồn tại đến 3 lượt.",
+    "picture": "spell:hoi-sinh-quai-thu"
   }
 ];
 
@@ -1312,7 +1319,7 @@ export const SPRING_WORN = "suoi-nguon-sinh-menh-2";
 const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>(["hoi-sinh-quai-thu"]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));

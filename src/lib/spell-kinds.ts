@@ -43,7 +43,7 @@ export function spellKindRank(id: string): number {
 export type SpellSpeed = "slow" | "fast" | "super" | "buff";
 const SPEEDS: Record<SpellSpeed, string[]> = {
   slow: ["sam-set-tan-the", "huy-diet", "soi-xich-dia-nguc", "thanh-guom-anh-sang", "mu-ma-phap", "phan-nguyen"],
-  fast: ["bay-thu", "song-sat", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"],
+  fast: ["bay-thu", "song-sat", "hoi-sinh-quai-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"],
   super: ["hoan-doi", "hop-ma-thuat", "don-cuoi-cung", "hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat", "suoi-nguon-sinh-menh", "suoi-nguon-sinh-menh-2"],
   buff: ["sung-loi-pha", "ke-dao-mo", "thu-hoi-quai-thu"],
 };

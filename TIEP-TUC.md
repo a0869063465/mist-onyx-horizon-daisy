@@ -6,6 +6,10 @@ Cách ghi: mỗi việc mới/đang làm chỉ ghi 3 dòng ngắn ở mục "Đa
 
 ## Đang dở (main: các lá Suối nguồn, Nắng và gió, Tử thần, Rùa, xáo bài, buff chỉ số… đã áp; chi tiết ở nhật ký)
 
+- Lá Hồi sinh quái thú (26/11, nhánh `ccr-9debffc2-yhepws`): LUẬT ĐÃ LÀM (Opus). duel.ts `REVIVE_CARD`, `reviveReady/Choices/Slots/Code`, `castRevive`, `reviveLand`, `reviveTick`; 4 bài thử đạt. Tranh: `docs/anh-tiep-tuc/hoi-sinh-quai-thu.jpg`; lá đang trong `WAITING_CARDS`.
+  Luật chốt: phản ứng đòn đánh thường của quái địch (vào người chơi hoặc quái mình) thì quái trong mộ 2 phe lên ô trống HÀNG TRƯỚC phe mình, ngửa, đủ chỉ số, chạy Khi triệu hồi, lao ra chặn, 2 lượt chung; chậm ở lượt chính 3 lượt chung; lượt đang diễn ra tính là lượt 1; hết hạn về mộ (không tính bị tiêu diệt); quái 5 sao được; lá đứng yên không chọn khi phản ứng.
+  Còn: phần lá (Sonnet medium): ảnh, bỏ khỏi WAITING_CARDS, bảng chọn quái trong mộ + ô, chớp cam khi bị đánh, PENDING_NOTES; máy (brain.ts) chưa dùng.
+
 - Chưa thử bằng mắt/online/máy/điện thoại: hầu hết lá mới (xem `docs/nhat-ky.md`, grep tên lá).
 - Nhánh `ccr-9debffc2-yhepws` (Song sát, Thiên sứ vô hình + Khoá 1, Tinh linh đàn hạc…) CHƯA gộp `main`, ghi chú riêng ở nhánh đó.
 - Icon vẽ tay chờ = 5 (+ `cupidon-arrow`). Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.

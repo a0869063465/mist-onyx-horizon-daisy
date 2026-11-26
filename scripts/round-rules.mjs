@@ -2278,6 +2278,77 @@ test("Suối nguồn sinh mệnh siêu tốc trong chuỗi: nổ ngay, quyền �
   assert.deepEqual(D.springAllies(hit, 1), [uid(s, 1, 0)]);
 });
 
+test("Hồi sinh quái thú (26/11): phản ứng đòn đánh quái, quái trong mộ địch lên sân mình, lao ra chặn, 2 lượt chung rồi về mộ", () => {
+  let s = board({ 0: ["may-chem", { atk: 1 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.REVIVE_CARD] : [], tolls: [], spent: i === 0 ? ["rong-con"] : [] })) };
+  assert.equal(D.reviveReady(s, 0), true, "lượt chính của mình: dùng chậm được");
+  assert.equal(D.reviveReady(s, 1), false, "không phải lượt mình, không có đòn: không dùng được");
+  const hit = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  assert.equal(hit.step, "respond", hit.live);
+  assert.equal(D.reviveReady(hit, 1), true, "bị đánh: lá chớp");
+  assert.deepEqual(D.reviveChoices(hit, true), [{ from: 0, cardId: "rong-con" }]);
+  const cast = D.castSpell(hit, 0, null, false, D.reviveCode({ from: 0, cardId: "rong-con", slot: null }));
+  assert.ok(cast.hold?.revive, "chờ trong chuỗi: " + cast.live);
+  assert.equal(cast.players[1].orb, 2, "1 mana");
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  const risen = at(done, 1, 1);
+  assert.equal(risen?.cardId, "rong-con", "lên ô trống hàng trước của phe mình: " + rows(done));
+  assert.equal(at(done, 1, 0).hp, 10, "quái bị nhắm không trúng đòn: " + done.live);
+  assert.equal(risen.revive, 2, "tồn tại 2 lượt chung");
+  assert.ok(!done.players[0].spent.includes("rong-con"), "lấy khỏi mộ địch");
+  // Đứng đủ 2 lượt chung (tính cả lượt đang diễn ra) rồi về mộ.
+  let t = board({}, { 1: ["rong-con", { hp: 3, maxHp: 3, revive: 2 }] });
+  t = closeRound(t);
+  assert.equal(at(t, 1, 1)?.revive, 1, "hết 1 lượt chung: còn 1");
+  t = closeRound(t);
+  assert.equal(at(t, 1, 1), null, "hết 2 lượt chung: về mộ: " + t.live);
+  assert.ok(t.players[1].spent.includes("rong-con"), "nằm trong mộ phe giữ nó");
+});
+
+test("Hồi sinh quái thú: phản ứng đòn đánh vào người chơi thì quái hồi sinh chặn; hàng trước kín thì không dùng được", () => {
+  let s = board({ 0: ["may-chem", { atk: 2 }] }, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.REVIVE_CARD] : [], tolls: [], spent: i === 1 ? ["khong-lo-mot-mat"] : [] })) };
+  const hp = s.players[1].hp;
+  const hit = D.attackFace(s, uid(s, 0, 0));
+  assert.equal(D.reviveReady(hit, 1), true, hit.live);
+  let done = D.castSpell(hit, 0, null, false, D.reviveCode({ from: 1, cardId: "khong-lo-mot-mat", slot: null }));
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(done.players[1].hp, hp, "người chơi không mất máu: " + done.live);
+  assert.equal(at(done, 1, 0)?.cardId, "khong-lo-mot-mat", rows(done));
+  const full = board({ 0: ["may-chem", { atk: 5 }] }, { 0: ["rong-con", {}], 1: ["rong-con", {}], 2: ["rong-con", {}] });
+  const fullS = { ...full, players: full.players.map((p, i) => ({ ...p, hand: i === 1 ? [D.REVIVE_CARD] : [], spent: ["khong-lo-mot-mat"] })) };
+  assert.equal(D.reviveReady(D.attackFace(fullS, uid(fullS, 0, 0)), 1), false, "hàng trước kín: không lao ra được");
+});
+
+test("Hồi sinh quái thú: phép chậm ở lượt chính mở chuỗi, chuỗi nổ thì quái lên ô đã chọn, tồn tại 3 lượt chung", () => {
+  let s = board({}, {});
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [D.REVIVE_CARD] : [], tolls: [], spent: i === 1 ? ["rong-ac-ma"] : [] })) };
+  const cast = D.castSpell(s, 0, null, false, D.reviveCode({ from: 1, cardId: "rong-ac-ma", slot: 4 }));
+  assert.equal(cast.step, "respond", "phép chậm mở chuỗi: " + cast.live);
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(at(done, 0, 4)?.cardId, "rong-ac-ma", "quái 5 sao lên đúng ô: " + rows(done) + " " + done.live);
+  assert.equal(at(done, 0, 4).revive, 3);
+  assert.ok(!done.players[1].spent.includes("rong-ac-ma"), "lấy khỏi mộ");
+  assert.equal(D.reviveReady(board({}, {}), 0), false, "mộ trống: không dùng được");
+});
+
+test("Hồi sinh quái thú: Hấp thụ ma pháp nuốt thì không ai lên sân, đòn vào mục tiêu cũ; quái hồi sinh chạy Khi triệu hồi của chính nó", () => {
+  let s = board({ 0: ["may-chem", { atk: 1 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10, def: 0 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.REVIVE_CARD] : ["hap-thu-ma-phap"], tolls: [], spent: i === 0 ? ["tinh-linh-dan-hac"] : [] })) };
+  const hit = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0));
+  const cast = D.castSpell(hit, 0, null, false, D.reviveCode({ from: 0, cardId: "tinh-linh-dan-hac", slot: null }));
+  let eaten = D.castSpell(cast, 0, null);
+  for (let n = 0; n < 4 && eaten.step === "respond"; n += 1) eaten = D.passResponse(eaten);
+  assert.equal(at(eaten, 1, 1), null, "bị nuốt: không ai lên sân: " + eaten.live);
+  assert.ok(at(eaten, 1, 0).hp < 10, "đòn vào mục tiêu cũ");
+  let done = cast;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  assert.equal(at(done, 1, 1)?.cardId, "tinh-linh-dan-hac", rows(done));
+  assert.ok(done.players[1].starGems > cast.players[1].starGems || done.players[1].stars > cast.players[1].stars, "Tiếng nhạc du dương chạy: " + done.live);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

@@ -144,6 +144,8 @@ export type FieldMon = {
   /** Suối nguồn sinh mệnh (chủ game 25/11): máu tối đa ban tạm tới hết lượt chung; hết lượt thì trừ lại, máu hiện tại
    *  kẹp xuống nếu vượt (`stampTurn`). */
   spring?: number;
+  /** Hồi sinh quái thú (chủ game 26/11): số lượt chung còn được ở trên sân; hết thì về mộ (`reviveTick`). */
+  revive?: number;
   /** Hàng sau (ô 3–5). Không có là hàng trước. Luôn theo ô đang đứng (`withRows`). */
   row?: "back";
   /** Song sát (chủ game 25/11): phần thủ (p) và thủ phép (s) đã chặn sát thương trong giao tranh Song sát, mất tới khi
@@ -285,6 +287,8 @@ export type Hold = {
   seal?: { by: string; uid: string };
   /** Song sát (chủ game 25/11): chờ trong chuỗi; chuỗi nổ thì 2 quái của `side` lần lượt ra đòn lên `target`. */
   duo?: { side: Side; target: string; picks: DuoPick[] };
+  /** Hồi sinh quái thú (chủ game 26/11): chờ trong chuỗi; chuỗi nổ thì quái từ mộ lên sân `side` và lao ra chặn đòn. */
+  revive?: { side: Side; pick: RevivePick };
 };
 
 /** Một quái của Song sát và việc nó làm: "atk" = đánh thường, số = kỹ năng gây sát thương thứ mấy. */
@@ -488,7 +492,8 @@ function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon 
 function pileFromField(mon: FieldMon): PileMon {
   if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
   const { uid: _uid, lurk: _lurk, ...kept } = mon;
-  const saved = kept.spring ? dropSpring(kept) : kept;
+  const sprung = kept.spring ? dropSpring(kept) : kept;
+  const saved = sprung.revive ? { ...sprung, revive: undefined } : sprung;
   const cap = saved.maxHp || saved.hp;
   return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
 }
@@ -4969,6 +4974,7 @@ function passResponseCore(state: Duel): Duel {
     return passResponseCore(rewound && stamp ? note(cleared, `Cỗ máy thời gian đưa ${cardOf(stamp.mon).name} về ${stamp.born ? "trạng thái lúc vừa triệu hồi" : "trạng thái đầu 3 lượt chung trước"}.`, "spell") : cleared);
   }
   if (hold.duo) return passResponseCore(duoLand(state));
+  if (hold.revive) return passResponseCore(reviveLand(state));
   if (pending.kind === "spell" && pending.cardId === DUO_CARD) return { ...state, step: "main", pending: null, hold: null };
   if (hold.ambush) return ambushStrike(state, hold.ambush.ally, hold.ambush.foe);
   if (hold.trap) return trapSpring(state, hold.trap.uid);
@@ -7352,7 +7358,7 @@ export function eatFor(state: Duel, side: Side): boolean {
 }
 
 /** Fast answers that wait or act in the chain, which Hấp thụ ma pháp may swallow (chủ game 04/11). */
-const EATABLE = new Set(["song-sat", "bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"]);
+const EATABLE = new Set(["song-sat", "bay-thu", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su", "hoi-sinh-quai-thu"]);
 
 /** The board kept to swallow an answer: what it was just before, the answer's cost paid; the record keeps going on. */
 function restoreEaten(now: Duel, back: Duel): Duel {
@@ -7520,6 +7526,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được Huỷ diệt.");
   }
   if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
+  if (card.id === REVIVE_CARD) return castRevive(state, side, handIndex, sourceUid ?? targetUid, replay);
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
   }
@@ -11165,7 +11172,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = dropSprings(dropShields(start));
+  const state = reviveTick(dropSprings(dropShields(start)));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -12777,4 +12784,186 @@ function duoLand(state: Duel): Duel {
   const marked = note(run, "Song sát kết thúc giao tranh.", "spell");
   if (marked.winner !== null) return { ...marked, step: "over", hold: null };
   return { ...marked, step: state.step, pending: state.pending, turn: state.turn, hold: { ...hold, duo: undefined } };
+}
+
+/**
+ * Hồi sinh quái thú (chủ game 26/11): phép 1 mana, 2 cách dùng.
+ * - Phản ứng: quái địch đánh thường vào bạn hoặc quái của bạn (đánh, gặm). Hồi sinh 1 quái đã chết trong mộ của 1 trong 2
+ *   phe về phe bạn, nó lao ra chặn đúng đòn đó (đặc biệt: chặn cả đòn vào người chơi). Chờ trong chuỗi như Bẫy thú;
+ *   chuỗi nổ mới lên sân. Tồn tại tối đa 2 lượt chung.
+ * - Phép chậm ở lượt chính: mở chuỗi, chuỗi nổ thì quái lên sân. Tồn tại tối đa 3 lượt chung.
+ * Quái lên sân luôn ngửa, đủ chỉ số gốc, chạy hiệu ứng "Khi triệu hồi" của chính nó; lượt chung đang diễn ra tính là lượt
+ * đầu; hết hạn thì về mộ (không tính là bị tiêu diệt). Quái 5 sao cũng hồi sinh được. Không còn ô trống thì không dùng được.
+ */
+export const REVIVE_CARD = "hoi-sinh-quai-thu";
+const REVIVE_FAST = 2;
+const REVIVE_SLOW = 3;
+
+/** Một quái trong mộ: `from` = mộ của phe nào. */
+export type ReviveChoice = { from: Side; cardId: string };
+export type RevivePick = ReviveChoice & { slot: Slot | null };
+
+export function reviveCode(pick: RevivePick): string {
+  return `${pick.from}|${pick.cardId}|${pick.slot ?? ""}`;
+}
+
+function reviveParse(code: string | null | undefined): RevivePick | null {
+  if (!code) return null;
+  const [from, cardId, slot] = code.split("|");
+  if ((from !== "0" && from !== "1") || !cardId || !monsterCard(cardId)) return null;
+  const at = slot === "" || slot == null ? null : Number(slot);
+  if (at !== null && !ALL_SLOTS.includes(at as Slot)) return null;
+  return { from: Number(from) as Side, cardId, slot: at as Slot | null };
+}
+
+/** Quái đã chết trong mộ cả 2 phe (mỗi lá một dòng mỗi phe). Phản ứng thì bỏ lá đứng yên (không chặn đòn được). */
+export function reviveChoices(state: Duel, block = false): ReviveChoice[] {
+  const out: ReviveChoice[] = [];
+  for (const from of [0, 1] as const) {
+    const seen = new Set<string>();
+    for (const id of state.players[from].spent ?? []) {
+      if (seen.has(id) || id === "mu" || !monsterCard(id)) continue;
+      seen.add(id);
+      if (block && isStill(id)) continue;
+      out.push({ from, cardId: id });
+    }
+  }
+  return out;
+}
+
+/** Ô trống quái `cardId` đứng được trên sân `side`; lao ra chặn đòn thì chỉ hàng trước. */
+export function reviveSlots(state: Duel, side: Side, cardId: string | null, front = false): Slot[] {
+  const player = state.players[side];
+  return ALL_SLOTS.filter((slot) => {
+    if (player.field[slot] || (player.locked?.[slot] ?? 0) > 0 || boxShut(state, side, slot)) return false;
+    if (front && backSlot(slot)) return false;
+    return !guardBarred(cardId, slot);
+  });
+}
+
+/** Đòn đánh thường của quái địch đang nhắm `side` hoặc quái của `side` mà Hồi sinh quái thú chặn được. */
+function reviveStrike(state: Duel, side: Side): boolean {
+  const pending = state.pending;
+  const hold = state.hold;
+  if (state.step !== "respond" || !pending || !hold || hold.stage || hold.priority !== side || hold.revive) return false;
+  const foe = (1 - side) as Side;
+  const mine = (uid: string) => state.players[side].field.some((mon) => mon?.uid === uid);
+  const theirs = (uid: string) => state.players[foe].field.some((mon) => mon?.uid === uid);
+  if (pending.kind === "melee" || pending.kind === "gnaw") return theirs(pending.attacker) && mine(pending.defender);
+  if (pending.kind === "face") return !pending.skill && state.turn === foe && theirs(pending.attacker);
+  return false;
+}
+
+/** Dùng được Hồi sinh quái thú lúc này: phản ứng một đòn đánh, hoặc phép chậm ở lượt chính của mình. */
+export function reviveReady(state: Duel, side: Side): boolean {
+  if (state.winner !== null) return false;
+  if (state.step === "respond") {
+    if (!reviveStrike(state, side)) return false;
+    return reviveChoices(state, true).length > 0 && reviveSlots(state, side, null, true).length > 0;
+  }
+  if (state.step !== "main" || state.turn !== side || state.hold || state.pending) return false;
+  return reviveChoices(state).length > 0 && reviveSlots(state, side, null).length > 0;
+}
+
+/** Lấy 1 lá khỏi mộ của `from` (đúng 1 bản). */
+function takeFromGrave(player: Player, cardId: string): Player | null {
+  const spent = [...(player.spent ?? [])];
+  const at = spent.lastIndexOf(cardId);
+  if (at < 0) return null;
+  spent.splice(at, 1);
+  return { ...player, spent };
+}
+
+/** Quái lên sân `side` từ mộ: đủ chỉ số gốc, ngửa, chạy "Khi triệu hồi" của chính nó. Trả về uid hoặc null nếu hụt. */
+function reviveRise(state: Duel, side: Side, pick: RevivePick, turns: number, front: boolean): { state: Duel; uid: string | null; line: string } {
+  const card = monsterCard(pick.cardId);
+  const fromPlayer = takeFromGrave(state.players[pick.from], pick.cardId);
+  if (!card || !fromPlayer) return { state, uid: null, line: "Hồi sinh quái thú: quái đó không còn trong mộ." };
+  const free = reviveSlots(state, side, pick.cardId, front);
+  const slot = pick.slot !== null && free.includes(pick.slot) ? pick.slot : free[0];
+  if (slot === undefined) return { state, uid: null, line: "Hồi sinh quái thú: không còn ô trống." };
+  let next = pick.from === side ? state : patch(state, pick.from, fromPlayer);
+  let player = pick.from === side ? fromPlayer : next.players[side];
+  const mon: FieldMon = { ...place(next, side, pick.cardId), revive: turns };
+  const field = [...player.field] as Player["field"];
+  field[slot] = mon;
+  player = { ...player, field };
+  const harp = harpSummoned(player, pick.cardId);
+  player = harp.player;
+  next = patch({ ...next, seq: next.seq + 1 }, side, player);
+  const whose = pick.from === side ? "" : ` của ${sideName(pick.from)}`;
+  return { state: next, uid: mon.uid, line: `Hồi sinh quái thú: ${card.name}${whose} sống lại, tồn tại tối đa ${turns} lượt.${harp.line}` };
+}
+
+/** Chuỗi nổ với Hồi sinh quái thú đang chờ: quái lên sân rồi lao ra chặn đòn đang chờ (thay mục tiêu của đòn). */
+function reviveLand(state: Duel): Duel {
+  const hold = state.hold;
+  const wait = hold?.revive;
+  if (!hold || !wait) return state;
+  const cleared: Duel = { ...state, hold: { ...hold, revive: undefined } };
+  const rose = reviveRise(cleared, wait.side, wait.pick, REVIVE_FAST, true);
+  if (!rose.uid) return note(cleared, rose.line, "spell");
+  const pending = rose.state.pending;
+  const after = rose.state;
+  const line = `${rose.line} Nó lao ra chặn đòn.`;
+  if (pending?.kind === "melee" || pending?.kind === "gnaw") {
+    return note({ ...after, pending: { ...pending, defender: rose.uid }, hold: after.hold ? { ...after.hold, blocker: null } : after.hold }, line, "spell");
+  }
+  if (pending?.kind === "face" && after.hold) return note({ ...after, hold: { ...after.hold, blocker: rose.uid, blockerSkill: false } }, line, "spell");
+  return note(after, rose.line, "spell");
+}
+
+/** Hết lượt chung: quái hồi sinh bớt 1 lượt; hết lượt thì về mộ của phe đang giữ nó (rời sân, không bị tiêu diệt). */
+function reviveTick(state: Duel): Duel {
+  let next = state;
+  const gone: string[] = [];
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.revive)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon?.revive) return mon;
+      if (mon.revive <= 1) {
+        gone.push(cardOf(mon).name);
+        return null;
+      }
+      return { ...mon, revive: mon.revive - 1 };
+    }) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return gone.length ? note(next, `Hết thời gian hồi sinh: ${gone.join(", ")} về mộ.`, "info") : next;
+}
+
+/** Dùng Hồi sinh quái thú (cả lúc chuỗi nổ với bản phép chậm: `replay`). */
+function castRevive(state: Duel, side: Side, handIndex: number, code: string | null, replay: boolean): Duel {
+  const player = state.players[side];
+  const card = spellCard(REVIVE_CARD)!;
+  const pick = reviveParse(code);
+  if (replay) {
+    const next = patch(state, side, dropHandCard(player, handIndex));
+    if (!pick) return note(next, "Hồi sinh quái thú không còn mục tiêu.", "spell");
+    const rose = reviveRise(next, side, pick, REVIVE_SLOW, false);
+    return note(rose.state, rose.line, "spell");
+  }
+  const respond = state.step === "respond";
+  if (!reviveReady(state, side)) {
+    return note(state, respond ? "Hồi sinh quái thú chỉ phản ứng khi quái địch đánh thường vào bạn hoặc quái của bạn." : "Hồi sinh quái thú cần quái trong mộ và ô trống.");
+  }
+  if (!pick) return note(state, "Chọn 1 quái thú trong mộ.");
+  if (!reviveChoices(state, respond).some((row) => row.from === pick.from && row.cardId === pick.cardId)) return note(state, "Quái đó không có trong mộ.");
+  const room = reviveSlots(state, side, pick.cardId, respond);
+  if (room.length === 0) return note(state, respond ? "Không còn ô trống ở hàng trước." : "Không còn ô trống.");
+  if (pick.slot !== null && !room.includes(pick.slot)) return note(state, "Ô này không đặt được.");
+  const before = player.stars;
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  const bill = playBill(card.gems, tolled, player.orb, player.flask);
+  if (bill) return note(state, bill);
+  const paid = payPlayed(player, card.gems, tolled);
+  if (!paid) return note(state, `Cần ${card.gems} gem.`);
+  const dropped = dropHandCard(paid, handIndex);
+  const buried = { ...dropped, spent: [...(dropped.spent ?? []), card.id] };
+  const next = pingStars(patch(state, side, buried), side, before, buried.stars);
+  const name = monsterCard(pick.cardId)!.name;
+  if (!respond) return beginHold(next, { kind: "spell", owner: side, cardId: card.id, target: null, source: reviveCode(pick) }, `Hồi sinh quái thú đang thi triển: gọi ${name} từ mộ.`);
+  if (!next.hold) return state;
+  return keep(note({ ...next, hold: { ...next.hold, revive: { side, pick } } }, `Hồi sinh quái thú chờ gọi ${name} từ mộ ra chặn đòn.`, "spell"));
 }
