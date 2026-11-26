@@ -6910,30 +6910,11 @@ function PlayPage() {
         const from = x;
         const lane = [1, 2, 3, 4, 5, 6, 7, 8].flatMap((step) => [from + dir * step * ICON * 1.15]).concat([1, 2, 3, 4].map((step) => from - dir * step * ICON * 1.15));
         if (allies.length > 0) {
-          // On the line between the two halves, between its allies, at the x farthest from the flows already drawn (chủ game 25/11).
-          const baseX = x;
-          const mid = ry(51);
-          let best = -1;
-          const lo = Math.min(...allies.map((one) => one.x));
-          const hi = Math.max(...allies.map((one) => one.x));
-          for (let tx = lo; tx <= hi; tx += 0.5) {
-            if (![...iconSpots.values()].every((other) => Math.hypot(tx - other.x, (mid - other.y) * rows) >= ICON * 0.85)) continue;
-            const gap = Math.min(
-              99,
-              ...runs.map(([from, to]) => {
-                const dx = to.x - from.x;
-                const dy = (to.y - from.y) * rows;
-                const len2 = dx * dx + dy * dy || 1;
-                const t = Math.max(0, Math.min(1, ((tx - from.x) * dx + (mid - from.y) * rows * dy) / len2));
-                return Math.hypot(tx - (from.x + t * dx), (mid - (from.y + (t * dy) / rows)) * rows);
-              }),
-            ) - Math.abs(tx - baseX) * 0.05;
-            if (gap > best) {
-              best = gap;
-              x = tx;
-              y = mid;
-            }
-          }
+          // On the line between the two halves, halfway between A and B: where the two allies' flows cross that line
+          // (chủ game 26/11). Each flow leaves its icon straight up and only then bends toward the enemy, so it crosses
+          // the line close to its icon's x: the middle of the two icons stands for the middle of A and B.
+          x = allies.reduce((sum, one) => sum + one.x, 0) / allies.length;
+          y = ry(51);
         } else
           for (const next of lane) {
             if (clear(x, y)) break;
