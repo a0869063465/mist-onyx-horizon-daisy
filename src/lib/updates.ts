@@ -1128,6 +1128,8 @@ export const PENDING_NOTES: string[] = [
   "Thêm lá phép Hồi sinh quái thú: 1 mana, phản ứng khi quái địch đánh thường, hồi sinh 1 quái trong mộ của cả 2 phe lao ra chặn đòn, ở lại 2 lượt. Dùng như phép chậm thì ở lại 3 lượt.",
   "Harpie Lady có tranh mới. Các lá phép Giáp và Vuốt, Roi điện, Mê hoặc, Thổi bay của cô cũng có tranh riêng.",
   "Bảng mô tả ngắn của lá phép trên tay ghi tóm tắt từng dòng như bảng xác nhận dùng phép, và ẩn đi khi bảng xác nhận mở ra.",
+  "Tay tối đa 7 lá (quái và phép gộp chung). Hết vòng mà tay dư thì chọn lá bỏ trong 20 giây, lá bỏ biến mất. Tay đủ 7 vẫn rút bài được.",
+  "Thêm lá phép Kính vạn hoa: siêu tốc 1 mana, thêm bản sao 1 quái đồng minh trên sân (1 máu tối đa) lên tay, hoặc rút 1 Harpie Lady từ bộ bài.",
 ];
 
 function remarkOf(notes: string[]) {

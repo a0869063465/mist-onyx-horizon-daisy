@@ -263,6 +263,8 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return [`Hồi ${num(e, /Hồi\s*(\d+)\s*máu/, 1)} máu cho 1 đồng minh`, `+${num(e, /(\d+)\s*máu tối đa/, 2)} máu tối đa tới hết lượt`];
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
+      case "kinh-van-hoa":
+        return ["Bản sao 1 quái đồng minh (1 máu tối đa) lên tay", "Hoặc rút 1 Harpie Lady từ bộ bài"];
       case "don-cuoi-cung":
         return ["Quái vừa bị hạ ra đòn cuối lên kẻ hạ nó", "Sát thương chuẩn, không né được"];
       case "huy-diet":

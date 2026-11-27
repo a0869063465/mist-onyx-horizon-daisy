@@ -22,6 +22,8 @@ export function PickPanel({
   onConfirm,
   onTimeout,
   onCancel,
+  need = 1,
+  onPicks,
 }: {
   cards: PickCard[];
   mine?: boolean;
@@ -32,12 +34,18 @@ export function PickPanel({
   onTimeout: () => void;
   /** Có thì có nút Huỷ (Hồi sinh được huỷ; Giảo hoạt không). */
   onCancel?: () => void;
+  /** Số lá phải chọn (bỏ lá dư khi tay quá 7 lá, chủ game 27/11); từ 2 trở lên thì OK gọi `onPicks`. */
+  need?: number;
+  onPicks?: (keys: string[]) => void;
 }) {
-  const [picked, setPicked] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<string[]>([]);
+  const picked = chosen.length >= need ? chosen[chosen.length - 1] ?? null : null;
   const [left, setLeft] = useState(LIMIT);
   const done = useRef(false);
-  const pickedRef = useRef(picked);
-  pickedRef.current = picked;
+  const pickedRef = useRef(chosen);
+  pickedRef.current = chosen;
+  const picksRef = useRef(onPicks);
+  picksRef.current = onPicks;
   const timeoutRef = useRef(onTimeout);
   timeoutRef.current = onTimeout;
   const confirmRef = useRef(onConfirm);
@@ -60,14 +68,18 @@ export function PickPanel({
 
   const choose = (key: string) => {
     if (!mine || done.current) return;
-    const on = pickedRef.current === key;
+    const now = pickedRef.current;
+    const on = now.includes(key);
+    if (!on && need > 1 && now.length >= need) return;
     playIntro(on ? "unmark" : "mark");
-    setPicked(on ? null : key);
+    setChosen(on ? now.filter((one) => one !== key) : need > 1 ? [...now, key] : [key]);
   };
   const ok = () => {
-    if (!mine || done.current || !pickedRef.current) return;
+    const now = pickedRef.current;
+    if (!mine || done.current || now.length < need) return;
     done.current = true;
-    confirmRef.current(pickedRef.current);
+    if (need > 1 && picksRef.current) picksRef.current(now);
+    else confirmRef.current(now[0]!);
   };
 
   return (
@@ -79,7 +91,7 @@ export function PickPanel({
       </div>
       <div className="pk-row">
         {cards.map((card) => {
-          const marked = mine && picked === card.key;
+          const marked = mine && chosen.includes(card.key);
           return (
             <div key={card.key} className={`pk-slot${marked ? " is-marked" : ""}`}>
               <button type="button" className="pk-card" disabled={!mine} onClick={() => choose(card.key)}>

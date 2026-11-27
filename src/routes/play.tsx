@@ -132,6 +132,11 @@ import {
   wileBirds,
   charmCode,
   REVIVE_CARD,
+  PRISM_CARD,
+  PRISM_DRAW,
+  prismPicks,
+  prismBase,
+  answerTrim,
   reviveReady,
   reviveChoices,
   reviveCode,
@@ -1238,6 +1243,7 @@ const ANSWER_SPELLS = new Set([
   WILE_CARDS.armor,
   WILE_CARDS.lash,
   REVIVE_CARD,
+  PRISM_CARD,
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1271,6 +1277,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   // Lá phép Harpie Lady và Hồi sinh quái thú (chủ game 26/11): chờ trong chuỗi như Bẫy thú.
   if (id === WILE_CARDS.armor || id === WILE_CARDS.lash) return duel.hold?.priority !== undefined && wileReady(duel, duel.hold.priority, id);
   if (id === REVIVE_CARD) return duel.hold?.priority !== undefined && reviveReady(duel, duel.hold.priority);
+  // Kính vạn hoa (chủ game 26/11): siêu tốc, dùng được trong chuỗi khi còn quái sao chép được hoặc Harpie Lady trong bộ.
+  if (id === PRISM_CARD) return duel.hold?.priority !== undefined && prismPicks(duel, duel.hold.priority).length > 0;
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   // Quả trứng thiên sứ (chủ game 21/11): an enemy monster's attack or damaging skill aimed at a monster of yours.
   if (id === "qua-trung-thien-su") return duel.hold?.priority !== undefined && eggAim(duel, duel.hold.priority) !== null;
@@ -1357,6 +1365,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (id === DUO_CARD) return duoReady(duel, viewer);
   if (isWileCard(id)) return wileReady(duel, viewer, id);
   if (id === REVIVE_CARD) return reviveReady(duel, viewer);
+  if (id === PRISM_CARD) return prismPicks(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -1392,7 +1401,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
   if (isSpring(id)) return springLive(duel, viewer);
-  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD && id !== REVIVE_CARD) || duel.step === "respond")) {
+  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD && id !== REVIVE_CARD && id !== PRISM_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
     if (id === "hoan-doi") return canCastSwap(duel, viewer);
@@ -2036,6 +2045,7 @@ function PlayPage() {
   const [rebirthAsk, setRebirthAsk] = useState<string | null>(null);
   /** Hồi sinh quái thú đang chọn quái trong mộ: vị trí lá trên tay. */
   const [reviveAsk, setReviveAsk] = useState<{ index: number } | null>(null);
+  const [prismAsk, setPrismAsk] = useState<{ index: number } | null>(null);
   const [toast, setToast] = useState("");
   const [help, setHelp] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -2810,7 +2820,7 @@ function PlayPage() {
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     // Harpie Lady (Giảo hoạt, tiến hoá): máy trả lời câu của nó; câu của người chơi thì máy chờ.
     const birdSide = duel.birdAsk ? (duel.birdAsk.side ?? (duel.players[1].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? 1 : 0)) : null;
-    const askSide = duel.wileAsk?.[0]?.side ?? birdSide;
+    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? birdSide;
     if (askSide === 0) return;
     const aiAsk = askSide === 1;
     if (!aiResponds && !aiMain && !aiParley && !aiAsk) return;
@@ -4619,6 +4629,14 @@ function PlayPage() {
       setReviveAsk({ index });
       return;
     }
+    if (id === PRISM_CARD) {
+      if (!prismPicks(duel, viewer).length) {
+        holdNotice("Không có quái đồng minh sao chép được, bộ bài cũng không còn Harpie Lady.");
+        return;
+      }
+      setPrismAsk({ index });
+      return;
+    }
     if (!isWileCard(id)) return;
     if (!wileReady(duel, viewer, id)) {
       holdNotice(id === WILE_CARDS.armor ? "Giáp và Vuốt chỉ dùng khi Harpie Lady chưa hành động bị đòn đánh thường nhắm vào." : id === WILE_CARDS.lash ? "Roi điện chỉ dùng khi Harpie Lady chưa hành động bị kỹ năng của 1 quái thú nhắm tới." : "Cần 1 Harpie Lady chưa hành động trên sân.");
@@ -5789,7 +5807,7 @@ function PlayPage() {
         startDuo(payload.index);
         return;
       }
-      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD) {
+      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD || payload.spellId === PRISM_CARD) {
         if (hit?.closest(".hand")) return;
         startWileSpell(payload.index);
         return;
@@ -7574,6 +7592,18 @@ function PlayPage() {
   const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
   const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const wileAsk = duel.wileAsk?.[0] ?? null;
+  const trimAsk = duel.trimAsk?.[0] ?? null;
+  // Bỏ lá dư (chủ game 27/11): đủ mọi lá trên tay, quái dự bị trước rồi phép, như bảng Sinh mệnh mới.
+  const trimHand = trimAsk ? duel.players[trimAsk.side] : null;
+  const trimCards: PickCard[] = trimHand
+    ? [
+        ...trimHand.reserve.map((held, index): PickCard => {
+          const card = monsterCard(held.id);
+          return { key: `r:${index}`, face: card ? <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null };
+        }),
+        ...trimHand.hand.map((id, index): PickCard => ({ key: `s:${index}`, face: <CardFace spellId={id} hand gems={trimHand.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} /> })),
+      ]
+    : [];
   const openerCards: OpenerCard[] = [
     ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
@@ -7712,6 +7742,47 @@ function PlayPage() {
             setReviveAsk(null);
             apply(castSpell(duel, index, null, false, reviveCode({ from: Number(from) as Side, cardId: cardId!, slot: null })));
           }}
+        />
+      ) : null}
+      {prismAsk && duel.players[viewer].hand[prismAsk.index] === PRISM_CARD && prismPicks(duel, viewer).length ? (
+        <PickPanel
+          key={`prism:${prismAsk.index}`}
+          title="Kính vạn hoa"
+          sub="Chọn quái để sao chép, hoặc rút Harpie Lady"
+          cards={prismPicks(duel, viewer).map((pick): PickCard => {
+            const mon = pick === PRISM_DRAW ? null : duel.players[viewer].field.find((unit) => unit?.uid === pick) ?? null;
+            const base = mon ? prismBase(mon) : "my-dieu-nhan";
+            const card = base ? monsterCard(base) : null;
+            return {
+              key: pick,
+              face: (
+                <>
+                  {card ? <CardFace monster={card} hand live={pick === PRISM_DRAW || !base ? undefined : reserveLive({ id: base, hp: 1, fake: mon?.fake }, card)} /> : null}
+                  <span className="pk-tag">{tr(pick === PRISM_DRAW ? "Rút từ bộ bài" : "Bản sao 1 máu")}</span>
+                </>
+              ),
+            };
+          })}
+          onCancel={() => setPrismAsk(null)}
+          onTimeout={() => setPrismAsk(null)}
+          onConfirm={(key) => {
+            const index = prismAsk.index;
+            setPrismAsk(null);
+            apply(castSpell(duel, index, key));
+          }}
+        />
+      ) : null}
+      {trimAsk && (trimAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`trim:${trimAsk.side}:${duel.clock ?? 1}`}
+          mine={trimAsk.side === viewer}
+          title="Tay quá 7 lá"
+          sub={`Chọn ${trimAsk.n} lá để bỏ`}
+          need={trimAsk.n}
+          cards={trimCards}
+          onConfirm={(pick) => apply(answerTrim(duel, [pick]))}
+          onPicks={(picks) => apply(answerTrim(duel, picks))}
+          onTimeout={() => apply(answerTrim(duel, null))}
         />
       ) : null}
       {wileAsk && (wileAsk.side === viewer || duel.mode === "net") ? (
@@ -9222,7 +9293,7 @@ function PlayPage() {
                               startDuo(index);
                               return;
                             }
-                            if (isWileCard(id) || id === REVIVE_CARD) {
+                            if (isWileCard(id) || id === REVIVE_CARD || id === PRISM_CARD) {
                               startWileSpell(index);
                               return;
                             }
@@ -9767,7 +9838,7 @@ function PlayPage() {
                             startDuo(index);
                             return;
                           }
-                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD) {
+                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD || shownSpell.id === PRISM_CARD) {
                             setInspect(null);
                             startWileSpell(index);
                             return;

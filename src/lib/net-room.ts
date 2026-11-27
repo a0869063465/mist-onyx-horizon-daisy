@@ -16,6 +16,8 @@ type WireDuel = {
   again?: [Vote, Vote] | null;
   /** Harpie Lady: câu hỏi Giảo hoạt / tiến hoá do chủ quái trả lời, kể cả khi không tới lượt họ. */
   wileAsk?: Array<{ side: 0 | 1 }> | null;
+  /** Bỏ lá dư khi tay quá 7 lá: bên phải bỏ đẩy nước đi. */
+  trimAsk?: Array<{ side: 0 | 1 }> | null;
   birdAsk?: { side?: 0 | 1 } | null;
 };
 
@@ -58,6 +60,7 @@ function readDeck(raw: string | null): NetDeck | null {
 
 function actor(duel: WireDuel): 0 | 1 | null {
   if (duel.winner) return null;
+  if (duel.trimAsk?.[0]) return duel.trimAsk[0].side;
   if (duel.wileAsk?.[0]) return duel.wileAsk[0].side;
   if (duel.birdAsk?.side != null) return duel.birdAsk.side;
   if (duel.step === "respond") return duel.hold?.priority ?? null;

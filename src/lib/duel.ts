@@ -1,6 +1,7 @@
 import {
   DEFAULT_DECK,
   fakeMonsterCard,
+  FORMS,
   FAKE_SPELLS,
   isStill,
   monsterCard,
@@ -424,6 +425,10 @@ export type Duel = {
   birdAsk?: { uid: string; side?: Side } | null;
   /** Giảo hoạt của Harpie Lady: mỗi câu là 1 lần chọn 1 kỹ năng (2 kỹ năng ngẫu nhiên chưa nhận), hỏi lần lượt. */
   wileAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
+  /** Tay tối đa 7 lá (chủ game 27/11): chỉ trận Vs Máy / online (không Test, Hướng dẫn, Thực chiến). */
+  handCap?: boolean;
+  /** Hết vòng mà tay quá 7 lá: mỗi câu là 1 bên phải chọn `n` lá để bỏ, hỏi lần lượt. */
+  trimAsk?: Array<{ side: Side; n: number }> | null;
   /** Một việc lẽ ra nhường quyền nhưng còn câu hỏi Giảo hoạt / tiến hoá chưa trả lời: trả lời xong thì nhường. */
   owedYield?: boolean;
   /** Đồng hồ khó đoán vừa ra sân: chủ chọn hung bạo hoặc mỏng manh; `back` = bên giữ quyền trước khi hỏi. */
@@ -664,6 +669,7 @@ export function createDuel(
     mid: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     started: Date.now(),
     opener: mode === "ai" || mode === "net" ? { done: [false, false] } : null,
+    handCap: mode === "ai" || mode === "net",
     step: "main",
     pending: null,
     hold: null,
@@ -1805,6 +1811,7 @@ function pay(player: Player, amount: number): Player | null {
 }
 
 function talkLock(state: Duel): Duel | null {
+  if (state.trimAsk?.length) return note(state, "Hãy chọn lá để bỏ trước.");
   if (state.lurkAsk) return note(state, "Hãy chọn quái ẩn để triệu hồi trước.");
   if (state.counterAsk) return note(state, "Hãy Trả đòn trước.");
   if (state.preyAsk) return note(state, "Hãy chọn có truy sát không.");
@@ -3215,6 +3222,7 @@ function settled(state: Duel): boolean {
     !state.plumeAsk &&
     !state.birdAsk &&
     !state.wileAsk?.length &&
+    !state.trimAsk?.length &&
     !state.clockAsk &&
     !state.preyAsk &&
     !state.reel &&
@@ -3949,6 +3957,124 @@ function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | nul
   // Viết hoa "Bạn"/"Đối thủ" để trang trận đổi đúng góc nhìn; tránh cụm "Đối thủ rút" (trang trận che tên lá rút ở đó).
   const foeLine = foePicks.length ? `${sideName(foeSide)} bỏ 1 lá ngẫu nhiên và rút ${foeDrawn.got} lá` : `${sideName(foeSide)} không có lá để bỏ, vẫn rút ${foeDrawn.got} lá`;
   return note(next, `${chipLabel(EGG, "life")}: ${sideName(side)} bỏ 1 lá và rút ${yourDrawn.got} lá; ${foeLine}.`, "heal");
+}
+
+/** Tay tối đa (chủ game 27/11): quái dự bị và phép trên tay gộp chung. */
+export const HAND_CAP = 7;
+export function handCount(player: Player): number {
+  return player.reserve.length + player.hand.length;
+}
+/** Hết vòng: bên nào tay quá 7 lá thì phải bỏ lá dư (cả hai bên, hỏi lần lượt). Tay đủ 7 vẫn rút bài được. */
+function askTrim(state: Duel): Duel {
+  if (!state.handCap || state.winner !== null || state.trimAsk?.length) return state;
+  const asks = ([0, 1] as Side[])
+    .map((side) => ({ side, n: handCount(state.players[side]) - HAND_CAP }))
+    .filter((ask) => ask.n > 0);
+  if (!asks.length) return state;
+  return note({ ...state, trimAsk: asks }, `Tay quá ${HAND_CAP} lá: bỏ bớt lá dư.`, "info");
+}
+/**
+ * Bỏ lá dư: `picks` = các lá "r:i" / "s:i" theo tay lúc hỏi, đúng số lá dư; sai hay null (hết giờ) thì lấy ngẫu nhiên.
+ * Lá bỏ biến mất (không vào mộ, không tính mana), chạy hiệu ứng bỏ lá như Sinh mệnh mới.
+ */
+export function answerTrim(state: Duel, picks: string[] | null): Duel {
+  const ask = state.trimAsk?.[0];
+  if (!ask) return state;
+  const rest = (state.trimAsk ?? []).slice(1);
+  const player = state.players[ask.side];
+  const need = handCount(player) - HAND_CAP;
+  if (need <= 0) return { ...state, trimAsk: rest.length ? rest : null };
+  const all = handPicks(player);
+  let chosen = picks && new Set(picks).size === need && picks.length === need && picks.every((pick) => all.includes(pick)) ? [...picks] : null;
+  if (!chosen) {
+    const pool = [...all];
+    chosen = [];
+    while (chosen.length < need && pool.length) chosen.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]!);
+  }
+  const drops = chosen.map((at) => ({ side: ask.side, at, card: pickCard(player, at) }));
+  // Bỏ từ chỉ số lớn xuống để các chỉ số còn lại không lệch.
+  const order = [...chosen].sort((a, b) => Number(b.slice(2)) - Number(a.slice(2)));
+  let left = player;
+  for (const pick of order) left = dropPick(left, pick) ?? left;
+  const next = patch({ ...state, trimAsk: rest.length ? rest : null, seq: state.seq + 1, discard: { id: state.seq + 1, drops } }, ask.side, left);
+  return note(next, `${sideName(ask.side)} bỏ ${need} lá dư trên tay.`, "info");
+}
+/**
+ * Máy bỏ lá dư (chủ game 27/11): bỏ lá không cần và không hợp chiến thuật, không phải lá yếu nhất. Lá giữ lại: quái
+ * triệu hồi được ngay hoặc sắp tới (đủ sao), phép phản ứng / siêu tốc để thủ, phép còn mục tiêu. Lá bỏ trước: bản trùng,
+ * quái còn xa mới đủ sao, phép không còn mục tiêu, lá phép Harpie Lady khi không còn Harpie Lady.
+ */
+export function aiTrimPick(state: Duel, side: Side): string[] {
+  const player = state.players[side];
+  const foe = state.players[(1 - side) as Side];
+  const need = handCount(player) - HAND_CAP;
+  if (need <= 0) return [];
+  const foeMons = foe.field.some((mon) => mon && mon.hp > 0);
+  const seen = new Map<string, number>();
+  const worth = (pick: string): number => {
+    const id = pickCard(player, pick);
+    const count = (seen.get(id) ?? 0) + 1;
+    seen.set(id, count);
+    let score = count > 1 ? -3 * (count - 1) : 0;
+    if (pick.startsWith("r:")) {
+      const held = player.reserve[Number(pick.slice(2))];
+      const card = held ? monsterCard(held.id) : null;
+      if (!card) return score - 5;
+      const gap = card.stars - player.stars;
+      score += gap <= 0 ? 5 : gap === 1 ? 3 : -2 * gap;
+      score += (card.atk + card.hp + card.def + card.mdef) / 4;
+      if (card.gems > player.flask + 3) score -= 2;
+      if (held?.fake) score -= 1;
+      return score;
+    }
+    const card = spellCard(id);
+    if (!card) return score - 5;
+    if (isWileCard(id)) return score + (sideGirls(state, side).length ? 3 : -8);
+    const speed = ["hoan-doi", "hop-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "guong-phong-ho", "la-chan-phan-don", "phuc-kich", "vong-nguyen-rua-ac-ma", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su", "don-cuoi-cung", PRISM_CARD];
+    score += 4 + (speed.includes(id) ? 2 : 0);
+    if (["soi-xich-dia-nguc", "sam-set-tan-the", DOOM_CARD, "phan-nguyen"].includes(id) && !foeMons) score -= 4;
+    if (card.gems > player.flask + 3) score -= 2;
+    return score;
+  };
+  const scored = handPicks(player).map((pick) => ({ pick, score: worth(pick) }));
+  return scored.sort((a, b) => a.score - b.score).slice(0, need).map((one) => one.pick);
+}
+
+/**
+ * Kính vạn hoa (chủ game 26/11): phép siêu tốc 1 mana. Chọn 1 quái thông thường đồng minh trên sân: thêm bản sao lá gốc
+ * của nó vào tay, máu tối đa 1, triệu hồi như lá thường. Hoặc rút 1 Harpie Lady từ bộ bài (`targetUid` = PRISM_DRAW).
+ * Quái ngoài bộ (dung hợp, tiến hoá) và quái 5 sao không sao chép được.
+ */
+export const PRISM_CARD = "kinh-van-hoa";
+export const PRISM_DRAW = "deck:harpie";
+/** Lá gốc để sao chép của một quái trên sân, null nếu không sao chép được. */
+export function prismBase(mon: FieldMon): string | null {
+  if (mon.cardId === "mu") return null;
+  const id = clockForm(mon.cardId) ? CLOCK : mon.cardId;
+  const card = monsterCard(id);
+  if (!card || card.stars > 4 || FORMS.some((form) => form.id === id)) return null;
+  return id;
+}
+/** Mọi lựa chọn của Kính vạn hoa lúc này: uid quái đồng minh sao chép được, và PRISM_DRAW nếu bộ còn Harpie Lady. */
+export function prismPicks(state: Duel, side: Side): string[] {
+  const player = state.players[side];
+  const allies = player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && prismBase(mon))).map((mon) => mon.uid);
+  return [...allies, ...(player.monsterDeck.some((held) => held.id === GIRL) ? [PRISM_DRAW] : [])];
+}
+function castPrism(state: Duel, side: Side, pick: string | null): Duel {
+  const you = state.players[side];
+  if (pick === PRISM_DRAW) {
+    const at = you.monsterDeck.findIndex((held) => held.id === GIRL);
+    if (at < 0) return note(state, "Bộ bài không còn Harpie Lady.", "spell");
+    const held = you.monsterDeck[at]!;
+    const drawn = { ...you, monsterDeck: you.monsterDeck.filter((_, index) => index !== at), reserve: [...you.reserve, held] };
+    return note(patch({ ...state, seq: state.seq + 1 }, side, drawn), `Kính vạn hoa: ${sideName(side)} lấy 1 Harpie Lady từ bộ bài lên tay.`, "spell");
+  }
+  const mon = pick ? you.field.find((unit) => unit?.uid === pick) ?? null : null;
+  const base = mon ? prismBase(mon) : null;
+  if (!mon || !base) return note(state, "Kính vạn hoa không còn quái để sao chép.", "spell");
+  const copy = asPile(base, 1, 1, Boolean(mon.fake));
+  return note(patch({ ...state, seq: state.seq + 1 }, side, { ...you, reserve: [...you.reserve, copy] }), `Kính vạn hoa: ${sideName(side)} nhận bản sao ${monsterCard(base)?.name ?? ""} (1 máu tối đa) lên tay.`, "spell");
 }
 
 /** Every monster on the board, changed by `fn` where it is one of `uids`. */
@@ -7531,6 +7657,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "giap-co-khi",
     "hop-ma-thuat",
     "qua-trung-thien-su",
+    PRISM_CARD,
     DUO_CARD,
     SPRING,
     SPRING_WORN,
@@ -7547,6 +7674,9 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && state.step === "respond" && doomWaiting(state) && card.id !== "hap-thu-ma-phap") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được Huỷ diệt.");
+  }
+  if (!replay && card.id === PRISM_CARD && !(targetUid && prismPicks(state, side).includes(targetUid))) {
+    return note(state, prismPicks(state, side).length ? "Chọn 1 quái đồng minh để sao chép, hoặc rút Harpie Lady." : "Không có quái đồng minh sao chép được, bộ bài cũng không còn Harpie Lady.");
   }
   if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
   if (isWileCard(card.id)) return castWile(state, side, handIndex, targetUid, sourceUid, replay);
@@ -7619,7 +7749,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && shelterPicks(state).length === 0) {
     return note(state, `${card.name} chỉ dùng khi có quái đã lao ra chặn hoặc che.`);
   }
-  if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap") {
+  if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap" && card.id !== PRISM_CARD) {
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
   if (card.id === "sung-loi-pha") {
@@ -7703,7 +7833,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     const dropped = dropHandCard(paid, handIndex);
     const buried = { ...dropped, spent: [...(dropped.spent ?? paid.spent ?? []), card.id] };
     next = pingStars(patch(state, side, buried), side, before, buried.stars);
-    const burst = new Set(["mua-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
+    const burst = new Set(["mua-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "thu-hoi-quai-thu", PRISM_CARD]);
     if (card.id === DUO_CARD) {
       const picks = duoParse(sourceUid);
       const bad = duoCheck(next, side, picks, targetUid);
@@ -7735,6 +7865,11 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     }
   } else {
     next = patch(state, side, dropHandCard(player, handIndex));
+  }
+  if (card.id === PRISM_CARD) {
+    // Siêu tốc: nổ ngay; trong chuỗi thì đối thủ lại được đáp như sau mọi phép phản ứng.
+    const done = castPrism(next, side, targetUid);
+    return done.step === "respond" ? keep(done) : done;
   }
   if (targetUid) targetUid = redirectCover(next.players[foe].field, targetUid);
   const enemy = next.players[foe];
@@ -11422,7 +11557,7 @@ function finishRound(state: Duel): Duel {
   }
   const opened: Duel = lurkTick({ ...next, round: (1 - owner) as Side, skipped: [false, false], counterAsk: null });
   const marked = traced(state, opened, { kind: "end-turn", actor: state.turn, ok: true, cardId: null, target: null, end: null });
-  return flushVirus(withResults(state, marked, { blocked: false, reflect: false, turn: true }));
+  return askTrim(flushVirus(withResults(state, marked, { blocked: false, reflect: false, turn: true })));
 }
 
 function endTurnCore(state: Duel): Duel {
@@ -11969,6 +12104,7 @@ export function aiAnswerAsk(state: Duel): Duel | null {
     if (!pick) return { ...state, parley: null };
     return withLive(pickParley(state, pick.uid));
   }
+  if (state.trimAsk?.[0]?.side === 1) return withLive(answerTrim(state, aiTrimPick(state, 1)));
   if (state.wileAsk?.[0]?.side === 1) return withLive(answerWile(state, aiWilePick(state, state.wileAsk[0])));
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
   if (state.clockAsk?.side === 1) return withLive(chooseClock(state, CLOCK_FIERCE));

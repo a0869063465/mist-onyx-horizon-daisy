@@ -1306,6 +1306,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 1,
     "effect": "Phép phản ứng 1 mana\nPhát động khi bị 1 quái thú địch tấn công, hồi sinh 1 quái thú đã chết của cả 2 phe, quái thú đó lập tức lao ra chặn ngay đòn tấn công. Tồn tại tối đa 2 lượt.\nHoặc có thể dùng như phép chậm, hồi sinh quái thú và nó có thể tồn tại đến 3 lượt.",
     "picture": "spell:hoi-sinh-quai-thu"
+  },
+  {
+    "id": "kinh-van-hoa",
+    "name": "Kính vạn hoa",
+    "gems": 1,
+    "effect": "Phép siêu tốc 1 mana\nTạo bản sao của 1 quái thú đồng minh trên sân với 1 máu. Hoặc rút 1 lá Harpie Lady từ bộ bài.",
+    "picture": "spell:kinh-van-hoa"
   }
 ];
 
