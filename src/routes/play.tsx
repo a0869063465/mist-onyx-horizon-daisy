@@ -3496,6 +3496,28 @@ function PlayPage() {
       setLift(uid);
       window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
     }
+    // Tiến hoá của Tê giác (chủ game 27/11): đủ điều kiện thì quái loé sáng như skill bị động kích hoạt, và đối thủ thấy
+    // bảng tóm tắt skill 8 giây (bảng nhỏ đầu màn như K4); người tiến hoá thấy màn xác nhận ngay sau đó.
+    if (!quiet && !tutorial && prev.mid === duel.mid && duel.rhinoAsk && duel.rhinoAsk.uid !== prev.rhinoAsk?.uid) {
+      const ask = duel.rhinoAsk;
+      const seat = seatOf(duel, ask.uid);
+      const mon = fieldMon(duel, ask.uid);
+      if (seat && mon && !seaVeiled(duel, viewerNow, mon.uid)) {
+        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+        emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        setLift(ask.uid);
+        window.setTimeout(() => setLift((now) => (now === ask.uid ? null : now)), FLARE_MS);
+        if (seat.side !== viewerNow && duel.mode !== "test" && duel.mode !== "hotseat") {
+          const form = monsterCard(ask.level >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang");
+          setFoeNote({
+            key: `rhino:${ask.uid}:${ask.level}`,
+            head: { name: "Tiến hoá", tone: "#b58cff", icon: "round-star", kind: "passive", art: artSrc("te-giac-be-con", mon.level ?? 1), who: fieldName(mon) },
+            lines: [`Tiến hoá thành ${form?.name ?? ""}, tiêu hao 1 mana.`],
+          });
+          playLine("note", 0.12);
+        }
+      }
+    }
     // Quái ẩn vừa lật mà còn trên sân: lá của mình lật mặt, bên đối thủ sương mù tan đi (chủ game 21/11).
     if (!quiet && !tutorial && prev.mid === duel.mid) {
       const fresh: Record<string, "own" | "foe"> = {};
