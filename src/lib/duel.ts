@@ -3094,6 +3094,7 @@ function pushDebt(mon: FieldMon, add: { p: number; s: number; t: number }): Fiel
 
 function takePhysical(mon: FieldMon, raw: number, allies?: Array<FieldMon | null>) {
   const hit = takePhysicalCore(mon, raw, allies);
+  if (hit.shielded) return { mon: hit.mon, bite: 0, surplus: 0 };
   return { ...hit, mon: crackArmor(hit.mon, raw) };
 }
 
@@ -3109,13 +3110,15 @@ function takePhysicalCore(mon: FieldMon, raw: number, allies?: Array<FieldMon | 
   if (mon.cardId === "chien-binh-rong") {
     const slice = third(raw);
     const queued = pushDebt(mon, { p: slice, s: 0, t: 0 });
-    const soaked = soak(queued, "phys", hurt(queued, Math.max(0, slice - liveDef(queued, allies))));
-    return applyIncoming(soaked.mon, soaked.amount, allies);
+    const shield = aegisGate(queued, slice);
+    if (shield) return { mon: shield, bite: 0, surplus: 0, shielded: true };
+    return applyIncoming(queued, hurt(queued, Math.max(0, slice - liveDef(queued, allies))), allies);
   }
+  const shield = aegisGate(mon, raw);
+  if (shield) return { mon: shield, bite: 0, surplus: 0, shielded: true };
   const def = liveDef(mon, allies);
   const blocked = Math.max(0, Math.min(raw, def));
-  const soaked = soak(bankPlate(mon, "phys", blocked), "phys", hurt(mon, physical(raw, def)));
-  return applyIncoming(soaked.mon, soaked.amount, allies);
+  return applyIncoming(bankPlate(mon, "phys", blocked), hurt(mon, physical(raw, def)), allies);
 }
 
 function applyIncoming(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): { mon: FieldMon; bite: number; surplus: number } {
@@ -3206,12 +3209,16 @@ function aegisWould(mon: FieldMon): boolean {
   return Boolean(mon.aegis) || (aegisDepth > 0 && aegisHit.has(mon.uid));
 }
 
-function soak(mon: FieldMon, _kind: "phys" | "spell" | "tru", amount: number): { mon: FieldMon; amount: number } {
-  if (amount <= 0 || !aegisWould(mon)) return { mon, amount };
-  if (!mon.aegis) return { mon, amount: 0 };
+/**
+ * Lá chắn xét sát thương GỐC đang tới, trước thủ/thủ phép (chủ game 27/11: sát thương đến là vỡ, không có chuyện thủ
+ * chặn trước). Trả về quái sau khi chặn (khiên vỡ, hoặc đã vỡ trong cùng lần ra đòn) hoặc null nếu không chặn.
+ */
+function aegisGate(mon: FieldMon, raw: number): FieldMon | null {
+  if (raw <= 0 || !aegisWould(mon)) return null;
+  if (!mon.aegis) return mon;
   wardLines.push(AEGIS_TAG);
   if (aegisDepth > 0) aegisHit.add(mon.uid);
-  return { mon: { ...mon, aegis: undefined }, amount: 0 };
+  return { ...mon, aegis: undefined };
 }
 
 /** Lá chắn vỡ trong bước before -> after (cùng lượt chung; hết lượt mà mất là hết hạn, không phải vỡ). Cho hiệu ứng. */
@@ -3242,16 +3249,18 @@ function damageSpell(mon: FieldMon, amount: number, allies?: Array<FieldMon | nu
   if (mon.cardId === "chien-binh-rong") {
     const slice = third(total);
     const queued = pushDebt(mon, { p: 0, s: slice, t: 0 });
+    const shield = aegisGate(queued, slice);
+    if (shield) return shield;
     const dealt = Math.max(0, slice - liveMdef(queued, allies));
-    const soaked = soak(queued, "spell", hurt(queued, dealt));
-    return applyIncoming(soaked.mon, soaked.amount, allies).mon;
+    return applyIncoming(queued, hurt(queued, dealt), allies).mon;
   }
+  const shield = aegisGate(mon, total);
+  if (shield) return shield;
   const mdef = liveMdef(mon, allies);
   const dealt = Math.max(0, total - mdef);
   const blocked = Math.max(0, Math.min(total, mdef));
   const plated = bankPlate(mon, "spell", blocked);
-  const soaked = soak(plated, "spell", hurt(plated, dealt));
-  const hit = applyIncoming(soaked.mon, soaked.amount, allies);
+  const hit = applyIncoming(plated, hurt(plated, dealt), allies);
   const stored = mon.cardId === "sua-hut-ma-phap" ? (mon.stored ?? 0) + blocked : hit.mon.stored;
   return settleMystic(mon, { ...hit.mon, stored }, null, allies, Boolean(mon.guarding)).mon;
 }
@@ -3262,7 +3271,7 @@ function spellLanded(target: FieldMon, amount: number, allies?: Array<FieldMon |
   const total = source?.curse ? Math.floor(peeked / 2) : peeked;
   const base = target.cardId === "chien-binh-rong" ? third(total) : total;
   const landed = hurt(target, Math.max(0, base - liveMdef(target, allies)));
-  return aegisWould(target) && landed > 0 ? 0 : landed;
+  return aegisWould(target) && base > 0 ? 0 : landed;
 }
 
 function spellPhrase(targets: Array<FieldMon | null | undefined>, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): string {
@@ -3287,13 +3296,15 @@ function trueDamage(mon: FieldMon, amount: number, allies?: Array<FieldMon | nul
 function landTrue(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): { mon: FieldMon; bite: number; surplus: number } {
   const total = amount + charmDamage;
   if (mon.cardId !== "chien-binh-rong") {
-    const soaked = soak(mon, "tru", hurt(mon, total));
-    return applyIncoming(soaked.mon, soaked.amount, allies, veilBudget);
+    const shield = aegisGate(mon, total);
+    if (shield) return { mon: shield, bite: 0, surplus: 0 };
+    return applyIncoming(mon, hurt(mon, total), allies, veilBudget);
   }
   const slice = third(total);
   const queued = pushDebt(mon, { p: 0, s: 0, t: slice });
-  const soaked = soak(queued, "tru", hurt(queued, slice));
-  return applyIncoming(soaked.mon, soaked.amount, allies, veilBudget);
+  const shield = aegisGate(queued, slice);
+  if (shield) return { mon: shield, bite: 0, surplus: 0 };
+  return applyIncoming(queued, hurt(queued, slice), allies, veilBudget);
 }
 
 function truLanded(target: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): number {
@@ -4588,18 +4599,20 @@ function strikeSpell(defender: FieldMon, raw: number, allies?: Array<FieldMon | 
   if (mon.cardId === "chien-binh-rong") {
     const slice = third(raw);
     const queued = pushDebt(mon, { p: 0, s: slice, t: 0 });
+    const shield = aegisGate(queued, slice);
+    if (shield) return { mon: shield, bite: 0, surplus: 0 };
     const dealt = Math.max(0, slice - liveMdef(queued, allies));
-    const soaked = soak(queued, "spell", hurt(queued, dealt));
-    return applyIncoming(soaked.mon, soaked.amount, allies);
+    return applyIncoming(queued, hurt(queued, dealt), allies);
   }
   const gated = swallowOath(mon, "spell", raw);
   if (gated.mon !== mon) return { mon: gated.mon, bite: 0, surplus: 0 };
+  const shield = aegisGate(mon, raw);
+  if (shield) return { mon: shield, bite: 0, surplus: 0 };
   const mdef = liveMdef(mon, allies);
   const dealt = Math.max(0, raw - mdef);
   const blocked = Math.max(0, Math.min(raw, mdef));
   const plated = bankPlate(mon, "spell", blocked);
-  const soaked = soak(plated, "spell", hurt(plated, dealt));
-  const hit = applyIncoming(soaked.mon, soaked.amount, allies);
+  const hit = applyIncoming(plated, hurt(plated, dealt), allies);
   const stored = mon.cardId === "sua-hut-ma-phap" ? (mon.stored ?? 0) + blocked : hit.mon.stored;
   return { ...hit, mon: { ...hit.mon, stored } };
 }
@@ -4641,7 +4654,10 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   const struck = attackerDodged || beam
     ? { mon: attacker, bite: 0, surplus: 0 }
     : counterBlow
-      ? applyIncoming(attacker, counterBlow.first, alliesA)
+      ? (() => {
+          const shield = aegisGate(attacker, outgoing(defender, liveAtk(defender)));
+          return shield ? { mon: shield, bite: 0, surplus: 0 } : applyIncoming(attacker, counterBlow.first, alliesA);
+        })()
       : blockSpell
         ? strikeSpell(attacker, counterRaw, alliesA)
         : takePhysical(attacker, counterRaw, alliesA);
@@ -4680,18 +4696,19 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     if (defender.cardId === "chien-binh-rong" && !defenderDodged) {
       const slice = third(hornAmount);
       const queued = pushDebt(defender, { p: 0, s: slice, t: 0 });
+      const shield = aegisGate(queued, slice);
       const dealt = Math.max(0, slice - liveMdef(queued, alliesB));
-      const hit = applyIncoming(queued, hurt(queued, dealt), alliesB);
+      const hit = shield ? { mon: shield, bite: 0, surplus: 0 } : applyIncoming(queued, hurt(queued, dealt), alliesB);
       defenderBody = hit.mon;
       bite = hit.bite;
       surplus = hit.surplus;
     } else {
-      const blocked = Math.max(0, Math.min(hornAmount, mdef));
-      const plated = bankPlate(defender, "spell", defenderDodged ? 0 : blocked);
+      const shield = defenderDodged ? null : aegisGate(defender, hornAmount);
+      const blocked = shield ? 0 : Math.max(0, Math.min(hornAmount, mdef));
+      const plated = shield ?? bankPlate(defender, "spell", defenderDodged ? 0 : blocked);
       const dealt = Math.max(0, hornAmount - mdef);
-      const incoming = defenderDodged ? 0 : hurt(plated, dealt);
-      const soaked = soak(plated, "spell", incoming);
-      const hit = applyIncoming(soaked.mon, soaked.amount, alliesB);
+      const incoming = defenderDodged || shield ? 0 : hurt(plated, dealt);
+      const hit = applyIncoming(plated, incoming, alliesB);
       const stored = defender.cardId === "sua-hut-ma-phap" ? (defender.stored ?? 0) + blocked : hit.mon.stored;
       defenderBody = { ...hit.mon, stored };
       bite = hit.bite;
@@ -4715,10 +4732,11 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
       const first = dragon
         ? takePhysical(defender, phys, alliesB)
         : (() => {
+            const shield = aegisGate(defender, raw);
+            if (shield) return { mon: shield, bite: 0, surplus: 0 };
             const blocked = Math.max(0, Math.min(phys, defB));
             const plated = bankPlate(defender, "phys", blocked);
-            const soaked = soak(plated, "phys", hurt(plated, physical(phys, defB)));
-            const landed = applyIncoming(soaked.mon, soaked.amount, alliesB);
+            const landed = applyIncoming(plated, hurt(plated, physical(phys, defB)), alliesB);
             return { ...landed, mon: crackArmor(landed.mon, raw) };
           })();
       const before = Math.max(0, first.mon.hp);
@@ -4729,18 +4747,21 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
     } else if (dragon) hit = takePhysical(defender, outgoing(attacker, atk), alliesB);
     else if (riderAtk && !defenderDodged) {
       const pack = riderPackets(attacker, defender, alliesB);
-      const soaked = soak(defender, "phys", pack.physical);
-      hit = applyIncoming(soaked.mon, Math.max(0, pack.first - pack.physical) + soaked.amount, alliesB);
+      const shield = aegisGate(defender, outgoing(attacker, liveAtk(attacker)));
+      hit = shield ? { mon: shield, bite: 0, surplus: 0 } : applyIncoming(defender, pack.first, alliesB);
     } else {
       const raw = outgoing(attacker, atk);
       const gated = swallowOath(defender, "phys", defenderDodged ? 0 : raw);
       if (gated.mon !== defender) hit = { mon: gated.mon, bite: 0, surplus: 0 };
       else {
+      const shield = defenderDodged ? null : aegisGate(defender, raw);
+      if (shield) hit = { mon: shield, bite: 0, surplus: 0 };
+      else {
       const blocked = defenderDodged ? 0 : Math.max(0, Math.min(raw, defB));
       const plated = bankPlate(defender, "phys", blocked);
-      const soaked = soak(plated, "phys", defenderDodged ? 0 : hurt(plated, physical(raw, defB)));
-      hit = applyIncoming(soaked.mon, soaked.amount, alliesB);
+      hit = applyIncoming(plated, defenderDodged ? 0 : hurt(plated, physical(raw, defB)), alliesB);
       hit = { ...hit, mon: crackArmor(hit.mon, defenderDodged ? 0 : raw) };
+      }
       }
     }
     if (!guardSpell && shadeHidden(defender) && !defenderDodged) {
@@ -6255,9 +6276,9 @@ function hellLine(pack: HellPack, name: string, broke: "aegis" | null = null, bo
   return [`gây 0 sát thương lên ${name}${tag}`];
 }
 
-function soakPack(mon: FieldMon, pack: HellPack): { mon: FieldMon; pack: HellPack; broke: "aegis" | null } {
-  const total = hellSum(pack);
-  if (total <= 0 || !aegisWould(mon)) return { mon, pack, broke: null };
+/** Lá chắn với gói sát thương: xét gói GỐC `raw` (trước thủ/thủ phép); chặn thì cả gói về 0. */
+function soakPack(mon: FieldMon, pack: HellPack, raw: HellPack = pack): { mon: FieldMon; pack: HellPack; broke: "aegis" | null } {
+  if (hellSum(raw) <= 0 || !aegisWould(mon)) return { mon, pack, broke: null };
   const zero: HellPack = { phys: 0, spell: 0, tru: 0 };
   if (!mon.aegis) return { mon, pack: zero, broke: null };
   if (aegisDepth > 0) aegisHit.add(mon.uid);
@@ -6273,10 +6294,12 @@ function landHell(mon: FieldMon, pack: HellPack, allies?: Array<FieldMon | null>
   const body = mon.cardId === "chien-binh-rong" ? pushDebt(mon, { p: sliced.phys, s: sliced.spell, t: sliced.tru }) : mon;
   const rawSpell = sliced.spell;
   const opened = hellMitigate(sliced, body, allies);
-  const guarded = soakPack(body, opened);
-  const blockedSpell = Math.max(0, Math.min(rawSpell, liveMdef(body, allies)));
+  const guarded = soakPack(body, opened, sliced);
+  const shielded = hellSum(sliced) > 0 && aegisWould(body);
+  const blockedSpell = shielded ? 0 : Math.max(0, Math.min(rawSpell, liveMdef(body, allies)));
   const hit = applyIncoming(guarded.mon, hellSum(guarded.pack), allies);
   const stored = mon.cardId === "sua-hut-ma-phap" ? (hit.mon.stored ?? 0) + blockedSpell : hit.mon.stored;
+  if (shielded) return { mon: { ...hit.mon, stored }, dealt: 0, left: hellSplit(guarded.pack, mon.hp).left, blockedSpell, taken: guarded.pack, broke: guarded.broke };
   return { mon: crackArmor({ ...hit.mon, stored }, sliced.phys), dealt: hellSum(guarded.pack), left: hellSplit(guarded.pack, mon.hp).left, blockedSpell, taken: guarded.pack, broke: guarded.broke };
 }
 

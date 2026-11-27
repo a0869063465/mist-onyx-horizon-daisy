@@ -81,6 +81,24 @@ test("Đòn đánh vào quái có khiên: chặn trọn (0 máu mất), khiên v
   assert.equal(at(twice, 1, 0).hp, 15, twice.live);
 });
 
+test("Thủ chặn hết sát thương vẫn làm vỡ khiên: sát thương đến là vỡ (chủ game 27/11)", () => {
+  const s = board({ 0: mon({ atk: 3 }) }, { 0: mon({ atk: 0, def: 9, aegis: 2 }) });
+  const once = hit(s, at(s, 0, 0).uid, at(s, 1, 0).uid);
+  assert.equal(at(once, 1, 0).aegis, undefined, once.live);
+  assert.equal(at(once, 1, 0).hp, 20);
+  const spell = board({ 0: mon({}) }, { 0: mon({ mdef: 99, aegis: 2 }) });
+  const cast = { ...spell, players: spell.players.map((p, i) => (i === 0 ? { ...p, hand: ["sam-set-tan-the"], orb: 9 } : p)) };
+  let next = D.castSpell(cast, 0, null);
+  for (let i = 0; i < 4 && next.pending; i += 1) next = D.passResponse(next);
+  assert.equal(at(next, 1, 0).aegis, undefined, "sát thương chuẩn tới cũng vỡ: " + next.live);
+});
+
+test("Sát thương gốc 0 (công 0) thì khiên không vỡ", () => {
+  const s = board({ 0: mon({ atk: 0 }) }, { 0: mon({ atk: 0, aegis: 2 }) });
+  const once = hit(s, at(s, 0, 0).uid, at(s, 1, 0).uid);
+  assert.equal(at(once, 1, 0).aegis, 2, once.live);
+});
+
 test("Khiên của kẻ tấn công chặn Trả đòn của quái bị đánh (Trả đòn là đòn đánh)", () => {
   let s = board({ 0: mon({ atk: 1, aegis: 2 }) }, { 0: mon({ atk: 6 }) });
   s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3 })) };
