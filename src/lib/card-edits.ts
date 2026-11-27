@@ -189,6 +189,7 @@ function write(store: Store) {
 const STALE_SKILLS: Array<[string, string]> = [
   ["my-dieu-nhan", "Mỗi kỹ năng dùng 1 lần rồi biến mất vĩnh viễn"],
   ["my-dieu-nhan", "Tạo 1 skill trong bộ kỹ năng của cô ta để dùng 1 lần"],
+  ["hiep-si-ho-ve", "Khiên Ân Huệ"],
   ["my-dieu-nhan", "tiêu hao 2 mana để huỷ nó"],
   ["my-dieu-nhan", "tiêu hao 2 mana để né"],
   ["my-dieu-nhan", "đánh thường vào ta"],

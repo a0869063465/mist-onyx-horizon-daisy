@@ -725,11 +725,11 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Hiệp sĩ hộ vệ",
     "stars": 3,
     "gems": 1,
-    "skill": "__**Khiên Ân Huệ**__:\n- Ta nhận được lời chúc của hậu, nếu có Hiệp sĩ của hậu trong bộ bài, ban cho ta 1 lá chắn phép vĩnh viễn.\n- Ta nhận được lời chúc của vua, nếu có Hiệp sĩ của vua trong bộ bài, ban cho ta 1 lá chắn vật lý vĩnh viễn.\n- Ta nhận được lời chúc của kỵ sĩ, nếu có Hiệp sĩ hộ vệ trong bộ bài.\n    Khi lá chắn do Khiên Ân Huệ ban tặng bị mất, đầu mỗi lượt của người chơi, ta được nhận ngay 3 điểm thủ (hoặc thủ phép, tuỳ loại khiên đã mất).\n    Cuối lượt đó, khiên đã mất sẽ được hồi lại nếu ta đã gây được loại sát thương ngược với loại khiên ta đã mất.\n\n__**Kiếm hộ vệ**__:\n- Tiêu hao 1 mana, đỡ đòn hộ cho đồng minh hoặc người chơi. \n- Mỗi lá chắn bị vỡ do ta chủ động lao vào sẽ hấp thu lại 60% sát thương.\n- Khi khiên vỡ vì ta chủ động đỡ đòn hoặc chủ động đánh thì sẽ nổ tích tụ trước đó gây sát thương vào kẻ đối đầu, và hồi lại khiên đó vào cuối lượt.\n- Khi chủ động lao vào tấn công hay đỡ đòn, loại sát thương ta gây ra phụ thuộc vào loại khiên ta đã mất trước đó.\n\n-Số màu cam và tím là biệu thị lượng dame sẽ phản lại nếu tự phá vỡ khiên.\n\n__**Học tập và trưởng thành**__:\n- Học tập: Khi có Hiệp sĩ của vua hoặc Hiệp sĩ của hậu trên sân, ta có thể được triệu hồi, bất kể số sao.\n- Trưởng thành: Khi ra sân với đủ 3 sao, cộng thêm 2 công và 3 máu vĩnh viễn.",
-    "atk": 2,
+    "skill": "__**Lời thề**__\nKhi có mặt 1 hiệp sĩ khác trên sân, ta có thể xuất trận như 1 quái thú 2 sao.\nKhi đủ 3 sao, ta nhận thêm 1 phòng ngự và 3 máu.\n\n__**Khiên**__\ntrước lần nhận sát thương đầu tiên trong lượt, ta +4 thủ hoặc thủ phép tuỳ vào sát thương ta sắp nhận.\n\n__**Điều động**__\nTiêu hao 1 mana, skill siêu tốc, lập tức hoán đổi vị trí giữa 1 hiệp sĩ bất kỳ với 1 quái thú khác, khi có 1 quái thú bị nhắm đến bởi 1 đòn tấn công.",
+    "atk": 4,
     "def": 0,
     "mdef": 0,
-    "hp": 2,
+    "hp": 4,
     "art": "hiep-si-ho-ve"
   },
   {

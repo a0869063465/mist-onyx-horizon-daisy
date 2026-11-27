@@ -507,6 +507,13 @@ export const BALANCE_LOG: BalanceEntry[] = [
     tone: "shift",
     stats: { atk: { from: 1, to: 3 }, mdef: { from: 3, to: 0 } },
     notes: ["Khiên: trước lần nhận sát thương đầu tiên trong lượt, +4 thủ hoặc thủ phép", "Kiếm: tiêu hao 1 mana, +3 công khi tấn công, có keyword Đòn đánh phép", "Bỏ Khiên Ân Huệ, Đàm phán và Kiếm phép cũ"],
+  },  {
+    id: "hiep-si-ho-ve",
+    at: "2026-11-27",
+    wave: 44,
+    tone: "shift",
+    stats: { atk: { from: 2, to: 4 }, hp: { from: 2, to: 4 } },
+    notes: ["Lời thề: có hiệp sĩ khác trên sân thì xuất trận như quái 2 sao; đủ 3 sao thì +1 phòng ngự và +3 máu", "Khiên: trước lần nhận sát thương đầu tiên trong lượt, +4 thủ hoặc thủ phép", "Điều động: tiêu hao 1 mana, siêu tốc, hoán đổi 1 hiệp sĩ với 1 quái thú khác khi 1 quái thú bị nhắm bởi đòn tấn công", "Bỏ Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành"],
   },
 ];
 

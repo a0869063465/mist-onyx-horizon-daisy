@@ -2360,6 +2360,60 @@ test("Harpie Lady: hết Harpie Lady trên sân thì lá phép của cô trên t
   assert.ok(!at(spring, 0, 0).dim, "lá khác không khoá");
 });
 
+test("Hiệp sĩ hộ vệ (27/11): Lời thề cần 2 sao khi có hiệp sĩ khác; đủ 3 sao thì +1 thủ, +1 thủ phép, +3 máu", () => {
+  const make = (stars, mine) => {
+    let s = board(mine, {});
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0, stars })) };
+    s = D.testGrant(s, 0, "hiep-si-ho-ve", false);
+    return D.summon(s, s.players[0].reserve.findIndex((p) => p.id === "hiep-si-ho-ve"), 1);
+  };
+  assert.match(make(2, {}).live, /Cần 3 sao/, "không có hiệp sĩ khác: cần 3 sao");
+  assert.equal(at(make(2, { 0: ["hiep-si-cua-vua", {}] }), 0, 1)?.cardId, "hiep-si-ho-ve", "có Hiệp sĩ của vua: 2 sao là đủ");
+  assert.match(make(1, { 0: ["hiep-si-cua-vua", {}] }).live, /Cần 3 sao/, "1 sao thì không");
+  const two = at(make(2, { 0: ["hiep-si-cua-vua", {}] }), 0, 1);
+  assert.equal(two.atk, 4);
+  assert.equal(two.hp, 4);
+  assert.equal(two.def, 0, "2 sao: không thêm phòng ngự");
+  const full = at(make(3, {}), 0, 1);
+  assert.equal(full.def, 1, "đủ 3 sao: +1 thủ");
+  assert.equal(full.mdef, 1, "+1 thủ phép");
+  assert.equal(full.hp, 7, "+3 máu");
+  assert.equal(full.maxHp, 7);
+});
+
+test("Hiệp sĩ hộ vệ: Khiên +4 thủ trước lần nhận sát thương đầu; không còn Kiếm phòng ngự", () => {
+  const s = board({ 0: ["may-chem", { atk: 5 }] }, { 0: ["hiep-si-ho-ve", { hp: 10, maxHp: 10, def: 0, mdef: 0 }], 1: ["rong-con", { hp: 9, maxHp: 9 }] });
+  const done = D.passResponse(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+  assert.equal(at(done, 1, 0).hp, 9, "5 công - 4 thủ của Khiên = 1: " + done.live);
+  const hit = D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 1));
+  assert.equal(D.canGuardCover(hit, uid(s, 1, 0)), false, "không còn Kiếm phòng ngự");
+});
+
+test("Hiệp sĩ hộ vệ: Điều động siêu tốc 1 mana, con bị nhắm đổi chỗ với 1 quái khác, một trong hai phải là hiệp sĩ; đòn rơi vào con đứng ở đó", () => {
+  let s = board({ 0: ["may-chem", { atk: 8 }] }, { 0: ["rong-con", { hp: 9, maxHp: 9 }], 1: ["hiep-si-ho-ve", { hp: 20, maxHp: 20, def: 0, mdef: 0 }], 2: ["khong-lo-mot-mat", { hp: 20, maxHp: 20 }] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 3, flask: 0 })) };
+  const target = uid(s, 1, 0);
+  const knight = uid(s, 1, 1);
+  const hit = D.attackMonster(s, uid(s, 0, 0), target);
+  assert.equal(D.canDispatch(hit, knight), true, hit.live);
+  const asked = D.dispatchKnight(hit, knight);
+  assert.ok(asked.swap?.knight, asked.live);
+  assert.equal(asked.players[1].orb, 2, "1 mana");
+  const wrong = D.confirmSwap(asked, `f:${target}`, `f:${uid(s, 1, 2)}`);
+  assert.match(wrong.live, /hiệp sĩ/, "không có hiệp sĩ trong cặp thì không đổi");
+  assert.equal(at(wrong, 1, 0).uid, target);
+  const swapped = D.confirmSwap(asked, `f:${target}`, `f:${knight}`);
+  assert.equal(at(swapped, 1, 0).uid, knight, "đổi chỗ: " + swapped.live);
+  let done = swapped;
+  for (let n = 0; n < 4 && done.step === "respond"; n += 1) done = D.passResponse(done);
+  const knightNow = done.players[1].field.find((m) => m?.uid === knight);
+  const dragon = done.players[1].field.find((m) => m?.uid === target);
+  assert.equal(knightNow.hp, 16, "đòn rơi vào hiệp sĩ (8 công - 4 thủ Khiên): " + done.live);
+  assert.equal(dragon.hp, 9, "con bị nhắm ban đầu không trúng");
+  // Không có quái nào bị nhắm: không dùng được.
+  assert.equal(D.canDispatch(s, knight), false);
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

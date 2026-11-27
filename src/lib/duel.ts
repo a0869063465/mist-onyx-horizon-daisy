@@ -394,7 +394,7 @@ export type Duel = {
   gemWarned?: [boolean, boolean];
   legs?: string | null;
   mends?: { uid: string; n: number }[] | null;
-  swap?: { first: string | null; side: Side; locked?: string | null } | null;
+  swap?: { first: string | null; side: Side; locked?: string | null; knight?: boolean } | null;
   /** Hộp ma thuật: the two monsters standing on each other's field until the round ends (`side` = real owner, `slot` =
    *  their own slot), and once one falls the slot it left on the foreign field, shut until the round ends. */
   box?: { pair: Array<{ uid: string; side: Side; slot: Slot }>; shut?: { side: Side; slot: Slot } | null; seq: number } | null;
@@ -2047,9 +2047,17 @@ const GUARD_KNIGHT = "hiep-si-ho-ve";
 const QUEEN_KNIGHT = "hiep-si-cua-hau";
 const MYSTIC = "hiep-si-huyen-bi";
 
-function knightTutor(field: Array<FieldMon | null>) {
-  return field.some((mon) => mon && mon.hp > 0 && (mon.cardId === KING || mon.cardId === QUEEN_KNIGHT));
+/** Mọi hiệp sĩ (chủ game 27/11: Lời thề, Điều động tính "bất kỳ hiệp sĩ nào"). */
+const ALL_KNIGHTS = new Set([KING, QUEEN_KNIGHT, GUARD_KNIGHT, MYSTIC]);
+export function isKnight(cardId: string | null | undefined): boolean {
+  return Boolean(cardId && ALL_KNIGHTS.has(cardId));
 }
+
+/** Lời thề của Hiệp sĩ hộ vệ (chủ game 27/11): có 1 hiệp sĩ khác trên sân thì xuất trận như quái 2 sao. */
+function knightTutor(field: Array<FieldMon | null>) {
+  return field.some((mon) => mon && mon.hp > 0 && isKnight(mon.cardId));
+}
+const OATH_STARS = 2;
 
 /**
  * Hiệp sĩ của vua, Hiệp sĩ của hậu (chủ game 25/11, chữ lá theo artifact "Xếp quái thú"):
@@ -2059,6 +2067,8 @@ function knightTutor(field: Array<FieldMon | null>) {
  * Số đọc từ chữ lá nếu có, không thì dùng số chủ game chốt.
  */
 const BLADE_KNIGHTS = new Set([KING, QUEEN_KNIGHT]);
+/** Khiên (chủ game 27/11): Hiệp sĩ hộ vệ có Khiên như vua và hậu, không có Kiếm. */
+const SHIELD_KNIGHTS = new Set([KING, QUEEN_KNIGHT, GUARD_KNIGHT]);
 
 function knightFigure(cardId: string, pattern: RegExp, fallback: number): number {
   const hit = pattern.exec(plainSkill(cardId));
@@ -2160,7 +2170,7 @@ function dropShields(state: Duel): Duel {
 let shieldDepth = 0;
 function knightShield(state: Duel, outer: (state: Duel) => Duel): Duel {
   if (dodgeOff || listingChoices || shieldDepth > 0) return outer(state);
-  const knights = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && BLADE_KNIGHTS.has(mon.cardId) && mon.hp > 0 && !mon.kGuard && !mon.cage)));
+  const knights = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && SHIELD_KNIGHTS.has(mon.cardId) && mon.hp > 0 && !mon.kGuard && !mon.cage)));
   if (knights.length === 0) return outer(state);
   const run = (next: Duel) => {
     shieldDepth += 1;
@@ -2224,14 +2234,9 @@ function mysticDue(mon: FieldMon) {
   return mon.cardId === MYSTIC && !mon.horn && !mon.gaze && !mon.bolt;
 }
 
-function guardBless(state: Duel, side: Side, cardId: string): Partial<FieldMon> {
-  if (cardId !== GUARD_KNIGHT) return {};
-  const roster = state.players[side].roster ?? [];
-  const oath = {
-    ...(roster.includes(KING) ? { phys: true } : {}),
-    ...(roster.includes(QUEEN_KNIGHT) ? { spell: true } : {}),
-  };
-  return oath.phys || oath.spell ? { oath } : {};
+/** Khiên Ân Huệ của Hiệp sĩ hộ vệ đã bỏ (chủ game 27/11): không quái nào còn nhận lá chắn lời chúc lúc ra sân. */
+function guardBless(_state: Duel, _side: Side, _cardId: string): Partial<FieldMon> {
+  return {};
 }
 
 function hasOath(mon: FieldMon, kind: "phys" | "spell") {
@@ -3415,7 +3420,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot, hide = false)
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   if (hide && cardStars(cardId, held.saved?.level ?? 1) >= 5) return note(state, "Quái 5 sao không ẩn được.");
   const short = player.stars < card.stars;
-  const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
+  const studied = cardId === GUARD_KNIGHT && knightTutor(player.field) && player.stars >= OATH_STARS;
   const forced = short && cardId === "trieu-hoi-ac-ma";
   if (short && !forced && !studied) return note(state, `Cần ${card.stars} sao.`);
   const gate = demonGate(player, held);
@@ -3434,7 +3439,8 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot, hide = false)
   let grown = false;
   if (cardId === GUARD_KNIGHT && !held.saved && player.stars >= 3) {
     grown = true;
-    next = { ...next, atk: next.atk + 2, maxHp: (next.maxHp || next.hp) + 3, hp: next.hp + 3, raised: markRaised(next, { atk: 2, hp: 3 }) };
+    // Lời thề (chủ game 27/11): đủ 3 sao thì +1 phòng ngự (thủ và thủ phép) và +3 máu, vĩnh viễn.
+    next = { ...next, def: next.def + 1, mdef: next.mdef + 1, maxHp: (next.maxHp || next.hp) + 3, hp: next.hp + 3, raised: markRaised(next, { def: 1, mdef: 1, hp: 3 }) };
   }
   if (gate.fresh) next.seen = true;
   const field = [...paid.field] as Player["field"];
@@ -3452,7 +3458,7 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot, hide = false)
     ? `${card.name} bị hiến tế.`
     : forced
       ? `${sideName(side)} bất chấp triệu hồi ${card.name}. Đầu lượt phải trả khế ước.${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}`
-      : `${sideName(side)} triệu hồi${next.lurk ? " ẩn" : ""} ${card.name}${grown ? " Trưởng thành: +2 công, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}${harp.line ? `.${harp.line}` : ""}`;
+      : `${sideName(side)} triệu hồi${next.lurk ? " ẩn" : ""} ${card.name}${grown ? " Lời thề: +1 thủ, +1 thủ phép, +3 máu." : ""}${gate.fresh ? " Lần ra sân này tốn 1 mana." : ""}${harp.line ? `.${harp.line}` : ""}`;
   return note(
     pingStars(patch({ ...state, seq: state.seq + 1, rite: vow.eaten ? { side, slot, seq: state.seq + 1 } : state.rite }, side, placed), side, before, placed.stars),
     line,
@@ -3514,7 +3520,7 @@ function summonVowCore(state: Duel, reserveIndex: number, slot: Slot, picks: str
   if (boxShut(state, side, land) && !player.field[land]) return note(state, "Ô này bị khoá tới hết vòng.");
   const stars = cardStars(cardId, held.saved?.level ?? 1);
   const short = player.stars < stars;
-  const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
+  const studied = cardId === GUARD_KNIGHT && knightTutor(player.field) && player.stars >= OATH_STARS;
   const forced = short && cardId === "trieu-hoi-ac-ma";
   if (short && !forced && !studied) return note(state, `Cần ${stars} sao.`);
   const gate = demonGate(player, held);
@@ -5424,18 +5430,11 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
       field: next.players[defender].field.map((mon) => (mon?.uid === blocker.uid ? spentAct(mon) : mon)),
     });
   }
-  if (smashPlain(blocker) || blocker.cardId === GUARD_KNIGHT) {
+  if (smashPlain(blocker)) {
     const owner = next.players[defender];
     const paid = pay(owner, 1);
     if (!paid) return note(state, "Cần 1 mana.");
     next = patch(next, defender, paid);
-  }
-  if (blocker.cardId === GUARD_KNIGHT) {
-    const owner = next.players[defender];
-    next = patch(next, defender, {
-      ...owner,
-      field: owner.field.map((mon) => (mon?.uid === blocker.uid ? { ...mon, guarding: true, oathShot: false } : mon)),
-    });
   }
   const veiled = next.players[defender].field.find((mon) => mon?.uid === blocker.uid) ?? null;
   if (shadeHidden(veiled)) {
@@ -5458,7 +5457,7 @@ function assignBlockCore(state: Duel, blockerUid: string, withSkill = false, bra
       [blockerUid],
     );
   }
-  const noted = note(acted.state, blocker.cardId === GUARD_KNIGHT ? `${cardOf(blocker).name} dùng Kiếm phòng ngự.${acted.extra}` : `${cardOf(blocker).name} sẽ chặn.${acted.extra}`, "info");
+  const noted = note(acted.state, `${cardOf(blocker).name} sẽ chặn.${acted.extra}`, "info");
   const blocked: Duel = {
     ...noted,
     step: "respond",
@@ -5645,7 +5644,7 @@ export function canGuardCover(state: Duel, uid: string): boolean {
   if (state.hold.priority !== ownerSide) return false;
   const owner = state.players[ownerSide];
   const mon = owner.field.find((unit) => unit?.uid === uid) ?? null;
-  if (!mon || (mon.cardId !== GUARD_KNIGHT && mon.cardId !== MYSTIC) || !canIntercept(mon) || mon.dim) return false;
+  if (!mon || mon.cardId !== MYSTIC || !canIntercept(mon) || mon.dim) return false;
   if (owner.orb < 1 && !state.parley) return false;
   const pending = state.pending;
   if (pending.kind === "face") return mon.cardId === MYSTIC;
@@ -8556,7 +8555,7 @@ export function confirmSwap(state: Duel, firstToken: string, secondToken: string
   if (firstToken === secondToken) return note(state, "Chọn hai quái khác nhau.");
   if (!state.swap.locked || firstToken !== state.swap.locked) return note(state, "Hoán đổi chỉ đổi quái đang bị nhắm.");
   const side = state.swap.side;
-  const done = pickSwap({ ...state, swap: { first: firstToken, side } }, secondToken);
+  const done = pickSwap({ ...state, swap: { first: firstToken, side, knight: state.swap.knight } }, secondToken);
   // A refused second pick leaves the ask as it was (with its locked monster), or the duel froze (chủ game 06/11).
   if (done.swap) return { ...done, swap: state.swap };
   return done;
@@ -8567,11 +8566,13 @@ export function pickSwap(state: Duel, token: string): Duel {
   const side = state.swap.side;
   const you = state.players[side];
   if (!swapToken(you, token)) return note(state, "Không đổi được quái này.");
-  if (!state.swap.first) return { ...state, swap: { first: token, side }, live: "Chọn quái thứ hai." };
+  if (!state.swap.first) return { ...state, swap: { first: token, side, knight: state.swap.knight }, live: "Chọn quái thứ hai." };
   if (state.swap.first === token) return note(state, "Chọn một quái khác.");
   const first = swapToken(you, state.swap.first);
   const second = swapToken(you, token);
   if (!first || !second) return { ...state, swap: null };
+  // Điều động (chủ game 27/11): một trong hai con phải là hiệp sĩ.
+  if (state.swap.knight && !isKnight(swapCardId(you, state.swap.first)) && !isKnight(swapCardId(you, token))) return note(state, "Điều động phải đổi 1 hiệp sĩ.");
   const field = [...you.field] as Player["field"];
   const reserve = [...you.reserve];
   const takeField = (uid: string) => {
@@ -11860,7 +11861,6 @@ function chooseBlock(state: Duel): { uid: string | null; skill: boolean } {
   let bestScore = -Infinity;
   for (const mon of options) {
     if (smashPlain(mon) && state.players[1].orb < 1) continue;
-    if (mon.cardId === GUARD_KNIGHT && state.players[1].orb < 1) continue;
     const hit = clashCost(attacker, mon);
     let score = attacker.atk * 2;
     if (hit.kill && !hit.suicide) score += 80;
@@ -13307,4 +13307,47 @@ function blessKeep(state: Duel, uids: string[], lock: boolean): { state: Duel; l
   if (!blessed.line || !eat || !blessed.state.hold) return blessed;
   const back = blessGirls(eat.back, uids, lock).state;
   return { state: { ...blessed.state, hold: { ...blessed.state.hold, eat: { ...eat, back } } }, line: blessed.line };
+}
+
+/** Lá ứng với 1 ô chọn của Hoán đổi: quái trên sân ("f:uid") hoặc quái dự bị ("r:i"). */
+function swapCardId(player: Player, token: string | null | undefined): string | null {
+  if (!token) return null;
+  if (token.startsWith("f:")) return player.field.find((mon) => mon?.uid === token.slice(2))?.cardId ?? null;
+  if (token.startsWith("r:")) return player.reserve[Number(token.slice(2))]?.id ?? null;
+  return null;
+}
+
+/**
+ * Điều động của Hiệp sĩ hộ vệ (chủ game 27/11): skill siêu tốc 1 mana, khi 1 quái thú của mình bị nhắm bởi đòn tấn công
+ * (đánh thường hoặc skill). Như Hoán đổi: con bị nhắm đổi chỗ với 1 quái khác (trên sân hoặc dự bị), một trong hai phải là
+ * hiệp sĩ; đòn rơi vào con đứng ở đó sau khi đổi.
+ */
+export function canDispatch(state: Duel, uid: string): boolean {
+  if (state.step !== "respond" || !state.hold || state.hold.stage || !state.pending || state.swap || doomWaiting(state)) return false;
+  const pending = state.pending;
+  const attack = pending.kind === "melee" || pending.kind === "gnaw" || ((pending.kind === "beam" || pending.kind === "gnaw-skill") && !("back" in pending && pending.back));
+  if (!attack) return false;
+  const side = state.hold.priority;
+  const you = state.players[side];
+  const mon = you.field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon || mon.cardId !== GUARD_KNIGHT || mon.hp <= 0 || barred(mon) || mon.stun > 0 || mon.cage) return false;
+  if (you.orb < dispatchCost()) return false;
+  const locked = lockedSwapToken(state, side);
+  if (!locked) return false;
+  const lockedKnight = isKnight(swapCardId(you, locked));
+  return swapRows(you).some((token) => token !== locked && (lockedKnight || isKnight(swapCardId(you, token))));
+}
+
+function dispatchCost(): number {
+  return knightFigure(GUARD_KNIGHT, /Tiêu hao\s*(\d+)\s*mana,\s*skill siêu tốc/i, 1);
+}
+
+export function dispatchKnight(state: Duel, uid: string): Duel {
+  if (!canDispatch(state, uid) || !state.hold) return state;
+  const side = state.hold.priority;
+  const paid = pay(state.players[side], dispatchCost());
+  if (!paid) return note(state, `Cần ${dispatchCost()} mana.`);
+  const locked = lockedSwapToken(state, side);
+  const mon = state.players[side].field.find((unit) => unit?.uid === uid)!;
+  return note({ ...patch(state, side, paid), swap: { first: locked, side, locked, knight: true } }, `${cardOf(mon).name} dùng Điều động: chọn quái để đổi chỗ.`, "spell");
 }
