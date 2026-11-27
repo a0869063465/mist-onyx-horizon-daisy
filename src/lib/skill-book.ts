@@ -122,11 +122,12 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "loi-nguyen-cua-rong": [A("Địa ngục lửa", "fire-ring")],
   "thien-than-be-nho": [A("Thiên thần hộ mệnh", "angel-outfit"), S("Tinh linh bé nhỏ", "fairy")],
   "hiep-si-cua-vua": [P("Khiên", "checked-shield"), A("Kiếm", "attack-sword")],
-  "hiep-si-ho-ve": [QUEEN, KING, KNIGHT, S("Kiếm hộ vệ", "sword-in-stone"), PP("Học tập", "open-book", "- học tập"), PP("Trưởng thành", "growth", "- trưởng thành"), NOTE("số màu cam và tím")],
+  // Hiệp sĩ hộ vệ (chủ game 27/11): Lời thề, Khiên, Điều động. Icon dùng chung tạm: Lời thề = shaking-hands, Điều động = card-exchange (chủ game sẽ vẽ riêng).
+  "hiep-si-ho-ve": [P("Lời thề", "shaking-hands"), P("Khiên", "checked-shield"), S("Điều động", "card-exchange")],
   "hiep-si-cua-hau": [P("Khiên", "checked-shield"), A("Kiếm", "energy-sword")],
   "hiep-si-huyen-bi": [P("Khiên toàn năng", "magic-shield"), A("Tấn công", "sword-clash"), S("Phòng ngự", "shield-reflect"), A("Đàm phán", "shaking-hands")],
   // Harpie Lady (chủ game 21/11): Giảo hoạt đứng đầu, 4 kỹ năng giữ nguyên, Tiến hoá cuối cùng (chữ theo chữ lá chủ game viết).
-  "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Tiến hoá", "round-star")],
+  "my-dieu-nhan": [P("Giảo hoạt", "card-draw"), S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), S("Roi điện", "electric-whip"), P("Càng xinh đẹp", "heart-plus"), P("Tiến hoá", "round-star")],
   "nu-chua-dieu-nhan": [S("Giáp và Vuốt", "harpy"), slow(A("Thổi bay", "whirlwind")), slow(A("Mê hoặc", "charm")), slow(A("Dụ dỗ", "lips")), S("Roi điện", "electric-whip"), NOTE("mỗi kỹ năng", "đủ 4 kỹ năng")],
   "nu-chua-dieu-nhan-hoan-my": [P("Giáp phản", "spiked-shell"), slow(A("Gió xoáy", "tornado")), slow(A("Dụ dỗ", "lips")), A("Roi sấm", "lightning-branches")],
   "the-than-cua-shien": [SP("Thế thân trên sân", "ninja-heroic-stance", "- trên sân"), SP("Thế thân trên tay", "card-exchange", "- trên tay")],
