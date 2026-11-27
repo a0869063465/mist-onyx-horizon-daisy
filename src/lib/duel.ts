@@ -1564,6 +1564,13 @@ function rhinoRankCost(level: number) {
   return grabNums(rhinoText(level), /tiêu(?:\s*hao)?\s*(\d+)\s*mana/gi)[0] ?? 1;
 }
 
+/** Tiến độ tiến hoá của Tê giác để hiện trên quái ("2/4"); null khi đã là dạng cuối hoặc không phải Tê giác. */
+export function rhinoProgress(mon: { cardId: string; level?: number; rush?: number }): string | null {
+  const level = rhinoLevel(mon);
+  if (level === 0 || level >= 3) return null;
+  return `${Math.min(rhinoNeed(level), mon.rush ?? 0)}/${rhinoNeed(level)}`;
+}
+
 /** Tê giác hiếu thắng / chiến binh: +n máu tối đa vĩnh viễn, máu hiện tại tăng bằng (Vào đây, Xông trận). */
 function rhinoGrit(mon: FieldMon, n: number): FieldMon {
   if (n <= 0 || mon.hp <= 0) return mon;

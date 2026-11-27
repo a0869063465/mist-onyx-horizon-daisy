@@ -125,6 +125,8 @@ import {
   answerPlume,
   answerPrey,
   evolveBird,
+  answerRhino,
+  rhinoProgress,
   answerWile,
   WILE_CARDS,
   isWileCard,
@@ -7592,6 +7594,9 @@ function PlayPage() {
   const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
   const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const wileAsk = duel.wileAsk?.[0] ?? null;
+  const rhinoAsk = duel.rhinoAsk ?? null;
+  const rhinoMon = rhinoAsk ? duel.players[rhinoAsk.side].field.find((unit) => unit?.uid === rhinoAsk.uid) ?? null : null;
+  const rhinoCard = rhinoAsk ? monsterCard(rhinoAsk.level >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : null;
   const trimAsk = duel.trimAsk?.[0] ?? null;
   // Bỏ lá dư (chủ game 27/11): đủ mọi lá trên tay, quái dự bị trước rồi phép, như bảng Sinh mệnh mới.
   const trimHand = trimAsk ? duel.players[trimAsk.side] : null;
@@ -7794,6 +7799,20 @@ function PlayPage() {
           cards={wileAsk.picks.map((pick): PickCard => ({ key: pick, face: <CardFace spellId={WILE_CARDS[pick as keyof typeof WILE_CARDS]} hand /> }))}
           onConfirm={(pick) => apply(answerWile(duel, pick))}
           onTimeout={() => apply(answerWile(duel, null))}
+        />
+      ) : null}
+      {rhinoAsk && rhinoCard && (rhinoAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`rhino:${rhinoAsk.uid}:${rhinoAsk.level}`}
+          mine={rhinoAsk.side === viewer}
+          foeSees
+          preset="form"
+          title="Tiến hoá"
+          sub={`${rhinoCard.name} · ${rhinoMon?.row === "back" && rhinoAsk.slot >= 3 ? "Đứng hàng sau" : "Lên hàng trước"}`}
+          foeSub={`${rhinoCard.name} tiến hoá…`}
+          cards={[{ key: "form", face: <CardFace monster={rhinoCard} hand /> }]}
+          onConfirm={() => apply(answerRhino(duel))}
+          onTimeout={() => apply(answerRhino(duel))}
         />
       ) : null}
       {rebirthAsk && duel.step === "main" && duel.turn === viewer ? (
@@ -10707,6 +10726,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
         ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
       : clockForm(mon.cardId) && !mon.lurk
         ? mon.clockLeft ?? 2
+      : mon.cardId === "te-giac-be-con"
+        ? rhinoProgress(mon) ?? ""
       : mon.cardId === "ken-ngai"
         ? mon.level ?? 0
         : mon.cardId === "con-thinh-no-cua-hai-vuong"
@@ -10725,6 +10746,7 @@ const COUNT_ICON: Record<string, string> = {
   "kazura": "hunting-bolas",
   "kizuran": "heart-shield",
   "ken-ngai": "butterfly",
+  "te-giac-be-con": "round-star",
   "con-thinh-no-cua-hai-vuong": "guardian-shield",
   "hiep-si-ho-ve": "growth",
   "chien-binh-rong": "scale-mail",

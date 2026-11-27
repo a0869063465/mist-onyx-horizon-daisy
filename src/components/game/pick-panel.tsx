@@ -24,6 +24,9 @@ export function PickPanel({
   onCancel,
   need = 1,
   onPicks,
+  preset,
+  foeSees = false,
+  foeSub,
 }: {
   cards: PickCard[];
   mine?: boolean;
@@ -37,8 +40,13 @@ export function PickPanel({
   /** Số lá phải chọn (bỏ lá dư khi tay quá 7 lá, chủ game 27/11); từ 2 trở lên thì OK gọi `onPicks`. */
   need?: number;
   onPicks?: (keys: string[]) => void;
+  /** Lá đã chọn sẵn (Tiến hoá của Tê giác: chỉ 1 lá, chỉ cần bấm xác nhận). */
+  preset?: string;
+  /** Bảng của đối thủ vẫn thấy mặt lá (Tiến hoá: đối thủ xem được dạng mới, chỉ không có nút). */
+  foeSees?: boolean;
+  foeSub?: string;
 }) {
-  const [chosen, setChosen] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<string[]>(preset ? [preset] : []);
   const picked = chosen.length >= need ? chosen[chosen.length - 1] ?? null : null;
   const [left, setLeft] = useState(LIMIT);
   const done = useRef(false);
@@ -87,7 +95,7 @@ export function PickPanel({
       <div className="op-dim" />
       <div className="op-head">
         <h2 className="op-title">{tr(title)}</h2>
-        <p className="op-sub">{tr(mine ? sub ?? "" : "Đối thủ đang chọn…")}</p>
+        <p className="op-sub">{tr(mine ? sub ?? "" : foeSub ?? "Đối thủ đang chọn…")}</p>
       </div>
       <div className="pk-row">
         {cards.map((card) => {
@@ -95,7 +103,7 @@ export function PickPanel({
           return (
             <div key={card.key} className={`pk-slot${marked ? " is-marked" : ""}`}>
               <button type="button" className="pk-card" disabled={!mine} onClick={() => choose(card.key)}>
-                {mine ? <span className="pk-face">{card.face}</span> : <img className="pk-back" src="/ui/card-back-foe.webp" alt="" draggable={false} />}
+                {mine || foeSees ? <span className="pk-face">{card.face}</span> : <img className="pk-back" src="/ui/card-back-foe.webp" alt="" draggable={false} />}
               </button>
             </div>
           );
