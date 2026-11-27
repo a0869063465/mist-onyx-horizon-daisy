@@ -902,16 +902,16 @@ export function FlareBlast() {
   );
 }
 
-/** Z4 (chủ game 27/11): khiên vỡ khi sát thương tới. Video 480×480, lá giữ chỗ (nền xanh khoá thành trong suốt) rộng 51,7% khung, tâm ở (50,2%; 44,9%). */
+/** Z4 (chủ game 27/11): khiên dựng lên (chạy một lần) và khiên vỡ khi sát thương tới. Video 480×480, lá giữ chỗ (nền xanh khoá thành trong suốt) rộng 51,7% khung, tâm ở (50,2%; 44,9%). */
 export function AegisBreak() {
-  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  const [clips, setClips] = useState<{ id: number; phase: "up" | "break"; x: number; y: number; w: number }[]>([]);
   useEffect(() => {
     const stop = subscribeFx((event) => {
       if (event.t !== "aegis") return;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
-      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
-      playCue("shieldBreak");
+      setClips((list) => [...list.slice(-3), { id, phase: event.phase, x: event.x, y: event.y, w: event.w }]);
+      playCue(event.phase === "up" ? "shieldUp" : "shieldBreak");
     });
     return () => {
       stop();
@@ -923,7 +923,7 @@ export function AegisBreak() {
         <video
           key={clip.id}
           className="aegis-break"
-          src={fxUrl("/fx/khien-vo.webm?v=1")}
+          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=1" : "/fx/khien-vo.webm?v=1")}
           autoPlay
           muted
           playsInline

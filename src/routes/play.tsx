@@ -3763,13 +3763,14 @@ function PlayPage() {
     if (!quiet && /cuộn thế thủ/.test(said)) cueAt("shield");
     if (!quiet && /xòe thế công/.test(said)) cueAt("spellRise");
     if (!quiet && /Hoá kén/.test(said)) cueAt("shield");
-    if (!quiet && /sẽ đỡ đòn và phép|ngừng đỡ|tạo khiên/.test(said)) cueAt("shield");
+    if (!quiet && /sẽ đỡ đòn và phép|ngừng đỡ/.test(said)) cueAt("shield");
     for (const side of [0, 1] as const) {
       duel.players[side].field.forEach((mon, index) => {
         const was = prev.players[side].field[index];
-        if (!mon?.aegis || (was?.uid === mon.uid && (was.aegis ?? 0) >= mon.aegis)) return;
-        const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-        if (spot) fxAt({ t: "shield", kind: "phys", x: spot.x, y: spot.y });
+        if (quiet || !mon?.aegis || (was?.uid === mon.uid && (was.aegis ?? 0) >= mon.aegis) || seaVeiled(duel, viewerNow, mon.uid)) return;
+        // Khiên dựng lên (Z4, chủ game 27/11): video + âm buffkhien chạy một lần, đặt đúng lá nhận khiên.
+        const box = SLOT_BOX[screenSide(side, viewerNow)][index];
+        emitFx({ t: "aegis", phase: "up", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
       });
     }
     // Khiên vỡ (Z4, chủ game 27/11): video + âm vỡ khiên đặt đúng lá bị đòn (hết hạn thì không nháy).
@@ -3779,7 +3780,7 @@ function PlayPage() {
         const mon = fieldMon(duel, uid);
         if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
         const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
-        emitFx({ t: "aegis", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        emitFx({ t: "aegis", phase: "break", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
       }
     }
     if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");

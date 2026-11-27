@@ -5,7 +5,7 @@ const MUSIC_KEY = "clash-vol-music";
 /** Sent when the sound switch or the music volume changes, so the music follows at once. */
 export const MUSIC_EVENT = "clash-music-level";
 
-export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "buff" | "mazeStep" | "flare" | "ramHit" | "shatter" | "equipMerge" | "kuriBoom" | "fogA" | "fogB" | "burn" | "shuffleYou" | "shuffleFoe" | "shieldBreak";
+export type Cue = "summon" | "spell" | "skill" | "attack" | "block" | "hit" | "star" | "win" | "lose" | "tap" | "draw" | "spellRise" | "spellBoom" | "veil" | "swordBoom" | "firePrep" | "boltPrep" | "boltBoom" | "boltSmall" | "laserBoom" | "poison" | "reflect" | "chain" | "dispel" | "sacrifice" | "gunPrep" | "gunBoom" | "shield" | "timeFlow" | "timeAge" | "timeBoost" | "reelSpin" | "reelStop" | "reelPair" | "reelTriple" | "reelSeven" | "reelSix" | "fusion" | "riteSummon" | "fuseRite" | "eruption" | "emblemYou" | "emblemFoe" | "tideRise" | "tideBurst" | "tideSwirl" | "tideWave" | "heal" | "buff" | "mazeStep" | "flare" | "ramHit" | "shatter" | "equipMerge" | "kuriBoom" | "fogA" | "fogB" | "burn" | "shuffleYou" | "shuffleFoe" | "shieldBreak" | "shieldUp";
 
 const CLIPS: Partial<Record<Cue, string>> = {
   summon: "/sfx/trieu-hoi.mp3?v=1",
@@ -54,6 +54,8 @@ const CLIPS: Partial<Record<Cue, string>> = {
   shield: "/sfx/khien-buff.mp3?v=2",
   // Z4 (chủ game 27/11): khiên vỡ khi sát thương tới (dokhien 1,0-1,7 s, +8,4 dB).
   shieldBreak: "/sfx/khien-vo.mp3?v=1",
+  // Z4: khiên dựng lên (buffkhien 0,15 s trở đi, +8 dB), chạy một lần lúc nhận khiên.
+  shieldUp: "/sfx/khien-dung.mp3?v=1",
   timeFlow: "/sfx/thoi-gian-dong.mp3?v=2",
   timeAge: "/sfx/thoi-gian-lao.mp3?v=2",
   timeBoost: "/sfx/thoi-gian-cuong.mp3?v=2",
