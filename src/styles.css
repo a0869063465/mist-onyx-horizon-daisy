@@ -14549,6 +14549,15 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
   object-fit: contain;
 }
 
+/* Khiên vỡ (Z4, chủ game 27/11): video 480×480, lá giữ chỗ ở (50,2%; 44,9%) khung. */
+.aegis-break {
+  position: absolute;
+  z-index: 15;
+  transform: translate(-50.2%, -44.9%);
+  pointer-events: none;
+  object-fit: contain;
+}
+
 /* Kuriboh phát nổ (chủ game 21/11): video 512×512, tâm nổ ở 50% ngang, 52,7% dọc. */
 .boom-blast {
   position: absolute;
@@ -14706,6 +14715,7 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 html[data-flatfx] .heal-blast,
 html[data-flatfx] .buff-blast,
 html[data-flatfx] .flare-blast,
+html[data-flatfx] .aegis-break,
 html[data-flatfx] .boom-blast,
 html[data-flatfx] .tide-vid,
 html[data-flatfx] .tide-wave,

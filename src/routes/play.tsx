@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { AegisBreak, BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -29,7 +29,7 @@ import { Medal } from "@/components/game/medal";
 import { OracleOrb } from "@/components/game/oracle-orb";
 import { HintCard } from "@/components/game/hint-card";
 import { countHint } from "@/lib/hints";
-import { CATAPULT, cannotAct, EGG, handPicks, STAR_COST, skillLoss } from "@/lib/duel";
+import { CATAPULT, cannotAct, EGG, handPicks, STAR_COST, skillLoss, shieldBreaks } from "@/lib/duel";
 
 /** Mana trong mộ cần cộng dồn để có đủ n sao (mốc 1, 3, 6, 10). */
 const starPrice = (n: number) => STAR_COST.slice(0, n).reduce((a, b) => a + b, 0);
@@ -3771,6 +3771,16 @@ function PlayPage() {
         const spot = SLOT_POS[screenSide(side, viewerNow)][index];
         if (spot) fxAt({ t: "shield", kind: "phys", x: spot.x, y: spot.y });
       });
+    }
+    // Khiên vỡ (Z4, chủ game 27/11): video + âm vỡ khiên đặt đúng lá bị đòn (hết hạn thì không nháy).
+    if (!quiet) {
+      for (const uid of shieldBreaks(prev, duel)) {
+        const seat = seatOf(duel, uid);
+        const mon = fieldMon(duel, uid);
+        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
+        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+        emitFx({ t: "aegis", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+      }
     }
     if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");
     else if (!quiet && /cường hoá và tiêu diệt|tiến hoá .+ dạng cuối|cường hoá .+, tăng 35%/.test(said)) cueAt("timeBoost");
@@ -10161,6 +10171,7 @@ function PlayPage() {
         <FireBurst />
         <HealBlast />
         <BuffBlast />
+        <AegisBreak />
         <FlareBlast />
         <BoomBlast />
         <BoltBurst />

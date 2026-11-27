@@ -471,7 +471,7 @@ export function Spectacle() {
         ailmentMarks = [];
         return;
       }
-      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom") return;
+      if (event.t === "fire" || event.t === "tide" || event.t === "shield" || event.t === "bolt" || event.t === "laser" || event.t === "rite" || event.t === "zap" || event.t === "clash" || event.t === "rouse" || event.t === "flare" || event.t === "boom" || event.t === "aegis") return;
       if (event.t === "ailments") {
         const pack = event.pack ?? actPack("ailment");
         const nextIds = new Set(event.marks.map((mark) => mark.id));
@@ -895,6 +895,39 @@ export function FlareBlast() {
           muted
           playsInline
           style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w * 2}%` }}
+          onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Z4 (chủ game 27/11): khiên vỡ khi sát thương tới. Video 480×480, lá giữ chỗ (nền xanh khoá thành trong suốt) rộng 51,7% khung, tâm ở (50,2%; 44,9%). */
+export function AegisBreak() {
+  const [clips, setClips] = useState<{ id: number; x: number; y: number; w: number }[]>([]);
+  useEffect(() => {
+    const stop = subscribeFx((event) => {
+      if (event.t !== "aegis") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const id = Date.now() + Math.random();
+      setClips((list) => [...list.slice(-3), { id, x: event.x, y: event.y, w: event.w }]);
+      playCue("shieldBreak");
+    });
+    return () => {
+      stop();
+    };
+  }, []);
+  return (
+    <>
+      {clips.map((clip) => (
+        <video
+          key={clip.id}
+          className="aegis-break"
+          src={fxUrl("/fx/khien-vo.webm?v=1")}
+          autoPlay
+          muted
+          playsInline
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w / 0.517}%` }}
           onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
         />
       ))}
