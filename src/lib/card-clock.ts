@@ -781,11 +781,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 0,
     "mdef": 0,
     "hp": 3,
-    "text": "48488b17",
+    "text": "28fdee8e",
     "added": "2026-10-05",
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": "2026-11-25"
+    "shiftAt": "2026-11-26"
   },
   "the-than-cua-shien": {
     "kind": "monster",
@@ -837,11 +837,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 6,
-    "text": "c2d0e73d",
+    "text": "f1780644",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-27"
   },
   "harpie-chi-thu": {
     "kind": "monster",
@@ -851,11 +851,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 6,
-    "text": "58eaa73b",
+    "text": "bc82b366",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-27"
   },
   "harpie-em-ut": {
     "kind": "monster",
@@ -865,11 +865,11 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "def": 1,
     "mdef": 1,
     "hp": 6,
-    "text": "63b122fb",
+    "text": "d097c5a6",
     "added": null,
     "powerAt": null,
     "powerTone": null,
-    "shiftAt": null
+    "shiftAt": "2026-11-27"
   },
   "hiep-si-huyen-bi": {
     "kind": "monster",
@@ -1641,6 +1641,20 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "powerTone": null,
     "shiftAt": null
   },
+  "song-sat": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 2,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "91ce93e1",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
   "suoi-nguon-sinh-menh": {
     "kind": "spell",
     "stars": 0,
@@ -1650,6 +1664,34 @@ export const CARD_CLOCK: Record<string, CardClock> = {
     "mdef": 0,
     "hp": 0,
     "text": "d2cb533c",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "hoi-sinh-quai-thu": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 1,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "adf94ff0",
+    "added": null,
+    "powerAt": null,
+    "powerTone": null,
+    "shiftAt": null
+  },
+  "kinh-van-hoa": {
+    "kind": "spell",
+    "stars": 0,
+    "mana": 1,
+    "atk": 0,
+    "def": 0,
+    "mdef": 0,
+    "hp": 0,
+    "text": "fc38763e",
     "added": null,
     "powerAt": null,
     "powerTone": null,

@@ -3,8 +3,8 @@ import { CastShow } from "@/components/game/cast-show";
 import { speedTone } from "@/lib/spell-kinds";
 import { Rim, SkillGlyph } from "@/components/game/monster-sheet";
 import { Medal, type MedalTone } from "@/components/game/medal";
-import { FlowCanvas, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
-import type { Side } from "@/lib/duel";
+import { FlowCanvas, flowCentre, type BoxPt, type FlowSpec, type Moat } from "@/components/game/flow-canvas";
+import { DUO_CARD, type Side } from "@/lib/duel";
 import { drawnWay, MANA_TO_GEMS, MANA_TO_ORB, MANA_TRUNK, fanRoutes, type FanAim, type FanCard, type FanRoute } from "@/lib/fan-plan";
 import type { ChainOrb, FlowEnd, FlowLink, FlowTone } from "@/lib/reaction-chain";
 import { playLine } from "@/lib/sfx";
@@ -270,7 +270,8 @@ export function AimFlow({ from, to, tone }: { from: { x: number; y: number; face
 export function ReactionLine({
   orbs,
   closing,
-  spots,
+  spots: spotsIn,
+  mid,
   endOf,
   lookOf,
   noteOf,
@@ -290,6 +291,8 @@ export function ReactionLine({
   orbs: ChainOrb[];
   closing: boolean;
   spots: ReadonlyMap<string, IconSpot>;
+  /** The line between the two halves of the board (% of the board down): Song sát's icon stands on it. */
+  mid?: number;
   /** Where a flow lands on a card or a player, coming from a point (in % of the board). */
   endOf: (end: FlowEnd, from: { x: number; y: number }) => EndSpot | null;
   lookOf: (orb: ChainOrb) => IconLook;
@@ -319,6 +322,55 @@ export function ReactionLine({
   /** K2: seconds a skill's icon waits before it fires, while its monster rouses. */
   rouseLate?: number;
 }) {
+  // Song sát (chủ game 26/11): its icon stands on the line between the two halves, halfway between A and B, where the
+  // light of each ally crosses that line. Worked out from the same curve the light is drawn along.
+  const spots = (() => {
+    const duo = orbs.find((orb) => orb.spell === DUO_CARD && !orb.done);
+    if (!duo || mid === undefined) return spotsIn;
+    const crossings: number[] = [];
+    for (const link of duo.to) {
+      if (!("orb" in link.end)) continue;
+      const ally = orbs.find((orb) => orb.id === (link.end as { orb: string }).orb);
+      const from = ally ? spotsIn.get(ally.id) : undefined;
+      const target = ally?.to.find((one) => !one.from && !("orb" in one.end));
+      const land = from && target ? endOf(target.end, from) : null;
+      if (!ally || !from || !target || !land) continue;
+      // An ally sent to strike runs as a flow thrown back (like Phục kích's): it swings round and lands on the side of
+      // its target's card facing it.
+      const box = ally.sent && land.moat?.kind === "box" ? land.moat : null;
+      const edge = box ? (from.x >= box.x ? 1 : -1) : 0;
+      const end = box ? { x: box.x + (edge * box.w) / 2, y: box.y, into: { x: -edge, y: 0 } } : land;
+      const swing = box ? clearOf(from, { x: end.x, y: end.y }, undefined) : undefined;
+      const line = flowCentre({
+        key: keyOf(ally, target),
+        a: toBox(from.x, from.y),
+        b: toBox(end.x, end.y),
+        out: from.face !== 0 ? { x: 0, y: from.face } : unitDir((end.x - from.x) * 0.9, (end.y - from.y) * 1.6),
+        into: end.into,
+        arc: swing !== undefined ? swing * 1.1 : undefined,
+        tone: target.tone,
+        done: false,
+        end: null,
+        late: 0,
+        strike: false,
+        delay: 0,
+      });
+      const want = mid * 1.6;
+      for (let i = 1; i < line.length; i += 1) {
+        const p = line[i - 1];
+        const q = line[i];
+        if ((p.y - want) * (q.y - want) <= 0 && p.y !== q.y) {
+          crossings.push((p.x + ((want - p.y) / (q.y - p.y)) * (q.x - p.x)) / 0.9);
+          break;
+        }
+      }
+    }
+    const own = spotsIn.get(duo.id);
+    if (crossings.length < 2 || !own) return spotsIn;
+    const next = new Map(spotsIn);
+    next.set(duo.id, { ...own, x: (Math.min(...crossings) + Math.max(...crossings)) / 2, y: mid });
+    return next;
+  })();
   const [tip, setTip] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
   // A spell or a skill landing shows big at the left for a moment (chủ game 21/10, câu 5), then flies into its icon;

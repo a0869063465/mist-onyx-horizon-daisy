@@ -1,4 +1,4 @@
-import { CATAPULT, catapultShell, harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
+import { CATAPULT, catapultShell, DUO_CARD, harmSkill, type Duel, type Pending, type Side } from "./duel.ts";
 import { monsterCard } from "./catalog.ts";
 
 /**
@@ -785,6 +785,51 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
         : orb,
     );
   }
+  // Song sát (chủ game 25/11): the spell's icon with a pink flow to each of its 2 allies; each ally has its own icon
+  // (an attack or its skill) with a flow into the enemy, all waiting until the chain lands.
+  const duoIds = new Set<string>();
+  const duo = open ? next.hold?.duo ?? null : null;
+  if (duo) {
+    const duoOrb = [...list].reverse().find((orb) => orb.spell === DUO_CARD && !orb.done) ?? null;
+    if (duoOrb) {
+      duoIds.add(duoOrb.id);
+      for (const pick of duo.picks) {
+        const key = `duo:${duoOrb.id}:${pick.uid}`;
+        let ally: ChainOrb | undefined = list.find((orb) => orb.base === key);
+        if (!ally) {
+          const hit = pick.act === "atk";
+          ally = {
+            id: `orb${orbSeq++}`,
+            kind: hit ? "attack" : "skill",
+            side: duo.side,
+            source: pick.uid,
+            cardId: monOf(next, pick.uid)?.cardId ?? null,
+            spell: null,
+            near: pick.uid,
+            by: null,
+            to: [{ end: { uid: duo.target }, tone: hit ? "red" : "blue" }],
+            tone: hit ? "red" : "blue",
+            skill: pick.act === "atk" ? null : pick.act,
+            strike: null,
+            base: key,
+            aim: duo.target,
+            notice: next.live,
+            done: false,
+            end: null,
+            sent: true,
+          };
+          list.push(ally);
+        }
+        duoIds.add(ally.id);
+      }
+      // Pink from the spell's icon into each ally's icon; the ally's own light runs on into the enemy.
+      const into = duo.picks.flatMap((pick): FlowLink[] => {
+        const ally = list.find((orb) => orb.base === `duo:${duoOrb.id}:${pick.uid}`);
+        return ally ? [{ end: { orb: ally.id }, tone: "pink" }] : [];
+      });
+      list = list.map((orb) => (orb.id === duoOrb.id ? { ...orb, to: into, done: false, end: null } : orb));
+    }
+  }
   // Mê hoặc waiting: the provoked enemy's attack icon stands with it until the chain lands.
   const lured = live && open ? charmFoe(next, next.pending) : null;
   if (live && lured && next.pending?.kind === "beam" && next.pending.target && !list.some((orb) => orb.sent && orb.source === lured && orb.base === live.base && !orb.done)) {
@@ -794,6 +839,7 @@ function stepCore(prev: Duel | null, next: Duel, chain: ChainOrb[], reach: Chain
   const ended = new Map<string, ChainOrb["end"]>();
   list = list.map((orb) => {
     if (orb.kind === "block" || orb.kind === "seal") return orb;
+    if (duoIds.has(orb.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     // The mirror stands until the attack it stops is over.
     if ((glass && orb.id === glass.id) || (lurk && orb.id === lurk.id) || (pounce && orb.id === pounce.id) || (rewinding && orb.id === rewinding.id)) return orb.done || orb.end ? { ...orb, done: false, end: null } : orb;
     const done = !heldBy.has(orb.id) && (!open || orb.base === null || orb.base !== base);

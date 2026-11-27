@@ -15027,6 +15027,18 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 /* Lá tường thành của đối thủ chọn được làm mục tiêu Pháo kích. */
 .wall-card.is-shell { --alert-color: #ff4fa6; z-index: 13; box-shadow: 0 0 0 2px #ff4fa6, 0 0 0.9rem #ff4fa6, 0 0 1.6rem rgba(255, 79, 166, 0.7); animation: react-breathe 1.2s ease-in-out infinite; }
 
+/* Bảng chọn 1 lá chung (chủ game 26/11, Giảo hoạt + Hồi sinh quái thú): khuôn bảng Bài khởi đầu, lá xếp hàng ngang vuốt
+   được, lá chọn glow xanh lá. Bảng của đối thủ chỉ thấy lá úp. */
+.pk .pk-row { display: flex; gap: calc(3 * var(--cqw)); width: 100%; overflow-x: auto; overflow-y: hidden; padding: calc(2.4 * var(--cqh)) calc(8 * var(--cqw)) calc(6.4 * var(--cqh)); box-sizing: border-box; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; justify-content: safe center; scrollbar-width: none; }
+.pk .pk-row::-webkit-scrollbar { display: none; }
+.pk .pk-slot { flex: 0 0 calc(30 * var(--cqw)); scroll-snap-align: center; }
+.pk .pk-card { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s ease, filter 0.18s ease; }
+.pk .pk-card:disabled { cursor: default; }
+.pk .pk-face, .pk .pk-back { display: block; width: 100%; }
+.pk .pk-back { aspect-ratio: 2 / 3.05; object-fit: cover; }
+.pk .pk-slot.is-marked .pk-card { transform: translateY(calc(-1.2 * var(--cqh))) scale(1.04); filter: drop-shadow(0 0 calc(1.6 * var(--cqw)) #3ddc6a) drop-shadow(0 0 calc(3.6 * var(--cqw)) rgb(61 220 106 / 0.7)); }
+.pk.is-foe .op-foot { display: none; }
+.pk .pk-tag { position: absolute; left: 50%; bottom: calc(-3.4 * var(--cqh)); transform: translateX(-50%); padding: calc(0.5 * var(--cqh)) calc(2 * var(--cqw)); border-radius: calc(1 * var(--cqw)); background: rgb(14 10 8 / 0.86); border: 1px solid rgb(233 196 106 / 0.5); color: #f1e2b8; font: 700 calc(3.4 * var(--cqw))/1 "Barlow Condensed", system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; pointer-events: none; }
 /* Chị em Harpie (chủ game 26/11): dung hợp xong hiện 3 lá chị cả, chị thứ, em út trái giữa phải, mỗi lá 1 mũi tên cố định
    đúng hàng của mình, nút Triệu hồi ở giữa bên dưới; bấm thì cả 3 đáp xuống ô. Theo khuôn 2 lá của Đồng hồ khó đoán. */
 .kin-card { position: absolute; top: 47%; z-index: 8; width: calc(28 * var(--cqw)); aspect-ratio: 0.72; padding: 0; border: 0; background: none; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(190, 255, 170, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); cursor: pointer; }

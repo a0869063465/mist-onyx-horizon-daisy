@@ -86,3 +86,5 @@ Chủ game đưa ảnh linh kiện (khung, nút, ô, glow) để chèn lên thì
 Hiệu ứng "Khi triệu hồi" của một quái chỉ chạy khi chính quái đó được triệu hồi, không chạy khi quái khác được triệu hồi. Quái triệu hồi có hiệu ứng riêng sẽ còn thêm, theo luật này.
 
 Chữ "lượt" trên lá bài luôn là lượt chung (cả hai bên đánh xong mới tính 1 lượt), không phải lượt riêng của người chơi. Không hỏi lại.
+
+"Đòn tấn công" trên lá bài nói chung luôn gồm cả đòn đánh thường lẫn skill (chủ game 27/11, quy ước chung). Không hiểu thành chỉ đòn đánh thường.

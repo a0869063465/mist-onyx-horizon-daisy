@@ -158,6 +158,40 @@ function rowsAlong(pts: Array<{ x: number; y: number }>, count: number): { rows:
   return { rows, total };
 }
 
+/**
+ * Where a single flow runs, in box units (the board is 9:16 so one box unit is the same across and down): the same
+ * curve `build` lays down, without the extra wind of a very long way, and with its end where `b` is. For placing an
+ * icon by where flows cross a line (Song sát).
+ */
+export function flowCentre(spec: FlowSpec, steps = 60): BoxPt[] {
+  const ax = spec.a.x;
+  const ay = spec.a.y;
+  const bx = spec.b.x;
+  const by = spec.b.y;
+  if (spec.path) return wayAlong(spec.path, 1, 1, { x: bx, y: by });
+  const len = Math.hypot(bx - ax, by - ay) || 1;
+  const nx = -(by - ay) / len;
+  const ny = (bx - ax) / len;
+  const reach = len * 0.42;
+  const bow = (hash(spec.key) < 0.5 ? -1 : 1) * (0.55 + 0.45 * hash(`${spec.key}#`));
+  const lean = spec.out.x * nx + spec.out.y * ny;
+  const turn = Math.abs(lean) > 0.12 ? Math.sign(lean) : Math.sign(bow) || 1;
+  const arcs = spec.arc !== undefined;
+  const bend = spec.arc ?? spec.bend ?? turn * Math.abs(bow) * (1 - 0.6 * Math.min(1, Math.abs(lean)));
+  const k1 = arcs ? 0.3 : 0.26;
+  const k2 = arcs ? 0.3 : -0.16;
+  const p1 = { x: ax + spec.out.x * reach + nx * bend * len * k1, y: ay + spec.out.y * reach + ny * bend * len * k1 };
+  const p2 = { x: bx - spec.into.x * reach + nx * bend * len * k2, y: by - spec.into.y * reach + ny * bend * len * k2 };
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const t = i / steps;
+    const u = 1 - t;
+    return {
+      x: u * u * u * ax + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * bx,
+      y: u * u * u * ay + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * by,
+    };
+  });
+}
+
 /** Points (in px) along a branch's own way (cubic Bézier pieces in box units), its end moved onto its moat; its last
  *  control moves with it, so it still arrives the way it was going. */
 function wayAlong(path: BoxPt[], sx: number, sy: number, tip: { x: number; y: number }): Array<{ x: number; y: number }> {

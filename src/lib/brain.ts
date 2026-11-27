@@ -177,6 +177,7 @@ function moved(prev: Duel, next: Duel): boolean {
     next.preyAsk !== prev.preyAsk ||
     next.birdAsk !== prev.birdAsk ||
     next.wileAsk !== prev.wileAsk ||
+    next.trimAsk !== prev.trimAsk ||
     next.clockAsk !== prev.clockAsk ||
     next.plumeAsk !== prev.plumeAsk ||
     next.lurkAsk !== prev.lurkAsk
@@ -239,6 +240,7 @@ export function judge(state: Duel, me: Side = ME): number {
 
 function askOf(state: Duel): Side | null {
   if (state.recall) return state.recall.side;
+  if (state.trimAsk?.length) return state.trimAsk[0]!.side;
   if (state.gemCap != null) return state.gemCap;
   if (state.gemWarn != null) return state.gemWarn;
   if (state.parley && state.step === "main") return null;
@@ -556,8 +558,8 @@ function planAnswer(state: Duel): Act {
 export function brainChoose(state: Duel, budgetMs = BUDGET_MS): Act | null {
   if (state.mode !== "ai" || state.winner !== null || state.reel || state.wheel) return null;
   if (aiAnswerAsk(state)) return ["ask"];
-  // Giảo hoạt / tiến hoá của Harpie Lady bên người chơi: chờ họ chọn.
-  if (state.wileAsk?.length || state.birdAsk) return null;
+  // Giảo hoạt / tiến hoá của Harpie Lady, bỏ lá dư của người chơi: chờ họ chọn.
+  if (state.wileAsk?.length || state.birdAsk || state.trimAsk?.length) return null;
   if (state.step === "respond" && state.hold?.priority === ME) return planAnswer(state);
   if (state.turn !== ME || state.step !== "main") return null;
   return planTurn(state, now() + budgetMs);
