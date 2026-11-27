@@ -79,7 +79,7 @@ Hiến tế dùng một gói: hình là hiệu ứng nổ của phép lửa, âm
 
 Lá đứng yên là lá không đánh hoặc không chặn vì cơ chế in sẵn trên lá, không phải vì dính debuff. Hoa ăn thịt người, Kén ngài và Chân kén là lá đứng yên. Lá đứng yên không hiện chữ Cấm, không có hiệu ứng âm thanh hay hình ảnh của bất lợi, và không giải trừ được. Lá đứng yên thêm sau này chỉ cần đánh dấu đứng yên, không gắn tay từng lá.
 
-Quái 5 sao là trường hợp đặc biệt. Cơ chế mới mà người chơi không đề cập tới quái 5 sao thì quái 5 sao không có cơ chế đó. Chỉ áp dụng tối đa đến quái 4 sao.
+Quái 5 sao không phải ngoại lệ của bất kỳ cơ chế nào (chủ game 27/11). Cơ chế mới áp dụng cho mọi quái thú, kể cả 5 sao, trừ khi chủ game nói rõ loại trừ. Không tự thêm ngoại lệ 5 sao và không hỏi lại về 5 sao.
 
 Chủ game đưa ảnh linh kiện (khung, nút, ô, glow) để chèn lên thì cắt nguyên ảnh đó rồi gắn, không tự vẽ lại bằng CSS hay SVG. Muốn dựng lại bằng code thì hỏi trước.
 
