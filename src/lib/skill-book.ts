@@ -63,9 +63,10 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "quai-thu-thien-su": [P("Cầu nguyện", "prayer"), P("Ân huệ thiên sứ", "angel-wings")],
   "tinh-linh-dan-hac": [P("Tiếng nhạc du dương", "harp")],
   "thien-su-vo-hinh": [P("Mũi tên thiên sứ", "cupidon-arrow")],
-  "te-giac-be-con": [A("Thăng cấp", "rhinoceros-horn")],
-  "te-giac-hieu-thang": [A("Thăng cấp", "rhinoceros-horn")],
-  "te-giac-chien-binh": [P("Tinh thần chiến binh", "rhino-banner")],
+  // Tê giác (chủ game 27/11): tiến hoá tự động theo sát thương ra đòn, không còn nút Thăng cấp.
+  "te-giac-be-con": [P("Tiến hoá", "round-star")],
+  "te-giac-hieu-thang": [P("Vào đây", "rhinoceros-horn"), P("Tiến hoá", "round-star")],
+  "te-giac-chien-binh": [P("Xông trận", "rhino-banner")],
   "phu-thuy-ti-hon": [A("Cầu sấm", "focused-lightning")],
   "phu-thuy-tap-su": [A("Cầu sấm", "focused-lightning")],
   "phu-thuy-bac-thay": [A("Cầu sấm", "focused-lightning")],

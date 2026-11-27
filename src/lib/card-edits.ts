@@ -13,7 +13,6 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "cast", label: "Quả cầu bóng đêm", tone: "z" },
   ],
   "cuc-bong-ma-quai": [{ key: "mult", label: "Cấp số nhân", tone: "y" }],
-  "te-giac-be-con": [{ key: "up", label: "Thăng cấp", tone: "y" }],
   "qua-trung-sinh-menh": [{ key: "life", label: "Sinh mệnh mới", tone: "y" }],
   "phu-thuy-ti-hon": [{ key: "hex", label: "Cầu Sấm", tone: "y" }],
   "rong-phun-hoa-cau": [

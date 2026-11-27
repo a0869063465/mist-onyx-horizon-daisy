@@ -508,6 +508,30 @@ export const BALANCE_LOG: BalanceEntry[] = [
     stats: { atk: { from: 1, to: 3 }, mdef: { from: 3, to: 0 } },
     notes: ["Khiên: trước lần nhận sát thương đầu tiên trong lượt, +4 thủ hoặc thủ phép", "Kiếm: tiêu hao 1 mana, +3 công khi tấn công, có keyword Đòn đánh phép", "Bỏ Khiên Ân Huệ, Đàm phán và Kiếm phép cũ"],
   },
+  {
+    id: "te-giac-be-con",
+    at: "2026-11-27",
+    wave: 44,
+    tone: "shift",
+    stats: { hp: { from: 3, to: 2 } },
+    notes: ["Tiến hoá tự động khi gây đủ 4 sát thương từ ra đòn, tốn 1 mana; bỏ nút Thăng cấp"],
+  },
+  {
+    id: "te-giac-hieu-thang",
+    at: "2026-11-27",
+    wave: 44,
+    tone: "shift",
+    stats: { hp: { from: 4, to: 3 } },
+    notes: ["Vào đây: +1 máu vĩnh viễn trước mỗi lần nhận sát thương và mỗi khi hạ gục 1 kẻ địch", "Tiến hoá tự động khi gây đủ 8 sát thương, tốn 1 mana"],
+  },
+  {
+    id: "te-giac-chien-binh",
+    at: "2026-11-27",
+    wave: 44,
+    tone: "shift",
+    stats: { atk: { from: 5, to: 4 } },
+    notes: ["Đổi tên Tê giác chiến binh", "Xông trận: ra đòn hồi 1 máu và +1 công trong 3 lượt, cộng dồn; tiêu diệt 1 quái hoặc trước khi chịu đòn, +1 máu vĩnh viễn"],
+  },
 ];
 
 const STATS: StatKey[] = ["hp", "atk", "def", "mdef", "stars", "mana"];

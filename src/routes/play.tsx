@@ -2820,7 +2820,7 @@ function PlayPage() {
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     // Harpie Lady (Giảo hoạt, tiến hoá): máy trả lời câu của nó; câu của người chơi thì máy chờ.
     const birdSide = duel.birdAsk ? (duel.birdAsk.side ?? (duel.players[1].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? 1 : 0)) : null;
-    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? birdSide;
+    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? birdSide ?? duel.rhinoAsk?.side ?? null;
     if (askSide === 0) return;
     const aiAsk = askSide === 1;
     if (!aiResponds && !aiMain && !aiParley && !aiAsk) return;

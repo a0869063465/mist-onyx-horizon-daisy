@@ -19,6 +19,7 @@ type WireDuel = {
   /** Bỏ lá dư khi tay quá 7 lá: bên phải bỏ đẩy nước đi. */
   trimAsk?: Array<{ side: 0 | 1 }> | null;
   birdAsk?: { side?: 0 | 1 } | null;
+  rhinoAsk?: { side: 0 | 1 } | null;
 };
 
 type RoomRow = {
@@ -63,6 +64,7 @@ function actor(duel: WireDuel): 0 | 1 | null {
   if (duel.trimAsk?.[0]) return duel.trimAsk[0].side;
   if (duel.wileAsk?.[0]) return duel.wileAsk[0].side;
   if (duel.birdAsk?.side != null) return duel.birdAsk.side;
+  if (duel.rhinoAsk) return duel.rhinoAsk.side;
   if (duel.step === "respond") return duel.hold?.priority ?? null;
   if (duel.step === "main") return duel.turn;
   return null;
