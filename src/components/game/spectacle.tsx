@@ -923,7 +923,7 @@ export function AegisBreak() {
         <video
           key={clip.id}
           className="aegis-break"
-          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=1" : "/fx/khien-vo.webm?v=1")}
+          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=2" : "/fx/khien-vo.webm?v=2")}
           autoPlay
           muted
           playsInline
