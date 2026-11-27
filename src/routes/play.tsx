@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { AegisBreak, BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, ShieldBurst, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { AegisBreak, BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -10178,7 +10178,6 @@ function PlayPage() {
         <BoltBurst />
         <LaserBeam />
         <WaterBurst />
-        <ShieldBurst />
         </div>
         {fuseShow ? (
           <div className={`fuse3d is-${fuseShow.phase}`}>
@@ -11097,7 +11096,7 @@ function BoardSlot({
           {mon.hex && mon.hex.left > 0 ? <i className="is-harm">{mon.hex.left}</i> : null}
           {(mon.wet ?? 0) > 0 ? <i>{tr("Ẩm")}</i> : null}
           {mon.cover ? <i>{tr("Đỡ")}</i> : null}
-          {mon.oath?.phys || mon.aegis ? <i className="is-ward-phys">{tr("Khiên")}</i> : null}
+          {mon.oath?.phys ? <i className="is-ward-phys">{tr("Khiên")}</i> : null}
           {mon.oath?.spell ? <i className="is-ward-spell">{tr("Phép")}</i> : null}
           {(mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0 ? <i>{tr("Hồi")}</i> : null}
           {glassLabel ? <i className="is-hold">{glassLabel}</i> : null}
