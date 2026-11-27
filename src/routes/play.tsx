@@ -83,6 +83,9 @@ import {
   standFor,
   standIn,
   canGuardCover,
+  canDispatch,
+  dispatchKnight,
+  isKnight,
   guardCover,
   startParley,
   pickParley,
@@ -1447,6 +1450,8 @@ function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (mon.cardId === "chien-si-gam-nham" && pending?.kind === "face") return true;
   if (mon.cardId === "yeu-tinh-chuc-phuc" && (pending?.kind === "face" || pending?.kind === "melee")) return true;
   if (mon.cardId === "linh-chien-da-khong-lo" && canWall(duel, mon.uid)) return true;
+  // Điều động của Hiệp sĩ hộ vệ (chủ game 27/11): chớp hồng khi quái của mình bị đòn tấn công nhắm.
+  if (mon.cardId === "hiep-si-ho-ve" && canDispatch(duel, mon.uid)) return true;
   if (canSpirit(duel, mon.uid)) return true;
   if (mon.cardId === "ky-si-bong-toi" && !(mon.path ?? 0) && pending?.kind === "melee" && pending.defender === mon.uid && !mon.clash) return true;
   return false;
@@ -4580,12 +4585,14 @@ function PlayPage() {
   const aimMark = aim?.kind === "spell" && AIM_MARK.has(aim.spellId) ? aim : null;
   /** Hoán đổi (siêu tốc, chủ game 30/10): the monster aimed at is locked; the others that can trade glow, tap one. */
   const swapAsk = duel.swap && duel.swap.side === viewer && duel.swap.locked ? duel.swap : null;
-  const swapFit = (unit: FieldMon | null | undefined) => Boolean(swapAsk && unit && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined && `f:${unit.uid}` !== swapAsk.locked);
+  /** Điều động (chủ game 27/11): một trong hai con đổi chỗ phải là hiệp sĩ. */
+  const swapKnightOk = (cardId: string) => !swapAsk?.knight || isKnight(cardId) || isKnight(you.field.find((unit) => `f:${unit?.uid}` === swapAsk.locked)?.cardId);
+  const swapFit = (unit: FieldMon | null | undefined) => Boolean(swapAsk && unit && swapKnightOk(unit.cardId) && !unit.copy && unit.cardId !== "chan-ken" && unit.cardId !== "ken-ngai" && unit.abroad === undefined && `f:${unit.uid}` !== swapAsk.locked);
   const swapBench = (held: (typeof you.reserve)[number]) => {
     const card = monsterCard(held.id);
     // The Triệu hồi ác ma also needs its 1 mana when it comes out at exactly 3 stars (a refused pick used to freeze the swap).
     const fresh = held.id === "trieu-hoi-ac-ma" && you.stars === 3 && !held.saved?.seen && you.orb < 1;
-    return Boolean(swapAsk && card && card.stars !== 0 && !fresh && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
+    return Boolean(swapAsk && card && swapKnightOk(held.id) && card.stars !== 0 && !fresh && !(held.id === "trieu-hoi-ac-ma" ? you.stars < 3 : you.stars < card.stars));
   };
   const markId = aimMark?.spellId ?? (swapAsk ? "hoan-doi" : null);
   // X (chủ game 31/10): opens as soon as a skill, an attack or a target choice is under way, and cancels that choice, not
@@ -10365,6 +10372,9 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
   if (side === viewer && harpyAlert(duel, mon, viewer)) {
     if (harpyOffer(duel, viewer) === "armor") z.push({ key: "armor", label: chipLabel(card.id, "armor"), go: () => apply(harpyWard(duel)) });
     else z.push({ key: "lash", label: chipLabel(card.id, "lash"), go: () => apply(harpyLash(duel)) });
+  }
+  if (side === viewer && mon.cardId === "hiep-si-ho-ve" && canDispatch(duel, uid)) {
+    z.push({ key: "dispatch", label: tr("Điều động"), go: () => apply(dispatchKnight(duel, uid)) });
   }
   if (canWall(duel, uid) && !mon.dim) {
     z.push({ key: "wall", label: chipLabel(mon.cardId, "wall"), go: () => apply(wallAlly(duel, uid)) });
