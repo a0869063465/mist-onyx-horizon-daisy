@@ -195,6 +195,13 @@ function lines(at: SkillAt): string[] {
         `-${num(t, /-(\d+)\s*thủ(?!\s*phép)/, 2)} thủ, -${num(t, /-(\d+)\s*thủ phép/, 2)} thủ phép`,
         `Trong ${num(t, /trong\s*(\d+)\s*lượt/, 6)} lượt`,
       ];
+    case "harpie-chi-ca":
+    case "harpie-chi-thu":
+    case "harpie-em-ut":
+      if (name === "Động viên") return [`Hồi ${num(t, /Hồi\s*(\d+)\s*máu/, 2)} máu`, `+${num(t, /\+\s*(\d+)\s*công/, 1)} công đến hết lượt`];
+      if (name === "Máu chiến") return ["Có Đâm xuyên đến hết lượt", "Đánh thường thì quái bị đánh mất skill bị động trong đòn đó"];
+      if (name === "Hoá đá") return ["Quái địch không hành động được", "Thủ và thủ phép về 0 đến hết lượt"];
+      return [];
     case "my-dieu-nhan":
     case "nu-chua-dieu-nhan":
     case "nu-chua-dieu-nhan-hoan-my":
