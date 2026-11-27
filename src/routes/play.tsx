@@ -3767,9 +3767,9 @@ function PlayPage() {
     for (const side of [0, 1] as const) {
       duel.players[side].field.forEach((mon, index) => {
         const was = prev.players[side].field[index];
-        if (!mon?.ward || mon.ward === was?.ward) return;
+        if (!mon?.aegis || (was?.uid === mon.uid && (was.aegis ?? 0) >= mon.aegis)) return;
         const spot = SLOT_POS[screenSide(side, viewerNow)][index];
-        if (spot) fxAt({ t: "shield", kind: mon.ward, x: spot.x, y: spot.y });
+        if (spot) fxAt({ t: "shield", kind: "phys", x: spot.x, y: spot.y });
       });
     }
     if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");
@@ -11085,8 +11085,8 @@ function BoardSlot({
           {mon.hex && mon.hex.left > 0 ? <i className="is-harm">{mon.hex.left}</i> : null}
           {(mon.wet ?? 0) > 0 ? <i>{tr("Ẩm")}</i> : null}
           {mon.cover ? <i>{tr("Đỡ")}</i> : null}
-          {mon.oath?.phys || mon.ward === "phys" ? <i className="is-ward-phys">{tr("Khiên")}</i> : null}
-          {mon.oath?.spell || mon.ward === "spell" ? <i className="is-ward-spell">{tr("Phép")}</i> : null}
+          {mon.oath?.phys || mon.aegis ? <i className="is-ward-phys">{tr("Khiên")}</i> : null}
+          {mon.oath?.spell ? <i className="is-ward-spell">{tr("Phép")}</i> : null}
           {(mon.blessAtk ?? 0) > 0 || (mon.blessDmg ?? 0) > 0 ? <i>{tr("Hồi")}</i> : null}
           {glassLabel ? <i className="is-hold">{glassLabel}</i> : null}
           {mon.preyAim ? <i>{mon.preyKind === "spell" ? "Phép" : mon.preyKind === "tru" ? "Chuẩn" : "Vật"}</i> : null}

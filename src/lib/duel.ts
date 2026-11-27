@@ -98,8 +98,10 @@ export type FieldMon = {
   clash?: { atk: number; def: number; maxHp: number; mdef?: number };
   pact?: boolean;
   seen?: boolean;
-  ward?: "phys" | "spell";
-  wardStay?: boolean;
+  /** Lá chắn (Z4, chủ game 23/11 + 27/11): số lượt chung còn lại (nhận = 2, lượt đang diễn ra tính là lượt 1). Chặn
+   *  trọn một lần ra đòn (đòn đánh, skill, phép gây sát thương; mọi loại sát thương gồm chuẩn, mọi đợt trong cùng lần ra
+   *  đòn) rồi vỡ. Hiệu ứng đi kèm không chặn. Độc, bỏng, nợ chia đợt, phản đòn, sát thương hết vòng không chặn, không vỡ. */
+  aegis?: number;
   veil?: boolean;
   oath?: { phys?: boolean; spell?: boolean };
   oathBack?: { phys?: boolean; spell?: boolean };
@@ -2279,7 +2281,7 @@ function place(state: Duel, side: Side, cardId: string, held?: PileMon): FieldMo
     ...(cardId === "kazura" ? { safe: 2 } : {}),
     ...(cardId === "ken-ngai" || cardId === "chan-ken" ? { dim: true } : {}),
     ...(isStill(cardId) ? { noBlock: true } : {}),
-    ...(cardId === "con-thinh-no-cua-hai-vuong" ? { oath: { phys: true, spell: true } } : {}),
+    ...(cardId === "con-thinh-no-cua-hai-vuong" ? { aegis: AEGIS_TURNS } : {}),
     ...guardBless(state, side, cardId),
     ...mysticBless(cardId),
   };
@@ -2432,7 +2434,7 @@ function knightShield(state: Duel, outer: (state: Duel) => Duel): Duel {
   const ids = new Set(knights.map((mon) => mon.uid));
   const BULK = 1000;
   const taken = (def: number, mdef: number): Map<string, number> => {
-    const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def, mdef, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, ward: undefined, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
+    const bare = reshapeMons(state, ids, (mon) => ({ ...mon, def, mdef, armor: 0, buff: mon.buff ? { ...mon.buff, def: 0, mdef: 0 } : mon.buff, aegis: undefined, hp: mon.hp + BULK, maxHp: mon.maxHp + BULK }));
     const ward = wardLines.splice(0);
     const hex = skillHex ? { ...skillHex, clips: skillHex.clips.map((clip) => ({ ...clip })) } : null;
     dodgeOff = true;
@@ -3167,18 +3169,69 @@ function wardTag(kind: "phys" | "spell") {
   return `(${kind === "phys" ? "Khiên vật lý" : "Khiên phép"} đã vỡ)`;
 }
 
-function soak(mon: FieldMon, kind: "phys" | "spell", amount: number): { mon: FieldMon; amount: number } {
-  if (bareUids.has(mon.uid)) return { mon, amount };
-  if (mon.cage || !mon.ward || amount <= 0) return { mon, amount };
-  if (mon.wardStay) {
-    if (kind !== "spell" || mon.ward !== "spell") return { mon, amount };
-    wardLines.push(wardTag("spell"));
-    return { mon: { ...mon, ward: undefined, wardStay: undefined }, amount: 0 };
+const AEGIS_TAG = "(Khiên đã vỡ)";
+/** Số lượt chung một lá chắn đứng được (chủ game 23/11). */
+const AEGIS_TURNS = 2;
+/** Đang trong một lần ra đòn (`oneBlow`): quái đã vỡ lá chắn trong lần này thì phần sát thương còn lại của cùng lần cũng về 0. */
+let aegisDepth = 0;
+const aegisHit = new Set<string>();
+/** Bật khi sát thương không phải đòn/skill/phép (hết vòng, nợ chia đợt, phản đòn bị động): lá chắn không chặn, không vỡ. */
+let aegisOff = 0;
+
+/** Bọc một lần ra đòn (đòn đánh, skill, phép): mọi đợt sát thương trong lần này vào quái có lá chắn đều bị chặn. */
+function oneBlow<T>(run: () => T): T {
+  if (aegisDepth === 0) aegisHit.clear();
+  aegisDepth += 1;
+  try {
+    return run();
+  } finally {
+    aegisDepth -= 1;
+    if (aegisDepth === 0) aegisHit.clear();
   }
-  const popped = { ...mon, ward: undefined };
-  wardLines.push(wardTag(mon.ward));
-  if (mon.ward !== kind) return { mon: popped, amount };
-  return { mon: popped, amount: 0 };
+}
+
+/** Chạy việc mà sát thương trong đó lá chắn không chặn (độc, bỏng, nợ chia đợt, phản đòn bị động, hết vòng). */
+function aegisPass<T>(run: () => T): T {
+  aegisOff += 1;
+  try {
+    return run();
+  } finally {
+    aegisOff -= 1;
+  }
+}
+
+/** Lá chắn có chặn phần sát thương này không (chỉ đọc, dùng cho số trên thông báo). */
+function aegisWould(mon: FieldMon): boolean {
+  if (aegisOff > 0 || bareUids.has(mon.uid) || mon.cage) return false;
+  return Boolean(mon.aegis) || (aegisDepth > 0 && aegisHit.has(mon.uid));
+}
+
+function soak(mon: FieldMon, _kind: "phys" | "spell" | "tru", amount: number): { mon: FieldMon; amount: number } {
+  if (amount <= 0 || !aegisWould(mon)) return { mon, amount };
+  if (!mon.aegis) return { mon, amount: 0 };
+  wardLines.push(AEGIS_TAG);
+  if (aegisDepth > 0) aegisHit.add(mon.uid);
+  return { mon: { ...mon, aegis: undefined }, amount: 0 };
+}
+
+/** Lá chắn vỡ trong bước before -> after (cùng lượt chung; hết lượt mà mất là hết hạn, không phải vỡ). Cho hiệu ứng. */
+export function shieldBreaks(before: Duel, after: Duel): string[] {
+  if ((before.clock ?? 1) !== (after.clock ?? 1)) return [];
+  const had = new Set(before.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon?.aegis)).map((mon) => mon.uid)));
+  if (had.size === 0) return [];
+  return after.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && had.has(mon.uid) && !mon.aegis)).map((mon) => mon.uid));
+}
+
+/** Hết lượt chung: lá chắn trừ 1 lượt, hết thì mất (không nháy). */
+function aegisTick(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.aegis)) continue;
+    const field = player.field.map((mon) => (mon?.aegis ? { ...mon, aegis: mon.aegis > 1 ? mon.aegis - 1 : undefined } : mon)) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return next;
 }
 
 function damageSpell(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): FieldMon {
@@ -3209,7 +3262,7 @@ function spellLanded(target: FieldMon, amount: number, allies?: Array<FieldMon |
   const total = source?.curse ? Math.floor(peeked / 2) : peeked;
   const base = target.cardId === "chien-binh-rong" ? third(total) : total;
   const landed = hurt(target, Math.max(0, base - liveMdef(target, allies)));
-  return target.ward === "spell" && landed > 0 ? 0 : landed;
+  return aegisWould(target) && landed > 0 ? 0 : landed;
 }
 
 function spellPhrase(targets: Array<FieldMon | null | undefined>, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): string {
@@ -3233,15 +3286,20 @@ function trueDamage(mon: FieldMon, amount: number, allies?: Array<FieldMon | nul
 
 function landTrue(mon: FieldMon, amount: number, allies?: Array<FieldMon | null>, veilBudget?: number): { mon: FieldMon; bite: number; surplus: number } {
   const total = amount + charmDamage;
-  if (mon.cardId !== "chien-binh-rong") return applyIncoming(mon, hurt(mon, total), allies, veilBudget);
+  if (mon.cardId !== "chien-binh-rong") {
+    const soaked = soak(mon, "tru", hurt(mon, total));
+    return applyIncoming(soaked.mon, soaked.amount, allies, veilBudget);
+  }
   const slice = third(total);
   const queued = pushDebt(mon, { p: 0, s: 0, t: slice });
-  return applyIncoming(queued, hurt(queued, slice), allies, veilBudget);
+  const soaked = soak(queued, "tru", hurt(queued, slice));
+  return applyIncoming(soaked.mon, soaked.amount, allies, veilBudget);
 }
 
 function truLanded(target: FieldMon, amount: number, allies?: Array<FieldMon | null>, source?: FieldMon | null): number {
   const total = (source ? outgoing(source, amount) : amount) + charmDamage;
   const slice = target.cardId === "chien-binh-rong" ? third(total) : total;
+  if (slice > 0 && aegisWould(target)) return 0;
   return shownTru(target, hurt(target, slice), allies);
 }
 
@@ -4589,7 +4647,7 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
         : takePhysical(attacker, counterRaw, alliesA);
   if (blockSpell && counterRaw > 0) wardLines.push(`${cardOf(defender).name} gây ${counterRaw} sát thương phép`);
   const rocky = boulder(defender) && !attackerDodged && !defenderDodged && !defender.cage && !shadeHidden(attacker) && !shadeHidden(defender);
-  const struckBy = rocky ? boulderBack(attacker, defender, atk, beam, gazeTrue, alliesA, alliesB, rosterA) : struck;
+  const struckBy = rocky ? aegisPass(() => boulderBack(attacker, defender, atk, beam, gazeTrue, alliesA, alliesB, rosterA)) : struck;
   if (rocky && struckBy.mon.hp !== attacker.hp) wardLines.push(`${cardOf(defender).name} phản đòn`);
   const nextAttacker = spendBless(clearClash({
     ...struckBy.mon,
@@ -5309,7 +5367,7 @@ export function passResponse(state: Duel): Duel {
     const set = { ...state, hold: { ...state.hold, mirror: "set" as const, priority: (1 - state.turn) as Side, passed: [false, false] as [boolean, boolean] } };
     return note(set, state.hold.breeze ? "Gió dịu đi phát động." : "Gương phòng hộ phát động.", "spell");
   }
-  const next = rhinoGuard(state, (from) => withSeed(state.hold?.seed, () => passResponseCore(from)));
+  const next = rhinoGuard(state, (from) => withSeed(state.hold?.seed, () => oneBlow(() => passResponseCore(from))));
   if (next === state || !state.hold) return next;
   const resolved = next.pending !== state.pending || next.step !== state.step || next.winner !== state.winner || next.hold === null;
   if (!resolved) return next;
@@ -6177,7 +6235,7 @@ function actNotice(title: string, actions: string[]) {
   return [title, ...lines.map((line) => `- ${line.replace(/^[-\s]+/u, "").replace(/[.。]+$/u, "")}.`)].join("\n");
 }
 
-function hellLine(pack: HellPack, name: string, broke: "phys" | "spell" | null = null, body?: FieldMon | null, allies?: Array<FieldMon | null>, pool?: number) {
+function hellLine(pack: HellPack, name: string, broke: "aegis" | null = null, body?: FieldMon | null, allies?: Array<FieldMon | null>, pool?: number) {
   const have = pool ?? phantomPool(body, allies);
   const spell = Math.max(0, pack.spell);
   const phys = Math.max(0, pack.phys);
@@ -6190,28 +6248,23 @@ function hellLine(pack: HellPack, name: string, broke: "phys" | "spell" | null =
     pack.spell > 0 ? `${spell - spellTake} sát thương phép` : "",
     pack.tru > 0 ? `${tru} sát thương chuẩn` : "",
   ].filter(Boolean);
-  const zeroed = broke === "phys" && pack.phys === 0 ? "0 sát thương vật lý" : broke === "spell" && pack.spell === 0 ? "0 sát thương phép" : "";
-  const tag = broke ? ` ${wardTag(broke)}` : "";
+  const zeroed = "";
+  const tag = broke ? ` ${AEGIS_TAG}` : "";
   if (other.length > 0) return [`gây ${other.join(", ")} lên ${name}${tag}`];
   if (zeroed) return [`gây ${zeroed} lên ${name}${tag}`];
   return [`gây 0 sát thương lên ${name}${tag}`];
 }
 
-function soakPack(mon: FieldMon, pack: HellPack): { mon: FieldMon; pack: HellPack; broke: "phys" | "spell" | null } {
-  if (mon.cage || !mon.ward) return { mon, pack, broke: null };
-  if (mon.wardStay) {
-    if (mon.ward !== "spell" || pack.spell <= 0) return { mon, pack, broke: null };
-    return { mon: { ...mon, ward: undefined, wardStay: undefined }, pack: { ...pack, spell: 0 }, broke: "spell" };
-  }
-  const matched = mon.ward === "phys" ? pack.phys : pack.spell;
-  const other = mon.ward === "phys" ? pack.spell : pack.phys;
-  if (matched <= 0 && other <= 0) return { mon, pack, broke: null };
-  const popped = { ...mon, ward: undefined };
-  if (matched > 0) return { mon: popped, pack: { ...pack, [mon.ward]: 0 }, broke: mon.ward };
-  return { mon: popped, pack, broke: mon.ward };
+function soakPack(mon: FieldMon, pack: HellPack): { mon: FieldMon; pack: HellPack; broke: "aegis" | null } {
+  const total = hellSum(pack);
+  if (total <= 0 || !aegisWould(mon)) return { mon, pack, broke: null };
+  const zero: HellPack = { phys: 0, spell: 0, tru: 0 };
+  if (!mon.aegis) return { mon, pack: zero, broke: null };
+  if (aegisDepth > 0) aegisHit.add(mon.uid);
+  return { mon: { ...mon, aegis: undefined }, pack: zero, broke: "aegis" };
 }
 
-function landHell(mon: FieldMon, pack: HellPack, allies?: Array<FieldMon | null>): { mon: FieldMon; dealt: number; left: HellPack; blockedSpell: number; taken: HellPack; broke: "phys" | "spell" | null } {
+function landHell(mon: FieldMon, pack: HellPack, allies?: Array<FieldMon | null>): { mon: FieldMon; dealt: number; left: HellPack; blockedSpell: number; taken: HellPack; broke: "aegis" | null } {
   const physGate = swallowOath(mon, "phys", pack.phys);
   const spellGate = swallowOath(physGate.mon, "spell", pack.spell);
   mon = spellGate.mon;
@@ -6664,7 +6717,7 @@ function tideSkill(before: Duel, after: Duel, uid: string, targetUid: string | n
 }
 
 function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Duel {
-  return knightShield(state, (shielded) => resolveMeleeGuarded(shielded, attackerUid, defenderUid));
+  return knightShield(state, (shielded) => oneBlow(() => resolveMeleeGuarded(shielded, attackerUid, defenderUid)));
 }
 
 function resolveMeleeGuarded(state: Duel, attackerUid: string, defenderUid: string): Duel {
@@ -7137,7 +7190,7 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
   const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
   const run = (armed: Duel) =>
     envGuard(armed, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(armed, blockerUid, withSkill));
-  return knightShield(state, (shielded) => rebukeGuard(shielded, attackerUid, (start) => (attackerUid && !withSkill ? lavaStrike(start, attackerUid, blockerUid, run) : run(start))));
+  return knightShield(state, (shielded) => oneBlow(() => rebukeGuard(shielded, attackerUid, (start) => (attackerUid && !withSkill ? lavaStrike(start, attackerUid, blockerUid, run) : run(start)))));
 }
 
 /** Mũi tên thiên sứ (chủ game 22/11): nội tại, gây sát thương lên người chơi đối thủ thì rút 1 lá. */
@@ -7866,7 +7919,7 @@ function castSpring(state: Duel, side: Side, handIndex: number, targetUid: strin
 }
 
 function castSpellCore(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
-  return knightShield(state, (shielded) => lizardGuard(shielded, (next) => castSpellBody(next, handIndex, targetUid, replay, sourceUid)));
+  return knightShield(state, (shielded) => oneBlow(() => lizardGuard(shielded, (next) => castSpellBody(next, handIndex, targetUid, replay, sourceUid))));
 }
 
 function castSpellBody(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
@@ -10105,7 +10158,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
 }
 
 function castSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
-  return knightShield(state, (shielded) => lizardGuard(shielded, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra))));
+  return knightShield(state, (shielded) => oneBlow(() => lizardGuard(shielded, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra)))));
 }
 
 /**
@@ -10168,18 +10221,17 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   if (mon.cardId === "thien-than-be-nho") {
     const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
     if (!ally) return note(state, "Chọn một đồng minh.");
-    const kind: "phys" | "spell" = skillIndex === 1 ? "spell" : "phys";
+    // Z4 (chủ game 27/11): chỉ còn 1 loại khiên thường, 2 lượt chung; đã có thì làm mới 2 lượt.
     const field = you.field.map((unit): FieldMon | null => {
       if (!unit) return unit;
       if (unit.uid === ally.uid) {
-        if (unit.cage || unit.wardStay || (kind === "phys" && unit.oath?.phys) || (kind === "spell" && unit.oath?.spell)) return unit;
-        return { ...unit, ward: kind };
+        if (unit.cage) return unit;
+        return { ...unit, aegis: AEGIS_TURNS };
       }
       if (unit.uid === mon.uid) return { ...unit, dim: true };
       return unit;
     });
-    const label = kind === "phys" ? "khiên vật lý" : "khiên phép";
-    return note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng Thiên thần hộ mệnh, tạo ${label} cho ${cardOf(ally).name}.`, "heal");
+    return note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng Thiên thần hộ mệnh, tạo khiên cho ${cardOf(ally).name}.`, "heal");
   }
   if (mon.cardId === PERFECT) return castPerfect(state, side, mon, skillIndex, targetUid, extra);
   if (mon.cardId === QUEEN && skillIndex === 3) return castLure(state, side, mon, extra, targetUid);
@@ -11556,7 +11608,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start)))));
+  const state = aegisTick(rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start))))));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -11769,7 +11821,7 @@ export function endTurn(state: Duel): Duel {
 function finishRound(state: Duel): Duel {
   const owner = attackRound(state);
   const from: Duel = { ...boxHome(settleBox(state)), turn: owner };
-  const next = rhinoGuard(from, endTurnCore);
+  const next = aegisPass(() => rhinoGuard(from, endTurnCore));
   if (next === from || (next.turn === from.turn && next.winner === from.winner && next.step === from.step)) {
     return next === from ? state : { ...next, turn: state.turn };
   }
