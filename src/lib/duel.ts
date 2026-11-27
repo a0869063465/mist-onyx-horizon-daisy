@@ -2378,7 +2378,29 @@ export function disarmed(mon: FieldMon | null | undefined): boolean {
 
 /** Skill bị động tắt: quái bị giải giới, trừ lúc đòn/skill nó đã phóng trước đó đang nổ (đòn đó giữ đủ bộ). */
 function numb(mon: FieldMon | null | undefined): boolean {
-  return Boolean(mon?.disarm && !mon.disarm.launch);
+  return Boolean(mon && ((mon.disarm && !mon.disarm.launch) || furyMuted.has(mon.uid)));
+}
+
+/**
+ * Máu chiến (Harpie chị thứ, chủ game 27/11): quái mang Máu chiến đánh thường thì quái bị đánh (hoặc quái chặn đòn đó) tắt
+ * hết skill bị động trong lúc đòn đó nổ; skill chủ động vẫn dùng được, không mất buff hay chỉ số.
+ */
+const furyMuted = new Set<string>();
+
+/** Skill bị động của quái này đang tắt (Giải giới, hoặc đang trúng đòn của quái mang Máu chiến). */
+function passiveOff(mon: FieldMon | null | undefined): boolean {
+  return Boolean(mon && (mon.disarm || furyMuted.has(mon.uid)));
+}
+
+function furyRun<T>(state: Duel, attackerUid: string | null | undefined, targetUid: string | null | undefined, run: () => T): T {
+  const attacker = attackerUid ? [...state.players[0].field, ...state.players[1].field].find((mon) => mon?.uid === attackerUid) : null;
+  if (!attacker?.fury || !targetUid || furyMuted.has(targetUid)) return run();
+  furyMuted.add(targetUid);
+  try {
+    return run();
+  } finally {
+    furyMuted.delete(targetUid);
+  }
 }
 
 /** Chiến binh rồng còn Vảy rồng (chia sát thương làm 3 phần); bị giải giới thì nhận đủ ngay. */
@@ -2481,7 +2503,7 @@ function barred(mon: FieldMon) {
 }
 
 function guardBonus(mon: FieldMon) {
-  return mon.cardId === "rong-boc-trung" && mon.stance === "guard" && !disarmed(mon) ? skillFigure(mon.cardId, "guard", 2) : 0;
+  return mon.cardId === "rong-boc-trung" && mon.stance === "guard" && !passiveOff(mon) ? skillFigure(mon.cardId, "guard", 2) : 0;
 }
 
 function auraGuard(allies: Array<FieldMon | null> | undefined, mon: FieldMon) {
@@ -2599,7 +2621,7 @@ function liveMdefRaw(mon: FieldMon, allies?: Array<FieldMon | null>) {
 
 function rawAtk(mon: FieldMon) {
   let atk = mon.atk + (mon.blessAtk ?? 0) + (mon.clash?.atk ?? 0) + (mon.cheer ?? 0);
-  if (mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !disarmed(mon)) atk += skillFigure(mon.cardId, "atk", 4);
+  if (mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !passiveOff(mon)) atk += skillFigure(mon.cardId, "atk", 4);
   if (mon.cardId === "con-thinh-no-cua-hai-vuong") atk += 3 * (mon.stored ?? 0);
   return atk;
 }
@@ -2617,7 +2639,7 @@ export function hexLocked(mon: FieldMon | null | undefined) {
 
 export function visibleStats(mon: FieldMon, allies: Array<FieldMon | null>) {
   const aura = auraGuard(allies, mon);
-  const stanceAtk = mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !disarmed(mon);
+  const stanceAtk = mon.cardId === "rong-boc-trung" && mon.stance === "attack" && !passiveOff(mon);
   return {
     atk: liveAtk(mon) + (mon.lava ?? 0),
     def: liveDef(mon, allies),
@@ -4319,7 +4341,7 @@ function lizardGuard(state: Duel, outer: (state: Duel) => Duel): Duel {
       guardDepth -= 1;
     }
   };
-  const lizards = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && DODGERS.has(mon.cardId) && mon.hp > 0 && !disarmed(mon))));
+  const lizards = state.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && DODGERS.has(mon.cardId) && mon.hp > 0 && !passiveOff(mon))));
   if (lizards.length === 0) return outer(state);
   const seed = Math.floor(Math.random() * 2147483646) + 1;
   const ids = new Set(lizards.map((mon) => mon.uid));
@@ -4438,7 +4460,7 @@ function dodgerName(attacker: FieldMon, defender: FieldMon): string {
 
 function rabbitDodge(self: FieldMon, other: FieldMon, aimed = true): boolean {
   if (riteRunning) return false;
-  if (disarmed(self)) return false;
+  if (passiveOff(self)) return false;
   if (DODGERS.has(self.cardId)) return aimed && lizardRoll(self, liveAtk(other));
   if (self.cardId !== "tho-den-tinh-nghich") return false;
   const rates = grabNums(skillText(self.cardId), /(\d+)\s*%/gi);
@@ -6644,7 +6666,7 @@ function tideSkill(before: Duel, after: Duel, uid: string, targetUid: string | n
 }
 
 function resolveMelee(state: Duel, attackerUid: string, defenderUid: string): Duel {
-  return knightShield(state, (shielded) => resolveMeleeGuarded(shielded, attackerUid, defenderUid));
+  return furyRun(state, attackerUid, defenderUid, () => knightShield(state, (shielded) => resolveMeleeGuarded(shielded, attackerUid, defenderUid)));
 }
 
 function resolveMeleeGuarded(state: Duel, attackerUid: string, defenderUid: string): Duel {
@@ -7119,7 +7141,10 @@ export function resolveFace(state: Duel, blockerUid: string | null, withSkill = 
   const pair = attackerUid && blockerUid ? [attackerUid, blockerUid] : [];
   const run = (armed: Duel) =>
     envGuard(armed, attackerUid ? [attackerUid, ...(blockerUid ? [blockerUid] : [])] : [], pair, () => resolveFaceCore(armed, blockerUid, withSkill));
-  return knightShield(state, (shielded) => rebukeGuard(shielded, attackerUid, (start) => (attackerUid && !withSkill ? lavaStrike(start, attackerUid, blockerUid, run) : run(start))));
+  const plain = state.pending?.kind === "face" && !state.pending.skill;
+  return furyRun(state, plain ? attackerUid : null, blockerUid, () =>
+    knightShield(state, (shielded) => rebukeGuard(shielded, attackerUid, (start) => (attackerUid && !withSkill ? lavaStrike(start, attackerUid, blockerUid, run) : run(start)))),
+  );
 }
 
 /** Mũi tên thiên sứ (chủ game 22/11): nội tại, gây sát thương lên người chơi đối thủ thì rút 1 lá. */

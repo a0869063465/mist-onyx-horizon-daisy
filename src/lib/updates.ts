@@ -1133,6 +1133,7 @@ export const PENDING_NOTES: string[] = [
   "Thêm Chị em Harpie, dung hợp từ 2 Harpie Lady. Ra sân tách 3 lá Harpie chị cả, Harpie chị thứ, Harpie em út: chung máu, chỉ số, trạng thái và 1 lần tấn công. Tiến hoá của Harpie Lady tạm ẩn.",
   "Dung hợp Chị em Harpie xong hiện 3 lá Harpie chị cả, Harpie chị thứ, Harpie em út, mỗi lá một mũi tên đúng hàng. Bấm Triệu hồi thì cả 3 ra sân.",
   "Chị em Harpie: Máu chiến và Hoá đá là phép chậm, chỉ dùng ở lượt mình. Hồi máu lan vào cả 3 lá cộng dồn vào máu chung. Thu 1 lá về thì cả 3 rời sân, về tay thành lá Chị em Harpie.",
+  "Máu chiến của Harpie chị thứ: đồng minh được ban đánh thường thì quái bị đánh (hoặc quái chặn) mất hết skill bị động trong đòn đó, skill chủ động vẫn dùng được.",
   "Thêm quái Đôi mắt trấn giữ (2 sao, 0 mana, công 2, thủ 0, thủ phép 1, máu 4). Giải giới: 1 mana, vô hiệu hoá 1 quái địch tới hết lượt: về dạng ban đầu, chỉ số gốc, mất buff, kỹ năng và keyword; vẫn đánh thường và chặn đòn. Hết lượt mọi thứ trở lại.",
   "Giải giới tắt tất cả kỹ năng bị động của quái bị vô hiệu hoá (né đòn, Vảy rồng, Đập phá, lời chúc, khiên…). Đòn đã tung ra trước đó vẫn trúng, tính bằng chỉ số hiện tại.",
   "Giải giới có hiệu ứng tia sét xanh lục quét qua lá, lá xám đi tới hết vòng, kèm âm thanh mới.",

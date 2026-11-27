@@ -2439,6 +2439,18 @@ test("Chị em Harpie: Giải giới 1 lá thì cả 3 lá bị vô hiệu hoá 
   assert.deepEqual([0, 3, 4].map((slot) => Boolean(at(hit, 0, slot)?.disarm)), [true, true, true], hit.live);
 });
 
+test("Máu chiến (27/11): quái mang Máu chiến đánh thường thì quái bị đánh tắt skill bị động trong đòn đó (Vảy rồng không chia sát thương); không có thì vẫn chia", () => {
+  const run = (fury) => {
+    let s = board({ 0: ["may-chem", { atk: 7, fury }] }, { 0: ["chien-binh-rong", { hp: 20, maxHp: 20, def: 1 }] });
+    s = settle(D.attackMonster(s, uid(s, 0, 0), uid(s, 1, 0)));
+    return at(s, 1, 0)?.hp ?? 0;
+  };
+  const plain = run(undefined);
+  const raged = run(true);
+  assert.ok(raged < plain, `Máu chiến nhận đủ ngay: ${raged} < ${plain}`);
+  assert.equal(raged, 14);
+});
+
 test("Hồi sinh quái thú (26/11): phản ứng đòn đánh quái, quái trong mộ địch lên sân mình, lao ra chặn, 2 lượt chung rồi về mộ", () => {
   let s = board({ 0: ["may-chem", { atk: 1 }] }, { 0: ["khong-lo-mot-mat", { hp: 10, maxHp: 10 }] });
   s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 1 ? [D.REVIVE_CARD] : [], tolls: [], spent: i === 0 ? ["rong-con"] : [] })) };
