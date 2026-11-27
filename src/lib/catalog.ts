@@ -290,11 +290,11 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Tê giác bé con",
     "stars": 1,
     "gems": 0,
-    "skill": "__**Thăng cấp**__. \nTốn 1 mana để tiến hoá\nMỗi lần thăng cấp đổi tên và chỉ số gốc, hồi 2 máu.",
+    "skill": "__**Tiến hoá**__\nKhi tích luỹ đủ 4 sát thương từ ra đòn. Tự động tiêu hao 1 mana, và tiến hoá thành dạng tiếp theo. Đồng thời tự chuyển bản thân ra vị trí hàng trước.",
     "atk": 2,
     "def": 0,
     "mdef": 0,
-    "hp": 3,
+    "hp": 2,
     "art": "te-giac",
     "strong": "Kiểm soát tốt thì sẽ có quái mạnh ở giai đoạn cực sớm.",
     "weak": "Rất dễ chết và hao tài nguyên nếu dùng sai",
@@ -1020,20 +1020,20 @@ export const FORMS: MonsterCard[] = [
     "name": "Tê giác hiếu thắng",
     "stars": 2,
     "gems": 0,
-    "skill": "__**Thăng cấp:\n**__Lên cấp cuối tiêu 2 mana và hồi 2 máu.\nTăng công, phòng ngự và chỉ số hồi phục vượt trội.",
+    "skill": "__**Vào đây**__\nTa nhận 1 máu vĩnh viễn trước mỗi lần nhận sát thương, và mỗi khi hạ gục 1 kẻ địch.\n\n__**Tiến hoá**__\nKhi tích đủ 8 sát thương từ ra đòn, sẽ tự động tiêu hao 1 mana để tiến hoá thành dạng tiếp theo.\nDi chuyển lên hàng phía trước sau khi tiến hoá xong.",
     "atk": 3,
     "def": 1,
     "mdef": 1,
-    "hp": 4,
+    "hp": 3,
     "art": "te-giac-2"
   },
   {
     "id": "te-giac-chien-binh",
-    "name": "Chiến binh tê giác",
+    "name": "Tê giác chiến binh",
     "stars": 3,
     "gems": 0,
-    "skill": "__**Tinh thần chiến binh**__: \nTăng vĩnh viễn 1 máu tối đa trong mỗi giao tranh.",
-    "atk": 5,
+    "skill": "__**Xông trận**__\nRa đòn: hồi 1 máu và tăng 1 công trong 3 lượt.\nTiêu diệt 1 quái hoặc trước khi chịu đòn, tăng vĩnh viễn 1 máu",
+    "atk": 4,
     "def": 2,
     "mdef": 2,
     "hp": 5,
@@ -1306,6 +1306,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 1,
     "effect": "Phép phản ứng 1 mana\nPhát động khi bị 1 quái thú địch tấn công, hồi sinh 1 quái thú đã chết của cả 2 phe, quái thú đó lập tức lao ra chặn ngay đòn tấn công. Tồn tại tối đa 2 lượt.\nHoặc có thể dùng như phép chậm, hồi sinh quái thú và nó có thể tồn tại đến 3 lượt.",
     "picture": "spell:hoi-sinh-quai-thu"
+  },
+  {
+    "id": "kinh-van-hoa",
+    "name": "Kính vạn hoa",
+    "gems": 1,
+    "effect": "Phép siêu tốc 1 mana\nTạo bản sao của 1 quái thú đồng minh trên sân với 1 máu. Hoặc rút 1 lá Harpie Lady từ bộ bài.",
+    "picture": "spell:kinh-van-hoa"
   }
 ];
 
@@ -1350,7 +1357,7 @@ export function isWarrior(name: string): boolean {
   return /kiếm sĩ|chiến binh|chiến sĩ/i.test(name);
 }
 
-const ART_REV = "51";
+const ART_REV = "52";
 
 export function librarySrc(picture: string): string {
   if (picture.startsWith("spell:")) return `/art/spells/${picture.slice(6)}.jpg?v=${ART_REV}`;

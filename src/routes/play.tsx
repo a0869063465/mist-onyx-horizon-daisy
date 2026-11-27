@@ -128,6 +128,8 @@ import {
   answerPlume,
   answerPrey,
   evolveBird,
+  answerRhino,
+  rhinoProgress,
   answerWile,
   WILE_CARDS,
   isWileCard,
@@ -135,6 +137,11 @@ import {
   wileBirds,
   charmCode,
   REVIVE_CARD,
+  PRISM_CARD,
+  PRISM_DRAW,
+  prismPicks,
+  prismBase,
+  answerTrim,
   reviveReady,
   reviveChoices,
   reviveCode,
@@ -1241,6 +1248,7 @@ const ANSWER_SPELLS = new Set([
   WILE_CARDS.armor,
   WILE_CARDS.lash,
   REVIVE_CARD,
+  PRISM_CARD,
 ]);
 
 function hornPending(duel: Duel): boolean {
@@ -1274,6 +1282,8 @@ function spellCanAnswer(id: string, duel: Duel): boolean {
   // Lá phép Harpie Lady và Hồi sinh quái thú (chủ game 26/11): chờ trong chuỗi như Bẫy thú.
   if (id === WILE_CARDS.armor || id === WILE_CARDS.lash) return duel.hold?.priority !== undefined && wileReady(duel, duel.hold.priority, id);
   if (id === REVIVE_CARD) return duel.hold?.priority !== undefined && reviveReady(duel, duel.hold.priority);
+  // Kính vạn hoa (chủ game 26/11): siêu tốc, dùng được trong chuỗi khi còn quái sao chép được hoặc Harpie Lady trong bộ.
+  if (id === PRISM_CARD) return duel.hold?.priority !== undefined && prismPicks(duel, duel.hold.priority).length > 0;
   if (slowWaiting(duel)) return id === "hap-thu-ma-phap" || (id === "hop-ma-thuat" && duel.hold?.priority !== undefined && boxAllies(duel, duel.hold.priority).length > 0);
   // Quả trứng thiên sứ (chủ game 21/11): an enemy monster's attack or damaging skill aimed at a monster of yours.
   if (id === "qua-trung-thien-su") return duel.hold?.priority !== undefined && eggAim(duel, duel.hold.priority) !== null;
@@ -1360,6 +1370,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (id === DUO_CARD) return duoReady(duel, viewer);
   if (isWileCard(id)) return wileReady(duel, viewer, id);
   if (id === REVIVE_CARD) return reviveReady(duel, viewer);
+  if (id === PRISM_CARD) return prismPicks(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
   const open = canTargetFoe(duel);
   const foes = foeAlive(duel, viewer);
@@ -1395,7 +1406,7 @@ function spellDragLive(id: string, duel: Duel, viewer: Side, index = -1) {
   const tolled = index >= 0 && Boolean(you.tolls?.[index]);
   if (!card || !tollOk(card.gems, tolled, you.orb, you.flask)) return false;
   if (isSpring(id)) return springLive(duel, viewer);
-  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD && id !== REVIVE_CARD) || duel.step === "respond")) {
+  if (ANSWER_SPELLS.has(id) && ((id !== "phan-nguyen" && id !== TRAP_CARD && id !== REVIVE_CARD && id !== PRISM_CARD) || duel.step === "respond")) {
     if (duel.step !== "respond" || duel.hold?.priority !== viewer) return false;
     if (!spellCanAnswer(id, duel) || !answerPayoff(id, duel, viewer)) return false;
     if (id === "hoan-doi") return canCastSwap(duel, viewer);
@@ -2041,6 +2052,7 @@ function PlayPage() {
   const [rebirthAsk, setRebirthAsk] = useState<string | null>(null);
   /** Hồi sinh quái thú đang chọn quái trong mộ: vị trí lá trên tay. */
   const [reviveAsk, setReviveAsk] = useState<{ index: number } | null>(null);
+  const [prismAsk, setPrismAsk] = useState<{ index: number } | null>(null);
   const [toast, setToast] = useState("");
   const [help, setHelp] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -2815,7 +2827,7 @@ function PlayPage() {
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     // Harpie Lady (Giảo hoạt, tiến hoá): máy trả lời câu của nó; câu của người chơi thì máy chờ.
     const birdSide = duel.birdAsk ? (duel.birdAsk.side ?? (duel.players[1].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? 1 : 0)) : null;
-    const askSide = duel.wileAsk?.[0]?.side ?? birdSide;
+    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? birdSide ?? duel.rhinoAsk?.side ?? null;
     if (askSide === 0) return;
     const aiAsk = askSide === 1;
     if (!aiResponds && !aiMain && !aiParley && !aiAsk) return;
@@ -3488,6 +3500,28 @@ function PlayPage() {
       const { uid } = flare;
       setLift(uid);
       window.setTimeout(() => setLift((now) => (now === uid ? null : now)), FLARE_MS);
+    }
+    // Tiến hoá của Tê giác (chủ game 27/11): đủ điều kiện thì quái loé sáng như skill bị động kích hoạt, và đối thủ thấy
+    // bảng tóm tắt skill 8 giây (bảng nhỏ đầu màn như K4); người tiến hoá thấy màn xác nhận ngay sau đó.
+    if (!quiet && !tutorial && prev.mid === duel.mid && duel.rhinoAsk && duel.rhinoAsk.uid !== prev.rhinoAsk?.uid) {
+      const ask = duel.rhinoAsk;
+      const seat = seatOf(duel, ask.uid);
+      const mon = fieldMon(duel, ask.uid);
+      if (seat && mon && !seaVeiled(duel, viewerNow, mon.uid)) {
+        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+        emitFx({ t: "flare", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        setLift(ask.uid);
+        window.setTimeout(() => setLift((now) => (now === ask.uid ? null : now)), FLARE_MS);
+        if (seat.side !== viewerNow && duel.mode !== "test" && duel.mode !== "hotseat") {
+          const form = monsterCard(ask.level >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang");
+          setFoeNote({
+            key: `rhino:${ask.uid}:${ask.level}`,
+            head: { name: "Tiến hoá", tone: "#b58cff", icon: "round-star", kind: "passive", art: artSrc("te-giac-be-con", mon.level ?? 1), who: fieldName(mon) },
+            lines: [`Tiến hoá thành ${form?.name ?? ""}, tiêu hao 1 mana.`],
+          });
+          playLine("note", 0.12);
+        }
+      }
     }
     // Quái ẩn vừa lật mà còn trên sân: lá của mình lật mặt, bên đối thủ sương mù tan đi (chủ game 21/11).
     if (!quiet && !tutorial && prev.mid === duel.mid) {
@@ -4624,6 +4658,14 @@ function PlayPage() {
         return;
       }
       setReviveAsk({ index });
+      return;
+    }
+    if (id === PRISM_CARD) {
+      if (!prismPicks(duel, viewer).length) {
+        holdNotice("Không có quái đồng minh sao chép được, bộ bài cũng không còn Harpie Lady.");
+        return;
+      }
+      setPrismAsk({ index });
       return;
     }
     if (!isWileCard(id)) return;
@@ -5796,7 +5838,7 @@ function PlayPage() {
         startDuo(payload.index);
         return;
       }
-      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD) {
+      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD || payload.spellId === PRISM_CARD) {
         if (hit?.closest(".hand")) return;
         startWileSpell(payload.index);
         return;
@@ -7581,6 +7623,21 @@ function PlayPage() {
   const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
   const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const wileAsk = duel.wileAsk?.[0] ?? null;
+  const rhinoAsk = duel.rhinoAsk ?? null;
+  const rhinoMon = rhinoAsk ? duel.players[rhinoAsk.side].field.find((unit) => unit?.uid === rhinoAsk.uid) ?? null : null;
+  const rhinoCard = rhinoAsk ? monsterCard(rhinoAsk.level >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : null;
+  const trimAsk = duel.trimAsk?.[0] ?? null;
+  // Bỏ lá dư (chủ game 27/11): đủ mọi lá trên tay, quái dự bị trước rồi phép, như bảng Sinh mệnh mới.
+  const trimHand = trimAsk ? duel.players[trimAsk.side] : null;
+  const trimCards: PickCard[] = trimHand
+    ? [
+        ...trimHand.reserve.map((held, index): PickCard => {
+          const card = monsterCard(held.id);
+          return { key: `r:${index}`, face: card ? <CardFace monster={card} hand level={held.saved?.level ?? 1} live={reserveLive(held, card)} fake={held.fake} gems={held.toll ? `${card.gems}+1` : undefined} /> : null };
+        }),
+        ...trimHand.hand.map((id, index): PickCard => ({ key: `s:${index}`, face: <CardFace spellId={id} hand gems={trimHand.tolls?.[index] ? `${spellCard(id)?.gems ?? 0}+1` : undefined} /> })),
+      ]
+    : [];
   const openerCards: OpenerCard[] = [
     ...you.reserve.filter((_, index) => index !== autoR).map((held, index): OpenerCard => {
       const card = monsterCard(held.id);
@@ -7721,6 +7778,47 @@ function PlayPage() {
           }}
         />
       ) : null}
+      {prismAsk && duel.players[viewer].hand[prismAsk.index] === PRISM_CARD && prismPicks(duel, viewer).length ? (
+        <PickPanel
+          key={`prism:${prismAsk.index}`}
+          title="Kính vạn hoa"
+          sub="Chọn quái để sao chép, hoặc rút Harpie Lady"
+          cards={prismPicks(duel, viewer).map((pick): PickCard => {
+            const mon = pick === PRISM_DRAW ? null : duel.players[viewer].field.find((unit) => unit?.uid === pick) ?? null;
+            const base = mon ? prismBase(mon) : "my-dieu-nhan";
+            const card = base ? monsterCard(base) : null;
+            return {
+              key: pick,
+              face: (
+                <>
+                  {card ? <CardFace monster={card} hand live={pick === PRISM_DRAW || !base ? undefined : reserveLive({ id: base, hp: 1, fake: mon?.fake }, card)} /> : null}
+                  <span className="pk-tag">{tr(pick === PRISM_DRAW ? "Rút từ bộ bài" : "Bản sao 1 máu")}</span>
+                </>
+              ),
+            };
+          })}
+          onCancel={() => setPrismAsk(null)}
+          onTimeout={() => setPrismAsk(null)}
+          onConfirm={(key) => {
+            const index = prismAsk.index;
+            setPrismAsk(null);
+            apply(castSpell(duel, index, key));
+          }}
+        />
+      ) : null}
+      {trimAsk && (trimAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`trim:${trimAsk.side}:${duel.clock ?? 1}`}
+          mine={trimAsk.side === viewer}
+          title="Tay quá 7 lá"
+          sub={`Chọn ${trimAsk.n} lá để bỏ`}
+          need={trimAsk.n}
+          cards={trimCards}
+          onConfirm={(pick) => apply(answerTrim(duel, [pick]))}
+          onPicks={(picks) => apply(answerTrim(duel, picks))}
+          onTimeout={() => apply(answerTrim(duel, null))}
+        />
+      ) : null}
       {wileAsk && (wileAsk.side === viewer || duel.mode === "net") ? (
         <PickPanel
           key={`wile:${wileAsk.uid}:${duel.clock ?? 1}`}
@@ -7730,6 +7828,20 @@ function PlayPage() {
           cards={wileAsk.picks.map((pick): PickCard => ({ key: pick, face: <CardFace spellId={WILE_CARDS[pick as keyof typeof WILE_CARDS]} hand /> }))}
           onConfirm={(pick) => apply(answerWile(duel, pick))}
           onTimeout={() => apply(answerWile(duel, null))}
+        />
+      ) : null}
+      {rhinoAsk && rhinoCard && (rhinoAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`rhino:${rhinoAsk.uid}:${rhinoAsk.level}`}
+          mine={rhinoAsk.side === viewer}
+          foeSees
+          preset="form"
+          title="Tiến hoá"
+          sub={`${rhinoCard.name} · ${rhinoMon?.row === "back" && rhinoAsk.slot >= 3 ? "Đứng hàng sau" : "Lên hàng trước"}`}
+          foeSub={`${rhinoCard.name} tiến hoá…`}
+          cards={[{ key: "form", face: <CardFace monster={rhinoCard} hand /> }]}
+          onConfirm={() => apply(answerRhino(duel))}
+          onTimeout={() => apply(answerRhino(duel))}
         />
       ) : null}
       {rebirthAsk && duel.step === "main" && duel.turn === viewer ? (
@@ -9229,7 +9341,7 @@ function PlayPage() {
                               startDuo(index);
                               return;
                             }
-                            if (isWileCard(id) || id === REVIVE_CARD) {
+                            if (isWileCard(id) || id === REVIVE_CARD || id === PRISM_CARD) {
                               startWileSpell(index);
                               return;
                             }
@@ -9774,7 +9886,7 @@ function PlayPage() {
                             startDuo(index);
                             return;
                           }
-                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD) {
+                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD || shownSpell.id === PRISM_CARD) {
                             setInspect(null);
                             startWileSpell(index);
                             return;
@@ -10646,6 +10758,8 @@ function fieldCount(mon: FieldMon, allies: Array<FieldMon | null>): number | str
         ? allies.reduce((sum, unit) => sum + (unit && unit.cardId === (mon.cardId === "kazura" ? "kizuran" : "kazura") && unit.hp > 0 ? (unit.stored ?? 0) : 0), 0) || ""
       : clockForm(mon.cardId) && !mon.lurk
         ? mon.clockLeft ?? 2
+      : mon.cardId === "te-giac-be-con"
+        ? rhinoProgress(mon) ?? ""
       : mon.cardId === "ken-ngai"
         ? mon.level ?? 0
         : mon.cardId === "con-thinh-no-cua-hai-vuong"
@@ -10664,6 +10778,7 @@ const COUNT_ICON: Record<string, string> = {
   "kazura": "hunting-bolas",
   "kizuran": "heart-shield",
   "ken-ngai": "butterfly",
+  "te-giac-be-con": "round-star",
   "con-thinh-no-cua-hai-vuong": "guardian-shield",
   "hiep-si-ho-ve": "growth",
   "chien-binh-rong": "scale-mail",

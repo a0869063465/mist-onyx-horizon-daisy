@@ -22,6 +22,11 @@ export function PickPanel({
   onConfirm,
   onTimeout,
   onCancel,
+  need = 1,
+  onPicks,
+  preset,
+  foeSees = false,
+  foeSub,
 }: {
   cards: PickCard[];
   mine?: boolean;
@@ -32,12 +37,23 @@ export function PickPanel({
   onTimeout: () => void;
   /** Có thì có nút Huỷ (Hồi sinh được huỷ; Giảo hoạt không). */
   onCancel?: () => void;
+  /** Số lá phải chọn (bỏ lá dư khi tay quá 7 lá, chủ game 27/11); từ 2 trở lên thì OK gọi `onPicks`. */
+  need?: number;
+  onPicks?: (keys: string[]) => void;
+  /** Lá đã chọn sẵn (Tiến hoá của Tê giác: chỉ 1 lá, chỉ cần bấm xác nhận). */
+  preset?: string;
+  /** Bảng của đối thủ vẫn thấy mặt lá (Tiến hoá: đối thủ xem được dạng mới, chỉ không có nút). */
+  foeSees?: boolean;
+  foeSub?: string;
 }) {
-  const [picked, setPicked] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<string[]>(preset ? [preset] : []);
+  const picked = chosen.length >= need ? chosen[chosen.length - 1] ?? null : null;
   const [left, setLeft] = useState(LIMIT);
   const done = useRef(false);
-  const pickedRef = useRef(picked);
-  pickedRef.current = picked;
+  const pickedRef = useRef(chosen);
+  pickedRef.current = chosen;
+  const picksRef = useRef(onPicks);
+  picksRef.current = onPicks;
   const timeoutRef = useRef(onTimeout);
   timeoutRef.current = onTimeout;
   const confirmRef = useRef(onConfirm);
@@ -60,14 +76,18 @@ export function PickPanel({
 
   const choose = (key: string) => {
     if (!mine || done.current) return;
-    const on = pickedRef.current === key;
+    const now = pickedRef.current;
+    const on = now.includes(key);
+    if (!on && need > 1 && now.length >= need) return;
     playIntro(on ? "unmark" : "mark");
-    setPicked(on ? null : key);
+    setChosen(on ? now.filter((one) => one !== key) : need > 1 ? [...now, key] : [key]);
   };
   const ok = () => {
-    if (!mine || done.current || !pickedRef.current) return;
+    const now = pickedRef.current;
+    if (!mine || done.current || now.length < need) return;
     done.current = true;
-    confirmRef.current(pickedRef.current);
+    if (need > 1 && picksRef.current) picksRef.current(now);
+    else confirmRef.current(now[0]!);
   };
 
   return (
@@ -75,15 +95,15 @@ export function PickPanel({
       <div className="op-dim" />
       <div className="op-head">
         <h2 className="op-title">{tr(title)}</h2>
-        <p className="op-sub">{tr(mine ? sub ?? "" : "Đối thủ đang chọn…")}</p>
+        <p className="op-sub">{tr(mine ? sub ?? "" : foeSub ?? "Đối thủ đang chọn…")}</p>
       </div>
       <div className="pk-row">
         {cards.map((card) => {
-          const marked = mine && picked === card.key;
+          const marked = mine && chosen.includes(card.key);
           return (
             <div key={card.key} className={`pk-slot${marked ? " is-marked" : ""}`}>
               <button type="button" className="pk-card" disabled={!mine} onClick={() => choose(card.key)}>
-                {mine ? <span className="pk-face">{card.face}</span> : <img className="pk-back" src="/ui/card-back-foe.webp" alt="" draggable={false} />}
+                {mine || foeSees ? <span className="pk-face">{card.face}</span> : <img className="pk-back" src="/ui/card-back-foe.webp" alt="" draggable={false} />}
               </button>
             </div>
           );

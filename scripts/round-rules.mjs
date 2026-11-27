@@ -2414,6 +2414,45 @@ test("Hiệp sĩ hộ vệ: Điều động siêu tốc 1 mana, con bị nhắm 
   assert.equal(D.canDispatch(s, knight), false);
 });
 
+test("Tay tối đa 7 lá (27/11): hết vòng tay dư thì hỏi bỏ lá, cả hai bên lần lượt; bỏ đúng lá chọn, lá biến mất; máy tự bỏ; Test không áp", () => {
+  let s = board({}, {});
+  const fill = (p, n) => ({ ...p, reserve: Array.from({ length: n }, () => ({ id: "may-chem", hp: 2, maxHp: 2 })), hand: ["hap-thu-ma-phap", "vong-xoay-bao-ho"], tolls: [false, false] });
+  s = { ...s, handCap: true, players: [fill(s.players[0], 7), fill(s.players[1], 6)] };
+  const closed = closeRound(s);
+  assert.deepEqual(closed.trimAsk, [{ side: 0, n: 2 }, { side: 1, n: 1 }], "hỏi cả hai bên: " + JSON.stringify(closed.trimAsk));
+  const one = D.answerTrim(closed, ["r:0", "s:1"]);
+  assert.equal(D.handCount(one.players[0]), 7, "còn 7 lá");
+  assert.deepEqual(one.players[0].hand, ["hap-thu-ma-phap"], "bỏ đúng phép chọn");
+  assert.equal(one.players[0].spent?.includes("vong-xoay-bao-ho") ?? false, false, "không vào mộ");
+  assert.equal(one.discard.drops.length, 2, "hiệu ứng bỏ 2 lá");
+  assert.equal(one.trimAsk[0].side, 1, "tới bên kia");
+  const two = D.answerTrim(one, null);
+  assert.equal(D.handCount(two.players[1]), 7);
+  assert.equal(two.trimAsk, null);
+  const ai = D.aiTrimPick({ ...one, players: [one.players[0], { ...one.players[1], reserve: [...one.players[1].reserve, { id: "rong-ac-ma", hp: 9, maxHp: 9 }] }] }, 1);
+  assert.equal(ai.length, 2, "máy chọn đủ lá dư: " + ai.join(","));
+  const plain = closeRound({ ...s, handCap: false });
+  assert.ok(!plain.trimAsk, "Test không áp");
+});
+
+test("Kính vạn hoa (26/11): siêu tốc 1 mana; bản sao lá gốc 1 máu tối đa lên tay, triệu hồi như lá thường; hoặc rút Harpie Lady; dạng ngoài bộ không sao chép", () => {
+  let s = board({ 0: ["rong-con", { hp: 1 }] }, { 0: ["may-chem", {}] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? ["kinh-van-hoa", "kinh-van-hoa"] : [], tolls: [false, false], monsterDeck: i === 0 ? [{ id: "kizuran", hp: 3, maxHp: 3 }, { id: "my-dieu-nhan", hp: 3, maxHp: 3 }] : p.monsterDeck })) };
+  const before = s.players[0].reserve.length;
+  const copied = D.castSpell(s, 0, uid(s, 0, 0));
+  assert.equal(copied.players[0].reserve.length, before + 1, "bản sao lên tay: " + copied.live);
+  const held = copied.players[0].reserve.at(-1);
+  assert.deepEqual([held.id, held.hp, held.maxHp], ["rong-con", 1, 1]);
+  assert.equal(copied.players[0].orb, 2, "tốn 1 mana");
+  assert.ok(!copied.hold, "siêu tốc: không mở chuỗi");
+  assert.equal(copied.turn, 1, "dùng ở lượt chính thì nhường quyền");
+  const drew = D.castSpell({ ...copied, turn: 0 }, 0, D.PRISM_DRAW);
+  assert.equal(drew.players[0].reserve.at(-1).id, "my-dieu-nhan", "rút Harpie Lady: " + drew.live);
+  assert.equal(drew.players[0].monsterDeck.length, 1);
+  const form = board({ 0: ["khong-lo-mac-giap", {}] }, {});
+  assert.equal(D.prismBase(at(form, 0, 0)), null, "dạng ngoài bộ không sao chép");
+});
+
 for (const [name, fn] of tests) {
   try {
     fn();

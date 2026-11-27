@@ -1128,6 +1128,9 @@ export const PENDING_NOTES: string[] = [
   "Thêm lá phép Hồi sinh quái thú: 1 mana, phản ứng khi quái địch đánh thường, hồi sinh 1 quái trong mộ của cả 2 phe lao ra chặn đòn, ở lại 2 lượt. Dùng như phép chậm thì ở lại 3 lượt.",
   "Harpie Lady có tranh mới. Các lá phép Giáp và Vuốt, Roi điện, Mê hoặc, Thổi bay của cô cũng có tranh riêng.",
   "Bảng mô tả ngắn của lá phép trên tay ghi tóm tắt từng dòng như bảng xác nhận dùng phép, và ẩn đi khi bảng xác nhận mở ra.",
+  "Tay tối đa 7 lá (quái và phép gộp chung). Hết vòng mà tay dư thì chọn lá bỏ trong 20 giây, lá bỏ biến mất. Tay đủ 7 vẫn rút bài được.",
+  "Thêm lá phép Kính vạn hoa: siêu tốc 1 mana, thêm bản sao 1 quái đồng minh trên sân (1 máu tối đa) lên tay, hoặc rút 1 Harpie Lady từ bộ bài.",
+  "Tê giác bé con tiến hoá tự động khi gây đủ 4 sát thương từ ra đòn và đủ 1 mana, không còn nút Thăng cấp. Tê giác hiếu thắng có Vào đây, tiến hoá khi đủ 8 sát thương. Tê giác chiến binh có Xông trận.",
   "Hiệp sĩ hộ vệ đổi kỹ năng: 3 sao, 1 mana, công 4, máu 4. Lời thề, Khiên và Điều động thay Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành.",
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
 ];

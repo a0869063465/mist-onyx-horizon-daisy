@@ -70,7 +70,7 @@ const PAIRS: Array<[string, string]> = [
   ["Ngài Nữ hoàng", "Queen Moth"],
   ["Ngài tối thượng", "Supreme Moth"],
   ["Tê giác hiếu thắng", "Eager Rhino"],
-  ["Chiến binh tê giác", "Rhino Warrior"],
+  ["Tê giác chiến binh", "Rhino Warrior"],
   ["Sấm sét tận thế", "Doomsday Thunder"],
   ["Gương phòng hộ", "Guard Mirror"],
   ["Lá chắn phản đòn", "Reflect Shield"],

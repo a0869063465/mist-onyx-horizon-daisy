@@ -1,6 +1,7 @@
 import {
   DEFAULT_DECK,
   fakeMonsterCard,
+  FORMS,
   FAKE_SPELLS,
   isStill,
   monsterCard,
@@ -148,6 +149,14 @@ export type FieldMon = {
   revive?: number;
   /** Càng xinh đẹp của Harpie Lady (chủ game 26/11): mỗi phần tử là 1 lần (+1 công, +1 máu tối đa) với số lượt chung còn lại. */
   beauty?: number[];
+  /** Tê giác (chủ game 27/11): sát thương đã gây ra từ ra đòn, tính cho Tiến hoá (đủ thì tự tiến hoá, đếm lại từ 0). */
+  rush?: number;
+  /** Tê giác bé con: số quái bị hạ trong cú đánh làm đủ sát thương tiến hoá, cộng cho dạng mới (chủ game 27/11). */
+  rushKill?: number;
+  /** Tê giác hiếu thắng / chiến binh: máu tối đa đã tăng vĩnh viễn (Vào đây, Xông trận), giữ qua tiến hoá. */
+  grit?: number;
+  /** Xông trận của Tê giác chiến binh: mỗi phần tử là 1 lần +1 công, số lượt chung còn lại (cộng dồn). */
+  rally?: number[];
   /** Hàng sau (ô 3–5). Không có là hàng trước. Luôn theo ô đang đứng (`withRows`). */
   row?: "back";
   /** Song sát (chủ game 25/11): phần thủ (p) và thủ phép (s) đã chặn sát thương trong giao tranh Song sát, mất tới khi
@@ -422,8 +431,15 @@ export type Duel = {
     keep?: Record<string, { dim: boolean; blessAtk: number; blessDmg: number; nextDef: number }>;
   } | null;
   birdAsk?: { uid: string; side?: Side } | null;
+  /** Tiến hoá tự động của Tê giác (chủ game 27/11): đủ sát thương + đủ mana thì chủ quái xác nhận dạng mới và ô đứng
+   *  (chỉ 1 nút: hàng trước, hàng trước đầy thì giữ hàng sau). `level` = cấp mới, `slot` = ô sẽ đứng. */
+  rhinoAsk?: { uid: string; side: Side; level: number; slot: Slot } | null;
   /** Giảo hoạt của Harpie Lady: mỗi câu là 1 lần chọn 1 kỹ năng (2 kỹ năng ngẫu nhiên chưa nhận), hỏi lần lượt. */
   wileAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
+  /** Tay tối đa 7 lá (chủ game 27/11): chỉ trận Vs Máy / online (không Test, Hướng dẫn, Thực chiến). */
+  handCap?: boolean;
+  /** Hết vòng mà tay quá 7 lá: mỗi câu là 1 bên phải chọn `n` lá để bỏ, hỏi lần lượt. */
+  trimAsk?: Array<{ side: Side; n: number }> | null;
   /** Một việc lẽ ra nhường quyền nhưng còn câu hỏi Giảo hoạt / tiến hoá chưa trả lời: trả lời xong thì nhường. */
   owedYield?: boolean;
   /** Đồng hồ khó đoán vừa ra sân: chủ chọn hung bạo hoặc mỏng manh; `back` = bên giữ quyền trước khi hỏi. */
@@ -497,7 +513,8 @@ function pileFromField(mon: FieldMon): PileMon {
   if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
   const { uid: _uid, lurk: _lurk, ...kept } = mon;
   const sprung = kept.spring ? dropSpring(kept) : kept;
-  const unbeautied = sprung.beauty?.length ? { ...dropBeauty(sprung, sprung.beauty.length), beauty: undefined } : sprung;
+  const unbeautied0 = sprung.beauty?.length ? { ...dropBeauty(sprung, sprung.beauty.length), beauty: undefined } : sprung;
+  const unbeautied = unbeautied0.rally?.length ? { ...dropRally(unbeautied0, unbeautied0.rally.length), rally: undefined } : unbeautied0;
   const saved = unbeautied.revive ? { ...unbeautied, revive: undefined } : unbeautied;
   const cap = saved.maxHp || saved.hp;
   return { id: saved.cardId, maxHp: cap, hp: Math.max(0, Math.min(cap, saved.hp)), saved, ...(saved.fake ? { fake: true } : {}) };
@@ -664,6 +681,7 @@ export function createDuel(
     mid: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     started: Date.now(),
     opener: mode === "ai" || mode === "net" ? { done: [false, false] } : null,
+    handCap: mode === "ai" || mode === "net",
     step: "main",
     pending: null,
     hold: null,
@@ -813,7 +831,6 @@ function freshId(events: MatchEvent[]): string {
 
 const LOOK_KINDS = new Set<TraceEvent["kind"]>(["draw", "summon", "attack-monster", "attack-face", "skill", "spell", "block", "pass", "end-turn", "fuse", "cover", "wall"]);
 const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | "declare" }>> = {
-  "te-giac-be-con": [{ index: 0, cast: "self" }],
   "hiep-si-cua-hau": [{ index: 0, cast: "aim" }],
   "mat-do-tan-pha": [{ index: 0, cast: "aim" }],
   "hoa-an-thit-nguoi": [{ index: 0, cast: "aim" }],
@@ -1111,7 +1128,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = settleWileCards(settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event)))))));
+  const after = settleRhino(settleWileCards(settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))))));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -1507,13 +1524,14 @@ function rhinoForm(level: number) {
   const card = monsterCard(RHINO_IDS[Math.min(3, Math.max(1, level)) - 1]);
   const baby = skillText("te-giac-be-con");
   const section = level >= 3 ? (baby.split(/lv\s*3/i)[1] ?? "") : level === 2 ? (baby.split(/lv\s*2/i)[1] ?? "").split(/lv\s*3/i)[0] : "";
-  const text = section || plainCopy(card?.skill || "");
+  // Chỉ số lấy từ lá của dạng đó; chữ kỹ năng (vd "tăng 1 công" của Xông trận) không phải chỉ số gốc.
+  const text = section;
   return {
     name: card?.name ?? "Tê giác",
-    atk: grabNums(text, NUM_ATK)[0] ?? card?.atk ?? 0,
-    def: grabNums(text, NUM_DEF)[0] ?? card?.def ?? 0,
-    mdef: grabNums(text, NUM_MDEF)[0] ?? card?.mdef ?? 0,
-    hp: grabNums(text, NUM_HP)[0] ?? card?.hp ?? 1,
+    atk: (text ? grabNums(text, NUM_ATK)[0] : undefined) ?? card?.atk ?? 0,
+    def: (text ? grabNums(text, NUM_DEF)[0] : undefined) ?? card?.def ?? 0,
+    mdef: (text ? grabNums(text, NUM_MDEF)[0] : undefined) ?? card?.mdef ?? 0,
+    hp: (text ? grabNums(text, NUM_HP)[0] : undefined) ?? card?.hp ?? 1,
   };
 }
 
@@ -1523,16 +1541,245 @@ export function fieldName(mon: { cardId: string; level?: number }): string {
   return monsterCard(mon.cardId)?.name ?? "";
 }
 
-function clashGrow(mon: FieldMon): FieldMon {
-  if (mon.cardId !== "te-giac-be-con" || (mon.level ?? 1) < 3 || mon.hp <= 0) return mon;
-  const maxHp = (mon.maxHp || mon.hp) + 1;
-  return { ...mon, maxHp, hp: mon.hp + 1, raised: markRaised(mon, { hp: 1 }) };
+/** Cấp Tê giác của quái (1 bé con, 2 hiếu thắng, 3 chiến binh); 0 nếu không phải Tê giác. */
+function rhinoLevel(mon: { cardId: string; level?: number } | null | undefined): number {
+  if (!mon) return 0;
+  if (mon.cardId === "te-giac-be-con") return Math.min(3, Math.max(1, mon.level ?? 1));
+  if (mon.cardId === "te-giac-hieu-thang") return 2;
+  if (mon.cardId === "te-giac-chien-binh") return 3;
+  return 0;
+}
+
+/** Chữ lá của dạng Tê giác ở cấp `level`. */
+function rhinoText(level: number): string {
+  return skillText(RHINO_IDS[Math.min(3, Math.max(1, level)) - 1]);
+}
+
+/** Tiến hoá: sát thương cần tích (bé con 4, hiếu thắng 8 theo chữ lá). */
+function rhinoNeed(level: number): number {
+  return grabNums(rhinoText(level), /đủ\s*(\d+)\s*sát thương/gi)[0] ?? (level >= 2 ? 8 : 4);
 }
 
 function rhinoRankCost(level: number) {
-  const costs = grabNums(skillText("te-giac-be-con"), /tiêu(?:\s*hao)?\s*(\d+)\s*mana/gi);
-  if (level >= 2) return costs[1] ?? 2;
-  return costs[0] ?? 1;
+  return grabNums(rhinoText(level), /tiêu(?:\s*hao)?\s*(\d+)\s*mana/gi)[0] ?? 1;
+}
+
+/** Tiến độ tiến hoá của Tê giác để hiện trên quái ("2/4"); null khi đã là dạng cuối hoặc không phải Tê giác. */
+export function rhinoProgress(mon: { cardId: string; level?: number; rush?: number }): string | null {
+  const level = rhinoLevel(mon);
+  if (level === 0 || level >= 3) return null;
+  return `${Math.min(rhinoNeed(level), mon.rush ?? 0)}/${rhinoNeed(level)}`;
+}
+
+/** Tê giác hiếu thắng / chiến binh: +n máu tối đa vĩnh viễn, máu hiện tại tăng bằng (Vào đây, Xông trận). */
+function rhinoGrit(mon: FieldMon, n: number): FieldMon {
+  if (n <= 0 || mon.hp <= 0) return mon;
+  return { ...mon, maxHp: (mon.maxHp || mon.hp) + n, hp: mon.hp + n, grit: (mon.grit ?? 0) + n, raised: markRaised(mon, { hp: n }) };
+}
+
+/** Kẻ ra đòn của việc đang chờ (đánh thường hoặc kỹ năng). */
+function blowStriker(pending: Pending): string | null {
+  if (!pending) return null;
+  if (pending.kind === "melee" || pending.kind === "face" || pending.kind === "gnaw") return pending.attacker;
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") return pending.caster;
+  return null;
+}
+
+/**
+ * Trước khi một việc được giải quyết (chủ game 27/11): Tê giác hiếu thắng / chiến binh +1 máu tối đa vĩnh viễn trước
+ * mỗi lần nhận sát thương (cộng trước; nếu rốt cuộc không nhận sát thương thì trả lại).
+ */
+function rhinoBrace(state: Duel): { state: Duel; braced: Map<string, number> } {
+  const braced = new Map<string, number>();
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon && mon.hp > 0 && rhinoLevel(mon) >= 2)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon || mon.hp <= 0 || rhinoLevel(mon) < 2) return mon;
+      const body = rhinoGrit(mon, 1);
+      braced.set(mon.uid, body.hp);
+      return body;
+    }) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return { state: next, braced };
+}
+
+/** Sau khi giải quyết: Tê giác không mất máu thì trả lại +1 máu tối đa đã cộng trước. */
+function rhinoUnbrace(state: Duel, braced: Map<string, number>): { state: Duel; hurt: Set<string> } {
+  const hurt = new Set<string>();
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    let changed = false;
+    const field = player.field.map((mon) => {
+      if (!mon) return mon;
+      const was = braced.get(mon.uid);
+      if (was === undefined) return mon;
+      if (mon.hp < was || mon.hp <= 0) {
+        hurt.add(mon.uid);
+        return mon;
+      }
+      changed = true;
+      const maxHp = Math.max(1, (mon.maxHp || mon.hp) - 1);
+      return { ...mon, maxHp, hp: Math.max(1, Math.min(maxHp, mon.hp - 1)), grit: Math.max(0, (mon.grit ?? 0) - 1), raised: markRaised(mon, { hp: -1 }) };
+    }) as Player["field"];
+    if (changed) next = patch(next, side, { ...player, field });
+  }
+  for (const uid of braced.keys()) {
+    if (!hurt.has(uid) && !next.players.some((player) => player.field.some((mon) => mon?.uid === uid))) hurt.add(uid);
+  }
+  return { state: next, hurt };
+}
+
+/** Sát thương Tê giác vừa gây ra và số quái địch nó hạ, trong một việc vừa giải quyết (`before` → `after`). */
+function rhinoDealt(before: Duel, after: Duel, uid: string, pending: Pending): { dealt: number; kills: number } {
+  const side = ownerSide(before, uid);
+  if (side === null || !pending) return { dealt: 0, kills: 0 };
+  const foe = (1 - side) as Side;
+  const striker = blowStriker(pending) === uid;
+  const parried = !striker && (pending.kind === "melee" || pending.kind === "gnaw") && (before.hold?.blocker ?? pending.defender) === uid;
+  if (!striker && !parried) return { dealt: 0, kills: 0 };
+  const only = parried ? pending.attacker : null;
+  let dealt = 0;
+  let kills = 0;
+  if (striker) dealt += Math.max(0, before.players[foe].hp - after.players[foe].hp);
+  for (const mon of before.players[foe].field) {
+    if (!mon || mon.hp <= 0 || (only && mon.uid !== only)) continue;
+    const now = after.players[foe].field.find((unit) => unit?.uid === mon.uid) ?? null;
+    const left = now ? Math.max(0, now.hp) : 0;
+    dealt += Math.max(0, mon.hp - left);
+    if (!now || now.hp <= 0) kills += 1;
+  }
+  return { dealt, kills };
+}
+
+/**
+ * Chạy một việc có thể gây sát thương (giải quyết đòn/kỹ năng/phép, hết vòng) với luật Tê giác: cộng trước khi nhận
+ * sát thương, Xông trận khi ra đòn, rồi đếm sát thương ra đòn cho Tiến hoá và +1 máu khi hạ gục.
+ */
+let rhinoBusy = false;
+
+function rhinoGuard(state: Duel, run: (from: Duel) => Duel, blow?: Pending, instant = false): Duel {
+  const hasRhino = state.players.some((player) => player.field.some((mon) => mon && mon.hp > 0 && rhinoLevel(mon) > 0));
+  if (rhinoBusy) return run(state);
+  rhinoBusy = true;
+  try {
+    return hasRhino ? rhinoGuarded(state, run, blow ?? state.pending, instant) : run(state);
+  } finally {
+    rhinoBusy = false;
+  }
+}
+
+function rhinoGuarded(state: Duel, run: (from: Duel) => Duel, pending: Pending, instant: boolean): Duel {
+  const brace = rhinoBrace(state);
+  const ran = run(brace.state);
+  if (ran === brace.state) return state;
+  let { state: next } = rhinoUnbrace(ran, brace.braced);
+  // Chỉ khi việc thật sự được giải quyết (không phải chỉ chuyển quyền phản ứng hay mới khai báo) mới tính ra đòn.
+  const waiting = state.hold && ran.pending === state.pending && ran.step === state.step && ran.winner === state.winner && ran.hold !== null;
+  if (!pending || waiting || (instant && ran.step === "respond" && ran.hold)) return next;
+  const striker = blowStriker(pending);
+  const blockerUid = (pending.kind === "melee" || pending.kind === "gnaw") ? (state.hold?.blocker ?? pending.defender) : null;
+  for (const uid of [striker, blockerUid]) {
+    if (!uid) continue;
+    const side = ownerSide(next, uid);
+    const mon = side === null ? null : next.players[side].field.find((unit) => unit?.uid === uid) ?? null;
+    const level = rhinoLevel(mon);
+    if (side === null || !mon || level === 0 || mon.hp <= 0) continue;
+    const { dealt, kills } = rhinoDealt(state, next, uid, pending);
+    let body: FieldMon = mon;
+    if (level >= 2 && kills > 0) body = rhinoGrit(body, kills);
+    if (level < 3 && dealt > 0) {
+      const rush = Math.min(rhinoNeed(level), (body.rush ?? 0) + dealt);
+      body = { ...body, rush };
+      if (level === 1 && kills > 0 && rush >= rhinoNeed(level)) body = { ...body, rushKill: (body.rushKill ?? 0) + kills };
+    }
+    // Xông trận: Tê giác chiến binh ra đòn (đánh thường, kỹ năng, trả đòn) thì hồi 1 máu và +1 công trong 3 lượt chung, cộng dồn.
+    let mend = 0;
+    if (level >= 3 && uid === striker) {
+      const hp = Math.min(body.maxHp || body.hp, body.hp + 1);
+      mend = hp - body.hp;
+      body = { ...body, hp, atk: body.atk + 1, rally: [...(body.rally ?? []), RALLY_TURNS], raised: markRaised(body, { atk: 1 }) };
+    }
+    if (body === mon) continue;
+    const player = next.players[side];
+    next = patch(next, side, { ...player, field: player.field.map((unit) => (unit?.uid === uid ? body : unit)) as Player["field"] });
+    if (mend > 0) next = { ...next, mends: [...(next.mends ?? []), { uid, n: mend }] };
+  }
+  return next;
+}
+
+/** Ô Tê giác sẽ đứng sau khi tiến hoá: đang ở hàng trước thì giữ; ở hàng sau thì ô trống đầu tiên hàng trước, không có thì giữ. */
+function rhinoSlot(player: Player, uid: string): Slot {
+  const from = player.field.findIndex((mon) => mon?.uid === uid);
+  if (from < 0 || !backSlot(from)) return Math.max(0, from) as Slot;
+  for (let slot = 0; slot < ROW_SLOTS; slot += 1) {
+    if (!player.field[slot] && (player.locked?.[slot] ?? 0) === 0) return slot as Slot;
+  }
+  return from as Slot;
+}
+
+/** Tiến hoá tự động của Tê giác (chủ game 27/11): đủ sát thương và đủ mana thì hỏi chủ quái xác nhận. */
+function settleRhino(state: Duel): Duel {
+  if (state.rhinoAsk || state.birdAsk || state.wileAsk?.length || state.winner !== null) return state;
+  if (!settled({ ...state, rhinoAsk: null })) return state;
+  for (const side of [0, 1] as const) {
+    const player = state.players[side];
+    const mon =
+      player.field.find((unit) => {
+        const level = rhinoLevel(unit);
+        return Boolean(unit && unit.hp > 0 && level > 0 && level < 3 && (unit.rush ?? 0) >= rhinoNeed(level) && player.orb >= rhinoRankCost(level));
+      }) ?? null;
+    if (!mon) continue;
+    const level = rhinoLevel(mon);
+    const owner = (mon.abroad ?? side) as Side;
+    return note({ ...state, rhinoAsk: { uid: mon.uid, side: owner, level: level + 1, slot: rhinoSlot(player, mon.uid) } }, `Tiến hoá: ${cardOf(mon).name} tiến hoá thành ${rhinoForm(level + 1).name}.`, "heal");
+  }
+  return state;
+}
+
+/** Xác nhận tiến hoá của Tê giác (nút duy nhất; hết 20 giây thì tự xác nhận): trả mana, đổi dạng, đứng vào ô đã định. */
+export function answerRhino(state: Duel): Duel {
+  const ask = state.rhinoAsk;
+  if (!ask) return state;
+  const open: Duel = { ...state, rhinoAsk: null };
+  const side = ownerSide(state, ask.uid);
+  const player = side === null ? null : state.players[side];
+  const mon = player?.field.find((unit) => unit?.uid === ask.uid) ?? null;
+  const level = rhinoLevel(mon);
+  if (side === null || !player || !mon || mon.hp <= 0 || level === 0 || level >= 3) return payYield(settleRhino(open));
+  const paid = pay(player, rhinoRankCost(level));
+  if (!paid) return payYield(settleRhino(open));
+  const form = rhinoForm(level + 1);
+  const oldMax = mon.maxHp || mon.hp;
+  const carried = level + 1 >= 2 ? (mon.grit ?? 0) + (mon.rushKill ?? 0) : 0;
+  const maxHp = form.hp + carried;
+  const hp = Math.max(1, mon.hp + (maxHp - oldMax));
+  const born: FieldMon = {
+    ...mon,
+    cardId: "te-giac-be-con",
+    level: level + 1,
+    atk: form.atk,
+    def: form.def,
+    mdef: form.mdef,
+    maxHp,
+    hp: Math.min(maxHp, hp),
+    rush: 0,
+    rushKill: undefined,
+    grit: carried || undefined,
+    raised: carried ? { atk: 0, def: 0, mdef: 0, hp: carried } : undefined,
+  };
+  const from = paid.field.findIndex((unit) => unit?.uid === mon.uid);
+  const field = [...paid.field] as Player["field"];
+  const to = field[ask.slot] && ask.slot !== from ? from : ask.slot;
+  field[from] = null;
+  field[to] = born;
+  const before = player.stars;
+  const moved = to !== from ? ` ${form.name} lên hàng trước.` : "";
+  const next = note(patch(open, side, { ...paid, field }), `${cardOf(mon).name} tiến hoá thành ${form.name}.${moved}`, "heal");
+  return payYield(settleRhino(pingStars(next, side, before, paid.stars)));
 }
 
 function isSpecial(mon: FieldMon) {
@@ -1545,7 +1792,7 @@ function evolveSpecial(mon: FieldMon): FieldMon {
   const form = rhinoForm(3);
   const missing = Math.max(0, (mon.maxHp || mon.hp) - mon.hp);
   const maxHp = form.hp;
-  return { ...mon, cardId: "te-giac-be-con", level: 3, atk: form.atk, def: form.def, mdef: form.mdef, maxHp, hp: Math.max(1, maxHp - missing) };
+  return { ...mon, cardId: "te-giac-be-con", level: 3, atk: form.atk, def: form.def, mdef: form.mdef, maxHp, hp: Math.max(1, maxHp - missing), rush: 0, rushKill: undefined };
 }
 
 function evolveImmortal(mon: FieldMon): FieldMon {
@@ -1805,6 +2052,7 @@ function pay(player: Player, amount: number): Player | null {
 }
 
 function talkLock(state: Duel): Duel | null {
+  if (state.trimAsk?.length) return note(state, "Hãy chọn lá để bỏ trước.");
   if (state.lurkAsk) return note(state, "Hãy chọn quái ẩn để triệu hồi trước.");
   if (state.counterAsk) return note(state, "Hãy Trả đòn trước.");
   if (state.preyAsk) return note(state, "Hãy chọn có truy sát không.");
@@ -3219,7 +3467,9 @@ function settled(state: Duel): boolean {
     !state.swordAsk &&
     !state.plumeAsk &&
     !state.birdAsk &&
+    !state.rhinoAsk &&
     !state.wileAsk?.length &&
+    !state.trimAsk?.length &&
     !state.clockAsk &&
     !state.preyAsk &&
     !state.reel &&
@@ -3242,7 +3492,7 @@ function yieldTurn(state: Duel): Duel {
 
 /** Xong hẳn, chỉ còn câu hỏi Giảo hoạt hoặc tiến hoá của Harpie Lady đang chờ. */
 function birdWaits(state: Duel): boolean {
-  return Boolean(state.wileAsk?.length || state.birdAsk) && settled({ ...state, wileAsk: null, birdAsk: null });
+  return Boolean(state.wileAsk?.length || state.birdAsk || state.rhinoAsk) && settled({ ...state, wileAsk: null, birdAsk: null, rhinoAsk: null });
 }
 
 /** Trả lời xong câu hỏi của Harpie Lady: việc trước đó lẽ ra nhường quyền thì giờ nhường. */
@@ -3957,6 +4207,124 @@ function castRebirth(state: Duel, side: Side, mon: FieldMon, extra: string | nul
   return note(next, `${chipLabel(EGG, "life")}: ${sideName(side)} bỏ 1 lá và rút ${yourDrawn.got} lá; ${foeLine}.`, "heal");
 }
 
+/** Tay tối đa (chủ game 27/11): quái dự bị và phép trên tay gộp chung. */
+export const HAND_CAP = 7;
+export function handCount(player: Player): number {
+  return player.reserve.length + player.hand.length;
+}
+/** Hết vòng: bên nào tay quá 7 lá thì phải bỏ lá dư (cả hai bên, hỏi lần lượt). Tay đủ 7 vẫn rút bài được. */
+function askTrim(state: Duel): Duel {
+  if (!state.handCap || state.winner !== null || state.trimAsk?.length) return state;
+  const asks = ([0, 1] as Side[])
+    .map((side) => ({ side, n: handCount(state.players[side]) - HAND_CAP }))
+    .filter((ask) => ask.n > 0);
+  if (!asks.length) return state;
+  return note({ ...state, trimAsk: asks }, `Tay quá ${HAND_CAP} lá: bỏ bớt lá dư.`, "info");
+}
+/**
+ * Bỏ lá dư: `picks` = các lá "r:i" / "s:i" theo tay lúc hỏi, đúng số lá dư; sai hay null (hết giờ) thì lấy ngẫu nhiên.
+ * Lá bỏ biến mất (không vào mộ, không tính mana), chạy hiệu ứng bỏ lá như Sinh mệnh mới.
+ */
+export function answerTrim(state: Duel, picks: string[] | null): Duel {
+  const ask = state.trimAsk?.[0];
+  if (!ask) return state;
+  const rest = (state.trimAsk ?? []).slice(1);
+  const player = state.players[ask.side];
+  const need = handCount(player) - HAND_CAP;
+  if (need <= 0) return { ...state, trimAsk: rest.length ? rest : null };
+  const all = handPicks(player);
+  let chosen = picks && new Set(picks).size === need && picks.length === need && picks.every((pick) => all.includes(pick)) ? [...picks] : null;
+  if (!chosen) {
+    const pool = [...all];
+    chosen = [];
+    while (chosen.length < need && pool.length) chosen.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]!);
+  }
+  const drops = chosen.map((at) => ({ side: ask.side, at, card: pickCard(player, at) }));
+  // Bỏ từ chỉ số lớn xuống để các chỉ số còn lại không lệch.
+  const order = [...chosen].sort((a, b) => Number(b.slice(2)) - Number(a.slice(2)));
+  let left = player;
+  for (const pick of order) left = dropPick(left, pick) ?? left;
+  const next = patch({ ...state, trimAsk: rest.length ? rest : null, seq: state.seq + 1, discard: { id: state.seq + 1, drops } }, ask.side, left);
+  return note(next, `${sideName(ask.side)} bỏ ${need} lá dư trên tay.`, "info");
+}
+/**
+ * Máy bỏ lá dư (chủ game 27/11): bỏ lá không cần và không hợp chiến thuật, không phải lá yếu nhất. Lá giữ lại: quái
+ * triệu hồi được ngay hoặc sắp tới (đủ sao), phép phản ứng / siêu tốc để thủ, phép còn mục tiêu. Lá bỏ trước: bản trùng,
+ * quái còn xa mới đủ sao, phép không còn mục tiêu, lá phép Harpie Lady khi không còn Harpie Lady.
+ */
+export function aiTrimPick(state: Duel, side: Side): string[] {
+  const player = state.players[side];
+  const foe = state.players[(1 - side) as Side];
+  const need = handCount(player) - HAND_CAP;
+  if (need <= 0) return [];
+  const foeMons = foe.field.some((mon) => mon && mon.hp > 0);
+  const seen = new Map<string, number>();
+  const worth = (pick: string): number => {
+    const id = pickCard(player, pick);
+    const count = (seen.get(id) ?? 0) + 1;
+    seen.set(id, count);
+    let score = count > 1 ? -3 * (count - 1) : 0;
+    if (pick.startsWith("r:")) {
+      const held = player.reserve[Number(pick.slice(2))];
+      const card = held ? monsterCard(held.id) : null;
+      if (!card) return score - 5;
+      const gap = card.stars - player.stars;
+      score += gap <= 0 ? 5 : gap === 1 ? 3 : -2 * gap;
+      score += (card.atk + card.hp + card.def + card.mdef) / 4;
+      if (card.gems > player.flask + 3) score -= 2;
+      if (held?.fake) score -= 1;
+      return score;
+    }
+    const card = spellCard(id);
+    if (!card) return score - 5;
+    if (isWileCard(id)) return score + (sideGirls(state, side).length ? 3 : -8);
+    const speed = ["hoan-doi", "hop-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "guong-phong-ho", "la-chan-phan-don", "phuc-kich", "vong-nguyen-rua-ac-ma", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su", "don-cuoi-cung", PRISM_CARD];
+    score += 4 + (speed.includes(id) ? 2 : 0);
+    if (["soi-xich-dia-nguc", "sam-set-tan-the", DOOM_CARD, "phan-nguyen"].includes(id) && !foeMons) score -= 4;
+    if (card.gems > player.flask + 3) score -= 2;
+    return score;
+  };
+  const scored = handPicks(player).map((pick) => ({ pick, score: worth(pick) }));
+  return scored.sort((a, b) => a.score - b.score).slice(0, need).map((one) => one.pick);
+}
+
+/**
+ * Kính vạn hoa (chủ game 26/11): phép siêu tốc 1 mana. Chọn 1 quái thông thường đồng minh trên sân: thêm bản sao lá gốc
+ * của nó vào tay, máu tối đa 1, triệu hồi như lá thường. Hoặc rút 1 Harpie Lady từ bộ bài (`targetUid` = PRISM_DRAW).
+ * Quái ngoài bộ (dung hợp, tiến hoá) và quái 5 sao không sao chép được.
+ */
+export const PRISM_CARD = "kinh-van-hoa";
+export const PRISM_DRAW = "deck:harpie";
+/** Lá gốc để sao chép của một quái trên sân, null nếu không sao chép được. */
+export function prismBase(mon: FieldMon): string | null {
+  if (mon.cardId === "mu") return null;
+  const id = clockForm(mon.cardId) ? CLOCK : mon.cardId;
+  const card = monsterCard(id);
+  if (!card || card.stars > 4 || FORMS.some((form) => form.id === id)) return null;
+  return id;
+}
+/** Mọi lựa chọn của Kính vạn hoa lúc này: uid quái đồng minh sao chép được, và PRISM_DRAW nếu bộ còn Harpie Lady. */
+export function prismPicks(state: Duel, side: Side): string[] {
+  const player = state.players[side];
+  const allies = player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && prismBase(mon))).map((mon) => mon.uid);
+  return [...allies, ...(player.monsterDeck.some((held) => held.id === GIRL) ? [PRISM_DRAW] : [])];
+}
+function castPrism(state: Duel, side: Side, pick: string | null): Duel {
+  const you = state.players[side];
+  if (pick === PRISM_DRAW) {
+    const at = you.monsterDeck.findIndex((held) => held.id === GIRL);
+    if (at < 0) return note(state, "Bộ bài không còn Harpie Lady.", "spell");
+    const held = you.monsterDeck[at]!;
+    const drawn = { ...you, monsterDeck: you.monsterDeck.filter((_, index) => index !== at), reserve: [...you.reserve, held] };
+    return note(patch({ ...state, seq: state.seq + 1 }, side, drawn), `Kính vạn hoa: ${sideName(side)} lấy 1 Harpie Lady từ bộ bài lên tay.`, "spell");
+  }
+  const mon = pick ? you.field.find((unit) => unit?.uid === pick) ?? null : null;
+  const base = mon ? prismBase(mon) : null;
+  if (!mon || !base) return note(state, "Kính vạn hoa không còn quái để sao chép.", "spell");
+  const copy = asPile(base, 1, 1, Boolean(mon.fake));
+  return note(patch({ ...state, seq: state.seq + 1 }, side, { ...you, reserve: [...you.reserve, copy] }), `Kính vạn hoa: ${sideName(side)} nhận bản sao ${monsterCard(base)?.name ?? ""} (1 máu tối đa) lên tay.`, "spell");
+}
+
 /** Every monster on the board, changed by `fn` where it is one of `uids`. */
 function reshapeMons(state: Duel, uids: ReadonlySet<string>, fn: (mon: FieldMon) => FieldMon): Duel {
   const players = state.players.map((player) => ({
@@ -4354,8 +4722,8 @@ function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<Fiel
   nextDefender.oathShot = undefined;
   nextDefender.riposte = undefined;
   nextDefender.waitCounter = undefined;
-  const grownAttacker = attacker.cardId === PERFECT ? spendPlate(clashGrow(nextAttacker), bolt ? { p: plate.p, s: plate.s } : plate, bolt) : clashGrow(nextAttacker);
-  const grownDefender = dropGuard(clashGrow(dropClash(nextDefender)));
+  const grownAttacker = attacker.cardId === PERFECT ? spendPlate(nextAttacker, bolt ? { p: plate.p, s: plate.s } : plate, bolt) : nextAttacker;
+  const grownDefender = dropGuard(dropClash(nextDefender));
   const dumped = releaseGuardAttack(attacker, grownAttacker, grownDefender, alliesB);
   const attackerBreak = settleMystic(attacker, dumped.attacker, dumped.defender, alliesB, true);
   const defenderBreak = settleMystic(defender, attackerBreak.foe ?? dumped.defender, attackerBreak.mon, alliesA, Boolean(defender.guarding));
@@ -4672,6 +5040,8 @@ function payCounter(state: Duel, side: Side): Duel | null {
 
 /** Trả đòn bằng đòn đánh thường: gây sát thương vật lý bằng công của quái lên kẻ vừa ra đòn. */
 export function pickCounter(state: Duel, mode: "phys"): Duel {
+  const ask = state.counterAsk;
+  if (ask && !rhinoBusy) return rhinoGuard(state, (from) => pickCounter(from, mode), { kind: "melee", attacker: ask.uid, defender: ask.from } as Pending);
   if (state.rites?.strike && state.counterAsk?.uid === state.rites.strike) return riteRun(state, (armed) => pickCounterCore(armed, mode));
   return pickCounterCore(state, mode);
 }
@@ -4939,7 +5309,7 @@ export function passResponse(state: Duel): Duel {
     const set = { ...state, hold: { ...state.hold, mirror: "set" as const, priority: (1 - state.turn) as Side, passed: [false, false] as [boolean, boolean] } };
     return note(set, state.hold.breeze ? "Gió dịu đi phát động." : "Gương phòng hộ phát động.", "spell");
   }
-  const next = withSeed(state.hold?.seed, () => passResponseCore(state));
+  const next = rhinoGuard(state, (from) => withSeed(state.hold?.seed, () => passResponseCore(from)));
   if (next === state || !state.hold) return next;
   const resolved = next.pending !== state.pending || next.step !== state.step || next.winner !== state.winner || next.hold === null;
   if (!resolved) return next;
@@ -6962,6 +7332,7 @@ export function answerGnaw(state: Duel, useSkillNow: boolean): Duel {
 }
 
 export function declareSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, extra: string | null = null): Duel {
+  if (!rhinoBusy) return rhinoGuard(state, (from) => declareSkill(from, uid, targetUid, skillIndex, extra), { kind: "beam", caster: uid, target: targetUid } as Pending, true);
   const second = knackRun(state, uid, (from) => declareSkill(from, uid, targetUid, skillIndex, extra));
   if (second) return second;
   if (state.parley && state.step === "respond") return freeTalk(state, (next) => declareSkill(next, uid, targetUid, skillIndex, extra));
@@ -7530,6 +7901,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     "giap-co-khi",
     "hop-ma-thuat",
     "qua-trung-thien-su",
+    PRISM_CARD,
     DUO_CARD,
     SPRING,
     SPRING_WORN,
@@ -7546,6 +7918,9 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (!replay && state.step === "respond" && doomWaiting(state) && card.id !== "hap-thu-ma-phap") {
     return note(state, "Chỉ Hấp thụ ma pháp hoá giải được Huỷ diệt.");
+  }
+  if (!replay && card.id === PRISM_CARD && !(targetUid && prismPicks(state, side).includes(targetUid))) {
+    return note(state, prismPicks(state, side).length ? "Chọn 1 quái đồng minh để sao chép, hoặc rút Harpie Lady." : "Không có quái đồng minh sao chép được, bộ bài cũng không còn Harpie Lady.");
   }
   if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
   if (isWileCard(card.id)) return castWile(state, side, handIndex, targetUid, sourceUid, replay);
@@ -7618,7 +7993,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   if (!replay && state.step === "respond" && card.id === "ngan-chan-phong-ngu" && shelterPicks(state).length === 0) {
     return note(state, `${card.name} chỉ dùng khi có quái đã lao ra chặn hoặc che.`);
   }
-  if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap") {
+  if (!replay && state.step === "main" && !canTargetFoe(state) && card.id !== "mua-ma-thuat" && card.id !== "thu-hoi-quai-thu" && card.id !== "sung-loi-pha" && card.id !== "mu-ma-phap" && card.id !== PRISM_CARD) {
     return note(state, "Lượt đầu không được nhắm đối thủ.");
   }
   if (card.id === "sung-loi-pha") {
@@ -7702,7 +8077,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     const dropped = dropHandCard(paid, handIndex);
     const buried = { ...dropped, spent: [...(dropped.spent ?? paid.spent ?? []), card.id] };
     next = pingStars(patch(state, side, buried), side, before, buried.stars);
-    const burst = new Set(["mua-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "thu-hoi-quai-thu"]);
+    const burst = new Set(["mua-ma-thuat", "hap-thu-ma-phap", "vong-xoay-bao-ho", "thu-hoi-quai-thu", PRISM_CARD]);
     if (card.id === DUO_CARD) {
       const picks = duoParse(sourceUid);
       const bad = duoCheck(next, side, picks, targetUid);
@@ -7734,6 +8109,11 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     }
   } else {
     next = patch(state, side, dropHandCard(player, handIndex));
+  }
+  if (card.id === PRISM_CARD) {
+    // Siêu tốc: nổ ngay; trong chuỗi thì đối thủ lại được đáp như sau mọi phép phản ứng.
+    const done = castPrism(next, side, targetUid);
+    return done.step === "respond" ? keep(done) : done;
   }
   if (targetUid) targetUid = redirectCover(next.players[foe].field, targetUid);
   const enemy = next.players[foe];
@@ -9625,6 +10005,7 @@ function dropAid(state: Duel, uid: string): Duel {
 }
 
 export function useSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null, silent = false): Duel {
+  if (!rhinoBusy) return rhinoGuard(state, (from) => useSkill(from, uid, targetUid, skillIndex, skipGnaw, extra, silent), { kind: "beam", caster: uid, target: targetUid } as Pending, true);
   if (!silent && state.rites?.strike === uid && state.counterAsk?.uid === uid) {
     return riteRun(state, (armed) => useSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra, silent));
   }
@@ -10166,35 +10547,6 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
     if (!paid) return note(state, "Cần 1 gem.");
     const field = paid.field.map((unit) => (unit?.uid === uid ? { ...unit, mult: true } : unit)) as Player["field"];
     return note(pingStars(patch(state, side, { ...paid, field }), side, before, paid.stars), `${castName(mon.cardId, 0)}: ${cardOf(mon).name} sẽ nhân đôi khi bị tiêu diệt.`, "spell");
-  }
-  if (mon.cardId === "te-giac-be-con") {
-    if ((mon.level ?? 1) >= 3) return note(state, "Đã đạt cấp cuối.");
-    const nextLevel = (mon.level ?? 1) + 1;
-    const cost = rhinoRankCost(mon.level ?? 1);
-    const before = you.stars;
-    const paid = pay(you, cost);
-    if (!paid) return note(state, cost === 1 ? "Cần 1 gem." : `Cần ${cost} gem.`);
-    const form = rhinoForm(nextLevel);
-    const heal = skillFigure(mon.cardId, "heal", 2);
-    const yourField = paid.field.map((unit) =>
-      unit?.uid === uid
-        ? {
-            ...unit,
-            level: nextLevel,
-            atk: form.atk,
-            def: form.def,
-            mdef: form.mdef,
-            hp: Math.min(form.hp, unit.hp + heal),
-            maxHp: form.hp,
-            dim: true,
-          }
-        : unit,
-    );
-    return note(
-      pingStars(patch(state, side, { ...paid, field: yourField }), side, before, paid.stars),
-      `${form.name} thăng cấp, hồi ${heal} máu.`,
-      "heal",
-    );
   }
   if (mon.cardId === "ma-dao-si") {
     if (!canTargetFoe(state)) return note(state, "Lượt đầu không được nhắm đối thủ.");
@@ -11204,7 +11556,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = beautyTick(reviveTick(dropSprings(dropShields(start))));
+  const state = rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start)))));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -11417,13 +11769,13 @@ export function endTurn(state: Duel): Duel {
 function finishRound(state: Duel): Duel {
   const owner = attackRound(state);
   const from: Duel = { ...boxHome(settleBox(state)), turn: owner };
-  const next = endTurnCore(from);
+  const next = rhinoGuard(from, endTurnCore);
   if (next === from || (next.turn === from.turn && next.winner === from.winner && next.step === from.step)) {
     return next === from ? state : { ...next, turn: state.turn };
   }
   const opened: Duel = lurkTick({ ...next, round: (1 - owner) as Side, skipped: [false, false], counterAsk: null });
   const marked = traced(state, opened, { kind: "end-turn", actor: state.turn, ok: true, cardId: null, target: null, end: null });
-  return flushVirus(withResults(state, marked, { blocked: false, reflect: false, turn: true }));
+  return askTrim(flushVirus(withResults(state, marked, { blocked: false, reflect: false, turn: true })));
 }
 
 function endTurnCore(state: Duel): Duel {
@@ -11911,6 +12263,7 @@ function askedNow(prev: Duel, next: Duel): boolean {
       (next.parley && !prev.parley) ||
       (next.preyAsk && !prev.preyAsk) ||
       (next.birdAsk && !prev.birdAsk) ||
+      (next.rhinoAsk && !prev.rhinoAsk) ||
       (next.clockAsk && !prev.clockAsk) ||
       (next.plumeAsk && !prev.plumeAsk) ||
       (next.recall && !prev.recall) ||
@@ -11969,8 +12322,10 @@ export function aiAnswerAsk(state: Duel): Duel | null {
     if (!pick) return { ...state, parley: null };
     return withLive(pickParley(state, pick.uid));
   }
+  if (state.trimAsk?.[0]?.side === 1) return withLive(answerTrim(state, aiTrimPick(state, 1)));
   if (state.wileAsk?.[0]?.side === 1) return withLive(answerWile(state, aiWilePick(state, state.wileAsk[0])));
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
+  if (state.rhinoAsk?.side === 1) return withLive(answerRhino(state));
   if (state.clockAsk?.side === 1) return withLive(chooseClock(state, CLOCK_FIERCE));
   if (state.plumeAsk && state.turn === 1) return withLive(answerPlume(state, (() => { const bird = state.players[1].field.find((mon) => mon?.uid === state.plumeAsk?.bird); const id = bird?.cardId ?? ""; return state.players[1].orb >= harpyKit(id)[meleeKey(id)]; })()));
   if (state.recall?.side === 1) return withLive(confirmRecall(state, chooseRecall(state.players[1].reserve, state.recall.caps, state.players[1].orb)));
@@ -12214,11 +12569,6 @@ export function aiStep(state: Duel): Duel {
     if (called) return called;
   }
 
-  const rhino = ready.find((mon) => mon.cardId === "te-giac-be-con" && (mon.level ?? 1) < 3);
-  if (threats.length === 0 && rhino && me.orb >= rhinoRankCost(rhino.level ?? 1) && foes.length === 0) {
-    const cast = progress(state, useSkill(state, rhino.uid, null, 0));
-    if (cast) return cast;
-  }
   if (threats.length === 0 && clown && me.orb >= 1 && clown.charge < 2 && foes.length === 0) {
     const cast = progress(state, useSkill(state, clown.uid, null, 0));
     if (cast) return cast;
@@ -13025,6 +13375,33 @@ export function isWileCard(id: string | null | undefined): boolean {
 
 /** Càng xinh đẹp: mỗi lần được chọn làm mục tiêu, +1 công và +1 máu tối đa trong 3 lượt chung (cộng dồn), hồi 1 máu. */
 const BEAUTY_TURNS = 3;
+/** Xông trận của Tê giác chiến binh: +1 công trong 3 lượt chung. */
+const RALLY_TURNS = 3;
+
+/** Hết lượt chung: mỗi lần +1 công của Xông trận bớt 1 lượt; hết thì mất +1 công đó. */
+function rallyTick(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.rally?.length)) continue;
+    const field = player.field.map((mon) => {
+      if (!mon?.rally?.length) return mon;
+      const left = mon.rally.map((n) => n - 1);
+      const gone = left.filter((n) => n <= 0).length;
+      const kept = left.filter((n) => n > 0);
+      const body = { ...mon, rally: kept.length ? kept : undefined };
+      return gone ? dropRally(body, gone) : body;
+    }) as Player["field"];
+    next = patch(next, side, { ...player, field });
+  }
+  return next;
+}
+
+function dropRally<T extends { atk: number; raised?: FieldMon["raised"] }>(mon: T, n: number): T {
+  if (n <= 0) return mon;
+  const raised = mon.raised ? { ...mon.raised, atk: mon.raised.atk - n } : mon.raised;
+  return { ...mon, atk: Math.max(0, mon.atk - n), raised };
+}
 
 /** Harpie Lady của `side` trên sân (kể cả đang ở sân bên kia vì Hộp ma thuật). */
 function sideGirls(state: Duel, side: Side): FieldMon[] {

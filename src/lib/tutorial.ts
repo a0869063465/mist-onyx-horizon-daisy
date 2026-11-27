@@ -57,7 +57,7 @@ export function createTutorialDuel(): Duel {
     },
   ];
   // The guided hands stay as written: no Đổi bài đầu trận here (chủ game 22/10, câu 7).
-  return { ...duel, players, opener: null };
+  return { ...duel, players, opener: null, handCap: false };
 }
 
 /** Puts Sợi xích địa ngục on top of the player's spell pile for the scripted spell draw. */
