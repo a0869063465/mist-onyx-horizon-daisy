@@ -491,6 +491,8 @@ function asPile(id: string, hp?: number, maxHp?: number, fake = false): PileMon 
 
 function pileFromField(mon: FieldMon): PileMon {
   if (clockForm(mon.cardId)) return asPile(CLOCK, undefined, undefined, Boolean(mon.fake));
+  // Chị em Harpie (chủ game 27/11): thu 1 lá về là thu về dạng lá Chị em Harpie, giữ chỉ số và trạng thái chung.
+  if (isSister(mon.cardId)) return pileFromField({ ...mon, cardId: SISTERS_CARD, dim: false, used: false });
   const { uid: _uid, lurk: _lurk, ...kept } = mon;
   const saved = kept.spring ? dropSpring(kept) : kept;
   const cap = saved.maxHp || saved.hp;
@@ -3411,6 +3413,11 @@ function summonCore(state: Duel, reserveIndex: number, slot: Slot, hide = false)
   if (boxShut(state, side, slot)) return note(state, "Ô này bị khoá tới hết vòng.");
   if (hide && cardStars(cardId, held.saved?.level ?? 1) >= 5) return note(state, "Quái 5 sao không ẩn được.");
   const short = player.stars < card.stars;
+  if (cardId === SISTERS_CARD) {
+    if (hide) return note(state, `${card.name} không triệu hồi Ẩn được.`);
+    if (short) return note(state, `Cần ${card.stars} sao.`);
+    return summonSisters(state, side, reserveIndex);
+  }
   const studied = cardId === GUARD_KNIGHT && knightTutor(player.field);
   const forced = short && cardId === "trieu-hoi-ac-ma";
   if (short && !forced && !studied) return note(state, `Cần ${card.stars} sao.`);
@@ -3726,6 +3733,32 @@ export function sisterSlots(state: Duel, side: Side, fieldUids: string[]): { fro
 
 /** Dung hợp 2 Harpie Lady ra Chị em Harpie: 3 lá chung chỉ số. Có Harpie Lady trên sân thì giữ hết chỉ số và trạng thái
  *  của cô rồi cộng thêm (công +1, thủ +1, thủ phép +1, máu +3); không có thì lấy chỉ số trên lá. */
+/** Lá Chị em Harpie trên tay (thu về) triệu hồi lại: tự tách 3 lá vào 1 ô trước + 2 ô sau, giữ chỉ số và trạng thái đã lưu. */
+function summonSisters(state: Duel, side: Side, reserveIndex: number): Duel {
+  const player = state.players[side];
+  const held = player.reserve[reserveIndex];
+  const card = monsterCard(SISTERS_CARD);
+  if (!held || !card) return state;
+  const spots = sisterSlots(state, side, []);
+  if (!spots) return note(state, "Cần 1 ô hàng trước và 2 ô hàng sau còn trống.");
+  const saved = held.saved;
+  const stats: KinStats = saved
+    ? { atk: saved.atk, def: saved.def, mdef: saved.mdef, maxHp: held.maxHp, hp: Math.min(held.hp, saved.hp, held.maxHp) }
+    : { atk: card.atk, def: card.def, mdef: card.mdef, maxHp: card.hp, hp: card.hp };
+  const kept: Partial<FieldMon> = saved ? kinPart(saved as FieldMon) : {};
+  const field = [...player.field] as Player["field"];
+  const order: Array<[string, Slot]> = [[SISTER_FRONT, spots.front], [SISTER_BACK[0], spots.back[0]], [SISTER_BACK[1], spots.back[1]]];
+  let kinId = "";
+  order.forEach(([id, slot], k) => {
+    const fresh = place({ ...state, seq: state.seq + 1 + k * 7 }, side, id);
+    if (!kinId) kinId = `kin-${fresh.uid}`;
+    field[slot] = kinStamp({ ...fresh, ...kept, ...stats, kin: { id: kinId, n: 3, base: stats, snap: "" } });
+  });
+  const reserve = player.reserve.filter((_, index) => index !== reserveIndex);
+  const placed = withRows({ ...player, field, reserve, summons: player.summons + 1, fresh: [...(player.fresh ?? []), ...order.map(([, slot]) => field[slot]!.uid)] });
+  return note(patch({ ...state, seq: state.seq + 30 }, side, placed), `Triệu hồi ${card.name}.`);
+}
+
 function fuseSisters(state: Duel, side: Side, mats: FuseMat[]): Duel {
   const player = state.players[side];
   const card = monsterCard(SISTERS_CARD);
@@ -5643,6 +5676,8 @@ export function waitSkill(cardId: string, index: number): boolean {
   if (cardId === "phu-thuy-thoi-gian") return index <= 2;
   if (cardId === "mo-voi-ma-mut") return index === 0;
   if (cardId === PERFECT) return index === 0 || index === 3;
+  // Chủ game 27/11: Máu chiến và Hoá đá là phép chậm, chỉ ở lượt mình, chờ trong chuỗi. Động viên nổ ngay.
+  if (isSister(cardId) && index === SISTER_SKILL) return cardId !== SISTER_BACK[0];
   if (isHarpy(cardId)) return index === 0 || index === 1 || index === 3;
   return false;
 }
@@ -9498,9 +9533,8 @@ function settleKin(state: Duel, tick = false): Duel {
     for (const key of KIN_STATS) {
       const deltas = members.map((mon) => (key === "maxHp" ? mon.maxHp || mon.hp : mon[key]) - base[key]);
       if (key === "hp" && !tick) {
-        const lost = deltas.filter((d) => d < 0).reduce((sum, d) => sum + d, 0);
-        const gained = Math.max(0, ...deltas);
-        stats.hp = base.hp + lost + gained;
+        // Chủ game 27/11: máu mất và máu hồi của từng lá đều cộng dồn vào bể chung (hồi lan +1 cho cả 3 là +3).
+        stats.hp = base.hp + deltas.reduce((sum, d) => sum + d, 0);
       } else {
         const delta = deltas.reduce((best, d) => (Math.abs(d) > Math.abs(best) ? d : best), 0);
         stats[key] = base[key] + delta;
@@ -9511,7 +9545,19 @@ function settleKin(state: Duel, tick = false): Duel {
     const snap = members[0].kin!.snap;
     const moved = members.find((mon) => JSON.stringify(kinPart(mon)) !== snap) ?? members[0];
     const shared = kinPart(moved);
-    const dead = broken || stats.hp <= 0;
+    // Lá rời sân về tay hoặc về xấp (lá Chị em Harpie mang `kin` của nhóm): rời sân. Không thấy đâu (bị hạ, huỷ): cả nhóm bị hạ.
+    const home = next.players.some((player) => [...player.reserve, ...player.monsterDeck].some((pile) => pile.saved?.kin?.id === id));
+    const dead = stats.hp <= 0 || (broken && !home);
+    // Chủ game 27/11: một lá rời sân mà bể máu còn (bị thu về…) thì cả 3 rời sân, không bị hạ; lá đã rời thành lá Chị em Harpie.
+    if (broken && !dead) {
+      for (const side of [0, 1] as const) {
+        const player = next.players[side];
+        if (!player.field.some((mon) => mon?.kin?.id === id)) continue;
+        next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.kin?.id === id ? null : mon)) as Player["field"] });
+      }
+      next = note(next, `${monsterCard(SISTERS_CARD)?.name ?? "Chị em Harpie"} rời sân cùng nhau.`, "info");
+      continue;
+    }
     for (const side of [0, 1] as const) {
       const player = next.players[side];
       if (!player.field.some((mon) => mon?.kin?.id === id)) continue;
