@@ -2074,7 +2074,7 @@ test("Pháo kích (23/11): skill chậm; nổ thì quái làm đạn mất, 65% 
   assert.notEqual(D.useSkill(make(), uid(s, 0, 0), uid(s, 1, 0), 0, true, null).step, "respond");
 });
 
-test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát thương kỹ năng mọi quái trừ nó; kích hoạt 1 mana thêm 2 lần, cộng dồn; giảm chia từng đợt", () => {
+test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát thương kỹ năng mọi quái trừ nó; kích hoạt 1 mana thêm 2 lần, cộng dồn; giảm dồn đợt đầu", () => {
   const make = (angel) => {
     const mine = { 0: ["rong-con", { atk: 3, hp: 6, maxHp: 6 }] };
     if (angel) mine[1] = ["thien-than-hanh-phuc"];
@@ -2101,8 +2101,10 @@ test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát th�
   assert.equal(at(up, 1, 0).joy, 3, "1 + 2");
   const twice = D.refreshJoy({ ...up, players: up.players.map((p, i) => (i === 0 ? { ...p, field: p.field.map((m) => (m?.uid === uid(s, 0, 1) ? { ...m, joyUp: [3, 2], used: false, dim: false } : m)) } : p)) });
   assert.equal(at(twice, 1, 0).joy, 5, "cộng dồn");
-  // Chia số giảm: mỗi đợt 1, lần lượt rồi quay lại; trong một đợt phép trước, rồi vật lý, rồi chuẩn.
+  // Số giảm dồn vào đợt đầu, dư sang đợt kế (như Phù thuỷ rừng đen, 27/11); trong một đợt phép trước, rồi vật lý, rồi chuẩn.
   assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 0 }, { n: 1, group: 2, rank: 0 }, { n: 3, group: 3, rank: 0 }], 5), [2, 1, 2]);
+  assert.deepEqual(D.dullPlan([{ n: 5, group: 1, rank: 1 }, { n: 5, group: 2, rank: 1 }], 3), [3, 0]);
+  assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 1 }, { n: 5, group: 2, rank: 0 }], 3), [2, 1]);
   assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 1 }, { n: 2, group: 1, rank: 0 }, { n: 2, group: 1, rank: 2 }], 3), [1, 2, 0]);
 });
 

@@ -2838,8 +2838,8 @@ function outgoing(mon: FieldMon, amount: number, rank?: number): number {
 }
 
 /**
- * Giảm sát thương kỹ năng (engine chung, chủ game 23/11): số giảm chia lần lượt mỗi đợt 1, từ đợt đầu tới đợt cuối rồi
- * quay lại; trong một đợt giảm phép trước, rồi vật lý, rồi chuẩn; đợt về 0 thì mất. Vì chưa biết trước kỹ năng có mấy
+ * Giảm sát thương kỹ năng (engine chung, chủ game 23/11, đổi 27/11): trừ hết vào đợt đầu, đợt về 0 thì phần dư sang
+ * đợt kế (như Nguyền rủa của Phù thuỷ rừng đen); trong một đợt giảm phép trước, rồi vật lý, rồi chuẩn. Vì chưa biết trước kỹ năng có mấy
  * đợt, `dullRun` chạy thử một lần ghi các đợt (`plan` null), chia số giảm, rồi chạy thật với cùng mầm.
  */
 type DullPart = { n: number; group: number; rank: number };
@@ -2877,30 +2877,21 @@ function outPack(mon: FieldMon, parts: { phys: number; spell: number; tru: numbe
 }
 
 export function dullPlan(log: DullPart[], budget: number): number[] {
-  const left = log.map((part) => Math.max(0, part.n));
+  // Như Nguyền rủa của Phù thuỷ rừng đen (chủ game 27/11): trừ hết vào đợt đầu, đợt về 0 thì phần dư sang đợt kế;
+  // trong một đợt phép trước, rồi vật lý, rồi chuẩn.
   const cut = log.map(() => 0);
-  const first = new Map<number, { at: number; rank: number }>();
-  log.forEach((part, index) => {
-    const seen = first.get(part.group);
-    if (!seen) first.set(part.group, { at: index, rank: part.rank });
-    else seen.rank = Math.min(seen.rank, part.rank);
-  });
-  const groups = [...first.entries()].sort((a, b) => a[1].rank - b[1].rank || a[1].at - b[1].at).map(([group]) => group);
-  while (budget > 0) {
-    let any = false;
-    for (const group of groups) {
-      if (budget <= 0) break;
-      const pick = log
-        .map((part, index) => ({ part, index }))
-        .filter((row) => row.part.group === group && left[row.index] > 0)
-        .sort((a, b) => a.part.rank - b.part.rank)[0];
-      if (!pick) continue;
-      left[pick.index] -= 1;
-      cut[pick.index] += 1;
-      budget -= 1;
-      any = true;
-    }
-    if (!any) break;
+  const order = log
+    .map((part, index) => ({ part, index }))
+    .sort((a, b) => {
+      const ga = log.findIndex((p) => p.group === a.part.group);
+      const gb = log.findIndex((p) => p.group === b.part.group);
+      return ga - gb || a.part.rank - b.part.rank || a.index - b.index;
+    });
+  for (const { part, index } of order) {
+    if (budget <= 0) break;
+    const take = Math.min(budget, Math.max(0, part.n));
+    cut[index] = take;
+    budget -= take;
   }
   return cut;
 }
