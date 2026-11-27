@@ -1,6 +1,6 @@
 # Clash of the Beasts
 
-Skill bị động lúc quái chớp cam: bấm quái, rồi bấm skill, là kích hoạt ngay. Không bắt kéo lên icon hay mục tiêu. Skill bị động thêm sau này cũng vậy.
+Skill bị động lúc quái chớp hồng: bấm quái, rồi bấm skill, là kích hoạt ngay. Không bắt kéo lên icon hay mục tiêu. Skill bị động thêm sau này cũng vậy.
 
 Phòng ngự luôn là cả thủ và thủ phép. Không hiểu thành chỉ một trong hai. adef là phòng ngự, gồm cả def và mdef. def là thủ, mdef là thủ phép. Chữ trên lá bài vẫn viết tiếng Việt. Hội thoại với người chơi thì tiếng Việt.
 
@@ -16,7 +16,7 @@ Buff và tự tăng chỉ số (công, thủ, thủ phép, máu tối đa) KHÔN
 
 Buff tạm (giáp lá cà của kỵ sĩ bóng tối, phù hộ công của yêu tinh, tăng chỉ số của chiến sĩ gặm nhắm, Suối nguồn sinh mệnh) chỉ chạy video buff một lần lúc xảy ra, không còn vòng giữ liên tục đến hết buff (chủ game 26/11).
 
-Yêu tinh chớp cam khi đối thủ tấn công người chơi hoặc bất kỳ quái nào. Bấm vào lúc đang chớp thì hiện skill đỏ, không mở bảng thông tin.
+Yêu tinh chớp hồng khi đối thủ tấn công người chơi hoặc bất kỳ quái nào. Bấm vào lúc đang chớp thì hiện skill đỏ, không mở bảng thông tin.
 
 Máu tối đa tăng bao nhiêu thì máu hiện tại tăng bấy nhiêu.
 
