@@ -28,6 +28,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "fire", label: "Vệt Lửa", tone: "y" },
   ],
   "ong-khong-lo": [{ key: "stun", label: "Kim châm tê liệt", tone: "y" }],
+  "doi-mat-tran-giu": [{ key: "disarm", label: "Giải giới", tone: "y" }],
   "mo-voi-ma-mut": [{ key: "burst", label: "Nguyền rủa", tone: "y" }],
   "rong-boc-trung": [
     { key: "stanceGuard", label: "Thế thủ", tone: "y" },
@@ -193,6 +194,7 @@ const STALE_SKILLS: Array<[string, string]> = [
   ["my-dieu-nhan", "tiêu hao 2 mana để né"],
   ["my-dieu-nhan", "đánh thường vào ta"],
   ["linh-chien-da-khong-lo", "Tiêu hao 1 mana để đỡ cho đồng minh đó"],
+  ["doi-mat-tran-giu", "Tước đoạt"],
   ["kraken", "sẽ thêm vào công của hắn"],
   ["sua-hut-ma-phap", "Tích luỹ ma pháp"],
   ["khong-lo-mot-mat", "Sau mỗi lần giáp lá cà"],

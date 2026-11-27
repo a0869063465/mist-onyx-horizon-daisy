@@ -15057,3 +15057,5 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .kin-arrows .row-arrow:nth-child(2) { left: 50%; }
 .kin-arrows .row-arrow:nth-child(3) { left: 82%; }
 .stage-opts.is-kin { top: calc(47% + 43 * var(--cqw)); z-index: 9; }
+/* Giải giới (chủ game 22/11): quái bị vô hiệu hoá xám đi như trong video, sáng lại khi hết vòng. */
+.field-unit.is-disarmed { filter: grayscale(0.85) brightness(0.92); transition: filter 0.6s ease 0.5s; }

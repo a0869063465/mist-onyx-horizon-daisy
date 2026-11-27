@@ -32,7 +32,8 @@ export type FxEvent =
   /** Chủ game 16/11: quái vừa lên hàng chờ phản ứng với kỹ năng: phát quang một lần quanh lá (video + âm của chủ game). `w` = bề ngang lá, % bàn. */
   | { t: "flare"; x: number; y: number; w: number; pack?: FxPack }
   /** Chủ game 21/11: Kuriboh phát nổ giữa hai lá lúc chạm (video 512×512, tâm nổ ở 50% / 52,7%). `w` = bề ngang khung video, % bàn. */
-  | { t: "boom"; x: number; y: number; w: number; pack?: FxPack };
+  | { t: "boom"; x: number; y: number; w: number; pack?: FxPack }
+  | { t: "disarm"; x: number; y: number; w: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();
