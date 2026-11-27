@@ -2990,6 +2990,25 @@ function hexCut(mon: FieldMon | null | undefined, amount: number, mode: "peek" |
 }
 
 function shaveHex(mon: FieldMon, parts: { spell: number; phys: number; tru: number }) {
+  return shaveJoy(mon, shaveCurse(mon, parts));
+}
+
+/** Đòn một đợt nổ ngoài `dullRun` (Hell lúc nổ, Kiếm hiệp sĩ hậu): hào quang Thiên thần hạnh phúc trừ phép, rồi vật lý, rồi chuẩn. */
+function shaveJoy(mon: FieldMon, parts: { spell: number; phys: number; tru: number }) {
+  let left = mon.joy ?? 0;
+  if (left <= 0 || skillDull?.uid === mon.uid) return parts;
+  const take = (n: number) => {
+    const cut = Math.min(n, left);
+    left -= cut;
+    return n - cut;
+  };
+  const spell = take(parts.spell);
+  const phys = take(parts.phys);
+  const tru = take(parts.tru);
+  return { spell, phys, tru };
+}
+
+function shaveCurse(mon: FieldMon, parts: { spell: number; phys: number; tru: number }) {
   const spell = Math.max(0, parts.spell);
   const phys = Math.max(0, parts.phys);
   const tru = Math.max(0, parts.tru);

@@ -2108,6 +2108,26 @@ test("Thiên thần hạnh phúc (23/11): hào quang giảm 1 công + 1 sát th�
   assert.deepEqual(D.dullPlan([{ n: 2, group: 1, rank: 1 }, { n: 2, group: 1, rank: 0 }, { n: 2, group: 1, rank: 2 }], 3), [1, 2, 0]);
 });
 
+test("Thiên thần hạnh phúc (27/11): skill Mắt đỏ tàn phá nổ sau hàng chờ cũng bị giảm 1 sát thương kỹ năng", () => {
+  const make = (angel) => {
+    const mine = { 0: ["mat-do-tan-pha", {}] };
+    if (angel) mine[1] = ["thien-than-hanh-phuc"];
+    let s = board(mine, { 0: ["khong-lo-mot-mat", { hp: 30, maxHp: 30, def: 0, mdef: 0 }] });
+    s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0 })) };
+    return D.refreshJoy(s);
+  };
+  const cast = (state) => {
+    let used = D.useSkill(state, uid(state, 0, 0), uid(state, 1, 0), 0);
+    for (let k = 0; k < 4 && used.step === "respond"; k++) used = D.passResponse(used);
+    return used;
+  };
+  const lost = (x) => 30 - at(x, 1, 0).hp;
+  const plain = cast(make(false));
+  const dull = cast(make(true));
+  assert.ok(lost(plain) > 0, plain.live);
+  assert.equal(lost(dull), lost(plain) - 1, `${plain.live} | ${dull.live}`);
+});
+
 test("Thiên thần hạnh phúc: Cầu sấm ánh sáng (Mắt xanh) không có số nên chỉ bị giảm công, không bị giảm sát thương kỹ năng (23/11)", () => {
   const make = (angel) => {
     const mine = { 0: ["mat-xanh-huy-diet", { atk: 5, hp: 9, maxHp: 9, gaze: true }] };
