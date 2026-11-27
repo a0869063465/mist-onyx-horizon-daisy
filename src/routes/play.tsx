@@ -158,6 +158,10 @@ import {
   fuse,
   fuseSet,
   setFusionsFor,
+  sisterSlots,
+  SISTERS_CARD,
+  SISTER_FRONT,
+  SISTER_BACK,
   testGrant,
   testEnv,
   testReset,
@@ -398,7 +402,7 @@ const PEEK_TOP = 9;
 type FuseOpt = { uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; cost: number; set?: { mats: FuseMat[] } };
 /** Dung hợp từ lá giống nhau: hình và chỗ của từng nguyên liệu ngoài lá đang kéo, để cảnh dung hợp bay đúng. */
 type FuseMatShow = { src: string; spot: BoardSpot; uid?: string; index?: number };
-type FuseShow = { index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot; set?: { mats: FuseMatShow[] } };
+type FuseShow = { kin?: BoardSpot[]; index: number; uid: string; slot: 0 | 1 | 2 | 3 | 4 | 5; resultId: string; phase: FusePhase; n: number; a: BoardSpot; b: BoardSpot; at: BoardSpot; third?: string; c?: BoardSpot; set?: { mats: FuseMatShow[] } };
 
 /** The rays of the fusion flash: angle (deg), length and thickness (vmin), delay (ms). */
 const FUSE_RAYS = [
@@ -1980,6 +1984,8 @@ function PlayPage() {
   // bấm lại lá thì sang kỹ năng kế, hết thì về đầu); kéo lá quái ra = `stage` (lá to giữa sân + lựa chọn); lá vừa rút hiện
   // giữa màn (`drawShows`, lần lượt từng lá) rồi mới về tay.
   const [peekAt, setPeekAt] = useState(0);
+  /** Chị em Harpie (chủ game 26/11): lá nào trong 3 chị em đang xem mô tả ở bảng dung hợp. */
+  const [kinAt, setKinAt] = useState(0);
   const [stage, setStage] = useState<Staged | null>(null);
   const [drawShows, setDrawShows] = useState<Array<{ key: number; target: string; wait?: boolean }>>([]);
   const [drawLeave, setDrawLeave] = useState(false);
@@ -6512,6 +6518,8 @@ function PlayPage() {
         return unit ? [{ src: artSrc(unit.cardId, unit.level ?? 1), spot: boardSpot(document.querySelector(`[data-slot="${viewer}-${at}"]`), slotSpot), uid: unit.uid }] : [];
       });
       setFuseChoice(null);
+      setKinAt(0);
+      setPeekAt(0);
       setFuseShow({
         index,
         uid: opt.uid,
@@ -7395,10 +7403,35 @@ function PlayPage() {
       }, 260);
     }, 750);
   };
-  const fuseCard = fuseShow ? monsterCard(fuseShow.resultId) : undefined;
+  /** Chị em Harpie: thay vì 1 lá giữa màn là 3 lá chị cả, chị thứ, em út (trái, giữa, phải), mỗi lá 1 mũi tên đúng hàng; bấm Triệu hồi thì cả 3 đáp xuống ô. */
+  const kinOn = fuseShow?.resultId === SISTERS_CARD;
+  const KIN_FACES = [SISTER_BACK[0], SISTER_FRONT, SISTER_BACK[1]] as const;
+  const kinLand = () => {
+    if (!fuseShow || !kinOn) return;
+    const fieldUids = (fuseShow.set?.mats ?? []).flatMap((mat) => (mat.uid ? [mat.uid] : []));
+    const spots = sisterSlots(duel, viewer, fieldUids);
+    if (!spots) return;
+    const slots = [spots.back[0], spots.front, spots.back[1]];
+    const at = slots.map((slot) => boardSpot(document.querySelector(`[data-slot="${viewer}-${slot}"]`), fuseShow.at));
+    const show = { ...fuseShow, kin: at, at: at[1], slot: spots.front, phase: "land" as const };
+    setFuseShow(show);
+    playCue("boltPrep", 0.35);
+    window.setTimeout(() => {
+      apply(fuseAt(show)(show.slot));
+      setFuseShow(null);
+      at.forEach((spot, i) => {
+        window.setTimeout(() => {
+          emitFx({ t: "rite", x: spot.x, y: spot.y, kind: "fuse" });
+          emitFx({ t: "bolt", rank: "big", x: spot.x, y: spot.y });
+          playCue(i === 0 ? "boltBoom" : "boltSmall");
+        }, i * 140);
+      });
+    }, 750);
+  };
+  const fuseCard = fuseShow ? monsterCard(kinOn ? KIN_FACES[kinAt % 3] : fuseShow.resultId) : undefined;
   const fusePeek: PeekInfo | null =
     fuseShow?.phase === "reveal" && fuseBorn && fuseCard
-      ? { name: fieldName(fuseBorn), cardId: fuseCard.id, stars: fuseCard.stars, stats: { atk: fuseCard.atk, def: fuseCard.def, mdef: fuseCard.mdef, hp: fuseCard.hp }, skills: skillsOf(fuseCard.id, fuseCard.skill ?? "") }
+      ? { name: kinOn ? fuseCard.name : fieldName(fuseBorn), cardId: fuseCard.id, stars: fuseCard.stars, stats: { atk: fuseCard.atk, def: fuseCard.def, mdef: fuseCard.mdef, hp: fuseCard.hp }, skills: skillsOf(fuseCard.id, fuseCard.skill ?? "") }
       : null;
 
   return (
@@ -9782,7 +9815,7 @@ function PlayPage() {
                 ))}
               </span>
             ) : null}
-            {fuseShow.phase === "reveal" ? (
+            {fuseShow.phase === "reveal" && !kinOn ? (
               <i
                 className="fuse3d-catch"
                 onClick={() => {
@@ -9791,7 +9824,34 @@ function PlayPage() {
                 }}
               />
             ) : null}
-            {(fuseShow.phase === "turn" || fuseShow.phase === "reveal" || fuseShow.phase === "rows" || fuseShow.phase === "land") && fuseBorn ? (
+            {kinOn && (fuseShow.phase === "turn" || fuseShow.phase === "reveal" || fuseShow.phase === "rows" || fuseShow.phase === "land") ? (
+              <>
+                {KIN_FACES.map((id, i) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`kin-card is-${["left", "mid", "right"][i]}${fuseShow.phase === "land" ? " is-land" : ""}${kinAt % 3 === i ? " is-on" : ""}`}
+                    style={fuseShow.kin?.[i] ? ({ "--sx": `${fuseShow.kin[i].x}%`, "--sy": `${fuseShow.kin[i].y}%`, "--sw": `${fuseShow.kin[i].w}%` } as CSSProperties) : undefined}
+                    onClick={() => (playUi("soft"), kinAt % 3 === i ? setPeekAt((at) => at + 1) : (setKinAt(i), setPeekAt(0)))}
+                  >
+                    <CardFace monster={monsterCard(id)!} hand />
+                  </button>
+                ))}
+              </>
+            ) : null}
+            {kinOn && fuseShow.phase === "reveal" ? (
+              <>
+                <div className="kin-arrows">
+                  {KIN_FACES.map((id) => (
+                    <RowArrow key={id} row={id === SISTER_FRONT ? "front" : "back"} onPick={() => undefined} />
+                  ))}
+                </div>
+                <div className="stage-opts is-kin">
+                  <ActionButton action={{ key: "summon", label: "Triệu hồi", tone: "gold", cost: 0, onPress: kinLand }} />
+                </div>
+              </>
+            ) : null}
+            {!kinOn && (fuseShow.phase === "turn" || fuseShow.phase === "reveal" || fuseShow.phase === "rows" || fuseShow.phase === "land") && fuseBorn ? (
               <div
                 className="fuse3d-big"
                 style={{ "--sx": `${fuseShow.at.x}%`, "--sy": `${fuseShow.at.y}%`, "--sw": `${fuseShow.at.w}%` } as CSSProperties}

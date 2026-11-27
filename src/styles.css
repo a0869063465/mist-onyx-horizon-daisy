@@ -15026,3 +15026,22 @@ html[data-flatfx] .turn-sword video { mix-blend-mode: screen; }
 .slot.is-thrust.is-mount .field-unit { filter: brightness(1.15) drop-shadow(0 0.35rem 0.5rem rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px rgba(255, 120, 190, 0.85)); }
 /* Lá tường thành của đối thủ chọn được làm mục tiêu Pháo kích. */
 .wall-card.is-shell { --alert-color: #ff4fa6; z-index: 13; box-shadow: 0 0 0 2px #ff4fa6, 0 0 0.9rem #ff4fa6, 0 0 1.6rem rgba(255, 79, 166, 0.7); animation: react-breathe 1.2s ease-in-out infinite; }
+
+/* Chị em Harpie (chủ game 26/11): dung hợp xong hiện 3 lá chị cả, chị thứ, em út trái giữa phải, mỗi lá 1 mũi tên cố định
+   đúng hàng của mình, nút Triệu hồi ở giữa bên dưới; bấm thì cả 3 đáp xuống ô. Theo khuôn 2 lá của Đồng hồ khó đoán. */
+.kin-card { position: absolute; top: 47%; z-index: 8; width: calc(28 * var(--cqw)); aspect-ratio: 0.72; padding: 0; border: 0; background: none; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(190, 255, 170, 0.55)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); cursor: pointer; }
+.kin-card.is-left { left: 18%; }
+.kin-card.is-mid { left: 50%; }
+.kin-card.is-right { left: 82%; }
+.kin-card > .card { width: 100%; height: 100%; aspect-ratio: auto; }
+.kin-card.is-on { filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.8)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.8)); }
+.fuse3d.is-turn .kin-card { animation: kin-in 0.64s cubic-bezier(0.25, 0.75, 0.35, 1) 0.22s both; }
+@keyframes kin-in { 0% { opacity: 0; transform: translate(-50%, -50%) rotateY(64deg) scale(1.06); filter: brightness(2.2) drop-shadow(0 0 30px #ffffff); } 18% { opacity: 1; } 100% { opacity: 1; transform: translate(-50%, -50%) rotateY(0deg) scale(1); } }
+.fuse3d.is-land .kin-card.is-land { animation: kin-land 0.75s cubic-bezier(0.45, 0, 0.6, 1) forwards; }
+@keyframes kin-land { 55% { transform: translate(-50%, -50%) rotateX(58deg); } 100% { left: var(--sx); top: var(--sy); width: var(--sw); transform: translate(-50%, -50%) rotateX(0deg); } }
+.kin-arrows { position: absolute; left: 0; right: 0; top: calc(47% + 22 * var(--cqw)); z-index: 9; pointer-events: none; }
+.kin-arrows .row-arrow { position: absolute; width: calc(11 * var(--cqw)); height: calc(12.5 * var(--cqw)); transform: translateX(-50%); pointer-events: none; }
+.kin-arrows .row-arrow:nth-child(1) { left: 18%; }
+.kin-arrows .row-arrow:nth-child(2) { left: 50%; }
+.kin-arrows .row-arrow:nth-child(3) { left: 82%; }
+.stage-opts.is-kin { top: calc(47% + 43 * var(--cqw)); z-index: 9; }

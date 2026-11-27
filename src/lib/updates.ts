@@ -1123,6 +1123,7 @@ export const PENDING_NOTES: string[] = [
   "Buff chỉ số (công, thủ, thủ phép, máu tối đa) có hiệu ứng vòng cam, mũi tên bay lên, riêng với hồi máu xanh lục. Bỏ vòng hồi máu giữ liên tục trên quái đang được buff tạm.",
   "Hiệu ứng xáo bài chạy lại từ đầu mỗi lần xáo, không còn đứng ở một lá nghiêng.",
   "Thêm Chị em Harpie, dung hợp từ 2 Harpie Lady. Ra sân tách 3 lá Harpie chị cả, Harpie chị thứ, Harpie em út: chung máu, chỉ số, trạng thái và 1 lần tấn công. Tiến hoá của Harpie Lady tạm ẩn.",
+  "Dung hợp Chị em Harpie xong hiện 3 lá Harpie chị cả, Harpie chị thứ, Harpie em út, mỗi lá một mũi tên đúng hàng. Bấm Triệu hồi thì cả 3 ra sân.",
 ];
 
 function remarkOf(notes: string[]) {
