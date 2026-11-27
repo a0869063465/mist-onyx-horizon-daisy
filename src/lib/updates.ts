@@ -1129,6 +1129,7 @@ export const PENDING_NOTES: string[] = [
   "Harpie Lady có tranh mới. Các lá phép Giáp và Vuốt, Roi điện, Mê hoặc, Thổi bay của cô cũng có tranh riêng.",
   "Bảng mô tả ngắn của lá phép trên tay ghi tóm tắt từng dòng như bảng xác nhận dùng phép, và ẩn đi khi bảng xác nhận mở ra.",
   "Hiệp sĩ hộ vệ đổi kỹ năng: 3 sao, 1 mana, công 4, máu 4. Lời thề, Khiên và Điều động thay Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành.",
+  "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
 ];
 
 function remarkOf(notes: string[]) {

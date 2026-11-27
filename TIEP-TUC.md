@@ -18,7 +18,7 @@ Cách ghi: mỗi việc mới/đang làm chỉ ghi 3 dòng ngắn ở mục "Đa
 
 - Chưa thử bằng mắt/online/máy/điện thoại: hầu hết lá mới (xem `docs/nhat-ky.md`, grep tên lá).
 - Nhánh `ccr-9debffc2-yhepws` (Song sát, Thiên sứ vô hình + Khoá 1, Tinh linh đàn hạc…) CHƯA gộp `main`, ghi chú riêng ở nhánh đó.
-- Icon skill chờ chủ game vẽ (27/11, chủ game chốt chỉ vẽ 5, các icon khác loại khỏi danh sách): Nắng ấm lên (tia nắng), Sinh mệnh mới (lá bài, mũi tên đỏ ra, mũi tên xanh vào; không dùng chung card-exchange nữa), Gặt hồn (lưỡi hái chém xuống xuyên lá bài), Lời thề (3 kiếm giơ lên như 3 hiệp sĩ tuyên thệ), Càng xinh đẹp (kiếm + dấu thập xanh lá). Vẽ xong: đặt `public/ui/skill/<tên>.webp` (256 px tròn) + thêm tên vào `src/lib/skill-art-ids.ts`, đổi tên icon trong `src/lib/skill-book.ts`. Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
+- Icon skill (27/11, ĐÃ GẮN, nhánh `ccr-9debffc2-yhepws`): chủ game vẽ 12 icon, cắt từ ảnh có viền (khuôn vòng) + ảnh không viền (nội dung): `public/ui/skill/<id>.webp` (256 px) + `skill-c/<id>.webp` (mép mờ). 6 id mới: sun-rays (Nắng ấm lên), scythe-card (Gặt hồn), oath-swords (Lời thề), beauty-sword (Càng xinh đẹp), ward-heart (Hộ thủ), life-cards (Sinh mệnh mới); 6 id cũ có tranh: three-friends, harp, cupidon-arrow, sands-of-time, card-draw (Giảo hoạt), round-star (Tiến hoá). Ảnh gốc + `circles.json` ở scratchpad (mất khi hết phiên). Còn mượn chung: Thổi bay, Thế thân trên tay, Điều động (chủ game không vẽ). Chưa thử trong game bằng mắt. Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
 - Chờ chủ game: bài Phục kích thỉnh thoảng FAIL trong round-rules (cũ).
 
 ## Quy tắc làm việc với chủ game (luật dự án ở `AGENTS.project.md`)
