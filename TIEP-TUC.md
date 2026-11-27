@@ -18,7 +18,7 @@ Cách ghi: mỗi việc mới/đang làm chỉ ghi 3 dòng ngắn ở mục "Đa
 
 - Chưa thử bằng mắt/online/máy/điện thoại: hầu hết lá mới (xem `docs/nhat-ky.md`, grep tên lá).
 - Nhánh `ccr-9debffc2-yhepws` (Song sát, Thiên sứ vô hình + Khoá 1, Tinh linh đàn hạc…) CHƯA gộp `main`, ghi chú riêng ở nhánh đó.
-- Icon skill chờ chủ game vẽ (27/11, đã gửi ảnh tổng hợp): 6 chưa có riêng (three-friends, harp, cupidon-arrow, sands-of-time, card-draw, round-star) + 9 skill đang mượn icon của skill khác (Nắng ấm lên, Hộ thủ, Gặt hồn, Thổi bay, Sinh mệnh mới, Thế thân trên tay, Điều động, Lời thề, Càng xinh đẹp). Vẽ xong: đặt `public/ui/skill/<tên>.webp` (256 px tròn) + thêm tên vào `src/lib/skill-art-ids.ts`; skill nào mượn thì đổi tên icon trong `src/lib/skill-book.ts`. Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
+- Icon skill chờ chủ game vẽ (27/11, chủ game chốt chỉ vẽ 5, các icon khác loại khỏi danh sách): Nắng ấm lên (tia nắng), Sinh mệnh mới (lá bài, mũi tên đỏ ra, mũi tên xanh vào; không dùng chung card-exchange nữa), Gặt hồn (lưỡi hái chém xuống xuyên lá bài), Lời thề (3 kiếm giơ lên như 3 hiệp sĩ tuyên thệ), Càng xinh đẹp (kiếm + dấu thập xanh lá). Vẽ xong: đặt `public/ui/skill/<tên>.webp` (256 px tròn) + thêm tên vào `src/lib/skill-art-ids.ts`, đổi tên icon trong `src/lib/skill-book.ts`. Mê cung PvE (`/maze`): còn bộ bài quái, bảo vật, Cửa hàng PvE, quy tắc 7 ngày.
 - Chờ chủ game: bài Phục kích thỉnh thoảng FAIL trong round-rules (cũ).
 
 ## Quy tắc làm việc với chủ game (luật dự án ở `AGENTS.project.md`)
