@@ -11634,7 +11634,8 @@ button.watch-back {
   background: #1b1320 center 22% / 165% no-repeat;
   animation: ms-face-in 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.55s + var(--at) * 0.18s) both;
 }
-.ms-face.is-ranked { background: none; }
+.ms-face.is-ranked { background: none; width: 60%; justify-self: center; }
+.ms-row:has(.ms-face.is-ranked) { column-gap: 1rem; }
 .ms-face-art { position: absolute; inset: 0; background: #1b1320 center 22% / 165% no-repeat; }
 .ms-face-frame { position: absolute; max-width: none; pointer-events: none; }
 .ms-face::after {
