@@ -34,7 +34,7 @@ export type FxEvent =
   /** Chủ game 21/11: Kuriboh phát nổ giữa hai lá lúc chạm (video 512×512, tâm nổ ở 50% / 52,7%). `w` = bề ngang khung video, % bàn. */
   | { t: "boom"; x: number; y: number; w: number; pack?: FxPack }
   /** Z4 (chủ game 27/11): khiên dựng lên (`up`, chạy một lần lúc nhận) hoặc vỡ khi sát thương tới (`break`). Video 480×480 có lá ở giữa (lá 51,7% bề ngang khung). `w` = bề ngang lá, % bàn. */
-  | { t: "aegis"; phase: "up" | "break"; x: number; y: number; w: number; pack?: FxPack };
+  | { t: "aegis"; phase: "up" | "break"; ward?: boolean; x: number; y: number; w: number; pack?: FxPack };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

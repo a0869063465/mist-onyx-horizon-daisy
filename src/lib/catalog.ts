@@ -1342,7 +1342,7 @@ const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
 /** Lá đã có luật nhưng chưa có tranh/giao diện: chưa vào gói, kho, album. Bảo hộ (chủ game 28/11): chờ tranh + hiệu ứng khiên phép. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>(["bao-ho"]);
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));

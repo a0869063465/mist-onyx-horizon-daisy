@@ -1,7 +1,7 @@
 import { EnvField, hasEnvField } from "@/components/game/env-field";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { KeywordRow } from "@/components/game/keyword-row";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
@@ -195,6 +195,8 @@ import {
   duoCanSkill,
   type DuoPick,
   springAllies,
+  WARD_CARD,
+  spellWardBreaks,
   eggAim,
   eggAllies,
   boxFoes,
@@ -1046,6 +1048,7 @@ const SPELL_AIMS: Record<string, "foe" | "ally"> = {
   "phuc-kich": "ally",
   "qua-trung-thien-su": "ally",
   [SPRING]: "ally",
+  [WARD_CARD]: "ally",
   [SPRING_WORN]: "ally",
   "ngan-chan-phong-ngu": "foe",
   "la-chan-phan-don": "foe",
@@ -1056,11 +1059,11 @@ function spellAimOf(id: string): "foe" | "ally" | undefined {
 }
 /** Spells that wait as an icon in the middle of the board while their target is picked (chủ game 30/10; Phục kích first,
  *  the others once the owner has seen it). */
-const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD, SPRING, SPRING_WORN, WILE_CARDS.gust, WILE_CARDS.charm]);
+const AIM_MARK = new Set(["phuc-kich", "ngan-chan-phong-ngu", "hop-ma-thuat", "qua-trung-thien-su", DUO_CARD, SPRING, SPRING_WORN, WARD_CARD, WILE_CARDS.gust, WILE_CARDS.charm]);
 
 /** Suối nguồn sinh mệnh (chủ game 25/11): siêu tốc, dùng được ở lượt chính lẫn lúc đáp trong chuỗi; nhắm 1 đồng minh. */
 function isSpring(id: string) {
-  return id === SPRING || id === SPRING_WORN;
+  return id === SPRING || id === SPRING_WORN || id === WARD_CARD;
 }
 function springLive(duel: Duel, viewer: Side) {
   if (springAllies(duel, viewer).length === 0) return false;
@@ -3778,6 +3781,15 @@ function PlayPage() {
         emitFx({ t: "aegis", phase: "up", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
       });
     }
+    // Khiên phép dựng lên (chủ game 28/11): video + âm khiên phép chạy một lần, đặt đúng lá nhận khiên.
+    for (const side of [0, 1] as const) {
+      duel.players[side].field.forEach((mon, index) => {
+        const was = prev.players[side].field[index];
+        if (quiet || !mon?.spellWard || (was?.uid === mon.uid && (was.spellWard ?? 0) >= mon.spellWard) || seaVeiled(duel, viewerNow, mon.uid)) return;
+        const box = SLOT_BOX[screenSide(side, viewerNow)][index];
+        emitFx({ t: "aegis", phase: "up", ward: true, x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+      });
+    }
     if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");
     else if (!quiet && /cường hoá và tiêu diệt|tiến hoá .+ dạng cuối|cường hoá .+, tăng 35%/.test(said)) cueAt("timeBoost");
     else if (!quiet && /lão hoá .+, (tăng|giảm) 35%/i.test(said)) cueAt("timeAge");
@@ -3919,21 +3931,23 @@ function PlayPage() {
     // lúc hiệu ứng tới), hình khiên còn đứng tới lúc đó. Hết hạn thì không nháy.
     if (!quiet) {
       const gap = landing ? lead + LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) : Math.max(0, wait);
-      for (const uid of shieldBreaks(prev, duel)) {
+      const breaks = [...shieldBreaks(prev, duel).map((uid) => ({ uid, ward: false })), ...spellWardBreaks(prev, duel).map((uid) => ({ uid, ward: true }))];
+      for (const { uid, ward } of breaks) {
         const seat = seatOf(duel, uid);
         const mon = fieldMon(duel, uid);
         if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
         const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
-        const burst = () => emitFx({ t: "aegis", phase: "break", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        const key = `${ward ? "w" : "a"}:${uid}`;
+        const burst = () => emitFx({ t: "aegis", phase: "break", ward, x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
         if (gap > 0) {
-          setAegisKeep((now) => ({ ...now, [uid]: true }));
+          setAegisKeep((now) => ({ ...now, [key]: true }));
           window.setTimeout(() => {
             burst();
             // Hình khiên còn thêm một nhịp để clip vỡ kịp lên khung đầu (video cần ~0,1 s mới hiện), không hở hình giữa 2 clip.
             window.setTimeout(() => {
               setAegisKeep((now) => {
                 const rest = { ...now };
-                delete rest[uid];
+                delete rest[key];
                 return rest;
               });
             }, 180);
@@ -10210,9 +10224,14 @@ function PlayPage() {
         <AegisBreak />
         {([0, 1] as const).flatMap((side) =>
           duel.players[side].field.map((mon, index) => {
-            if (!mon || !(mon.aegis || aegisKeep[mon.uid]) || mon.hp <= 0 || seaVeiled(duel, viewer, mon.uid)) return null;
+            if (!mon || mon.hp <= 0 || seaVeiled(duel, viewer, mon.uid)) return null;
             const box = SLOT_BOX[screenSide(side, viewer)][index];
-            return <AegisHold key={`aegis-${mon.uid}`} x={box.x + box.w / 2} y={box.y + box.h / 2} w={box.w} />;
+            return (
+              <Fragment key={`aegis-${mon.uid}`}>
+                {mon.aegis || aegisKeep[`a:${mon.uid}`] ? <AegisHold x={box.x + box.w / 2} y={box.y + box.h / 2} w={box.w} /> : null}
+                {mon.spellWard || aegisKeep[`w:${mon.uid}`] ? <AegisHold ward x={box.x + box.w / 2} y={box.y + box.h / 2} w={box.w} /> : null}
+              </Fragment>
+            );
           }),
         )}
         <FlareBlast />

@@ -29,7 +29,7 @@ export function flatFx(): boolean {
 }
 
 /** Alpha clips that have a black-background MP4 twin (the box clip has none). */
-const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|buff-chi-so|phat-quang|khien-vo|khien-dung|khien-giu|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
+const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|buff-chi-so|phat-quang|khien-vo|khien-dung|khien-giu|khien-phep-dung|khien-phep-vo|khien-phep-giu|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
 export function alphaSrc(src: string): string {
   return flatFx() && FLAT_TWINS.test(src) ? src.replace(".webm", ".mp4") : src;
 }
@@ -86,6 +86,9 @@ export const FX_VIDEOS = [
   "/fx/khien-vo.webm?v=4",
   "/fx/khien-dung.webm?v=2",
   "/fx/khien-giu.webm?v=1",
+  "/fx/khien-phep-dung.webm?v=1",
+  "/fx/khien-phep-vo.webm?v=1",
+  "/fx/khien-phep-giu.webm?v=1",
   "/fx/kuriboh-no.webm?v=1",
   "/fx/suong-mu-hinh1.webm?v=1",
   "/fx/suong-mu-hinh2.webm?v=1",

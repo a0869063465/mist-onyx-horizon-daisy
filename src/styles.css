@@ -14560,6 +14560,8 @@ img, video, canvas, svg { -webkit-user-drag: none; user-drag: none; }
 }
 @keyframes aegis-hold-in { from { opacity: 0; } to { opacity: 1; } }
 
+.aegis-break.is-ward, .aegis-hold.is-ward { transform: translate(-50.2%, -45.4%); }
+
 /* Khiên vỡ (Z4, chủ game 27/11): video 480×480, lá giữ chỗ ở (50,2%; 44,9%) khung. */
 .aegis-break {
   position: absolute;

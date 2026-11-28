@@ -904,14 +904,14 @@ export function FlareBlast() {
 
 /** Z4 (chủ game 27/11): khiên dựng lên (chạy một lần) và khiên vỡ khi sát thương tới. Video 480×480, lá giữ chỗ (nền xanh khoá thành trong suốt) rộng 51,7% khung, tâm ở (50,2%; 44,9%). */
 export function AegisBreak() {
-  const [clips, setClips] = useState<{ id: number; phase: "up" | "break"; x: number; y: number; w: number }[]>([]);
+  const [clips, setClips] = useState<{ id: number; phase: "up" | "break"; ward: boolean; x: number; y: number; w: number }[]>([]);
   useEffect(() => {
     const stop = subscribeFx((event) => {
       if (event.t !== "aegis") return;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const id = Date.now() + Math.random();
-      setClips((list) => [...list.slice(-3), { id, phase: event.phase, x: event.x, y: event.y, w: event.w }]);
-      playCue(event.phase === "up" ? "shieldUp" : "shieldBreak");
+      setClips((list) => [...list.slice(-3), { id, phase: event.phase, ward: Boolean(event.ward), x: event.x, y: event.y, w: event.w }]);
+      playCue(event.ward ? (event.phase === "up" ? "wardUp" : "wardBreak") : event.phase === "up" ? "shieldUp" : "shieldBreak");
     });
     return () => {
       stop();
@@ -922,12 +922,12 @@ export function AegisBreak() {
       {clips.map((clip) => (
         <video
           key={clip.id}
-          className="aegis-break"
-          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=2" : "/fx/khien-vo.webm?v=4")}
+          className={`aegis-break${clip.ward ? " is-ward" : ""}`}
+          src={fxUrl(clip.ward ? (clip.phase === "up" ? "/fx/khien-phep-dung.webm?v=1" : "/fx/khien-phep-vo.webm?v=1") : clip.phase === "up" ? "/fx/khien-dung.webm?v=2" : "/fx/khien-vo.webm?v=4")}
           autoPlay
           muted
           playsInline
-          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w / 0.517}%` }}
+          style={{ left: `${clip.x}%`, top: `${clip.y}%`, width: `${clip.w / (clip.ward ? 0.5 : 0.517)}%` }}
           onEnded={() => setClips((list) => list.filter((item) => item.id !== clip.id))}
         />
       ))}
@@ -940,17 +940,17 @@ export function AegisBreak() {
  * 19 khung nối liền) đặt trên lá có khiên, hiện dần sau khi clip dựng khiên (3 s) hết, mất ngay khi khiên vỡ hay hết hạn.
  * `x`, `y`, `w` = tâm và bề ngang lá, % bàn.
  */
-export function AegisHold({ x, y, w }: { x: number; y: number; w: number }) {
+export function AegisHold({ x, y, w, ward = false }: { x: number; y: number; w: number; ward?: boolean }) {
   return (
     <video
-      className="aegis-hold"
-      src={fxUrl("/fx/khien-giu.webm?v=1")}
+      className={`aegis-hold${ward ? " is-ward" : ""}`}
+      src={fxUrl(ward ? "/fx/khien-phep-giu.webm?v=1" : "/fx/khien-giu.webm?v=1")}
       autoPlay
       loop
       muted
       playsInline
       aria-hidden="true"
-      style={{ left: `${x}%`, top: `${y}%`, width: `${w / 0.517}%` }}
+      style={{ left: `${x}%`, top: `${y}%`, width: `${w / (ward ? 0.5 : 0.517)}%` }}
     />
   );
 }
