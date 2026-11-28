@@ -234,6 +234,75 @@ test("Tinh linh bé nhỏ: hết mana thì không tạo khiên, đồng minh v�
   assert.equal(at(blocked, 0, 0).aegis, undefined);
 });
 
+// ---- Khiên phép + lá Bảo hộ (chủ game 28/11) ----
+const WARD = "bao-ho";
+const withHand = (s, side, hand, orb = 5) => ({ ...s, players: s.players.map((p, i) => (i === side ? { ...p, hand, orb } : p)) });
+/** Bên 1 (đối thủ) giữ lượt, bên 0 có quái mang khiên phép. */
+function foeTurn(mine, theirs) {
+  const s = board(mine, theirs);
+  return { ...s, turn: 1, round: 1, players: s.players.map((p) => ({ ...p, orb: 5 })) };
+}
+
+test("Bảo hộ: phép siêu tốc 0 mana, ban khiên phép vĩnh viễn cho 1 đồng minh", () => {
+  let s = withHand(board({ 0: plain({}) }, { 0: mon({}) }), 0, [WARD], 2);
+  const next = D.castSpell(s, 0, at(s, 0, 0).uid);
+  assert.equal(at(next, 0, 0).spellWard, 99, next.live);
+  assert.equal(next.players[0].orb, 2, "0 mana");
+  assert.equal(next.players[0].hand.length, 0);
+});
+
+test("Khiên phép đỡ trọn skill của đối thủ nhắm vào quái, rồi mất; khiên thường vẫn còn", () => {
+  let s = foeTurn({ 0: plain({ spellWard: 99, aegis: 2 }) }, { 0: ["rong-con", { atk: 2, hp: 6, maxHp: 6 }] });
+  const next = D.useSkill(s, at(s, 1, 0).uid, at(s, 0, 0).uid, 0);
+  assert.equal(at(next, 0, 0).hp, 20, next.live);
+  assert.equal(at(next, 0, 0).spellWard, undefined);
+  assert.equal(at(next, 0, 0).aegis, 2, "khiên thường không bị đụng");
+  assert.match(next.log.join("\n"), /Khiên phép đã chặn/);
+});
+
+test("Khiên phép: phép gây cả sân (Sấm sét tận thế) loại quái có khiên ra, các quái khác vẫn trúng", () => {
+  let s = foeTurn({ 0: plain({ spellWard: 99 }), 1: plain({}) }, { 0: mon({}) });
+  s = withHand(s, 1, ["sam-set-tan-the"], 9);
+  let next = D.castSpell(s, 0, null);
+  for (let i = 0; i < 4 && next.pending; i += 1) next = D.passResponse(next);
+  assert.equal(at(next, 0, 0).hp, 20, next.live);
+  assert.equal(at(next, 0, 0).spellWard, undefined);
+  assert.ok(at(next, 0, 1).hp < 20, "quái kia vẫn trúng");
+});
+
+test("Khiên phép đỡ cả phép tiêu diệt (Huỷ diệt)", () => {
+  let s = foeTurn({ 0: plain({ spellWard: 99 }) }, { 0: mon({}) });
+  s = withHand(s, 1, ["huy-diet"], 9);
+  let next = D.castSpell(s, 0, at(s, 0, 0).uid);
+  for (let i = 0; i < 4 && next.pending; i += 1) next = D.passResponse(next);
+  assert.ok(at(next, 0, 0), "quái vẫn trên sân: " + next.live);
+  assert.equal(at(next, 0, 0).spellWard, undefined);
+});
+
+test("Khiên phép không đỡ đòn đánh thường (để khiên thường lo), không mất", () => {
+  const s = board({ 0: mon({ atk: 5 }) }, { 0: plain({ spellWard: 99 }) });
+  const once = hit(s, at(s, 0, 0).uid, at(s, 1, 0).uid);
+  assert.equal(at(once, 1, 0).hp, 15, once.live);
+  assert.equal(at(once, 1, 0).spellWard, 99);
+});
+
+test("Khiên phép không ghi vĩnh viễn hết sau 2 lượt chung; vĩnh viễn thì còn", () => {
+  let s = board({ 0: plain({ spellWard: 2 }), 1: plain({ spellWard: 99 }) }, { 0: mon({}) });
+  const one = closeRound(s);
+  assert.equal(at(one, 0, 0).spellWard, 1);
+  const two = closeRound(one);
+  assert.equal(at(two, 0, 0).spellWard, undefined);
+  assert.equal(at(two, 0, 1).spellWard, 99);
+});
+
+test("Khiên phép không chặn skill/phép của chính phe mình", () => {
+  let s = board({ 0: plain({ spellWard: 99 }) }, { 0: mon({}) });
+  s = withHand(s, 0, ["suoi-nguon-sinh-menh"], 5);
+  const next = D.castSpell(s, 0, at(s, 0, 0).uid);
+  assert.equal(at(next, 0, 0).spellWard, 99, next.live);
+  assert.ok(at(next, 0, 0).maxHp > 20, "buff của phe mình vẫn vào");
+});
+
 console.log(`${passed}/${passed + failed} đạt`);
 await server.close();
 process.exit(failed ? 1 : 0);

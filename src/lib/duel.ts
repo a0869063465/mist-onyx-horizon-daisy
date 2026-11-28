@@ -104,6 +104,9 @@ export type FieldMon = {
   aegis?: number;
   /** Tinh linh bé nhỏ của Nàng tiên giữ khoá (chủ game 28/11): đã tạo khiên cho đồng minh chặn đòn hộ trong lượt chung này. */
   fairyShot?: boolean;
+  /** Khiên phép (chủ game 28/11): số lượt chung còn lại (`WARD_FOREVER` = vĩnh viễn). Đỡ trọn 1 skill hoặc 1 phép của đối thủ
+   *  nhắm vào quái này hay gây lên cả sân (quái này được loại ra khỏi mọi tác động), rồi mất. Giữ song song với `aegis`. */
+  spellWard?: number;
   veil?: boolean;
   oath?: { phys?: boolean; spell?: boolean };
   oathBack?: { phys?: boolean; spell?: boolean };
@@ -3230,13 +3233,115 @@ export function shieldBreaks(before: Duel, after: Duel): string[] {
   return after.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && had.has(mon.uid) && !mon.aegis)).map((mon) => mon.uid));
 }
 
+/** Khiên phép vĩnh viễn (lá ghi "vĩnh viễn"); khiên phép không ghi thì 2 lượt chung như khiên thường (chủ game 28/11). */
+const WARD_FOREVER = 99;
+const WARD_TAG = "(Khiên phép đã chặn)";
+
+/**
+ * Bên tung skill / phép của việc đang chờ (cả đòn đánh cường hoá: sừng, tia, roi), cho khiên phép. Đòn đánh thường thì
+ * không (khiên phép chỉ đỡ skill và phép).
+ */
+function wardActor(state: Duel): Side | null {
+  const pending = state.pending;
+  if (!pending) return null;
+  if (pending.kind === "spell" || pending.kind === "lash") return pending.owner;
+  if (pending.kind === "beam" || pending.kind === "gnaw-skill") return ownerSide(state, pending.caster);
+  if (pending.kind === "melee" || pending.kind === "face") {
+    const side = ownerSide(state, pending.attacker);
+    const attacker = side === null ? null : state.players[side].field.find((mon) => mon?.uid === pending.attacker) ?? null;
+    if (pending.kind === "face" && pending.skill) return side;
+    return attacker && (attacker.horn || attacker.gaze || attacker.bolt) ? side : null;
+  }
+  return null;
+}
+
+/**
+ * Khiên phép (chủ game 28/11): chạy skill / phép của bên `actor`; quái phe kia có khiên phép mà bị tác động (máu, chỉ số,
+ * trạng thái, bị tiêu diệt, bị kéo đi...) thì được trả về y như trước (loại ra khỏi mọi tác động) và khiên phép mất.
+ */
+function spellShield(state: Duel, actor: Side | null, run: (state: Duel) => Duel): Duel {
+  if (actor === null || aegisOff > 0 || dodgeOff) return run(state);
+  const side = (1 - actor) as Side;
+  const warded: Array<{ mon: FieldMon; slot: number }> = [];
+  state.players[side].field.forEach((mon, slot) => {
+    if (mon && (mon.spellWard ?? 0) > 0 && mon.hp > 0 && !mon.cage) warded.push({ mon, slot });
+  });
+  if (warded.length === 0) return run(state);
+  const next = run(state);
+  if (next === state) return next;
+  let out = next;
+  const names: string[] = [];
+  for (const { mon, slot } of warded) {
+    const at = ([0, 1] as const).map((who) => ({ who, index: out.players[who].field.findIndex((unit) => unit?.uid === mon.uid) })).find((row) => row.index >= 0) ?? null;
+    const now = at ? out.players[at.who].field[at.index] : null;
+    if (now && at?.who === side && JSON.stringify(now) === JSON.stringify(mon)) continue;
+    const kept: FieldMon = { ...mon, spellWard: undefined };
+    if (at && at.who !== side) {
+      const other = out.players[at.who];
+      out = patch(out, at.who, { ...other, field: other.field.map((unit) => (unit?.uid === mon.uid ? null : unit)) as Player["field"] });
+    }
+    const owner = out.players[side];
+    const field = [...owner.field] as Player["field"];
+    const here = field.findIndex((unit) => unit?.uid === mon.uid);
+    if (here >= 0) field[here] = kept;
+    else if (!field[slot]) field[slot] = kept;
+    else continue;
+    let spent = owner.spent;
+    if (!now && (owner.spent?.length ?? 0) > (state.players[side].spent?.length ?? 0)) {
+      const list = [...(owner.spent ?? [])];
+      const drop = list.lastIndexOf(mon.cardId);
+      if (drop >= 0) list.splice(drop, 1);
+      spent = list;
+    }
+    out = patch(out, side, { ...owner, field, spent });
+    names.push(cardOf(mon).name);
+  }
+  if (names.length === 0) return next;
+  return note(out, `${names.join(", ")} ${WARD_TAG}.`, "spell");
+}
+
+/** Khiên phép vỡ (đỡ 1 skill / phép) trong bước before -> after, cùng lượt chung. Cho hiệu ứng. */
+export function spellWardBreaks(before: Duel, after: Duel): string[] {
+  if ((before.clock ?? 1) !== (after.clock ?? 1)) return [];
+  const had = new Set(before.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon?.spellWard)).map((mon) => mon.uid)));
+  if (had.size === 0) return [];
+  return after.players.flatMap((player) => player.field.filter((mon): mon is FieldMon => Boolean(mon && had.has(mon.uid) && !mon.spellWard)).map((mon) => mon.uid));
+}
+
+/** Bảo hộ (chủ game 28/11): phép siêu tốc 0 mana, ban khiên phép vĩnh viễn cho 1 đồng minh. Đã có thì giữ nguyên (vĩnh viễn). */
+export const WARD_CARD = "bao-ho";
+function castWard(state: Duel, side: Side, handIndex: number, targetUid: string | null, replay: boolean): Duel {
+  const player = state.players[side];
+  const card = spellCard(player.hand[handIndex] ?? "");
+  if (!card) return state;
+  const ally = targetUid ? player.field.find((mon) => mon?.uid === targetUid && mon.hp > 0) ?? null : null;
+  if (!ally) return note(state, "Chọn 1 quái thú đồng minh.");
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  if (!replay) {
+    const bill = playBill(card.gems, tolled, player.orb, player.flask);
+    if (bill) return note(state, bill);
+  }
+  const paid = replay ? player : payPlayed(player, card.gems, tolled);
+  if (!paid) return note(state, `Cần ${card.gems} gem.`);
+  const you = dropHandCard(paid, handIndex);
+  const field = you.field.map((mon) => (mon?.uid === ally.uid ? { ...mon, spellWard: WARD_FOREVER } : mon)) as Player["field"];
+  const spent = [...(you.spent ?? []), card.id];
+  return note(patch(state, side, { ...you, field, spent }), `${card.name}: ${cardOf(ally).name} nhận khiên phép vĩnh viễn.`, "heal");
+}
+
 /** Hết lượt chung: lá chắn trừ 1 lượt, hết thì mất (không nháy). */
 function aegisTick(state: Duel): Duel {
   let next = state;
   for (const side of [0, 1] as const) {
     const player = next.players[side];
-    if (!player.field.some((mon) => mon?.aegis)) continue;
-    const field = player.field.map((mon) => (mon?.aegis ? { ...mon, aegis: mon.aegis > 1 ? mon.aegis - 1 : undefined } : mon)) as Player["field"];
+    if (!player.field.some((mon) => mon?.aegis || (mon?.spellWard && mon.spellWard < WARD_FOREVER))) continue;
+    const field = player.field.map((mon) => {
+      if (!mon) return mon;
+      let next = mon;
+      if (next.aegis) next = { ...next, aegis: next.aegis > 1 ? next.aegis - 1 : undefined };
+      if (next.spellWard && next.spellWard < WARD_FOREVER) next = { ...next, spellWard: next.spellWard > 1 ? next.spellWard - 1 : undefined };
+      return next;
+    }) as Player["field"];
     next = patch(next, side, { ...player, field });
   }
   return next;
@@ -5389,7 +5494,7 @@ export function passResponse(state: Duel): Duel {
     const set = { ...state, hold: { ...state.hold, mirror: "set" as const, priority: (1 - state.turn) as Side, passed: [false, false] as [boolean, boolean] } };
     return note(set, state.hold.breeze ? "Gió dịu đi phát động." : "Gương phòng hộ phát động.", "spell");
   }
-  const next = rhinoGuard(state, (from) => withSeed(state.hold?.seed, () => oneBlow(() => passResponseCore(from))));
+  const next = rhinoGuard(state, (from) => withSeed(state.hold?.seed, () => oneBlow(() => spellShield(from, wardActor(from), passResponseCore))));
   if (next === state || !state.hold) return next;
   const resolved = next.pending !== state.pending || next.step !== state.step || next.winner !== state.winner || next.hold === null;
   if (!resolved) return next;
@@ -8044,7 +8149,8 @@ function castSpring(state: Duel, side: Side, handIndex: number, targetUid: strin
 }
 
 function castSpellCore(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
-  return knightShield(state, (shielded) => oneBlow(() => lizardGuard(shielded, (next) => castSpellBody(next, handIndex, targetUid, replay, sourceUid))));
+  const caster = (replay || state.step === "main" ? state.turn : (state.hold?.priority ?? ((1 - state.turn) as Side))) as Side;
+  return knightShield(state, (shielded) => oneBlow(() => spellShield(shielded, caster, (warded) => lizardGuard(warded, (next) => castSpellBody(next, handIndex, targetUid, replay, sourceUid)))));
 }
 
 function castSpellBody(state: Duel, handIndex: number, targetUid: string | null = null, replay = false, sourceUid: string | null = null): Duel {
@@ -8083,6 +8189,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     DUO_CARD,
     SPRING,
     SPRING_WORN,
+    WARD_CARD,
     ...(state.step === "respond" && state.pending?.kind === "spell" && state.pending.corrode ? ["phan-nguyen"] : []),
     ...(state.step === "respond" ? [TRAP_CARD] : []),
   ]);
@@ -8101,6 +8208,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
     return note(state, prismPicks(state, side).length ? "Chọn 1 quái đồng minh để sao chép, hoặc rút Harpie Lady." : "Không có quái đồng minh sao chép được, bộ bài cũng không còn Harpie Lady.");
   }
   if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
+  if (card.id === WARD_CARD) return castWard(state, side, handIndex, targetUid, replay);
   if (isWileCard(card.id)) return castWile(state, side, handIndex, targetUid, sourceUid, replay);
   if (card.id === REVIVE_CARD) return castRevive(state, side, handIndex, sourceUid ?? targetUid, replay);
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
@@ -10283,7 +10391,7 @@ function useSkillCore(state: Duel, uid: string, targetUid: string | null, skillI
 }
 
 function castSkill(state: Duel, uid: string, targetUid: string | null, skillIndex = 0, skipGnaw = false, extra: string | null = null): Duel {
-  return knightShield(state, (shielded) => oneBlow(() => lizardGuard(shielded, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra)))));
+  return knightShield(state, (shielded) => oneBlow(() => spellShield(shielded, ownerSide(shielded, uid), (warded) => lizardGuard(warded, (next) => rebukeGuard(next, uid, (armed) => castSkillBody(armed, uid, targetUid, skillIndex, skipGnaw, extra))))));
 }
 
 /**

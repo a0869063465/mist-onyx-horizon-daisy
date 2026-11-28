@@ -1313,6 +1313,13 @@ export const SPELLS: SpellCard[] = [
     "gems": 1,
     "effect": "Phép siêu tốc 1 mana\nTạo bản sao của 1 quái thú đồng minh trên sân với 1 máu. Hoặc rút 1 lá Harpie Lady từ bộ bài.",
     "picture": "spell:kinh-van-hoa"
+  },
+  {
+    "id": "bao-ho",
+    "name": "Bảo hộ",
+    "gems": 0,
+    "effect": "Phép siêu tốc 0 mana\nBan khiên phép vĩnh viễn cho 1 đồng minh.",
+    "picture": "spell:bao-ho"
   }
 ];
 
@@ -1334,7 +1341,8 @@ const WILE_SPELLS: SpellCard[] = [
 const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }, ...WILE_SPELLS];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
-export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();
+/** Lá đã có luật nhưng chưa có tranh/giao diện: chưa vào gói, kho, album. Bảo hộ (chủ game 28/11): chờ tranh + hiệu ứng khiên phép. */
+export const WAITING_CARDS: ReadonlySet<string> = new Set<string>(["bao-ho"]);
 
 const monsterById = new Map([...MONSTERS, ...FORMS].map((card) => [card.id, card]));
 const spellById = new Map([...SPELLS, ...SPELL_FORMS].map((card) => [card.id, card]));
