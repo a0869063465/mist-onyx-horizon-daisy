@@ -1135,6 +1135,7 @@ export const PENDING_NOTES: string[] = [
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
   "Thêm quái Long thần hoàn: Biến hoá chọn 1 lá biến hình lên tay. Bạch hổ long thần hoàn đóng băng quái bị ra đòn, Cuồng quyền long thần hoàn hồi máu và tăng phòng ngự, Huy sư long thần hoàn phá huỷ quái ẩn.",
   "Rồng bọc trứng bỏ dòng chữ Linh hoạt trên lá, chỉ còn Thế công và Thế thủ. Cách chơi không đổi.",
+  "Long thần hoàn có Linh hoạt: mỗi lần đổi dạng hồi 1 máu, +1 công cho đòn kế. Dạng giữ đến khi ra đòn xong (kể cả trả đòn). Đủ 3 sao được +1 công, +2 máu.",
 ];
 
 function remarkOf(notes: string[]) {

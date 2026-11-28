@@ -127,10 +127,12 @@ export type FieldMon = {
   /** Harpie Lady (chủ game 21/11): `born` = lượt chung lúc triệu hồi, `last` = lượt chung của lần Giảo hoạt gần nhất,
    *  `picked` = kỹ năng đã nhận (không mời lại), `deeds` = các hành động khác nhau đã thi triển (3 thì tiến hoá). */
   wit?: { born: number; last: number; picked: string[]; deeds: string[] };
-  /** Long thần hoàn (chủ game 28/11): `last` = lượt chung của lần Biến hoá gần nhất. */
-  dragon?: { last: number };
-  /** Long thần hoàn đang ở dạng biến hình (id lá phép, chỉ đổi tranh), tới hết lượt chung; `boost` = phòng ngự tạm. */
-  guise?: { id: string; boost?: { def: number; mdef: number } };
+  /** Long thần hoàn (chủ game 28/11): `last` = lượt chung của lần Biến hoá gần nhất; `up` = đã nhận nâng cấp đủ 3 sao. */
+  dragon?: { last: number; up?: boolean };
+  /** Long thần hoàn đang ở dạng biến hình (id lá phép, chỉ đổi tranh), tới khi nó ra đòn xong. */
+  guise?: { id: string };
+  /** Chỉ số tạm của Long thần hoàn (Linh hoạt, Cuồng quyền), mất khi nó ra đòn xong. */
+  dragonBoost?: { atk: number; def: number; mdef: number };
   /** Kuriboh đã kích hoạt Cấp số nhân: bị tiêu diệt thì tách ra 2 Kuriboh mới (chủ game 21/11). */
   mult?: boolean;
   lure?: boolean;
@@ -4563,15 +4565,31 @@ export function strikeAtk(mon: FieldMon): number {
   return boulder(mon) ? Math.round(Math.max(0, mon.hp) * 0.7) : liveAtk(mon);
 }
 
-/** Bạch hổ long thần hoàn (chủ game 28/11): Long thần hoàn ở dạng Bạch hổ ra đòn thì quái bị ra đòn bị đóng băng, khoá hành
- *  động 2 lượt chung (khoá = tê liệt, chủ game 18/11). Quái 5 sao không bị. */
+/**
+ * Long thần hoàn ra đòn (kể cả đánh trả, chủ game 28/11): ở dạng Bạch hổ thì quái bị ra đòn bị đóng băng, khoá hành động 2
+ * lượt chung (khoá = tê liệt, chủ game 18/11; quái 5 sao không bị); ra đòn xong thì về dạng gốc, mất chỉ số tạm.
+ */
 function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
   const hit = strikePairCore(attacker, defender, alliesA, alliesB, rosterA, rosterB, rockA, rockB);
-  if (attacker.guise?.id !== DRAGON_CARDS.tiger || hit.defender.hp <= 0 || cardStars(hit.defender.cardId, hit.defender.level) >= 5) return hit;
-  return { ...hit, defender: { ...hit.defender, stun: Math.max(hit.defender.stun, DRAGON_FROST) } };
+  let a = hit.attacker;
+  let d = hit.defender;
+  if (attacker.cardId === DRAGON) {
+    if (attacker.guise?.id === DRAGON_CARDS.tiger) d = frostOf(d);
+    a = shedGuise(a);
+  }
+  if (defender.cardId === DRAGON && hit.answered) {
+    if (defender.guise?.id === DRAGON_CARDS.tiger) a = frostOf(a);
+    d = shedGuise(d);
+  }
+  return { attacker: a, defender: d, dodged: hit.dodged, bite: hit.bite, surplus: hit.surplus };
 }
 
-function strikePairCore(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
+function frostOf(mon: FieldMon): FieldMon {
+  if (mon.hp <= 0 || cardStars(mon.cardId, mon.level) >= 5) return mon;
+  return { ...mon, stun: Math.max(mon.stun, DRAGON_FROST) };
+}
+
+function strikePairCore(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number; answered: boolean } {
   // Vãy phá giáp: trừ thủ của quái địch TRƯỚC rồi mới tính sát thương (chủ game 11/11, luật 0.2).
   if (attacker.cardId === "khung-long-vay-kiem") defender = { ...defender, def: defender.def - skillLoss(attacker.cardId, "def", 2) };
   if (defender.cardId === "khung-long-vay-kiem") attacker = { ...attacker, def: attacker.def - skillLoss(defender.cardId, "def", 2) };
@@ -4745,7 +4763,7 @@ function strikePairCore(attacker: FieldMon, defender: FieldMon, alliesA?: Array<
   const finalAttacker = defenderBreak.foe ?? attackerBreak.mon;
   if (rideShown > 0) wardLines.push(`Cưỡi rồng gây ${rideShown} sát thương chuẩn${rideHeal > 0 && finalAttacker.hp > 0 ? `, ${cardOf(attacker).name} hồi ${Math.min(rideHeal, Math.max(0, finalAttacker.maxHp - finalAttacker.hp))} máu` : ""}`);
   const healed = rideHeal > 0 && finalAttacker.hp > 0 ? { ...finalAttacker, hp: Math.min(finalAttacker.maxHp, finalAttacker.hp + rideHeal) } : finalAttacker;
-  return { attacker: healed, defender: defenderBreak.mon, dodged: attackerDodged || defenderDodged, bite, surplus };
+  return { attacker: healed, defender: defenderBreak.mon, dodged: attackerDodged || defenderDodged, bite, surplus, answered: !beam && (counter > 0 || Boolean(counterBlow)) };
 }
 
 function withLeech(field: Array<FieldMon | null>, attacker: FieldMon, bite: number, surplus: number) {
@@ -5077,9 +5095,12 @@ function pickCounterCore(state: Duel, mode: "phys"): Duel {
   const attacker = foe.field.find((unit) => unit?.uid === ask.from) ?? null;
   if (!mon || mon.hp <= 0 || !attacker || attacker.hp <= 0) return done(state);
   const blow = takePhysical(attacker, liveAtk(mon), foe.field);
-  const field = foe.field.map((unit) => (unit?.uid === attacker.uid ? blow.mon : unit));
+  // Long thần hoàn trả đòn cũng là ra đòn (chủ game 28/11): Bạch hổ đóng băng kẻ bị đánh, xong thì về dạng gốc.
+  const frozen = mon.cardId === DRAGON && mon.guise?.id === DRAGON_CARDS.tiger ? frostOf(blow.mon) : blow.mon;
+  const field = foe.field.map((unit) => (unit?.uid === attacker.uid ? frozen : unit));
   const lost = Math.max(0, attacker.hp - Math.max(0, blow.mon.hp));
-  const hit = note(patch(state, fromSide, dropDead({ ...foe, field: field as Player["field"] })), `${cardOf(mon).name} trả đòn, gây ${lost} sát thương lên ${cardOf(attacker).name}.`, "hit");
+  const frostLine = frozen !== blow.mon && frozen.stun > blow.mon.stun ? ` ${cardOf(attacker).name} bị đóng băng ${DRAGON_FROST} lượt.` : "";
+  const hit = shedStriker(note(patch(state, fromSide, dropDead({ ...foe, field: field as Player["field"] })), `${cardOf(mon).name} trả đòn, gây ${lost} sát thương lên ${cardOf(attacker).name}.${frostLine}`, "hit"), mon.uid);
   const next = checkWinner(hit);
   const marked = traced(state, done(next), { kind: "attack-monster", actor: side, ok: true, cardId: mon.cardId, target: monsterTarget(state, attacker.uid), end: null });
   return marked.winner !== null ? { ...marked, step: "over" } : marked;
@@ -7160,7 +7181,8 @@ const ANGEL_ARROW = "thien-su-vo-hinh";
 
 function resolveFaceCore(state: Duel, blockerUid: string | null, withSkill = false): Duel {
   const pending = state.step === "respond" && state.pending?.kind === "face" ? state.pending : null;
-  const next = resolveFaceRaw(state, blockerUid, withSkill);
+  const raw = resolveFaceRaw(state, blockerUid, withSkill);
+  const next = pending ? shedStriker(raw, pending.attacker) : raw;
   if (!pending) return next;
   const side = ownerSide(state, pending.attacker);
   const archer = side === null ? null : state.players[side].field.find((mon) => mon?.uid === pending.attacker) ?? null;
@@ -11572,7 +11594,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = dropGuises(rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start))))));
+  const state = rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start)))));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -13724,6 +13746,8 @@ const DRAGON_HIGH: string[] = [];
 const DRAGON_IDS = new Set<string>([...Object.values(DRAGON_CARDS), ...DRAGON_HIGH]);
 const DRAGON_FROST = 2;
 const DRAGON_HEAL = 2;
+/** Linh hoạt: mỗi lần đổi dạng hồi 1 máu, +1 công cho lần tấn công kế. */
+const DRAGON_FLEX = { hp: 1, atk: 1 };
 
 export function isDragonCard(id: string | null | undefined): boolean {
   return Boolean(id && DRAGON_IDS.has(id));
@@ -13752,23 +13776,35 @@ function settleDragon(before: Duel, after: Duel): Duel {
   const clock = after.clock ?? 1;
   const asks = [...(after.dragonAsk ?? [])];
   const lit: string[] = [];
+  const upped: string[] = [];
   let next = after;
   for (const at of [0, 1] as const) {
     const board = next.players[at];
     let changed = false;
-    const field = board.field.map((mon) => {
-      if (!mon || mon.cardId !== DRAGON || mon.hp <= 0 || mon.copy || asks.some((ask) => ask.uid === mon.uid)) return mon;
+    const field = board.field.map((unit) => {
+      let mon = unit;
+      if (!mon || mon.cardId !== DRAGON || mon.hp <= 0 || mon.copy) return mon;
       const side = (mon.abroad ?? at) as Side;
+      if (mon.dragon && !mon.dragon.up && next.players[side].stars >= 3) {
+        changed = true;
+        upped.push(mon.uid);
+        mon = dragonUp(mon);
+      }
+      if (asks.some((ask) => ask.uid === mon!.uid)) return mon;
       const fresh = clock > (before.clock ?? 1) && attackRound(next) === side && mon.dragon?.last !== clock;
       if (mon.dragon && !fresh) return mon;
       changed = true;
       asks.push({ side, uid: mon.uid, picks: dragonPicks(next, side) });
       lit.push(mon.uid);
-      return { ...mon, dragon: { last: clock } };
+      const marked: FieldMon = { ...mon, dragon: { last: clock, up: mon.dragon?.up } };
+      if (marked.dragon?.up || next.players[side].stars < 3) return marked;
+      upped.push(mon.uid);
+      return dragonUp(marked);
     });
     if (changed) next = patch(next, at, { ...board, field });
   }
-  if (!lit.length) return after;
+  if (upped.length) next = note(next, `Long thần hoàn đủ 3 sao: +${DRAGON_UP.atk} công, +${DRAGON_UP.hp} máu vĩnh viễn.`, "heal");
+  if (!lit.length) return next;
   const dodge = { id: (next.dodge?.id ?? before.dodge?.id ?? 0) + 1, uids: [...new Set([...(next.dodge && next.dodge !== before.dodge ? next.dodge.uids : []), ...lit])] };
   return note({ ...next, dragonAsk: asks, dodge }, "Biến hoá: chọn 1 lá biến hình của Long thần hoàn.", "info");
 }
@@ -13832,24 +13868,30 @@ export function dragonTargets(state: Duel, side: Side): string[] {
   return sideDragons(state, side).map((mon) => mon.uid);
 }
 
-/** Bỏ dạng biến hình (hết lượt hoặc đổi dạng khác): về tranh gốc, mất phòng ngự tạm của Cuồng quyền. */
+/** Long thần hoàn ra đòn xong: về dạng gốc (tranh gốc), mất chỉ số tạm của Linh hoạt và Cuồng quyền. */
 function shedGuise(mon: FieldMon): FieldMon {
-  if (!mon.guise) return mon;
-  const boost = mon.guise.boost;
+  if (!mon.guise && !mon.dragonBoost) return mon;
+  const boost = mon.dragonBoost;
   if (!boost) return { ...mon, guise: undefined };
-  const raised = mon.raised ? { ...mon.raised, def: mon.raised.def - boost.def, mdef: mon.raised.mdef - boost.mdef } : mon.raised;
-  return { ...mon, guise: undefined, def: Math.max(0, mon.def - boost.def), mdef: Math.max(0, mon.mdef - boost.mdef), raised };
+  const raised = mon.raised ? { ...mon.raised, atk: mon.raised.atk - boost.atk, def: mon.raised.def - boost.def, mdef: mon.raised.mdef - boost.mdef } : mon.raised;
+  return { ...mon, guise: undefined, dragonBoost: undefined, atk: Math.max(0, mon.atk - boost.atk), def: Math.max(0, mon.def - boost.def), mdef: Math.max(0, mon.mdef - boost.mdef), raised };
 }
 
-/** Đầu lượt chung mới: mọi Long thần hoàn về dạng gốc. */
-function dropGuises(state: Duel): Duel {
-  let next = state;
-  for (const side of [0, 1] as const) {
-    const player = next.players[side];
-    if (!player.field.some((mon) => mon?.guise)) continue;
-    next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.guise ? shedGuise(mon) : mon)) as Player["field"] });
-  }
-  return next;
+/** Long thần hoàn vừa đánh thẳng người chơi (không bị chặn): ra đòn xong thì về dạng gốc. */
+function shedStriker(state: Duel, uid: string): Duel {
+  const side = ownerSide(state, uid);
+  if (side === null) return state;
+  const player = state.players[side];
+  const mon = player.field.find((unit) => unit?.uid === uid) ?? null;
+  if (!mon || mon.cardId !== DRAGON || (!mon.guise && !mon.dragonBoost)) return state;
+  return patch(state, side, { ...player, field: player.field.map((unit) => (unit?.uid === uid ? shedGuise(unit) : unit)) as Player["field"] });
+}
+
+/** Đủ 3 sao (chủ game 28/11): Long thần hoàn được +1 công, +2 máu vĩnh viễn (máu tối đa tăng bao nhiêu máu tăng bấy nhiêu). */
+const DRAGON_UP = { atk: 1, hp: 2 };
+function dragonUp(mon: FieldMon): FieldMon {
+  const cap = (mon.maxHp || mon.hp) + DRAGON_UP.hp;
+  return { ...mon, atk: mon.atk + DRAGON_UP.atk, maxHp: cap, hp: mon.hp + DRAGON_UP.hp, raised: markRaised(mon, DRAGON_UP), dragon: { last: mon.dragon?.last ?? 0, up: true } };
 }
 
 /** Tung lá biến hình: đổi dạng, loé sáng, hiệu ứng ngay (siêu tốc: trong chuỗi thì đối thủ lại được đáp). */
@@ -13876,24 +13918,33 @@ function castDragon(state: Duel, side: Side, handIndex: number, targetUid: strin
   if (where === null) return state;
   const board = next.players[where];
   const now = board.field.find((mon) => mon?.uid === dragon.uid) ?? dragon;
-  let body: FieldMon = { ...shedGuise(now), guise: { id } };
-  const bits = [`${cardOf(now).name} biến hình`];
-  const mends: NonNullable<Duel["mends"]> = [];
-  if (id === DRAGON_CARDS.fist) {
-    const hp = Math.min(body.maxHp || body.hp, body.hp + DRAGON_HEAL);
-    if (hp > body.hp) mends.push({ uid: body.uid, n: hp - body.hp });
-    body = { ...body, hp, def: body.def + 1, mdef: body.mdef + 1, raised: markRaised(body, { def: 1, mdef: 1 }), guise: { id, boost: { def: 1, mdef: 1 } } };
-    bits.push(`hồi ${hp - now.hp} máu`, "+1 thủ và +1 thủ phép tới hết lượt");
-  } else if (id === DRAGON_CARDS.tiger) {
-    bits.push("ra đòn thì đóng băng quái bị ra đòn 2 lượt");
-  }
+  // Đổi dạng (chủ game 28/11): chỉ số tạm cộng dồn tới khi nó ra đòn xong. Linh hoạt: hồi 1 máu, +1 công cho đòn kế.
+  const boost = { atk: 0, def: 0, mdef: 0, ...(now.dragonBoost ?? {}) };
+  const heal = DRAGON_FLEX.hp + (id === DRAGON_CARDS.fist ? DRAGON_HEAL : 0);
+  const guard = id === DRAGON_CARDS.fist ? 1 : 0;
+  const hp = Math.min(now.maxHp || now.hp, now.hp + heal);
+  const body: FieldMon = {
+    ...now,
+    guise: id === DRAGON_CARDS.lion ? undefined : { id },
+    hp,
+    atk: now.atk + DRAGON_FLEX.atk,
+    def: now.def + guard,
+    mdef: now.mdef + guard,
+    raised: markRaised(now, { atk: DRAGON_FLEX.atk, def: guard, mdef: guard }),
+    dragonBoost: { atk: boost.atk + DRAGON_FLEX.atk, def: boost.def + guard, mdef: boost.mdef + guard },
+  };
+  const bits = [`${cardOf(now).name} biến hình`, `Linh hoạt: +${DRAGON_FLEX.atk} công cho đòn kế`];
+  if (hp > now.hp) bits.push(`hồi ${hp - now.hp} máu`);
+  const mends: NonNullable<Duel["mends"]> = hp > now.hp ? [{ uid: now.uid, n: hp - now.hp }] : [];
+  if (id === DRAGON_CARDS.fist) bits.push("+1 thủ và +1 thủ phép tới khi ra đòn xong");
+  else if (id === DRAGON_CARDS.tiger) bits.push("ra đòn thì đóng băng quái bị ra đòn 2 lượt");
   next = patch(next, where, { ...board, field: board.field.map((mon) => (mon?.uid === body.uid ? body : mon)) as Player["field"] });
   if (mends.length) next = { ...next, mends: [...(next.mends ?? []), ...mends] };
   flashMon(body.uid);
   if (id === DRAGON_CARDS.lion) {
     const prey = lionPrey(next, side);
     const victim = prey[Math.floor(Math.random() * prey.length)]!;
-    bits.push("phá huỷ 1 quái thú ẩn mình");
+    bits.push("phá huỷ 1 quái thú ẩn mình", "về dạng cơ bản");
     const foe = ownerSide(next, victim.uid);
     if (foe !== null) {
       const owner = next.players[foe];

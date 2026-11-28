@@ -2262,34 +2262,67 @@ test("Long thần hoàn (28/11): ra sân loé sáng, Biến hoá mời 2 trong 3
   assert.equal(asked, 2, "4 lượt chung thì mời 2 lần");
 });
 
-test("Cuồng quyền long thần hoàn: 1 mana, siêu tốc, hồi 2 máu, +1 thủ +1 thủ phép, đổi dạng; hết lượt chung thì mất dạng và phòng ngự tạm", () => {
-  let s = board({ 0: ["long-than-hoan", { hp: 1, maxHp: 4, def: 1, mdef: 1, dragon: { last: 1 } }] }, { 0: ["may-chem", {}] });
-  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [D.DRAGON_CARDS.fist] : [], tolls: [] })) };
+test("Cuồng quyền long thần hoàn (28/11): hồi 2 + Linh hoạt hồi 1, +1 công, +1 thủ +1 thủ phép; giữ qua hết lượt, mất khi ra đòn xong", () => {
+  let s = board({ 0: ["long-than-hoan", { atk: 2, hp: 1, maxHp: 9, def: 1, mdef: 1, dragon: { last: 1 } }] }, { 0: ["may-chem", { hp: 30, maxHp: 30, atk: 0, def: 0 }] });
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 2, hand: i === 0 ? [D.DRAGON_CARDS.fist] : [], tolls: [] })) };
   const cast = D.castSpell(s, 0, null);
   const mon = at(cast, 0, 0);
-  assert.equal(mon.hp, 3, cast.live);
+  assert.equal(mon.hp, 4, cast.live);
+  assert.equal(mon.atk, 3, "Linh hoạt +1 công");
   assert.equal(mon.def, 2);
   assert.equal(mon.mdef, 2);
   assert.equal(mon.guise?.id, D.DRAGON_CARDS.fist);
   assert.equal(cast.players[0].orb, 2, "trả 1 mana");
-  assert.equal(cast.players[0].hand.length, 0);
-  const next = closeRound(cast);
-  const back = at(next, 0, 0);
-  assert.equal(back.guise, undefined, "hết lượt: về dạng gốc");
+  let t = closeRound(cast);
+  assert.equal(at(t, 0, 0).guise?.id, D.DRAGON_CARDS.fist, "hết lượt vẫn giữ dạng");
+  t = { ...t, turn: 0, round: 0, skipped: [false, false], players: t.players.map((p) => ({ ...p, field: p.field.map((m) => (m ? { ...m, dim: false, used: false } : m)) })) };
+  const foeHp = at(t, 1, 0).hp;
+  t = D.attackMonster(t, uid(t, 0, 0), uid(t, 1, 0));
+  for (let n = 0; n < 4 && t.step === "respond"; n += 1) t = D.passResponse(t);
+  assert.equal(foeHp - at(t, 1, 0).hp, 3, "đòn mang +1 công: " + t.live);
+  const back = at(t, 0, 0);
+  assert.equal(back.guise, undefined, "ra đòn xong: về dạng gốc");
+  assert.equal(back.atk, 2);
   assert.equal(back.def, 1);
   assert.equal(back.mdef, 1);
-  assert.equal(back.hp, 3, "máu đã hồi giữ nguyên");
+  assert.equal(back.hp, 4, "máu đã hồi giữ nguyên");
 });
 
-test("Bạch hổ long thần hoàn: ra đòn thì quái bị ra đòn bị đóng băng 2 lượt (quái 5 sao không bị)", () => {
+test("Bạch hổ long thần hoàn: ra đòn (cả đánh trả) thì quái bị ra đòn bị đóng băng 2 lượt; ra đòn xong về dạng gốc", () => {
   let s = board({ 0: ["long-than-hoan", { atk: 1, hp: 9, maxHp: 9, dragon: { last: 1 } }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, atk: 0 }] });
-  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, hand: i === 0 ? [D.DRAGON_CARDS.tiger] : [], tolls: [] })) };
+  s = { ...s, players: s.players.map((p, i) => ({ ...p, orb: 3, flask: 0, stars: 2, hand: i === 0 ? [D.DRAGON_CARDS.tiger] : [], tolls: [] })) };
   let t = D.castSpell(s, 0, null);
   assert.equal(at(t, 0, 0).guise?.id, D.DRAGON_CARDS.tiger, t.live);
   t = { ...t, turn: 0, round: 0, skipped: [false, false] };
   t = D.attackMonster(t, uid(t, 0, 0), uid(t, 1, 0));
   for (let n = 0; n < 4 && t.step === "respond"; n += 1) t = D.passResponse(t);
   assert.ok(at(t, 1, 0).stun >= 2, "đóng băng: " + t.live);
+  assert.equal(at(t, 0, 0).guise, undefined, "về dạng gốc");
+  // Đánh trả: Long thần hoàn bị đánh, đánh lại thì kẻ đánh bị đóng băng.
+  let u = board({ 0: ["long-than-hoan", { atk: 1, hp: 9, maxHp: 9, dragon: { last: 1 }, guise: { id: D.DRAGON_CARDS.tiger } }] }, { 0: ["may-chem", { hp: 20, maxHp: 20, atk: 1 }] });
+  u = { ...u, turn: 1, round: 1, players: u.players.map((p) => ({ ...p, orb: 3, flask: 0, stars: 2, hand: [], tolls: [] })) };
+  u = D.attackMonster(u, uid(u, 1, 0), uid(u, 0, 0));
+  for (let n = 0; n < 4 && u.step === "respond"; n += 1) u = D.passResponse(u);
+  assert.equal(at(u, 0, 0).guise?.id, D.DRAGON_CARDS.tiger, "bị đánh chưa đánh lại: còn dạng");
+  if (u.counterAsk) u = D.pickCounter(u, "phys");
+  for (let n = 0; n < 4 && u.step === "respond"; n += 1) u = D.passResponse(u);
+  assert.ok(at(u, 1, 0).stun >= 2, "đánh trả cũng đóng băng: " + u.live);
+  assert.equal(at(u, 0, 0).guise, undefined, "đánh trả xong về dạng gốc");
+});
+
+test("Long thần hoàn đủ 3 sao: +1 công +2 máu vĩnh viễn (1 lần); bảng chọn 3 dạng", () => {
+  let s = board({ 0: ["long-than-hoan", { atk: 2, hp: 4, maxHp: 4, dragon: { last: 1 } }] }, { 0: ["may-chem", {}] });
+  s = { ...s, players: s.players.map((p) => ({ ...p, orb: 5, flask: 0, stars: 3, hand: [], tolls: [] })) };
+  const drawn = D.draw(s, "spell");
+  const mon = at(drawn, 0, 0);
+  assert.equal(mon.atk, 3, drawn.live);
+  assert.equal(mon.maxHp, 6);
+  assert.equal(mon.hp, 6);
+  const again = D.draw({ ...drawn, players: drawn.players.map((p) => ({ ...p, draws: 0 })) }, "spell");
+  assert.equal(at(again, 0, 0).atk, 3, "chỉ 1 lần");
+  let t = D.testGrant({ ...s, players: s.players.map((p, i) => (i === 0 ? { ...p, field: [null, ...p.field.slice(1)] } : p)) }, 0, "long-than-hoan", false);
+  t = D.summon(t, t.players[0].reserve.findIndex((p) => p.id === "long-than-hoan"), 0);
+  assert.equal(t.dragonAsk?.[0]?.picks.length, 3, "đủ 3 sao: 3 dạng");
 });
 
 test("Huy sư long thần hoàn: chỉ dùng khi đối thủ có quái ẩn; phá huỷ 1 quái ẩn", () => {
