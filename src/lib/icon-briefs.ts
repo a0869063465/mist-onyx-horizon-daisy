@@ -277,6 +277,12 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
         return ["Chọn 1 Harpie Lady", "Huỷ 1 lá phép ngẫu nhiên trên tay đối thủ"];
       case "harpie-me-hoac":
         return ["Chọn 1 Harpie Lady phát động", "Quái địch đánh thường vào 1 đồng minh", "Được chọn chính cô"];
+      case "long-than-bach-ho":
+        return ["Long thần hoàn đổi dạng tới hết lượt", "Ra đòn thì đóng băng quái bị ra đòn 2 lượt"];
+      case "long-than-cuong-quyen":
+        return ["Hồi 2 máu cho Long thần hoàn", "+1 thủ và +1 thủ phép tới hết lượt"];
+      case "long-than-huy-su":
+        return ["Phá huỷ 1 quái thú ẩn của đối thủ (tự chọn)"];
       case "hoi-sinh-quai-thu":
         return ["Hồi sinh quái thú đã chết của cả 2 phe", "Lao ra chặn đòn đánh, ở lại 2 lượt (phép chậm: 3 lượt)"];
       case "bay-thu":
