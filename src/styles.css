@@ -11432,10 +11432,13 @@ button.watch-back {
   filter: drop-shadow(0 0 10px rgba(90, 200, 255, 0.9));
   pointer-events: none;
 }
-.is-lose .es-wings { filter: drop-shadow(0 0 10px rgba(255, 60, 80, 0.9)); }
-/* Cánh thua đâm ra: lưỡi dài phóng từ tâm theo đường thẳng (scaleX 0 → 1), không xoè xoay như cánh thắng. */
-.es-blade { transform: rotate(var(--a)); animation: es-blade-in 420ms calc(200ms + var(--i) * 70ms) cubic-bezier(0.1, 0.9, 0.2, 1) both; }
-@keyframes es-blade-in { 0% { opacity: 0; transform: rotate(var(--a)) scale(0.02, 1); } 15% { opacity: 1; } 70% { transform: rotate(var(--a)) scale(1.07, 1); } 100% { opacity: 1; transform: rotate(var(--a)) scale(1, 1); } }
+/* Cánh thua = ảnh chủ game đưa (812×347, cắt sát), tâm giữa hai cánh đặt đúng tâm huy hiệu; mỗi cánh xoè ra như cánh thắng. */
+.es-wings.is-red { width: min(100vw, 560px); aspect-ratio: 812 / 347; transform: translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(255, 60, 80, 0.8)); }
+.es-wing { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+.es-wing.is-l { clip-path: inset(0 50% 0 0); transform-origin: 40% 50%; animation: es-wing-l 760ms 200ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.es-wing.is-r { clip-path: inset(0 0 0 50%); transform-origin: 60% 50%; animation: es-wing-r 760ms 200ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes es-wing-l { from { opacity: 0; transform: rotate(-60deg) scale(0.2); } to { opacity: 1; transform: none; } }
+@keyframes es-wing-r { from { opacity: 0; transform: rotate(60deg) scale(0.2); } to { opacity: 1; transform: none; } }
 /* Ngọc thua nứt thật: mảnh tách ra theo vết nứt, kẽ hở lộ nền tối. */
 .es-shard { transform-box: fill-box; transform-origin: center; animation: es-shard-open 520ms 620ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
 @keyframes es-shard-open { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); } }

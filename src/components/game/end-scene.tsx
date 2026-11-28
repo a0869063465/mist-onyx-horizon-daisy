@@ -406,12 +406,10 @@ function Crest({ win }: { win: boolean }) {
   );
 }
 
-/** The gem of a lost match, split along a jagged crack into 5 pieces that then drift apart (dx, dy, r = how far each opens). */
+/** The gem of a lost match, split along one jagged crack into 2 pieces that then drift apart (dx, dy, r = how far each opens). */
 const CRACKED = [
-  { d: "M0 -34 L22 0 L4 -3 L-5 -14 Z", dx: 2.4, dy: -2, r: 3 },
-  { d: "M4 -3 L22 0 L0 34 L2 22 L-3 12 Z", dx: 3, dy: 2.4, r: 4 },
-  { d: "M0 -34 L-5 -14 L4 -3 L-3 12 L-22 0 Z", dx: -2.8, dy: -2.2, r: -4 },
-  { d: "M-3 12 L2 22 L0 34 L-22 0 Z", dx: -2.2, dy: 3.2, r: -3 },
+  { d: "M0 -34 L-5 -14 L4 -3 L-3 12 L2 22 L0 34 L-22 0 Z", dx: -2.6, dy: -0.6, r: -3 },
+  { d: "M0 -34 L22 0 L0 34 L2 22 L-3 12 L4 -3 L-5 -14 Z", dx: 2.6, dy: 0.8, r: 3 },
 ] as const;
 
 /** Blue crystal wings unfolding from both sides of the crest. */
@@ -457,39 +455,12 @@ function Wings() {
   );
 }
 
-/** Red blades of a lost match: the same six wings as the win, but straight and sharp, stabbing out instead of fanning open. */
+/** Red crystal wings of a lost match (chủ game's own image, as given): the two wings unfold like the win's blue ones. */
 function LoseWings() {
-  const blades = [
-    { a: -10, l: 176, w: 12 },
-    { a: 2, l: 196, w: 14 },
-    { a: 15, l: 184, w: 13 },
-    { a: 28, l: 160, w: 12 },
-    { a: 41, l: 132, w: 10 },
-    { a: 54, l: 104, w: 9 },
-  ];
   return (
-    <svg className="es-wings is-blades" viewBox="-240 -150 480 260" aria-hidden="true">
-      <defs>
-        <linearGradient id="es-blade" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#5c0614" />
-          <stop offset="0.5" stopColor="#d3182f" />
-          <stop offset="1" stopColor="#ffd2d8" />
-        </linearGradient>
-      </defs>
-      {[-1, 1].map((side) => (
-        <g key={side} transform={`scale(${side} 1)`}>
-          {blades.map((f, i) => {
-            const base = 52;
-            const tip = base + f.l;
-            return (
-              <g key={i} className="es-blade" style={{ "--i": i, "--a": `${-f.a}deg` } as CSSProperties}>
-                <path d={`M${base} ${-f.w * 0.6} L${tip - 40} ${-f.w * 0.3} L${tip} 0 L${tip - 40} ${f.w * 0.3} L${base} ${f.w * 0.6} Z`} fill="url(#es-blade)" stroke="#ffe3e6" strokeWidth="1" opacity="0.95" />
-                <path d={`M${base + 6} 0 L${tip - 10} 0`} stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" />
-              </g>
-            );
-          })}
-        </g>
-      ))}
-    </svg>
+    <span className="es-wings is-red" aria-hidden="true">
+      <img className="es-wing is-l" src="/ui/end/lose-wings.webp" alt="" draggable={false} />
+      <img className="es-wing is-r" src="/ui/end/lose-wings.webp" alt="" draggable={false} />
+    </span>
   );
 }
