@@ -262,7 +262,7 @@ function skillsOfRaw(cardId: string, text: string): SkillShown[] {
  * otherwise. A shield of Nàng tiên giữ khoá (the rules name it after her) is her Tinh linh hộ mệnh.
  */
 const CAST_NAMES: Record<string, Record<string, string>> = {
-  "thien-than-be-nho": { "nàng tiên giữ khoá": "Tinh linh hộ mệnh", "khiên chắn": "Tinh linh hộ mệnh" },
+  "thien-than-be-nho": { "nàng tiên giữ khoá": "Tinh linh hộ mệnh", "lá chắn": "Tinh linh hộ mệnh" },
   "the-than-cua-shien": { "thế thân": "Thế thân trên sân" },
   kizuran: { "vì anh em": "Chịu đòn vì bạn" },
 };

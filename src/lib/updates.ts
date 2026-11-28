@@ -1133,9 +1133,9 @@ export const PENDING_NOTES: string[] = [
   "Tê giác bé con tiến hoá tự động khi gây đủ 4 sát thương từ ra đòn và đủ 1 mana, không còn nút Thăng cấp. Tê giác hiếu thắng có Vào đây, tiến hoá khi đủ 8 sát thương. Tê giác chiến binh có Xông trận.",
   "Hiệp sĩ hộ vệ đổi kỹ năng: 3 sao, 1 mana, công 4, máu 4. Lời thề, Khiên và Điều động thay Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành.",
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
-  "Khiên gộp 1 loại: chặn trọn 1 lần ra đòn (đòn đánh, skill, phép), mọi loại sát thương kể cả chuẩn, rồi vỡ. Không bị đánh thì mất sau 2 lượt. Thiên thần hộ mệnh và Cơn thịnh nộ của hải vương dùng khiên này.",
-  "Khiên vỡ có hiệu ứng và tiếng vỡ riêng, đặt đúng lá bị đòn.",
-  "Nàng tiên giữ khoá đổi kỹ năng: Tinh linh hộ mệnh (phản ứng, 1 mana, tạo khiên cho 1 quái phe mình đang bị nhắm) và Tinh linh bé nhỏ (tự tạo khiên cho đồng minh đầu tiên chặn đòn hộ cô trong lượt).",
+  "Lá chắn gộp 1 loại: chặn trọn 1 lần ra đòn (đòn đánh, skill, phép), mọi loại sát thương kể cả chuẩn, rồi vỡ. Không bị đánh thì mất sau 2 lượt. Thiên thần hộ mệnh và Cơn thịnh nộ của hải vương dùng lá chắn này.",
+  "Lá chắn vỡ có hiệu ứng và tiếng vỡ riêng, đặt đúng lá bị đòn.",
+  "Nàng tiên giữ khoá đổi kỹ năng: Tinh linh hộ mệnh (phản ứng, 1 mana, tạo lá chắn cho 1 quái phe mình đang bị nhắm) và Tinh linh bé nhỏ (tự tạo lá chắn cho đồng minh đầu tiên chặn đòn hộ cô trong lượt).",
   "Thêm lá phép Bảo hộ: siêu tốc 0 mana, ban khiên phép vĩnh viễn cho 1 đồng minh. Khiên phép đỡ trọn 1 skill hoặc 1 phép của đối thủ (kể cả phép lên cả sân) rồi mất.",
 ];
 

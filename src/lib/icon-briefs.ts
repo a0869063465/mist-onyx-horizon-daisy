@@ -187,8 +187,8 @@ function lines(at: SkillAt): string[] {
       return [`Gây ${each} sát thương chuẩn lên mọi quái địch`, ...(plus > 0 ? [`Mục tiêu chọn chịu thêm ${plus}`] : [])];
     }
     case "thien-than-be-nho":
-      if (name === "Tinh linh bé nhỏ") return ["Tạo khiên cho đồng minh đầu tiên lao ra chặn đòn hộ cô"];
-      return ["Tạo khiên cho 1 quái đồng minh đang bị nhắm đến"];
+      if (name === "Tinh linh bé nhỏ") return ["Tạo lá chắn cho đồng minh đầu tiên lao ra chặn đòn hộ cô"];
+      return ["Tạo lá chắn cho 1 quái đồng minh đang bị nhắm đến"];
     case "phu-thuy-rung-den":
       return [
         `-${num(t, /-(\d+)\s*công/, 3)} công, -${num(t, /-(\d+)\s*sát thương kỹ năng/, 3)} sát thương kỹ năng`,

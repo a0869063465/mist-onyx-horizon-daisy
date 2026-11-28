@@ -6461,7 +6461,7 @@ function PlayPage() {
         setAim(null);
         holdNotice("");
         apply(spiritWard(duel, caster, mon.uid));
-      } else holdNotice("Chọn 1 quái đang sáng để tạo khiên.");
+      } else holdNotice("Chọn 1 quái đang sáng để tạo lá chắn.");
       return;
     }
     if (shelling()) {

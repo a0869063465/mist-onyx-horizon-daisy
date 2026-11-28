@@ -3176,7 +3176,7 @@ function wardTag(kind: "phys" | "spell") {
   return `(${kind === "phys" ? "Khiên vật lý" : "Khiên phép"} đã vỡ)`;
 }
 
-const AEGIS_TAG = "(Khiên đã vỡ)";
+const AEGIS_TAG = "(Lá chắn đã vỡ)";
 /** Số lượt chung một lá chắn đứng được (chủ game 23/11). */
 const AEGIS_TURNS = 2;
 /** Đang trong một lần ra đòn (`oneBlow`): quái đã vỡ lá chắn trong lần này thì phần sát thương còn lại của cùng lần cũng về 0. */
@@ -5885,7 +5885,7 @@ export function spiritWard(state: Duel, uid: string, targetUid: string): Duel {
   });
   const angel = owner.field.find((mon) => mon?.uid === uid)!;
   const ally = owner.field.find((mon) => mon?.uid === targetUid)!;
-  const next = note(patch(state, side, { ...paid, field }), `${cardOf(angel).name} dùng Tinh linh hộ mệnh, tạo khiên cho ${ally.uid === uid ? "chính mình" : cardOf(ally).name}.`, "heal");
+  const next = note(patch(state, side, { ...paid, field }), `${cardOf(angel).name} dùng Tinh linh hộ mệnh, tạo lá chắn cho ${ally.uid === uid ? "chính mình" : cardOf(ally).name}.`, "heal");
   return traced(state, next, { kind: "skill", actor: side, ok: true, cardId: ANGEL, target: monsterTarget(state, targetUid), end: null, skill: 0 });
 }
 
@@ -5912,7 +5912,7 @@ function fairyGuard(before: Duel, after: Duel, blockerUid: string, branch?: stri
     if (mon.uid === angel.uid) return { ...mon, fairyShot: true };
     return mon;
   });
-  return note(patch(after, side, { ...paid, field }), `Tinh linh bé nhỏ: ${cardOf(angel).name} tạo khiên cho ${cardOf(blocker).name}.`, "heal");
+  return note(patch(after, side, { ...paid, field }), `Tinh linh bé nhỏ: ${cardOf(angel).name} tạo lá chắn cho ${cardOf(blocker).name}.`, "heal");
 }
 
 function spiritAim(state: Duel): string | null {

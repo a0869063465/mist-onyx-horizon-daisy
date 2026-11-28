@@ -63,7 +63,7 @@ test("Đòn đánh vào quái có khiên: chặn trọn (0 máu mất), khiên v
   const once = hit(s, at(s, 0, 0).uid, at(s, 1, 0).uid);
   assert.equal(at(once, 1, 0).hp, 20, once.live);
   assert.equal(at(once, 1, 0).aegis, undefined);
-  assert.match(once.log.join("\n"), /\(Khiên đã vỡ\)/);
+  assert.match(once.log.join("\n"), /\(Lá chắn đã vỡ\)/);
   assert.deepEqual(D.shieldBreaks(s, once), [at(s, 1, 0).uid], "vỡ trong cùng lượt chung = vỡ (cho hiệu ứng)");
   // Đòn kế (lần ra đòn khác) vào cùng quái: khiên đã vỡ, trúng bình thường.
   const bare = board({ 0: mon({ atk: 5 }) }, { 0: mon({ atk: 0 }) });
@@ -153,7 +153,7 @@ test("Tinh linh hộ mệnh: đòn đánh vào đồng minh, chọn quái bị n
   assert.equal(at(warded, 0, 0).aegis, 2, warded.live);
   assert.equal(warded.players[0].orb, 2, "trừ 1 mana");
   assert.equal(at(warded, 0, 3).dim, true);
-  assert.match(warded.live, /Tinh linh hộ mệnh, tạo khiên cho/);
+  assert.match(warded.live, /Tinh linh hộ mệnh, tạo lá chắn cho/);
   let done = warded;
   for (let i = 0; i < 4 && done.pending; i += 1) done = D.passResponse(done);
   assert.equal(at(done, 0, 0).hp, 20, done.live);

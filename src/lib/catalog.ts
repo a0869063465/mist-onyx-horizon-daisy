@@ -698,7 +698,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Nàng tiên giữ khoá",
     "stars": 1,
     "gems": 1,
-    "skill": "__**Tinh linh hộ mệnh**__\nSkill phản ứng\nKhi 1 đồng minh hoặc chính cô bị nhắm đến bởi 1 đòn sát thương, tiêu hao 1 mana để tạo khiên chắn cho chúng.\n\n__**Tinh linh bé nhỏ**__\nNội tại: tự tiêu hao 1 mana, tạo khiên chắn cho 1 đồng minh đầu tiên lao ra chặn đòn cho cô trong lượt này.",
+    "skill": "__**Tinh linh hộ mệnh**__\nSkill phản ứng\nKhi 1 đồng minh hoặc chính cô bị nhắm đến bởi 1 đòn sát thương, tiêu hao 1 mana để tạo lá chắn cho chúng.\n\n__**Tinh linh bé nhỏ**__\nNội tại: tự tiêu hao 1 mana, tạo lá chắn cho 1 đồng minh đầu tiên lao ra chặn đòn cho cô trong lượt này.",
     "atk": 0,
     "def": 0,
     "mdef": 0,

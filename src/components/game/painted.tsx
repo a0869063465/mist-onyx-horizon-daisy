@@ -28,7 +28,7 @@ NOTICE_RULES.push(
   { text: "Khiên vật lý", ink: "phys" },
   { text: "khiên vật lý", ink: "phys" },
   { text: "khiên phép vĩnh viễn", ink: "ward" },
-  { text: "khiên", ink: "phys" },
+  { text: "lá chắn", ink: "phys" },
   { text: "đang bị nhắm đến", ink: "atk" },
   { text: "Khiên phép", ink: "ward" },
   { text: "khiên phép", ink: "ward" },
