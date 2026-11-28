@@ -923,7 +923,7 @@ export function AegisBreak() {
         <video
           key={clip.id}
           className="aegis-break"
-          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=2" : "/fx/khien-vo.webm?v=2")}
+          src={fxUrl(clip.phase === "up" ? "/fx/khien-dung.webm?v=2" : "/fx/khien-vo.webm?v=4")}
           autoPlay
           muted
           playsInline
@@ -932,6 +932,26 @@ export function AegisBreak() {
         />
       ))}
     </>
+  );
+}
+
+/**
+ * Khiên còn đứng (Z4, chủ game 28/11: hình khiên không được biến mất khi code còn khiên): viền sáng lặp (buffkhien 2,125–2,917 s,
+ * 19 khung nối liền) đặt trên lá có khiên, hiện dần sau khi clip dựng khiên (3 s) hết, mất ngay khi khiên vỡ hay hết hạn.
+ * `x`, `y`, `w` = tâm và bề ngang lá, % bàn.
+ */
+export function AegisHold({ x, y, w }: { x: number; y: number; w: number }) {
+  return (
+    <video
+      className="aegis-hold"
+      src={fxUrl("/fx/khien-giu.webm?v=1")}
+      autoPlay
+      loop
+      muted
+      playsInline
+      aria-hidden="true"
+      style={{ left: `${x}%`, top: `${y}%`, width: `${w / 0.517}%` }}
+    />
   );
 }
 

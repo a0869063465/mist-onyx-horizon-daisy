@@ -6,7 +6,7 @@ import { CardFace, cardText } from "@/components/game/card-face";
 import { CopyText } from "@/components/game/copy-text";
 import { plainCopy } from "@/lib/copy-mark";
 import { Painted } from "@/components/game/painted";
-import { AegisBreak, BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, Spectacle, WaterBurst } from "@/components/game/spectacle";
+import { AegisBreak, AegisHold, BoltBurst, BoomBlast, BuffBlast, FireBurst, FlareBlast, FOG_MS, FogWipe, HealBlast, LaserBeam, Spectacle, WaterBurst } from "@/components/game/spectacle";
 import { ArenaFx } from "@/components/game/arena-fx";
 import { artSrc, fakeMonsterCard, FORMS, isStill, MONSTERS, monsterCard, SPELLS, SPRING, SPRING_WORN, spellCard, spellSrc, type MonsterCard } from "@/lib/catalog";
 import { askLabel, attackLabel, chipLabel, MONSTER_CHIPS } from "@/lib/card-edits";
@@ -969,7 +969,8 @@ function attackLanding(prev: Duel, next: Duel, viewer: Side, marks: { youHp: { x
     // Gương phòng hộ chặn đòn (chủ game 09/11): không gây sát thương thì không có hiệu ứng đánh trúng; chỉ số kẻ đánh bị cướp
     // nên máu của nó đổi, không phải là trúng đòn trả.
     if (prev.hold?.mirror && after && after.hp === before.hp) return null;
-    const hurt = !after || after.hp !== before.hp || fieldMon(next, attacker.uid)?.hp !== attacker.hp;
+    // Khiên (Z4, chủ game 28/11): đòn bị khiên chặn hết không đổi máu ai, nhưng quái vẫn lao vào và va chạm; khiên vỡ cũng là trúng đòn.
+    const hurt = !after || after.hp !== before.hp || fieldMon(next, attacker.uid)?.hp !== attacker.hp || Boolean(before.aegis && !after.aegis);
     if (!hurt) return null;
     const box = SLOT_BOX[screenSide(where.side, viewer)][where.index];
     const target = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
@@ -10173,6 +10174,13 @@ function PlayPage() {
         <HealBlast />
         <BuffBlast />
         <AegisBreak />
+        {([0, 1] as const).flatMap((side) =>
+          duel.players[side].field.map((mon, index) => {
+            if (!mon?.aegis || mon.hp <= 0 || seaVeiled(duel, viewer, mon.uid)) return null;
+            const box = SLOT_BOX[screenSide(side, viewer)][index];
+            return <AegisHold key={`aegis-${mon.uid}`} x={box.x + box.w / 2} y={box.y + box.h / 2} w={box.w} />;
+          }),
+        )}
         <FlareBlast />
         <BoomBlast />
         <BoltBurst />
