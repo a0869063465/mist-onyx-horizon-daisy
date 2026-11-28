@@ -1134,6 +1134,7 @@ export const PENDING_NOTES: string[] = [
   "Hiệp sĩ hộ vệ đổi kỹ năng: 3 sao, 1 mana, công 4, máu 4. Lời thề, Khiên và Điều động thay Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành.",
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
   "Thêm quái Long thần hoàn: Biến hoá chọn 1 lá biến hình lên tay. Bạch hổ long thần hoàn đóng băng quái bị ra đòn, Cuồng quyền long thần hoàn hồi máu và tăng phòng ngự, Huy sư long thần hoàn phá huỷ quái ẩn.",
+  "Rồng bọc trứng bỏ dòng chữ Linh hoạt trên lá, chỉ còn Thế công và Thế thủ. Cách chơi không đổi.",
 ];
 
 function remarkOf(notes: string[]) {

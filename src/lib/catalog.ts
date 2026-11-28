@@ -195,7 +195,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Rồng bọc trứng",
     "stars": 3,
     "gems": 1,
-    "skill": "__**Linh hoạt**__\nĐổi thế công hoặc thế thủ một lần mỗi lượt, trước khi tấn công.\n\n__**Thế công \n**__+4 công.\n \n__**Thế thủ \n**__+2 phòng ngự và không được tấn công. Hết lượt ở thế thủ thì hồi 3 máu.",
+    "skill": "__**Thế công \n**__+4 công.\n \n__**Thế thủ \n**__+2 phòng ngự và không được tấn công. Hết lượt ở thế thủ thì hồi 3 máu.",
     "atk": 0,
     "def": 1,
     "mdef": 0,
