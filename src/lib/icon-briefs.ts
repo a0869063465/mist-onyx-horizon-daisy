@@ -187,8 +187,8 @@ function lines(at: SkillAt): string[] {
       return [`Gây ${each} sát thương chuẩn lên mọi quái địch`, ...(plus > 0 ? [`Mục tiêu chọn chịu thêm ${plus}`] : [])];
     }
     case "thien-than-be-nho":
-      if (name === "Tinh linh bé nhỏ") return ["Tạo khiên cho đồng minh chặn hộ"];
-      return ["Tạo khiên cho 1 quái bị nhắm"];
+      if (name === "Tinh linh bé nhỏ") return ["Tạo khiên cho đồng minh đầu tiên lao ra chặn đòn hộ cô"];
+      return ["Tạo khiên cho 1 quái đồng minh đang bị nhắm đến"];
     case "phu-thuy-rung-den":
       return [
         `-${num(t, /-(\d+)\s*công/, 3)} công, -${num(t, /-(\d+)\s*sát thương kỹ năng/, 3)} sát thương kỹ năng`,
@@ -264,7 +264,7 @@ export function spellBrief(duel: Duel, spellId: string, owner: Side, rebound = f
       case "hop-ma-thuat":
         return ["Đổi chỗ đồng minh bị nhắm với 1 quái địch", "Tới hết vòng"];
       case "bao-ho":
-        return ["Khiên phép vĩnh viễn cho 1 đồng minh", "Đỡ 1 skill hoặc 1 phép của đối thủ rồi mất"];
+        return ["Ban khiên phép vĩnh viễn cho 1 đồng minh"];
       case "kinh-van-hoa":
         return ["Bản sao 1 quái đồng minh (1 máu tối đa) lên tay", "Hoặc rút 1 Harpie Lady từ bộ bài"];
       case "don-cuoi-cung":
