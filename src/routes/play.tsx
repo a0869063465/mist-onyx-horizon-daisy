@@ -133,6 +133,11 @@ import {
   answerWile,
   WILE_CARDS,
   isWileCard,
+  isDragonCard,
+  dragonReady,
+  answerDragon,
+  dragonTargets,
+  DRAGON_CARDS,
   wileReady,
   wileBirds,
   charmCode,
@@ -897,6 +902,12 @@ function seatOf(duel: Duel, uid: string): { side: Side; index: number } | null {
 }
 
 /** The card a monster on the field shows as: Tê giác bé con grown up is its grown card. */
+/** Tranh quái trên sân: Long thần hoàn đang biến hình thì mang tranh lá phép biến hình (chủ game 28/11), vẫn là con đó. */
+function fieldArt(mon: FieldMon, cardId: string = mon.cardId, level: number | undefined = mon.level) {
+  if (mon.guise && cardId === mon.cardId) return spellSrc(mon.guise.id);
+  return artSrc(cardId, level);
+}
+
 function formOf(mon: FieldMon) {
   return mon.cardId === "te-giac-be-con" && (mon.level ?? 1) > 1 ? ((mon.level ?? 1) >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : mon.cardId;
 }
@@ -1369,6 +1380,7 @@ function slowUsable(id: string, duel: Duel, viewer: Side) {
   if (id === TRAP_CARD) return trapPicks(duel, viewer).length > 0;
   if (id === DUO_CARD) return duoReady(duel, viewer);
   if (isWileCard(id)) return wileReady(duel, viewer, id);
+  if (isDragonCard(id)) return dragonReady(duel, viewer, id);
   if (id === REVIVE_CARD) return reviveReady(duel, viewer);
   if (id === PRISM_CARD) return prismPicks(duel, viewer).length > 0;
   if (!SLOW_SPELLS.has(id)) return false;
@@ -2827,7 +2839,7 @@ function PlayPage() {
     const aiParley = Boolean(duel.parley && duel.step === "main" && parleyPicker(duel) === 1);
     // Harpie Lady (Giảo hoạt, tiến hoá): máy trả lời câu của nó; câu của người chơi thì máy chờ.
     const birdSide = duel.birdAsk ? (duel.birdAsk.side ?? (duel.players[1].field.some((mon) => mon?.uid === duel.birdAsk?.uid) ? 1 : 0)) : null;
-    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? birdSide ?? duel.rhinoAsk?.side ?? null;
+    const askSide = duel.trimAsk?.[0]?.side ?? duel.wileAsk?.[0]?.side ?? duel.dragonAsk?.[0]?.side ?? birdSide ?? duel.rhinoAsk?.side ?? null;
     if (askSide === 0) return;
     const aiAsk = askSide === 1;
     if (!aiResponds && !aiMain && !aiParley && !aiAsk) return;
@@ -4668,6 +4680,15 @@ function PlayPage() {
       setPrismAsk({ index });
       return;
     }
+    if (isDragonCard(id)) {
+      // Lá biến hình của Long thần hoàn: siêu tốc, dùng luôn (Huy sư tự chọn quái ẩn).
+      if (!dragonReady(duel, viewer, id)) {
+        holdNotice(id === DRAGON_CARDS.lion ? "Đối thủ không có quái ẩn." : "Cần Long thần hoàn trên sân, lúc mình giữ quyền.");
+        return;
+      }
+      apply(castSpell(duel, index, dragonTargets(duel, viewer)[0] ?? null));
+      return;
+    }
     if (!isWileCard(id)) return;
     if (!wileReady(duel, viewer, id)) {
       holdNotice(id === WILE_CARDS.armor ? "Giáp và Vuốt chỉ dùng khi Harpie Lady chưa hành động bị đòn đánh thường nhắm vào." : id === WILE_CARDS.lash ? "Roi điện chỉ dùng khi Harpie Lady chưa hành động bị kỹ năng của 1 quái thú nhắm tới." : "Cần 1 Harpie Lady chưa hành động trên sân.");
@@ -5838,7 +5859,7 @@ function PlayPage() {
         startDuo(payload.index);
         return;
       }
-      if (isWileCard(payload.spellId) || payload.spellId === REVIVE_CARD || payload.spellId === PRISM_CARD) {
+      if (isWileCard(payload.spellId) || isDragonCard(payload.spellId) || payload.spellId === REVIVE_CARD || payload.spellId === PRISM_CARD) {
         if (hit?.closest(".hand")) return;
         startWileSpell(payload.index);
         return;
@@ -7623,6 +7644,7 @@ function PlayPage() {
   const autoR = you.draws >= 1 && you.reserve.length > 2 ? you.reserve.length - 1 : -1;
   const autoS = you.draws >= 1 && autoR < 0 && you.hand.length > 1 ? you.hand.length - 1 : -1;
   const wileAsk = duel.wileAsk?.[0] ?? null;
+  const dragonAsk = duel.dragonAsk?.[0] ?? null;
   const rhinoAsk = duel.rhinoAsk ?? null;
   const rhinoMon = rhinoAsk ? duel.players[rhinoAsk.side].field.find((unit) => unit?.uid === rhinoAsk.uid) ?? null : null;
   const rhinoCard = rhinoAsk ? monsterCard(rhinoAsk.level >= 3 ? "te-giac-chien-binh" : "te-giac-hieu-thang") : null;
@@ -7828,6 +7850,17 @@ function PlayPage() {
           cards={wileAsk.picks.map((pick): PickCard => ({ key: pick, face: <CardFace spellId={WILE_CARDS[pick as keyof typeof WILE_CARDS]} hand /> }))}
           onConfirm={(pick) => apply(answerWile(duel, pick))}
           onTimeout={() => apply(answerWile(duel, null))}
+        />
+      ) : null}
+      {dragonAsk && (dragonAsk.side === viewer || duel.mode === "net") ? (
+        <PickPanel
+          key={`dragon:${dragonAsk.uid}:${duel.clock ?? 1}`}
+          mine={dragonAsk.side === viewer}
+          title="Biến hoá"
+          sub="Chọn 1 lá biến hình của Long thần hoàn"
+          cards={dragonAsk.picks.map((pick): PickCard => ({ key: pick, face: <CardFace spellId={pick} hand /> }))}
+          onConfirm={(pick) => apply(answerDragon(duel, pick))}
+          onTimeout={() => apply(answerDragon(duel, null))}
         />
       ) : null}
       {rhinoAsk && rhinoCard && (rhinoAsk.side === viewer || duel.mode === "net") ? (
@@ -9341,7 +9374,7 @@ function PlayPage() {
                               startDuo(index);
                               return;
                             }
-                            if (isWileCard(id) || id === REVIVE_CARD || id === PRISM_CARD) {
+                            if (isWileCard(id) || isDragonCard(id) || id === REVIVE_CARD || id === PRISM_CARD) {
                               startWileSpell(index);
                               return;
                             }
@@ -9886,7 +9919,7 @@ function PlayPage() {
                             startDuo(index);
                             return;
                           }
-                          if (isWileCard(shownSpell.id) || shownSpell.id === REVIVE_CARD || shownSpell.id === PRISM_CARD) {
+                          if (isWileCard(shownSpell.id) || isDragonCard(shownSpell.id) || shownSpell.id === REVIVE_CARD || shownSpell.id === PRISM_CARD) {
                             setInspect(null);
                             startWileSpell(index);
                             return;
@@ -10821,7 +10854,7 @@ function SheetCard({ mon, allies, layout }: { mon: FieldMon; allies: Array<Field
         {value}
       </span>
     );
-  const art = artSrc(mon.cardId, mon.level);
+  const art = fieldArt(mon);
   return (
     <span className="sheet-unit">
       <span className="field-unit">
@@ -11071,7 +11104,7 @@ function BoardSlot({
         {lurk && !veil ? <img className="lurk-back" src="/ui/card-back-you.webp" alt="" draggable={false} /> : null}
         {fog || unveil === "foe" ? <img className={`lurk-fog${unveil === "foe" ? " is-out" : ""}`} src="/ui/suong-mu-dung.webp" alt="" draggable={false} /> : null}
         {unveil === "foe" ? <FogWipe /> : null}
-        {artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level) ? <img className="art" src={artSrc(mask ? "mu" : mon.cardId, mask ? 1 : mon.level)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
+        {(mask ? artSrc("mu", 1) : fieldArt(mon)) ? <img className="art" src={mask ? artSrc("mu", 1) : fieldArt(mon)} alt="" draggable={false} style={veil ? { filter: "brightness(0)" } : undefined} /> : null}
         <img className="frame" src="/ui/frame-hand-nogem.png" alt="" draggable={false} />
         {veil || decoy || mask ? null : <KeywordRow cardId={mon.cardId} />}
         {veil || decoy ? (decoy ? null : <i className="sea-veil">{tr("Ẩn")}</i>) : mask ? null : (
