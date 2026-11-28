@@ -44,7 +44,7 @@ export type SpellSpeed = "slow" | "fast" | "super" | "buff";
 const SPEEDS: Record<SpellSpeed, string[]> = {
   slow: ["harpie-thoi-bay", "harpie-me-hoac", "sam-set-tan-the", "huy-diet", "soi-xich-dia-nguc", "thanh-guom-anh-sang", "mu-ma-phap", "phan-nguyen"],
   fast: ["bay-thu", "song-sat", "hoi-sinh-quai-thu", "harpie-giap-va-vuot", "harpie-roi-dien", "guong-phong-ho", "la-chan-phan-don", "vong-nguyen-rua-ac-ma", "phuc-kich", "ngan-chan-phong-ngu", "virus-an-mon", "co-may-thoi-gian", "giap-co-khi", "qua-trung-thien-su"],
-  super: ["hoan-doi", "hop-ma-thuat", "kinh-van-hoa", "don-cuoi-cung", "hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat", "suoi-nguon-sinh-menh", "suoi-nguon-sinh-menh-2"],
+  super: ["hoan-doi", "hop-ma-thuat", "kinh-van-hoa", "don-cuoi-cung", "hap-thu-ma-phap", "vong-xoay-bao-ho", "mua-ma-thuat", "suoi-nguon-sinh-menh", "suoi-nguon-sinh-menh-2", "long-than-bach-ho", "long-than-cuong-quyen", "long-than-huy-su"],
   buff: ["sung-loi-pha", "ke-dao-mo", "thu-hoi-quai-thu"],
 };
 export function spellSpeed(id: string): SpellSpeed | null {

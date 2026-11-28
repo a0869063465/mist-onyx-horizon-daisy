@@ -447,6 +447,19 @@ export const MONSTERS: MonsterCard[] = [
     "since": "2026-11-23"
   },
   {
+    "id": "long-than-hoan",
+    "name": "Long thần hoàn",
+    "stars": 2,
+    "gems": 1,
+    "skill": "**__Biến hoá__**:\nKhi ra sân, chọn 1 trong 3 lá phép tạo trên tay để biến hình.\n(Khi ngươi đạt đủ 3 sao sẽ có thêm 2 dạng biến hình nữa)\n\nLưu ý: Các lá phép biến hình sẽ biến đổi hình dáng của lá long thần tạo ra nó, và ban hiệu ứng ngay lập tức.",
+    "atk": 2,
+    "def": 1,
+    "mdef": 1,
+    "hp": 4,
+    "art": "long-than-hoan",
+    "since": "2026-11-28"
+  },
+  {
     "id": "kazura",
     "name": "Kazura",
     "stars": 2,
@@ -1331,7 +1344,14 @@ const WILE_SPELLS: SpellCard[] = [
   { id: "harpie-roi-dien", name: "Roi điện", gems: 1, effect: "Phép phản ứng 1 mana\nKhi harpie lady bị skill của 1 quái thú nhắm tới, chọn harpie đó để dùng phép này, huỷ đòn đó. tăng cho cô ấy vĩnh viễn 1 công và trả đòn ngay trực tiếp lên kẻ ra đòn (huỷ đòn trả đòn của cô ấy sau đó nữa, nếu có)", picture: "spell:harpie-roi-dien" },
 ];
 
-const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }, ...WILE_SPELLS];
+/** Lá biến hình của Long thần hoàn (chủ game 28/11): tạo trên tay lúc Biến hoá, không có trong bộ bài. */
+const DRAGON_SPELLS: SpellCard[] = [
+  { id: "long-than-bach-ho", name: "Bạch hổ long thần hoàn", gems: 1, effect: "Siêu tốc 1 mana\nBạn nội tại: khi ta ra đòn, đóng băng quái thú địch, khoá hành động của chúng trong 2 lượt.", picture: "spell:long-than-bach-ho" },
+  { id: "long-than-cuong-quyen", name: "Cuồng quyền long thần hoàn", gems: 1, effect: "Siêu tốc 1 mana\nHồi 2 máu cho long thần, ban 1 phòng ngự đến hết lượt.", picture: "spell:long-than-cuong-quyen" },
+  { id: "long-than-huy-su", name: "Huy sư long thần hoàn", gems: 1, effect: "Siêu tốc 1 mana\nPhá huỷ 1 quái thú đang ẩn của đối thủ.", picture: "spell:long-than-huy-su" },
+];
+
+const SPELL_FORMS: SpellCard[] = [{ ...SPELLS.find((card) => card.id === SPRING)!, id: SPRING_WORN }, ...WILE_SPELLS, ...DRAGON_SPELLS];
 
 /** Cards shown in the collection but not yet playable (rules not built): out of packs, out of decks. */
 export const WAITING_CARDS: ReadonlySet<string> = new Set<string>();

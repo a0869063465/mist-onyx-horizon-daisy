@@ -127,6 +127,10 @@ export type FieldMon = {
   /** Harpie Lady (chủ game 21/11): `born` = lượt chung lúc triệu hồi, `last` = lượt chung của lần Giảo hoạt gần nhất,
    *  `picked` = kỹ năng đã nhận (không mời lại), `deeds` = các hành động khác nhau đã thi triển (3 thì tiến hoá). */
   wit?: { born: number; last: number; picked: string[]; deeds: string[] };
+  /** Long thần hoàn (chủ game 28/11): `last` = lượt chung của lần Biến hoá gần nhất. */
+  dragon?: { last: number };
+  /** Long thần hoàn đang ở dạng biến hình (id lá phép, chỉ đổi tranh), tới hết lượt chung; `boost` = phòng ngự tạm. */
+  guise?: { id: string; boost?: { def: number; mdef: number } };
   /** Kuriboh đã kích hoạt Cấp số nhân: bị tiêu diệt thì tách ra 2 Kuriboh mới (chủ game 21/11). */
   mult?: boolean;
   lure?: boolean;
@@ -436,6 +440,8 @@ export type Duel = {
   rhinoAsk?: { uid: string; side: Side; level: number; slot: Slot } | null;
   /** Giảo hoạt của Harpie Lady: mỗi câu là 1 lần chọn 1 kỹ năng (2 kỹ năng ngẫu nhiên chưa nhận), hỏi lần lượt. */
   wileAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
+  /** Biến hoá của Long thần hoàn: chọn 1 lá phép biến hình (id lá) lên tay, đối thủ thấy bảng úp. */
+  dragonAsk?: Array<{ side: Side; uid: string; picks: string[] }> | null;
   /** Tay tối đa 7 lá (chủ game 27/11): chỉ trận Vs Máy / online (không Test, Hướng dẫn, Thực chiến). */
   handCap?: boolean;
   /** Hết vòng mà tay quá 7 lá: mỗi câu là 1 bên phải chọn `n` lá để bỏ, hỏi lần lượt. */
@@ -1128,7 +1134,7 @@ function traced(before: Duel, rawAfter: Duel, event: TraceEvent): Duel {
   const flashed = booms.length
     ? { ...dodged, boom: { id: (before.boom?.id ?? 0) + 1, uids: [...new Set(booms.map((row) => row.uid))], to: Object.fromEntries(booms.flatMap((row) => (row.to ? [[row.uid, row.to] as const] : []))) } }
     : dodged;
-  const after = settleRhino(settleWileCards(settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))))));
+  const after = settleDragonCards(settleDragon(before, settleRhino(settleWileCards(settleSeal(settleBird(settleWit(before, wearStones(settleMult(before, markTraps(before, markRites(before, settleLurk(markLurk(before, settleBox(flashed), event)), event), event))))))))));
   const start = before.events?.length ?? 0;
   const current = after.events ?? [];
   if (event.kind !== "result" && current.slice(start).some((row) => row.kind === event.kind && row.actor === event.actor)) return after;
@@ -1723,7 +1729,7 @@ function rhinoSlot(player: Player, uid: string): Slot {
 
 /** Tiến hoá tự động của Tê giác (chủ game 27/11): đủ sát thương và đủ mana thì hỏi chủ quái xác nhận. */
 function settleRhino(state: Duel): Duel {
-  if (state.rhinoAsk || state.birdAsk || state.wileAsk?.length || state.winner !== null) return state;
+  if (state.rhinoAsk || state.birdAsk || state.wileAsk?.length || state.dragonAsk?.length || state.winner !== null) return state;
   if (!settled({ ...state, rhinoAsk: null })) return state;
   for (const side of [0, 1] as const) {
     const player = state.players[side];
@@ -3469,6 +3475,7 @@ function settled(state: Duel): boolean {
     !state.birdAsk &&
     !state.rhinoAsk &&
     !state.wileAsk?.length &&
+    !state.dragonAsk?.length &&
     !state.trimAsk?.length &&
     !state.clockAsk &&
     !state.preyAsk &&
@@ -3492,7 +3499,7 @@ function yieldTurn(state: Duel): Duel {
 
 /** Xong hẳn, chỉ còn câu hỏi Giảo hoạt hoặc tiến hoá của Harpie Lady đang chờ. */
 function birdWaits(state: Duel): boolean {
-  return Boolean(state.wileAsk?.length || state.birdAsk || state.rhinoAsk) && settled({ ...state, wileAsk: null, birdAsk: null, rhinoAsk: null });
+  return Boolean(state.wileAsk?.length || state.dragonAsk?.length || state.birdAsk || state.rhinoAsk) && settled({ ...state, wileAsk: null, dragonAsk: null, birdAsk: null, rhinoAsk: null });
 }
 
 /** Trả lời xong câu hỏi của Harpie Lady: việc trước đó lẽ ra nhường quyền thì giờ nhường. */
@@ -4556,7 +4563,15 @@ export function strikeAtk(mon: FieldMon): number {
   return boulder(mon) ? Math.round(Math.max(0, mon.hp) * 0.7) : liveAtk(mon);
 }
 
+/** Bạch hổ long thần hoàn (chủ game 28/11): Long thần hoàn ở dạng Bạch hổ ra đòn thì quái bị ra đòn bị đóng băng, khoá hành
+ *  động 2 lượt chung (khoá = tê liệt, chủ game 18/11). Quái 5 sao không bị. */
 function strikePair(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
+  const hit = strikePairCore(attacker, defender, alliesA, alliesB, rosterA, rosterB, rockA, rockB);
+  if (attacker.guise?.id !== DRAGON_CARDS.tiger || hit.defender.hp <= 0 || cardStars(hit.defender.cardId, hit.defender.level) >= 5) return hit;
+  return { ...hit, defender: { ...hit.defender, stun: Math.max(hit.defender.stun, DRAGON_FROST) } };
+}
+
+function strikePairCore(attacker: FieldMon, defender: FieldMon, alliesA?: Array<FieldMon | null>, alliesB?: Array<FieldMon | null>, rosterA?: string[], rosterB?: string[], rockA = 0, rockB = 0): { attacker: FieldMon; defender: FieldMon; dodged: boolean; bite: number; surplus: number } {
   // Vãy phá giáp: trừ thủ của quái địch TRƯỚC rồi mới tính sát thương (chủ game 11/11, luật 0.2).
   if (attacker.cardId === "khung-long-vay-kiem") defender = { ...defender, def: defender.def - skillLoss(attacker.cardId, "def", 2) };
   if (defender.cardId === "khung-long-vay-kiem") attacker = { ...attacker, def: attacker.def - skillLoss(defender.cardId, "def", 2) };
@@ -7924,6 +7939,7 @@ function castSpellBody(state: Duel, handIndex: number, targetUid: string | null 
   }
   if (card.id === SPRING || card.id === SPRING_WORN) return castSpring(state, side, handIndex, targetUid, replay);
   if (isWileCard(card.id)) return castWile(state, side, handIndex, targetUid, sourceUid, replay);
+  if (isDragonCard(card.id)) return castDragon(state, side, handIndex, targetUid);
   if (card.id === REVIVE_CARD) return castRevive(state, side, handIndex, sourceUid ?? targetUid, replay);
   if (!replay && card.id === "hap-thu-ma-phap" && state.pending?.kind !== "spell" && state.pending?.kind !== "lash" && !chargedWhip(state) && !slowWaiting(state) && !eatFor(state, side)) {
     return note(state, "Chỉ hấp thu được lá phép đang thi triển.");
@@ -9804,7 +9820,7 @@ function settleWit(before: Duel, after: Duel): Duel {
 
 /** Tiến hoá (chủ game 21/11): Harpie Lady đã thi triển 3 hành động khác nhau (đánh, chặn, mỗi kỹ năng là 1 loại). */
 function settleBird(state: Duel): Duel {
-  if (state.birdAsk || state.wileAsk?.length || state.winner !== null) return state;
+  if (state.birdAsk || state.wileAsk?.length || state.dragonAsk?.length || state.winner !== null) return state;
   if (!settled({ ...state, birdAsk: null })) return state;
   for (const side of [0, 1] as const) {
     const mon = state.players[side].field.find((unit) => unit?.cardId === GIRL && unit.hp > 0 && (unit.wit?.deeds.length ?? 0) >= 4) ?? null;
@@ -11556,7 +11572,7 @@ function rewindAlly(state: Duel, side: Side, uid: string): Duel | null {
 }
 
 function stampTurn(start: Duel): Duel {
-  const state = rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start)))));
+  const state = dropGuises(rallyTick(beautyTick(reviveTick(dropSprings(dropShields(start))))));
   const now: NonNullable<Duel["now"]> = {};
   for (const team of state.players) {
     team.field.forEach((mon, slot) => {
@@ -12324,6 +12340,7 @@ export function aiAnswerAsk(state: Duel): Duel | null {
   }
   if (state.trimAsk?.[0]?.side === 1) return withLive(answerTrim(state, aiTrimPick(state, 1)));
   if (state.wileAsk?.[0]?.side === 1) return withLive(answerWile(state, aiWilePick(state, state.wileAsk[0])));
+  if (state.dragonAsk?.[0]?.side === 1) return withLive(answerDragon(state, aiDragonPick(state, state.dragonAsk[0])));
   if (state.birdAsk && state.players[1].field.some((mon) => mon?.uid === state.birdAsk?.uid)) return withLive(evolveBird(state, "nu-chua-dieu-nhan"));
   if (state.rhinoAsk?.side === 1) return withLive(answerRhino(state));
   if (state.clockAsk?.side === 1) return withLive(chooseClock(state, CLOCK_FIERCE));
@@ -13684,6 +13701,207 @@ function blessKeep(state: Duel, uids: string[], lock: boolean): { state: Duel; l
   if (!blessed.line || !eat || !blessed.state.hold) return blessed;
   const back = blessGirls(eat.back, uids, lock).state;
   return { state: { ...blessed.state, hold: { ...blessed.state.hold, eat: { ...eat, back } } }, line: blessed.line };
+}
+
+/**
+ * Long thần hoàn (chủ game 28/11). Biến hoá: lúc ra sân và đầu mỗi lượt chung mà chủ nó giữ lượt tấn công, nó loé sáng và
+ * chủ chọn 1 trong 2 dạng ngẫu nhiên trong 3 (đủ 3 sao: 3 trong 5, hiện mới có 3 dạng); lá phép dạng đó lên tay. Trên tay
+ * luôn chỉ 1 lá biến hình: lần chọn mới thay lá cũ (lá sống 2 lượt chung). Tung lá (siêu tốc, mana của lá): Long thần
+ * hoàn đổi tranh thành dạng đó (vẫn là con đó) tới hết lượt chung rồi về dạng gốc, và có hiệu ứng ngay:
+ * - Bạch hổ: nội tại, ra đòn thì quái bị ra đòn bị đóng băng 2 lượt.
+ * - Cuồng quyền: hồi 2 máu, +1 thủ và +1 thủ phép tới hết lượt.
+ * - Huy sư: phá huỷ 1 quái ẩn của đối thủ (tự chọn ngẫu nhiên).
+ * Không còn Long thần hoàn trên sân thì lá biến hình trên tay chủ biến mất.
+ */
+export const DRAGON = "long-than-hoan";
+export const DRAGON_CARDS = {
+  tiger: "long-than-bach-ho",
+  fist: "long-than-cuong-quyen",
+  lion: "long-than-huy-su",
+} as const;
+/** Dạng thêm khi chủ đủ 3 sao (chủ game sẽ thêm 2 dạng): id lá phép. */
+const DRAGON_HIGH: string[] = [];
+const DRAGON_IDS = new Set<string>([...Object.values(DRAGON_CARDS), ...DRAGON_HIGH]);
+const DRAGON_FROST = 2;
+const DRAGON_HEAL = 2;
+
+export function isDragonCard(id: string | null | undefined): boolean {
+  return Boolean(id && DRAGON_IDS.has(id));
+}
+
+/** Long thần hoàn của `side` trên sân (kể cả đang ở sân bên kia vì Hộp ma thuật). */
+function sideDragons(state: Duel, side: Side): FieldMon[] {
+  return state.players.flatMap((player, at) => player.field.filter((mon): mon is FieldMon => Boolean(mon && mon.cardId === DRAGON && mon.hp > 0 && (mon.abroad ?? at) === side)));
+}
+
+/** Quái ẩn của đối thủ Huy sư phá được (quái 5 sao không ẩn được, vẫn loại cho chắc). */
+function lionPrey(state: Duel, side: Side): FieldMon[] {
+  const foe = state.players[(1 - side) as Side];
+  return foe.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && lurking(mon) && cardStars(mon.cardId, mon.level) < 5));
+}
+
+/** Các dạng mời lúc Biến hoá: 2 trong 3, đủ 3 sao thì 3 trong 5 (chưa có dạng thêm thì lấy hết những gì có). */
+function dragonPicks(state: Duel, side: Side): string[] {
+  const high = state.players[side].stars >= 3;
+  const pool = [...Object.values(DRAGON_CARDS), ...(high ? DRAGON_HIGH : [])];
+  return shuffled(pool).slice(0, Math.min(pool.length, high ? 3 : 2));
+}
+
+/** Sau mỗi việc: Long thần hoàn vừa vào sân, hoặc lượt chung mới mà chủ nó giữ lượt tấn công, thì mở Biến hoá. */
+function settleDragon(before: Duel, after: Duel): Duel {
+  const clock = after.clock ?? 1;
+  const asks = [...(after.dragonAsk ?? [])];
+  const lit: string[] = [];
+  let next = after;
+  for (const at of [0, 1] as const) {
+    const board = next.players[at];
+    let changed = false;
+    const field = board.field.map((mon) => {
+      if (!mon || mon.cardId !== DRAGON || mon.hp <= 0 || mon.copy || asks.some((ask) => ask.uid === mon.uid)) return mon;
+      const side = (mon.abroad ?? at) as Side;
+      const fresh = clock > (before.clock ?? 1) && attackRound(next) === side && mon.dragon?.last !== clock;
+      if (mon.dragon && !fresh) return mon;
+      changed = true;
+      asks.push({ side, uid: mon.uid, picks: dragonPicks(next, side) });
+      lit.push(mon.uid);
+      return { ...mon, dragon: { last: clock } };
+    });
+    if (changed) next = patch(next, at, { ...board, field });
+  }
+  if (!lit.length) return after;
+  const dodge = { id: (next.dodge?.id ?? before.dodge?.id ?? 0) + 1, uids: [...new Set([...(next.dodge && next.dodge !== before.dodge ? next.dodge.uids : []), ...lit])] };
+  return note({ ...next, dragonAsk: asks, dodge }, "Biến hoá: chọn 1 lá biến hình của Long thần hoàn.", "info");
+}
+
+/** Không còn Long thần hoàn của chủ trên sân: lá biến hình trên tay biến mất. */
+function settleDragonCards(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.hand.some((id) => isDragonCard(id)) || sideDragons(next, side).length > 0) continue;
+    next = note(patch(next, side, dropDragonCards(player)), "Không còn Long thần hoàn trên sân: lá biến hình biến mất.", "info");
+  }
+  return next;
+}
+
+function dropDragonCards(player: Player): Player {
+  let you = player;
+  for (let index = you.hand.length - 1; index >= 0; index -= 1) if (isDragonCard(you.hand[index])) you = dropHandCard(you, index);
+  return you;
+}
+
+/** Trả lời Biến hoá: `cardId` là lá chọn; null hoặc không hợp lệ (hết giờ) thì lấy ngẫu nhiên. Lá mới thay lá cũ. */
+export function answerDragon(state: Duel, cardId: string | null): Duel {
+  const ask = state.dragonAsk?.[0];
+  if (!ask) return state;
+  const rest = (state.dragonAsk ?? []).slice(1);
+  const pick = cardId && ask.picks.includes(cardId) ? cardId : ask.picks[Math.floor(Math.random() * ask.picks.length)]!;
+  let next: Duel = { ...state, dragonAsk: rest.length ? rest : null };
+  if (sideDragons(next, ask.side).some((mon) => mon.uid === ask.uid)) {
+    const hands = dropDragonCards(next.players[ask.side]);
+    next = note(patch(next, ask.side, { ...hands, hand: [...hands.hand, pick], tolls: [...handTolls(hands), false] }), `Biến hoá: tạo lá ${spellCard(pick)?.name ?? "biến hình"} lên tay.`, "heal");
+  }
+  return payYield(settleBird(next));
+}
+
+/** Máy chọn dạng: có quái ẩn để phá thì Huy sư, Long thần hoàn bị thương thì Cuồng quyền, không thì Bạch hổ. */
+function aiDragonPick(state: Duel, ask: { side: Side; uid: string; picks: string[] }): string {
+  const mon = sideDragons(state, ask.side).find((unit) => unit.uid === ask.uid) ?? null;
+  const score = (id: string) => {
+    if (id === DRAGON_CARDS.lion) return lionPrey(state, ask.side).length ? 5 : 0;
+    if (id === DRAGON_CARDS.fist) return mon && mon.hp < (mon.maxHp || mon.hp) ? 4 : 1;
+    if (id === DRAGON_CARDS.tiger) return 3;
+    return 0;
+  };
+  return [...ask.picks].sort((a, b) => score(b) - score(a))[0]!;
+}
+
+/** Dùng được lá biến hình lúc này (siêu tốc: lượt chính của mình, hoặc lúc mình giữ quyền đáp trong chuỗi). */
+export function dragonReady(state: Duel, side: Side, cardId: string): boolean {
+  if (state.winner !== null || !isDragonCard(cardId)) return false;
+  const main = state.step === "main" && state.turn === side && !state.hold && !state.pending;
+  const answer = state.step === "respond" && Boolean(state.hold) && !state.hold?.stage && state.hold?.priority === side;
+  if (!main && !answer) return false;
+  if (!sideDragons(state, side).length) return false;
+  if (cardId === DRAGON_CARDS.lion) return lionPrey(state, side).length > 0;
+  return true;
+}
+
+/** Long thần hoàn chọn được làm đích của lá biến hình. */
+export function dragonTargets(state: Duel, side: Side): string[] {
+  return sideDragons(state, side).map((mon) => mon.uid);
+}
+
+/** Bỏ dạng biến hình (hết lượt hoặc đổi dạng khác): về tranh gốc, mất phòng ngự tạm của Cuồng quyền. */
+function shedGuise(mon: FieldMon): FieldMon {
+  if (!mon.guise) return mon;
+  const boost = mon.guise.boost;
+  if (!boost) return { ...mon, guise: undefined };
+  const raised = mon.raised ? { ...mon.raised, def: mon.raised.def - boost.def, mdef: mon.raised.mdef - boost.mdef } : mon.raised;
+  return { ...mon, guise: undefined, def: Math.max(0, mon.def - boost.def), mdef: Math.max(0, mon.mdef - boost.mdef), raised };
+}
+
+/** Đầu lượt chung mới: mọi Long thần hoàn về dạng gốc. */
+function dropGuises(state: Duel): Duel {
+  let next = state;
+  for (const side of [0, 1] as const) {
+    const player = next.players[side];
+    if (!player.field.some((mon) => mon?.guise)) continue;
+    next = patch(next, side, { ...player, field: player.field.map((mon) => (mon?.guise ? shedGuise(mon) : mon)) as Player["field"] });
+  }
+  return next;
+}
+
+/** Tung lá biến hình: đổi dạng, loé sáng, hiệu ứng ngay (siêu tốc: trong chuỗi thì đối thủ lại được đáp). */
+function castDragon(state: Duel, side: Side, handIndex: number, targetUid: string | null): Duel {
+  const player = state.players[side];
+  const id = player.hand[handIndex] ?? "";
+  const card = spellCard(id);
+  if (!card) return state;
+  if (!dragonReady(state, side, id)) {
+    if (!sideDragons(state, side).length) return note(state, "Cần Long thần hoàn trên sân.");
+    if (id === DRAGON_CARDS.lion && !lionPrey(state, side).length) return note(state, "Đối thủ không có quái ẩn.");
+    return note(state, `${card.name} chưa dùng được lúc này.`);
+  }
+  const dragons = sideDragons(state, side);
+  const dragon = dragons.find((mon) => mon.uid === targetUid) ?? dragons[0]!;
+  const before = player.stars;
+  const tolled = Boolean(player.tolls?.[handIndex]);
+  const bill = playBill(card.gems, tolled, player.orb, player.flask);
+  if (bill) return note(state, bill);
+  const paid = payPlayed(player, card.gems, tolled);
+  if (!paid) return note(state, `Cần ${card.gems} gem.`);
+  let next = pingStars(patch(state, side, dropHandCard(paid, handIndex)), side, before, paid.stars);
+  const where = ownerSide(next, dragon.uid);
+  if (where === null) return state;
+  const board = next.players[where];
+  const now = board.field.find((mon) => mon?.uid === dragon.uid) ?? dragon;
+  let body: FieldMon = { ...shedGuise(now), guise: { id } };
+  const bits = [`${cardOf(now).name} biến hình`];
+  const mends: NonNullable<Duel["mends"]> = [];
+  if (id === DRAGON_CARDS.fist) {
+    const hp = Math.min(body.maxHp || body.hp, body.hp + DRAGON_HEAL);
+    if (hp > body.hp) mends.push({ uid: body.uid, n: hp - body.hp });
+    body = { ...body, hp, def: body.def + 1, mdef: body.mdef + 1, raised: markRaised(body, { def: 1, mdef: 1 }), guise: { id, boost: { def: 1, mdef: 1 } } };
+    bits.push(`hồi ${hp - now.hp} máu`, "+1 thủ và +1 thủ phép tới hết lượt");
+  } else if (id === DRAGON_CARDS.tiger) {
+    bits.push("ra đòn thì đóng băng quái bị ra đòn 2 lượt");
+  }
+  next = patch(next, where, { ...board, field: board.field.map((mon) => (mon?.uid === body.uid ? body : mon)) as Player["field"] });
+  if (mends.length) next = { ...next, mends: [...(next.mends ?? []), ...mends] };
+  flashMon(body.uid);
+  if (id === DRAGON_CARDS.lion) {
+    const prey = lionPrey(next, side);
+    const victim = prey[Math.floor(Math.random() * prey.length)]!;
+    bits.push("phá huỷ 1 quái thú ẩn mình");
+    const foe = ownerSide(next, victim.uid);
+    if (foe !== null) {
+      const owner = next.players[foe];
+      next = patch(next, foe, dropDead({ ...owner, field: owner.field.map((mon) => (mon?.uid === victim.uid ? { ...mon, hp: 0 } : mon)) as Player["field"] }));
+    }
+  }
+  const done = note(next, actNotice(card.name, bits), "spell");
+  return done.step === "respond" ? keep(done) : done;
 }
 
 /** Lá ứng với 1 ô chọn của Hoán đổi: quái trên sân ("f:uid") hoặc quái dự bị ("r:i"). */

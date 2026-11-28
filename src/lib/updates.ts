@@ -1133,6 +1133,7 @@ export const PENDING_NOTES: string[] = [
   "Tê giác bé con tiến hoá tự động khi gây đủ 4 sát thương từ ra đòn và đủ 1 mana, không còn nút Thăng cấp. Tê giác hiếu thắng có Vào đây, tiến hoá khi đủ 8 sát thương. Tê giác chiến binh có Xông trận.",
   "Hiệp sĩ hộ vệ đổi kỹ năng: 3 sao, 1 mana, công 4, máu 4. Lời thề, Khiên và Điều động thay Khiên Ân Huệ, Kiếm hộ vệ, Học tập và trưởng thành.",
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
+  "Thêm quái Long thần hoàn: Biến hoá chọn 1 lá biến hình lên tay. Bạch hổ long thần hoàn đóng băng quái bị ra đòn, Cuồng quyền long thần hoàn hồi máu và tăng phòng ngự, Huy sư long thần hoàn phá huỷ quái ẩn.",
 ];
 
 function remarkOf(notes: string[]) {
