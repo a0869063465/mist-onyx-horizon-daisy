@@ -814,10 +814,16 @@ export function playEnd(cue: EndCue, delay = 0) {
       for (const [freq, at] of [[1046.5, 0.05], [1318.5, 0.13], [1568, 0.21], [2093, 0.29], [2637, 0.37]] as const) bell(audio, t + at, freq, 1.4, 0.05 * vol);
       shimmer(audio, t + 0.1, 2, 0.045 * vol);
     } else {
+      // Đối xứng với tiếng thắng, nhưng ngược lại: hợp âm thứ trầm, chuông đi xuống đúng nhịp thắng, rồi ngọc nứt (t + 0,62 s).
       thump(audio, t, 0.9 * vol);
       for (const freq of [130.8, 155.6, 196, 261.6]) pad(audio, t, freq, 2.6, 0.05 * vol);
+      for (const [freq, at] of [[1244.5, 0.05], [987.8, 0.13], [784, 0.21], [622.3, 0.29], [466.2, 0.37]] as const) bell(audio, t + at, freq, 1.4, 0.045 * vol);
       noiseBurst(audio, t, 1.4, 600, 90, 0.12 * vol);
-      bell(audio, t + 0.1, 622.3, 1.6, 0.035 * vol);
+      noiseBurst(audio, t + 0.62, 0.07, 7000, 2600, 0.3 * vol);
+      noiseBurst(audio, t + 0.69, 0.06, 5200, 1800, 0.22 * vol);
+      noiseBurst(audio, t + 0.78, 0.25, 3400, 600, 0.26 * vol);
+      thump(audio, t + 0.64, 0.5 * vol);
+      for (let i = 0; i < 4; i++) bell(audio, t + 0.64 + Math.random() * 0.25, 1800 + Math.random() * 1600, 0.16 + Math.random() * 0.14, (0.018 + Math.random() * 0.015) * vol);
     }
   });
 }

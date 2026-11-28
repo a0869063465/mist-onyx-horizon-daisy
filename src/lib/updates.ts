@@ -1137,6 +1137,7 @@ export const PENDING_NOTES: string[] = [
   "Khiên vỡ có hiệu ứng và tiếng vỡ riêng, đặt đúng lá bị đòn.",
   "Quái đã dùng skill (như Cấp số nhân của Kuriboh) hết hành động: tắt viền xanh lá và không còn hiện nút Tấn công.",
   "Bảng kết quả trận: nút Tìm hiểu bộ bài là xấp bài, bộ bài hiện như trong màn Chọn bộ bài, icon người chơi vuông không khung.",
+  "Cảnh thất bại có cánh đỏ đâm thẳng ra hai bên, viên ngọc giữa huy hiệu nứt vỡ thật, âm thanh đồng nhịp với cảnh thắng nhưng đi ngược xuống.",
 ];
 
 function remarkOf(notes: string[]) {

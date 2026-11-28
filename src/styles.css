@@ -11432,6 +11432,13 @@ button.watch-back {
   filter: drop-shadow(0 0 10px rgba(90, 200, 255, 0.9));
   pointer-events: none;
 }
+.is-lose .es-wings { filter: drop-shadow(0 0 10px rgba(255, 60, 80, 0.9)); }
+/* Cánh thua đâm ra: lưỡi dài phóng từ tâm theo đường thẳng (scaleX 0 → 1), không xoè xoay như cánh thắng. */
+.es-blade { transform: rotate(var(--a)); animation: es-blade-in 420ms calc(200ms + var(--i) * 70ms) cubic-bezier(0.1, 0.9, 0.2, 1) both; }
+@keyframes es-blade-in { 0% { opacity: 0; transform: rotate(var(--a)) scale(0.02, 1); } 15% { opacity: 1; } 70% { transform: rotate(var(--a)) scale(1.07, 1); } 100% { opacity: 1; transform: rotate(var(--a)) scale(1, 1); } }
+/* Ngọc thua nứt thật: mảnh tách ra theo vết nứt, kẽ hở lộ nền tối. */
+.es-shard { transform-box: fill-box; transform-origin: center; animation: es-shard-open 520ms 620ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes es-shard-open { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); } }
 .es-feather { transform: rotate(var(--a)); animation: es-feather-in 760ms calc(200ms + var(--i) * 60ms) cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
 .es-title {
   position: absolute;

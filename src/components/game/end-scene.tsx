@@ -340,7 +340,7 @@ export function EndScene({ win, at, tone, onDone }: { win: boolean; at: { x: num
       <canvas ref={ref} className="es-canvas" aria-hidden="true" />
       {crest ? (
         <div className="es-crest">
-          {win ? <Wings /> : null}
+          {win ? <Wings /> : <LoseWings />}
           <Crest win={win} />
           <h2 className="es-title">{tr(win ? "CHIẾN THẮNG" : "THẤT BẠI")}</h2>
           {ready ? <p className="es-hint">{tr("Chạm để tiếp tục")}</p> : null}
@@ -386,12 +386,33 @@ function Crest({ win }: { win: boolean }) {
         const a = (i / 12) * Math.PI * 2;
         return <circle key={i} cx={(Math.cos(a) * 58).toFixed(1)} cy={(Math.sin(a) * 58).toFixed(1)} r="2.2" fill="#2b3240" />;
       })}
-      <path className="es-gem" d="M0 -34 L22 0 L0 34 L-22 0 Z" fill="url(#es-gem)" stroke="#ffffff" strokeWidth="1.5" />
-      <path d="M0 -34 L8 -4 L0 34 L-8 -4 Z" fill="rgba(255,255,255,0.35)" />
-      {win ? null : <path className="es-crack" d="M-40 -18 L-14 -6 L-20 6 L6 14 L2 26 L30 34" fill="none" stroke="#14020a" strokeWidth="3" strokeLinejoin="round" />}
+      {win ? (
+        <>
+          <path className="es-gem" d="M0 -34 L22 0 L0 34 L-22 0 Z" fill="url(#es-gem)" stroke="#ffffff" strokeWidth="1.5" />
+          <path d="M0 -34 L8 -4 L0 34 L-8 -4 Z" fill="rgba(255,255,255,0.35)" />
+        </>
+      ) : (
+        <g className="es-cracked">
+          <path d="M0 -34 L22 0 L0 34 L-22 0 Z" fill="#0b0105" />
+          {CRACKED.map((piece, i) => (
+            <g key={i} className="es-shard" style={{ "--dx": `${piece.dx}px`, "--dy": `${piece.dy}px`, "--r": `${piece.r}deg` } as CSSProperties}>
+              <path d={piece.d} fill="url(#es-gem)" stroke="#2a0409" strokeWidth="1.1" strokeLinejoin="round" />
+              <path d={piece.d} fill="rgba(255,255,255,0.18)" transform="scale(0.55) translate(0 -6)" />
+            </g>
+          ))}
+        </g>
+      )}
     </svg>
   );
 }
+
+/** The gem of a lost match, split along a jagged crack into 5 pieces that then drift apart (dx, dy, r = how far each opens). */
+const CRACKED = [
+  { d: "M0 -34 L22 0 L4 -3 L-5 -14 Z", dx: 2.4, dy: -2, r: 3 },
+  { d: "M4 -3 L22 0 L0 34 L2 22 L-3 12 Z", dx: 3, dy: 2.4, r: 4 },
+  { d: "M0 -34 L-5 -14 L4 -3 L-3 12 L-22 0 Z", dx: -2.8, dy: -2.2, r: -4 },
+  { d: "M-3 12 L2 22 L0 34 L-22 0 Z", dx: -2.2, dy: 3.2, r: -3 },
+] as const;
 
 /** Blue crystal wings unfolding from both sides of the crest. */
 function Wings() {
@@ -427,6 +448,43 @@ function Wings() {
                   opacity="0.94"
                 />
                 <path d={`M${base + 6} 0 L${tip - 8} 0`} stroke="rgba(255,255,255,0.75)" strokeWidth="1.4" />
+              </g>
+            );
+          })}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** Red blades of a lost match: the same six wings as the win, but straight and sharp, stabbing out instead of fanning open. */
+function LoseWings() {
+  const blades = [
+    { a: -10, l: 176, w: 12 },
+    { a: 2, l: 196, w: 14 },
+    { a: 15, l: 184, w: 13 },
+    { a: 28, l: 160, w: 12 },
+    { a: 41, l: 132, w: 10 },
+    { a: 54, l: 104, w: 9 },
+  ];
+  return (
+    <svg className="es-wings is-blades" viewBox="-240 -150 480 260" aria-hidden="true">
+      <defs>
+        <linearGradient id="es-blade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#5c0614" />
+          <stop offset="0.5" stopColor="#d3182f" />
+          <stop offset="1" stopColor="#ffd2d8" />
+        </linearGradient>
+      </defs>
+      {[-1, 1].map((side) => (
+        <g key={side} transform={`scale(${side} 1)`}>
+          {blades.map((f, i) => {
+            const base = 52;
+            const tip = base + f.l;
+            return (
+              <g key={i} className="es-blade" style={{ "--i": i, "--a": `${-f.a}deg` } as CSSProperties}>
+                <path d={`M${base} ${-f.w * 0.6} L${tip - 40} ${-f.w * 0.3} L${tip} 0 L${tip - 40} ${f.w * 0.3} L${base} ${f.w * 0.6} Z`} fill="url(#es-blade)" stroke="#ffe3e6" strokeWidth="1" opacity="0.95" />
+                <path d={`M${base + 6} 0 L${tip - 10} 0`} stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" />
               </g>
             );
           })}
