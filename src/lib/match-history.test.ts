@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createDuel, concede, checkWinner, draw, endTurn, summon, attackFace, attackMonster, passResponse, assignBlock, aiStep, fuse, spiritCover, answerUpkeep, scoreReel, startReel, pullReel, settleReel, testGrant, useSkill, type Duel } from "./duel.ts";
+import { createDuel, concede, checkWinner, draw, endTurn, summon, attackFace, attackMonster, passResponse, assignBlock, aiStep, fuse, answerUpkeep, scoreReel, startReel, pullReel, settleReel, testGrant, useSkill, type Duel } from "./duel.ts";
 import { FUSIONS } from "./fusion.ts";
 import {
   MATCH_HISTORY_KEY,
@@ -495,19 +495,8 @@ test("fusion, wall, cover, upkeep and reel record the actor once", () => {
     FUSIONS.pop();
   }
 
-  let duel = testGrant(testGrant(testGrant(trial(), 0, "khong-lo-mot-mat", true), 1, "thien-than-be-nho", true), 1, "phu-thuy-thoi-gian", true);
-  const target = duel.players[1].field.find((mon) => mon?.cardId === "thien-than-be-nho");
-  const witch = duel.players[1].field.find((mon) => mon?.cardId === "phu-thuy-thoi-gian");
-  const attacker = duel.players[0].field[0];
-  assert.ok(target && witch && attacker);
-  const covered = spiritCover(attackMonster(duel, attacker.uid, target.uid), witch.uid);
-  const cover = covered.events?.filter((event) => event.kind === "cover") ?? [];
-  assert.equal(cover.length, 1);
-  assert.equal(cover[0]?.actor, 1);
-  assert.equal(cover[0]?.cardId, "phu-thuy-thoi-gian");
-  assert.equal(cover[0]?.target && cover[0].target.kind === "monster" ? cover[0].target.uid : "", target.uid);
-
-  duel = testGrant(trial(), 0, "quai-thu-thien-su", true);
+  // Đỡ hộ riêng của Nàng tiên giữ khoá (sự kiện "cover") đã bỏ (chủ game 28/11).
+  let duel = testGrant(trial(), 0, "quai-thu-thien-su", true);
   const prayer = duel.players[0].field[0];
   assert.ok(prayer);
   const kept = answerUpkeep({ ...duel, upkeep: prayer.uid }, true);

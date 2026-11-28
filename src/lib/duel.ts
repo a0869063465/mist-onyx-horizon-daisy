@@ -102,6 +102,8 @@ export type FieldMon = {
    *  trọn một lần ra đòn (đòn đánh, skill, phép gây sát thương; mọi loại sát thương gồm chuẩn, mọi đợt trong cùng lần ra
    *  đòn) rồi vỡ. Hiệu ứng đi kèm không chặn. Độc, bỏng, nợ chia đợt, phản đòn, sát thương hết vòng không chặn, không vỡ. */
   aegis?: number;
+  /** Tinh linh bé nhỏ của Nàng tiên giữ khoá (chủ game 28/11): đã tạo khiên cho đồng minh chặn đòn hộ trong lượt chung này. */
+  fairyShot?: boolean;
   veil?: boolean;
   oath?: { phys?: boolean; spell?: boolean };
   oathBack?: { phys?: boolean; spell?: boolean };
@@ -847,7 +849,6 @@ const LOOK_SKILLS: Record<string, Array<{ index: number; cast: "self" | "aim" | 
   "loi-nguyen-cua-rong": [{ index: 0, cast: "aim" }],
   "rong-ac-ma": [{ index: 0, cast: "aim" }],
   "cuc-bong-ma-quai": [{ index: 0, cast: "self" }],
-  "thien-than-be-nho": [{ index: 0, cast: "aim" }, { index: 1, cast: "aim" }],
   "rong-phun-hoa-cau": [{ index: 0, cast: "declare" }, { index: 1, cast: "aim" }],
   "phu-thuy-thoi-gian": [{ index: 0, cast: "aim" }],
   "kiem-si-lua-thieng": [{ index: 0, cast: "aim" }],
@@ -5714,6 +5715,99 @@ function wallAllyCore(state: Duel, uid: string): Duel {
   };
 }
 
+const ANGEL = "thien-than-be-nho";
+
+/** Bên ra đòn / dùng kỹ năng / phép của việc đang chờ. */
+function pendingActor(state: Duel): Side | null {
+  const pending = state.pending;
+  if (!pending) return null;
+  if (pending.kind === "spell" || pending.kind === "lash") return pending.owner;
+  const uid = pending.kind === "beam" || pending.kind === "gnaw-skill" ? pending.caster : pending.attacker;
+  return ownerSide(state, uid);
+}
+
+/**
+ * Tinh linh hộ mệnh (chủ game 28/11, skill phản ứng): khi 1 đồng minh hoặc chính Nàng tiên bị nhắm bởi 1 đòn sát thương
+ * (đòn đánh, skill, phép), tiêu hao 1 mana tạo khiên cho 1 quái trong số đó (người chơi chọn). Quái "bị nhắm" = quái của
+ * phe mình mà đòn đang chờ sẽ gây sát thương (chạy thử với khiên tạm trên mọi quái phe mình, quái nào vỡ khiên là bị nhắm).
+ */
+export function spiritTargets(state: Duel, uid: string): string[] {
+  if (state.step !== "respond" || !state.hold || !state.pending || state.winner !== null) return [];
+  if (doomWaiting(state)) return [];
+  const side = ownerSide(state, uid);
+  if (side === null || state.hold.priority !== side) return [];
+  const owner = state.players[side];
+  const angel = owner.field.find((mon) => mon?.uid === uid) ?? null;
+  if (!angel || angel.cardId !== ANGEL || angel.hp <= 0 || angel.dim || cannotAct(angel)) return [];
+  if (pendingActor(state) !== (1 - side)) return [];
+  if (manaPool(owner) < skillManaCost(ANGEL, 1)) return [];
+  const own = owner.field.filter((mon): mon is FieldMon => Boolean(mon && mon.hp > 0 && !mon.cage)).map((mon) => mon.uid);
+  if (own.length === 0) return [];
+  const tried = lookProbe(state, (copy) => {
+    let run = reshapeMons(copy, new Set(own), (mon) => ({ ...mon, aegis: 99 }));
+    const pending = run.pending;
+    for (let i = 0; i < 6 && run.pending === pending && run.step === "respond" && run.winner === null; i += 1) {
+      const passed = passResponse(run);
+      if (passed === run) break;
+      run = passed;
+    }
+    return run;
+  });
+  if (!tried) return [];
+  const after = tried.next.players[side].field;
+  return own.filter((id) => {
+    const mon = after.find((unit) => unit?.uid === id);
+    return !mon || (mon.aegis ?? 0) !== 99;
+  });
+}
+
+export function spiritWard(state: Duel, uid: string, targetUid: string): Duel {
+  if (state.parley && state.step === "respond") return freeTalk(state, (next) => spiritWard(next, uid, targetUid));
+  const targets = spiritTargets(state, uid);
+  if (!targets.includes(targetUid)) return note(state, "Chọn 1 quái phe mình đang bị nhắm bởi đòn sát thương.");
+  const side = ownerSide(state, uid)!;
+  const owner = state.players[side];
+  const paid = pay(owner, skillManaCost(ANGEL, 1));
+  if (!paid) return note(state, "Cần 1 mana.");
+  const field = paid.field.map((mon) => {
+    if (!mon) return mon;
+    let next = mon;
+    if (mon.uid === targetUid) next = { ...next, aegis: AEGIS_TURNS };
+    if (mon.uid === uid) next = { ...next, dim: true };
+    return next;
+  });
+  const angel = owner.field.find((mon) => mon?.uid === uid)!;
+  const ally = owner.field.find((mon) => mon?.uid === targetUid)!;
+  const next = note(patch(state, side, { ...paid, field }), `${cardOf(angel).name} dùng Tinh linh hộ mệnh, tạo khiên cho ${ally.uid === uid ? "chính mình" : cardOf(ally).name}.`, "heal");
+  return traced(state, next, { kind: "skill", actor: side, ok: true, cardId: ANGEL, target: monsterTarget(state, targetUid), end: null, skill: 0 });
+}
+
+/**
+ * Tinh linh bé nhỏ (chủ game 28/11, nội tại): đồng minh đầu tiên lao ra chặn đòn hộ Nàng tiên trong lượt chung thì Nàng
+ * tiên tự tiêu hao 1 mana tạo khiên cho đồng minh đó (trước khi đòn tới). Hết mana thì không tạo.
+ */
+function fairyGuard(before: Duel, after: Duel, blockerUid: string, branch?: string): Duel {
+  const pending = before.pending;
+  const guarded = branch ?? (pending?.kind === "melee" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" ? pending.target : null);
+  if (!guarded) return after;
+  const side = ownerSide(after, blockerUid);
+  if (side === null) return after;
+  const owner = after.players[side];
+  const angel = owner.field.find((mon) => mon?.uid === guarded && mon.cardId === ANGEL && mon.hp > 0) ?? null;
+  if (!angel || angel.fairyShot || cannotAct(angel)) return after;
+  const blocker = owner.field.find((mon) => mon?.uid === blockerUid) ?? null;
+  if (!blocker || blocker.cage) return after;
+  const paid = pay(owner, skillManaCost(ANGEL, 1));
+  if (!paid) return after;
+  const field = paid.field.map((mon) => {
+    if (!mon) return mon;
+    if (mon.uid === blockerUid) return { ...mon, aegis: AEGIS_TURNS };
+    if (mon.uid === angel.uid) return { ...mon, fairyShot: true };
+    return mon;
+  });
+  return note(patch(after, side, { ...paid, field }), `Tinh linh bé nhỏ: ${cardOf(angel).name} tạo khiên cho ${cardOf(blocker).name}.`, "heal");
+}
+
 function spiritAim(state: Duel): string | null {
   const pending = state.pending;
   if (!pending) return null;
@@ -5722,7 +5816,12 @@ function spiritAim(state: Duel): string | null {
   return null;
 }
 
-export function canSpirit(state: Duel, uid: string): boolean {
+/** Đỡ hộ riêng của Nàng tiên giữ khoá đã bỏ (chủ game 28/11: đồng minh hàng trước lao ra đỡ theo luật chung). */
+export function canSpirit(_state: Duel, _uid: string): boolean {
+  return false;
+}
+
+function canSpiritOld(state: Duel, uid: string): boolean {
   if (doomWaiting(state)) return false;
   if (state.step !== "respond" || !state.hold || !state.pending) return false;
   const ownerSide = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
@@ -5748,7 +5847,7 @@ export function spiritCover(state: Duel, uid: string): Duel {
 }
 
 function spiritCoverCore(state: Duel, uid: string): Duel {
-  if (!canSpirit(state, uid) || !state.hold || !state.pending) return state;
+  if (!canSpiritOld(state, uid) || !state.hold || !state.pending) return state;
   const ownerSide = (state.players[0].field.some((mon) => mon?.uid === uid) ? 0 : 1) as Side;
   const owner = state.players[ownerSide];
   const mon = owner.field.find((unit) => unit?.uid === uid);
@@ -5790,6 +5889,7 @@ export function assignBlock(state: Duel, blockerUid: string, withSkill = false, 
   const actor = (state.players[0].field.some((unit) => unit?.uid === blockerUid) ? 0 : 1) as Side;
   const ok = branch ? Boolean(next.hold?.covers?.some((row) => row.blocker === blockerUid)) : next.hold?.blocker === blockerUid;
   if (!ok && next.upkeep && !state.upkeep && next.players === state.players) return next;
+  if (ok) return traced(state, fairyGuard(state, next, blockerUid, branch), { kind: "block", actor, ok, cardId: mon?.cardId ?? null, target: monsterTarget(state, state.pending && (state.pending.kind === "face" || state.pending.kind === "melee") ? state.pending.attacker : state.pending && (state.pending.kind === "beam" || state.pending.kind === "gnaw-skill") ? state.pending.caster : null), end: null });
   const attacker = state.pending && (state.pending.kind === "face" || state.pending.kind === "melee") ? state.pending.attacker : state.pending && (state.pending.kind === "beam" || state.pending.kind === "gnaw-skill") ? state.pending.caster : null;
   return traced(state, next, { kind: "block", actor, ok, cardId: mon?.cardId ?? null, target: monsterTarget(state, attacker), end: null });
 }
@@ -10241,21 +10341,7 @@ function castSkillBody(state: Duel, uid: string, targetUid: string | null, skill
   }
   if (mon.cardId === BREEZE && skillIndex === 0) return castSunlight(state, side, mon);
   if (mon.cardId === CATAPULT && skillIndex === 0) return castCatapult(state, side, mon, targetUid, extra);
-  if (mon.cardId === "thien-than-be-nho") {
-    const ally = you.field.find((unit) => unit?.uid === targetUid && unit.hp > 0) ?? null;
-    if (!ally) return note(state, "Chọn một đồng minh.");
-    // Z4 (chủ game 27/11): chỉ còn 1 loại khiên thường, 2 lượt chung; đã có thì làm mới 2 lượt.
-    const field = you.field.map((unit): FieldMon | null => {
-      if (!unit) return unit;
-      if (unit.uid === ally.uid) {
-        if (unit.cage) return unit;
-        return { ...unit, aegis: AEGIS_TURNS };
-      }
-      if (unit.uid === mon.uid) return { ...unit, dim: true };
-      return unit;
-    });
-    return note(patch(state, side, { ...you, field }), `${cardOf(mon).name} dùng Thiên thần hộ mệnh, tạo khiên cho ${cardOf(ally).name}.`, "heal");
-  }
+  if (mon.cardId === ANGEL) return note(state, "Tinh linh hộ mệnh chỉ dùng khi đồng minh hoặc Nàng tiên bị nhắm bởi đòn sát thương.");
   if (mon.cardId === PERFECT) return castPerfect(state, side, mon, skillIndex, targetUid, extra);
   if (mon.cardId === QUEEN && skillIndex === 3) return castLure(state, side, mon, extra, targetUid);
   if (isHarpy(mon.cardId) && (skillIndex === 0 || skillIndex === 1)) return castHarpy(state, side, mon, skillIndex, targetUid, extra);
@@ -11901,6 +11987,7 @@ function endTurnCore(state: Duel): Duel {
         nextDef: 0,
         tempGuard: 0,
         noCover: undefined,
+        fairyShot: undefined,
         seized: undefined,
       };
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
@@ -11963,6 +12050,7 @@ function endTurnCore(state: Duel): Duel {
         spun: false,
         tempGuard: 0,
         noCover: undefined,
+        fairyShot: undefined,
       });
       if (mon.hp > 0 && (mon.fed ?? 0) > 0 && ((mon.path ?? 0) > 0 || mon.cardId === "chien-binh-huyen-thoai")) vowHeals.push({ uid: mon.uid, n: mon.fed ?? 0 });
       return freeCage(settleGuard(settleVow(faded)));

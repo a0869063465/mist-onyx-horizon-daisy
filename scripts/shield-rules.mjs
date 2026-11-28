@@ -29,6 +29,8 @@ function board(mine, theirs, orb = 5) {
 const at = (s, side, slot) => s.players[side].field[slot];
 const hit = (s, a, b) => D.passResponse(D.attackMonster(s, a, b));
 const mon = (stats) => [DUMMY, { atk: 3, def: 0, mdef: 0, hp: 20, maxHp: 20, ...stats }];
+/** Quái không có skill, chặn đòn không tốn gì. */
+const plain = (stats) => ["may-chem", { atk: 3, def: 0, mdef: 0, hp: 20, maxHp: 20, ...stats }];
 /** Cả hai bỏ lượt: hết vòng (1 lượt chung). */
 function closeRound(s) {
   s = { ...s, players: s.players.map((p) => ({ ...p, orb: 1, flask: 0 })), counterAsk: null };
@@ -47,18 +49,6 @@ function test(name, fn) {
     console.log(`FAIL ${name}\n     ${error?.message ?? error}`);
   }
 }
-
-test("Thiên thần hộ mệnh: cả 2 nút đều tạo cùng 1 khiên thường, 2 lượt chung; đã có thì làm mới 2 lượt", () => {
-  for (const index of [0, 1]) {
-    const s = board({ 0: [ANGEL, {}], 1: mon({}) }, { 0: mon({}) });
-    const next = D.useSkill(s, at(s, 0, 0).uid, at(s, 0, 1).uid, index);
-    assert.equal(at(next, 0, 1).aegis, 2, next.live);
-    assert.match(next.live, /tạo khiên cho/);
-  }
-  const s = board({ 0: [ANGEL, {}], 1: mon({ aegis: 1 }) }, { 0: mon({}) });
-  const next = D.useSkill(s, at(s, 0, 0).uid, at(s, 0, 1).uid, 0);
-  assert.equal(at(next, 0, 1).aegis, 2, "làm mới 2 lượt, vẫn 1 khiên");
-});
 
 test("Cơn thịnh nộ của hải vương: ra sân có 1 khiên 2 lượt, không còn khiên vật lý/phép cũ", () => {
   let s = board({}, { 0: mon({}) });
@@ -144,6 +134,93 @@ test("Sát thương hết vòng không làm vỡ khiên", () => {
   const next = closeRound(s);
   assert.ok(at(next, 0, 0).hp < 20, next.live);
   assert.equal(at(next, 0, 0).aegis, 1, "khiên còn, chỉ trừ 1 lượt");
+});
+
+// ---- Nàng tiên giữ khoá (chủ game 28/11): Tinh linh hộ mệnh + Tinh linh bé nhỏ ----
+/** Đối thủ (bên 1) ra đòn, bên 0 (có Nàng tiên) đang giữ quyền phản ứng. */
+function foeBoard(mine, theirs, orb = 3) {
+  const s = board(mine, theirs, orb);
+  return { ...s, turn: 1, round: 1, players: s.players.map((p, i) => ({ ...p, orb: i === 0 ? orb : 5 })) };
+}
+
+test("Tinh linh hộ mệnh: đòn đánh vào đồng minh, chọn quái bị nhắm, 1 mana, tạo khiên; đòn tới thì khiên chặn", () => {
+  let s = foeBoard({ 0: mon({}), 3: [ANGEL, { hp: 3, maxHp: 3 }] }, { 0: mon({ atk: 5 }) });
+  s = D.attackMonster(s, at(s, 1, 0).uid, at(s, 0, 0).uid);
+  assert.equal(s.hold?.priority, 0, s.live);
+  const angel = at(s, 0, 3).uid;
+  assert.deepEqual(D.spiritTargets(s, angel), [at(s, 0, 0).uid], "chỉ quái bị nhắm");
+  const warded = D.spiritWard(s, angel, at(s, 0, 0).uid);
+  assert.equal(at(warded, 0, 0).aegis, 2, warded.live);
+  assert.equal(warded.players[0].orb, 2, "trừ 1 mana");
+  assert.equal(at(warded, 0, 3).dim, true);
+  assert.match(warded.live, /Tinh linh hộ mệnh, tạo khiên cho/);
+  let done = warded;
+  for (let i = 0; i < 4 && done.pending; i += 1) done = D.passResponse(done);
+  assert.equal(at(done, 0, 0).hp, 20, done.live);
+  assert.equal(at(done, 0, 0).aegis, undefined);
+});
+
+test("Tinh linh hộ mệnh: phép diện rộng của đối thủ nhắm nhiều quái, chọn 1 trong số đó", () => {
+  let s = foeBoard({ 0: mon({}), 1: mon({}), 3: [ANGEL, { hp: 9, maxHp: 9 }] }, { 0: mon({}) });
+  s = { ...s, players: s.players.map((p, i) => (i === 1 ? { ...p, hand: ["sam-set-tan-the"], orb: 9 } : p)) };
+  s = D.castSpell(s, 0, null);
+  const angel = at(s, 0, 3).uid;
+  const aims = D.spiritTargets(s, angel);
+  assert.equal(aims.length, 3, `cả 3 quái bị nhắm: ${s.live}`);
+  const warded = D.spiritWard(s, angel, at(s, 0, 1).uid);
+  let done = warded;
+  for (let i = 0; i < 4 && done.pending; i += 1) done = D.passResponse(done);
+  assert.equal(at(done, 0, 1).hp, 20, "quái được chọn không mất máu");
+  assert.ok(at(done, 0, 0).hp < 20, "quái kia vẫn trúng");
+});
+
+test("Tinh linh hộ mệnh: không có khi hết mana, khi phe mình ra đòn, hay Nàng tiên đã hành động", () => {
+  let s = foeBoard({ 0: mon({}), 3: [ANGEL, {}] }, { 0: mon({ atk: 5 }) }, 0);
+  s = D.attackMonster(s, at(s, 1, 0).uid, at(s, 0, 0).uid);
+  assert.deepEqual(D.spiritTargets(s, at(s, 0, 3).uid), [], "0 mana");
+  let mine = board({ 0: mon({ atk: 5 }), 3: [ANGEL, {}] }, { 0: mon({}) });
+  mine = D.attackMonster(mine, at(mine, 0, 0).uid, at(mine, 1, 0).uid);
+  assert.deepEqual(D.spiritTargets(mine, at(mine, 0, 3).uid), [], "đòn của phe mình");
+  let used = foeBoard({ 0: mon({}), 3: [ANGEL, { dim: true }] }, { 0: mon({ atk: 5 }) });
+  used = D.attackMonster(used, at(used, 1, 0).uid, at(used, 0, 0).uid);
+  assert.deepEqual(D.spiritTargets(used, at(used, 0, 3).uid), [], "đã hành động");
+});
+
+test("Bỏ skill cũ: nút Thiên thần hộ mệnh không còn tạo khiên, không còn đỡ hộ riêng", () => {
+  const s = board({ 0: [ANGEL, {}], 1: mon({}) }, { 0: mon({}) });
+  const next = D.useSkill(s, at(s, 0, 0).uid, at(s, 0, 1).uid, 0);
+  assert.equal(at(next, 0, 1).aegis, undefined, next.live);
+  assert.equal(D.canSpirit(s, at(s, 0, 1).uid), false);
+});
+
+test("Tinh linh bé nhỏ: đồng minh đầu tiên chặn đòn hộ Nàng tiên (hàng sau) được khiên, tự trừ 1 mana, 1 lần mỗi lượt chung", () => {
+  let s = foeBoard({ 0: plain({}), 1: plain({}), 3: [ANGEL, { hp: 3, maxHp: 3 }] }, { 0: mon({ atk: 5 }), 1: mon({ atk: 5 }) });
+  s = D.attackMonster(s, at(s, 1, 0).uid, at(s, 0, 3).uid);
+  const blocked = D.assignBlock(s, at(s, 0, 0).uid);
+  assert.equal(blocked.hold?.blocker, at(s, 0, 0).uid, blocked.live);
+  assert.equal(at(blocked, 0, 0).aegis, 2, blocked.live);
+  assert.equal(blocked.players[0].orb, 2);
+  assert.equal(at(blocked, 0, 3).fairyShot, true);
+  let done = blocked;
+  for (let i = 0; i < 4 && done.pending; i += 1) done = D.passResponse(done);
+  assert.equal(at(done, 0, 0).hp, 20, "khiên chặn đòn cho quái chặn hộ: " + done.live);
+  // Đòn thứ hai trong cùng lượt chung: không tạo thêm.
+  let again = { ...done, turn: 1, step: "main", pending: null, hold: null, counterAsk: null, players: done.players.map((p, i) => ({ ...p, orb: i === 0 ? 3 : 5, field: p.field.map((m) => (m ? { ...m, dim: false } : m)) })) };
+  again = D.attackMonster(again, at(again, 1, 1).uid, at(again, 0, 3).uid);
+  const second = D.assignBlock(again, at(again, 0, 1).uid);
+  assert.equal(at(second, 0, 1).aegis, undefined, "lượt này đã dùng: " + second.live);
+  assert.equal(second.players[0].orb, 3);
+  // Hết lượt chung thì dùng lại được.
+  const next = closeRound({ ...done, step: "main", pending: null, hold: null });
+  assert.equal(at(next, 0, 3).fairyShot, undefined);
+});
+
+test("Tinh linh bé nhỏ: hết mana thì không tạo khiên, đồng minh vẫn chặn được", () => {
+  let s = foeBoard({ 0: plain({}), 3: [ANGEL, {}] }, { 0: mon({ atk: 5 }) }, 0);
+  s = D.attackMonster(s, at(s, 1, 0).uid, at(s, 0, 3).uid);
+  const blocked = D.assignBlock(s, at(s, 0, 0).uid);
+  assert.equal(blocked.hold?.blocker, at(s, 0, 0).uid, blocked.live);
+  assert.equal(at(blocked, 0, 0).aegis, undefined);
 });
 
 console.log(`${passed}/${passed + failed} đạt`);

@@ -121,7 +121,7 @@ export const SKILL_BOOK: Record<string, SkillEntry[]> = {
   "chien-binh-rong": [P("Vảy rồng", "scale-mail")],
   "ma-dao-si": [A("Ma đạn", "bolt-spell-cast")],
   "loi-nguyen-cua-rong": [A("Địa ngục lửa", "fire-ring")],
-  "thien-than-be-nho": [A("Thiên thần hộ mệnh", "angel-outfit"), S("Tinh linh bé nhỏ", "fairy")],
+  "thien-than-be-nho": [A("Tinh linh hộ mệnh", "angel-outfit"), S("Tinh linh bé nhỏ", "fairy")],
   "hiep-si-cua-vua": [P("Khiên", "checked-shield"), A("Kiếm", "attack-sword")],
   // Hiệp sĩ hộ vệ (chủ game 27/11): Lời thề, Khiên, Điều động. Icon dùng chung tạm: Lời thề = shaking-hands, Điều động = card-exchange (chủ game sẽ vẽ riêng).
   "hiep-si-ho-ve": [P("Lời thề", "oath-swords"), P("Khiên", "checked-shield"), S("Điều động", "card-exchange")],
@@ -259,10 +259,10 @@ function skillsOfRaw(cardId: string, text: string): SkillShown[] {
 
 /**
  * Names the duel gives a skill (its notices, the buttons on the field) where the card text, and so the sheet, calls it
- * otherwise. A shield of Nàng tiên giữ khoá (the rules name it after her) is her Thiên thần hộ mệnh.
+ * otherwise. A shield of Nàng tiên giữ khoá (the rules name it after her) is her Tinh linh hộ mệnh.
  */
 const CAST_NAMES: Record<string, Record<string, string>> = {
-  "thien-than-be-nho": { "nàng tiên giữ khoá": "Thiên thần hộ mệnh", "khiên vật lý": "Thiên thần hộ mệnh", "khiên phép": "Thiên thần hộ mệnh", "đỡ hộ": "Tinh linh bé nhỏ" },
+  "thien-than-be-nho": { "nàng tiên giữ khoá": "Tinh linh hộ mệnh", "khiên chắn": "Tinh linh hộ mệnh" },
   "the-than-cua-shien": { "thế thân": "Thế thân trên sân" },
   kizuran: { "vì anh em": "Chịu đòn vì bạn" },
 };

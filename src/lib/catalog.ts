@@ -698,7 +698,7 @@ export const MONSTERS: MonsterCard[] = [
     "name": "Nàng tiên giữ khoá",
     "stars": 1,
     "gems": 1,
-    "skill": "__**Thiên thần hộ mệnh**__\nTạo 1 khiên vật lý hoặc 1 khiên phép cho 1 đồng minh.\nKhiên chỉ chặn đúng loại sát thương đó.\nDính sát thương vật lý hoặc phép thì khiên biến mất.\nSát thương chuẩn không đụng tới khiên.\n\n__**Tinh linh bé nhỏ**__\nKhi ta bị nhắm, quái thú đồng minh có thể đỡ đòn hộ cho ta.",
+    "skill": "__**Tinh linh hộ mệnh**__\nSkill phản ứng\nKhi 1 đồng minh hoặc chính cô bị nhắm đến bởi 1 đòn sát thương, tiêu hao 1 mana để tạo khiên chắn cho chúng.\n\n__**Tinh linh bé nhỏ**__\nNội tại: tự tiêu hao 1 mana, tạo khiên chắn cho 1 đồng minh đầu tiên lao ra chặn đòn cho cô trong lượt này.",
     "atk": 0,
     "def": 0,
     "mdef": 0,

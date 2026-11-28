@@ -1135,6 +1135,7 @@ export const PENDING_NOTES: string[] = [
   "Icon skill mới: Nắng ấm lên, Gặt hồn, Lời thề, Càng xinh đẹp, Hộ thủ, Sinh mệnh mới, Cấp số nhân, Tiếng nhạc du dương, Mũi tên thiên sứ, Tiktok, Giảo hoạt, Tiến hoá.",
   "Khiên gộp 1 loại: chặn trọn 1 lần ra đòn (đòn đánh, skill, phép), mọi loại sát thương kể cả chuẩn, rồi vỡ. Không bị đánh thì mất sau 2 lượt. Thiên thần hộ mệnh và Cơn thịnh nộ của hải vương dùng khiên này.",
   "Khiên vỡ có hiệu ứng và tiếng vỡ riêng, đặt đúng lá bị đòn.",
+  "Nàng tiên giữ khoá đổi kỹ năng: Tinh linh hộ mệnh (phản ứng, 1 mana, tạo khiên cho 1 quái phe mình đang bị nhắm) và Tinh linh bé nhỏ (tự tạo khiên cho đồng minh đầu tiên chặn đòn hộ cô trong lượt).",
 ];
 
 function remarkOf(notes: string[]) {

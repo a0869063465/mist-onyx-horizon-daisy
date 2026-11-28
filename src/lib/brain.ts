@@ -30,8 +30,8 @@ import {
   settleReel,
   settleWheel,
   spreadHits,
-  spiritCover,
-  canSpirit,
+  spiritWard,
+  spiritTargets,
   standFor,
   summon,
   summonVow,
@@ -94,7 +94,7 @@ export type Act =
   | ["wall", string]
   | ["guard", string]
   | ["stand", string]
-  | ["spirit", string];
+  | ["spirit", string, string];
 
 export function runAct(state: Duel, act: Act): Duel {
   switch (act[0]) {
@@ -147,7 +147,7 @@ export function runAct(state: Duel, act: Act): Duel {
     case "stand":
       return standFor(state, act[1]);
     case "spirit":
-      return spiritCover(state, act[1]);
+      return spiritWard(state, act[1], act[2]);
   }
 }
 
@@ -508,7 +508,7 @@ function answerMoves(state: Duel): Move[] {
     if (canWall(state, mon.uid)) tryMove(list, state, ["wall", mon.uid]);
     if (canGuardCover(state, mon.uid)) tryMove(list, state, ["guard", mon.uid]);
     if (canStand(state, mon.uid)) tryMove(list, state, ["stand", mon.uid]);
-    if (canSpirit(state, mon.uid)) tryMove(list, state, ["spirit", mon.uid]);
+    for (const aim of spiritTargets(state, mon.uid)) tryMove(list, state, ["spirit", mon.uid, aim]);
   }
   spellMoves(state, list);
   return list;
