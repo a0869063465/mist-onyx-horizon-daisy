@@ -6436,6 +6436,20 @@ function PlayPage() {
       if (side === viewer && swapFit(mon)) apply(confirmSwap(duel, swapAsk.locked!, `f:${mon.uid}`));
       return;
     }
+    // Tinh linh hộ mệnh nhiều quái bị nhắm (chủ game 28/11): bấm thẳng quái đang sáng trên bàn để tạo khiên; bấm Nàng tiên để thôi.
+    if (aim?.kind === "spirit") {
+      const aims = spiritTargets(duel, aim.uid);
+      if (side === viewer && mon.uid === aim.uid && !aims.includes(mon.uid)) {
+        setAim(null);
+        holdNotice("");
+      } else if (side === viewer && aims.includes(mon.uid)) {
+        const caster = aim.uid;
+        setAim(null);
+        holdNotice("");
+        apply(spiritWard(duel, caster, mon.uid));
+      } else holdNotice("Chọn 1 quái đang sáng để tạo khiên.");
+      return;
+    }
     if (shelling()) {
       if (side === viewer && aim?.kind === "skill" && mon.uid === aim.uid && !aim.also) {
         setAim(null);
@@ -7783,28 +7797,6 @@ function PlayPage() {
           onClosed={() => setOpenerOpen(false)}
         />
       ) : null}
-      {aim?.kind === "spirit" && spiritTargets(duel, aim.uid).length > 0 ? (
-        <PickPanel
-          key={`spirit:${aim.uid}:${duel.stepNo}`}
-          title="Tinh linh hộ mệnh"
-          sub="Chọn 1 quái bị nhắm để tạo khiên"
-          cards={spiritTargets(duel, aim.uid).map((uid): PickCard => {
-            const mon = fieldMon(duel, uid);
-            const card = mon ? monsterCard(mon.cardId) : null;
-            return {
-              key: uid,
-              face: card && mon ? <CardFace monster={card} hand level={mon.level ?? 1} live={{ name: fieldName(mon), atk: mon.atk, def: mon.def, mdef: mon.mdef, hp: mon.hp }} /> : null,
-            };
-          })}
-          onCancel={() => setAim(null)}
-          onTimeout={() => setAim(null)}
-          onConfirm={(key) => {
-            const uid = aim.uid;
-            setAim(null);
-            apply(spiritWard(duel, uid, key));
-          }}
-        />
-      ) : null}
       {reviveAsk && duel.players[viewer].hand[reviveAsk.index] === REVIVE_CARD && reviveReady(duel, viewer) ? (
         <PickPanel
           key={`revive:${reviveAsk.index}`}
@@ -9103,7 +9095,7 @@ function PlayPage() {
               const aimed = pending?.kind === "melee" || pending?.kind === "gnaw" ? pending.defender : pending?.kind === "beam" || pending?.kind === "gnaw-skill" || pending?.kind === "spell" ? pending.target : null;
               return unit.uid === aimed;
             });
-          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "huy-diet" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (aim?.kind === "spell" && aim.spellId === "qua-trung-thien-su" && !!mon && eggAllies(duel, viewer).includes(mon.uid)) || (!!mon && swapFit(mon)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
+          const youHot = ((drag?.kind === "summon" || aim?.kind === "summon") && !mon) || (drag?.kind === "spell" && drag.spellId !== "hoan-doi" && drag.spellId !== "phan-nguyen" && drag.spellId !== "soi-xich-dia-nguc" && drag.spellId !== "huy-diet" && drag.spellId !== "ke-dao-mo" && spellDragLive(drag.spellId, duel, viewer, drag.index) && !!mon && (drag.spellId !== "sung-loi-pha" || hornFit(mon.cardId))) || (aim?.kind === "spell" && aim.spellId === "sung-loi-pha" && !!mon && hornFit(mon.cardId)) || (aim?.kind === "spell" && aim.spellId === "phuc-kich" && !!mon && ambushReady(mon)) || (aim?.kind === "spell" && aim.spellId === "qua-trung-thien-su" && !!mon && eggAllies(duel, viewer).includes(mon.uid)) || (!!mon && swapFit(mon)) || (!!mon && aim?.kind === "spirit" && spiritTargets(duel, aim.uid).includes(mon.uid)) || (aim?.kind === "spell" && aim.spellId === "phan-nguyen" && !aim.from && !!mon && harmShift(mon)) || (aim?.kind === "spell" && aim.spellId === "hop-ma-thuat" && !aim.from && !!mon && boxAllies(duel, viewer).includes(mon.uid)) || (!!mon && aim?.kind === "skill" && !!selectedCard && allySkill(selectedCard.id) && (mon.uid !== aim.uid || selectedCard.id === "thien-than-be-nho")) || (!!mon && aim?.kind === "skill" && selectedCard?.id === "phu-thuy-thoi-gian" && witchAllyMark(duel, aim.uid, mon));
           const plan = targetPlan();
           const youSpell =
             (drag?.kind === "spell" && drag.spellId === "sung-loi-pha" && spellDragLive(drag.spellId, duel, viewer, drag.index)) ||
