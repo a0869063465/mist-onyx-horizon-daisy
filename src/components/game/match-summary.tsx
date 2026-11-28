@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { DeckBox, LorDefs } from "@/components/deck-box";
+import { LorDefs } from "@/components/deck-box";
 import { DeckRow } from "@/components/deck-row";
 import { CardMonsterSheet, SpellSheet } from "@/components/game/card-sheets";
 import { Glyph } from "@/components/game/monster-sheet";
 import { artSrc, monsterCard, spellCard, type MonsterCard, type SpellCard } from "@/lib/catalog";
 import { byMana, byStars } from "@/lib/deck";
 import { tr } from "@/lib/i18n";
+import { rankFrame } from "@/lib/rank";
 import { playSummary } from "@/lib/sfx";
 
 /** One player on the summary: the name and deck of the VS screen, the board behind the row, and the deck brought. */
@@ -14,6 +15,8 @@ export type SummarySeat = {
   deck: string | null;
   cover: string | null;
   board: string;
+  /** Hạng (0 = Vua trò chơi … 5 = Tập chơi) khi đấu rank: có khung rank quanh icon; không có thì icon vuông không khung. */
+  rank?: number | null;
   cards: { monsters: string[]; spells: string[] } | null;
 };
 
@@ -88,7 +91,6 @@ export function MatchSummary({
   return (
     <div className={`ms${win ? " is-win" : " is-lose"}`} role="dialog" aria-label={tr(win ? "CHIẾN THẮNG" : "THẤT BẠI")}>
       <LorDefs />
-      <EyeDefs />
       <span className="ms-sky" aria-hidden="true" />
       <span className="ms-motes" aria-hidden="true">
         {motes.map((style, i) => (
@@ -136,21 +138,21 @@ export function MatchSummary({
  *  round portrait, name and deck name, the deck box and Tìm hiểu bộ bài. */
 function SeatRow({ seat, at, onLook }: { seat: SummarySeat; at: number; onLook: () => void }) {
   const art = seat.cover ? artSrc(seat.cover, 1) : null;
-  const spells = seat.cards?.spells ?? [];
   return (
     <article className="ms-row" style={{ "--at": at, "--board": `url(${seat.board})`, "--spot": at === 0 ? "50% 80%" : "50% 18%" } as CSSProperties}>
       <span className="ms-row-board" aria-hidden="true" />
-      <span className="ms-face" style={art ? { backgroundImage: `url(${art})` } : undefined} aria-hidden="true" />
+      <SeatIcon art={art} rank={seat.rank ?? null} />
       <div className="ms-who">
         <b className="ms-name">{tr(seat.label)}</b>
         {seat.deck ? <span className="ms-deck">{tr(seat.deck)}</span> : null}
       </div>
-      <span className="ms-box">
-        <DeckBox cover={seat.cover} spells={spells} />
+      <span className="ms-box" style={{ "--k": 0.36 } as CSSProperties}>
+        <i className="dk2-art" style={{ backgroundImage: `url(${art ?? "/ui/card-back-you.webp"})` }} />
+        <img className="dk2-stack" src="/ui/deck/stack.webp" alt="" draggable={false} />
       </span>
       <button type="button" className="ms-look" disabled={!seat.cards} onClick={onLook}>
         <span className="lor-square ms-eye">
-          <EyeIcon />
+          <img className="ms-eye-img" src="/ui/match/stack-look.webp" alt="" draggable={false} />
         </span>
         <span className="ms-look-text">{tr("Tìm hiểu bộ bài")}</span>
       </button>
@@ -214,18 +216,6 @@ export function DeckDrawer({
   );
 }
 
-/** The white eye with an amber iris of LoR's Tìm hiểu bộ bài, drawn here. */
-function EyeIcon() {
-  return (
-    <svg className="ms-eye-svg" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M3 24C9.5 13 16.5 8.5 24 8.5S38.5 13 45 24c-6.5 11-13.5 15.5-21 15.5S9.5 35 3 24Z" fill="url(#ms-eye-white)" stroke="#1b1107" strokeWidth="2.4" />
-      <circle cx="24" cy="24" r="9.2" fill="url(#ms-eye-iris)" stroke="#3a1c04" strokeWidth="1.2" />
-      <circle cx="24" cy="24" r="4" fill="#160a02" />
-      <circle cx="20.6" cy="20.4" r="2.2" fill="#ffffff" />
-    </svg>
-  );
-}
-
 /** A small fan of cards for the deck's total. */
 function CardsIcon() {
   return (
@@ -236,21 +226,24 @@ function CardsIcon() {
   );
 }
 
-function EyeDefs() {
+/** Icon người chơi (như ngoài màn hình chính): vuông không khung; đấu rank thì nằm trong khung rank (ô trống của khung = ô icon). */
+function SeatIcon({ art, rank }: { art: string | null; rank: number | null }) {
+  const bg = art ? { backgroundImage: `url(${art})` } : undefined;
+  if (rank === null) return <span className="ms-face" style={bg} aria-hidden="true" />;
+  const f = rankFrame(rank);
+  const [hl, ht, hr, hb] = f.hole;
+  const hw = hr - hl;
+  const hh = hb - ht;
   return (
-    <svg className="glyph-defs" width="0" height="0" aria-hidden="true">
-      <defs>
-        <radialGradient id="ms-eye-white" cx="0.5" cy="0.4" r="0.6">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.75" stopColor="#ece6da" />
-          <stop offset="1" stopColor="#b9ae9c" />
-        </radialGradient>
-        <radialGradient id="ms-eye-iris" cx="0.45" cy="0.4" r="0.6">
-          <stop offset="0" stopColor="#ffd27a" />
-          <stop offset="0.55" stopColor="#e88a1c" />
-          <stop offset="1" stopColor="#8a3a05" />
-        </radialGradient>
-      </defs>
-    </svg>
+    <span className="ms-face is-ranked" style={{ aspectRatio: `${hw} / ${hh}` }} aria-hidden="true">
+      <span className="ms-face-art" style={bg} />
+      <img
+        className="ms-face-frame"
+        src={f.src}
+        alt=""
+        draggable={false}
+        style={{ left: `${(-hl / hw) * 100}%`, top: `${(-ht / hh) * 100}%`, width: `${(f.w / hw) * 100}%`, height: `${(f.h / hh) * 100}%` }}
+      />
+    </span>
   );
 }
