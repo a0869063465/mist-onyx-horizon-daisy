@@ -11698,7 +11698,8 @@ button.watch-back {
 .ms-eye { width: 2.6rem; height: 2.6rem; padding: 0.28rem; transition: transform 0.1s, filter 0.1s; }
 .ms-look:not(:disabled):active .ms-eye { transform: translateY(1px); filter: brightness(0.92); }
 .ms-eye { position: relative; overflow: hidden; }
-.ms-eye-img { position: absolute; left: 50%; top: 50%; width: 245%; max-width: none; transform: translate(-50%, -50%); pointer-events: none; }
+/* Xấp bài chiếm ~85% ô (như ảnh mẫu): ảnh 1536×1024, xấp (alpha>200) rộng 663, tâm (761,5; 484,5). */
+.ms-eye-img { position: absolute; left: calc(50% - 2.538rem); top: calc(50% - 1.615rem); width: 5.12rem; max-width: none; pointer-events: none; }
 .ms-look-text { max-width: 3.3rem; font-family: var(--lor-cond); font-size: 0.72rem; font-weight: 700; line-height: 1.05; letter-spacing: 0.05em; text-align: center; text-transform: uppercase; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
 
 .ms-foot { position: relative; z-index: 1; display: grid; justify-items: end; gap: 0.5rem; padding: 0.4rem 0.2rem 0; animation: ms-fade 0.45s ease-out 1s both; }
