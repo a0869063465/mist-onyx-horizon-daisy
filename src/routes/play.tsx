@@ -1489,7 +1489,8 @@ function fakeCut(mon: FieldMon, key: "atk" | "def" | "mdef" | "hp", value: numbe
 
 /** Đã mệt (hành động rồi), trừ quái Tháo vát còn lượt hành động thứ hai. */
 function tired(mon: FieldMon) {
-  return mon.dim && !knackOpen(mon);
+  // Dùng skill (Cấp số nhân của Kuriboh…) chỉ đánh dấu `used`, không làm `dim`: vẫn là đã hành động (chủ game 28/11).
+  return (mon.dim || Boolean(mon.used)) && !knackOpen(mon);
 }
 
 function gnawBoosted(prev: Duel, next: Duel) {
