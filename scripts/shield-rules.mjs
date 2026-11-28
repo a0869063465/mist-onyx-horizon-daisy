@@ -186,6 +186,17 @@ test("Tinh linh hộ mệnh: không có khi hết mana, khi phe mình ra đòn, 
   assert.deepEqual(D.spiritTargets(used, at(used, 0, 3).uid), [], "đã hành động");
 });
 
+test("Tinh linh hộ mệnh: chỉ buff lá bị nhắm tới; đã có quái chặn hộ thì không dùng được (chủ game 28/11)", () => {
+  let s = foeBoard({ 0: plain({}), 3: [ANGEL, {}], 4: plain({}) }, { 0: mon({ atk: 5 }) });
+  s = D.attackMonster(s, at(s, 1, 0).uid, at(s, 0, 4).uid);
+  const angel = at(s, 0, 3).uid;
+  assert.deepEqual(D.spiritTargets(s, angel), [at(s, 0, 4).uid], "trước khi chặn: lá bị nhắm");
+  const blocked = D.assignBlock(s, at(s, 0, 0).uid);
+  assert.equal(blocked.hold?.blocker, at(s, 0, 0).uid, blocked.live);
+  assert.deepEqual(D.spiritTargets(blocked, angel), [], "đã chặn hộ: không dùng được");
+  assert.match(D.spiritWard(blocked, angel, at(s, 0, 0).uid).live, /Chọn 1 quái/);
+});
+
 test("Bỏ skill cũ: nút Thiên thần hộ mệnh không còn tạo khiên, không còn đỡ hộ riêng", () => {
   const s = board({ 0: [ANGEL, {}], 1: mon({}) }, { 0: mon({}) });
   const next = D.useSkill(s, at(s, 0, 0).uid, at(s, 0, 1).uid, 0);

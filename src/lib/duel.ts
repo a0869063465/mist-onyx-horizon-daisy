@@ -5734,6 +5734,8 @@ function pendingActor(state: Duel): Side | null {
 export function spiritTargets(state: Duel, uid: string): string[] {
   if (state.step !== "respond" || !state.hold || !state.pending || state.winner !== null) return [];
   if (doomWaiting(state)) return [];
+  // Chỉ buff lá bị nhắm tới; đã có quái lao ra chặn hộ thì không dùng được nữa (chủ game 28/11).
+  if (state.hold.blocker || (state.hold.covers?.length ?? 0) > 0) return [];
   const side = ownerSide(state, uid);
   if (side === null || state.hold.priority !== side) return [];
   const owner = state.players[side];
