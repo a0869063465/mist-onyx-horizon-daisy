@@ -39,6 +39,7 @@ Cách ghi: mỗi việc mới/đang làm chỉ ghi 3 dòng ngắn ở mục "Đa
 
 - Chủ game chỉ dùng điện thoại Android. Hướng dẫn phải làm được trên điện thoại.
 - MÔ HÌNH: mỗi việc có mô hình + nỗ lực đã chốt (luật `duel.ts` = Opus, giao diện/hiệu ứng = Sonnet, ghi chú = thấp). Mỗi lần xin "ok" hoặc sắp làm, viết **tên mô hình + mức nỗ lực** in đậm ở dòng riêng. Mô hình đang chạy khác chốt thì DỪNG, báo, chờ đổi. Xong phần của mô hình đang chạy thì DỪNG, báo "đổi sang mô hình Y để làm phần Z". Mỗi kế hoạch phải có đề xuất mô hình + nỗ lực, không chờ bị hỏi.
+- CHIA MÔ HÌNH TỪ ĐẦU (chủ game 28/11, thói quen, không chờ nhắc): việc dài không giao trọn cho Opus (tốn phí). Mọi việc tách thành giai đoạn ngay trong kế hoạch đầu: tìm lỗi/đọc code/tái hiện/giao diện/ghi chú = Sonnet (medium hoặc thấp); chỉ riêng bước SỬA luật `duel.ts` mới Opus, và Sonnet phải ghi rõ nguyên nhân + dòng code để Opus sửa gọn một chỗ, không đọc lại từ đầu. Nếu tìm ra lỗi chỉ ở hình thì Sonnet làm trọn, không cần Opus. Kế hoạch ghi bảng phân công này ngay lần đầu.
 - KẾ HOẠCH NGẮN: 3 mục (việc vừa làm, hiện trạng, việc sắp làm), dưới 4 dòng mỗi việc, không bảng dài. Ghi vào đây ngay khi bắt đầu.
 - CHỜ "OK": mọi chỉnh sửa, kể cả nhỏ, kể cả góp ý vừa gửi: ghi, đưa kế hoạch, hỏi, chờ "ok" rồi mới sửa. Giao quyền chọn hướng thì ĐỀ XUẤT và báo lại, chưa gắn code.
 - LÀM HÀNG LOẠT: chỉ làm MỘT mẫu, gửi ảnh, chờ "ok" mới chạy cả lô. Mẫu thử làm ở scratchpad.
