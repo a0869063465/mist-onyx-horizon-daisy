@@ -29,7 +29,7 @@ export function flatFx(): boolean {
 }
 
 /** Alpha clips that have a black-background MP4 twin (the box clip has none). */
-const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|buff-chi-so|phat-quang|khien-vo|khien-dung|khien-giu|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
+const FLAT_TWINS = /\/(fx\/(dai-hong-thuy|hoi-mau|buff-chi-so|phat-quang|khien-vo|khien-dung|khien-giu|end-win|end-lose|thuy-tru|thuy-no|thuy-xoay)|ui\/atk-(you|foe))\.webm/;
 export function alphaSrc(src: string): string {
   return flatFx() && FLAT_TWINS.test(src) ? src.replace(".webm", ".mp4") : src;
 }
@@ -76,6 +76,8 @@ function font(): Promise<unknown> {
 
 /** Effect videos, kept as named so the players can ask fxUrl for the same string. */
 export const FX_VIDEOS = [
+  "/fx/end-win.webm?v=1",
+  "/fx/end-lose.webm?v=1",
   "/fx/lua-no.mp4?v=2",
   "/fx/xao-bai-xanh.webm?v=1",
   "/fx/xao-bai-do.webm?v=1",

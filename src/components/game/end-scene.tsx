@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { tr } from "@/lib/i18n";
-import { playEnd } from "@/lib/sfx";
+import { fxUrl } from "@/lib/preload";
+import { playCue, playEnd } from "@/lib/sfx";
 
 /**
  * The end of a match (chủ game 22/10, after LoR's nexus falling, T10), all drawn here: a pink-white flash on the
@@ -28,6 +29,7 @@ export function EndScene({ win, at, tone, onDone }: { win: boolean; at: { x: num
   const ref = useRef<HTMLCanvasElement>(null);
   const [crest, setCrest] = useState(false);
   const [ready, setReady] = useState(false);
+  const [bad, setBad] = useState(false);
   const skip = useRef<() => void>(() => undefined);
 
   useEffect(() => {
@@ -293,7 +295,7 @@ export function EndScene({ win, at, tone, onDone }: { win: boolean; at: { x: num
       }
       if (t >= CREST_AT && !converged) {
         converged = true;
-        playEnd(win ? "win" : "lose");
+        playCue(win ? "endWin" : "endLose");
       }
       if (t >= CREST_AT && t < CREST_AT + 0.5) {
         const k = (t - CREST_AT) / 0.5;
@@ -340,127 +342,15 @@ export function EndScene({ win, at, tone, onDone }: { win: boolean; at: { x: num
       <canvas ref={ref} className="es-canvas" aria-hidden="true" />
       {crest ? (
         <div className="es-crest">
-          {win ? <Wings /> : <LoseWings />}
-          <Crest win={win} />
-          <h2 className="es-title">{tr(win ? "CHIẾN THẮNG" : "THẤT BẠI")}</h2>
+          {bad ? (
+            <h2 className="es-title">{tr(win ? "CHIẾN THẮNG" : "THẤT BẠI")}</h2>
+          ) : (
+            // Video của chủ game (28/11): bảng huy hiệu + cánh + chữ, chạy một lần rồi giữ khung cuối.
+            <video className="es-vid" src={fxUrl(win ? "/fx/end-win.webm?v=1" : "/fx/end-lose.webm?v=1")} muted playsInline autoPlay preload="auto" onError={() => setBad(true)} aria-hidden="true" />
+          )}
           {ready ? <p className="es-hint">{tr("Chạm để tiếp tục")}</p> : null}
         </div>
       ) : null}
     </div>
-  );
-}
-
-/** The metal crest: a steel ring with a crown of spikes, a dark disc and a crystal at its heart. */
-function Crest({ win }: { win: boolean }) {
-  const disc = win ? ["#3a7fe6", "#0c2154"] : ["#c0283a", "#3c060e"];
-  const gem = win ? ["#ffffff", "#9fe4ff", "#2477e8"] : ["#ffffff", "#ff9aa6", "#b0102a"];
-  return (
-    <svg className="es-medal" viewBox="-80 -86 160 160" aria-hidden="true">
-      <defs>
-        <linearGradient id="es-steel" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.35" stopColor={win ? "#c9d4e4" : "#e4c4c8"} />
-          <stop offset="0.6" stopColor={win ? "#6d7c94" : "#7a4a52"} />
-          <stop offset="1" stopColor={win ? "#e6edf7" : "#f0d6da"} />
-        </linearGradient>
-        <radialGradient id="es-disc" cx="0.4" cy="0.35" r="0.75">
-          <stop offset="0" stopColor={disc[0]} />
-          <stop offset="1" stopColor={disc[1]} />
-        </radialGradient>
-        <linearGradient id="es-gem" x1="0.2" y1="0" x2="0.8" y2="1">
-          <stop offset="0" stopColor={gem[0]} />
-          <stop offset="0.4" stopColor={gem[1]} />
-          <stop offset="1" stopColor={gem[2]} />
-        </linearGradient>
-      </defs>
-      <g className="es-spikes" fill="url(#es-steel)" stroke="#2b3240" strokeWidth="1.2">
-        <path d="M0 -84 L9 -56 L-9 -56 Z" />
-        <path d="M-34 -74 L-17 -52 L-33 -46 Z" />
-        <path d="M34 -74 L17 -52 L33 -46 Z" />
-      </g>
-      <circle r="58" fill="none" stroke="url(#es-steel)" strokeWidth="12" />
-      <circle r="64" fill="none" stroke="#2b3240" strokeWidth="1.5" />
-      <circle r="51.5" fill="none" stroke="#2b3240" strokeWidth="1.5" />
-      <circle r="50" fill="url(#es-disc)" />
-      {Array.from({ length: 12 }, (_, i) => {
-        const a = (i / 12) * Math.PI * 2;
-        return <circle key={i} cx={(Math.cos(a) * 58).toFixed(1)} cy={(Math.sin(a) * 58).toFixed(1)} r="2.2" fill="#2b3240" />;
-      })}
-      {win ? (
-        <>
-          <path className="es-gem" d="M0 -34 L22 0 L0 34 L-22 0 Z" fill="url(#es-gem)" stroke="#ffffff" strokeWidth="1.5" />
-          <path d="M0 -34 L8 -4 L0 34 L-8 -4 Z" fill="rgba(255,255,255,0.35)" />
-        </>
-      ) : (
-        <g className="es-cracked">
-          <path d="M0 -34 L22 0 L0 34 L-22 0 Z" fill="#0b0105" />
-          {CRACKED.map((piece, i) => (
-            <g key={i} className="es-shard" style={{ "--dx": `${piece.dx}px`, "--dy": `${piece.dy}px`, "--r": `${piece.r}deg` } as CSSProperties}>
-              <path d={piece.d} fill="url(#es-gem)" stroke="#2a0409" strokeWidth="1.1" strokeLinejoin="round" />
-              <path d={piece.d} fill="rgba(255,255,255,0.18)" transform="scale(0.55) translate(0 -6)" />
-            </g>
-          ))}
-        </g>
-      )}
-    </svg>
-  );
-}
-
-/** The gem of a lost match, split along one jagged crack into 2 pieces that then drift apart (dx, dy, r = how far each opens). */
-const CRACKED = [
-  { d: "M0 -34 L-5 -14 L4 -3 L-3 12 L2 22 L0 34 L-22 0 Z", dx: -2.6, dy: -0.6, r: -3 },
-  { d: "M0 -34 L22 0 L0 34 L2 22 L-3 12 L4 -3 L-5 -14 Z", dx: 2.6, dy: 0.8, r: 3 },
-] as const;
-
-/** Blue crystal wings unfolding from both sides of the crest. */
-function Wings() {
-  const feathers = [
-    { a: -12, l: 150, w: 15 },
-    { a: 2, l: 172, w: 17 },
-    { a: 17, l: 160, w: 16 },
-    { a: 32, l: 138, w: 15 },
-    { a: 47, l: 112, w: 13 },
-    { a: 62, l: 86, w: 11 },
-  ];
-  return (
-    <svg className="es-wings" viewBox="-240 -150 480 260" aria-hidden="true">
-      <defs>
-        <linearGradient id="es-feather" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#1d5bd6" />
-          <stop offset="0.45" stopColor="#5ec8ff" />
-          <stop offset="1" stopColor="#ecfbff" />
-        </linearGradient>
-      </defs>
-      {[-1, 1].map((side) => (
-        <g key={side} transform={`scale(${side} 1)`}>
-          {feathers.map((f, i) => {
-            const base = 52;
-            const tip = base + f.l;
-            return (
-              <g key={i} className="es-feather" style={{ "--i": i, "--a": `${-f.a}deg` } as CSSProperties}>
-                <path
-                  d={`M${base} ${-f.w * 0.5} L${tip - 30} ${-f.w} L${tip} 0 L${tip - 34} ${f.w * 0.7} L${base} ${f.w * 0.5} Z`}
-                  fill="url(#es-feather)"
-                  stroke="#e6f9ff"
-                  strokeWidth="1.2"
-                  opacity="0.94"
-                />
-                <path d={`M${base + 6} 0 L${tip - 8} 0`} stroke="rgba(255,255,255,0.75)" strokeWidth="1.4" />
-              </g>
-            );
-          })}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-/** Red crystal wings of a lost match (chủ game's own image, as given): the two wings unfold like the win's blue ones. */
-function LoseWings() {
-  return (
-    <span className="es-wings is-red" aria-hidden="true">
-      <img className="es-wing is-l" src="/ui/end/lose-wings.webp" alt="" draggable={false} />
-      <img className="es-wing is-r" src="/ui/end/lose-wings.webp" alt="" draggable={false} />
-    </span>
   );
 }
