@@ -2121,6 +2121,8 @@ function PlayPage() {
   }, [sentAlly]);
   /** A player's HP held at its old value until the lightning of a landing blow reaches it. */
   const [hpHold, setHpHold] = useState<Record<string, number>>({});
+  /** Quái mà khiên đã vỡ trong dữ liệu nhưng hình khiên còn đứng tới lúc đòn chạm (Z4, chủ game 28/11). */
+  const [aegisKeep, setAegisKeep] = useState<Record<string, boolean>>({});
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const [linger, setLinger] = useState<Linger[]>([]);
   /** Chủ game 16/11: monsters being shattered (the video effect), kept apart from the slot so a new summon there is not hidden. */
@@ -3774,16 +3776,6 @@ function PlayPage() {
         emitFx({ t: "aegis", phase: "up", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
       });
     }
-    // Khiên vỡ (Z4, chủ game 27/11): video + âm vỡ khiên đặt đúng lá bị đòn (hết hạn thì không nháy).
-    if (!quiet) {
-      for (const uid of shieldBreaks(prev, duel)) {
-        const seat = seatOf(duel, uid);
-        const mon = fieldMon(duel, uid);
-        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
-        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
-        emitFx({ t: "aegis", phase: "break", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
-      }
-    }
     if (!quiet && /quét cả sân/.test(said)) cueAt("timeFlow");
     else if (!quiet && /cường hoá và tiêu diệt|tiến hoá .+ dạng cuối|cường hoá .+, tăng 35%/.test(said)) cueAt("timeBoost");
     else if (!quiet && /lão hoá .+, (tăng|giảm) 35%/i.test(said)) cueAt("timeAge");
@@ -3921,6 +3913,29 @@ function PlayPage() {
     if (pre && shown) for (const item of shown.floaters) item.delay = (item.delay ?? 0) + pre / 1000;
     // Pháo kích: cú lao bắt đầu sau khi đạn đã lên nòng và chờ xong (`pre`).
     const lead = cannon && landing?.uid === cannon.ammo ? pre : 0;
+    // Khiên vỡ (Z4, chủ game 28/11): video + âm vỡ khiên đặt đúng lá bị đòn, ĐÚNG LÚC đòn chạm (đánh thường: sau cú lao; skill, phép: theo
+    // lúc hiệu ứng tới), hình khiên còn đứng tới lúc đó. Hết hạn thì không nháy.
+    if (!quiet) {
+      const gap = landing ? lead + LAND_MS + (boomIds.has(landing.uid) ? BOOM_PEAK_MS : 0) : Math.max(0, wait);
+      for (const uid of shieldBreaks(prev, duel)) {
+        const seat = seatOf(duel, uid);
+        const mon = fieldMon(duel, uid);
+        if (!seat || !mon || seaVeiled(duel, viewerNow, mon.uid)) continue;
+        const box = SLOT_BOX[screenSide(seat.side, viewerNow)][seat.index];
+        const burst = () => emitFx({ t: "aegis", phase: "break", x: box.x + box.w / 2, y: box.y + box.h / 2, w: box.w });
+        if (gap > 0) {
+          setAegisKeep((now) => ({ ...now, [uid]: true }));
+          window.setTimeout(() => {
+            setAegisKeep((now) => {
+              const rest = { ...now };
+              delete rest[uid];
+              return rest;
+            });
+            burst();
+          }, gap);
+        } else burst();
+      }
+    }
     if (landing && shown) {
       for (const item of shown.floaters) {
         if (item.heal) continue;
@@ -10176,7 +10191,7 @@ function PlayPage() {
         <AegisBreak />
         {([0, 1] as const).flatMap((side) =>
           duel.players[side].field.map((mon, index) => {
-            if (!mon?.aegis || mon.hp <= 0 || seaVeiled(duel, viewer, mon.uid)) return null;
+            if (!mon || !(mon.aegis || aegisKeep[mon.uid]) || mon.hp <= 0 || seaVeiled(duel, viewer, mon.uid)) return null;
             const box = SLOT_BOX[screenSide(side, viewer)][index];
             return <AegisHold key={`aegis-${mon.uid}`} x={box.x + box.w / 2} y={box.y + box.h / 2} w={box.w} />;
           }),
