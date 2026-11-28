@@ -48,8 +48,6 @@ const ROWS: Row[] = [
   { ids: ["ma-dao-si"], key: "dan", cast: "aim", skill: 0, gate: pay(1) },
   { ids: ["loi-nguyen-cua-rong"], key: "fire", cast: "aim", skill: 0, gate: pay(0) },
   { ids: ["rong-ac-ma"], key: "orb", cast: "aim", skill: 0, gate: pay(1) },
-  { ids: ["thien-than-be-nho"], key: "phys", cast: "aim", skill: 0 },
-  { ids: ["thien-than-be-nho"], key: "spell", cast: "aim", skill: 1 },
   { ids: ["rong-phun-hoa-cau"], key: "peek", cast: "declare", skill: 0, gate: pay(1) },
   { ids: ["rong-phun-hoa-cau"], key: "fire", cast: "aim", skill: 1, gate: orb(1) },
   { ids: ["phu-thuy-thoi-gian"], key: "age", cast: "aim", skill: 0 },

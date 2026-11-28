@@ -74,11 +74,7 @@ export const MONSTER_CHIPS: Record<string, ChipDef[]> = {
     { key: "hell", label: "Lửa địa ngục", tone: "y" },
   ],
   "rong-ac-ma": [{ key: "orb", label: "Hoả cầu địa ngục", tone: "y" }],
-  "thien-than-be-nho": [
-    { key: "phys", label: "Khiên vật lý", tone: "y" },
-    { key: "spell", label: "Khiên phép", tone: "y" },
-    { key: "cover", label: "Đỡ hộ", tone: "z" },
-  ],
+  "thien-than-be-nho": [{ key: "ward", label: "Tinh linh hộ mệnh", tone: "z" }],
   "my-dieu-nhan": [
     { key: "gust", label: "Thổi bay", tone: "y" },
     { key: "charm", label: "Mê hoặc", tone: "y" },

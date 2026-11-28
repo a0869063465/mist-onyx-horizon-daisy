@@ -90,8 +90,8 @@ import {
   startParley,
   pickParley,
   parleyPicker,
-  canSpirit,
-  spiritCover,
+  spiritTargets,
+  spiritWard,
   castName,
   castSpell,
   concede,
@@ -396,6 +396,8 @@ type Aim =
   | { kind: "innate"; uid: string }
   | { kind: "skill"; uid: string; index: number; also?: string }
   | { kind: "tide"; uid: string }
+  /** Tinh linh hộ mệnh có nhiều quái bị nhắm: bảng chọn 1 quái (chủ game 28/11). */
+  | { kind: "spirit"; uid: string }
   | { kind: "spell"; index: number; spellId: string; from?: string; duo?: { picks: DuoPick[]; ask?: string }; wile?: { ally?: string } };
 
 type Strike = { uid: string; face: boolean; foeUid: string | null };
@@ -1464,7 +1466,7 @@ function monsterAlert(duel: Duel, mon: FieldMon, viewer: Side): boolean {
   if (mon.cardId === "linh-chien-da-khong-lo" && canWall(duel, mon.uid)) return true;
   // Điều động của Hiệp sĩ hộ vệ (chủ game 27/11): chớp hồng khi quái của mình bị đòn tấn công nhắm.
   if (mon.cardId === "hiep-si-ho-ve" && canDispatch(duel, mon.uid)) return true;
-  if (canSpirit(duel, mon.uid)) return true;
+  if (spiritTargets(duel, mon.uid).length > 0) return true;
   if (mon.cardId === "ky-si-bong-toi" && !(mon.path ?? 0) && pending?.kind === "melee" && pending.defender === mon.uid && !mon.clash) return true;
   return false;
 }
@@ -6641,7 +6643,7 @@ function PlayPage() {
     }
     const fairyUp = side === viewer && monsterAlert(duel, mon, side) && mon.cardId === "yeu-tinh-chuc-phuc";
     const wallUp = side === viewer && canWall(duel, mon.uid);
-    const spiritUp = side === viewer && canSpirit(duel, mon.uid);
+    const spiritUp = side === viewer && spiritTargets(duel, mon.uid).length > 0;
     const mysticUp = side === viewer && mysticAlert(duel, mon, side);
     const harpyUp = side === viewer && harpyAlert(duel, mon, viewer);
     const reactive = ready || coverReady || fairyUp || wallUp || spiritUp || mysticUp;
@@ -7779,6 +7781,28 @@ function PlayPage() {
           startWaiting={Boolean(duel.opener?.done[viewer])}
           onConfirm={confirmOpener}
           onClosed={() => setOpenerOpen(false)}
+        />
+      ) : null}
+      {aim?.kind === "spirit" && spiritTargets(duel, aim.uid).length > 0 ? (
+        <PickPanel
+          key={`spirit:${aim.uid}:${duel.stepNo}`}
+          title="Tinh linh hộ mệnh"
+          sub="Chọn 1 quái bị nhắm để tạo khiên"
+          cards={spiritTargets(duel, aim.uid).map((uid): PickCard => {
+            const mon = fieldMon(duel, uid);
+            const card = mon ? monsterCard(mon.cardId) : null;
+            return {
+              key: uid,
+              face: card && mon ? <CardFace monster={card} hand level={mon.level ?? 1} live={{ name: fieldName(mon), atk: mon.atk, def: mon.def, mdef: mon.mdef, hp: mon.hp }} /> : null,
+            };
+          })}
+          onCancel={() => setAim(null)}
+          onTimeout={() => setAim(null)}
+          onConfirm={(key) => {
+            const uid = aim.uid;
+            setAim(null);
+            apply(spiritWard(duel, uid, key));
+          }}
         />
       ) : null}
       {reviveAsk && duel.players[viewer].hand[reviveAsk.index] === REVIVE_CARD && reviveReady(duel, viewer) ? (
@@ -10534,8 +10558,19 @@ function unitRows({ duel, uid, viewer, attackable, riposte = false, blessOn, onB
   if (canGuardCover(duel, uid)) {
     z.push({ key: "cover", label: card.id === "hiep-si-huyen-bi" ? tr("Phòng ngự") : tr("Kiếm phòng ngự"), go: () => apply(guardCover(duel, uid)) });
   }
-  if (canSpirit(duel, uid) && !mon.dim) {
-    z.push({ key: "cover", label: chipLabel("thien-than-be-nho", "cover"), go: () => apply(spiritCover(duel, uid)) });
+  // Tinh linh hộ mệnh (chủ game 28/11): chớp hồng khi quái phe mình bị đòn sát thương nhắm; 1 mục tiêu thì dùng ngay, nhiều thì chọn 1 trong bảng.
+  if (side === viewer && !mon.dim && mon.cardId === "thien-than-be-nho") {
+    const aims = spiritTargets(duel, uid);
+    if (aims.length > 0) {
+      z.push({
+        key: "ward",
+        label: chipLabel(mon.cardId, "ward"),
+        go: () => {
+          if (aims.length === 1) apply(spiritWard(duel, uid, aims[0]!));
+          else setAim({ kind: "spirit", uid });
+        },
+      });
+    }
   }
   if (!mon.dim && card.id === "kizuran" && mon.stun === 0 && (mon.chain ?? 0) === 0 && (mon.cover || you.field.some((unit) => unit && unit.cardId === "kazura" && unit.hp > 0))) {
     z.push({ key: "cover", label: mon.cover ? tr("Ngừng đỡ") : chipLabel(card.id, "cover"), go: () => apply(setCover(duel, uid, !mon.cover)) });
