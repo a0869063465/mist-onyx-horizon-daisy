@@ -3926,12 +3926,15 @@ function PlayPage() {
         if (gap > 0) {
           setAegisKeep((now) => ({ ...now, [uid]: true }));
           window.setTimeout(() => {
-            setAegisKeep((now) => {
-              const rest = { ...now };
-              delete rest[uid];
-              return rest;
-            });
             burst();
+            // Hình khiên còn thêm một nhịp để clip vỡ kịp lên khung đầu (video cần ~0,1 s mới hiện), không hở hình giữa 2 clip.
+            window.setTimeout(() => {
+              setAegisKeep((now) => {
+                const rest = { ...now };
+                delete rest[uid];
+                return rest;
+              });
+            }, 180);
           }, gap);
         } else burst();
       }
